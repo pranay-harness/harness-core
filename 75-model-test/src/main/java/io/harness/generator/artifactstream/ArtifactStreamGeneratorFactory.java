@@ -25,7 +25,7 @@ public class ArtifactStreamGeneratorFactory {
     if (ArtifactStreams.HARNESS_SAMPLE_DOCKER.equals(artifactStreams)) {
       return dockerArtifactStreamGenerator;
     }
-    if (ArtifactStreams.ARTIFACTORY_ECHO_WAR.equals(artifactStreams)) {
+    if (ArtifactStreams.ARTIFACTORY_ECHO_WAR.equals(artifactStreams) || ArtifactStreams.PCF.equals(artifactStreams)) {
       return artifactoryArtifactStreamStreamsGenerator;
     }
     if (ArtifactStreams.HARNESS_SAMPLE_IIS_APP.equals(artifactStreams)) {

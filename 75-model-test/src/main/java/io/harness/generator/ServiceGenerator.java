@@ -12,6 +12,7 @@ import com.google.inject.Singleton;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager.Owners;
+import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import software.wings.api.DeploymentType;
@@ -47,7 +48,8 @@ public class ServiceGenerator {
     ECS_TEST,
     K8S_V2_TEST,
     MULTI_ARTIFACT_FUNCTIONAL_TEST,
-    MULTI_ARTIFACT_K8S_V2_TEST
+    MULTI_ARTIFACT_K8S_V2_TEST,
+    PCF_V2_TEST
   }
 
   public Service ensurePredefined(Randomizer.Seed seed, Owners owners, Services predefined) {
@@ -66,11 +68,23 @@ public class ServiceGenerator {
         return ensureMultiArtifactFunctionalTest(seed, owners, "MA-FunctionalTest Service");
       case MULTI_ARTIFACT_K8S_V2_TEST:
         return ensureMultiArtifactK8sTest(seed, owners, "MA-Test K8sV2 Service");
+      case PCF_V2_TEST:
+        return ensurePcfTest(seed, owners, "PCF Service");
       default:
         unhandled(predefined);
     }
 
     return null;
+  }
+
+  private Service ensurePcfTest(Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners,
+        builder().name(name).artifactType(ArtifactType.PCF).deploymentType(DeploymentType.PCF).isPcfV2(true).build()));
+    ArtifactStream artifactStream = artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.PCF);
+    Service service = owners.obtainService();
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+    return service;
   }
 
   public Service ensureWindowsTest(Randomizer.Seed seed, Owners owners, String name) {

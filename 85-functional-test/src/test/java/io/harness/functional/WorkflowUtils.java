@@ -1,6 +1,8 @@
 package io.harness.functional;
 
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.Arrays.asList;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrchestrationWorkflowBuilder.aBlueGreenOrchestrationWorkflow;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
@@ -15,6 +17,14 @@ import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.DEPLOY;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.DEPLOY_CONTAINERS;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_RESIZE;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_ROLLBACK;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_SETUP;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_PREFIX;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.SETUP;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.VERIFY_SERVICE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
@@ -34,6 +44,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.ResizeStrategy;
@@ -41,19 +52,23 @@ import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowPhase;
+import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class WorkflowUtils {
-  private static final long TEST_TIMEOUT_IN_MINUTES = 5;
+  private static final long TEST_TIMEOUT_IN_MINUTES = 8;
 
   static final String SETUP_CONTAINER_CONSTANT = "Setup Container";
   static final String PRE_DEPLOYMENT_CONSTANT = "Pre-Deployment";
@@ -228,6 +243,103 @@ public class WorkflowUtils {
             .build();
 
     return workflow;
+  }
+
+  public Workflow createPcfWorkflow(String name, Service service, InfrastructureDefinition infrastructureDefinition) {
+    WorkflowPhase workflowPhase = obtainWorkflowPhasePcf(service, infrastructureDefinition);
+    WorkflowPhase rollbackPhase = obtainRollbackPhasePcf(workflowPhase);
+    Map<String, WorkflowPhase> rollbackMap = new HashMap<>();
+    rollbackMap.put(workflowPhase.getUuid(), rollbackPhase);
+    return aWorkflow()
+        .name(name)
+        .appId(service.getAppId())
+        .serviceId(service.getUuid())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .withWorkflowPhases(Collections.singletonList(workflowPhase))
+                                   .withRollbackWorkflowPhaseIdMap(rollbackMap)
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
+        .build();
+  }
+
+  private WorkflowPhase obtainWorkflowPhasePcf(Service service, InfrastructureDefinition infrastructureDefinition) {
+    List<PhaseStep> phaseSteps = new ArrayList<>();
+
+    Map<String, Object> defaultProperties = new HashMap<>();
+    defaultProperties.put("blueGreen", false);
+    defaultProperties.put("isWorkflowV2", true);
+    defaultProperties.put("resizeStrategy", "DOWNSIZE_OLD_FIRST");
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.PCF_SETUP, SETUP)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.PCF_SETUP.name())
+                                    .name(PCF_SETUP)
+                                    .properties(defaultProperties)
+                                    .build())
+                       .build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.PCF_RESIZE, DEPLOY)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.PCF_RESIZE.name())
+                                    .name(PCF_RESIZE)
+                                    .properties(ImmutableMap.<String, Object>builder()
+                                                    .put("instanceCount", 1)
+                                                    .put("instanceUnitType", InstanceUnitType.COUNT)
+                                                    .put("downsizeInstanceCount", 1)
+                                                    .put("downsizeInstanceUnitType", InstanceUnitType.COUNT)
+                                                    .build())
+                                    .build())
+                       .build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE).build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP_CONSTANT).build());
+
+    return aWorkflowPhase()
+        .uuid(generateUuid())
+        .serviceId(service.getUuid())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .phaseSteps(phaseSteps)
+        .build();
+  }
+
+  private WorkflowPhase obtainRollbackPhasePcf(WorkflowPhase workflowPhase) {
+    WorkflowPhaseBuilder rollbackPhaseBuilder = aWorkflowPhase()
+                                                    .name(ROLLBACK_PREFIX + workflowPhase.getName())
+                                                    .deploymentType(workflowPhase.getDeploymentType())
+                                                    .rollback(true)
+                                                    .phaseNameForRollback(workflowPhase.getName())
+                                                    .serviceId(workflowPhase.getServiceId())
+                                                    .computeProviderId(workflowPhase.getComputeProviderId())
+                                                    .infraDefinitionId(workflowPhase.getInfraDefinitionId());
+
+    return rollbackPhaseBuilder
+        .phaseSteps(asList(aPhaseStep(PhaseStepType.PCF_RESIZE, DEPLOY)
+                               .addStep(GraphNode.builder()
+                                            .id(generateUuid())
+                                            .type(StateType.PCF_ROLLBACK.name())
+                                            .name(PCF_ROLLBACK)
+                                            .rollback(true)
+                                            .build())
+                               .withPhaseStepNameForRollback(DEPLOY)
+                               .withStatusForRollback(SUCCESS)
+                               .withRollback(true)
+                               .build(),
+            // When we rolling back the verification steps
+            // the same criteria to run if deployment is needed should be used
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                .withPhaseStepNameForRollback(DEPLOY_CONTAINERS)
+                .withStatusForRollback(SUCCESS)
+                .withRollback(true)
+                .build(),
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP_CONSTANT).withRollback(true).build()))
+        .build();
   }
 
   public Workflow getRollingK8sTemplatizedWorkflow(

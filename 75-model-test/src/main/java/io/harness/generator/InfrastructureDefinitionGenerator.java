@@ -14,6 +14,7 @@ import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
 import static software.wings.beans.InfrastructureType.AWS_LAMBDA;
 import static software.wings.beans.InfrastructureType.AZURE_SSH;
 import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
+import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,6 +27,7 @@ import io.harness.generator.InfrastructureProvisionerGenerator.InfrastructurePro
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator.Services;
+import io.harness.generator.SettingGenerator.Settings;
 import io.harness.generator.constants.InfraDefinitionGeneratorConstants;
 import io.harness.testframework.restutils.InfrastructureDefinitionRestUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -52,6 +54,7 @@ import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
+import software.wings.infra.PcfInfraStructure;
 import software.wings.infra.PhysicalInfraWinrm;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.EnvironmentService;
@@ -89,6 +92,8 @@ public class InfrastructureDefinitionGenerator {
         return ensureAzureInstance(seed, owners, bearerToken);
       case AWS_LAMBDA:
         return ensureAwsLambda(seed, owners, bearerToken);
+      case PCF_INFRASTRUCTURE:
+        return ensurePcf(seed, owners, bearerToken);
       default:
         return null;
     }
@@ -396,6 +401,28 @@ public class InfrastructureDefinitionGenerator {
     }
 
     return infrastructureDefinitionService.save(infrastructureDefinition, false, true);
+  }
+
+  private InfrastructureDefinition ensurePcf(Seed seed, Owners owners, String bearerToken) {
+    Environment environment = ensureEnv(seed, owners);
+    final SettingAttribute pcfCloudProvider = settingGenerator.ensurePredefined(seed, owners, Settings.PCF_CONNECTOR);
+
+    PcfInfraStructure pcfInfraStructure = PcfInfraStructure.builder()
+                                              .organization("Harness")
+                                              .space("CD-Test-space")
+                                              .cloudProviderId(pcfCloudProvider.getUuid())
+                                              .build();
+
+    String name = HarnessStringUtils.join(StringUtils.EMPTY, "pcf-definition");
+    InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
+                                                            .name(name)
+                                                            .infrastructure(pcfInfraStructure)
+                                                            .appId(environment.getAppId())
+                                                            .envId(environment.getUuid())
+                                                            .cloudProviderType(CloudProviderType.PCF)
+                                                            .deploymentType(DeploymentType.PCF)
+                                                            .build();
+    return ensureInfrastructureDefinition(infrastructureDefinition);
   }
 
   private Environment ensureEnv(Randomizer.Seed seed, Owners owners) {

@@ -43,7 +43,7 @@ public class PcfServiceSpecification extends DeploymentSpecification {
 
   public static final String manifestTemplate = "applications:\n"
       + "- name: ${APPLICATION_NAME}\n"
-      + "  memory: 350M\n"
+      + "  memory: 750M\n"
       + "  INSTANCES : ${INSTANCE_COUNT}\n"
       + "  path: ${FILE_LOCATION}\n"
       + "  ROUTES:\n"

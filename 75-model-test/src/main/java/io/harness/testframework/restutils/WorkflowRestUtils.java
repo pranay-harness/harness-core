@@ -10,6 +10,7 @@ import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
+import io.harness.exception.EmptyRestResponseException;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
@@ -113,6 +114,26 @@ public class WorkflowRestUtils {
     }
 
     return savedWorkflowExecutionResponse.getResource();
+  }
+
+  public static WorkflowExecution rollbackExecution(String bearerToken, String appId, String workflowExecutionId) {
+    GenericType<RestResponse<WorkflowExecution>> workflowExecutionType =
+        new GenericType<RestResponse<WorkflowExecution>>() {};
+    RestResponse<WorkflowExecution> rollbackExecutionResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .queryParam("appId", appId)
+            .queryParam("workflowExecutionId", workflowExecutionId)
+            .body(new HashMap<>(), ObjectMapperType.GSON)
+            .contentType(ContentType.JSON)
+            .post("/executions/triggerRollback")
+            .as(workflowExecutionType.getType());
+    if (rollbackExecutionResponse.getResource() == null) {
+      throw new EmptyRestResponseException(
+          "/executions/triggerRollback", String.valueOf(rollbackExecutionResponse.getResponseMessages()));
+    }
+    return rollbackExecutionResponse.getResource();
   }
 
   public static WorkflowPhase saveWorkflowPhase(
