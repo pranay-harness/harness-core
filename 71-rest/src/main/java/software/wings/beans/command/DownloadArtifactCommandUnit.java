@@ -521,7 +521,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     String command;
     switch (this.getScriptType()) {
       case BASH:
-        command = "curl --progress-bar -H \"Authorization: " + authHeader + "\" -X GET \"" + url + "\" -o \""
+        command = "curl -L --progress-bar -H \"Authorization: " + authHeader + "\" -X GET \"" + url + "\" -o \""
             + getCommandPath() + "/" + artifactFileName + "\"";
         break;
       case POWERSHELL:

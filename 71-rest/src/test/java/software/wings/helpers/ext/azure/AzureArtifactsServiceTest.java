@@ -11,6 +11,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.getSubdomainUrl;
 import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.validateAzureDevopsUrl;
+import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.validateRawResponse;
 import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.validateResponse;
 
 import com.google.common.collect.ImmutableMap;
@@ -21,10 +22,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.waiter.ListNotifyResponseData;
-import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.Request;
-import okhttp3.ResponseBody;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Rule;
 import org.junit.Test;
@@ -623,17 +622,57 @@ public class AzureArtifactsServiceTest extends WingsBaseTest {
     validateResponse(null);
   }
 
+  @Test(expected = Test.None.class)
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldValidateRawResponse() {
+    validateRawResponse(Response.success("").raw());
+  }
+
   @Test(expected = InvalidArtifactServerException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void shouldValidateResponse401() {
-    validateResponse(Response.error(ResponseBody.create(MediaType.parse("text/plain"), "401"),
-        new okhttp3.Response.Builder()
-            .code(401)
-            .protocol(Protocol.HTTP_1_1)
-            .message("401 status")
-            .request(new Request.Builder().url("http://localhost/").build())
-            .build()));
+  public void shouldValidateRawResponseNull() {
+    validateRawResponse(null);
+  }
+
+  @Test(expected = InvalidArtifactServerException.class)
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldValidateRawResponse203() {
+    validateRawResponse(Response
+                            .success("{}",
+                                new okhttp3.Response.Builder()
+                                    .code(203)
+                                    .message("203")
+                                    .protocol(Protocol.HTTP_1_1)
+                                    .request(new Request.Builder().url("http://localhost/path").build())
+                                    .build())
+                            .raw());
+  }
+
+  @Test(expected = InvalidArtifactServerException.class)
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldValidateRawResponse401() {
+    validateRawResponse(new okhttp3.Response.Builder()
+                            .code(401)
+                            .message("401")
+                            .protocol(Protocol.HTTP_1_1)
+                            .request(new Request.Builder().url("http://localhost/path").build())
+                            .build());
+  }
+
+  @Test(expected = InvalidArtifactServerException.class)
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldValidateRawResponse500() {
+    validateRawResponse(new okhttp3.Response.Builder()
+                            .code(500)
+                            .message("500")
+                            .protocol(Protocol.HTTP_1_1)
+                            .request(new Request.Builder().url("http://localhost/path").build())
+                            .build());
   }
 
   @Test
