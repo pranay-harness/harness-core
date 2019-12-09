@@ -331,6 +331,8 @@ public abstract class AbstractAnalysisState extends State {
           phaseHosts.keySet().forEach(host -> hosts.remove(host));
         }
       }
+      getLogger().info("hosts returned as getLastExecutionNodes in K8sV2 for {} are {}",
+          context.getStateExecutionInstanceId(), hosts);
       return hosts;
     } else if (containerInstanceHandler.isContainerDeployment(infrastructureMapping)) {
       Set<ContainerMetadata> containerMetadataSet =
@@ -555,6 +557,7 @@ public abstract class AbstractAnalysisState extends State {
         }
       });
     });
+    getLogger().info("Hosts deployed so far for {} are {}", context.getStateExecutionInstanceId(), hosts);
     return hosts;
   }
 
@@ -825,6 +828,8 @@ public abstract class AbstractAnalysisState extends State {
       getLogger().info("for {} no host found for {}", context.getStateExecutionInstanceId(), hostElement);
       return;
     }
+    getLogger().info("For {}, setting hostName as {}, ec2Instance as {} and publicDns as {}",
+        context.getStateExecutionInstanceId(), host.getHostName(), host.getEc2Instance(), host.getPublicDns());
     instanceElement.setHost(aHostElement()
                                 .hostName(host.getHostName())
                                 .ec2Instance(host.getEc2Instance())
