@@ -319,6 +319,7 @@ import software.wings.beans.sso.LdapUserSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.template.TemplateReference;
 import software.wings.beans.trigger.TriggerCommand.TriggerCommandType;
+import software.wings.beans.utm.UtmInfo;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
@@ -1441,14 +1442,13 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(DeploySweepingOutputPcf.class, 7281);
     kryo.register(InfraMappingSweepingOutput.class, 7282);
     kryo.register(ElkDataCollectionInfoV2.class, 7283);
-
     kryo.register(AzureArtifactsPATConfig.class, 7284);
     kryo.register(AzureDevopsProject.class, 7285);
     kryo.register(AzureArtifactsFeed.class, 7286);
     kryo.register(AzureArtifactsPackage.class, 7287);
     kryo.register(AzureArtifactsPackageVersion.class, 7288);
     kryo.register(AzureArtifactsCollectionTaskParameters.class, 7289);
-
     kryo.register(GcpKmsConfig.class, 7290);
+    kryo.register(UtmInfo.class, 7291);
   }
 }

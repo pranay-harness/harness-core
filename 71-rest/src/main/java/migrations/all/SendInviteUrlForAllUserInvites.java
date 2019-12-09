@@ -74,7 +74,7 @@ public class SendInviteUrlForAllUserInvites implements Migration {
           }
 
           if (isEmpty(userInvite.getAccountId())) {
-            marketoHelper.createOrUpdateLead(null, null, userInvite.getEmail(), accessToken, null, retrofit);
+            marketoHelper.createOrUpdateLead(null, null, userInvite.getEmail(), accessToken, null, retrofit, null);
           } else {
             Account account = accountService.get(userInvite.getAccountId());
             if (account != null && account.getLicenseInfo() != null
@@ -82,7 +82,7 @@ public class SendInviteUrlForAllUserInvites implements Migration {
               user = userService.getUserByEmail(userInvite.getEmail(), userInvite.getAccountId());
               if (user != null) {
                 marketoHelper.createOrUpdateLead(
-                    account, user.getName(), user.getEmail(), accessToken, user.getOauthProvider(), retrofit);
+                    account, user.getName(), user.getEmail(), accessToken, user.getOauthProvider(), retrofit, null);
               }
             }
           }

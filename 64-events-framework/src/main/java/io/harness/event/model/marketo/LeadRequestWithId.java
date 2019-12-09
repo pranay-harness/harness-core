@@ -46,5 +46,11 @@ public class LeadRequestWithId {
     private String Freemium_Invite_URL__c;
     private String Days_Left_in_Trial__c;
     private String SSO_Freemium_Type__c;
+
+    private String UTM_Source__c;
+    private String UTM_Content__c;
+    private String UTM_Medium__c;
+    private String UTM_Term__c;
+    private String UTM__c;
   }
 }

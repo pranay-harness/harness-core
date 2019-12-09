@@ -12,6 +12,11 @@ import static io.harness.event.handler.impl.Constants.TECH_CATEGORY_NAME;
 import static io.harness.event.handler.impl.Constants.TECH_NAME;
 import static io.harness.event.handler.impl.Constants.USER_INVITE_ID;
 import static io.harness.event.handler.impl.Constants.USER_NAME;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_CAMPAIGN;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_CONTENT;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_MEDIUM;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_SOURCE;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_TERM;
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
@@ -51,7 +56,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.SamlSettings;
-import software.wings.common.VerificationConstants;
+import software.wings.beans.utm.UtmInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
@@ -62,14 +67,12 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.SSOSettingService;
-import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WhitelistService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.verification.CVConfigurationService;
-import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
 import java.util.HashMap;
@@ -101,11 +104,8 @@ public class EventPublishHelper {
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private MarketoConfig marketoConfig;
   @Inject private SegmentConfig segmentConfig;
-  @Inject private StateExecutionService stateExecutionService;
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private LearningEngineService learningEngineService;
-
-  private List<StateType> analysisStates = VerificationConstants.getAnalysisStates();
 
   public void publishLicenseChangeEvent(String accountId, String oldAccountType, String newAccountType) {
     if (!checkIfMarketoOrSegmentIsEnabled()) {
@@ -519,7 +519,29 @@ public class EventPublishHelper {
     Map<String, String> properties = new HashMap<>();
     properties.put(ACCOUNT_ID, accountId);
     properties.put(EMAIL_ID, user.getEmail());
+    setUTMDataToProperties(properties, user.getUtmInfo());
     publishEvent(EventType.COMPLETE_USER_REGISTRATION, properties);
+  }
+
+  public void publishTrialUserSignupEvent(UtmInfo utmInfo, String email, String userName, String inviteId) {
+    if (isEmpty(email)) {
+      return;
+    }
+
+    Map<String, String> properties = getProperties(null, email, userName, inviteId);
+
+    setUTMDataToProperties(properties, utmInfo);
+    publishEvent(EventType.NEW_TRIAL_SIGNUP, properties);
+  }
+
+  public void setUTMDataToProperties(Map<String, String> properties, UtmInfo utmInfo) {
+    if (utmInfo != null) {
+      properties.put(UTM_SOURCE, utmInfo.getUtmSource());
+      properties.put(UTM_CONTENT, utmInfo.getUtmContent());
+      properties.put(UTM_MEDIUM, utmInfo.getUtmMedium());
+      properties.put(UTM_TERM, utmInfo.getUtmTerm());
+      properties.put(UTM_CAMPAIGN, utmInfo.getUtmCampaign());
+    }
   }
 
   public void publishTrialUserSignupEvent(String email, String userName, String inviteId) {
@@ -851,7 +873,6 @@ public class EventPublishHelper {
     return properties;
   }
 
-  //  public void publishCustomEvent(String accountId, String customEvent, String additionalInfo) {
   public void publishCustomEvent(String accountId, String customEvent) {
     String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(customEvent);
 
