@@ -19,6 +19,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -518,9 +519,43 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(context.prepareSweepingOutputBuilder(any())).thenReturn(SweepingOutputInstance.builder());
     approvalState.setSweepingOutputName("test");
     approvalState.setVariables(asList(NameValuePair.builder().name("test").value("test").valueType("TEXT").build()));
+    verifyUserGroupSweepingOutput();
+    verifyJiraSweepingOutput();
+    verifySnowSweepingOutput();
+  }
+
+  private void verifyJiraSweepingOutput() {
     ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
-    ApprovalStateExecutionData executionData =
-        ApprovalStateExecutionData.builder().approvedBy(EmbeddedUser.builder().name(USER_NAME).build()).build();
+    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
+                                                   .approvalStateType(ApprovalStateType.JIRA)
+                                                   .approvedBy(EmbeddedUser.builder().name(USER_NAME).build())
+                                                   .build();
+    final List<String> keys = GetSweepingOutputKeys(captor, executionData);
+    assertJiraKeysInSweepingOutput(keys);
+  }
+
+  private void verifyUserGroupSweepingOutput() {
+    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
+                                                   .approvalStateType(ApprovalStateType.USER_GROUP)
+                                                   .approvedBy(EmbeddedUser.builder().name(USER_NAME).build())
+                                                   .build();
+    final List<String> keys = GetSweepingOutputKeys(captor, executionData);
+    assertUserGroupKeysInSweepingOutput(keys);
+  }
+
+  private void verifySnowSweepingOutput() {
+    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
+                                                   .approvalStateType(ApprovalStateType.SERVICENOW)
+                                                   .approvedBy(EmbeddedUser.builder().name(USER_NAME).build())
+                                                   .build();
+    final List<String> keys = GetSweepingOutputKeys(captor, executionData);
+    assertSnowKeysInSweepingOutput(keys);
+  }
+
+  private List<String> GetSweepingOutputKeys(
+      ArgumentCaptor<SweepingOutputInstance> captor, ApprovalStateExecutionData executionData) {
     approvalState.fillSweepingOutput(context, executionData, null);
 
     verify(sweepingOutputService, times(1)).save(captor.capture());
@@ -528,15 +563,32 @@ public class ApprovalStateTest extends WingsBaseTest {
     SweepingOutputInstance sweepingOutput = captor.getValue();
     Map<String, Object> data = (Map<String, Object>) KryoUtils.asInflatedObject(sweepingOutput.getOutput());
 
-    final List<String> keys = data.keySet().stream().collect(Collectors.toList());
+    reset(sweepingOutputService);
+    return data.keySet().stream().collect(Collectors.toList());
+  }
+
+  private void assertUserGroupKeysInSweepingOutput(List<String> keys) {
     assertThat(keys).isNotNull().containsExactlyInAnyOrder(ApprovalState.APPROVAL_STATUS_KEY,
-        ApprovalStateExecutionDataKeys.ticketUrl, ApprovalStateExecutionDataKeys.variables,
-        ApprovalStateExecutionDataKeys.comments, ApprovalStateExecutionDataKeys.issueKey, "test",
-        ApprovalStateExecutionDataKeys.currentStatus, ApprovalStateExecutionDataKeys.approvalValue,
-        ApprovalStateExecutionDataKeys.rejectionField, ApprovalStateExecutionDataKeys.approvedBy,
-        ApprovalStateExecutionDataKeys.ticketType, ApprovalStateExecutionDataKeys.approvalStateType,
-        ApprovalStateExecutionDataKeys.approvedOn, ApprovalStateExecutionDataKeys.issueUrl,
+        ApprovalStateExecutionDataKeys.variables, ApprovalStateExecutionDataKeys.comments, "test",
+        ApprovalStateExecutionDataKeys.approvedOn, ApprovalStateExecutionDataKeys.approvalFromSlack,
+        ApprovalStateExecutionDataKeys.timeoutMillis, ApprovalStateExecutionDataKeys.approvalStateType,
+        ApprovalStateExecutionDataKeys.approvedBy);
+  }
+
+  private void assertJiraKeysInSweepingOutput(List<String> keys) {
+    assertThat(keys).isNotNull().containsExactlyInAnyOrder(ApprovalState.APPROVAL_STATUS_KEY,
+        ApprovalStateExecutionDataKeys.variables, "test", ApprovalStateExecutionDataKeys.issueKey,
+        ApprovalStateExecutionDataKeys.issueUrl, ApprovalStateExecutionDataKeys.currentStatus,
+        ApprovalStateExecutionDataKeys.approvalField, ApprovalStateExecutionDataKeys.approvalValue,
+        ApprovalStateExecutionDataKeys.rejectionField, ApprovalStateExecutionDataKeys.rejectionValue,
         ApprovalStateExecutionDataKeys.approvalFromSlack, ApprovalStateExecutionDataKeys.timeoutMillis,
-        ApprovalStateExecutionDataKeys.approvalField, ApprovalStateExecutionDataKeys.rejectionValue);
+        ApprovalStateExecutionDataKeys.approvalStateType);
+  }
+
+  private void assertSnowKeysInSweepingOutput(List<String> keys) {
+    assertThat(keys).isNotNull().containsExactlyInAnyOrder(ApprovalState.APPROVAL_STATUS_KEY,
+        ApprovalStateExecutionDataKeys.variables, "test", ApprovalStateExecutionDataKeys.ticketType,
+        ApprovalStateExecutionDataKeys.ticketUrl, ApprovalStateExecutionDataKeys.approvalFromSlack,
+        ApprovalStateExecutionDataKeys.timeoutMillis, ApprovalStateExecutionDataKeys.approvalStateType);
   }
 }
