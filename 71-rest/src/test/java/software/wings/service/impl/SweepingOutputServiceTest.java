@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.common.collect.ImmutableMap;
@@ -25,7 +25,7 @@ public class SweepingOutputServiceTest extends WingsBaseTest {
   @Inject HPersistence persistence;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT, intermittent = true)
   @Category(UnitTests.class)
   @RealMongo
   public void shouldGetInstanceId() {
