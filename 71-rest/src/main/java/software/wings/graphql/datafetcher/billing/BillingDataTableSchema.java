@@ -60,6 +60,9 @@ public class BillingDataTableSchema {
   DbColumn memoryMbSeconds;
   DbColumn cloudServiceName;
   DbColumn namespace;
+  DbColumn idleCost;
+  DbColumn cpuIdleCost;
+  DbColumn memoryIdleCost;
 
   private static String varcharType = "varchar(40)";
   private static String doubleType = "double";
@@ -93,5 +96,8 @@ public class BillingDataTableSchema {
     memoryMbSeconds = billingDataTable.addColumn("memorymbseconds", doubleType, null);
     cloudServiceName = billingDataTable.addColumn("cloudServiceName", "text", null);
     namespace = billingDataTable.addColumn("namespace", "text", null);
+    idleCost = billingDataTable.addColumn("idlecost", doubleType, null);
+    cpuIdleCost = billingDataTable.addColumn("cpuidlecost", doubleType, null);
+    memoryIdleCost = billingDataTable.addColumn("memoryidlecost", doubleType, null);
   }
 }

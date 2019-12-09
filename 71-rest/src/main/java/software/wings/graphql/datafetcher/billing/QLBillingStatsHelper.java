@@ -25,13 +25,14 @@ public class QLBillingStatsHelper {
       case SERVICEID:
         return getServiceName(entityId);
       case REGION:
-      case CLUSTERID:
       case CLOUDSERVICENAME:
       case INSTANCEID:
       case LAUNCHTYPE:
       case WORKLOADNAME:
       case WORKLOADTYPE:
       case NAMESPACE:
+      case CLUSTERNAME:
+      case CLUSTERID:
         return entityId;
       default:
         throw new InvalidRequestException("Invalid EntityType " + field);

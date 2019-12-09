@@ -6,7 +6,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
+import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
@@ -28,7 +28,7 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
-public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcher<QLCCMAggregationFunction,
+public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithAggregationList<QLCCMAggregationFunction,
     QLBillingDataFilter, QLCCMGroupBy, QLBillingSortCriteria> {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
@@ -36,7 +36,7 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcher<QLCC
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  protected QLData fetch(String accountId, QLCCMAggregationFunction aggregateFunction,
+  protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria) {
     try {
       if (timeScaleDBService.isValid()) {
@@ -50,7 +50,7 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcher<QLCC
   }
 
   protected QLEntityTableListData getEntityData(@NotNull String accountId, List<QLBillingDataFilter> filters,
-      QLCCMAggregationFunction aggregateFunction, List<QLCCMGroupBy> groupByList,
+      List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMGroupBy> groupByList,
       List<QLBillingSortCriteria> sortCriteria) {
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
@@ -82,6 +82,8 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcher<QLCC
       String name = BillingStatsDefaultKeys.NAME;
       Double totalCost = BillingStatsDefaultKeys.TOTALCOST;
       Double idleCost = BillingStatsDefaultKeys.IDLECOST;
+      Double cpuIdleCost = BillingStatsDefaultKeys.CPUIDLECOST;
+      Double memoryIdleCost = BillingStatsDefaultKeys.MEMORYIDLECOST;
       Double costTrend = BillingStatsDefaultKeys.COSTTREND;
       String trendType = BillingStatsDefaultKeys.TRENDTYPE;
       String region = BillingStatsDefaultKeys.REGION;
@@ -90,13 +92,17 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcher<QLCC
       String workloadName = BillingStatsDefaultKeys.WORKLOADNAME;
       String workloadType = BillingStatsDefaultKeys.WORKLOADTYPE;
       String namespace = BillingStatsDefaultKeys.NAMESPACE;
+      String clusterType = BillingStatsDefaultKeys.CLUSTERTYPE;
+      String clusterId = BillingStatsDefaultKeys.CLUSTERID;
+      int totalWorkloads = BillingStatsDefaultKeys.TOTALWORKLOADS;
+      int totalNamespaces = BillingStatsDefaultKeys.TOTALNAMESPACES;
 
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
           case APPID:
           case ENVID:
           case SERVICEID:
-          case CLUSTERID:
+          case CLUSTERNAME:
           case INSTANCEID:
             type = field.getFieldName();
             entityId = resultSet.getString(field.getFieldName());
@@ -124,6 +130,27 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcher<QLCC
             namespace
             = resultSet.getString(field.getFieldName());
             break;
+          case IDLECOST:
+            idleCost = Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
+            break;
+          case CPUIDLECOST:
+            cpuIdleCost = Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
+            break;
+          case MEMORYIDLECOST:
+            memoryIdleCost = Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
+            break;
+          case CLUSTERTYPE:
+            clusterType = resultSet.getString(field.getFieldName());
+            break;
+          case CLUSTERID:
+            clusterId = resultSet.getString(field.getFieldName());
+            break;
+          case TOTALNAMESPACES:
+            // Todo: query db to get total namespace count
+            break;
+          case TOTALWORKLOADS:
+            // Todo: query db to get total workloads in a given namespace
+            break;
           default:
             break;
         }
@@ -135,6 +162,8 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcher<QLCC
           .type(type)
           .totalCost(totalCost)
           .idleCost(idleCost)
+          .cpuIdleCost(cpuIdleCost)
+          .memoryIdleCost(memoryIdleCost)
           .costTrend(costTrend)
           .trendType(trendType)
           .region(region)
@@ -142,7 +171,11 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcher<QLCC
           .cloudServiceName(cloudServiceName)
           .workloadName(workloadName)
           .workloadType(workloadType)
-          .namespace(namespace);
+          .namespace(namespace)
+          .clusterType(clusterType)
+          .clusterId(clusterId)
+          .totalNamespaces(totalNamespaces)
+          .totalWorkloads(totalWorkloads);
 
       entityTableListData.add(entityTableDataBuilder.build());
     }

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 @Service
 @Singleton
@@ -33,6 +34,7 @@ public class UtilizationDataServiceImpl {
   @Autowired private DataFetcherUtils utils;
 
   private static final int MAX_RETRY_COUNT = 5;
+
   static final String INSERT_STATEMENT =
       "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, CLUSTERARN, CLUTERNAME, SERVICEARN, SERVICENAME, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTACEID, INSTANCETYPE, SETTINGID ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
   private static final String UTILIZATION_DATA_QUERY =
@@ -102,6 +104,7 @@ public class UtilizationDataServiceImpl {
       String query, Map<String, List<String>> serviceArnToInstanceIds) {
     ResultSet resultSet = null;
     Map<String, UtilizationData> utilizationDataForInstances = new HashMap<>();
+    populateDefaultUtilizationData(utilizationDataForInstances, serviceArnToInstanceIds);
     logger.info("Utilization data query : {}", query);
 
     try (Connection connection = timeScaleDBService.getDBConnection();
@@ -157,5 +160,19 @@ public class UtilizationDataServiceImpl {
       return instanceData.getMetaData().get(InstanceMetaDataConstants.ECS_SERVICE_ARN);
     }
     return null;
+  }
+
+  private void populateDefaultUtilizationData(
+      Map<String, UtilizationData> utilizationDataForInstances, Map<String, List<String>> serviceArnToInstanceIds) {
+    if (serviceArnToInstanceIds != null) {
+      for (Entry<String, List<String>> entry : serviceArnToInstanceIds.entrySet()) {
+        if (entry.getValue() != null) {
+          entry.getValue().forEach(instance -> {
+            utilizationDataForInstances.put(
+                instance, UtilizationData.builder().cpuUtilization(1).memoryUtilization(1).build());
+          });
+        }
+      }
+    }
   }
 }

@@ -18,6 +18,8 @@ public class QLEntityTableData implements QLData {
   String type;
   Double totalCost;
   Double idleCost;
+  Double cpuIdleCost;
+  Double memoryIdleCost;
   Double costTrend;
   String trendType;
   String region;
@@ -26,4 +28,8 @@ public class QLEntityTableData implements QLData {
   String workloadName;
   String workloadType;
   String namespace;
+  String clusterType;
+  String clusterId;
+  int totalNamespaces;
+  int totalWorkloads;
 }
