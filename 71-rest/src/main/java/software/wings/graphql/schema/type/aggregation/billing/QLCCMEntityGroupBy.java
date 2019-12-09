@@ -5,7 +5,7 @@ import software.wings.graphql.schema.type.aggregation.QLAggregationKind;
 public enum QLCCMEntityGroupBy {
   Application(QLAggregationKind.SIMPLE),
   Service(QLAggregationKind.SIMPLE),
-  Cluster(QLAggregationKind.SIMPLE),
+  Cluster(QLAggregationKind.SIMPLE), // for cluster id
   StartTime(QLAggregationKind.SIMPLE),
   Region(QLAggregationKind.SIMPLE),
   Environment(QLAggregationKind.SIMPLE),
@@ -14,7 +14,9 @@ public enum QLCCMEntityGroupBy {
   LaunchType(QLAggregationKind.SIMPLE),
   WorkloadName(QLAggregationKind.SIMPLE),
   WorkloadType(QLAggregationKind.SIMPLE),
-  Namespace(QLAggregationKind.SIMPLE);
+  Namespace(QLAggregationKind.SIMPLE),
+  ClusterType(QLAggregationKind.SIMPLE),
+  ClusterName(QLAggregationKind.SIMPLE);
 
   QLAggregationKind aggregationKind;
 

@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 @Value
 public class BillingData {
   private BigDecimal billingAmount;
-  private BigDecimal idleCost;
+  private IdleCostData idleCostData;
   private double usageDurationSeconds;
   private double cpuUnitSeconds;
   private double memoryMbSeconds;

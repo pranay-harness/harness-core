@@ -30,6 +30,8 @@ public class InstanceBillingData {
   private String cloudProvider;
   private BigDecimal billingAmount;
   private BigDecimal idleCost;
+  private BigDecimal cpuIdleCost;
+  private BigDecimal memoryIdleCost;
   private double cpuUnitSeconds;
   private double memoryMbSeconds;
   private double usageDurationSeconds;

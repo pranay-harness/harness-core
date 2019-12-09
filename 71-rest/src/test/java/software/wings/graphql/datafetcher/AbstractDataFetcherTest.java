@@ -87,7 +87,9 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
   public static final String PIPELINE1 = "PIPELINE1";
   public static final String REGION1 = "REGION1";
   public static final String CLUSTER1_ID = "CLUSTER1_ID";
+  public static final String CLUSTER1_NAME = "CLUSTER1_NAME";
   public static final String LAUNCH_TYPE1 = "LAUNCH_TYPE1";
+  public static final String CLUSTER_TYPE1 = "CLUSTER_TYPE1";
   public static final String NAMESPACE1 = "NAMESPACE1";
   public static final String INSTANCE_TYPE1 = "INSTANCE_TYPE1";
   public static final String QUERY1 =

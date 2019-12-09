@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.service.BillingCalculationService;
 import io.harness.batch.processing.billing.service.BillingData;
+import io.harness.batch.processing.billing.service.IdleCostData;
 import io.harness.batch.processing.billing.service.UtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
@@ -140,8 +141,8 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     when(utilizationDataService.getUtilizationDataForInstances(any(), any(), any()))
         .thenReturn(utilizationDataForInstances);
     when(billingCalculationService.getInstanceBillingAmount(any(), any(), any(), any()))
-        .thenReturn(new BillingData(
-            BigDecimal.ONE, BigDecimal.ZERO, USAGE_DURATION_SECONDS, CPU_UNIT_SECONDS, MEMORY_MB_SECONDS));
+        .thenReturn(new BillingData(BigDecimal.ONE, new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO),
+            USAGE_DURATION_SECONDS, CPU_UNIT_SECONDS, MEMORY_MB_SECONDS));
     instanceBillingDataWriter.write(Arrays.asList(instanceData));
     ArgumentCaptor<InstanceBillingData> instanceBillingDataArgumentCaptor =
         ArgumentCaptor.forClass(InstanceBillingData.class);

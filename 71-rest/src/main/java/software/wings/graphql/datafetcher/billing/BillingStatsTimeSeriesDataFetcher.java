@@ -30,6 +30,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -77,8 +78,10 @@ public class BillingStatsTimeSeriesDataFetcher extends AbstractStatsDataFetcher<
       filters = new ArrayList<>();
     }
 
+    List<QLCCMAggregationFunction> aggregationFunctions = Arrays.asList(aggregateFunction);
+
     queryData =
-        billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, sortCriteria);
+        billingDataQueryBuilder.formQuery(accountId, filters, aggregationFunctions, groupByEntityList, sortCriteria);
     logger.info("BillingStatsTimeSeriesDataFetcher query!! {}", queryData.getQuery());
     logger.info(queryData.getQuery());
 

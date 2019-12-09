@@ -339,6 +339,31 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
   }
 
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingTimeSeriesDataFetcherClusterTypeQuery() {
+    String[] clusterIdValues = new String[] {CLUSTER1_ID};
+
+    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeClusterTypeEntityGroupBy(), makeStartTimeEntityGroupBy());
+    List<QLBillingDataFilter> filters = Arrays.asList(makeNamespaceFilter(clusterIdValues));
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(CLUSTER_TYPE1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("CLUSTERTYPE");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
+  }
+
   public QLCCMAggregationFunction makeBillingAmtAggregation() {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.SUM)
@@ -398,6 +423,11 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   public QLCCMGroupBy makeNamespaceEntityGroupBy() {
     QLCCMEntityGroupBy namespaceGroupBy = QLCCMEntityGroupBy.Namespace;
     return QLCCMGroupBy.builder().entityGroupBy(namespaceGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeClusterTypeEntityGroupBy() {
+    QLCCMEntityGroupBy clusterTypeGroupBy = QLCCMEntityGroupBy.ClusterType;
+    return QLCCMGroupBy.builder().entityGroupBy(clusterTypeGroupBy).build();
   }
 
   public QLBillingDataFilter makeApplicationFilter(String[] values) {
@@ -475,6 +505,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getString("ENVID")).thenAnswer((Answer<String>) invocation -> ENV1_ID_APP1_ACCOUNT1);
     when(resultSet.getString("NAMESPACE")).thenAnswer((Answer<String>) invocation -> NAMESPACE1);
     when(resultSet.getString("REGION")).thenAnswer((Answer<String>) invocation -> REGION1);
+    when(resultSet.getString("CLUSTERTYPE")).thenAnswer((Answer<String>) invocation -> CLUSTER_TYPE1);
     when(resultSet.getString("INSTANCEID"))
         .thenAnswer((Answer<String>) invocation -> INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
     when(resultSet.getTimestamp("STARTTIME", utils.getDefaultCalendar())).thenAnswer((Answer<Timestamp>) invocation -> {
