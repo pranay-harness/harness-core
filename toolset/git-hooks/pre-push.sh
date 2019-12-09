@@ -64,7 +64,7 @@ else
 
     git fetch origin ${TARGET_BRANCH}:${TARGET_BRANCH}
 
-    FIXES=`git rev-list --left-right --pretty ${CURRENT_BRANCH}..${TARGET_BRANCH} | grep "[PR_FIX]"`
+    FIXES=`git rev-list --left-right --pretty ${CURRENT_BRANCH}..${TARGET_BRANCH} | grep "\[PR_FIX\]"`
 
     if [ ! -z "${FIXES}" ]
     then
