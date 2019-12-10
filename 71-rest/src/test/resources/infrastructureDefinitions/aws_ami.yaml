@@ -5,6 +5,7 @@ deploymentType: AMI
 infrastructure:
 - type: AWS_AMI
   amiDeploymentType: AWS_ASG
+  asgIdentifiesWorkload: false
   autoScalingGroupName: ASG
   cloudProviderName: TEST_CLOUD_PROVIDER
   hostNameConvention: ${host.ec2Instance.publicDnsName.split('\.')[0]}

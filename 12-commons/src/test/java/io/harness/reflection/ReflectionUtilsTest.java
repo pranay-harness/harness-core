@@ -2,6 +2,7 @@ package io.harness.reflection;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,6 +11,7 @@ import com.google.common.collect.ImmutableList;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
+import lombok.Builder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -18,12 +20,16 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ReflectionUtilsTest extends CategoryTest {
   private static class FieldBase { public String baseField; }
 
+  @Builder
   private static class Field extends FieldBase {
     public String field;
     public String inheritField;
@@ -126,7 +132,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void updateField() {
-    Field dummy = new Field();
+    Field dummy = Field.builder().build();
     dummy.annotatedField = "test";
     ReflectionUtils.updateFieldValues(
         dummy, f -> f.isAnnotationPresent(DummyAnnotation.class), value -> value + " hello world");
@@ -137,7 +143,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void updateListField() {
-    Field dummy = new Field();
+    Field dummy = Field.builder().build();
     List<String> a = new ArrayList<>();
     a.add("one");
     a.add("two");
@@ -158,5 +164,19 @@ public class ReflectionUtilsTest extends CategoryTest {
     accessorMethods.sort(String::compareTo);
 
     assertThat(accessorMethods).isEqualTo(asList("getAnyType", "getBaseAccessor", "isABoolean", "isBooleanType"));
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldGetFieldValues() {
+    Field dummy = Field.builder().field("val1").annotatedField("val2").build();
+    HashSet<String> fields = new HashSet<>(Arrays.asList("field", "annotatedField", "wrongField"));
+
+    Map<String, Object> fieldValues = ReflectionUtils.getFieldValues(dummy, fields);
+
+    assertThat(fieldValues).hasSize(2);
+    assertThat(fieldValues.get("field")).isEqualTo("val1");
+    assertThat(fieldValues.get("annotatedField")).isEqualTo("val2");
   }
   }

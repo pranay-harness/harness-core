@@ -2,6 +2,7 @@ package software.wings.infra;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static software.wings.beans.AmiDeploymentType.AWS_ASG;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.AWS_AMI;
@@ -24,6 +25,8 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -55,6 +58,7 @@ public class AwsAmiInfrastructure
   // Variables used for SpotInst Deployment type
   private String spotinstElastiGroupJson;
   private String spotinstCloudProvider;
+  private boolean asgIdentifiesWorkload;
 
   private Map<String, String> expressions;
 
@@ -151,6 +155,13 @@ public class AwsAmiInfrastructure
     }
   }
 
+  @Override
+  public Set<String> getUserDefinedUniqueInfraFields() {
+    return isAsgIdentifiesWorkload()
+        ? new HashSet<>(Collections.singletonList(AwsAmiInfrastructureKeys.autoScalingGroupName))
+        : emptySet();
+  }
+
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName(AWS_AMI)
@@ -170,12 +181,14 @@ public class AwsAmiInfrastructure
     private AmiDeploymentType amiDeploymentType;
     private String spotinstElastiGroupJson;
     private String spotinstCloudProviderName;
+    boolean asgIdentifiesWorkload;
 
     @Builder
     public Yaml(String type, String cloudProviderName, String region, String autoScalingGroupName,
         List<String> classicLoadBalancers, List<String> targetGroupArns, String hostNameConvention,
         List<String> stageClassicLoadBalancers, List<String> stageTargetGroupArns, Map<String, String> expressions,
-        AmiDeploymentType amiDeploymentType, String spotinstElastiGroupJson, String spotinstCloudProviderName) {
+        AmiDeploymentType amiDeploymentType, String spotinstElastiGroupJson, String spotinstCloudProviderName,
+        boolean asgIdentifiesWorkload) {
       super(type);
       setCloudProviderName(cloudProviderName);
       setRegion(region);
@@ -189,6 +202,7 @@ public class AwsAmiInfrastructure
       setAmiDeploymentType(amiDeploymentType);
       setSpotinstCloudProviderName(spotinstCloudProviderName);
       setSpotinstElastiGroupJson(spotinstElastiGroupJson);
+      setAsgIdentifiesWorkload(asgIdentifiesWorkload);
     }
 
     public Yaml() {

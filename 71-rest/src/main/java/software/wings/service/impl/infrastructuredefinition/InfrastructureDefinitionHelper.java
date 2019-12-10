@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 
+import io.harness.reflection.ReflectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.jetbrains.annotations.NotNull;
@@ -18,6 +19,7 @@ import software.wings.infra.InfrastructureDefinition;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 class InfrastructureDefinitionHelper {
@@ -29,8 +31,8 @@ class InfrastructureDefinitionHelper {
                                       .append(infrastructureDefinition.getEnvId())
                                       .append(serviceId)
                                       .append(infrastructureDefinition.getUuid());
-    InfraMappingInfrastructureProvider infrastructure = infrastructureDefinition.getInfrastructure();
-    Map<String, Object> queryMap = ((FieldKeyValMapProvider) infrastructure).getFieldMapForClass();
+    Map<String, Object> queryMap = getQueryMap(infrastructureDefinition.getInfrastructure());
+
     if (isNotEmpty(queryMap)) {
       queryMap.entrySet()
           .stream()
@@ -41,6 +43,15 @@ class InfrastructureDefinitionHelper {
     return DigestUtils.sha1Hex(stringBuilder.toString());
   }
 
+  @NotNull
+  Map<String, Object> getQueryMap(InfraMappingInfrastructureProvider infrastructureProvider) {
+    Map<String, Object> queryMap = ((FieldKeyValMapProvider) infrastructureProvider).getFieldMapForClass();
+    Set<String> uniqueInfraFields = infrastructureProvider.getUserDefinedUniqueInfraFields();
+    Map<String, Object> fieldValues = ReflectionUtils.getFieldValues(infrastructureProvider, uniqueInfraFields);
+    queryMap.putAll(fieldValues);
+    return queryMap;
+  }
+
   InfrastructureMapping existingInfraMapping(InfrastructureDefinition infraDefinition, String serviceId) {
     Query baseQuery = getQuery(infraDefinition, serviceId);
     List<InfrastructureMapping> infrastructureMappings = baseQuery.asList();
@@ -49,9 +60,9 @@ class InfrastructureDefinitionHelper {
 
   @NotNull
   private Query getQuery(InfrastructureDefinition infraDefinition, String serviceId) {
-    InfraMappingInfrastructureProvider infrastructure = infraDefinition.getInfrastructure();
-    Class<? extends InfrastructureMapping> mappingClass = infrastructure.getMappingClass();
-    Map<String, Object> queryMap = ((FieldKeyValMapProvider) infrastructure).getFieldMapForClass();
+    Map<String, Object> queryMap = getQueryMap(infraDefinition.getInfrastructure());
+
+    Class<? extends InfrastructureMapping> mappingClass = infraDefinition.getInfrastructure().getMappingClass();
     Query baseQuery = wingsPersistence.createQuery(mappingClass)
                           .filter(InfrastructureMapping.APP_ID_KEY, infraDefinition.getAppId())
                           .filter(InfrastructureMapping.ENV_ID_KEY, infraDefinition.getEnvId())

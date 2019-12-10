@@ -43,6 +43,7 @@ public class AwsAmiInfrastructureYamlHandler
         .amiDeploymentType(bean.getAmiDeploymentType())
         .spotinstCloudProviderName(spotinstCloudProviderName)
         .spotinstElastiGroupJson(bean.getSpotinstElastiGroupJson())
+        .asgIdentifiesWorkload(bean.isAsgIdentifiesWorkload())
         .type(InfrastructureType.AWS_AMI)
         .expressions(bean.getExpressions())
         .build();
@@ -76,6 +77,7 @@ public class AwsAmiInfrastructureYamlHandler
     bean.setAmiDeploymentType(yaml.getAmiDeploymentType());
     bean.setSpotinstCloudProvider(spotinstCloudProviderId);
     bean.setSpotinstElastiGroupJson(yaml.getSpotinstElastiGroupJson());
+    bean.setAsgIdentifiesWorkload(yaml.isAsgIdentifiesWorkload());
     bean.setExpressions(yaml.getExpressions());
   }
 

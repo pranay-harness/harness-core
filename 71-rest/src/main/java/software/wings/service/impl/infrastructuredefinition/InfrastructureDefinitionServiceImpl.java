@@ -545,6 +545,12 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     if (!oldInfraDefinition.getCloudProviderType().equals(newInfrastructureDefinition.getCloudProviderType())) {
       throw new InvalidRequestException("Cloud Provider Type is immutable");
     }
+    if (newInfrastructureDefinition.getInfrastructure() instanceof AwsAmiInfrastructure) {
+      if (((AwsAmiInfrastructure) oldInfraDefinition.getInfrastructure()).isAsgIdentifiesWorkload()
+          != ((AwsAmiInfrastructure) newInfrastructureDefinition.getInfrastructure()).isAsgIdentifiesWorkload()) {
+        throw new InvalidRequestException("\"Asg Uniquely Identifies Workload\" field is immutable");
+      }
+    }
   }
 
   @Override

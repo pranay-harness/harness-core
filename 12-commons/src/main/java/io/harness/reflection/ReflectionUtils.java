@@ -1,5 +1,7 @@
 package io.harness.reflection;
 
+import static java.lang.String.format;
+
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -8,8 +10,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
+import javax.annotation.Nonnull;
 
 @Slf4j
 public class ReflectionUtils {
@@ -124,5 +130,22 @@ public class ReflectionUtils {
       clazz = clazz.getSuperclass();
     }
     return methods;
+  }
+
+  public static Map<String, Object> getFieldValues(@Nonnull Object obj, @Nonnull Set<String> fieldNames) {
+    Map<String, Object> fieldNameValueMap = new HashMap<>();
+    for (String fieldName : fieldNames) {
+      try {
+        Field field = obj.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        Object value = field.get(obj);
+        fieldNameValueMap.put(fieldName, value);
+      } catch (NoSuchFieldException ignored) {
+        logger.error(format("Field \"%s\" not available in object \"%s\"", fieldName, obj.toString()));
+      } catch (IllegalAccessException e) {
+        logger.error(format("Unable to access field \"%s\"", fieldName));
+      }
+    }
+    return fieldNameValueMap;
   }
 }

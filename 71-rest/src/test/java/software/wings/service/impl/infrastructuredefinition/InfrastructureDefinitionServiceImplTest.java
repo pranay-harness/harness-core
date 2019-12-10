@@ -793,6 +793,28 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     verify(infrastructureDefinitionService, times(0)).validateInfraDefinition(any(InfrastructureDefinition.class));
   }
 
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void asgFieldUpdateShouldThrowException() {
+    InfrastructureDefinition oldInfraDef =
+        InfrastructureDefinition.builder()
+            .deploymentType(DeploymentType.AMI)
+            .cloudProviderType(CloudProviderType.AWS)
+            .infrastructure(AwsAmiInfrastructure.builder().asgIdentifiesWorkload(true).build())
+            .build();
+    InfrastructureDefinition newInfraDef =
+        InfrastructureDefinition.builder()
+            .deploymentType(DeploymentType.AMI)
+            .cloudProviderType(CloudProviderType.AWS)
+            .infrastructure(AwsAmiInfrastructure.builder().asgIdentifiesWorkload(false).build())
+            .build();
+
+    assertThatThrownBy(() -> infrastructureDefinitionService.validateImmutableFields(newInfraDef, oldInfraDef))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Asg Uniquely Identifies Workload");
+  }
+
   //  @Test
   //  @Owner(emails = UNKNOWN)
   //  @Category(UnitTests.class)
