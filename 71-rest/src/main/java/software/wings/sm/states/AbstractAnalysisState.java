@@ -136,6 +136,7 @@ public abstract class AbstractAnalysisState extends State {
   public static final String START_TIME_PLACE_HOLDER = "$startTime";
   public static final String END_TIME_PLACE_HOLDER = "$endTime";
   public static final String HOST_NAME_PLACE_HOLDER = "$hostName";
+  public static final int MAX_SAMPLING_SIZE_PER_GROUP = 10;
 
   protected String timeDuration;
   protected String comparisonStrategy;
@@ -1022,5 +1023,34 @@ public abstract class AbstractAnalysisState extends State {
       default:
         throw new WingsException("Specify delay in seconds (1s) or minutes (1m) ");
     }
+  }
+
+  protected void sampleHostsMap(AnalysisContext analysisContext) {
+    if (featureFlagService.isEnabled(FeatureName.CV_HOST_SAMPLING, analysisContext.getAccountId())) {
+      analysisContext.setControlNodes(sampleHostsMap(analysisContext.getControlNodes(), MAX_SAMPLING_SIZE_PER_GROUP));
+      analysisContext.setTestNodes(sampleHostsMap(analysisContext.getTestNodes(), MAX_SAMPLING_SIZE_PER_GROUP));
+    }
+  }
+
+  private Map<String, String> sampleHostsMap(Map<String, String> hostToGroupMap, int maxSizePerGroup) {
+    Map<String, List<String>> groupToHostMap = new HashMap<>();
+    for (Map.Entry<String, String> entry : hostToGroupMap.entrySet()) {
+      List<String> list = groupToHostMap.getOrDefault(entry.getValue(), new ArrayList<>());
+      list.add(entry.getKey());
+      groupToHostMap.put(entry.getValue(), list);
+    }
+    Map<String, String> sampledMap = new HashMap<>();
+    for (Map.Entry<String, List<String>> entry : groupToHostMap.entrySet()) {
+      String groupName = entry.getKey();
+      List<String> hosts = entry.getValue();
+      hosts = randomSample(hosts, maxSizePerGroup);
+      hosts.forEach(host -> sampledMap.put(host, groupName));
+    }
+    return sampledMap;
+  }
+
+  private List<String> randomSample(List<String> hosts, int maxHosts) {
+    Collections.shuffle(hosts);
+    return hosts.subList(0, Math.min(maxHosts, hosts.size()));
   }
 }

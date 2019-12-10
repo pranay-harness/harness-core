@@ -5,6 +5,8 @@ import static software.wings.common.VerificationConstants.DATA_DOG_DEFAULT_HOSTN
 import static software.wings.common.VerificationConstants.KUBERNETES_HOSTNAME;
 import static software.wings.utils.Misc.replaceDotWithUnicode;
 
+import com.google.common.base.Preconditions;
+
 import com.github.reinert.jjschema.Attributes;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -144,6 +146,7 @@ public class DatadogLogState extends AbstractLogAnalysisState {
   public static Map<String, Object> resolveHostnameField(Map<String, Object> body, String hostnameField) {
     String queryKey = "query";
     String queryString = (String) body.get(queryKey);
+    Preconditions.checkNotNull(queryString, "query string can not be null");
     queryString = queryString.replace("${hostname_field}", hostnameField);
     body.put(queryKey, queryString);
     return body;
