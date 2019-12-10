@@ -1,6 +1,7 @@
 package software.wings.integration.appdynamics;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PARNIAN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static javax.ws.rs.client.Entity.entity;
@@ -21,7 +22,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
@@ -223,7 +223,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.KAMAL, intermittent = true)
+  @Owner(developers = KAMAL, intermittent = true)
   @Category(IntegrationTests.class)
   public void testGetDataForNode() throws Exception {
     String appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());

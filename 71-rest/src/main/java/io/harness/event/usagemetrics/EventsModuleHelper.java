@@ -13,11 +13,11 @@ import java.util.Map;
 public class EventsModuleHelper {
   @Inject Map<String, EventHandler> eventHandlerMap;
   @Inject @Named("GenericEventListener") EventListener eventListener;
+
   public void initialize() {
     HarnessMetricsRegistryHandler eventHandler =
-        (HarnessMetricsRegistryHandler) eventHandlerMap.get("HarnessMetricsRegistryHandler");
+        (HarnessMetricsRegistryHandler) eventHandlerMap.get(HarnessMetricsRegistryHandler.class.getSimpleName());
     eventHandler.registerEventsWithHarnessRegistry();
-
     eventHandler.registerWithEventListener(eventListener);
   }
 }

@@ -34,7 +34,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -128,6 +127,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import javax.cache.Cache;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -153,7 +153,7 @@ public class AuthServiceImpl implements AuthService {
   private SSOSettingService ssoSettingService;
   @Inject private ExecutorService executorService;
   @Inject private ApiKeyService apiKeyService;
-  @Inject @Named("SegmentHandlerAnnotation") private SegmentHandler segmentHandler;
+  @Inject @Nullable private SegmentHandler segmentHandler;
   private AppService appService;
   private DashboardAuthHandler dashboardAuthHandler;
 
@@ -924,14 +924,16 @@ public class AuthServiceImpl implements AuthService {
             return;
           }
           try {
-            Map<String, String> properties = new HashMap<>();
-            properties.put(SegmentHandler.Keys.GROUP_ID, accountId);
+            if (segmentHandler != null) {
+              Map<String, String> properties = new HashMap<>();
+              properties.put(SegmentHandler.Keys.GROUP_ID, accountId);
 
-            Map<String, Boolean> integrations = new HashMap<>();
-            integrations.put(SegmentHandler.Keys.NATERO, true);
-            integrations.put(SegmentHandler.Keys.SALESFORCE, false);
+              Map<String, Boolean> integrations = new HashMap<>();
+              integrations.put(SegmentHandler.Keys.NATERO, true);
+              integrations.put(SegmentHandler.Keys.SALESFORCE, false);
 
-            segmentHandler.reportTrackEvent(account, Keys.LOGIN_EVENT, user, properties, integrations);
+              segmentHandler.reportTrackEvent(account, Keys.LOGIN_EVENT, user, properties, integrations);
+            }
           } catch (Exception e) {
             logger.error("Exception while reporting track event for User {} login", user.getUuid(), e);
           }

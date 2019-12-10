@@ -81,6 +81,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import javax.annotation.Nullable;
 
 /**
  * Publishes event if all the criteria is met. MarketoHandler handles the event and converts it into a marketo campaign.
@@ -102,8 +103,9 @@ public class EventPublishHelper {
   @Inject private WhitelistService whitelistService;
   @Inject private UserGroupService userGroupService;
   @Inject private CVConfigurationService cvConfigurationService;
-  @Inject private MarketoConfig marketoConfig;
-  @Inject private SegmentConfig segmentConfig;
+  @Inject @Nullable private MarketoConfig marketoConfig;
+  @Inject @Nullable private SegmentConfig segmentConfig;
+
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private LearningEngineService learningEngineService;
 
@@ -695,7 +697,7 @@ public class EventPublishHelper {
   }
 
   private boolean checkIfMarketoOrSegmentIsEnabled() {
-    return marketoConfig.isEnabled() || segmentConfig.isEnabled();
+    return (marketoConfig != null && marketoConfig.isEnabled()) || (segmentConfig != null && segmentConfig.isEnabled());
   }
 
   public boolean publishVerificationWorkflowMetrics(

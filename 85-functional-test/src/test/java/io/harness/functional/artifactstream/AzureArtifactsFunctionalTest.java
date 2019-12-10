@@ -116,7 +116,7 @@ public class AzureArtifactsFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
+  @Owner(developers = GARVIT, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldCollectNuGetArtifactsWithProject() {
     Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);

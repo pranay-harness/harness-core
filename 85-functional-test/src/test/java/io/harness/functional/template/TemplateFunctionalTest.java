@@ -76,7 +76,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldExecuteShellScriptTemplateWorkflow() {
     GenericType<RestResponse<WorkflowExecution>> workflowExecutionType =

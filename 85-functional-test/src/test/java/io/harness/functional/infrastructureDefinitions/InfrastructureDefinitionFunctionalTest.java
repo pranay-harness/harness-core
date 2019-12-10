@@ -1,5 +1,7 @@
 package io.harness.functional.infrastructureDefinitions;
 
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
@@ -16,7 +18,6 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.WorkflowGenerator;
-import io.harness.rule.OwnerRule;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.framework.utils.PipelineUtils;
 import io.harness.testframework.restutils.ArtifactRestUtils;
@@ -81,7 +82,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunAwsInstanceWorkflow() {
@@ -111,7 +112,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunAwsEcsEc2Workflow() {
@@ -138,7 +139,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunAwsLambdaWorkflow() {
@@ -158,7 +159,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunGcpK8sWorkflow() {
@@ -177,7 +178,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunGcpK8sTemplatizedWorkflow() {
@@ -203,7 +204,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldReuseInfraMapping() {
@@ -246,7 +247,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldRunAzureWinRmCanaryWorkflow() {

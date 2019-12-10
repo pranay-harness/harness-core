@@ -3,6 +3,7 @@ package io.harness.integration;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.SRIRAM;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,7 +30,6 @@ import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob.LogAnalysisTask;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
@@ -188,7 +188,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void saveAnalysisSummaryControlClusters() throws Exception {
@@ -272,7 +272,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFeatureflagDemoSuccess() {
@@ -336,7 +336,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFeatureflagDemoFail() {
@@ -413,7 +413,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFirstLevelClustering() throws Exception {
@@ -531,7 +531,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void controlButNoTestData() throws IOException, InterruptedException {
@@ -742,7 +742,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testButNoControlDataFirstExecution() throws IOException, InterruptedException {
@@ -814,7 +814,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testNoControlNotFirstExecution() throws Exception {
@@ -880,7 +880,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void noControlandTestData() throws IOException {
@@ -991,7 +991,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void withControlAndTest() throws IOException, InterruptedException {
@@ -1135,7 +1135,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFetchCorrectLastWorkflowLogsMissingData() {
@@ -1148,7 +1148,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFetchCorrectLastWorkflowLogs() {
@@ -1161,7 +1161,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFetchCorrectLastWorkflowLogsFirstWorkflow() {
@@ -1172,7 +1172,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFetchCorrectLastWorkflowLogsNoData() {
@@ -1239,7 +1239,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testGetCurrentExecutionLogs() throws Exception {
@@ -1317,7 +1317,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testGetLastExecutionLogs() throws Exception {
@@ -1444,7 +1444,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SRIRAM)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void onlyFeedback() throws IOException, InterruptedException {
