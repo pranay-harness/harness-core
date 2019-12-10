@@ -5,6 +5,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
@@ -110,6 +111,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void noTestNodes() {
     ElkAnalysisState spyState = spy(elkAnalysisState);
+    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
     doReturn(Collections.emptyMap()).when(spyState).getCanaryNewHostNames(executionContext);
     doReturn(Collections.emptyMap()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
@@ -134,6 +136,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   public void noControlNodesCompareWithCurrent() {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     ElkAnalysisState spyState = spy(elkAnalysisState);
+    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
     doReturn(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME))
         .when(spyState)
         .getCanaryNewHostNames(executionContext);
@@ -161,6 +164,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   public void compareWithCurrentSameTestAndControlNodes() {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     ElkAnalysisState spyState = spy(elkAnalysisState);
+    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
     doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
         .when(spyState)
         .getCanaryNewHostNames(executionContext);
@@ -220,6 +224,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
 
     ElkAnalysisState spyState = spy(elkAnalysisState);
+    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
     doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
         .when(spyState)
         .getCanaryNewHostNames(executionContext);

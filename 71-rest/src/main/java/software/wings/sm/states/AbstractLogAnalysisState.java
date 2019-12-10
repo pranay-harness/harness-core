@@ -377,10 +377,16 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   }
 
   private AnalysisContext getLogAnalysisContext(ExecutionContext context, String correlationId) {
-    Map<String, String> controlNodes =
-        getComparisonStrategy() == COMPARE_WITH_PREVIOUS ? Collections.emptyMap() : getLastExecutionNodes(context);
-    Map<String, String> testNodes = getCanaryNewHostNames(context);
-    testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
+    Map<String, String> controlNodes = new HashMap<>();
+    Map<String, String> testNodes = new HashMap<>();
+    if (isNewInstanceFieldPopulated(context)) {
+      populateNewAndOldHostNames(context, controlNodes, testNodes);
+    } else {
+      controlNodes =
+          getComparisonStrategy() == COMPARE_WITH_PREVIOUS ? Collections.emptyMap() : getLastExecutionNodes(context);
+      testNodes = getCanaryNewHostNames(context);
+    }
+    testNodes.keySet().forEach(controlNodes::remove);
     renderedQuery = context.renderExpression(query);
 
     String accountId = this.appService.get(context.getAppId()).getAccountId();

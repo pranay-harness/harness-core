@@ -4,7 +4,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
@@ -21,6 +23,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
@@ -45,12 +49,15 @@ import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.beans.AmiDeploymentType;
+import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
@@ -76,7 +83,9 @@ import software.wings.sm.WorkflowStandardParams;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -529,5 +538,150 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
       }
     }
     return hosts;
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testIsNewInstanceFieldPopulated_False() {
+    ExecutionContext context = Mockito.mock(ExecutionContext.class);
+    SplunkV2State state = spy(new SplunkV2State("SplunkState"));
+    InfrastructureMapping mapping = new PcfInfrastructureMapping();
+
+    doReturn(mapping).when(state).getInfrastructureMapping(context);
+    boolean isPopulated = state.isNewInstanceFieldPopulated(context);
+    assertThat(isPopulated).isFalse();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testIsNewInstanceFieldPopulated_AmiAsgDeployment() {
+    ExecutionContext context = Mockito.mock(ExecutionContext.class);
+    SplunkV2State state = spy(new SplunkV2State("SplunkState"));
+    AwsAmiInfrastructureMapping mapping = new AwsAmiInfrastructureMapping();
+    mapping.setAmiDeploymentType(AmiDeploymentType.AWS_ASG);
+
+    doReturn(mapping).when(state).getInfrastructureMapping(context);
+    boolean isPopulated = state.isNewInstanceFieldPopulated(context);
+    assertThat(isPopulated).isFalse();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testIsNewInstanceFieldPopulated_SpotinstDeployment() {
+    ExecutionContext context = Mockito.mock(ExecutionContext.class);
+    SplunkV2State state = spy(new SplunkV2State("SplunkState"));
+    AwsAmiInfrastructureMapping mapping = new AwsAmiInfrastructureMapping();
+    mapping.setAmiDeploymentType(AmiDeploymentType.SPOTINST);
+
+    doReturn(mapping).when(state).getInfrastructureMapping(context);
+    boolean isPopulated = state.isNewInstanceFieldPopulated(context);
+    assertThat(isPopulated).isTrue();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testPopulateNewAndOldHostNames_EmptyInstances() {
+    ExecutionContext context = Mockito.mock(ExecutionContext.class);
+    SplunkV2State state = spy(new SplunkV2State("SplunkState"));
+    Map<String, String> controlNodes = new HashMap<>();
+    Map<String, String> testNodes = new HashMap<>();
+
+    AwsAmiInfrastructureMapping mapping = new AwsAmiInfrastructureMapping();
+    mapping.setAmiDeploymentType(AmiDeploymentType.SPOTINST);
+    doReturn(mapping).when(state).getInfrastructureMapping(context);
+
+    WorkflowStandardParams params = Mockito.mock(WorkflowStandardParams.class);
+    doReturn(new ArrayList<>()).when(params).getInstances();
+    doReturn(params).when(context).getContextElement(ContextElementType.STANDARD);
+
+    assertThatThrownBy(() -> state.populateNewAndOldHostNames(context, controlNodes, testNodes))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testPopulateNewAndOldHostNames_NonEmptyInstances_Canary() throws IllegalAccessException {
+    ExecutionContext context = Mockito.mock(ExecutionContext.class);
+    SplunkV2State state = spy(new SplunkV2State("SplunkState"));
+    Map<String, String> controlNodes = new HashMap<>();
+    Map<String, String> testNodes = new HashMap<>();
+
+    AwsAmiInfrastructureMapping mapping = new AwsAmiInfrastructureMapping();
+    mapping.setAmiDeploymentType(AmiDeploymentType.SPOTINST);
+    doReturn(mapping).when(state).getInfrastructureMapping(context);
+
+    String newHostName = "newHost";
+    String oldHostName = "oldHost";
+
+    WorkflowStandardParams params = Mockito.mock(WorkflowStandardParams.class);
+    InstanceElement instanceElementNew = new InstanceElement();
+    instanceElementNew.setNewInstance(true);
+    instanceElementNew.setHostName(newHostName);
+
+    InstanceElement instanceElementOld = new InstanceElement();
+    instanceElementOld.setNewInstance(false);
+    instanceElementOld.setHostName(oldHostName);
+
+    doReturn(Arrays.asList(instanceElementNew, instanceElementOld)).when(params).getInstances();
+    doReturn(params).when(context).getContextElement(ContextElementType.STANDARD);
+    doReturn(COMPARE_WITH_CURRENT).when(state).getComparisonStrategy();
+    doReturn(DeploymentType.AMI).when(serviceResourceService).getDeploymentType(any(), any(), any());
+    FieldUtils.writeField(state, "serviceResourceService", serviceResourceService, true);
+
+    state.populateNewAndOldHostNames(context, controlNodes, testNodes);
+
+    assertThat(controlNodes.size()).isEqualTo(1);
+    assertThat(testNodes.size()).isEqualTo(1);
+
+    assertThat(controlNodes.keySet()).isEqualTo(new HashSet<>(Collections.singletonList(oldHostName)));
+    assertThat(testNodes.keySet()).isEqualTo(new HashSet<>(Collections.singletonList(newHostName)));
+
+    assertThat(controlNodes.get(oldHostName)).isEqualTo(DEFAULT_GROUP_NAME);
+    assertThat(testNodes.get(newHostName)).isEqualTo(DEFAULT_GROUP_NAME);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testPopulateNewAndOldHostNames_NonEmptyInstances_Previous() throws IllegalAccessException {
+    ExecutionContext context = Mockito.mock(ExecutionContext.class);
+    SplunkV2State state = spy(new SplunkV2State("SplunkState"));
+    Map<String, String> controlNodes = new HashMap<>();
+    Map<String, String> testNodes = new HashMap<>();
+
+    AwsAmiInfrastructureMapping mapping = new AwsAmiInfrastructureMapping();
+    mapping.setAmiDeploymentType(AmiDeploymentType.SPOTINST);
+    doReturn(mapping).when(state).getInfrastructureMapping(context);
+
+    String newHostName = "newHost";
+    String oldHostName = "oldHost";
+
+    WorkflowStandardParams params = Mockito.mock(WorkflowStandardParams.class);
+    InstanceElement instanceElementNew = new InstanceElement();
+    instanceElementNew.setNewInstance(true);
+    instanceElementNew.setHostName(newHostName);
+
+    InstanceElement instanceElementOld = new InstanceElement();
+    instanceElementOld.setNewInstance(false);
+    instanceElementOld.setHostName(oldHostName);
+
+    doReturn(Arrays.asList(instanceElementNew, instanceElementOld)).when(params).getInstances();
+    doReturn(params).when(context).getContextElement(ContextElementType.STANDARD);
+    doReturn(COMPARE_WITH_PREVIOUS).when(state).getComparisonStrategy();
+    doReturn(DeploymentType.AMI).when(serviceResourceService).getDeploymentType(any(), any(), any());
+    FieldUtils.writeField(state, "serviceResourceService", serviceResourceService, true);
+
+    state.populateNewAndOldHostNames(context, controlNodes, testNodes);
+
+    assertThat(controlNodes.size()).isEqualTo(0);
+    assertThat(testNodes.size()).isEqualTo(1);
+
+    assertThat(testNodes.keySet()).isEqualTo(new HashSet<>(Collections.singletonList(newHostName)));
+    assertThat(testNodes.get(newHostName)).isEqualTo(DEFAULT_GROUP_NAME);
   }
 }

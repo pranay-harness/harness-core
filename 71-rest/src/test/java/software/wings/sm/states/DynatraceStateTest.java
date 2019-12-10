@@ -5,6 +5,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -140,6 +141,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     wingsPersistence.save(settingAttribute);
     dynatraceState.setAnalysisServerConfigId(settingAttribute.getUuid());
     DynatraceState spyState = spy(dynatraceState);
+    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
     doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
         .when(spyState)
         .getCanaryNewHostNames(executionContext);
