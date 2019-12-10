@@ -11,7 +11,6 @@ import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.JsonFormat;
 import com.google.protobuf.util.JsonFormat.TypeRegistry;
 
-import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -26,7 +25,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class PodWatcher implements Watcher<Pod> {
@@ -39,16 +37,20 @@ public class PodWatcher implements Watcher<Pod> {
   private final String clusterName;
   private final EventPublisher eventPublisher;
   private final Set<String> publishedPods;
+  private final KubernetesClient client;
+  private final PodOwnerHelper podOwnerHelper;
 
   @Inject
-  public PodWatcher(
-      @Assisted KubernetesClient client, @Assisted K8sWatchTaskParams params, EventPublisher eventPublisher) {
-    watch = client.pods().inAnyNamespace().watch(this);
+  public PodWatcher(@Assisted KubernetesClient client, @Assisted K8sWatchTaskParams params,
+      EventPublisher eventPublisher, PodOwnerHelper podOwnerHelper) {
+    this.client = client;
+    this.watch = client.pods().inAnyNamespace().watch(this);
     this.cloudProviderId = params.getCloudProviderId();
     this.clusterId = params.getClusterId();
     this.clusterName = params.getClusterName();
-    publishedPods = new HashSet<>();
+    this.publishedPods = new HashSet<>();
     this.eventPublisher = eventPublisher;
+    this.podOwnerHelper = podOwnerHelper;
   }
 
   @Override
@@ -57,8 +59,8 @@ public class PodWatcher implements Watcher<Pod> {
     logger.debug("Pod Watcher received an event for pod with uid={}, action={}", uid, action);
     PodCondition podScheduledCondition = getPodScheduledCondition(pod);
     if (podScheduledCondition != null && !publishedPods.contains(uid)) {
-      // put the pod in the map and publish the spec
       Timestamp creationTimestamp = HTimestamps.parse(pod.getMetadata().getCreationTimestamp());
+
       PodInfo podInfo = PodInfo.newBuilder()
                             .setCloudProviderId(cloudProviderId)
                             .setClusterId(clusterId)
@@ -72,9 +74,11 @@ public class PodWatcher implements Watcher<Pod> {
                             .setCreationTimestamp(creationTimestamp)
                             .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
                             .putAllLabels(pod.getMetadata().getLabels())
-                            .addAllOwner(getAllOwners(pod.getMetadata().getOwnerReferences()))
+                            .addOwner(podOwnerHelper.getOwner(pod, client))
                             .build();
+
       logMessage(podInfo);
+
       eventPublisher.publishMessage(podInfo, creationTimestamp);
       final Timestamp timestamp = HTimestamps.parse(podScheduledCondition.getLastTransitionTime());
       PodEvent podEvent = PodEvent.newBuilder()
@@ -127,17 +131,6 @@ public class PodWatcher implements Watcher<Pod> {
       containerList.add(container);
     }
     return containerList;
-  }
-
-  private Set<Owner> getAllOwners(List<OwnerReference> k8sOwnerReferences) {
-    return k8sOwnerReferences.stream()
-        .map(ownerReference
-            -> Owner.newBuilder()
-                   .setUid(ownerReference.getUid())
-                   .setName(ownerReference.getName())
-                   .setKind(ownerReference.getKind())
-                   .build())
-        .collect(Collectors.toSet());
   }
 
   /**
