@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -17,6 +18,8 @@ import software.wings.beans.Account;
 import software.wings.beans.Event.Type;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SecretManagerConfig;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.SecretsManagementFeature;
@@ -24,6 +27,7 @@ import software.wings.features.api.PremiumFeature;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
 
@@ -43,6 +47,7 @@ public abstract class AbstractSecretServiceImpl {
   @Inject protected SecretManagerConfigService secretManagerConfigService;
   @Inject private KmsService kmsService;
   @Inject private AccountService accountService;
+  @Inject private AlertService alertService;
   @Inject @Named(SecretsManagementFeature.FEATURE_NAME) private PremiumFeature secretsManagementFeature;
   @Inject private AuditServiceHelper auditServiceHelper;
 
@@ -123,10 +128,15 @@ public abstract class AbstractSecretServiceImpl {
   boolean deleteSecretManagerAndGenerateAudit(String accountId, SecretManagerConfig secretManagerConfig) {
     boolean deleted = false;
     if (secretManagerConfig != null) {
-      deleted = wingsPersistence.delete(SecretManagerConfig.class, secretManagerConfig.getUuid());
+      String secretManagerConfigId = secretManagerConfig.getUuid();
+      deleted = wingsPersistence.delete(SecretManagerConfig.class, secretManagerConfigId);
       if (deleted) {
         auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, secretManagerConfig);
       }
+
+      KmsSetupAlert kmsSetupAlert =
+          KmsSetupAlert.builder().kmsId(secretManagerConfigId).message(secretManagerConfig.getName()).build();
+      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
     }
     return deleted;
   }

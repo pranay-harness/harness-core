@@ -7,6 +7,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.alerts.AlertStatus.Pending;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 
@@ -21,13 +23,18 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.alerts.AlertStatus;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.User;
+import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.security.GcpKmsService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
@@ -41,6 +48,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
   @Mock GcpKmsService gcpKmsService;
   @Mock HarnessUserGroupService harnessUserGroupService;
   @Mock AccountService accountService;
+  @Inject @InjectMocks AlertService alertService;
   @Inject @InjectMocks GcpSecretsManagerService gcpSecretsManagerService;
   private Account account;
 
@@ -419,7 +427,18 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     String encryptedRecordId = wingsPersistence.save(encryptedData);
 
     boolean result = false;
+    String alertId = UUIDGenerator.generateUuid();
     try {
+      KmsSetupAlert alertData = KmsSetupAlert.builder().kmsId(gcpKmsConfig.getUuid()).build();
+      Alert alert = Alert.builder()
+                        .uuid(alertId)
+                        .appId(GLOBAL_APP_ID)
+                        .accountId(account.getUuid())
+                        .type(AlertType.InvalidKMS)
+                        .status(Pending)
+                        .alertData(alertData)
+                        .build();
+      wingsPersistence.save(alert);
       result = gcpSecretsManagerService.deleteGcpKmsConfig(account.getUuid(), configId);
     } catch (SecretManagementException e) {
       assertThat(e).isNotNull();
@@ -430,5 +449,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     wingsPersistence.delete(EncryptedData.class, encryptedRecordId);
     result = gcpSecretsManagerService.deleteGcpKmsConfig(account.getUuid(), configId);
     assertThat(result).isTrue();
+    Alert alert = wingsPersistence.get(Alert.class, alertId);
+    assertThat(alert.getStatus()).isEqualTo(AlertStatus.Closed);
   }
 }
