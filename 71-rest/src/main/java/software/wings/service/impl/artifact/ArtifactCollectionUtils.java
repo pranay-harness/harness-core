@@ -149,7 +149,8 @@ public class ArtifactCollectionUtils {
                           .withMetadata(getMetadata(artifactStream, buildDetails))
                           .withRevision(buildDetails.getRevision())
                           .withArtifactStreamType(artifactStream.getArtifactStreamType())
-                          .withUiDisplayName(buildDetails.getUiDisplayName());
+                          .withUiDisplayName(buildDetails.getUiDisplayName())
+                          .withArtifactDownloadMetadata(buildDetails.getArtifactFileMetadataList());
     if (settingId != null) {
       builder.withSettingId(settingId);
     }
@@ -222,6 +223,10 @@ public class ArtifactCollectionUtils {
       metadata.put(ArtifactMetadataKeys.buildNo, buildDetails.getNumber());
       if (isNotEmpty(buildDetails.getBuildUrl())) {
         metadata.put(ArtifactMetadataKeys.url, buildDetails.getBuildUrl());
+      }
+      if (isNotEmpty(buildDetails.getArtifactFileMetadataList())) {
+        metadata.put(
+            ArtifactMetadataKeys.artifactFileName, buildDetails.getArtifactFileMetadataList().get(0).getFileName());
       }
       return metadata;
     }

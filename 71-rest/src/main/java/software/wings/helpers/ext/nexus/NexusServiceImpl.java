@@ -262,7 +262,8 @@ public class NexusServiceImpl implements NexusService {
         return nexusTwoService.getVersions(
             nexusConfig, encryptionDetails, repoId, groupId, artifactName, extension, classifier);
       } else {
-        return nexusThreeService.getVersions(nexusConfig, encryptionDetails, repoId, groupId, artifactName);
+        return nexusThreeService.getVersions(
+            nexusConfig, encryptionDetails, repoId, groupId, artifactName, extension, classifier);
       }
     } catch (final IOException e) {
       logger.error(

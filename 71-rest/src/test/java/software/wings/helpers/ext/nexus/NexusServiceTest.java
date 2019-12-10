@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -847,6 +848,20 @@ public class NexusServiceTest extends WingsBaseTest {
         .containsExactly(
             "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar",
             "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("rest-client-3.0.jar");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar");
+    assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("rest-client-3.1.2-capsule.jar");
+    assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
   }
 
   @Test
@@ -870,6 +885,20 @@ public class NexusServiceTest extends WingsBaseTest {
         .extracting(BuildDetails::getBuildUrl)
         .containsExactly(
             "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar&c=sources",
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=sources");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("rest-client-3.0.jar");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar&c=sources");
+    assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("rest-client-3.1.2-capsule.jar");
+    assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo(
             "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=sources");
   }
 
@@ -1134,6 +1163,12 @@ public class NexusServiceTest extends WingsBaseTest {
     List<BuildDetails> buildDetails =
         nexusService.getVersions(nexusThreeConfig, null, "maven-releases", "mygroup", "myartifact", null, null);
     assertThat(buildDetails).hasSize(2).extracting(BuildDetails::getNumber).contains("1.0", "1.8");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("myartifact-1.0.war");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo("http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war");
   }
 
   @Test
@@ -1143,6 +1178,12 @@ public class NexusServiceTest extends WingsBaseTest {
     List<BuildDetails> buildDetails =
         nexusService.getVersions(RepositoryFormat.npm.name(), nexusThreeConfig, null, "harness-npm", "npm-app1");
     assertThat(buildDetails).hasSize(1).extracting(BuildDetails::getNumber).contains("1.0.0");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("npm-app1-1.0.0.tgz");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo("http://localhost:8881/nexus/repository/harness-npm/npm-app1/-/npm-app1-1.0.0.tgz");
   }
 
   @Test
@@ -1152,6 +1193,18 @@ public class NexusServiceTest extends WingsBaseTest {
     List<BuildDetails> buildDetails = nexusService.getVersions(
         RepositoryFormat.nuget.name(), nexusThreeConfig, null, "nuget-group", "NuGet.Sample.Package");
     assertThat(buildDetails).hasSize(2).extracting(BuildDetails::getNumber).contains("1.0.0.0", "1.0.0.18279");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("NuGet.Sample.Package-1.0.0.0.nupkg");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo("http://localhost:8881/nexus/repository/nuget-hosted/NuGet.Sample.Package/1.0.0.0");
+    assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("NuGet.Sample.Package-1.0.0.18279.nupkg");
+    assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo("http://localhost:8881/nexus/repository/nuget-hosted/NuGet.Sample.Package/1.0.0.18279");
   }
 
   @Test
@@ -1179,6 +1232,13 @@ public class NexusServiceTest extends WingsBaseTest {
     List<BuildDetails> buildDetails =
         nexusService.getVersions(RepositoryFormat.nuget.name(), nexusConfig, null, "MyNuGet", "NuGet.Sample.Package");
     assertThat(buildDetails).hasSize(1).extracting(BuildDetails::getNumber).contains("1.0.0.18279");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("NuGet.Sample.Package-1.0.0.18279.nupkg");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo(
+            "http://localhost:8881/nexus/service/local/repositories/MyNuGet/content/NuGet.Sample.Package/1.0.0.18279/NuGet.Sample.Package-1.0.0.18279.nupkg");
   }
 
   @Test
@@ -1188,6 +1248,24 @@ public class NexusServiceTest extends WingsBaseTest {
     List<BuildDetails> buildDetails =
         nexusService.getVersions(RepositoryFormat.npm.name(), nexusConfig, null, "npmjs", "abbrev");
     assertThat(buildDetails).hasSize(3).extracting(BuildDetails::getNumber).contains("1.0.3", "1.0.4", "1.0.5");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("abbrev-1.0.3.tgz");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo("https://nexus2.harness.io/content/repositories/npmjs/abbrev/-/abbrev-1.0.3.tgz");
+    assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("abbrev-1.0.4.tgz");
+    assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo("https://nexus2.harness.io/content/repositories/npmjs/abbrev/-/abbrev-1.0.4.tgz");
+    assertThat(buildDetails.get(2).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("abbrev-1.0.5.tgz");
+    assertThat(buildDetails.get(2).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo("https://nexus2.harness.io/content/repositories/npmjs/abbrev/-/abbrev-1.0.5.tgz");
   }
 
   @Test(expected = InvalidRequestException.class)

@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.artifact.ArtifactUtilities;
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -34,6 +35,7 @@ import software.wings.common.AlphanumComparator;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.nexus.model.Asset;
 import software.wings.helpers.ext.nexus.model.DockerImageResponse;
 import software.wings.helpers.ext.nexus.model.DockerImageTagResponse;
 import software.wings.helpers.ext.nexus.model.Nexus3AssetResponse;
@@ -234,7 +236,8 @@ public class NexusThreeServiceImpl {
       String repositoryName, String packageName) throws IOException {
     logger.info("Retrieving package versions for repository {} package {} ", repositoryName, packageName);
     List<String> versions = new ArrayList<>();
-    Map<String, Nexus3ComponentResponse.Component> versionToArtifactUrls = new HashMap<>();
+    Map<String, Asset> versionToArtifactUrls = new HashMap<>();
+    Map<String, List<ArtifactFileMetadata>> versionToArtifactDownloadUrls = new HashMap<>();
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<Nexus3ComponentResponse> response;
     boolean hasMoreResults = true;
@@ -256,10 +259,13 @@ public class NexusThreeServiceImpl {
         if (response.body() != null) {
           if (isNotEmpty(response.body().getItems())) {
             for (Nexus3ComponentResponse.Component component : response.body().getItems()) {
-              versions.add(
-                  component
-                      .getVersion()); // todo: add limit if results are returned in descending order of lastUpdatedTs
-              versionToArtifactUrls.put(component.getVersion(), component);
+              String version = component.getVersion();
+              versions.add(version); // todo: add limit if results are returned in descending order of lastUpdatedTs
+              if (isNotEmpty(component.getAssets())) {
+                versionToArtifactUrls.put(version, component.getAssets().get(0));
+              }
+              // for each version - get all assets and store download urls in metadata
+              versionToArtifactDownloadUrls.put(version, getDownloadUrlsForPackageVersion(component));
             }
           }
           if (response.body().getContinuationToken() != null) {
@@ -284,13 +290,9 @@ public class NexusThreeServiceImpl {
           metadata.put(ArtifactMetadataKeys.version, version);
           String url = null;
           if (versionToArtifactUrls.get(version) != null) {
-            if (isNotEmpty(versionToArtifactUrls.get(version).getAssets())
-                && versionToArtifactUrls.get(version).getAssets().get(0) != null) {
-              url = (versionToArtifactUrls.get(version).getAssets().get(0)).getDownloadUrl();
-              metadata.put(ArtifactMetadataKeys.url, url);
-              metadata.put(
-                  ArtifactMetadataKeys.artifactPath, (versionToArtifactUrls.get(version).getAssets().get(0)).getPath());
-            }
+            url = (versionToArtifactUrls.get(version)).getDownloadUrl();
+            metadata.put(ArtifactMetadataKeys.url, url);
+            metadata.put(ArtifactMetadataKeys.artifactPath, (versionToArtifactUrls.get(version)).getPath());
           }
           return aBuildDetails()
               .withNumber(version)
@@ -298,9 +300,31 @@ public class NexusThreeServiceImpl {
               .withBuildUrl(url)
               .withMetadata(metadata)
               .withUiDisplayName("Version# " + version)
+              .withArtifactDownloadMetadata(versionToArtifactDownloadUrls.get(version))
               .build();
         })
         .collect(toList());
+  }
+
+  private List<ArtifactFileMetadata> getDownloadUrlsForPackageVersion(Nexus3ComponentResponse.Component component) {
+    List<Asset> assets = component.getAssets();
+    List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
+    if (isNotEmpty(assets)) {
+      for (Asset asset : assets) {
+        String url = asset.getDownloadUrl();
+        String artifactName;
+        if (RepositoryFormat.nuget.name().equals(component.getFormat())) {
+          artifactName = component.getName() + "-" + component.getVersion() + ".nupkg";
+        } else {
+          artifactName = url.substring(url.lastIndexOf('/') + 1);
+        }
+        if (artifactName.endsWith("pom") || artifactName.endsWith("md5") || artifactName.endsWith("sha1")) {
+          continue;
+        }
+        artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(artifactName).url(url).build());
+      }
+    }
+    return artifactFileMetadata;
   }
 
   public List<BuildDetails> getDockerTags(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
@@ -409,31 +433,8 @@ public class NexusThreeServiceImpl {
         logger.info("Downloading version {} of groupId: {} artifactId: {} from repository {}", version, groupId,
             artifactName, repoName);
         NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
-        Response<Nexus3AssetResponse> response;
-        if (nexusConfig.hasCredentials()) {
-          if (isNotEmpty(extension) || isNotEmpty(classifier)) {
-            response = nexusThreeRestClient
-                           .getMavenAssetWithExtensionAndClassifier(
-                               Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
-                               repoName, groupId, artifactName, version, extension, classifier)
-                           .execute();
-          } else {
-            response =
-                nexusThreeRestClient
-                    .getMavenAsset(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
-                        repoName, groupId, artifactName, version)
-                    .execute();
-          }
-        } else {
-          if (isNotEmpty(extension) || isNotEmpty(classifier)) {
-            response = nexusThreeRestClient
-                           .getMavenAssetWithExtensionAndClassifier(
-                               repoName, groupId, artifactName, version, extension, classifier)
-                           .execute();
-          } else {
-            response = nexusThreeRestClient.getMavenAsset(repoName, groupId, artifactName, version).execute();
-          }
-        }
+        Response<Nexus3AssetResponse> response = getNexus3MavenAssets(
+            nexusConfig, version, groupId, artifactName, repoName, extension, classifier, nexusThreeRestClient);
 
         if (isSuccessful(response)) {
           if (response.body() != null) {
@@ -464,6 +465,38 @@ public class NexusThreeServiceImpl {
       }
     }
     return null;
+  }
+
+  @SuppressWarnings({"squid:S00107"})
+  private Response<Nexus3AssetResponse> getNexus3MavenAssets(NexusConfig nexusConfig, String version, String groupId,
+      String artifactName, String repoName, String extension, String classifier,
+      NexusThreeRestClient nexusThreeRestClient) throws IOException {
+    Response<Nexus3AssetResponse> response;
+    if (nexusConfig.hasCredentials()) {
+      if (isNotEmpty(extension) || isNotEmpty(classifier)) {
+        response = nexusThreeRestClient
+                       .getMavenAssetWithExtensionAndClassifier(
+                           Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
+                           repoName, groupId, artifactName, version, extension, classifier)
+                       .execute();
+      } else {
+        response =
+            nexusThreeRestClient
+                .getMavenAsset(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
+                    repoName, groupId, artifactName, version)
+                .execute();
+      }
+    } else {
+      if (isNotEmpty(extension) || isNotEmpty(classifier)) {
+        response = nexusThreeRestClient
+                       .getMavenAssetWithExtensionAndClassifier(
+                           repoName, groupId, artifactName, version, extension, classifier)
+                       .execute();
+      } else {
+        response = nexusThreeRestClient.getMavenAsset(repoName, groupId, artifactName, version).execute();
+      }
+    }
+    return response;
   }
 
   @SuppressWarnings({"squid:S3510"})
@@ -546,10 +579,11 @@ public class NexusThreeServiceImpl {
   }
 
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, String groupId, String artifactName) throws IOException {
+      String repoId, String groupId, String artifactName, String extension, String classifier) throws IOException {
     logger.info("Retrieving versions for repoId {} groupId {} and artifactName {}", repoId, groupId, artifactName);
     List<String> versions = new ArrayList<>();
     Map<String, String> versionToArtifactUrls = new HashMap<>();
+    Map<String, List<ArtifactFileMetadata>> versionToArtifactDownloadUrls = new HashMap<>();
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<Nexus3ComponentResponse> response;
     boolean hasMoreResults = true;
@@ -569,13 +603,17 @@ public class NexusThreeServiceImpl {
         if (response.body() != null) {
           if (isNotEmpty(response.body().getItems())) {
             for (Nexus3ComponentResponse.Component component : response.body().getItems()) {
-              versions.add(
-                  component
-                      .getVersion()); // todo: add limit if results are returned in descending order of lastUpdatedTs
-              versionToArtifactUrls.put(component.getVersion(),
-                  (component.getAssets().get(0))
-                      .getDownloadUrl()
-                      .substring(0, (component.getAssets().get(0)).getDownloadUrl().lastIndexOf('/')));
+              String version = component.getVersion();
+              versions.add(version); // todo: add limit if results are returned in descending order of lastUpdatedTs
+              // get artifact urls for each version
+              Response<Nexus3AssetResponse> versionResponse = getNexus3MavenAssets(
+                  nexusConfig, version, groupId, artifactName, repoId, extension, classifier, nexusThreeRestClient);
+              List<ArtifactFileMetadata> artifactFileMetadata = getDownloadUrlsForMaven(versionResponse);
+
+              if (isNotEmpty(artifactFileMetadata)) {
+                versionToArtifactUrls.put(version, artifactFileMetadata.get(0).getUrl());
+              }
+              versionToArtifactDownloadUrls.put(version, artifactFileMetadata);
             }
           }
           if (response.body().getContinuationToken() != null) {
@@ -589,7 +627,26 @@ public class NexusThreeServiceImpl {
                 "Failed to fetch the versions for groupId [" + groupId + "] and artifactId [" + artifactName + "]");
       }
     }
-    return nexusHelper.constructBuildDetails(repoId, groupId, artifactName, versions, versionToArtifactUrls);
+    return nexusHelper.constructBuildDetails(
+        repoId, groupId, artifactName, versions, versionToArtifactUrls, versionToArtifactDownloadUrls);
+  }
+
+  private List<ArtifactFileMetadata> getDownloadUrlsForMaven(Response<Nexus3AssetResponse> response) {
+    List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
+    if (isSuccessful(response)) {
+      if (response.body() != null && isNotEmpty(response.body().getItems())) {
+        for (Asset item : response.body().getItems()) {
+          String url = item.getDownloadUrl();
+          String artifactFileName = url.substring(url.lastIndexOf('/') + 1);
+          if (artifactFileName.endsWith("pom") || artifactFileName.endsWith("md5")
+              || artifactFileName.endsWith("sha1")) {
+            continue;
+          }
+          artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(artifactFileName).url(url).build());
+        }
+      }
+    }
+    return artifactFileMetadata;
   }
 
   public boolean existsVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,

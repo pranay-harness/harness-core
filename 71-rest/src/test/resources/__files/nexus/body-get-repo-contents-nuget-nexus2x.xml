@@ -1,12 +1,8 @@
 <content>
     <data>
         <content-item>
-            <resourceURI>
-                http://localhost:8881/nexus/service/local/repositories/MyNuGet/content/NuGet.Sample.Package/1.0.0.18279/NuGet.Sample.Package-1.0.0.18279.nupkg
-            </resourceURI>
-            <relativePath>
-                /NuGet.Sample.Package/1.0.0.18279/NuGet.Sample.Package-1.0.0.18279.nupkg
-            </relativePath>
+            <resourceURI>http://localhost:8881/nexus/service/local/repositories/MyNuGet/content/NuGet.Sample.Package/1.0.0.18279/NuGet.Sample.Package-1.0.0.18279.nupkg</resourceURI>
+            <relativePath>/NuGet.Sample.Package/1.0.0.18279/NuGet.Sample.Package-1.0.0.18279.nupkg</relativePath>
             <text>NuGet.Sample.Package-1.0.0.18279.nupkg</text>
             <leaf>true</leaf>
             <lastModified>2019-07-08 09:48:14.0 UTC</lastModified>

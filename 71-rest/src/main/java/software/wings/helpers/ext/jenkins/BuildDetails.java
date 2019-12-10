@@ -2,7 +2,11 @@ package software.wings.helpers.ext.jenkins;
 
 import com.google.common.base.MoreObjects;
 
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -24,6 +28,8 @@ public class BuildDetails {
   private Map<String, String> buildParameters = new HashMap<>();
   private Map<String, String> metadata = new HashMap<>();
   private Map<String, String> labels = new HashMap<>();
+  private List<ArtifactFileMetadata> artifactFileMetadataList = new ArrayList<>();
+
   public enum BuildStatus {
     FAILURE("Failure"),
     UNSTABLE("Unstable"),
@@ -60,6 +66,14 @@ public class BuildDetails {
 
   public void setUiDisplayName(String uiDisplayName) {
     this.uiDisplayName = uiDisplayName;
+  }
+
+  public List<ArtifactFileMetadata> getArtifactFileMetadataList() {
+    return artifactFileMetadataList;
+  }
+
+  public void setArtifactFileMetadataList(List<ArtifactFileMetadata> artifactFileMetadataList) {
+    this.artifactFileMetadataList = artifactFileMetadataList;
   }
 
   /**
@@ -224,6 +238,7 @@ public class BuildDetails {
     private BuildStatus status;
     private Map<String, String> metadata = new HashMap<>();
     private String uiDisplayName;
+    private List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
 
     private Builder() {}
 
@@ -323,6 +338,11 @@ public class BuildDetails {
       return this;
     }
 
+    public Builder withArtifactDownloadMetadata(List<ArtifactFileMetadata> artifactFileMetadata) {
+      this.artifactFileMetadata = artifactFileMetadata;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -341,7 +361,8 @@ public class BuildDetails {
           .withArtifactFileSize(artifactFileSize)
           .withMetadata(metadata)
           .withStatus(status)
-          .withUiDisplayName(uiDisplayName);
+          .withUiDisplayName(uiDisplayName)
+          .withArtifactDownloadMetadata(artifactFileMetadata);
     }
 
     /**
@@ -363,6 +384,7 @@ public class BuildDetails {
       buildDetails.setMetadata(metadata);
       buildDetails.setStatus(status);
       buildDetails.setUiDisplayName(uiDisplayName);
+      buildDetails.setArtifactFileMetadataList(artifactFileMetadata);
       return buildDetails;
     }
   }

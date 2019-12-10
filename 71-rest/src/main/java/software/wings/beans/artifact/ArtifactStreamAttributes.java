@@ -2,6 +2,7 @@ package software.wings.beans.artifact;
 
 import com.google.common.collect.Maps;
 
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -44,6 +45,7 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private Map<String, String> filters;
   private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
   private Map<String, String> metadata = Maps.newHashMap();
+  private List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
   private boolean copyArtifactEnabledForArtifactory;
   private String artifactoryDockerRepositoryServer;
   private String nexusDockerPort;

@@ -588,6 +588,7 @@ public class CommandState extends State {
     }
     artifactStreamAttributes.setMetadataOnly(artifactStream.isMetadataOnly());
     artifactStreamAttributes.setMetadata(artifact.getMetadata());
+    artifactStreamAttributes.setArtifactFileMetadata(artifact.getArtifactFileMetadata());
 
     if (featureFlagService.isEnabled(FeatureName.COPY_ARTIFACT, accountId)) {
       artifactStreamAttributes.setCopyArtifactEnabledForArtifactory(true);
@@ -636,6 +637,7 @@ public class CommandState extends State {
         }
         artifactStreamAttributes.setMetadataOnly(artifactStream.isMetadataOnly());
         artifactStreamAttributes.setMetadata(artifact.getMetadata());
+        artifactStreamAttributes.setArtifactFileMetadata(artifact.getArtifactFileMetadata());
 
         if (featureFlagService.isEnabled(FeatureName.COPY_ARTIFACT, accountId)) {
           artifactStreamAttributes.setCopyArtifactEnabledForArtifactory(true);
