@@ -9,6 +9,7 @@ import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_KEY;
 import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_USERNAME;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.testframework.framework.utils.SettingUtils.createGitHubRepoSetting;
+import static io.harness.testframework.framework.utils.SettingUtils.createPCFFunctionalTestGitRepoSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createTerraformCityGitRepoSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createTerraformMainGitRepoSetting;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -105,7 +106,8 @@ public class SettingGenerator {
     HELM_CHART_REPO_CONNECTOR,
     HELM_SOURCE_REPO_CONNECTOR,
     PCF_CONNECTOR,
-    AZURE_ARTIFACTS_CONNECTOR
+    AZURE_ARTIFACTS_CONNECTOR,
+    PCF_FUNCTIONAL_TEST_GIT_REPO
   }
 
   public void ensureAllPredefined(Randomizer.Seed seed, Owners owners) {
@@ -158,6 +160,8 @@ public class SettingGenerator {
         return ensurePcfConnector(seed, owners);
       case AZURE_ARTIFACTS_CONNECTOR:
         return ensureAzureArtifactsSetting(seed, owners);
+      case PCF_FUNCTIONAL_TEST_GIT_REPO:
+        return ensurePCFGitRepo(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -323,6 +327,14 @@ public class SettingGenerator {
 
     char[] password = scmSecret.decryptToCharArray(new SecretName("terraform_password"));
     SettingAttribute settingAttribute = createTerraformCityGitRepoSetting(githubKey, password);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  private SettingAttribute ensurePCFGitRepo(Randomizer.Seed seed, Owners owners) {
+    SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
+
+    char[] password = scmSecret.decryptToCharArray(new SecretName("terraform_password"));
+    SettingAttribute settingAttribute = createPCFFunctionalTestGitRepoSetting(githubKey, password);
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 

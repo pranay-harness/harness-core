@@ -91,6 +91,30 @@ public class PcfFunctionalTest extends AbstractFunctionalTest {
     workflowUtils.checkForWorkflowSuccess(rollbackExecution);
   }
 
+  // todo @rk : enable it after jenkins image has cf cli installed
+  @Test
+  @Owner(developers = OwnerRule.ROHIT_KUMAR)
+  @Category(FunctionalTests.class)
+  @Ignore("enable it after the jenkins image with CF cli has been released")
+  public void testPCFCommandRemoteManifest() {
+    WorkflowExecution workflowExecution = createAndExecuteWorkflowPCFCommand();
+    workflowUtils.checkForWorkflowSuccess(workflowExecution);
+  }
+
+  private WorkflowExecution createAndExecuteWorkflowPCFCommand() {
+    Service commandService = serviceGenerator.ensurePredefined(seed, owners, Services.PCF_V2_REMOTE_TEST);
+    Artifact artifact = getArtifact(commandService, commandService.getAppId());
+    resetCache(commandService.getAccountId());
+    InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(
+        seed, owners, InfrastructureType.PCF_INFRASTRUCTURE, bearerToken);
+    resetCache(commandService.getAccountId());
+    Workflow workflow =
+        workflowUtils.createPcfCommandWorkflow("pcf-command-wf", commandService, infrastructureDefinition);
+    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
+    return executeWorkflow(
+        workflow, commandService, Arrays.asList(artifact), ImmutableMap.<String, String>builder().build());
+  }
+
   private WorkflowExecution createAndExecuteWorkflow() {
     service = serviceGenerator.ensurePredefined(seed, owners, Services.PCF_V2_TEST);
     resetCache(service.getAccountId());
@@ -108,7 +132,7 @@ public class PcfFunctionalTest extends AbstractFunctionalTest {
     final String appId = service.getAppId();
     final String envId = workflow.getEnvId();
 
-    resetCache(this.service.getAccountId());
+    resetCache(service.getAccountId());
     ExecutionArgs executionArgs = prepareExecutionArgs(workflow, artifacts, workflowVariables);
     return WorkflowRestUtils.startWorkflow(bearerToken, appId, envId, executionArgs);
   }

@@ -1,6 +1,7 @@
 package io.harness.generator;
 
 import static io.harness.generator.ServiceGenerator.Services.KUBERNETES_GENERIC_TEST;
+import static io.harness.generator.SettingGenerator.Settings.PCF_FUNCTIONAL_TEST_GIT_REPO;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Service.APP_ID_KEY;
 import static software.wings.beans.Service.ServiceBuilder;
@@ -17,13 +18,19 @@ import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.DefaultSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
 
@@ -36,9 +43,10 @@ public class ServiceGenerator {
   @Inject private OwnerManager ownerManager;
   @Inject ApplicationGenerator applicationGenerator;
   @Inject ArtifactStreamManager artifactStreamManager;
-
+  @Inject SettingGenerator settingGenerator;
   @Inject ServiceResourceService serviceResourceService;
   @Inject WingsPersistence wingsPersistence;
+  @Inject ApplicationManifestService applicationManifestService;
 
   public enum Services {
     GENERIC_TEST,
@@ -49,7 +57,8 @@ public class ServiceGenerator {
     K8S_V2_TEST,
     MULTI_ARTIFACT_FUNCTIONAL_TEST,
     MULTI_ARTIFACT_K8S_V2_TEST,
-    PCF_V2_TEST
+    PCF_V2_TEST,
+    PCF_V2_REMOTE_TEST
   }
 
   public Service ensurePredefined(Randomizer.Seed seed, Owners owners, Services predefined) {
@@ -70,6 +79,8 @@ public class ServiceGenerator {
         return ensureMultiArtifactK8sTest(seed, owners, "MA-Test K8sV2 Service");
       case PCF_V2_TEST:
         return ensurePcfTest(seed, owners, "PCF Service");
+      case PCF_V2_REMOTE_TEST:
+        return ensurePcfTestRemote(seed, owners, "PCF Remote");
       default:
         unhandled(predefined);
     }
@@ -85,6 +96,37 @@ public class ServiceGenerator {
     Service service = owners.obtainService();
     service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
     return service;
+  }
+
+  private Service ensurePcfTestRemote(Seed seed, Owners owners, String name) {
+    final Service service = ensurePcfTest(seed, owners, name);
+    final SettingAttribute gitConnectorSetting =
+        settingGenerator.ensurePredefined(seed, owners, PCF_FUNCTIONAL_TEST_GIT_REPO);
+    final ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                        .serviceId(service.getUuid())
+                                                        .kind(AppManifestKind.K8S_MANIFEST)
+                                                        .storeType(StoreType.Remote)
+                                                        .gitFileConfig(GitFileConfig.builder()
+                                                                           .connectorId(gitConnectorSetting.getUuid())
+                                                                           .branch("master")
+                                                                           .useBranch(true)
+                                                                           .filePath("pcf-app1")
+                                                                           .build())
+                                                        .build();
+    applicationManifest.setAppId(service.getAppId());
+    upsertApplicationManifest(applicationManifest);
+
+    return service;
+  }
+
+  private ApplicationManifest upsertApplicationManifest(ApplicationManifest applicationManifest) {
+    final ApplicationManifest manifestByServiceId = applicationManifestService.getManifestByServiceId(
+        applicationManifest.getAppId(), applicationManifest.getServiceId());
+    if (manifestByServiceId != null) {
+      applicationManifest.setUuid(manifestByServiceId.getUuid());
+      return applicationManifestService.update(applicationManifest);
+    }
+    return applicationManifestService.create(applicationManifest);
   }
 
   public Service ensureWindowsTest(Randomizer.Seed seed, Owners owners, String name) {
