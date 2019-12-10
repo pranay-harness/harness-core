@@ -157,19 +157,17 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getName()).isEqualTo(BillingStatsDefaultKeys.NAME);
     assertThat(data.getData().get(0).getType()).isEqualTo(BillingStatsDefaultKeys.TYPE);
     assertThat(data.getData().get(0).getCostTrend()).isEqualTo(BillingStatsDefaultKeys.COSTTREND);
-    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(BillingStatsDefaultKeys.IDLECOST);
     assertThat(data.getData().get(0).getTrendType()).isEqualTo(BillingStatsDefaultKeys.TRENDTYPE);
     assertThat(data.getData().get(0).getRegion()).isEqualTo(BillingStatsDefaultKeys.REGION);
     assertThat(data.getData().get(0).getClusterType()).isEqualTo(BillingStatsDefaultKeys.CLUSTERTYPE);
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
+    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(5.0);
   }
 
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testFetchMethodInBillingEntitySeriesDataFetcherForIdleCost() {
-    Long filterTime = 0L;
-
     List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation(),
         makeIdleCostAggregation(), makeCpuIdleCostAggregation(), makeMemoryIdleCostAggregation());
     String[] clusterValues = new String[] {CLUSTER1_ID};
@@ -200,14 +198,65 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getId()).isEqualTo(CLUSTER1_NAME);
     assertThat(data.getData().get(0).getWorkloadName()).isEqualTo(BillingStatsDefaultKeys.WORKLOADNAME);
     assertThat(data.getData().get(0).getWorkloadType()).isEqualTo(BillingStatsDefaultKeys.WORKLOADTYPE);
-    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(BillingStatsDefaultKeys.IDLECOST);
     assertThat(data.getData().get(0).getTrendType()).isEqualTo(BillingStatsDefaultKeys.TRENDTYPE);
     assertThat(data.getData().get(0).getClusterType()).isEqualTo(BillingStatsDefaultKeys.CLUSTERTYPE);
     assertThat(data.getData().get(0).getClusterId()).isEqualTo(CLUSTER1_ID);
+    assertThat(data.getData().get(0).getAvgMemoryUtilization()).isEqualTo(BillingStatsDefaultKeys.AVGMEMORYUTILIZATION);
+    assertThat(data.getData().get(0).getAvgCpuUtilization()).isEqualTo(BillingStatsDefaultKeys.AVGCPUUTILIZATION);
+    assertThat(data.getData().get(0).getMaxCpuUtilization()).isEqualTo(BillingStatsDefaultKeys.MAXCPUUTILIZATION);
+    assertThat(data.getData().get(0).getMaxMemoryUtilization()).isEqualTo(BillingStatsDefaultKeys.MAXMEMORYUTILIZATION);
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
-    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(0.0);
-    assertThat(data.getData().get(0).getCpuIdleCost()).isEqualTo(0);
-    assertThat(data.getData().get(0).getMemoryIdleCost()).isEqualTo(0);
+    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(5.0);
+    assertThat(data.getData().get(0).getCpuIdleCost()).isEqualTo(2.5);
+    assertThat(data.getData().get(0).getMemoryIdleCost()).isEqualTo(2.5);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingEntitySeriesDataFetcherForUtilization() {
+    List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation(),
+        makeMaxCpuUtilizationAggregation(), makeMaxMemoryUtilizationAggregation(), makeAvgCpuUtilizationAggregation(),
+        makeAvgMemoryUtilizationAggregation());
+    String[] clusterValues = new String[] {CLUSTER1_ID};
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeClusterFilter(clusterValues));
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeWorkloadNameEntityGroupBy());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+
+    QLEntityTableListData data = (QLEntityTableListData) billingStatsEntityDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, null);
+
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(aggregationFunction.get(1).getColumnName()).isEqualTo("maxcpuutilization");
+    assertThat(aggregationFunction.get(1).getOperationType()).isEqualTo(QLCCMAggregateOperation.MAX);
+    assertThat(aggregationFunction.get(2).getColumnName()).isEqualTo("maxmemoryutilization");
+    assertThat(aggregationFunction.get(2).getOperationType()).isEqualTo(QLCCMAggregateOperation.MAX);
+    assertThat(aggregationFunction.get(3).getColumnName()).isEqualTo("avgcpuutilization");
+    assertThat(aggregationFunction.get(3).getOperationType()).isEqualTo(QLCCMAggregateOperation.AVG);
+    assertThat(aggregationFunction.get(4).getColumnName()).isEqualTo("avgmemoryutilization");
+    assertThat(aggregationFunction.get(4).getOperationType()).isEqualTo(QLCCMAggregateOperation.AVG);
+    assertThat(filters.get(0).getCluster().getOperator()).isEqualTo(QLIdOperator.EQUALS);
+    assertThat(filters.get(0).getCluster().getValues()).isEqualTo(clusterValues);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getWorkloadName()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
+    assertThat(data.getData().get(0).getRegion()).isEqualTo(BillingStatsDefaultKeys.REGION);
+    assertThat(data.getData().get(0).getWorkloadType()).isEqualTo(BillingStatsDefaultKeys.WORKLOADTYPE);
+    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(BillingStatsDefaultKeys.IDLECOST);
+    assertThat(data.getData().get(0).getTrendType()).isEqualTo(BillingStatsDefaultKeys.TRENDTYPE);
+    assertThat(data.getData().get(0).getClusterType()).isEqualTo(BillingStatsDefaultKeys.CLUSTERTYPE);
+    assertThat(data.getData().get(0).getClusterId()).isEqualTo(BillingStatsDefaultKeys.CLUSTERID);
+    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(BillingStatsDefaultKeys.IDLECOST);
+    assertThat(data.getData().get(0).getCpuIdleCost()).isEqualTo(BillingStatsDefaultKeys.CPUIDLECOST);
+    assertThat(data.getData().get(0).getMemoryIdleCost()).isEqualTo(BillingStatsDefaultKeys.MEMORYIDLECOST);
+    assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
+    assertThat(data.getData().get(0).getMaxCpuUtilization()).isEqualTo(0.5);
+    assertThat(data.getData().get(0).getMaxMemoryUtilization()).isEqualTo(0.5);
+    assertThat(data.getData().get(0).getAvgCpuUtilization()).isEqualTo(0.4);
+    assertThat(data.getData().get(0).getAvgMemoryUtilization()).isEqualTo(0.4);
   }
 
   public QLBillingSortCriteria makeDescByTimeSortingCriteria() {
@@ -236,6 +285,34 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.SUM)
         .columnName("memoryidlecost")
+        .build();
+  }
+
+  public QLCCMAggregationFunction makeMaxCpuUtilizationAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.MAX)
+        .columnName("maxcpuutilization")
+        .build();
+  }
+
+  public QLCCMAggregationFunction makeMaxMemoryUtilizationAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.MAX)
+        .columnName("maxmemoryutilization")
+        .build();
+  }
+
+  public QLCCMAggregationFunction makeAvgCpuUtilizationAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.AVG)
+        .columnName("avgcpuutilization")
+        .build();
+  }
+
+  public QLCCMAggregationFunction makeAvgMemoryUtilizationAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.AVG)
+        .columnName("avgmemoryutilization")
         .build();
   }
 
@@ -298,11 +375,15 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     when(statement.executeQuery(anyString())).thenReturn(resultSet);
 
     when(resultSet.getDouble("COST")).thenAnswer((Answer<Double>) invocation -> 10.0 + doubleVal[0]++);
-    when(resultSet.getDouble("IDLECOST")).thenAnswer((Answer<Double>) invocation -> 0.0);
-    when(resultSet.getDouble("CPUIDLECOST")).thenAnswer((Answer<Double>) invocation -> 0.0);
-    when(resultSet.getDouble("MEMORYIDLECOST")).thenAnswer((Answer<Double>) invocation -> 0.0);
+    when(resultSet.getDouble("IDLECOST")).thenAnswer((Answer<Double>) invocation -> 5.0);
+    when(resultSet.getDouble("CPUIDLECOST")).thenAnswer((Answer<Double>) invocation -> 2.5);
+    when(resultSet.getDouble("MEMORYIDLECOST")).thenAnswer((Answer<Double>) invocation -> 2.5);
     when(resultSet.getInt("TOTALNAMESPACES")).thenAnswer((Answer<Integer>) invocation -> 0);
     when(resultSet.getInt("TOTALWORKLOADS")).thenAnswer((Answer<Integer>) invocation -> 0);
+    when(resultSet.getDouble("MAXCPUUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.5);
+    when(resultSet.getDouble("MAXMEMORYUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.5);
+    when(resultSet.getDouble("AVGCPUUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.4);
+    when(resultSet.getDouble("AVGMEMORYUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.4);
     when(resultSet.getString("APPID")).thenAnswer((Answer<String>) invocation -> APP1_ID_ACCOUNT1);
     when(resultSet.getString("WORKLOADNAME")).thenAnswer((Answer<String>) invocation -> WORKLOAD_NAME_ACCOUNT1);
     when(resultSet.getString("WORKLOADTYPE")).thenAnswer((Answer<String>) invocation -> WORKLOAD_TYPE_ACCOUNT1);

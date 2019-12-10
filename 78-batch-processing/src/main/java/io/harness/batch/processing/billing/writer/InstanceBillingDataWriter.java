@@ -44,8 +44,9 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
     Map<String, UtilizationData> utilizationDataForInstances = utilizationDataService.getUtilizationDataForInstances(
         instanceDataList, startTime.toString(), endTime.toString());
     instanceDataList.forEach(instanceData -> {
-      BillingData billingData = billingCalculationService.getInstanceBillingAmount(
-          instanceData, utilizationDataForInstances.get(instanceData.getInstanceId()), startTime, endTime);
+      UtilizationData utilizationData = utilizationDataForInstances.get(instanceData.getInstanceId());
+      BillingData billingData =
+          billingCalculationService.getInstanceBillingAmount(instanceData, utilizationData, startTime, endTime);
       logger.info("Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmount());
       HarnessServiceInfo harnessServiceInfo = getHarnessServiceInfo(instanceData);
       InstanceBillingData instanceBillingData =
@@ -83,6 +84,10 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
                   getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ECS_SERVICE_NAME, instanceData))
               // todo : insert kubernetes namespace here
               .namespace("NAMESPACE")
+              .maxCpuUtilization(utilizationData.getMaxCpuUtilization())
+              .maxMemoryUtilization(utilizationData.getMaxMemoryUtilization())
+              .avgCpuUtilization(utilizationData.getAvgCpuUtilization())
+              .avgMemoryUtilization(utilizationData.getAvgMemoryUtilization())
               .build();
       billingDataService.create(instanceBillingData);
     });

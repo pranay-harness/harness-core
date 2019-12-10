@@ -348,7 +348,12 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   private UtilizationData getUtilization(double cpuUtilization, double memoryUtilization) {
-    return UtilizationData.builder().cpuUtilization(cpuUtilization).memoryUtilization(memoryUtilization).build();
+    return UtilizationData.builder()
+        .maxCpuUtilization(cpuUtilization)
+        .maxMemoryUtilization(memoryUtilization)
+        .avgMemoryUtilization(cpuUtilization)
+        .avgMemoryUtilization(memoryUtilization)
+        .build();
   }
 
   private VMComputePricingInfo createVMComputePricingInfo() {

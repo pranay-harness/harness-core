@@ -73,8 +73,9 @@ public class BillingCalculationService {
       return new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
     }
     Double billingAmount = billingDataForResource.doubleValue();
-    BigDecimal cpuIdleCost = BigDecimal.valueOf(billingAmount * ((1 - utilizationData.getCpuUtilization()) / 2));
-    BigDecimal memoryIdleCost = BigDecimal.valueOf(billingAmount * ((1 - utilizationData.getMemoryUtilization()) / 2));
+    BigDecimal cpuIdleCost = BigDecimal.valueOf(billingAmount * ((1 - utilizationData.getMaxCpuUtilization()) / 2));
+    BigDecimal memoryIdleCost =
+        BigDecimal.valueOf(billingAmount * ((1 - utilizationData.getMaxMemoryUtilization()) / 2));
     BigDecimal idleCost = BigDecimal.valueOf(cpuIdleCost.doubleValue() + memoryIdleCost.doubleValue());
     return new IdleCostData(idleCost, cpuIdleCost, memoryIdleCost);
   }

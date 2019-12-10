@@ -38,6 +38,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -166,15 +167,18 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   private List<QLBillingDataFilter> createFilter() {
-    String[] appIdFilterValues = new String[] {APP1_ID_ACCOUNT1};
+    String[] appIdFilterValues = new String[] {""};
     return Arrays.asList(
         makeApplicationFilter(appIdFilterValues), startTimeFilter(START_TIME), endTimeFilter(END_TIME));
   }
 
   private List<QLBillingDataFilter> createForecastFilter() {
-    String[] appIdFilterValues = new String[] {APP1_ID_ACCOUNT1};
-    return Arrays.asList(makeApplicationFilter(appIdFilterValues), startTimeFilter(START_TIME),
-        endTimeFilter(Instant.now().plus(5, ChronoUnit.DAYS)));
+    String[] clusterIdFilterValues = new String[] {""};
+    List<QLBillingDataFilter> forecastFilter = new ArrayList<>();
+    forecastFilter.add(makeClusterFilter(clusterIdFilterValues));
+    forecastFilter.add(startTimeFilter(START_TIME));
+    forecastFilter.add(endTimeFilter(Instant.now().plus(5, ChronoUnit.DAYS)));
+    return forecastFilter;
   }
 
   public QLCCMAggregationFunction makeBillingAmtAggregation() {
@@ -185,8 +189,13 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   public QLBillingDataFilter makeApplicationFilter(String[] values) {
-    QLIdFilter applicationFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    QLIdFilter applicationFilter = QLIdFilter.builder().operator(QLIdOperator.NOT_NULL).values(values).build();
     return QLBillingDataFilter.builder().application(applicationFilter).build();
+  }
+
+  private QLBillingDataFilter makeClusterFilter(String[] values) {
+    QLIdFilter clusterFilter = QLIdFilter.builder().operator(QLIdOperator.NOT_NULL).values(values).build();
+    return QLBillingDataFilter.builder().cluster(clusterFilter).build();
   }
 
   public QLBillingDataFilter startTimeFilter(Instant instant) {
