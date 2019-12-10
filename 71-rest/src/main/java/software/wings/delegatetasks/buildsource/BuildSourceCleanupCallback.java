@@ -4,11 +4,13 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -152,7 +154,8 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
     } else if (AMI.name().equals(artifactStreamType)) {
       cleanupAMIArtifacts(artifactStream, deletedArtifacts);
     } else if (ARTIFACTORY.name().equals(artifactStreamType) || GCR.name().equals(artifactStreamType)
-        || ECR.name().equals(artifactStreamType)) {
+        || ECR.name().equals(artifactStreamType) || ACR.name().equals(artifactStreamType)
+        || NEXUS.name().equals(artifactStreamType)) {
       // This might not work for Nexus as we are also calling update nexus status
       List<Artifact> deletedArtifactsNew = cleanupStaleArtifacts(artifactStream, builds);
       deletedArtifacts.addAll(deletedArtifactsNew);
