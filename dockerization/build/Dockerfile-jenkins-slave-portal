@@ -46,4 +46,7 @@ RUN yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-g
     && yum install -y git \
     && git version
 
+RUN wget -O /etc/yum.repos.d/cloudfoundry-cli.repo https://packages.cloudfoundry.org/fedora/cloudfoundry-cli.repo \
+    && yum install -y cf-cli
+
 ENTRYPOINT ["jenkins-slave"]

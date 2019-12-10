@@ -54,6 +54,24 @@ public class SettingUtils {
         .build();
   }
 
+  public static SettingAttribute createPCFFunctionalTestGitRepoSetting(SettingAttribute githubKey, char[] password) {
+    return aSettingAttribute()
+        .withCategory(CONNECTOR)
+        .withName("pcf-functional-test")
+        .withAppId(githubKey.getAppId())
+        .withEnvId(githubKey.getEnvId())
+        .withAccountId(githubKey.getAccountId())
+        .withValue(GitConfig.builder()
+                       .repoUrl("https://github.com/wings-software/pcf-functional-test.git")
+                       .username("test-harness")
+                       .password(password)
+                       .branch("master")
+                       .accountId(githubKey.getAccountId())
+                       .build())
+        .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+        .build();
+  }
+
   public static SettingAttribute createTerraformMainGitRepoSetting(SettingAttribute githubKey, char[] password) {
     return aSettingAttribute()
         .withCategory(CONNECTOR)

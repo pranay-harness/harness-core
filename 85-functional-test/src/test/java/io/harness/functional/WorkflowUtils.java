@@ -55,6 +55,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateType;
 
@@ -248,6 +249,63 @@ public class WorkflowUtils {
   public Workflow createPcfWorkflow(String name, Service service, InfrastructureDefinition infrastructureDefinition) {
     WorkflowPhase workflowPhase = obtainWorkflowPhasePcf(service, infrastructureDefinition);
     WorkflowPhase rollbackPhase = obtainRollbackPhasePcf(workflowPhase);
+    return createPcfWorkflow(name, service, infrastructureDefinition, workflowPhase, rollbackPhase);
+  }
+
+  public Workflow createPcfCommandWorkflow(
+      String name, Service service, InfrastructureDefinition infrastructureDefinition) {
+    WorkflowPhase workflowPhase = obtainWorkflowPhasePcfCommand(service, infrastructureDefinition);
+    WorkflowPhase rollbackPhase = obtainRollbackPhasePcfCommand(workflowPhase);
+    return createPcfWorkflow(name, service, infrastructureDefinition, workflowPhase, rollbackPhase);
+  }
+
+  private WorkflowPhase obtainRollbackPhasePcfCommand(WorkflowPhase workflowPhase) {
+    return aWorkflowPhase()
+        .name(ROLLBACK_PREFIX + workflowPhase.getName())
+        .deploymentType(workflowPhase.getDeploymentType())
+        .rollback(true)
+        .phaseNameForRollback(workflowPhase.getName())
+        .serviceId(workflowPhase.getServiceId())
+        .computeProviderId(workflowPhase.getComputeProviderId())
+        .infraDefinitionId(workflowPhase.getInfraDefinitionId())
+        .phaseSteps(asList(aPhaseStep(PhaseStepType.PCF_RESIZE, DEPLOY)
+                               .withPhaseStepNameForRollback(DEPLOY)
+                               .withStatusForRollback(SUCCESS)
+                               .withRollback(true)
+                               .build(),
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP_CONSTANT).withRollback(true).build()))
+        .build();
+  }
+
+  private WorkflowPhase obtainWorkflowPhasePcfCommand(
+      Service service, InfrastructureDefinition infrastructureDefinition) {
+    List<PhaseStep> phaseSteps = new ArrayList<>();
+
+    Map<String, Object> pcfCommandProperties = new HashMap<>();
+    pcfCommandProperties.put("scriptString",
+        "cf apps \n cat ${service.manifest}/manifest.yml \n cat ${service.manifest.repoRoot}/pcf-app1/vars.yml");
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.PCF_SETUP, SETUP)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.PCF_PLUGIN.name())
+                                    .name(WorkflowServiceHelper.PCF_PLUGIN)
+                                    .properties(pcfCommandProperties)
+                                    .build())
+                       .build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE).build());
+
+    return aWorkflowPhase()
+        .uuid(generateUuid())
+        .serviceId(service.getUuid())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .phaseSteps(phaseSteps)
+        .build();
+  }
+
+  public Workflow createPcfWorkflow(String name, Service service, InfrastructureDefinition infrastructureDefinition,
+      WorkflowPhase workflowPhase, WorkflowPhase rollbackPhase) {
     Map<String, WorkflowPhase> rollbackMap = new HashMap<>();
     rollbackMap.put(workflowPhase.getUuid(), rollbackPhase);
     return aWorkflow()
