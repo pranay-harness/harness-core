@@ -1,20 +1,32 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.BlockDeviceMapping;
+import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionRequest;
+import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionResult;
 import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.amazonaws.services.ec2.model.DescribeLaunchTemplateVersionsRequest;
+import com.amazonaws.services.ec2.model.DescribeLaunchTemplateVersionsResult;
 import com.amazonaws.services.ec2.model.DescribeRegionsResult;
 import com.amazonaws.services.ec2.model.DescribeSecurityGroupsResult;
 import com.amazonaws.services.ec2.model.DescribeSubnetsResult;
@@ -22,6 +34,7 @@ import com.amazonaws.services.ec2.model.DescribeTagsResult;
 import com.amazonaws.services.ec2.model.DescribeVpcsResult;
 import com.amazonaws.services.ec2.model.Image;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.LaunchTemplateVersion;
 import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.SecurityGroup;
@@ -30,7 +43,10 @@ import com.amazonaws.services.ec2.model.TagDescription;
 import com.amazonaws.services.ec2.model.Vpc;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -46,8 +62,17 @@ import java.util.Set;
 public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
   @Mock private AwsCallTracker mockTracker;
-  @Spy @InjectMocks private AwsEc2HelperServiceDelegateImpl awsEc2HelperServiceDelegate;
+  @Mock private AmazonEC2Client mockClient;
 
+  @Spy @InjectMocks private AwsEc2HelperServiceDelegateImpl awsEc2HelperServiceDelegate;
+  public static final String REGION = "us-east-1";
+
+  @Before
+  public void setup() {
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyListOf(EncryptedDataDetail.class));
+    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
+    doNothing().when(mockTracker).trackEC2Call(anyString());
+  }
   @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
@@ -211,11 +236,71 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
         .when(mockClient)
         .describeImages(any());
     doNothing().when(mockTracker).trackEC2Call(anyString());
-    Set<String> names = awsEc2HelperServiceDelegate.listBlockDeviceNamesOfAmi(
-        AwsConfig.builder().build(), emptyList(), "us-east-1", "ami");
+    Set<String> names =
+        awsEc2HelperServiceDelegate.listBlockDeviceNamesOfAmi(AwsConfig.builder().build(), emptyList(), REGION, "ami");
     assertThat(names).isNotNull();
     assertThat(names.size()).isEqualTo(2);
     assertThat(names.contains("name0")).isTrue();
     assertThat(names.contains("name1")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_getLaunchTemplateVersion() {
+    final LaunchTemplateVersion launchTemplateVersion1 = new LaunchTemplateVersion();
+    doReturn(new DescribeLaunchTemplateVersionsResult().withLaunchTemplateVersions(launchTemplateVersion1))
+        .when(mockClient)
+        .describeLaunchTemplateVersions(any(DescribeLaunchTemplateVersionsRequest.class));
+    final LaunchTemplateVersion launchTemplateVersion = awsEc2HelperServiceDelegate.getLaunchTemplateVersion(
+        AwsConfig.builder().build(), emptyList(), REGION, "ltid", "3");
+    assertThat(launchTemplateVersion).isEqualTo(launchTemplateVersion1);
+    verify(mockClient, times(1)).describeLaunchTemplateVersions(any(DescribeLaunchTemplateVersionsRequest.class));
+    doThrow(new AmazonClientException("exception"))
+        .when(mockClient)
+        .describeLaunchTemplateVersions(any(DescribeLaunchTemplateVersionsRequest.class));
+    assertThatThrownBy(()
+                           -> awsEc2HelperServiceDelegate.getLaunchTemplateVersion(
+                               AwsConfig.builder().build(), emptyList(), REGION, "ltid", "3"))
+        .isInstanceOf(WingsException.class);
+
+    doThrow(new AmazonServiceException("exception"))
+        .when(mockClient)
+        .describeLaunchTemplateVersions(any(DescribeLaunchTemplateVersionsRequest.class));
+    assertThatThrownBy(()
+                           -> awsEc2HelperServiceDelegate.getLaunchTemplateVersion(
+                               AwsConfig.builder().build(), emptyList(), REGION, "ltid", "3"))
+        .isInstanceOf(WingsException.class);
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_createLaunchTemplateVersion() {
+    final CreateLaunchTemplateVersionRequest createLaunchTemplateVersionRequest =
+        new CreateLaunchTemplateVersionRequest();
+    doReturn(new CreateLaunchTemplateVersionResult())
+        .when(mockClient)
+        .createLaunchTemplateVersion(createLaunchTemplateVersionRequest);
+
+    final CreateLaunchTemplateVersionResult launchTemplateVersionResult =
+        awsEc2HelperServiceDelegate.createLaunchTemplateVersion(
+            createLaunchTemplateVersionRequest, AwsConfig.builder().build(), emptyList(), REGION);
+    verify(mockClient, times(1)).createLaunchTemplateVersion(createLaunchTemplateVersionRequest);
+    doThrow(new AmazonServiceException("exception"))
+        .when(mockClient)
+        .createLaunchTemplateVersion(createLaunchTemplateVersionRequest);
+    assertThatThrownBy(()
+                           -> awsEc2HelperServiceDelegate.createLaunchTemplateVersion(
+                               createLaunchTemplateVersionRequest, AwsConfig.builder().build(), emptyList(), REGION))
+        .isInstanceOf(WingsException.class);
+
+    doThrow(new AmazonClientException("exception"))
+        .when(mockClient)
+        .createLaunchTemplateVersion(createLaunchTemplateVersionRequest);
+    assertThatThrownBy(()
+                           -> awsEc2HelperServiceDelegate.createLaunchTemplateVersion(
+                               createLaunchTemplateVersionRequest, AwsConfig.builder().build(), emptyList(), REGION))
+        .isInstanceOf(WingsException.class);
   }
 }

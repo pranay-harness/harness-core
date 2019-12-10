@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -15,6 +16,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.HARNESS_AUTOSCALING_GROUP_TAG;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -31,6 +33,7 @@ import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsResult;
 import com.amazonaws.services.autoscaling.model.DescribePoliciesResult;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import com.amazonaws.services.autoscaling.model.LaunchTemplateSpecification;
 import com.amazonaws.services.autoscaling.model.PutScalingPolicyResult;
 import com.amazonaws.services.autoscaling.model.ScalingPolicy;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityResult;
@@ -40,6 +43,7 @@ import com.amazonaws.services.ec2.model.InstanceState;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
+import lombok.Builder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -191,21 +195,62 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testDeleteAutoScalingGroups() {
-    AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
-    doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), any());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
-    LogCallback mockCallback = mock(LogCallback.class);
-    doNothing().when(mockTracker).trackASGCall(anyString());
     try {
-      doReturn(true).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
-      awsAsgHelperServiceDelegate.deleteAutoScalingGroups(
-          AwsConfig.builder().build(), emptyList(), "us-east-1", singletonList(new AutoScalingGroup()), mockCallback);
+      final Mocks mocks = prepareMocksForDeleteAutoScalingGroups();
+      AmazonAutoScalingClient mockClient = mocks.amazonAutoScalingClient;
+      LogCallback mockCallback = mocks.mockCallback;
+
+      awsAsgHelperServiceDelegate.deleteAutoScalingGroups(AwsConfig.builder().build(), emptyList(), "us-east-1",
+          singletonList(new AutoScalingGroup().withLaunchConfigurationName("launch_config")), mockCallback);
       verify(mockClient).deleteAutoScalingGroup(any());
       verify(mockClient).deleteLaunchConfiguration(any());
       verify(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
     } catch (Exception ex) {
       fail(format("Test threw an exception: [%s]", ex.getMessage()));
     }
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void testDeleteAutoScalingGroups_withLT() {
+    try {
+      final Mocks mocks = prepareMocksForDeleteAutoScalingGroups();
+      AmazonAutoScalingClient mockClient = mocks.amazonAutoScalingClient;
+      LogCallback mockCallback = mocks.mockCallback;
+
+      awsAsgHelperServiceDelegate.deleteAutoScalingGroups(AwsConfig.builder().build(), emptyList(), "us-east-1",
+          singletonList(new AutoScalingGroup().withLaunchTemplate(new LaunchTemplateSpecification())), mockCallback);
+      verify(mockClient).deleteAutoScalingGroup(any());
+      verify(mockClient, times(0)).deleteLaunchConfiguration(any());
+      verify(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    } catch (Exception ex) {
+      fail(format("Test threw an exception: [%s]", ex.getMessage()));
+    }
+  }
+
+  @Builder
+  private static class Mocks {
+    AmazonAutoScalingClient amazonAutoScalingClient;
+    LogCallback mockCallback;
+    TimeLimiter mockTimeLimiter;
+    AwsCallTracker mockTracker;
+  }
+
+  private Mocks prepareMocksForDeleteAutoScalingGroups() throws Exception {
+    AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
+    doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    LogCallback mockCallback = mock(LogCallback.class);
+    doNothing().when(mockTracker).trackASGCall(anyString());
+    doReturn(true).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+
+    return Mocks.builder()
+        .amazonAutoScalingClient(mockClient)
+        .mockCallback(mockCallback)
+        .mockTimeLimiter(mockTimeLimiter)
+        .mockTracker(mockTracker)
+        .build();
   }
 
   @Test

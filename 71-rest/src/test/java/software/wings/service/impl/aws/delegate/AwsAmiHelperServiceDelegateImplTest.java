@@ -1,17 +1,20 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -26,22 +29,33 @@ import com.google.common.collect.ImmutableSet;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.BlockDeviceMapping;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
+import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupResult;
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest;
 import com.amazonaws.services.autoscaling.model.InstanceMonitoring;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import com.amazonaws.services.autoscaling.model.LaunchTemplate;
+import com.amazonaws.services.autoscaling.model.LaunchTemplateSpecification;
+import com.amazonaws.services.autoscaling.model.MixedInstancesPolicy;
 import com.amazonaws.services.autoscaling.model.TagDescription;
+import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionRequest;
+import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionResult;
+import com.amazonaws.services.ec2.model.LaunchTemplateVersion;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.OwnerRule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAmiResizeData;
+import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse.AwsAmiServiceSetupResponseBuilder;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
@@ -61,16 +75,20 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private AwsElbHelperServiceDelegate mockAwsElbHelperServiceDelegate;
   @Mock private AwsEc2HelperServiceDelegate mockAwsEc2HelperServiceDelegate;
   @Mock private EncryptionService mockEncryptionService;
+  @Mock ExecutionLogCallback mockCallback;
 
-  @InjectMocks private AwsAmiHelperServiceDelegateImpl awsAmiHelperServiceDelegate;
+  @InjectMocks @Spy private AwsAmiHelperServiceDelegateImpl awsAmiHelperServiceDelegate;
+  public static final String REGION = "us-east-1";
 
+  @Before
+  public void setup() {
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+  }
   @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testSwitchAmiRoutes() {
-    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
-    doNothing().when(mockCallback).saveExecutionLog(anyString());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     AwsAmiSwitchRoutesRequest request = AwsAmiSwitchRoutesRequest.builder()
                                             .awsConfig(AwsConfig.builder().build())
                                             .encryptionDetails(emptyList())
@@ -174,31 +192,35 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void testCreateNewAutoScalingGroupRequest_LT() {
+    AutoScalingGroup baseAutoScalingGroup = getAutoScalingGroup();
+    CreateAutoScalingGroupRequest request = awsAmiHelperServiceDelegate.createNewAutoScalingGroupRequest("id",
+        asList("lb1", "lb2"), asList("a1", "a2"), "newName", baseAutoScalingGroup, 2, 10,
+        new LaunchTemplateVersion().withLaunchTemplateId("ltid").withLaunchTemplateName("ltname").withVersionNumber(
+            3L));
+    validateCreateAutoScalingGroupRequest(request);
+    assertThat(request.getLaunchConfigurationName()).isNull();
+    assertThat(request.getLaunchTemplate().getVersion()).isEqualTo("3");
+    assertThat(request.getLaunchTemplate().getLaunchTemplateId()).isEqualTo("ltid");
+  }
+
+  @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testCreateNewAutoScalingGroupRequest() {
-    AutoScalingGroup baseAutoScalingGroup =
-        new AutoScalingGroup()
-            .withTags(new TagDescription().withKey("k1").withValue("v1"),
-                new TagDescription().withKey("k2").withValue("v2"),
-                new TagDescription().withKey(HARNESS_AUTOSCALING_GROUP_TAG).withValue("id__1"),
-                new TagDescription().withKey(NAME_TAG).withValue("oldName"))
-            .withMaxSize(10)
-            .withDefaultCooldown(11)
-            .withAvailabilityZones("z1", "z2")
-            .withTerminationPolicies("p1", "p2")
-            .withNewInstancesProtectedFromScaleIn(true)
-            .withDefaultCooldown(12)
-            .withHealthCheckType("hcType")
-            .withHealthCheckGracePeriod(13)
-            .withPlacementGroup("pGroup")
-            .withVPCZoneIdentifier("vpcI");
+    AutoScalingGroup baseAutoScalingGroup = getAutoScalingGroup();
     CreateAutoScalingGroupRequest request = awsAmiHelperServiceDelegate.createNewAutoScalingGroupRequest(
-        "id", asList("lb1", "lb2"), asList("a1", "a2"), "newName", baseAutoScalingGroup, 2, 10);
+        "id", asList("lb1", "lb2"), asList("a1", "a2"), "newName", baseAutoScalingGroup, 2, 10, null);
+    validateCreateAutoScalingGroupRequest(request);
+    assertThat(request.getLaunchConfigurationName()).isEqualTo("newName");
+  }
+
+  private void validateCreateAutoScalingGroupRequest(CreateAutoScalingGroupRequest request) {
     assertThat(request).isNotNull();
     assertThat(request.getTags().size()).isEqualTo(4);
     assertThat(request.getAutoScalingGroupName()).isEqualTo("newName");
-    assertThat(request.getLaunchConfigurationName()).isEqualTo("newName");
     assertThat(request.getDesiredCapacity()).isEqualTo(0);
     assertThat(request.getMinSize()).isEqualTo(0);
     assertThat(request.getMaxSize()).isEqualTo(10);
@@ -212,6 +234,24 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     assertThat(request.getHealthCheckGracePeriod()).isEqualTo(13);
     assertThat(request.getPlacementGroup()).isEqualTo("pGroup");
     assertThat(request.getVPCZoneIdentifier()).isEqualTo("vpcI");
+  }
+
+  private AutoScalingGroup getAutoScalingGroup() {
+    return new AutoScalingGroup()
+        .withTags(new TagDescription().withKey("k1").withValue("v1"),
+            new TagDescription().withKey("k2").withValue("v2"),
+            new TagDescription().withKey(HARNESS_AUTOSCALING_GROUP_TAG).withValue("id__1"),
+            new TagDescription().withKey(NAME_TAG).withValue("oldName"))
+        .withMaxSize(10)
+        .withDefaultCooldown(11)
+        .withAvailabilityZones("z1", "z2")
+        .withTerminationPolicies("p1", "p2")
+        .withNewInstancesProtectedFromScaleIn(true)
+        .withDefaultCooldown(12)
+        .withHealthCheckType("hcType")
+        .withHealthCheckGracePeriod(13)
+        .withPlacementGroup("pGroup")
+        .withVPCZoneIdentifier("vpcI");
   }
 
   @Test
@@ -372,5 +412,192 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     assertThat(oldAsgNames.size()).isEqualTo(2);
     assertThat(oldAsgNames.get(0)).isEqualTo("name_1");
     assertThat(oldAsgNames.get(1)).isEqualTo("name_2");
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_createAndGetNewLaunchTemplateVersion() {
+    final LaunchTemplateVersion baseLaunchTemplateVersion =
+        new LaunchTemplateVersion().withLaunchTemplateName("LtName").withLaunchTemplateId("ltid").withVersionNumber(3L);
+    final String artifactVersion = "artifact_version";
+    final AwsAmiServiceSetupRequest request =
+        AwsAmiServiceSetupRequest.builder().artifactRevision(artifactVersion).userData("user-data").build();
+    final AwsConfig awsConfig = AwsConfig.builder().build();
+    final CreateLaunchTemplateVersionResult result =
+        new CreateLaunchTemplateVersionResult().withLaunchTemplateVersion(new LaunchTemplateVersion());
+    doReturn(result)
+        .when(mockAwsEc2HelperServiceDelegate)
+        .createLaunchTemplateVersion(
+            any(CreateLaunchTemplateVersionRequest.class), eq(awsConfig), eq(emptyList()), eq(REGION));
+
+    final LaunchTemplateVersion newLaunchTemplate = awsAmiHelperServiceDelegate.createAndGetNewLaunchTemplateVersion(
+        baseLaunchTemplateVersion, request, mockCallback, awsConfig, emptyList(), REGION);
+    assertThat(newLaunchTemplate).isEqualTo(result.getLaunchTemplateVersion());
+    ArgumentCaptor<CreateLaunchTemplateVersionRequest> requestArgumentCaptor =
+        ArgumentCaptor.forClass(CreateLaunchTemplateVersionRequest.class);
+    verify(mockAwsEc2HelperServiceDelegate)
+        .createLaunchTemplateVersion(requestArgumentCaptor.capture(), eq(awsConfig), eq(emptyList()), eq(REGION));
+    final CreateLaunchTemplateVersionRequest createLaunchTemplateVersionRequest = requestArgumentCaptor.getValue();
+    assertThat(createLaunchTemplateVersionRequest.getLaunchTemplateData().getImageId()).isEqualTo(artifactVersion);
+    assertThat(createLaunchTemplateVersionRequest.getLaunchTemplateId()).isEqualTo("ltid");
+    assertThat(createLaunchTemplateVersionRequest.getSourceVersion()).isEqualTo("3");
+    assertThat(createLaunchTemplateVersionRequest.getLaunchTemplateData().getUserData()).isEqualTo("user-data");
+
+    doReturn(new CreateLaunchTemplateVersionResult())
+        .when(mockAwsEc2HelperServiceDelegate)
+        .createLaunchTemplateVersion(
+            any(CreateLaunchTemplateVersionRequest.class), eq(awsConfig), eq(emptyList()), eq(REGION));
+
+    assertThatThrownBy(()
+                           -> awsAmiHelperServiceDelegate.createAndGetNewLaunchTemplateVersion(
+                               baseLaunchTemplateVersion, request, mockCallback, awsConfig, emptyList(), REGION))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_ensureAndGetLaunchTemplateVersion() {
+    final LaunchTemplateSpecification launchTemplateSpecification = new LaunchTemplateSpecification();
+    final AutoScalingGroup autoScalingGroup = new AutoScalingGroup();
+    final AwsConfig awsConfig = AwsConfig.builder().build();
+
+    doReturn(mock(LaunchTemplateVersion.class))
+        .when(mockAwsEc2HelperServiceDelegate)
+        .getLaunchTemplateVersion(awsConfig, emptyList(), REGION, launchTemplateSpecification.getLaunchTemplateId(),
+            launchTemplateSpecification.getVersion());
+    final LaunchTemplateVersion launchTemplateVersion = awsAmiHelperServiceDelegate.ensureAndGetLaunchTemplateVersion(
+        launchTemplateSpecification, autoScalingGroup, awsConfig, emptyList(), REGION, mockCallback);
+
+    assertThat(launchTemplateVersion).isNotNull();
+    verify(mockAwsEc2HelperServiceDelegate, times(1))
+        .getLaunchTemplateVersion(awsConfig, emptyList(), REGION, launchTemplateSpecification.getLaunchTemplateId(),
+            launchTemplateSpecification.getVersion());
+
+    //  check error
+
+    doReturn(null)
+        .when(mockAwsEc2HelperServiceDelegate)
+        .getLaunchTemplateVersion(awsConfig, emptyList(), REGION, launchTemplateSpecification.getLaunchTemplateId(),
+            launchTemplateSpecification.getVersion());
+
+    assertThatThrownBy(()
+                           -> awsAmiHelperServiceDelegate.ensureAndGetLaunchTemplateVersion(launchTemplateSpecification,
+                               autoScalingGroup, awsConfig, emptyList(), REGION, mockCallback))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_extractLaunchTemplateSpecFrom() {
+    final LaunchTemplateSpecification launchTemplate = new LaunchTemplateSpecification();
+    final AutoScalingGroup autoScalingGroup = new AutoScalingGroup().withLaunchTemplate(launchTemplate);
+    assertThat(awsAmiHelperServiceDelegate.extractLaunchTemplateSpecFrom(autoScalingGroup)).isEqualTo(launchTemplate);
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_extractLaunchTemplateSpecFrom_1() {
+    final LaunchTemplateSpecification launchTemplateSpecification = new LaunchTemplateSpecification();
+    final AutoScalingGroup autoScalingGroup =
+        new AutoScalingGroup().withMixedInstancesPolicy(new MixedInstancesPolicy().withLaunchTemplate(
+            new LaunchTemplate().withLaunchTemplateSpecification(launchTemplateSpecification)));
+    assertThat(awsAmiHelperServiceDelegate.extractLaunchTemplateSpecFrom(autoScalingGroup))
+        .isEqualTo(launchTemplateSpecification);
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_setUpAmiService_LT() {
+    final AwsConfig awsConfig = AwsConfig.builder().build();
+    final AwsAmiServiceSetupRequest awsAmiServiceSetupRequest = AwsAmiServiceSetupRequest.builder()
+                                                                    .region(REGION)
+                                                                    .infraMappingAsgName("asg_name")
+                                                                    .awsConfig(awsConfig)
+                                                                    .encryptionDetails(emptyList())
+                                                                    .infraMappingId("infra_id")
+                                                                    .newAsgNamePrefix("newsasgprefix_")
+                                                                    .useCurrentRunningCount(false)
+                                                                    .minInstances(1)
+                                                                    .maxInstances(3)
+                                                                    .desiredInstances(1)
+                                                                    .infraMappingClassisLbs(emptyList())
+                                                                    .infraMappingTargetGroupArns(emptyList())
+                                                                    .blueGreen(false)
+                                                                    .build();
+    final LaunchTemplateSpecification baseLaunchTemplateSpecification =
+        new LaunchTemplateSpecification().withLaunchTemplateId("ltid").withVersion("1");
+    final AutoScalingGroup baseAutoScalingGroup =
+        new AutoScalingGroup().withLaunchTemplate(baseLaunchTemplateSpecification);
+
+    doReturn(baseAutoScalingGroup)
+        .when(awsAmiHelperServiceDelegate)
+        .ensureAndGetBaseAutoScalingGroup(eq(awsConfig), eq(emptyList()), anyString(), anyString(), eq(mockCallback));
+
+    final LaunchTemplateVersion baseLaunchTemplateVersion =
+        new LaunchTemplateVersion().withVersionNumber(1L).withLaunchTemplateId("ltid").withLaunchTemplateName(
+            "base_lt_name");
+
+    doReturn(baseLaunchTemplateVersion)
+        .when(awsAmiHelperServiceDelegate)
+        .ensureAndGetLaunchTemplateVersion(eq(baseLaunchTemplateSpecification), eq(baseAutoScalingGroup), eq(awsConfig),
+            eq(emptyList()), anyString(), eq(mockCallback));
+    List<AutoScalingGroup> groups = asList(new AutoScalingGroup(),
+        new AutoScalingGroup()
+            .withAutoScalingGroupName("foo")
+            .withTags(new TagDescription().withKey(HARNESS_AUTOSCALING_GROUP_TAG).withValue("idFoo"))
+            .withCreatedTime(new Date(10)));
+
+    doReturn(groups).when(mockAwsAsgHelperServiceDelegate).listAllAsgs(any(), anyList(), anyString());
+
+    final LaunchTemplateVersion newLaunchTemplateVersion =
+        new LaunchTemplateVersion().withVersionNumber(2L).withLaunchTemplateId("ltid").withLaunchTemplateName(
+            "base_lt_name");
+    doReturn(newLaunchTemplateVersion)
+        .when(awsAmiHelperServiceDelegate)
+        .createAndGetNewLaunchTemplateVersion(eq(baseLaunchTemplateVersion), eq(awsAmiServiceSetupRequest),
+            eq(mockCallback), eq(awsConfig), eq(emptyList()), eq(REGION));
+
+    doReturn(new CreateAutoScalingGroupResult())
+        .when(mockAwsAsgHelperServiceDelegate)
+        .createAutoScalingGroup(
+            eq(awsConfig), eq(emptyList()), eq(REGION), any(CreateAutoScalingGroupRequest.class), eq(mockCallback));
+
+    final AwsAmiServiceSetupResponse awsAmiServiceSetupResponse =
+        awsAmiHelperServiceDelegate.setUpAmiService(awsAmiServiceSetupRequest, mockCallback);
+
+    verify(awsAmiHelperServiceDelegate, times(1))
+        .ensureAndGetBaseAutoScalingGroup(eq(awsConfig), eq(emptyList()), anyString(), anyString(), eq(mockCallback));
+    verify(awsAmiHelperServiceDelegate, times(1))
+        .ensureAndGetLaunchTemplateVersion(eq(baseLaunchTemplateSpecification), eq(baseAutoScalingGroup), eq(awsConfig),
+            eq(emptyList()), anyString(), eq(mockCallback));
+
+    verify(mockAwsAsgHelperServiceDelegate, times(1)).listAllAsgs(any(), anyList(), anyString());
+    verify(awsAmiHelperServiceDelegate, times(1))
+        .createAndGetNewLaunchTemplateVersion(eq(baseLaunchTemplateVersion), eq(awsAmiServiceSetupRequest),
+            eq(mockCallback), eq(awsConfig), eq(emptyList()), eq(REGION));
+
+    verify(mockAwsAsgHelperServiceDelegate, times(1))
+        .createAutoScalingGroup(
+            eq(awsConfig), eq(emptyList()), eq(REGION), any(CreateAutoScalingGroupRequest.class), eq(mockCallback));
+
+    verify(awsAmiHelperServiceDelegate)
+        .createNewAutoScalingGroupRequest("infra_id", emptyList(), emptyList(),
+            awsAmiServiceSetupResponse.getNewAsgName(), baseAutoScalingGroup,
+            awsAmiServiceSetupResponse.getHarnessRevision(), 3, newLaunchTemplateVersion);
+
+    assertThat(awsAmiServiceSetupResponse.getNewLaunchTemplateName())
+        .isEqualTo(newLaunchTemplateVersion.getLaunchTemplateName());
+    assertThat(awsAmiServiceSetupResponse.getNewLaunchTemplateVersion())
+        .isEqualTo(String.valueOf(newLaunchTemplateVersion.getVersionNumber()));
+
+    assertThat(awsAmiServiceSetupResponse.getBaseLaunchTemplateName())
+        .isEqualTo(baseLaunchTemplateVersion.getLaunchTemplateName());
+    assertThat(awsAmiServiceSetupResponse.getBaseLaunchTemplateVersion())
+        .isEqualTo(String.valueOf(baseLaunchTemplateVersion.getVersionNumber()));
   }
 }

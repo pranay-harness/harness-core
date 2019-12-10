@@ -27,8 +27,15 @@ import com.amazonaws.services.autoscaling.model.BlockDeviceMapping;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import com.amazonaws.services.autoscaling.model.LaunchTemplate;
+import com.amazonaws.services.autoscaling.model.LaunchTemplateSpecification;
+import com.amazonaws.services.autoscaling.model.MixedInstancesPolicy;
 import com.amazonaws.services.autoscaling.model.Tag;
+import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionRequest;
+import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionResult;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.LaunchTemplateVersion;
+import com.amazonaws.services.ec2.model.RequestLaunchTemplateData;
 import io.fabric8.utils.Lists;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
@@ -57,7 +64,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
 @Singleton
@@ -482,6 +491,20 @@ public class AwsAmiHelperServiceDelegateImpl
           rollback, baseScalingPolicyJSONs, desiredInstances);
     }
   }
+  @VisibleForTesting
+  LaunchTemplateSpecification extractLaunchTemplateSpecFrom(AutoScalingGroup autoScalingGroup) {
+    LaunchTemplateSpecification launchTemplateSpecification = null;
+    if (autoScalingGroup != null) {
+      launchTemplateSpecification = autoScalingGroup.getLaunchTemplate();
+      if (launchTemplateSpecification == null) {
+        launchTemplateSpecification = Optional.ofNullable(autoScalingGroup.getMixedInstancesPolicy())
+                                          .map(MixedInstancesPolicy::getLaunchTemplate)
+                                          .map(LaunchTemplate::getLaunchTemplateSpecification)
+                                          .orElse(null);
+      }
+    }
+    return launchTemplateSpecification;
+  }
 
   @Override
   public AwsAmiServiceSetupResponse setUpAmiService(
@@ -493,12 +516,26 @@ public class AwsAmiHelperServiceDelegateImpl
       logCallback.saveExecutionLog("Starting AWS AMI Setup", INFO);
 
       logCallback.saveExecutionLog("Getting base auto scaling group");
-      AutoScalingGroup baseAutoScalingGroup = ensureAndGetBaseAutoScalingGroup(
+      final AutoScalingGroup baseAutoScalingGroup = ensureAndGetBaseAutoScalingGroup(
           awsConfig, encryptionDetails, request.getRegion(), request.getInfraMappingAsgName(), logCallback);
-
-      logCallback.saveExecutionLog("Getting base launch configuration");
-      LaunchConfiguration baseLaunchConfiguration = ensureAndGetBaseLaunchConfiguration(awsConfig, encryptionDetails,
-          request.getRegion(), request.getInfraMappingAsgName(), baseAutoScalingGroup, logCallback);
+      boolean isBaseAsgLtBased = false;
+      LaunchConfiguration baseLaunchConfiguration = null;
+      final LaunchTemplateSpecification baseLaunchTemplateSpecification =
+          extractLaunchTemplateSpecFrom(baseAutoScalingGroup);
+      LaunchTemplateVersion baseLaunchTemplateVersion = null;
+      LaunchTemplateVersion newLaunchTemplateVersion = null;
+      if (baseLaunchTemplateSpecification != null) {
+        isBaseAsgLtBased = true;
+        logCallback.saveExecutionLog("Getting base launch template");
+        baseLaunchTemplateVersion = ensureAndGetLaunchTemplateVersion(baseLaunchTemplateSpecification,
+            baseAutoScalingGroup, awsConfig, encryptionDetails, request.getRegion(), logCallback);
+        logCallback.saveExecutionLog(format("Found Base Launch Template name=[%s], version=[%s]",
+            baseLaunchTemplateVersion.getLaunchTemplateName(), baseLaunchTemplateVersion.getVersionNumber()));
+      } else {
+        logCallback.saveExecutionLog("Getting base launch configuration");
+        baseLaunchConfiguration = ensureAndGetBaseLaunchConfiguration(awsConfig, encryptionDetails, request.getRegion(),
+            request.getInfraMappingAsgName(), baseAutoScalingGroup, logCallback);
+      }
 
       logCallback.saveExecutionLog("Getting all Harness managed autoscaling groups");
       List<AutoScalingGroup> harnessManagedAutoScalingGroups = listAllHarnessManagedAsgs(
@@ -532,26 +569,21 @@ public class AwsAmiHelperServiceDelegateImpl
         desiredInstances = request.getDesiredInstances();
       }
 
-      LaunchConfiguration oldLaunchConfiguration = awsAsgHelperServiceDelegate.getLaunchConfiguration(
-          awsConfig, encryptionDetails, region, newAutoScalingGroupName);
-      if (oldLaunchConfiguration != null) {
-        logCallback.saveExecutionLog(
-            format("Deleting old launch configuration [%s]", oldLaunchConfiguration.getLaunchConfigurationName()));
-        awsAsgHelperServiceDelegate.deleteLaunchConfig(awsConfig, encryptionDetails, region, newAutoScalingGroupName);
+      if (isBaseAsgLtBased) {
+        //  creating LT
+        newLaunchTemplateVersion = createAndGetNewLaunchTemplateVersion(
+            baseLaunchTemplateVersion, request, logCallback, awsConfig, encryptionDetails, region);
+      } else {
+        createNewLaunchConfig(request, logCallback, awsConfig, encryptionDetails, baseLaunchConfiguration, region,
+            newAutoScalingGroupName);
       }
-
-      logCallback.saveExecutionLog(format("Creating new launch configuration [%s]", newAutoScalingGroupName));
-      awsAsgHelperServiceDelegate.createLaunchConfiguration(awsConfig, encryptionDetails, region,
-          createNewLaunchConfigurationRequest(awsConfig, encryptionDetails, region, request.getArtifactRevision(),
-              baseLaunchConfiguration, newAutoScalingGroupName, request.getUserData()));
 
       logCallback.saveExecutionLog(format("Creating new AutoScalingGroup [%s]", newAutoScalingGroupName));
       awsAsgHelperServiceDelegate.createAutoScalingGroup(awsConfig, encryptionDetails, region,
           createNewAutoScalingGroupRequest(request.getInfraMappingId(), request.getInfraMappingClassisLbs(),
               request.getInfraMappingTargetGroupArns(), newAutoScalingGroupName, baseAutoScalingGroup, harnessRevision,
-              maxInstances),
+              maxInstances, newLaunchTemplateVersion),
           logCallback);
-
       AwsAmiServiceSetupResponseBuilder builder =
           AwsAmiServiceSetupResponse.builder()
               .executionStatus(SUCCESS)
@@ -562,6 +594,15 @@ public class AwsAmiHelperServiceDelegateImpl
               .maxInstances(maxInstances)
               .desiredInstances(desiredInstances)
               .blueGreen(request.isBlueGreen())
+              .baseLaunchTemplateName(
+                  baseLaunchTemplateVersion != null ? baseLaunchTemplateVersion.getLaunchTemplateName() : null)
+              .baseLaunchTemplateVersion(baseLaunchTemplateVersion != null
+                      ? String.valueOf(baseLaunchTemplateVersion.getVersionNumber())
+                      : null)
+              .newLaunchTemplateName(
+                  newLaunchTemplateVersion != null ? newLaunchTemplateVersion.getLaunchTemplateName() : null)
+              .newLaunchTemplateVersion(
+                  newLaunchTemplateVersion != null ? String.valueOf(newLaunchTemplateVersion.getVersionNumber()) : null)
               .baseAsgScalingPolicyJSONs(awsAsgHelperServiceDelegate.getScalingPolicyJSONs(
                   awsConfig, encryptionDetails, region, baseAutoScalingGroup.getAutoScalingGroupName(), logCallback));
 
@@ -582,6 +623,45 @@ public class AwsAmiHelperServiceDelegateImpl
           .executionStatus(FAILED)
           .build();
     }
+  }
+
+  private void createNewLaunchConfig(AwsAmiServiceSetupRequest request, ExecutionLogCallback logCallback,
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, LaunchConfiguration baseLaunchConfiguration,
+      String region, String newAutoScalingGroupName) {
+    LaunchConfiguration oldLaunchConfiguration = awsAsgHelperServiceDelegate.getLaunchConfiguration(
+        awsConfig, encryptionDetails, region, newAutoScalingGroupName);
+    if (oldLaunchConfiguration != null) {
+      logCallback.saveExecutionLog(
+          format("Deleting old launch configuration [%s]", oldLaunchConfiguration.getLaunchConfigurationName()));
+      awsAsgHelperServiceDelegate.deleteLaunchConfig(awsConfig, encryptionDetails, region, newAutoScalingGroupName);
+    }
+    logCallback.saveExecutionLog(format("Creating new launch configuration [%s]", newAutoScalingGroupName));
+    awsAsgHelperServiceDelegate.createLaunchConfiguration(awsConfig, encryptionDetails, region,
+        createNewLaunchConfigurationRequest(awsConfig, encryptionDetails, region, request.getArtifactRevision(),
+            baseLaunchConfiguration, newAutoScalingGroupName, request.getUserData()));
+  }
+
+  @VisibleForTesting
+  LaunchTemplateVersion createAndGetNewLaunchTemplateVersion(LaunchTemplateVersion baseLaunchTemplateVersion,
+      AwsAmiServiceSetupRequest request, ExecutionLogCallback logCallback, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region) {
+    logCallback.saveExecutionLog("Creating new launch template version");
+
+    final CreateLaunchTemplateVersionRequest createLaunchTemplateVersionRequest = createNewLaunchTemplateVersionRequest(
+        request.getArtifactRevision(), baseLaunchTemplateVersion, request.getUserData());
+    final CreateLaunchTemplateVersionResult newLaunchTemplateVersionResult =
+        awsEc2HelperServiceDelegate.createLaunchTemplateVersion(
+            createLaunchTemplateVersionRequest, awsConfig, encryptionDetails, region);
+    if (newLaunchTemplateVersionResult == null || newLaunchTemplateVersionResult.getLaunchTemplateVersion() == null) {
+      final String errorMsg = format("Unable to create new version of Launch Template from base [%s] , version =[%s]",
+          baseLaunchTemplateVersion.getLaunchTemplateName(), baseLaunchTemplateVersion.getVersionNumber());
+      logCallback.saveExecutionLog(errorMsg, ERROR);
+      throw new InvalidRequestException(errorMsg);
+    }
+
+    logCallback.saveExecutionLog(format("Created new launch template version =[%s]",
+        newLaunchTemplateVersionResult.getLaunchTemplateVersion().getVersionNumber()));
+    return newLaunchTemplateVersionResult.getLaunchTemplateVersion();
   }
 
   @VisibleForTesting
@@ -643,7 +723,8 @@ public class AwsAmiHelperServiceDelegateImpl
   @VisibleForTesting
   CreateAutoScalingGroupRequest createNewAutoScalingGroupRequest(String infraMappingId,
       List<String> infraMappingClassisLbs, List<String> infraMappingTargetGroupArns, String newAutoScalingGroupName,
-      AutoScalingGroup baseAutoScalingGroup, Integer harnessRevision, Integer maxInstances) {
+      AutoScalingGroup baseAutoScalingGroup, Integer harnessRevision, Integer maxInstances,
+      LaunchTemplateVersion newLaunchTemplateVersion) {
     List<Tag> tags =
         baseAutoScalingGroup.getTags()
             .stream()
@@ -674,7 +755,6 @@ public class AwsAmiHelperServiceDelegateImpl
     CreateAutoScalingGroupRequest createAutoScalingGroupRequest =
         new CreateAutoScalingGroupRequest()
             .withAutoScalingGroupName(newAutoScalingGroupName)
-            .withLaunchConfigurationName(newAutoScalingGroupName)
             .withDesiredCapacity(0)
             .withMinSize(0)
             .withMaxSize(maxInstances)
@@ -683,6 +763,15 @@ public class AwsAmiHelperServiceDelegateImpl
             .withAvailabilityZones(baseAutoScalingGroup.getAvailabilityZones())
             .withTerminationPolicies(baseAutoScalingGroup.getTerminationPolicies())
             .withNewInstancesProtectedFromScaleIn(baseAutoScalingGroup.getNewInstancesProtectedFromScaleIn());
+
+    if (newLaunchTemplateVersion != null) {
+      createAutoScalingGroupRequest.withLaunchTemplate(
+          new LaunchTemplateSpecification()
+              .withLaunchTemplateId(newLaunchTemplateVersion.getLaunchTemplateId())
+              .withVersion(String.valueOf(newLaunchTemplateVersion.getVersionNumber())));
+    } else {
+      createAutoScalingGroupRequest.withLaunchConfigurationName(newAutoScalingGroupName);
+    }
 
     if (!Lists.isNullOrEmpty(infraMappingClassisLbs)) {
       createAutoScalingGroupRequest.setLoadBalancerNames(infraMappingClassisLbs);
@@ -773,6 +862,20 @@ public class AwsAmiHelperServiceDelegateImpl
   }
 
   @VisibleForTesting
+  CreateLaunchTemplateVersionRequest createNewLaunchTemplateVersionRequest(
+      String artifactRevision, LaunchTemplateVersion baseLaunchTemplateVersion, String userData) {
+    RequestLaunchTemplateData launchTemplateData = new RequestLaunchTemplateData().withImageId(artifactRevision);
+    if (isNotEmpty(userData)) {
+      launchTemplateData = launchTemplateData.withUserData(userData);
+    }
+    return new CreateLaunchTemplateVersionRequest()
+        .withClientToken(UUID.randomUUID().toString())
+        .withLaunchTemplateId(baseLaunchTemplateVersion.getLaunchTemplateId())
+        .withSourceVersion(String.valueOf(baseLaunchTemplateVersion.getVersionNumber()))
+        .withLaunchTemplateData(launchTemplateData);
+  }
+
+  @VisibleForTesting
   Integer getNewHarnessVersion(List<AutoScalingGroup> harnessManagedAutoScalingGroups) {
     Integer harnessRevision = 1;
     if (isNotEmpty(harnessManagedAutoScalingGroups)) {
@@ -844,5 +947,24 @@ public class AwsAmiHelperServiceDelegateImpl
       throw new InvalidRequestException(errorMessage);
     }
     return baseAutoScalingGroup;
+  }
+
+  @VisibleForTesting
+  LaunchTemplateVersion ensureAndGetLaunchTemplateVersion(LaunchTemplateSpecification baseLaunchTemplateSpec,
+      AutoScalingGroup baseAutoScalingGroup, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, ExecutionLogCallback logCallback) {
+    final LaunchTemplateVersion baseLaunchTemplateVersion =
+        awsEc2HelperServiceDelegate.getLaunchTemplateVersion(awsConfig, encryptionDetails, region,
+            baseLaunchTemplateSpec.getLaunchTemplateId(), baseLaunchTemplateSpec.getVersion());
+
+    if (baseLaunchTemplateVersion == null) {
+      String errorMessage = format(
+          "LaunchTemplate [%s] , version [%s] for referenced AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",
+          baseLaunchTemplateSpec.getLaunchTemplateName(), baseLaunchTemplateSpec.getVersion(),
+          baseAutoScalingGroup.getAutoScalingGroupName(), region);
+      logCallback.saveExecutionLog(errorMessage, ERROR);
+      throw new InvalidRequestException(errorMessage);
+    }
+    return baseLaunchTemplateVersion;
   }
 }

@@ -290,15 +290,17 @@ public class AwsAsgHelperServiceDelegateImpl
               amazonAutoScalingClient, autoScalingGroup.getAutoScalingGroupName(), new HashSet<>(), callback, true);
           logger.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
         }
-        try {
-          tracker.trackASGCall("Delete Launch Config");
-          amazonAutoScalingClient.deleteLaunchConfiguration(
-              new DeleteLaunchConfigurationRequest().withLaunchConfigurationName(
-                  autoScalingGroup.getLaunchConfigurationName()));
-        } catch (Exception ignored) {
-          describeAutoScalingGroupActivities(
-              amazonAutoScalingClient, autoScalingGroup.getAutoScalingGroupName(), new HashSet<>(), callback, true);
-          logger.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
+        if (isNotEmpty(autoScalingGroup.getLaunchConfigurationName())) {
+          try {
+            tracker.trackASGCall("Delete Launch Config");
+            amazonAutoScalingClient.deleteLaunchConfiguration(
+                new DeleteLaunchConfigurationRequest().withLaunchConfigurationName(
+                    autoScalingGroup.getLaunchConfigurationName()));
+          } catch (Exception ignored) {
+            describeAutoScalingGroupActivities(
+                amazonAutoScalingClient, autoScalingGroup.getAutoScalingGroupName(), new HashSet<>(), callback, true);
+            logger.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
+          }
         }
       });
     } catch (AmazonServiceException amazonServiceException) {
