@@ -18,6 +18,13 @@ extend type Query {
     groupBy: [CCMGroupBy]
     sortCriteria: [BillingSortCriteria]
   ): BillingEntityData @dataFetcher(name: billingStatsEntity)
+
+  billingStatsFilterValues(
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+    sortCriteria: [BillingSortCriteria]
+  ): BillingFilterData @dataFetcher(name: billingStatsFilterValues)
 }
 
 input CCMAggregationFunction {
@@ -27,6 +34,8 @@ input CCMAggregationFunction {
 
 enum CCMAggregateOperation {
   SUM
+  MAX
+  AVG
 }
 
 input CCMGroupBy {
@@ -90,10 +99,27 @@ type BillingEntityDataPoint {
   clusterId: String
   totalNamespaces: Number
   totalWorkloads: Number
+  maxCpuUtilization: Number
+  maxMemoryUtilization: Number
+  avgCpuUtilization: Number
+  avgMemoryUtilization: Number
 }
 
 type BillingEntityData {
   data: [BillingEntityDataPoint]
+}
+
+type BillingFilterDataPoint {
+  cloudServiceNames: [String]
+  instanceIds: [String]
+  launchTypes: [String]
+  clusterIds: [String]
+  workloadNames: [String]
+  namespaces: [String]
+}
+
+type BillingFilterData {
+  data: [BillingFilterDataPoint]
 }
 
 type BillingStatsData {

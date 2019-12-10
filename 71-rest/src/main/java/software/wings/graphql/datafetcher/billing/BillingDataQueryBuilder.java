@@ -97,6 +97,10 @@ public class BillingDataQueryBuilder {
 
     selectQuery.addCustomFromTable(schema.getBillingDataTable());
 
+    if (isClusterNotNullFilterPresent(filters)) {
+      addInstanceTypeFilter(filters);
+    }
+
     if (!Lists.isNullOrEmpty(filters)) {
       decorateQueryWithFilters(selectQuery, filters);
     }
@@ -106,6 +110,41 @@ public class BillingDataQueryBuilder {
     selectQuery.getWhereClause().setDisableParens(true);
     queryMetaDataBuilder.fieldNames(fieldNames);
     queryMetaDataBuilder.query(selectQuery.toString());
+    queryMetaDataBuilder.filters(filters);
+    return queryMetaDataBuilder.build();
+  }
+
+  protected BillingDataQueryMetadata formFilterValuesQuery(
+      String accountId, List<QLBillingDataFilter> filters, List<QLCCMEntityGroupBy> groupBy) {
+    BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
+    SelectQuery selectQuery = new SelectQuery();
+    ResultType resultType;
+    resultType = ResultType.STACKED_TIME_SERIES;
+
+    queryMetaDataBuilder.resultType(resultType);
+    List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
+    List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
+
+    if (isGroupByClusterPresent(groupBy)) {
+      addInstanceTypeFilter(filters);
+    }
+
+    selectQuery.addCustomFromTable(schema.getBillingDataTable());
+
+    if (!Lists.isNullOrEmpty(filters)) {
+      decorateQueryWithFilters(selectQuery, filters);
+    }
+
+    if (isValidGroupBy(groupBy)) {
+      decorateQueryWithGroupBy(fieldNames, selectQuery, groupBy, groupByFields);
+    }
+
+    addAccountFilter(selectQuery, accountId);
+
+    selectQuery.getWhereClause().setDisableParens(true);
+    queryMetaDataBuilder.fieldNames(fieldNames);
+    queryMetaDataBuilder.query(selectQuery.toString());
+    queryMetaDataBuilder.groupByFields(groupByFields);
     queryMetaDataBuilder.filters(filters);
     return queryMetaDataBuilder.build();
   }
@@ -123,7 +162,7 @@ public class BillingDataQueryBuilder {
 
   private void decorateQueryWithAggregation(SelectQuery selectQuery, QLCCMAggregationFunction aggregationFunction,
       List<BillingDataMetaDataFields> fieldNames) {
-    if (aggregationFunction != null && aggregationFunction.getOperationType().equals(QLCCMAggregateOperation.SUM)) {
+    if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.SUM) {
       if (aggregationFunction.getColumnName().equals(schema.getBillingAmount().getColumnNameSQL())) {
         selectQuery.addCustomColumns(
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getBillingAmount()),
@@ -144,6 +183,30 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getMemoryIdleCost()),
                 BillingDataMetaDataFields.MEMORYIDLECOST.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.MEMORYIDLECOST);
+      }
+    } else if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.MAX) {
+      if (aggregationFunction.getColumnName().equals(schema.getMaxCpuUtilization().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.max().addColumnParams(schema.getMaxCpuUtilization()),
+                BillingDataMetaDataFields.MAXCPUUTILIZATION.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.MAXCPUUTILIZATION);
+      } else if (aggregationFunction.getColumnName().equals(schema.getMaxMemoryUtilization().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.max().addColumnParams(schema.getMaxMemoryUtilization()),
+                BillingDataMetaDataFields.MAXMEMORYUTILIZATION.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.MAXMEMORYUTILIZATION);
+      }
+    } else if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.AVG) {
+      if (aggregationFunction.getColumnName().equals(schema.getAvgCpuUtilization().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.avg().addColumnParams(schema.getAvgCpuUtilization()),
+                BillingDataMetaDataFields.AVGCPUUTILIZATION.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.AVGCPUUTILIZATION);
+      } else if (aggregationFunction.getColumnName().equals(schema.getAvgMemoryUtilization().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.avg().addColumnParams(schema.getAvgMemoryUtilization()),
+                BillingDataMetaDataFields.AVGMEMORYUTILIZATION.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.AVGMEMORYUTILIZATION);
       }
     }
   }
@@ -218,6 +281,10 @@ public class BillingDataQueryBuilder {
       case IN:
         selectQuery.addCondition(new InCondition(key, (Object[]) filter.getValues()));
         break;
+      case NOT_NULL:
+        selectQuery.addCondition(UnaryCondition.isNotNull(key));
+        break;
+
       default:
         throw new InvalidRequestException("String simple operator not supported" + operator);
     }
@@ -373,27 +440,33 @@ public class BillingDataQueryBuilder {
     }
   }
 
-  private boolean isGroupByClusterPresent(List<QLCCMEntityGroupBy> groupBy) {
-    for (QLCCMEntityGroupBy aggregation : groupBy) {
-      if (aggregation.equals(QLCCMEntityGroupBy.Cluster)) {
-        return true;
-      }
-    }
-    return false;
+  private boolean isGroupByClusterPresent(List<QLCCMEntityGroupBy> groupByList) {
+    return groupByList.stream().anyMatch(groupBy -> groupBy == QLCCMEntityGroupBy.Cluster);
+  }
+
+  private boolean isClusterNotNullFilterPresent(List<QLBillingDataFilter> filters) {
+    return filters.stream().anyMatch(
+        filter -> filter.getCluster() != null && filter.getCluster().getOperator() == QLIdOperator.NOT_NULL);
   }
 
   private void addInstanceTypeFilter(List<QLBillingDataFilter> filters) {
-    List<String> instanceTypeValues = new ArrayList<>();
-    instanceTypeValues.add("ECS_TASK_FARGATE");
-    instanceTypeValues.add("ECS_CONTAINER_INSTANCE");
-    instanceTypeValues.add("K8S_NODE");
+    if (!isInstanceTypeFilterPresent(filters)) {
+      List<String> instanceTypeValues = new ArrayList<>();
+      instanceTypeValues.add("ECS_TASK_FARGATE");
+      instanceTypeValues.add("ECS_CONTAINER_INSTANCE");
+      instanceTypeValues.add("K8S_NODE");
 
-    QLBillingDataFilter instanceTypeFilter = QLBillingDataFilter.builder()
-                                                 .instanceType(QLIdFilter.builder()
-                                                                   .operator(QLIdOperator.EQUALS)
-                                                                   .values(instanceTypeValues.toArray(new String[0]))
-                                                                   .build())
-                                                 .build();
-    filters.add(instanceTypeFilter);
+      QLBillingDataFilter instanceTypeFilter = QLBillingDataFilter.builder()
+                                                   .instanceType(QLIdFilter.builder()
+                                                                     .operator(QLIdOperator.EQUALS)
+                                                                     .values(instanceTypeValues.toArray(new String[0]))
+                                                                     .build())
+                                                   .build();
+      filters.add(instanceTypeFilter);
+    }
+  }
+
+  private boolean isInstanceTypeFilterPresent(List<QLBillingDataFilter> filters) {
+    return filters.stream().anyMatch(filter -> filter.getInstanceType() != null);
   }
 }

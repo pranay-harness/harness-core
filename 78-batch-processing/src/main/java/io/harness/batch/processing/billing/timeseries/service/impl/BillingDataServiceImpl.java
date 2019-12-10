@@ -23,7 +23,7 @@ public class BillingDataServiceImpl {
 
   private static final int MAX_RETRY_COUNT = 5;
   static final String INSERT_STATEMENT =
-      "INSERT INTO BILLING_DATA (STARTTIME, ENDTIME, ACCOUNTID, INSTANCETYPE, BILLINGACCOUNTID, BILLINGAMOUNT, USAGEDURATIONSECONDS, INSTANCEID, CLUSTERNAME, CLUSTERID, SETTINGID,  SERVICEID, APPID, CLOUDPROVIDERID, ENVID, CPUUNITSECONDS, MEMORYMBSECONDS, PARENTINSTANCEID, REGION, LAUNCHTYPE, CLUSTERTYPE, CLOUDPROVIDER, WORKLOADNAME, WORKLOADTYPE, NAMESPACE, CLOUDSERVICENAME, IDLECOST, CPUIDLECOST, MEMORYIDLECOST) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO BILLING_DATA (STARTTIME, ENDTIME, ACCOUNTID, INSTANCETYPE, BILLINGACCOUNTID, BILLINGAMOUNT, USAGEDURATIONSECONDS, INSTANCEID, CLUSTERNAME, CLUSTERID, SETTINGID,  SERVICEID, APPID, CLOUDPROVIDERID, ENVID, CPUUNITSECONDS, MEMORYMBSECONDS, PARENTINSTANCEID, REGION, LAUNCHTYPE, CLUSTERTYPE, CLOUDPROVIDER, WORKLOADNAME, WORKLOADTYPE, NAMESPACE, CLOUDSERVICENAME, IDLECOST, CPUIDLECOST, MEMORYIDLECOST, MAXCPUUTILIZATION, MAXMEMORYUTILIZATION, AVGCPUUTILIZATION, AVGMEMORYTILIZATION ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
   public boolean create(InstanceBillingData instanceBillingData) {
     boolean successfulInsert = false;
@@ -80,5 +80,9 @@ public class BillingDataServiceImpl {
     statement.setBigDecimal(27, instanceBillingData.getIdleCost());
     statement.setBigDecimal(28, instanceBillingData.getCpuIdleCost());
     statement.setBigDecimal(29, instanceBillingData.getMemoryIdleCost());
+    statement.setDouble(30, instanceBillingData.getMaxCpuUtilization());
+    statement.setDouble(31, instanceBillingData.getMaxMemoryUtilization());
+    statement.setDouble(32, instanceBillingData.getAvgCpuUtilization());
+    statement.setDouble(33, instanceBillingData.getAvgMemoryUtilization());
   }
 }

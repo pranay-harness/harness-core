@@ -20,6 +20,11 @@ public class BillingStatsDefaultKeys {
   public static final String NAMESPACE = "Default_Namespace";
   public static final String CLUSTERTYPE = "Default_ClusterType";
   public static final String CLUSTERID = "Default_ClusterId";
+  public static final String INSTANCEID = "Default_InstanceId";
   public static final int TOTALWORKLOADS = 0;
   public static final int TOTALNAMESPACES = 0;
+  public static final double MAXCPUUTILIZATION = 1.0;
+  public static final double MAXMEMORYUTILIZATION = 1.0;
+  public static final double AVGCPUUTILIZATION = 1.0;
+  public static final double AVGMEMORYUTILIZATION = 1.0;
 }

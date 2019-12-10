@@ -32,6 +32,10 @@ public class InstanceBillingData {
   private BigDecimal idleCost;
   private BigDecimal cpuIdleCost;
   private BigDecimal memoryIdleCost;
+  private double maxCpuUtilization;
+  private double maxMemoryUtilization;
+  private double avgCpuUtilization;
+  private double avgMemoryUtilization;
   private double cpuUnitSeconds;
   private double memoryMbSeconds;
   private double usageDurationSeconds;

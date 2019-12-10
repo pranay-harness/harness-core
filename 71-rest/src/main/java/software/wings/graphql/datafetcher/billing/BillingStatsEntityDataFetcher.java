@@ -96,6 +96,10 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
       String clusterId = BillingStatsDefaultKeys.CLUSTERID;
       int totalWorkloads = BillingStatsDefaultKeys.TOTALWORKLOADS;
       int totalNamespaces = BillingStatsDefaultKeys.TOTALNAMESPACES;
+      Double maxCpuUtilization = BillingStatsDefaultKeys.MAXCPUUTILIZATION;
+      Double maxMemoryUtilization = BillingStatsDefaultKeys.MAXMEMORYUTILIZATION;
+      Double avgCpuUtilization = BillingStatsDefaultKeys.AVGCPUUTILIZATION;
+      Double avgMemoryUtilization = BillingStatsDefaultKeys.AVGMEMORYUTILIZATION;
 
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
@@ -145,6 +149,18 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
           case CLUSTERID:
             clusterId = resultSet.getString(field.getFieldName());
             break;
+          case MAXCPUUTILIZATION:
+            maxCpuUtilization = resultSet.getDouble(field.getFieldName());
+            break;
+          case MAXMEMORYUTILIZATION:
+            maxMemoryUtilization = resultSet.getDouble(field.getFieldName());
+            break;
+          case AVGCPUUTILIZATION:
+            avgCpuUtilization = resultSet.getDouble(field.getFieldName());
+            break;
+          case AVGMEMORYUTILIZATION:
+            avgMemoryUtilization = resultSet.getDouble(field.getFieldName());
+            break;
           case TOTALNAMESPACES:
             // Todo: query db to get total namespace count
             break;
@@ -175,7 +191,11 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
           .clusterType(clusterType)
           .clusterId(clusterId)
           .totalNamespaces(totalNamespaces)
-          .totalWorkloads(totalWorkloads);
+          .totalWorkloads(totalWorkloads)
+          .maxCpuUtilization(maxCpuUtilization)
+          .maxMemoryUtilization(maxMemoryUtilization)
+          .avgCpuUtilization(avgCpuUtilization)
+          .avgMemoryUtilization(avgMemoryUtilization);
 
       entityTableListData.add(entityTableDataBuilder.build());
     }

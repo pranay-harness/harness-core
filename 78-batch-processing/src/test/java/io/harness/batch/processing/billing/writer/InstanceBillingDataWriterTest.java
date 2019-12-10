@@ -126,7 +126,12 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     metaDataMap.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
     Map<String, UtilizationData> utilizationDataForInstances = new HashMap<>();
     utilizationDataForInstances.put(INSTANCE_ID,
-        UtilizationData.builder().cpuUtilization(CPU_UTILIZATION).memoryUtilization(MEMORY_UTILIZATION).build());
+        UtilizationData.builder()
+            .maxCpuUtilization(CPU_UTILIZATION)
+            .maxMemoryUtilization(MEMORY_UTILIZATION)
+            .avgCpuUtilization(CPU_UTILIZATION)
+            .avgMemoryUtilization(MEMORY_UTILIZATION)
+            .build());
     InstanceData instanceData = InstanceData.builder()
                                     .instanceType(InstanceType.EC2_INSTANCE)
                                     .metaData(metaDataMap)
@@ -161,6 +166,10 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     assertThat(instanceBillingData.getEndTimestamp()).isEqualTo(END_TIME_MILLIS);
     assertThat(instanceBillingData.getAppId()).isEqualTo(APP_ID);
     assertThat(instanceBillingData.getServiceId()).isEqualTo(SERVICE_ID);
+    assertThat(instanceBillingData.getMaxCpuUtilization()).isEqualTo(CPU_UTILIZATION);
+    assertThat(instanceBillingData.getMaxMemoryUtilization()).isEqualTo(MEMORY_UTILIZATION);
+    assertThat(instanceBillingData.getAvgCpuUtilization()).isEqualTo(CPU_UTILIZATION);
+    assertThat(instanceBillingData.getAvgMemoryUtilization()).isEqualTo(MEMORY_UTILIZATION);
   }
 
   private HarnessServiceInfo getHarnessServiceInfo() {

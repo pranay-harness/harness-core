@@ -122,8 +122,10 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
     assertThat(utilizationDataMap).isNotNull();
     assertThat(utilizationDataMap.get(INSTANCE_ID)).isNotNull();
     UtilizationData utilizationData = utilizationDataMap.get(INSTANCE_ID);
-    assertThat(utilizationData.getCpuUtilization()).isEqualTo(CPU_UTILIZATION);
-    assertThat(utilizationData.getMemoryUtilization()).isEqualTo(MEMORY_UTILIZATION);
+    assertThat(utilizationData.getMaxCpuUtilization()).isEqualTo(CPU_UTILIZATION);
+    assertThat(utilizationData.getMaxMemoryUtilization()).isEqualTo(MEMORY_UTILIZATION);
+    assertThat(utilizationData.getAvgCpuUtilization()).isEqualTo(CPU_UTILIZATION);
+    assertThat(utilizationData.getAvgMemoryUtilization()).isEqualTo(MEMORY_UTILIZATION);
   }
 
   @Test
@@ -179,8 +181,10 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
     when(timeScaleDBService.getDBConnection()).thenReturn(connection);
     when(connection.createStatement()).thenReturn(statement);
     when(statement.executeQuery(anyString())).thenReturn(resultSet);
-    when(resultSet.getDouble("CPUUTILIZATION")).thenAnswer((Answer<Double>) invocation -> CPU_UTILIZATION);
-    when(resultSet.getDouble("MEMORYUTILIZATION")).thenAnswer((Answer<Double>) invocation -> MEMORY_UTILIZATION);
+    when(resultSet.getDouble("MAXCPUUTILIZATION")).thenAnswer((Answer<Double>) invocation -> CPU_UTILIZATION);
+    when(resultSet.getDouble("MAXMEMORYUTILIZATION")).thenAnswer((Answer<Double>) invocation -> MEMORY_UTILIZATION);
+    when(resultSet.getDouble("AVGCPUUTILIZATION")).thenAnswer((Answer<Double>) invocation -> CPU_UTILIZATION);
+    when(resultSet.getDouble("AVGMEMORYUTILIZATION")).thenAnswer((Answer<Double>) invocation -> MEMORY_UTILIZATION);
     when(resultSet.getString("INSTANCEID")).thenAnswer((Answer<String>) invocation -> SERVICE_ARN);
     returnResultSet(1);
   }

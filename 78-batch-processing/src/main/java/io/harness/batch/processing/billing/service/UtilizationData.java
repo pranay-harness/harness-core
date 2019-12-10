@@ -6,6 +6,8 @@ import lombok.Value;
 @Value
 @Builder
 public class UtilizationData {
-  private double cpuUtilization;
-  private double memoryUtilization;
+  private double maxCpuUtilization;
+  private double maxMemoryUtilization;
+  private double avgCpuUtilization;
+  private double avgMemoryUtilization;
 }
