@@ -49,16 +49,6 @@ ARTIFACT_SOURCE_TYPE:
       value: ARTIFACTORY
 
 ARTIFACT_STREAM_TYPE:
-    - name: JENKINS
-      value: Jenkins
-    - name: BAMBOO
-      value: Bamboo
-    - name: NEXUS
-      value: Nexus
-    - name: ARTIFACTORY
-      value: Artifactory
-    - name: AMAZON_S3
-      value: Amazon S3
     - name: DOCKER
       value: Docker Registry
     - name: ECR
@@ -67,16 +57,26 @@ ARTIFACT_STREAM_TYPE:
       value: GCR
     - name: ACR
       value: Azure Container Registry
-    - name: AMI
-      value: AMI Repository
+    - name: ARTIFACTORY
+      value: Artifactory
+    - name: NEXUS
+      value: Nexus
+    - name: JENKINS
+      value: Jenkins
+    - name: BAMBOO
+      value: Bamboo
     - name: GCS
       value: Google Cloud Storage
+    - name: AMAZON_S3
+      value: Amazon S3
+    - name: AMI
+      value: AMI Repository
+    - name: AZURE_ARTIFACTS
+      value: Azure Artifacts
     - name: SMB
       value: Samba Server
     - name: SFTP
       value: SFTP Server
-    - name: AZURE_ARTIFACTS
-      value: Azure Artifacts
     - name: CUSTOM
       value: Custom Repository
 

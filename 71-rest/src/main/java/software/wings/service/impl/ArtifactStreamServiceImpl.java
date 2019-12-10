@@ -955,43 +955,37 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
           new ImmutableMap.Builder<String, String>().put(AMI.name(), AMI.name()).put(CUSTOM.name(), CUSTOM.name());
       return builder.build();
     } else if (service.getArtifactType().equals(ArtifactType.OTHER)) {
-      ImmutableMap.Builder<String, String> builder =
-          new ImmutableMap.Builder<String, String>()
-              .put(DOCKER.name(), DOCKER.name())
-              .put(ECR.name(), ECR.name())
-              .put(ACR.name(), ACR.name())
-              .put(GCR.name(), GCR.name())
-              .put(ARTIFACTORY.name(), ARTIFACTORY.name())
-              .put(NEXUS.name(), NEXUS.name())
-              .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
-              .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
-              .put(GCS.name(), GCS.name())
-              .put(AMAZON_S3.name(), AMAZON_S3.name())
-              .put(SMB.name(), SMB.name())
-              .put(AMI.name(), AMI.name())
-              .put(SFTP.name(), SFTP.name())
-              .put(CUSTOM.name(), CUSTOM.name());
+      ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
+                                                         .put(DOCKER.name(), DOCKER.name())
+                                                         .put(ECR.name(), ECR.name())
+                                                         .put(ACR.name(), ACR.name())
+                                                         .put(GCR.name(), GCR.name())
+                                                         .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+                                                         .put(NEXUS.name(), NEXUS.name())
+                                                         .put(JENKINS.name(), JENKINS.name())
+                                                         .put(BAMBOO.name(), BAMBOO.name())
+                                                         .put(GCS.name(), GCS.name())
+                                                         .put(AMAZON_S3.name(), AMAZON_S3.name())
+                                                         .put(AMI.name(), AMI.name());
       if (featureFlagService.isEnabled(FeatureName.AZURE_ARTIFACTS, appService.getAccountIdByAppId(appId))) {
         builder.put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name());
       }
+      builder.put(SMB.name(), SMB.name()).put(SFTP.name(), SFTP.name()).put(CUSTOM.name(), CUSTOM.name());
       return builder.build();
     }
 
-    ImmutableMap.Builder<String, String> builder =
-        new ImmutableMap.Builder<String, String>()
-            .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
-            .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
-            .put(GCS.name(), GCS.name())
-            .put(ArtifactStreamType.NEXUS.name(), ArtifactStreamType.NEXUS.name())
-            .put(ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name())
-            .put(AMAZON_S3.name(), AMAZON_S3.name())
-            .put(SMB.name(), SMB.name())
-            .put(AMI.name(), AMI.name())
-            .put(SFTP.name(), SFTP.name())
-            .put(CUSTOM.name(), CUSTOM.name());
+    ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
+                                                       .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+                                                       .put(NEXUS.name(), NEXUS.name())
+                                                       .put(JENKINS.name(), JENKINS.name())
+                                                       .put(BAMBOO.name(), BAMBOO.name())
+                                                       .put(GCS.name(), GCS.name())
+                                                       .put(AMAZON_S3.name(), AMAZON_S3.name())
+                                                       .put(AMI.name(), AMI.name());
     if (featureFlagService.isEnabled(FeatureName.AZURE_ARTIFACTS, appService.getAccountIdByAppId(appId))) {
       builder.put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name());
     }
+    builder.put(SMB.name(), SMB.name()).put(SFTP.name(), SFTP.name()).put(CUSTOM.name(), CUSTOM.name());
     return builder.build();
   }
 
