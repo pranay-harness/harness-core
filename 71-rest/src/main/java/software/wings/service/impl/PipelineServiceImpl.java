@@ -847,37 +847,53 @@ public class PipelineServiceImpl implements PipelineService {
                                 -> t.obtainEntityType() != null && t.getMetadata() != null
                                     && t.getMetadata().get(Variable.RELATED_FIELD) != null)
                             .collect(Collectors.toList());
+    Map<String, String> parentFields = new HashMap<>();
     switch (entityType) {
       case INFRASTRUCTURE_MAPPING:
       case INFRASTRUCTURE_DEFINITION:
+        // instead of parent fields they have envId and service Id which is set inside the method
         handleInfraPipelineVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
         break;
       case APPDYNAMICS_TIERID:
-        handleAppDynamicsTierIdVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
+        parentFields =
+            handleAppDynamicsTierIdVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
         break;
       case APPDYNAMICS_APPID:
-        handleAppDynamicsAppIdVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
+        parentFields =
+            handleAppDynamicsAppIdVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
         break;
       case ELK_INDICES:
-        handleElkIndicesVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
+        parentFields =
+            handleElkIndicesVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
         break;
       case NEWRELIC_APPID:
-        handleNewRelicAppIdVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
+        parentFields =
+            handleNewRelicAppIdVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
         break;
       case NEWRELIC_MARKER_APPID:
-        handleNewRelicMarkerAppIdVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
+        parentFields = handleNewRelicMarkerAppIdVariable(
+            pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
         break;
       case SPLUNK_CONFIGID:
-        handleSplunkConfigIdVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
+        parentFields =
+            handleSplunkConfigIdVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
         break;
       default:
-        // no parent fields required
-        return;
+        logger.info("no parent fields required to be set");
+    }
+    if (isNotEmpty(parentFields)) {
+      if (pipelineVariable.getMetadata().get(Variable.PARENT_FIELDS) != null) {
+        Map<String, String> existingParents =
+            (Map<String, String>) pipelineVariable.getMetadata().get(Variable.PARENT_FIELDS);
+        existingParents.putAll(parentFields);
+      } else {
+        pipelineVariable.getMetadata().put(Variable.PARENT_FIELDS, parentFields);
+      }
     }
   }
 
-  private void handleNewRelicMarkerAppIdVariable(Variable pipelineVariable, List<Variable> workflowVariables,
-      String originalVarName, Map<String, String> pseWorkflowVariables) {
+  private Map<String, String> handleNewRelicMarkerAppIdVariable(Variable pipelineVariable,
+      List<Variable> workflowVariables, String originalVarName, Map<String, String> pseWorkflowVariables) {
     Map<String, String> parentFields = new HashMap<>();
     for (Variable var : workflowVariables) {
       if (NEWRELIC_MARKER_CONFIGID.equals(var.obtainEntityType())) {
@@ -887,10 +903,10 @@ public class PipelineServiceImpl implements PipelineService {
         }
       }
     }
-    pipelineVariable.getMetadata().put(Variable.PARENT_FIELDS, parentFields);
+    return parentFields;
   }
 
-  private void handleNewRelicAppIdVariable(Variable pipelineVariable, List<Variable> workflowVariables,
+  private Map<String, String> handleNewRelicAppIdVariable(Variable pipelineVariable, List<Variable> workflowVariables,
       String originalVarName, Map<String, String> pseWorkflowVariables) {
     Map<String, String> parentFields = new HashMap<>();
     for (Variable var : workflowVariables) {
@@ -901,10 +917,10 @@ public class PipelineServiceImpl implements PipelineService {
         }
       }
     }
-    pipelineVariable.getMetadata().put(Variable.PARENT_FIELDS, parentFields);
+    return parentFields;
   }
 
-  private void handleElkIndicesVariable(Variable pipelineVariable, List<Variable> workflowVariables,
+  private Map<String, String> handleElkIndicesVariable(Variable pipelineVariable, List<Variable> workflowVariables,
       String originalVarName, Map<String, String> pseWorkflowVariables) {
     Map<String, String> parentFields = new HashMap<>();
     for (Variable var : workflowVariables) {
@@ -915,10 +931,10 @@ public class PipelineServiceImpl implements PipelineService {
         }
       }
     }
-    pipelineVariable.getMetadata().put(Variable.PARENT_FIELDS, parentFields);
+    return parentFields;
   }
 
-  private void handleSplunkConfigIdVariable(Variable pipelineVariable, List<Variable> workflowVariables,
+  private Map<String, String> handleSplunkConfigIdVariable(Variable pipelineVariable, List<Variable> workflowVariables,
       String originalVarName, Map<String, String> pseWorkflowVariables) {
     Map<String, String> parentFields = new HashMap<>();
     for (Variable var : workflowVariables) {
@@ -929,11 +945,11 @@ public class PipelineServiceImpl implements PipelineService {
         }
       }
     }
-    pipelineVariable.getMetadata().put(Variable.PARENT_FIELDS, parentFields);
+    return parentFields;
   }
 
-  private void handleAppDynamicsAppIdVariable(Variable pipelineVariable, List<Variable> workflowVariables,
-      String originalVarName, Map<String, String> pseWorkflowVariables) {
+  private Map<String, String> handleAppDynamicsAppIdVariable(Variable pipelineVariable,
+      List<Variable> workflowVariables, String originalVarName, Map<String, String> pseWorkflowVariables) {
     Map<String, String> parentFields = new HashMap<>();
     for (Variable var : workflowVariables) {
       if (APPDYNAMICS_CONFIGID.equals(var.obtainEntityType())) {
@@ -943,11 +959,11 @@ public class PipelineServiceImpl implements PipelineService {
         }
       }
     }
-    pipelineVariable.getMetadata().put(Variable.PARENT_FIELDS, parentFields);
+    return parentFields;
   }
 
-  private void handleAppDynamicsTierIdVariable(Variable pipelineVariable, List<Variable> workflowVariables,
-      String originalVarName, Map<String, String> pseWorkflowVariables) {
+  private Map<String, String> handleAppDynamicsTierIdVariable(Variable pipelineVariable,
+      List<Variable> workflowVariables, String originalVarName, Map<String, String> pseWorkflowVariables) {
     Map<String, String> parentFields = new HashMap<>();
     for (Variable var : workflowVariables) {
       if (APPDYNAMICS_APPID.equals(var.obtainEntityType())) {
@@ -962,7 +978,7 @@ public class PipelineServiceImpl implements PipelineService {
         }
       }
     }
-    pipelineVariable.getMetadata().put(Variable.PARENT_FIELDS, parentFields);
+    return parentFields;
   }
 
   private void handleInfraPipelineVariable(Variable pipelineVariable, List<Variable> workflowVariables,
