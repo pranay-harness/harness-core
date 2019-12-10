@@ -8,6 +8,7 @@ import org.cloudfoundry.operations.domains.Domain;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.routes.Route;
 import org.cloudfoundry.reactor.ConnectionContext;
+import org.zeroturnaround.exec.StartedProcess;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
@@ -68,5 +69,7 @@ public interface PcfClient {
   String resolvePcfPluginHome();
 
   List<LogMessage> getRecentLogs(PcfRequestConfig pcfRequestConfig, long logsAfterTsNs)
+      throws PivotalClientApiException;
+  StartedProcess tailLogsForPcf(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback)
       throws PivotalClientApiException;
 }

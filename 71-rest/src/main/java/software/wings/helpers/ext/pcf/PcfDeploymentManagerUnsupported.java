@@ -118,4 +118,10 @@ public class PcfDeploymentManagerUnsupported implements PcfDeploymentManager {
   public String resolvePcfPluginHome() {
     return null;
   }
+
+  @Override
+  public ApplicationDetail upsizeApplicationWithSteadyStateCheck(
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    throw new PivotalClientApiException("PCF operations not supported by this API.");
+  }
 }

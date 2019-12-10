@@ -487,7 +487,8 @@ public class PcfCommandTaskHelper {
                                   .build());
 
     // upsize application
-    ApplicationDetail detailsAfterUpsize = pcfDeploymentManager.resizeApplication(pcfRequestConfig);
+    ApplicationDetail detailsAfterUpsize =
+        pcfDeploymentManager.upsizeApplicationWithSteadyStateCheck(pcfRequestConfig, executionLogCallback);
     executionLogCallback.saveExecutionLog(sb.append("# Application upsized successfully ").toString());
 
     List<InstanceDetail> instances = detailsAfterUpsize.getInstanceDetails().stream().collect(toList());

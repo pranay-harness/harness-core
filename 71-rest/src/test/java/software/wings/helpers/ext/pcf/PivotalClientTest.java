@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.pcf;
 
+import static io.harness.pcf.model.PcfConstants.APP_TOKEN;
+import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_APP_LOG_TAILING;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCALAR;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
 import static io.harness.pcf.model.PcfConstants.CF_PLUGIN_HOME;
@@ -23,10 +25,12 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.helpers.ext.pcf.PcfClientImpl.BIN_SH;
 
 import io.harness.category.element.UnitTests;
 import io.harness.filesystem.FileIo;
@@ -58,6 +62,7 @@ import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.StartedProcess;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.wings.WingsBaseTest;
@@ -719,8 +724,11 @@ public class PivotalClientTest extends WingsBaseTest {
     doReturn(0).doReturn(1).when(processResult).getExitValue();
 
     doReturn(processExecutor).when(pcfClient).createProccessExecutorForPcfTask(anyLong(), anyString(), anyMap(), any());
-    pcfClient.performConfigureAutoscalar(
-        PcfAppAutoscalarRequestData.builder().autoscalarFilePath(file.getAbsolutePath()).timeoutInMins(1).build(),
+    pcfClient.performConfigureAutoscalar(PcfAppAutoscalarRequestData.builder()
+                                             .autoscalarFilePath(file.getAbsolutePath())
+                                             .timeoutInMins(1)
+                                             .pcfRequestConfig(PcfRequestConfig.builder().build())
+                                             .build(),
         logCallback);
 
     try {
@@ -763,6 +771,7 @@ public class PivotalClientTest extends WingsBaseTest {
                                                             .applicationName(APP_NAME)
                                                             .applicationGuid(APP_NAME)
                                                             .timeoutInMins(1)
+                                                            .pcfRequestConfig(PcfRequestConfig.builder().build())
                                                             .build();
     assertThat(pcfClient.checkIfAppHasAutoscalarAttached(autoscalarRequestData, logCallback)).isTrue();
 
@@ -818,8 +827,11 @@ public class PivotalClientTest extends WingsBaseTest {
     doReturn(processResult).when(processExecutor).execute();
     doReturn(0).doReturn(1).when(processResult).getExitValue();
 
-    PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
-        PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).timeoutInMins(1).build();
+    PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData = PcfAppAutoscalarRequestData.builder()
+                                                                  .applicationName(APP_NAME)
+                                                                  .timeoutInMins(1)
+                                                                  .pcfRequestConfig(PcfRequestConfig.builder().build())
+                                                                  .build();
     doReturn(processExecutor).when(pcfClient).createProccessExecutorForPcfTask(anyLong(), anyString(), anyMap(), any());
     doReturn("cf").when(pcfClient).generateChangeAutoscalarStateCommand(any(), anyBoolean());
     pcfClient.changeAutoscalarState(pcfAppAutoscalarRequestData, logCallback, true);
@@ -906,12 +918,15 @@ public class PivotalClientTest extends WingsBaseTest {
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
     doNothing().when(logCallback).saveExecutionLog(anyString());
 
-    PcfAppAutoscalarRequestData autoscalarRequestData = PcfAppAutoscalarRequestData.builder().loggedin(true).build();
+    PcfAppAutoscalarRequestData autoscalarRequestData =
+        PcfAppAutoscalarRequestData.builder()
+            .pcfRequestConfig(PcfRequestConfig.builder().loggedin(true).build())
+            .build();
     pcfClient.logInForAppAutoscalarCliCommand(autoscalarRequestData, logCallback);
     verify(pcfClient, never()).doLogin(any(), any(), anyString());
 
     doReturn(true).when(pcfClient).doLogin(any(), any(), anyString());
-    autoscalarRequestData.setLoggedin(false);
+    autoscalarRequestData.getPcfRequestConfig().setLoggedin(false);
     pcfClient.logInForAppAutoscalarCliCommand(autoscalarRequestData, logCallback);
     verify(pcfClient, times(1)).doLogin(any(), any(), anyString());
   }
@@ -997,5 +1012,51 @@ public class PivotalClientTest extends WingsBaseTest {
     });
     when(applications.logs(any(LogsRequest.class))).thenReturn(result);
     client.getRecentLogs(pcfRequestConfig, 0);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void test_getProcessExecutorForLogTailing() {
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+    ProcessExecutor processExecutorForLogTailing = client.getProcessExecutorForLogTailing(
+        PcfRequestConfig.builder().applicationName(APP_NAME).build(), logCallback);
+
+    assertThat(processExecutorForLogTailing.getCommand())
+        .containsExactly(BIN_SH, "-c", CF_COMMAND_FOR_APP_LOG_TAILING.replace(APP_TOKEN, APP_NAME));
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void test_tailLogsForPcf() throws Exception {
+    reset(client);
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+
+    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().applicationName(APP_NAME).loggedin(true).build();
+    ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+    StartedProcess startedProcess = mock(StartedProcess.class);
+    doReturn(processExecutor).when(client).getProcessExecutorForLogTailing(any(), any());
+    doReturn(startedProcess).when(processExecutor).start();
+
+    StartedProcess startedProcessRet = client.tailLogsForPcf(pcfRequestConfig, logCallback);
+    assertThat(startedProcess).isEqualTo(startedProcessRet);
+    verify(client, never()).doLogin(any(), any(), any());
+
+    pcfRequestConfig.setLoggedin(false);
+    doReturn(true).when(client).doLogin(any(), any(), any());
+    startedProcessRet = client.tailLogsForPcf(pcfRequestConfig, logCallback);
+    assertThat(startedProcess).isEqualTo(startedProcessRet);
+    verify(client, times(1)).doLogin(any(), any(), any());
+
+    reset(client);
+    doReturn(false).when(client).doLogin(any(), any(), any());
+    try {
+      client.tailLogsForPcf(pcfRequestConfig, logCallback);
+    } catch (PivotalClientApiException e) {
+      assertThat(e.getCause().getMessage()).contains("Failed to login");
+    }
   }
 }

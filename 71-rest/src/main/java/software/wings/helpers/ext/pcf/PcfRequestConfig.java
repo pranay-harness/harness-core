@@ -22,4 +22,6 @@ public class PcfRequestConfig {
   Map<String, String> safeDisplayServiceVariables;
   private int timeOutIntervalInMins;
   private boolean useCLIForAppCreate;
+  private String cfHomeDirPath;
+  private boolean loggedin;
 }

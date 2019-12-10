@@ -157,7 +157,6 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
                                                         .newReleaseName(newReleaseName)
                                                         .pcfManifestFileData(pcfManifestFileData)
                                                         .varsYmlFilePresent(varsYmlPresent)
-                                                        .loginNeeded(!pcfAppAutoscalarRequestData.isLoggedin())
                                                         .build();
 
       // Generate final manifest Yml needed for push.

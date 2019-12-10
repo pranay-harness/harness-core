@@ -74,6 +74,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
               .orgName(pcfCommandRouteUpdateRequest.getOrganization())
               .spaceName(pcfCommandRouteUpdateRequest.getSpace())
               .timeOutIntervalInMins(pcfCommandRouteUpdateRequest.getTimeoutIntervalInMin())
+              .cfHomeDirPath(workingDirectory.getAbsolutePath())
               .build();
 
       PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData =
@@ -191,8 +192,12 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
           }
         }
 
-        // reisze app (upsize in swap rollback, downsize in swap state)
-        pcfDeploymentManager.resizeApplication(pcfRequestConfig);
+        // resize app (upsize in swap rollback, downsize in swap state)
+        if (!isRollback) {
+          pcfDeploymentManager.resizeApplication(pcfRequestConfig);
+        } else {
+          pcfDeploymentManager.upsizeApplicationWithSteadyStateCheck(pcfRequestConfig, executionLogCallback);
+        }
 
         // After resize, enable autoscalar if it was attached.
         if (isRollback && pcfCommandRouteUpdateRequest.isUseAppAutoscalar()) {

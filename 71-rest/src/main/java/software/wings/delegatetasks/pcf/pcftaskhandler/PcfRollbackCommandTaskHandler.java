@@ -82,6 +82,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
               .timeOutIntervalInMins(commandRollbackRequest.getTimeoutIntervalInMin() == null
                       ? 10
                       : commandRollbackRequest.getTimeoutIntervalInMin())
+              .cfHomeDirPath(workingDirectory.getAbsolutePath())
               .build();
 
       // Will be used if app autoscalar is configured

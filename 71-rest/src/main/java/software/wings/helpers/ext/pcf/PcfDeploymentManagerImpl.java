@@ -3,6 +3,7 @@ package software.wings.helpers.ext.pcf;
 import static io.harness.pcf.model.PcfConstants.DISABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.ENABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION;
+import static io.harness.pcf.model.PcfConstants.THREAD_SLEEP_INTERVAL_FOR_STEADY_STATE_CHECK;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -14,6 +15,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -21,6 +23,8 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.routes.Route;
+import org.zeroturnaround.exec.StartedProcess;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
@@ -29,6 +33,7 @@ import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
@@ -101,6 +106,97 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  public ApplicationDetail upsizeApplicationWithSteadyStateCheck(
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    boolean steadyStateReached = false;
+    long timeout = pcfRequestConfig.getTimeOutIntervalInMins() <= 0 ? 10 : pcfRequestConfig.getTimeOutIntervalInMins();
+    long expiryTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(timeout);
+
+    executionLogCallback.saveExecutionLog(color("\n# Streaming Logs From PCF -", White, Bold));
+    StartedProcess startedProcess = startTailingLogsIfNeeded(pcfRequestConfig, executionLogCallback, null);
+
+    ApplicationDetail applicationDetail = resizeApplication(pcfRequestConfig);
+    while (!steadyStateReached && System.currentTimeMillis() < expiryTime) {
+      try {
+        startedProcess = startTailingLogsIfNeeded(pcfRequestConfig, executionLogCallback, startedProcess);
+
+        applicationDetail = pcfClient.getApplicationByName(pcfRequestConfig);
+        if (reachedDesiredState(applicationDetail, pcfRequestConfig.getDesiredCount())) {
+          steadyStateReached = true;
+          destroyProcess(startedProcess);
+        } else {
+          Thread.sleep(THREAD_SLEEP_INTERVAL_FOR_STEADY_STATE_CHECK);
+        }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt(); // restore the flag
+        throw new PivotalClientApiException("Thread Was Interrupted, stopping execution");
+      } catch (Exception e) {
+        executionLogCallback.saveExecutionLog(
+            "Error while waiting for steadyStateCheck." + e.getMessage() + ", Continuing with steadyStateCheck");
+      }
+    }
+
+    if (!steadyStateReached) {
+      executionLogCallback.saveExecutionLog(color("# Steady State Check Failed", White, Bold));
+      destroyProcess(startedProcess);
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + "Failed to reach steady state");
+    }
+
+    return applicationDetail;
+  }
+
+  @VisibleForTesting
+  void destroyProcess(StartedProcess startedProcess) {
+    if (startedProcess != null && startedProcess.getProcess() != null) {
+      Process process = startedProcess.getProcess();
+
+      try {
+        if (startedProcess.getFuture() != null && !startedProcess.getFuture().isDone()
+            && !startedProcess.getFuture().isCancelled()) {
+          startedProcess.getFuture().cancel(true);
+        }
+      } catch (Exception e) {
+        // This is a safeguards, as we still want to continue to destroy process.
+      }
+      process.destroy();
+      if (process.isAlive()) {
+        process.destroyForcibly();
+      }
+    }
+  }
+
+  @VisibleForTesting
+  boolean reachedDesiredState(ApplicationDetail applicationDetail, int desiredCount) {
+    if (applicationDetail.getRunningInstances() != desiredCount) {
+      return false;
+    }
+
+    boolean reachedDesiredState = false;
+    if (EmptyPredicate.isNotEmpty(applicationDetail.getInstanceDetails())) {
+      int count = (int) applicationDetail.getInstanceDetails()
+                      .stream()
+                      .filter(instanceDetail -> "RUNNING".equals(instanceDetail.getState()))
+                      .count();
+      reachedDesiredState = count == desiredCount;
+    }
+
+    return reachedDesiredState;
+  }
+
+  @VisibleForTesting
+  StartedProcess startTailingLogsIfNeeded(
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback, StartedProcess startedProcess) {
+    try {
+      if (startedProcess == null || startedProcess.getProcess() == null || !startedProcess.getProcess().isAlive()) {
+        executionLogCallback.saveExecutionLog("# Printing next Log batch: ");
+        startedProcess = pcfClient.tailLogsForPcf(pcfRequestConfig, executionLogCallback);
+      }
+    } catch (PivotalClientApiException e) {
+      executionLogCallback.saveExecutionLog("Failed while retrieving logs in this attempt", LogLevel.WARN);
+    }
+    return startedProcess;
   }
 
   @Override
