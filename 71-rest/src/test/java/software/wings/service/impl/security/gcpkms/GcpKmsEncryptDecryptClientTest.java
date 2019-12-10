@@ -20,6 +20,7 @@ import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.protobuf.ByteString;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.exception.DelegateRetryableException;
@@ -35,7 +36,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.WingsBaseTest;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementDelegateException;
@@ -45,18 +45,17 @@ import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({GcpKmsEncryptDecryptClient.class, KeyManagementServiceClient.class})
+@PrepareForTest(KeyManagementServiceClient.class)
 @PowerMockIgnore({"org.apache.http.conn.ssl.", "javax.net.ssl.", "javax.crypto.*"})
-public class GcpKmsEncryptDecryptClientTest extends WingsBaseTest {
+public class GcpKmsEncryptDecryptClientTest extends CategoryTest {
   private TimeLimiter timeLimiter = new SimpleTimeLimiter();
-  private GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient;
+  private GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient = spy(new GcpKmsEncryptDecryptClient(timeLimiter));
   private GcpKmsConfig gcpKmsConfig;
 
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testEncryptDecrypt() {
-    gcpKmsEncryptDecryptClient = spy(new GcpKmsEncryptDecryptClient(timeLimiter));
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
     gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
     gcpKmsConfig.setUuid(UUIDGenerator.generateUuid());
@@ -103,8 +102,6 @@ public class GcpKmsEncryptDecryptClientTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testEncrypt_ShouldFail1() {
-    gcpKmsEncryptDecryptClient = spy(new GcpKmsEncryptDecryptClient(timeLimiter));
-
     String plainTextValue = "value";
 
     EncryptedRecord encryptedRecord = null;
@@ -120,7 +117,6 @@ public class GcpKmsEncryptDecryptClientTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testEncrypt_ShouldFail2() {
-    gcpKmsEncryptDecryptClient = spy(new GcpKmsEncryptDecryptClient(timeLimiter));
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
     gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
     gcpKmsConfig.setUuid(UUIDGenerator.generateUuid());
@@ -151,8 +147,6 @@ public class GcpKmsEncryptDecryptClientTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testDecrypt_ShouldFail1() {
-    gcpKmsEncryptDecryptClient = spy(new GcpKmsEncryptDecryptClient(timeLimiter));
-
     EncryptedData encryptedData = mock(EncryptedData.class);
     when(encryptedData.getEncryptedValue()).thenReturn(null);
     char[] plainText = gcpKmsEncryptDecryptClient.decrypt(encryptedData, gcpKmsConfig);
@@ -163,8 +157,6 @@ public class GcpKmsEncryptDecryptClientTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testDecrypt_ShouldFail2() {
-    gcpKmsEncryptDecryptClient = spy(new GcpKmsEncryptDecryptClient(timeLimiter));
-
     EncryptedData encryptedData = mock(EncryptedData.class);
     when(encryptedData.getEncryptedValue()).thenReturn("encryptedValue".toCharArray());
     char[] plainText = null;
@@ -180,7 +172,6 @@ public class GcpKmsEncryptDecryptClientTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testDecrypt_ShoudFail3() {
-    gcpKmsEncryptDecryptClient = spy(new GcpKmsEncryptDecryptClient(timeLimiter));
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
     gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
     gcpKmsConfig.setUuid(UUIDGenerator.generateUuid());
