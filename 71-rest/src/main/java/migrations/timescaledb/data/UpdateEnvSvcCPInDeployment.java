@@ -11,8 +11,7 @@ import lombok.Data;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import migrations.TimeScaleDBDataMigration;
-import software.wings.beans.Base;
-import software.wings.beans.Environment;
+import software.wings.beans.EnvSummary;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -121,7 +120,8 @@ public class UpdateEnvSvcCPInDeployment implements TimeScaleDBDataMigration {
         try (Connection connection = timeScaleDBService.getDBConnection();
              PreparedStatement updateStatement = connection.prepareStatement(UPDATE_STATEMENT)) {
           if (wfData.isValid()) {
-            List<String> envIds = wfData.getEnvironments().stream().map(Base::getUuid).collect(Collectors.toList());
+            List<String> envIds =
+                wfData.getEnvironments().stream().map(EnvSummary::getUuid).collect(Collectors.toList());
             Set<String> envTypes = wfData.getEnvironments()
                                        .stream()
                                        .map(env -> env.getEnvironmentType().name())
@@ -188,7 +188,7 @@ public class UpdateEnvSvcCPInDeployment implements TimeScaleDBDataMigration {
   @ToString
   static class WfData {
     private boolean valid;
-    private List<Environment> environments;
+    private List<EnvSummary> environments;
     private List<String> cloudProviders;
     private List<String> services;
     private String appId;

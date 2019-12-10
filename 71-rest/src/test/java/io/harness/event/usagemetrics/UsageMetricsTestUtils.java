@@ -80,7 +80,11 @@ public class UsageMetricsTestUtils {
         .startTs(100L)
         .endTs(200L)
         .cloudProviderIds(Lists.newArrayList(UsageMetricsTestKeys.CLOUDPROVIDER1, UsageMetricsTestKeys.CLOUDPROVIDER2))
+        .deployedCloudProviders(
+            Lists.newArrayList(UsageMetricsTestKeys.CLOUDPROVIDER1, UsageMetricsTestKeys.CLOUDPROVIDER2))
         .environments(Lists.newArrayList(EnvSummary.builder().environmentType(EnvironmentType.PROD).build()))
+        .deployedEnvironments(Lists.newArrayList(
+            EnvSummary.builder().environmentType(EnvironmentType.PROD).uuid(UsageMetricsTestKeys.ENV1).build()))
         .pipelineExecution(
             Builder.aPipelineExecution()
                 .withPipelineId(UsageMetricsTestKeys.PIPELINEID)
@@ -99,7 +103,7 @@ public class UsageMetricsTestUtils {
         .pipelineExecutionId(UsageMetricsTestKeys.PIPELINEEXECUTIONID)
         .artifacts(Lists.newArrayList(Artifact.Builder.anArtifact().withMetadata(artifactBuildNumber).build()))
         .serviceIds(Arrays.asList(UsageMetricsTestKeys.SERVICE1))
-
+        .deployedServices(Arrays.asList(UsageMetricsTestKeys.SERVICE1))
         .triggeredBy(EmbeddedUser.builder().uuid(UsageMetricsTestKeys.USER1).build())
         .deploymentTriggerId(UsageMetricsTestKeys.TRIGGER1)
         .duration(100L)

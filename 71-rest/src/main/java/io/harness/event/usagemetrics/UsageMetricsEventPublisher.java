@@ -12,8 +12,7 @@ import io.harness.queue.QueuePublisher;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.api.InstanceEvent;
-import software.wings.beans.Base;
-import software.wings.beans.Environment;
+import software.wings.beans.EnvSummary;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -75,7 +74,7 @@ public class UsageMetricsEventPublisher {
     longData.put(EventProcessor.STARTTIME, workflowExecution.getStartTs());
     longData.put(EventProcessor.ENDTIME, workflowExecution.getEndTs());
 
-    List<String> cloudProviderIds = workflowExecutionService.getCloudProviderIdsForExecution(workflowExecution);
+    List<String> cloudProviderIds = workflowExecution.getDeployedCloudProviders();
 
     if (!Lists.isNullOrEmpty(cloudProviderIds)) {
       listData.put(EventProcessor.CLOUD_PROVIDER_LIST, cloudProviderIds);
@@ -94,19 +93,20 @@ public class UsageMetricsEventPublisher {
           workflowExecution.getArtifacts().stream().map(Artifact::getBuildNo).collect(Collectors.toList()));
     }
 
-    List<String> serviceIds = workflowExecutionService.getServiceIdsForExecution(workflowExecution);
+    List<String> serviceIds = workflowExecution.getDeployedServices();
     if (!Lists.isNullOrEmpty(serviceIds)) {
       listData.put(EventProcessor.SERVICE_LIST, serviceIds);
     }
 
-    List<Environment> environments = workflowExecutionService.getEnvironmentsForExecution(workflowExecution);
+    List<EnvSummary> environments = workflowExecution.getDeployedEnvironments();
 
     if (!Lists.isNullOrEmpty(environments)) {
       listData.put(EventProcessor.ENVTYPES,
           new ArrayList<>(
               environments.stream().map(env -> env.getEnvironmentType().name()).collect(Collectors.toSet())));
 
-      listData.put(EventProcessor.ENV_LIST, environments.stream().map(Base::getUuid).collect(Collectors.toList()));
+      listData.put(
+          EventProcessor.ENV_LIST, environments.stream().map(EnvSummary::getUuid).collect(Collectors.toList()));
     }
     if (workflowExecution.getDeploymentTriggerId() != null) {
       stringData.put(EventProcessor.TRIGGER_ID, workflowExecution.getDeploymentTriggerId());

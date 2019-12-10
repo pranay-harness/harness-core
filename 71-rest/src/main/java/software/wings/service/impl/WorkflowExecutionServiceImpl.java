@@ -146,7 +146,6 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EnvSummary;
-import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
@@ -3616,8 +3615,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @return only the skeleton of the environment object. Contains only the ID,the type and the name ->
    * Reconstructed from what we see in the pipelineExecution or the workflowExecution
    */
-  public List<Environment> getEnvironmentsForExecution(WorkflowExecution workflowExecution) {
-    Set<Environment> environments = new HashSet<>();
+  public List<EnvSummary> getEnvironmentsForExecution(WorkflowExecution workflowExecution) {
+    Set<EnvSummary> environments = new HashSet<>();
     if (workflowExecution.getPipelineExecution() != null) {
       if (workflowExecution.getPipelineExecution().getPipelineStageExecutions() != null) {
         workflowExecution.getPipelineExecution().getPipelineStageExecutions().forEach(stageExecution
@@ -3625,7 +3624,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                    .stream()
                    .filter(wfExecution -> wfExecution.getEnvId() != null && wfExecution.getEnvType() != null)
                    .map(wfExecution
-                       -> Environment.Builder.anEnvironment()
+                       -> EnvSummary.builder()
                               .uuid(wfExecution.getEnvId())
                               .environmentType(wfExecution.getEnvType())
                               .name(wfExecution.getEnvName())
@@ -3634,7 +3633,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     } else {
       if (workflowExecution.getEnvId() != null && workflowExecution.getEnvType() != null) {
-        environments.add(Environment.Builder.anEnvironment()
+        environments.add(EnvSummary.builder()
                              .environmentType(workflowExecution.getEnvType())
                              .uuid(workflowExecution.getEnvId())
                              .name(workflowExecution.getEnvName())

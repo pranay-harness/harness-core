@@ -49,7 +49,7 @@ public class ExecutionQueryHelper {
       }
 
       if (filter.getCloudProvider() != null) {
-        field = query.field(WorkflowExecutionKeys.cloudProviderIds);
+        field = query.field(WorkflowExecutionKeys.deployedCloudProviders);
         QLIdFilter idFilter = filter.getCloudProvider();
         utils.setIdFilter(field, idFilter);
       }
@@ -67,7 +67,7 @@ public class ExecutionQueryHelper {
       }
 
       if (filter.getEnvironment() != null) {
-        field = query.field(WorkflowExecutionKeys.envIds);
+        field = query.field(WorkflowExecutionKeys.deployedEnvironments + ".uuid");
         QLIdFilter idFilter = filter.getEnvironment();
         utils.setIdFilter(field, idFilter);
       }
@@ -85,7 +85,7 @@ public class ExecutionQueryHelper {
       }
 
       if (filter.getService() != null) {
-        field = query.field(WorkflowExecutionKeys.serviceIds);
+        field = query.field(WorkflowExecutionKeys.deployedServices);
         QLIdFilter idFilter = filter.getService();
         utils.setIdFilter(field, idFilter);
       }

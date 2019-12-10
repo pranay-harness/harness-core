@@ -15,7 +15,7 @@ import software.wings.beans.AwsLambdaExecutionSummary;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
-import software.wings.beans.Environment;
+import software.wings.beans.EnvSummary;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HelmExecutionSummary;
@@ -218,7 +218,7 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   int getInstancesDeployedFromExecution(WorkflowExecution workflowExecution);
 
-  List<Environment> getEnvironmentsForExecution(WorkflowExecution workflowExecution);
+  List<EnvSummary> getEnvironmentsForExecution(WorkflowExecution workflowExecution);
 
   List<String> getServiceIdsForExecution(WorkflowExecution workflowExecution);
 
