@@ -18,6 +18,9 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import software.wings.beans.InfrastructureMapping;
 
+import java.util.Collections;
+import java.util.Set;
+
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = AwsAmiInfrastructure.class, name = AWS_AMI)
@@ -37,4 +40,9 @@ public interface InfraMappingInfrastructureProvider extends CloudProviderInfrast
   @JsonIgnore InfrastructureMapping getInfraMapping();
 
   @JsonIgnore Class<? extends InfrastructureMapping> getMappingClass();
+
+  @JsonIgnore
+  default Set<String> getUserDefinedUniqueInfraFields() {
+    return Collections.emptySet();
+  }
 }
