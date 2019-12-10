@@ -1,5 +1,6 @@
 package io.harness.workers.background.critical.iterator;
 
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
@@ -17,7 +18,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
-import io.harness.rule.OwnerRule;
 import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -86,7 +86,7 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testRegisterIterators() {
     workflowExecutionMonitorHandler.registerIterators();
@@ -97,7 +97,7 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testHandleExpiredWorkflow() {
     StateExecutionInstance expiredStateExecutionInstance = createExpiredStateExecutionInstance();
@@ -112,7 +112,7 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testHandleRecentSuccessfulStateExecution() {
     StateExecutionInstance failedStateExecutionInstance = createSuccessStateExecutionInstance();

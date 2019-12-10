@@ -12,7 +12,6 @@ import static software.wings.sm.StateType.PHASE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.fabric8.utils.Lists;
 import io.harness.beans.EmbeddedUser;
@@ -92,7 +91,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private AccountService accountService;
   @Inject private UsageMetricsHelper usageMetricsHelper;
-  @Inject @Named("SegmentHandlerAnnotation") private SegmentHandler segmentHandler;
+  @Inject private SegmentHandler segmentHandler;
 
   /**
    * Instantiates a new workflow execution update.
