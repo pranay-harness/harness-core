@@ -277,8 +277,8 @@ public abstract class CloudFormationState extends State {
   }
 
   protected String getStackNameSuffix(ExecutionContextImpl executionContext, String provisionerId) {
-    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
-    Environment env = workflowStandardParams.getEnv();
+    WorkflowStandardParams workflowStandardParams = executionContext.fetchWorkflowStandardParamsFromContext();
+    Environment env = workflowStandardParams.fetchRequiredEnv();
     return getNormalizedId(env.getUuid()) + getNormalizedId(provisionerId);
   }
 

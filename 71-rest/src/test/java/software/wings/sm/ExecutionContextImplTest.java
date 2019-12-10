@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -403,7 +404,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setExecutionUuid(generateUuid());
-    stateExecutionInstance.setDisplayName("http");
+    stateExecutionInstance.setDisplayName("http-TEST");
 
     ExecutionContextImpl context = prepareContext(stateExecutionInstance);
     ServiceElement svc = context.getContextElement(ContextElementType.SERVICE);
@@ -563,5 +564,37 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     assertThat(sweepingOutputInstance1.getPhaseExecutionId()).isNotEqualTo(workflowExecutionId + phaseId + phaseName);
     assertThat(sweepingOutputInstance1.getStateExecutionId()).isEqualTo(stateId);
     assertThat(sweepingOutputInstance1.getAppId()).isEqualTo(appId);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testExpressionEvaluationWithStateName() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setDisplayName("ABC-TEST");
+
+    ExecutionContextImpl context = prepareContext(stateExecutionInstance);
+    ServiceElement svc = context.getContextElement(ContextElementType.SERVICE);
+    on(context).set("serviceTemplateService", serviceTemplateService);
+
+    final PhaseElement phaseElement = PhaseElement.builder().serviceElement(svc).build();
+    injector.injectMembers(phaseElement);
+    context.pushContextElement(phaseElement);
+
+    Artifact artifact = Artifact.Builder.anArtifact()
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withMetadata(Maps.newHashMap("buildNo", "123-SNAPSHOT"))
+                            .build();
+    programServiceTemplateService(context, artifact);
+
+    String expr = "${httpResponseBody}.contains(${serviceVariable.REV})";
+    HttpStateExecutionData httpStateExecutionData =
+        HttpStateExecutionData.builder().httpResponseBody("ABC-123-SNAPSHOT-23423ABC").build();
+    boolean assertion = (boolean) context.evaluateExpression(
+        expr, StateExecutionContext.builder().stateExecutionData(httpStateExecutionData).build());
+    assertThat(assertion).isTrue();
+    // Don't change the display name. This tests the https://harness.atlassian.net/browse/CD-2111
+    assertThat(stateExecutionInstance.getDisplayName()).isEqualTo("ABC-TEST");
   }
 }
