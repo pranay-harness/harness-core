@@ -5,7 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.model.EventConstants.ACCOUNT_STATUS;
 import static io.harness.event.model.EventConstants.COMPANY_NAME;
 import static io.harness.event.model.EventConstants.DAYS_LEFT_IN_TRIAL;
+import static io.harness.event.model.EventConstants.EMAIL;
 import static io.harness.event.model.EventConstants.FIRST_NAME;
+import static io.harness.event.model.EventConstants.GROUP_ID;
 import static io.harness.event.model.EventConstants.LAST_NAME;
 import static io.harness.event.model.EventConstants.OAUTH_PROVIDER;
 import static io.harness.event.model.EventConstants.USER_INVITE_URL;
@@ -52,8 +54,8 @@ public class SegmentHelper {
     }
   }
 
-  public String createOrUpdateIdentity(
-      String userId, String email, String userName, Account account, String userInviteUrl, String oauthProvider) {
+  public String createOrUpdateIdentity(String userId, String email, String userName, Account account,
+      String userInviteUrl, String oauthProvider, Map<String, Boolean> integrations) {
     logger.info("Updating identity {} to segment", userId);
 
     Builder identityBuilder = IdentifyMessage.builder();
@@ -68,21 +70,20 @@ public class SegmentHelper {
     }
 
     Map<String, String> traits = new HashMap<>();
-    traits.put("email", email);
+    traits.put(EMAIL, email);
+    traits.put(GROUP_ID, account.getUuid());
     String firstName = utils.getFirstName(userName, email);
     traits.put(FIRST_NAME, isNotEmpty(firstName) ? firstName : email);
     String lastName = utils.getLastName(userName, email);
     traits.put(LAST_NAME, isNotEmpty(lastName) ? lastName : "");
 
-    if (account != null) {
-      traits.put(COMPANY_NAME, account.getCompanyName());
-      traits.put(EventConstants.ACCOUNT_ID, account.getUuid());
+    traits.put(COMPANY_NAME, account.getCompanyName());
+    traits.put(EventConstants.ACCOUNT_ID, account.getUuid());
 
-      LicenseInfo licenseInfo = account.getLicenseInfo();
-      if (licenseInfo != null) {
-        traits.put(ACCOUNT_STATUS, licenseInfo.getAccountStatus());
-        traits.put(DAYS_LEFT_IN_TRIAL, utils.getDaysLeft(licenseInfo.getExpiryTime()));
-      }
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+    if (licenseInfo != null) {
+      traits.put(ACCOUNT_STATUS, licenseInfo.getAccountStatus());
+      traits.put(DAYS_LEFT_IN_TRIAL, utils.getDaysLeft(licenseInfo.getExpiryTime()));
     }
 
     if (isNotEmpty(userInviteUrl)) {
@@ -94,6 +95,15 @@ public class SegmentHelper {
     }
 
     identityBuilder.traits(traits);
+    if (integrations != null) {
+      integrations.forEach((k, v) -> {
+        boolean value = false;
+        if (v != null) {
+          value = v.booleanValue();
+        }
+        identityBuilder.enableIntegration(k, value);
+      });
+    }
     enqueue(identityBuilder);
     return identity;
   }

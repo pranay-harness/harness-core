@@ -2,6 +2,8 @@ package io.harness.event.model;
 
 public interface EventConstants {
   String ACCOUNT_ID = "ACCOUNT_ID";
+  String EMAIL = "email";
+  String GROUP_ID = "groupId";
   String ACCOUNT_NAME = "ACCOUNT_NAME";
   String COMPANY_NAME = "COMPANY_NAME";
   String FIRST_NAME = "FIRST_NAME";
