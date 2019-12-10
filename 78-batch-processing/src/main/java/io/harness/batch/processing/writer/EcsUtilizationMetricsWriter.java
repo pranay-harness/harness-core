@@ -4,6 +4,7 @@ import static io.harness.batch.processing.ccm.UtilizationInstanceType.ECS_CLUSTE
 import static io.harness.batch.processing.ccm.UtilizationInstanceType.ECS_SERVICE;
 
 import com.google.inject.Singleton;
+import com.google.protobuf.Timestamp;
 
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
@@ -16,7 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Collections;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -49,31 +51,30 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
             instanceType = ECS_SERVICE;
           }
 
-          // Handle the Utilization event
-          double cpuUtilizationAvg = 0.0;
-          double cpuUtilizationMax = 0.0;
-          double memoryUtilizationAvg = 0.0;
-          double memoryUtilizationMax = 0.0;
-
-          long endTimestamp = 0L;
-          long startTimestamp = 0L;
+          // Initialising List of Metrics to handle Utilization Metrics Downtime (Ideally this will be of size 1)
+          // We do not need a Default value as such a scenario will never exist, if there is no data. It will not be
+          // inserted to DB.
+          List<Double> cpuUtilizationAvgList = new ArrayList<>();
+          List<Double> cpuUtilizationMaxList = new ArrayList<>();
+          List<Double> memoryUtilizationAvgList = new ArrayList<>();
+          List<Double> memoryUtilizationMaxList = new ArrayList<>();
+          List<Timestamp> startTimestampList = new ArrayList<>();
+          int metricsListSize = 0;
 
           for (MetricValue utilizationMetric : ecsUtilization.getMetricValuesList()) {
-            if (!utilizationMetric.getTimestampsList().isEmpty()) {
-              startTimestamp = utilizationMetric.getTimestampsList().get(0).getSeconds() * 1000;
-              endTimestamp = utilizationMetric.getTimestampsList()
-                                 .get(utilizationMetric.getTimestampsList().size() - 1)
-                                 .getSeconds()
-                  * 1000;
-            }
+            // Assumption that size of all the metrics and timestamps will be same across the 4 metrics
+            startTimestampList = utilizationMetric.getTimestampsList();
+            List<Double> metricsList = utilizationMetric.getValuesList();
+            metricsListSize = metricsList.size();
+
             switch (utilizationMetric.getStatistic()) {
               case "Maximum":
                 switch (utilizationMetric.getMetricName()) {
                   case "MemoryUtilization":
-                    memoryUtilizationMax = Collections.max(utilizationMetric.getValuesList());
+                    memoryUtilizationMaxList = metricsList;
                     break;
                   case "CPUUtilization":
-                    cpuUtilizationMax = Collections.max(utilizationMetric.getValuesList());
+                    cpuUtilizationMaxList = metricsList;
                     break;
                   default:
                     throw new InvalidRequestException("Invalid Utilization metric name");
@@ -82,12 +83,10 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
               case "Average":
                 switch (utilizationMetric.getMetricName()) {
                   case "MemoryUtilization":
-                    memoryUtilizationAvg =
-                        utilizationMetric.getValuesList().stream().mapToDouble(val -> val).average().orElse(0.0);
+                    memoryUtilizationAvgList = metricsList;
                     break;
                   case "CPUUtilization":
-                    cpuUtilizationAvg =
-                        utilizationMetric.getValuesList().stream().mapToDouble(val -> val).average().orElse(0.0);
+                    cpuUtilizationAvgList = metricsList;
                     break;
                   default:
                     throw new InvalidRequestException("Invalid Utilization metric name");
@@ -98,23 +97,31 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
             }
           }
 
-          InstanceUtilizationData utilizationData = InstanceUtilizationData.builder()
-                                                        .accountId(accountId)
-                                                        .clusterArn(clusterArn)
-                                                        .clusterName(clusterName)
-                                                        .serviceArn(serviceArn)
-                                                        .serviceName(serviceName)
-                                                        .instanceId(instanceId)
-                                                        .instanceType(instanceType)
-                                                        .settingId(settingId)
-                                                        .cpuUtilizationMax(cpuUtilizationMax)
-                                                        .cpuUtilizationAvg(cpuUtilizationAvg)
-                                                        .memoryUtilizationMax(memoryUtilizationMax)
-                                                        .memoryUtilizationAvg(memoryUtilizationAvg)
-                                                        .startTimestamp(startTimestamp)
-                                                        .endTimestamp(endTimestamp)
-                                                        .build();
-          utilizationDataService.create(utilizationData);
+          // POJO and insertion to DB
+          for (int metricIndex = 0; metricIndex < metricsListSize; metricIndex++) {
+            long startTime = startTimestampList.get(metricIndex).getSeconds() * 1000;
+            long oneHourMillis = Duration.ofHours(1).toMillis();
+
+            InstanceUtilizationData utilizationData =
+                InstanceUtilizationData.builder()
+                    .accountId(accountId)
+                    .clusterArn(clusterArn)
+                    .clusterName(clusterName)
+                    .serviceArn(serviceArn)
+                    .serviceName(serviceName)
+                    .instanceId(instanceId)
+                    .instanceType(instanceType)
+                    .settingId(settingId)
+                    .cpuUtilizationMax(cpuUtilizationMaxList.get(metricIndex))
+                    .cpuUtilizationAvg(cpuUtilizationAvgList.get(metricIndex))
+                    .memoryUtilizationMax(memoryUtilizationMaxList.get(metricIndex))
+                    .memoryUtilizationAvg(memoryUtilizationAvgList.get(metricIndex))
+                    .startTimestamp(startTime)
+                    .endTimestamp(startTime + oneHourMillis)
+                    .build();
+
+            utilizationDataService.create(utilizationData);
+          }
         });
   }
 }
