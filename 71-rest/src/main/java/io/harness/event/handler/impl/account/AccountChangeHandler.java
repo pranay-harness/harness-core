@@ -13,6 +13,7 @@ import com.google.inject.Singleton;
 import com.segment.analytics.messages.GroupMessage;
 import com.segment.analytics.messages.IdentifyMessage;
 import io.harness.event.handler.EventHandler;
+import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
@@ -38,6 +39,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -53,6 +55,8 @@ public class AccountChangeHandler implements EventHandler {
   @Inject private UserService userService;
   @Inject private HPersistence hPersistence;
   @Inject private AccountService accountService;
+
+  private Map<String, Boolean> integrations = new HashMap<>();
 
   public AccountChangeHandler(EventListener eventListener) {
     eventListener.registerEventHandler(this, Sets.newHashSet(EventType.ACCOUNT_ENTITY_CHANGE));
@@ -94,10 +98,23 @@ public class AccountChangeHandler implements EventHandler {
 
     Builder<String, Object> identityTraits = ImmutableMap.builder();
 
-    IdentifyMessage.Builder identity =
-        IdentifyMessage.builder()
-            .userId(user.getId())
-            .traits(identityTraits.put("name", user.getUserName()).put("email", user.getEmail()).build());
+    integrations.put(SegmentHandler.Keys.NATERO, true);
+
+    IdentifyMessage.Builder identity = IdentifyMessage.builder()
+                                           .userId(user.getId())
+                                           .traits(identityTraits.put("name", user.getUserName())
+                                                       .put("email", user.getEmail())
+                                                       .put("groupId", accountId)
+                                                       .build());
+
+    integrations.forEach((k, v) -> {
+      boolean value = false;
+      if (v != null) {
+        value = v.booleanValue();
+      }
+      identity.enableIntegration(k, value);
+    });
+
     segmentHelper.enqueue(identity);
   }
 

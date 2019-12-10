@@ -47,7 +47,7 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.AutoLogContext;
@@ -254,10 +254,14 @@ public class SegmentHandler implements EventHandler {
     } else {
       userInvite = signupService.getUserInviteByEmail(user.getEmail());
     }
-
     String userInviteUrl = utils.getUserInviteUrl(userInvite, account);
+
+    Map<String, Boolean> integrations = new HashMap<>();
+    integrations.put(SegmentHandler.Keys.NATERO, true);
+
     String identity = segmentHelper.createOrUpdateIdentity(
-        user.getUuid(), user.getEmail(), user.getName(), account, userInviteUrl, user.getOauthProvider());
+        user.getUuid(), user.getEmail(), user.getName(), account, userInviteUrl, user.getOauthProvider(), integrations);
+
     if (!identity.equals(user.getSegmentIdentity())) {
       updateUserIdentity(user, identity);
     }
@@ -277,7 +281,10 @@ public class SegmentHandler implements EventHandler {
   }
 
   public String reportIdentity(String userName, String email) throws IOException {
-    return segmentHelper.createOrUpdateIdentity(null, email, userName, null, null, null);
+    Map<String, Boolean> integrations = new HashMap<>();
+    integrations.put(SegmentHandler.Keys.NATERO, true);
+
+    return segmentHelper.createOrUpdateIdentity(null, email, userName, null, null, null, integrations);
   }
 
   private User updateUserEvents(User user, String event) {
@@ -307,7 +314,7 @@ public class SegmentHandler implements EventHandler {
         latestUser.setSegmentIdentity(segmentIdentity);
         return userService.update(latestUser);
       } else {
-        throw new WingsException("Invalid user for the given id:" + user.getUuid(), USER);
+        throw new InvalidRequestException("Invalid user for the given id:" + user.getUuid(), USER);
       }
     }
   }
