@@ -45,6 +45,7 @@ import migrations.all.TimeSeriesThresholdsMigration;
 import migrations.all.UpdateAccountEncryptionClassNames;
 import migrations.all.UpdateWorkflowExecutionAccountId;
 import migrations.all.UpdateWorkflowExecutionDuration;
+import migrations.all.WFEAddDeploymentMetaData;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -142,6 +143,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(82, AddArtifactIdentityMigration.class))
         .add(Pair.of(83, AddHarnessOwnedToResourceConstraint.class))
         .add(Pair.of(84, BaseMigration.class))
+        .add(Pair.of(85, WFEAddDeploymentMetaData.class))
         .build();
   }
 }

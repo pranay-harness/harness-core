@@ -14,6 +14,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.fabric8.utils.Lists;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -33,6 +34,7 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
@@ -57,6 +59,7 @@ import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -240,6 +243,8 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
          * this case, startTS and endTS are not populated. Ignoring these events.
          */
         if (workflowExecution.getStartTs() != null && workflowExecution.getEndTs() != null) {
+          updateDeploymentInformation(workflowExecution);
+          workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
           /**
            * Had to do a double check on the finalStatus since workflowStatus is still not in finalStatus while
            * the callBack says it is finalStatus (Check with Srinivas)
@@ -275,6 +280,30 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
             "Failed to generate events for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId, e);
       }
     }
+  }
+
+  public void updateDeploymentInformation(WorkflowExecution workflowExecution) {
+    UpdateOperations<WorkflowExecution> updateOps;
+    updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
+    final List<String> deployedCloudProviders =
+        workflowExecutionService.getCloudProviderIdsForExecution(workflowExecution);
+
+    if (!Lists.isNullOrEmpty(deployedCloudProviders)) {
+      setUnset(updateOps, WorkflowExecutionKeys.deployedCloudProviders, deployedCloudProviders);
+    }
+    final List<String> deployedServices = workflowExecutionService.getServiceIdsForExecution(workflowExecution);
+    if (!Lists.isNullOrEmpty(deployedServices)) {
+      setUnset(updateOps, WorkflowExecutionKeys.deployedServices, deployedServices);
+    }
+    final List<EnvSummary> deployedEnvironments =
+        workflowExecutionService.getEnvironmentsForExecution(workflowExecution);
+
+    if (!Lists.isNullOrEmpty(deployedEnvironments)) {
+      setUnset(updateOps, WorkflowExecutionKeys.deployedEnvironments, deployedEnvironments);
+    }
+    wingsPersistence.findAndModify(wingsPersistence.createQuery(WorkflowExecution.class)
+                                       .filter(WorkflowExecutionKeys.uuid, workflowExecution.getUuid()),
+        updateOps, callbackFindAndModifyOptions);
   }
 
   private boolean isProdEnv(WorkflowExecution workflowExecution) {

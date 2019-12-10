@@ -158,6 +158,10 @@ public class WorkflowExecution
 
   private List<EnvSummary> environments;
 
+  private List<EnvSummary> deployedEnvironments;
+  private List<String> deployedServices;
+  private List<String> deployedCloudProviders;
+
   private List<BuildExecutionSummary> buildExecutionSummaries;
 
   private OrchestrationWorkflowType orchestrationType;
