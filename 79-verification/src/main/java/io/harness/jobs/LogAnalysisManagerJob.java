@@ -192,7 +192,9 @@ public class LogAnalysisManagerJob implements Job {
 
         return logAnalysisMinute;
       } catch (Exception ex) {
+        completeCron = true;
         error = true;
+        errorMsg = ExceptionUtils.getMessage(ex);
         logger.info("Verification Analysis failed for {}", context.getStateExecutionId(), ex);
         apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
         apiCallLog.addFieldToResponse(

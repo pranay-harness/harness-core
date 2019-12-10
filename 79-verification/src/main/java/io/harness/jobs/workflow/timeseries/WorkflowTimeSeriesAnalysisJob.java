@@ -475,16 +475,16 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
               logger.info("send notification to state manager for {} and delete cron with error : {} errorMsg : {}",
                   context.getStateExecutionId(), error, errMsg);
               sendStateNotification(context, error, errMsg, analysisMinute);
-            } catch (Exception e) {
-              logger.error("Send notification failed for new relic analysis manager", e);
-            } finally {
               try {
                 if (jobExecutionContext.isPresent()) {
                   jobExecutionContext.get().getScheduler().deleteJob(jobExecutionContext.get().getJobDetail().getKey());
                 }
               } catch (Exception e) {
-                logger.error("Delete cron failed", e);
+                logger.error("for {} Delete cron failed", context.getStateExecutionId(), e);
               }
+            } catch (Exception e) {
+              logger.error("for {} Send notification failed for new relic analysis manager, this will be retried",
+                  context.getStateExecutionId(), e);
             }
           }
         } catch (Exception ex) {
