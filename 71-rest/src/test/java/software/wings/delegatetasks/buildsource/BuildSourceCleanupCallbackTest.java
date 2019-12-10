@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.HARSH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -16,10 +17,13 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACTORY_URL;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
+import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
@@ -40,6 +44,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -50,6 +55,8 @@ import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
+import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
@@ -62,6 +69,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.stream.Stream;
 
 public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
@@ -70,6 +78,9 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID_4 = "ARTIFACT_STREAM_ID_4";
   private static final String ARTIFACT_STREAM_ID_5 = "ARTIFACT_STREAM_ID_5";
   private static final String ARTIFACT_STREAM_ID_6 = "ARTIFACT_STREAM_ID_6";
+  private static final String ARTIFACT_STREAM_ID_7 = "ARTIFACT_STREAM_ID_7";
+  private static final String ARTIFACT_STREAM_ID_8 = "ARTIFACT_STREAM_ID_8";
+  private static final String ARTIFACT_STREAM_ID_9 = "ARTIFACT_STREAM_ID_9";
 
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
   @Mock private ArtifactService artifactService;
@@ -99,37 +110,67 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
                                                      .imageName("image_name")
                                                      .build();
 
-  AmiArtifactStream amiArtifactStream = AmiArtifactStream.builder()
-                                            .accountId(ACCOUNT_ID)
-                                            .uuid(ARTIFACT_STREAM_ID_3)
-                                            .appId(APP_ID)
-                                            .settingId(SETTING_ID)
-                                            .region("us-east-1")
-                                            .autoPopulate(true)
-                                            .serviceId(SERVICE_ID)
-                                            .build();
+  private final AmiArtifactStream amiArtifactStream = AmiArtifactStream.builder()
+                                                          .accountId(ACCOUNT_ID)
+                                                          .uuid(ARTIFACT_STREAM_ID_3)
+                                                          .appId(APP_ID)
+                                                          .settingId(SETTING_ID)
+                                                          .region("us-east-1")
+                                                          .autoPopulate(true)
+                                                          .serviceId(SERVICE_ID)
+                                                          .build();
 
-  ArtifactoryArtifactStream artifactoryStream = ArtifactoryArtifactStream.builder()
-                                                    .uuid(ARTIFACT_STREAM_ID)
-                                                    .appId(APP_ID)
-                                                    .sourceName("ARTIFACT_SOURCE")
-                                                    .serviceId(SERVICE_ID)
-                                                    .build();
+  private final ArtifactoryArtifactStream artifactoryStream = ArtifactoryArtifactStream.builder()
+                                                                  .uuid(ARTIFACT_STREAM_ID)
+                                                                  .appId(APP_ID)
+                                                                  .sourceName("ARTIFACT_SOURCE")
+                                                                  .serviceId(SERVICE_ID)
+                                                                  .build();
 
-  GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
-                                            .uuid(ARTIFACT_STREAM_ID_5)
-                                            .appId(APP_ID)
-                                            .sourceName("ARTIFACT_SOURCE")
-                                            .serviceId(SERVICE_ID)
-                                            .build();
+  private final GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
+                                                          .uuid(ARTIFACT_STREAM_ID_5)
+                                                          .appId(APP_ID)
+                                                          .sourceName("ARTIFACT_SOURCE")
+                                                          .serviceId(SERVICE_ID)
+                                                          .build();
 
-  EcrArtifactStream ecrArtifactStream = EcrArtifactStream.builder()
-                                            .uuid(ARTIFACT_STREAM_ID_6)
-                                            .appId(APP_ID)
-                                            .sourceName("ARTIFACT_SOURCE")
-                                            .serviceId(SERVICE_ID)
-                                            .settingId(SETTING_ID)
-                                            .build();
+  private final EcrArtifactStream ecrArtifactStream = EcrArtifactStream.builder()
+                                                          .uuid(ARTIFACT_STREAM_ID_6)
+                                                          .appId(APP_ID)
+                                                          .sourceName("ARTIFACT_SOURCE")
+                                                          .serviceId(SERVICE_ID)
+                                                          .settingId(SETTING_ID)
+                                                          .build();
+
+  private final JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                                  .uuid(ARTIFACT_STREAM_ID_9)
+                                                                  .sourceName("todolistwar")
+                                                                  .settingId(SETTING_ID)
+                                                                  .accountId(ACCOUNT_ID)
+                                                                  .appId(APP_ID)
+                                                                  .jobname("todolistwar")
+                                                                  .autoPopulate(true)
+                                                                  .serviceId(SERVICE_ID)
+                                                                  .artifactPaths(asList("target/todolist.war"))
+                                                                  .build();
+
+  private final NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                              .uuid(ARTIFACT_STREAM_ID_7)
+                                                              .appId(APP_ID)
+                                                              .settingId(SETTING_ID)
+                                                              .sourceName(ARTIFACT_STREAM_NAME)
+                                                              .jobname(BUILD_JOB_NAME)
+                                                              .groupId(ARTIFACT_GROUP_ID)
+                                                              .artifactPaths(Stream.of(ARTIFACT_NAME).collect(toList()))
+                                                              .build();
+
+  private final AcrArtifactStream acrArtifactStream = AcrArtifactStream.builder()
+                                                          .uuid(ARTIFACT_STREAM_ID_8)
+                                                          .appId(APP_ID)
+                                                          .sourceName("ARTIFACT_SOURCE")
+                                                          .serviceId(SERVICE_ID)
+                                                          .settingId(SETTING_ID)
+                                                          .build();
 
   private SettingAttribute artifactorySetting = aSettingAttribute()
                                                     .withUuid(SETTING_ID)
@@ -173,6 +214,8 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_4)).thenReturn(artifactoryStream);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_5)).thenReturn(gcrArtifactStream);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_6)).thenReturn(ecrArtifactStream);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_7)).thenReturn(nexusArtifactStream);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_8)).thenReturn(acrArtifactStream);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM_UNSTABLE, BUILD_DETAILS_1)).thenReturn(ARTIFACT_1);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM_UNSTABLE, BUILD_DETAILS_2)).thenReturn(ARTIFACT_2);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM, BUILD_DETAILS_1)).thenReturn(ARTIFACT_1);
@@ -239,6 +282,23 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldNotifyOnSuccessWithNexusDeleteArtifacts() {
+    buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_7);
+    when(artifactService.prepareArtifactWithMetadataQuery(any())).thenReturn(query);
+    when(artifactService.prepareCleanupQuery(any())).thenReturn(query);
+    when(query.fetch()).thenReturn(artifactIterator);
+
+    when(artifactIterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(artifactIterator.next()).thenReturn(artifact);
+
+    buildSourceCleanupCallback.handleResponseForSuccessInternal(
+        prepareBuildSourceExecutionResponse(true), nexusArtifactStream);
+    verify(artifactService, times(1)).deleteArtifacts(any());
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void shouldNotifyOnSuccessWithEmptyBuilds() {
@@ -280,6 +340,38 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
     buildSourceCleanupCallback.handleResponseForSuccessInternal(
         prepareBuildSourceExecutionResponse(true), amiArtifactStream);
     verify(artifactService, times(1)).deleteArtifacts(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldNotifyOnSuccessWithACRDeleteArtifacts() {
+    buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_8);
+    when(artifactService.prepareArtifactWithMetadataQuery(any())).thenReturn(query);
+    when(query.fetch()).thenReturn(artifactIterator);
+    when(artifactService.prepareCleanupQuery(any())).thenReturn(query);
+    when(artifactIterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(artifactIterator.next()).thenReturn(artifact);
+
+    buildSourceCleanupCallback.handleResponseForSuccessInternal(
+        prepareBuildSourceExecutionResponse(true), acrArtifactStream);
+    verify(artifactService, times(1)).deleteArtifacts(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldNotDeleteJENKINSArtifacts() {
+    buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_9);
+    when(artifactService.prepareArtifactWithMetadataQuery(any())).thenReturn(query);
+    when(query.fetch()).thenReturn(artifactIterator);
+
+    when(artifactIterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(artifactIterator.next()).thenReturn(artifact);
+
+    buildSourceCleanupCallback.handleResponseForSuccessInternal(
+        prepareBuildSourceExecutionResponse(true), jenkinsArtifactStream);
+    verify(artifactService, times(0)).deleteArtifacts(any());
   }
 
   @Test

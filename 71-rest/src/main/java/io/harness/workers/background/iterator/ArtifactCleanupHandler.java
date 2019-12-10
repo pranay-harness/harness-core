@@ -49,7 +49,8 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
                 -> query.field(ArtifactStreamKeys.artifactStreamType)
                        .in(asList(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.AMI.name(),
                            ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ECR.name(),
-                           ArtifactStreamType.GCR.name())))
+                           ArtifactStreamType.GCR.name(), ArtifactStreamType.ACR.name(),
+                           ArtifactStreamType.NEXUS.name())))
             .schedulingType(REGULAR)
             .redistribute(true));
 
