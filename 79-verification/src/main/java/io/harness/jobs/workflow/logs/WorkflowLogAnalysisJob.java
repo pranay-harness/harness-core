@@ -246,17 +246,17 @@ public class WorkflowLogAnalysisJob implements Job, Handler<AnalysisContext> {
                 new LogMLAnalysisGenerator(context, logAnalysisMinute, false, analysisService, learningEngineService,
                     managerClient, managerClientHelper, MLAnalysisType.LOG_ML)
                     .sendStateNotification(context, error, errorMsg, (int) logAnalysisMinute);
+                try {
+                  if (jobExecutionContext.isPresent()) {
+                    jobExecutionContext.get().getScheduler().deleteJob(
+                        jobExecutionContext.get().getJobDetail().getKey());
+                  }
+                } catch (Exception e) {
+                  logger.error("for {} Delete cron failed", context.getStateExecutionId(), e);
+                }
               }
             } catch (Exception e) {
-              logger.error("Send notification failed for log analysis manager", e);
-            } finally {
-              try {
-                if (jobExecutionContext.isPresent()) {
-                  jobExecutionContext.get().getScheduler().deleteJob(jobExecutionContext.get().getJobDetail().getKey());
-                }
-              } catch (Exception e) {
-                logger.error("Delete cron failed", e);
-              }
+              logger.error("Send notification failed for {} log analysis manager", context.getStateExecutionId(), e);
             }
           }
         } catch (Exception ex) {
