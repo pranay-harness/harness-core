@@ -63,8 +63,8 @@ public class K8sDummyInstanceDataGenerator {
           nodeMetadataMap.put(InstanceMetaDataConstants.REGION, region);
           nodeMetadataMap.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
 
-          double nodeCpu = cpuBaseline * secureRandom.nextInt(3);
-          double nodeMemory = memoryBaseline * secureRandom.nextInt(5);
+          double nodeCpu = cpuBaseline * (secureRandom.nextInt(3) + 1);
+          double nodeMemory = memoryBaseline * (secureRandom.nextInt(5) + 1);
 
           long nodeStartTimeLocal = startTime + (secureRandom.nextInt(10) * oneDayMillis);
           long nodeEndTimeLocal = nodeStartTimeLocal + (secureRandom.nextInt(10) * oneDayMillis);
