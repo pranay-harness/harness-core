@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -80,6 +81,7 @@ public class Artifact extends Base {
   private List<String> serviceIds = new ArrayList<>();
   @Transient private List<Service> services;
   private List<ArtifactFile> artifactFiles = Lists.newArrayList();
+  private List<ArtifactFileMetadata> artifactFileMetadata = Lists.newArrayList();
   private Status status;
   private String description;
   private String errorMessage;
@@ -196,6 +198,10 @@ public class Artifact extends Base {
     }
     return "Build# " + getBuildNo();
   }
+
+  public List<ArtifactFileMetadata> getArtifactFileMetadata() {
+    return artifactFileMetadata;
+  }
   /**
    * The Enum Status.
    */
@@ -311,6 +317,7 @@ public class Artifact extends Base {
     private String uuid;
     private List<Service> services;
     private List<ArtifactFile> artifactFiles = Lists.newArrayList();
+    private List<ArtifactFileMetadata> artifactFileMetadata = Lists.newArrayList();
     private EmbeddedUser createdBy;
     private long createdAt;
     private Status status;
@@ -382,6 +389,11 @@ public class Artifact extends Base {
 
     public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
       this.artifactFiles = artifactFiles;
+      return this;
+    }
+
+    public Builder withArtifactDownloadMetadata(List<ArtifactFileMetadata> artifactFileMetadata) {
+      this.artifactFileMetadata = artifactFileMetadata;
       return this;
     }
 
@@ -463,6 +475,7 @@ public class Artifact extends Base {
           .withAppId(appId)
           .withServices(services)
           .withArtifactFiles(artifactFiles)
+          .withArtifactDownloadMetadata(artifactFileMetadata)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withStatus(status)
@@ -491,6 +504,7 @@ public class Artifact extends Base {
       artifact.setAppId(appId);
       artifact.setServices(services);
       artifact.setArtifactFiles(artifactFiles);
+      artifact.setArtifactFileMetadata(artifactFileMetadata);
       artifact.setCreatedBy(createdBy);
       artifact.setCreatedAt(createdAt);
       artifact.setStatus(status);

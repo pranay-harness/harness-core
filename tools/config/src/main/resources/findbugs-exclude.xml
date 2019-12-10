@@ -18,6 +18,10 @@
         <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CHECKED" />
     </Match>
     <Match>
+        <!-- This was reported fixed But spotbugs is still reporting it -->
+        <Bug pattern="WOC_WRITE_ONLY_COLLECTION_LOCAL" />
+    </Match>
+    <Match>
         <!-- covert from sonar scan -->
         <Bug pattern="CC_CYCLOMATIC_COMPLEXITY" />
     </Match>

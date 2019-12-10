@@ -9,6 +9,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
@@ -99,5 +100,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(LoadBalancerType.class, 19032);
     kryo.register(ArtifactServerException.class, 7244);
     kryo.register(PcfManifestsPackage.class, 19033);
+    kryo.register(ArtifactFileMetadata.class, 19034);
   }
 }

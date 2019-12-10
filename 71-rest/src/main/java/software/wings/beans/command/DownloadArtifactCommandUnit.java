@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.InvalidRequestException;
@@ -38,6 +39,7 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
@@ -187,6 +189,12 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
           }
         }
         return SUCCESS;
+      case NEXUS:
+        command = constructCommandStringForNexus(context, artifactStreamAttributes, encryptionDetails);
+        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        saveExecutionLog(
+            context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        return context.executeCommandString(command, false);
       default:
         saveExecutionLog(context, ERROR,
             format("Download Artifact not supported for Artifact Stream Type %s", artifactStreamType.name()));
@@ -488,6 +496,74 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         throw new InvalidRequestException("Invalid Script type", USER);
     }
     return command;
+  }
+
+  private String constructCommandStringForNexus(ShellCommandExecutionContext context,
+      ArtifactStreamAttributes artifactStreamAttributes, List<EncryptedDataDetail> encryptionDetails) {
+    NexusConfig nexusConfig = (NexusConfig) artifactStreamAttributes.getServerSetting().getValue();
+    encryptionService.decrypt(nexusConfig, encryptionDetails);
+    String authHeader = null;
+    if (nexusConfig.hasCredentials()) {
+      String pair = nexusConfig.getUsername() + ":" + new String(nexusConfig.getPassword());
+      authHeader = "Basic " + encodeBase64(pair);
+    }
+    List<ArtifactFileMetadata> artifactFileMetadata = artifactStreamAttributes.getArtifactFileMetadata();
+    StringBuilder command = new StringBuilder(128);
+
+    if (isEmpty(artifactFileMetadata)) {
+      saveExecutionLog(context, ERROR, "There are no artifacts to copy");
+      throw new InvalidRequestException("There are no artifacts to copy", USER);
+    }
+
+    switch (this.getScriptType()) {
+      case BASH:
+        for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
+          if (!nexusConfig.hasCredentials()) {
+            command.append("curl --progress-bar -X GET \"")
+                .append(downloadMetadata.getUrl())
+                .append("\" -o \"")
+                .append(getCommandPath().trim())
+                .append('/')
+                .append(downloadMetadata.getFileName())
+                .append("\"\n");
+          } else {
+            command.append("curl --progress-bar -H \"Authorization: ")
+                .append(authHeader)
+                .append("\" -X GET \"")
+                .append(downloadMetadata.getUrl())
+                .append("\" -o \"")
+                .append(getCommandPath().trim())
+                .append('/')
+                .append(downloadMetadata.getFileName())
+                .append("\"\n");
+          }
+        }
+        break;
+      case POWERSHELL:
+        if (nexusConfig.hasCredentials()) {
+          command
+              .append("$Headers = @{\n"
+                  + "    Authorization = \"")
+              .append(authHeader)
+              .append("\"\n}\n [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12");
+        } else {
+          command.append("[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12");
+        }
+        for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
+          command.append("\n Invoke-WebRequest -Uri \"")
+              .append(downloadMetadata.getUrl())
+              .append("\" -OutFile \"")
+              .append(getCommandPath().trim())
+              .append('\\')
+              .append(downloadMetadata.getFileName())
+              .append('"');
+        }
+        break;
+      default:
+        throw new InvalidRequestException("Invalid Script type", USER);
+    }
+
+    return command.toString();
   }
 
   private String getArtifactoryUrl(ArtifactoryConfig config, String artifactPath) {

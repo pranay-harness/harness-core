@@ -108,7 +108,7 @@
       ],
       "dist": {
         "shasum": "5d8257bd9ebe435e698b2fa431afde4fe7b10b03",
-        "tarball": "http://localhost:8881/nexus/content/repositories/npmjs/abbrev/-/abbrev-1.0.5.tgz"
+        "tarball": "https://nexus2.harness.io/content/repositories/npmjs/abbrev/-/abbrev-1.0.5.tgz"
       },
       "directories": {}
     }

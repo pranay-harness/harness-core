@@ -5,6 +5,7 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 
 import com.google.inject.Singleton;
 
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -20,7 +21,8 @@ import java.util.Map;
 public class NexusHelper {
   @NotNull
   public List<BuildDetails> constructBuildDetails(String repoId, String groupId, String artifactName,
-      List<String> versions, Map<String, String> versionToArtifactUrls) {
+      List<String> versions, Map<String, String> versionToArtifactUrls,
+      Map<String, List<ArtifactFileMetadata>> versionToArtifactDownloadUrls) {
     logger.info("Versions come from nexus server {}", versions);
     versions = versions.stream().sorted(new AlphanumComparator()).collect(toList());
     logger.info("After sorting alphanumerically versions {}", versions);
@@ -38,6 +40,7 @@ public class NexusHelper {
               .withBuildUrl(versionToArtifactUrls.get(version))
               .withMetadata(metadata)
               .withUiDisplayName("Version# " + version)
+              .withArtifactDownloadMetadata(versionToArtifactDownloadUrls.get(version))
               .build();
         })
         .collect(toList());

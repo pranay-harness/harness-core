@@ -1,7 +1,9 @@
 package software.wings.beans.command;
 
+import static io.harness.delegate.beans.artifact.ArtifactFileMetadata.builder;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.UNKNOWN;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -9,6 +11,7 @@ import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
@@ -16,6 +19,7 @@ import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_FILE_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID_ARTIFACTORY;
 import static software.wings.utils.WingsTestConstants.BUCKET_NAME;
 import static software.wings.utils.WingsTestConstants.BUILD_NO;
@@ -35,6 +39,7 @@ import junitparams.naming.TestCaseName;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -48,6 +53,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
@@ -146,6 +152,62 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
           .packageName("GROUP_ID:ARTIFACT_ID")
           .build();
 
+  private SettingAttribute nexusSetting = aSettingAttribute()
+                                              .withUuid(SETTING_ID)
+                                              .withValue(NexusConfig.builder()
+                                                             .nexusUrl(WingsTestConstants.HARNESS_NEXUS)
+                                                             .username("admin")
+                                                             .password("dummy123!".toCharArray())
+                                                             .build())
+                                              .build();
+
+  private SettingAttribute nexusSettingAnon =
+      aSettingAttribute()
+          .withUuid(SETTING_ID)
+          .withValue(NexusConfig.builder().nexusUrl(WingsTestConstants.HARNESS_NEXUS_THREE).build())
+          .build();
+
+  private ArtifactStreamAttributes nexus2MavenStreamAttributes =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.NEXUS.name())
+          .metadataOnly(true)
+          .artifactFileMetadata(asList(
+              builder()
+                  .fileName("todolist-7.0.war")
+                  .url(
+                      "https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war")
+                  .build()))
+          .serverSetting(nexusSetting)
+          .artifactStreamId(ARTIFACT_STREAM_ID)
+          .jobName("releases")
+          .groupId("io.harness.test")
+          .artifactName("todolist")
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .build();
+
+  private ArtifactStreamAttributes nexus2MavenStreamAttributesAnon =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.NEXUS.name())
+          .metadataOnly(true)
+          .artifactFileMetadata(asList(
+              builder()
+                  .fileName("todolist-7.0.war")
+                  .url(
+                      "https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war")
+                  .build(),
+              builder()
+                  .fileName("todolist-7.0.tar")
+                  .url(
+                      "https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=tar")
+                  .build()))
+          .serverSetting(nexusSettingAnon)
+          .artifactStreamId(ARTIFACT_STREAM_ID)
+          .jobName("releases")
+          .groupId("io.harness.test")
+          .artifactName("todolist")
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .build();
+
   @InjectMocks
   private ShellCommandExecutionContext amazonS3Context =
       new ShellCommandExecutionContext(aCommandExecutionContext()
@@ -184,6 +246,28 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
       new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .withArtifactStreamAttributes(artifactStreamAttributesForAzureArtifacts)
                                            .withMetadata(mockMetadata(ArtifactStreamType.AZURE_ARTIFACTS))
+                                           .withHostConnectionAttributes(hostConnectionAttributes)
+                                           .withAppId(WingsTestConstants.APP_ID)
+                                           .withActivityId(ACTIVITY_ID)
+                                           .withHost(host)
+                                           .build());
+
+  @InjectMocks
+  ShellCommandExecutionContext nexusContextMaven =
+      new ShellCommandExecutionContext(aCommandExecutionContext()
+                                           .withArtifactStreamAttributes(nexus2MavenStreamAttributes)
+                                           .withMetadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+                                           .withHostConnectionAttributes(hostConnectionAttributes)
+                                           .withAppId(WingsTestConstants.APP_ID)
+                                           .withActivityId(ACTIVITY_ID)
+                                           .withHost(host)
+                                           .build());
+
+  @InjectMocks
+  ShellCommandExecutionContext nexusContextMavenAnon =
+      new ShellCommandExecutionContext(aCommandExecutionContext()
+                                           .withArtifactStreamAttributes(nexus2MavenStreamAttributesAnon)
+                                           .withMetadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
                                            .withHostConnectionAttributes(hostConnectionAttributes)
                                            .withAppId(WingsTestConstants.APP_ID)
                                            .withActivityId(ACTIVITY_ID)
@@ -275,6 +359,38 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     assertThat(status).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  @Parameters(method = "getNexus2MavenData")
+  public void shouldDownloadFromNexus2Maven(ScriptType scriptType, String command) {
+    nexusContextMaven.setExecutor(executor);
+    downloadArtifactCommandUnit.setScriptType(scriptType);
+    downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+        .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
+    downloadArtifactCommandUnit.executeInternal(nexusContextMaven);
+    ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
+    verify(executor).executeCommandString(argument.capture(), anyBoolean());
+    assertThat(argument.getValue()).isEqualTo(command);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  @Parameters(method = "getNexus2MavenDataAnon")
+  public void shouldDownloadFromNexus2MavenAnon(ScriptType scriptType, String command) {
+    nexusContextMavenAnon.setExecutor(executor);
+    downloadArtifactCommandUnit.setScriptType(scriptType);
+    downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+        .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
+    downloadArtifactCommandUnit.executeInternal(nexusContextMavenAnon);
+    ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
+    verify(executor).executeCommandString(argument.capture(), anyBoolean());
+    assertThat(argument.getValue()).isEqualTo(command);
+  }
+
   private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {
     Map<String, String> map = new HashMap<>();
     switch (artifactStreamType) {
@@ -315,5 +431,28 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     artifactoryContext.setExecutor(executor);
     azureArtifactsContext.setExecutor(executor);
     return new Object[][] {{ScriptType.BASH}, {ScriptType.POWERSHELL}};
+  }
+
+  private Object[][] getNexus2MavenData() {
+    return new Object[][] {
+        {ScriptType.BASH,
+            "curl --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -o \"DESTINATION_DIR_PATH/todolist-7.0.war\"\n"},
+        {ScriptType.POWERSHELL,
+            "$Headers = @{\n"
+                + "    Authorization = \"Basic YWRtaW46ZHVtbXkxMjMh\"\n"
+                + "}\n"
+                + " [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n"
+                + " Invoke-WebRequest -Uri \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -OutFile \"DESTINATION_DIR_PATH\\todolist-7.0.war\""}};
+  }
+
+  private Object[][] getNexus2MavenDataAnon() {
+    return new Object[][] {
+        {ScriptType.BASH,
+            "curl --progress-bar -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -o \"DESTINATION_DIR_PATH/todolist-7.0.war\"\n"
+                + "curl --progress-bar -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=tar\" -o \"DESTINATION_DIR_PATH/todolist-7.0.tar\"\n"},
+        {ScriptType.POWERSHELL,
+            "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n"
+                + " Invoke-WebRequest -Uri \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -OutFile \"DESTINATION_DIR_PATH\\todolist-7.0.war\"\n"
+                + " Invoke-WebRequest -Uri \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=tar\" -OutFile \"DESTINATION_DIR_PATH\\todolist-7.0.tar\""}};
   }
 }
