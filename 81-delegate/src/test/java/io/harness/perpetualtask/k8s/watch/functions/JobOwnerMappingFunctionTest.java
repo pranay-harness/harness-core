@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.model.Kind;
 import io.harness.perpetualtask.k8s.watch.Owner;
@@ -24,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RunWith(MockitoJUnitRunner.class)
-public class JobOwnerMappingFunctionTest {
+public class JobOwnerMappingFunctionTest extends CategoryTest {
   @Rule public final KubernetesServer server = new KubernetesServer(true, true);
   private KubernetesClient kubernetesClient;
   private OwnerReference ownerReference;
