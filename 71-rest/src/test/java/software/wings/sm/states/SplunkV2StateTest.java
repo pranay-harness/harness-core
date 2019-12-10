@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
@@ -223,6 +224,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
     ExecutionResponse response = spyState.execute(executionContext);
+    verify(spyState, times(1)).sampleHostsMap(any(AnalysisContext.class));
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
     assertThat(response.getErrorMessage())
         .isEqualTo(

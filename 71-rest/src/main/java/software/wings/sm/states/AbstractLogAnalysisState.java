@@ -422,6 +422,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       DataCollectionInfo dataCollectionInfo = createDataCollectionInfo(analysisContext);
       analysisContext.setDataCollectionInfo(dataCollectionInfo);
     }
+    sampleHostsMap(analysisContext);
     if (getCVTaskFeatureName().isPresent()) {
       analysisContext.setFeatureFlag(
           getCVTaskFeatureName().get(), isCVTaskEnqueuingEnabled(analysisContext.getAccountId()));

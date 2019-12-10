@@ -48,6 +48,7 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -57,7 +58,9 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
@@ -71,8 +74,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -382,7 +383,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void testGetCanaryNewNodes() throws NoSuchAlgorithmException, KeyManagementException, IllegalAccessException {
+  public void testGetCanaryNewNodes() throws IllegalAccessException {
     List<InstanceElement> instanceElements = new ArrayList<>();
     for (int i = 0; i < 5; ++i) {
       instanceElements.add(
@@ -419,8 +420,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testGetCanaryNewNodesHelm()
-      throws NoSuchAlgorithmException, KeyManagementException, IllegalAccessException {
+  public void testGetCanaryNewNodesHelm() throws IllegalAccessException {
     when(infraMappingService.get(anyString(), anyString()))
         .thenReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
                         .withDeploymentType(DeploymentType.HELM.name())
@@ -457,5 +457,77 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
           + "-" + i + ".harness.com");
     }
     assertThat(nodes).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testSampleHosts_whenFFIsDisabled() throws IllegalAccessException {
+    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    String accountId = generateUuid();
+    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+    FieldUtils.writeField(abstractAnalysisState, "featureFlagService", featureFlagService, true);
+    when(featureFlagService.isEnabled(eq(FeatureName.CV_HOST_SAMPLING), eq(accountId))).thenReturn(false);
+    AnalysisContext analysisContext = AnalysisContext.builder()
+                                          .accountId(accountId)
+                                          .testNodes(getHostsMap(20, 5))
+                                          .controlNodes(getHostsMap(20, 5))
+                                          .build();
+    abstractAnalysisState.sampleHostsMap(analysisContext);
+    assertThat(analysisContext.getControlNodes()).hasSize(100);
+    assertThat(analysisContext.getTestNodes()).hasSize(100);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testSampleHosts_whenFFIsEnabledAndNoSamplingRequired() throws IllegalAccessException {
+    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    String accountId = generateUuid();
+    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+    FieldUtils.writeField(abstractAnalysisState, "featureFlagService", featureFlagService, true);
+    when(featureFlagService.isEnabled(eq(FeatureName.CV_HOST_SAMPLING), eq(accountId))).thenReturn(true);
+    AnalysisContext analysisContext = AnalysisContext.builder()
+                                          .accountId(accountId)
+                                          .testNodes(getHostsMap(10, 5))
+                                          .controlNodes(getHostsMap(9, 5))
+                                          .build();
+    Map<String, String> testNodes = analysisContext.getTestNodes();
+    Map<String, String> controlNodes = analysisContext.getControlNodes();
+    abstractAnalysisState.sampleHostsMap(analysisContext);
+    assertThat(analysisContext.getControlNodes()).hasSize(45);
+    assertThat(analysisContext.getTestNodes()).hasSize(50);
+    assertThat(analysisContext.getTestNodes()).isEqualTo(testNodes);
+    assertThat(analysisContext.getControlNodes()).isEqualTo(controlNodes);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testSampleHosts_whenFFIsEnabledAndSamplingRequired() throws IllegalAccessException {
+    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    String accountId = generateUuid();
+    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+    FieldUtils.writeField(abstractAnalysisState, "featureFlagService", featureFlagService, true);
+    when(featureFlagService.isEnabled(eq(FeatureName.CV_HOST_SAMPLING), eq(accountId))).thenReturn(true);
+    AnalysisContext analysisContext = AnalysisContext.builder()
+                                          .accountId(accountId)
+                                          .testNodes(getHostsMap(20, 5))
+                                          .controlNodes(getHostsMap(11, 5))
+                                          .build();
+    abstractAnalysisState.sampleHostsMap(analysisContext);
+    assertThat(analysisContext.getControlNodes()).hasSize(50);
+    assertThat(analysisContext.getTestNodes()).hasSize(50);
+  }
+
+  private Map<String, String> getHostsMap(int numberOfHostsPerGroup, int numberOfGroups) {
+    Map<String, String> hosts = new HashMap<>();
+    for (int i = 0; i < numberOfGroups; i++) {
+      String groupName = generateUuid();
+      for (int j = 0; j < numberOfHostsPerGroup; j++) {
+        hosts.put(generateUuid(), groupName);
+      }
+    }
+    return hosts;
   }
 }

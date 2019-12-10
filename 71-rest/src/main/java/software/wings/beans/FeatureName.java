@@ -35,7 +35,7 @@ public enum FeatureName {
   TRIGGER_REFACTOR,
   TRIGGER_YAML,
   CV_FEEDBACKS,
-  CV_ACTIVITY_LOG(Scope.GLOBAL), // still not removed from UI. Remove once UI stop using it.
+  CV_HOST_SAMPLING,
   CUSTOM_DASHBOARD,
   SEND_LOG_ANALYSIS_COMPRESSED,
   SSH_SHORT_VALIDATION_TIMEOUT,
