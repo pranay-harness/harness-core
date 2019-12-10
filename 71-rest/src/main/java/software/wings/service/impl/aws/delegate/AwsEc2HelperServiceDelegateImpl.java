@@ -18,10 +18,14 @@ import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ec2.model.BlockDeviceMapping;
+import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionRequest;
+import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionResult;
 import com.amazonaws.services.ec2.model.DescribeImagesRequest;
 import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.amazonaws.services.ec2.model.DescribeLaunchTemplateVersionsRequest;
+import com.amazonaws.services.ec2.model.DescribeLaunchTemplateVersionsResult;
 import com.amazonaws.services.ec2.model.DescribeSecurityGroupsRequest;
 import com.amazonaws.services.ec2.model.DescribeSecurityGroupsResult;
 import com.amazonaws.services.ec2.model.DescribeSubnetsRequest;
@@ -31,6 +35,7 @@ import com.amazonaws.services.ec2.model.DescribeVpcsRequest;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Image;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.LaunchTemplateVersion;
 import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ec2.model.SecurityGroup;
 import com.amazonaws.services.ec2.model.Subnet;
@@ -268,6 +273,48 @@ public class AwsEc2HelperServiceDelegateImpl
       handleAmazonClientException(amazonClientException);
     }
     return emptySet();
+  }
+
+  @Override
+  public LaunchTemplateVersion getLaunchTemplateVersion(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region, String launchTemplateId, String version) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      final AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig);
+      tracker.trackEC2Call("Get Launch Template Version");
+      final DescribeLaunchTemplateVersionsResult describeLaunchTemplateVersionsResult =
+          amazonEc2Client.describeLaunchTemplateVersions(
+              new DescribeLaunchTemplateVersionsRequest().withLaunchTemplateId(launchTemplateId).withVersions(version));
+      if (describeLaunchTemplateVersionsResult != null
+          && isNotEmpty(describeLaunchTemplateVersionsResult.getLaunchTemplateVersions())) {
+        return describeLaunchTemplateVersionsResult.getLaunchTemplateVersions().get(0);
+      }
+
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+
+    return null;
+  }
+
+  @Override
+  public CreateLaunchTemplateVersionResult createLaunchTemplateVersion(
+      CreateLaunchTemplateVersionRequest createLaunchTemplateVersionRequest, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      final AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig);
+      tracker.trackEC2Call("Create Launch Template Version");
+      return amazonEc2Client.createLaunchTemplateVersion(createLaunchTemplateVersionRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+
+    return null;
   }
 
   private List<Instance> getInstanceList(DescribeInstancesResult result) {

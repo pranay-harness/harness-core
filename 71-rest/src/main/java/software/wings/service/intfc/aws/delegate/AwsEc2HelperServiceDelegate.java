@@ -1,7 +1,10 @@
 package software.wings.service.intfc.aws.delegate;
 
+import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionRequest;
+import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.LaunchTemplateVersion;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
 
@@ -24,4 +27,11 @@ public interface AwsEc2HelperServiceDelegate {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, List<String> instanceIds, String region);
   Set<String> listBlockDeviceNamesOfAmi(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String amiId);
+
+  LaunchTemplateVersion getLaunchTemplateVersion(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String launchTemplateId, String version);
+
+  CreateLaunchTemplateVersionResult createLaunchTemplateVersion(
+      CreateLaunchTemplateVersionRequest createLaunchTemplateVersionRequest, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region);
 }
