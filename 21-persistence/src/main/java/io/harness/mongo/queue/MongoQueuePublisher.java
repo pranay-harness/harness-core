@@ -4,6 +4,8 @@ import static io.harness.manage.GlobalContextManager.obtainGlobalContext;
 
 import com.google.inject.Inject;
 
+import io.harness.logging.AutoLogRemoveContext;
+import io.harness.mongo.MessageLogContext;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queuable;
 import io.harness.queue.QueuePublisher;
@@ -27,7 +29,10 @@ public class MongoQueuePublisher<T extends Queuable> implements QueuePublisher<T
   }
 
   private void store(T payload) {
-    payload.setGlobalContext(obtainGlobalContext());
+    try (AutoLogRemoveContext ignore1 = new AutoLogRemoveContext(MessageLogContext.MESSAGE_CLASS);
+         AutoLogRemoveContext ignore2 = new AutoLogRemoveContext(MessageLogContext.MESSAGE_ID)) {
+      payload.setGlobalContext(obtainGlobalContext());
+    }
     persistence.insertIgnoringDuplicateKeys(payload);
   }
 
