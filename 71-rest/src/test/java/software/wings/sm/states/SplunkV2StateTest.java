@@ -110,6 +110,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void noTestNodes() {
     SplunkV2State spyState = spy(splunkState);
+    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
     doReturn(Collections.emptyMap()).when(spyState).getCanaryNewHostNames(executionContext);
     doReturn(Collections.emptyMap()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
@@ -135,6 +136,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   public void noControlNodesCompareWithCurrent() {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     SplunkV2State spyState = spy(splunkState);
+    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
     doReturn(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME))
         .when(spyState)
         .getCanaryNewHostNames(executionContext);
@@ -164,6 +166,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   public void compareWithCurrentSameTestAndControlNodes() {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     SplunkV2State spyState = spy(splunkState);
+    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
     doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
         .when(spyState)
         .getCanaryNewHostNames(executionContext);
@@ -211,6 +214,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     Logger activityLogger = mock(Logger.class);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
     SplunkV2State spyState = spy(splunkState);
+    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
     doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
         .when(spyState)
         .getCanaryNewHostNames(executionContext);
@@ -319,6 +323,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     Logger activityLogger = mock(Logger.class);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
     SplunkV2State spyState = spy(splunkState);
+    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
     doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
         .when(spyState)
         .getCanaryNewHostNames(executionContext);

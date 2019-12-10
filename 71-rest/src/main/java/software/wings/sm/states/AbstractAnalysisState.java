@@ -18,6 +18,7 @@ import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.ThirdPartyApiCallLog.PAYLOAD;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
@@ -50,6 +51,7 @@ import software.wings.api.PhaseExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.k8s.K8sElement;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -536,16 +538,18 @@ public abstract class AbstractAnalysisState extends State {
         if (serviceElement.getUuid().equals(serviceId)) {
           if (isNotEmpty(elementExecutionSummary.getInstanceStatusSummaries())) {
             elementExecutionSummary.getInstanceStatusSummaries().forEach(instanceStatusSummary -> {
+              String hostName;
               if (isEmpty(getHostnameTemplate())) {
-                hosts.put(instanceStatusSummary.getInstanceElement().getHostName(),
-                    getGroupName(instanceStatusSummary.getInstanceElement(), deploymentType));
+                hostName = instanceStatusSummary.getInstanceElement().getHostName();
               } else {
                 fillHostDetail(instanceStatusSummary.getInstanceElement(), context);
-                hosts.put(context.renderExpression(getHostnameTemplate(),
-                              StateExecutionContext.builder()
-                                  .contextElements(Lists.newArrayList(instanceStatusSummary.getInstanceElement()))
-                                  .build()),
-                    getGroupName(instanceStatusSummary.getInstanceElement(), deploymentType));
+                hostName = context.renderExpression(getHostnameTemplate(),
+                    StateExecutionContext.builder()
+                        .contextElements(Lists.newArrayList(instanceStatusSummary.getInstanceElement()))
+                        .build());
+              }
+              if (!isNewInstanceFieldPopulated(context) || instanceStatusSummary.getInstanceElement().isNewInstance()) {
+                hosts.put(hostName, getGroupName(instanceStatusSummary.getInstanceElement(), deploymentType));
               }
             });
           } else {
@@ -558,6 +562,39 @@ public abstract class AbstractAnalysisState extends State {
     });
     getLogger().info("Hosts deployed so far for {} are {}", context.getStateExecutionInstanceId(), hosts);
     return hosts;
+  }
+
+  protected boolean isNewInstanceFieldPopulated(ExecutionContext context) {
+    InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
+    return infrastructureMapping instanceof AwsAmiInfrastructureMapping
+        && AmiDeploymentType.SPOTINST == ((AwsAmiInfrastructureMapping) infrastructureMapping).getAmiDeploymentType();
+  }
+
+  protected void populateNewAndOldHostNames(
+      ExecutionContext context, Map<String, String> controlNodes, Map<String, String> testNodes) {
+    InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
+    if (includePreviousPhaseNodes) {
+      testNodes.putAll(getHostsDeployedSoFar(context, getPhaseServiceId(context), getDeploymentType(context)));
+    }
+
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    Preconditions.checkArgument(isNotEmpty(workflowStandardParams.getInstances()));
+    for (InstanceElement instanceElement : workflowStandardParams.getInstances()) {
+      DeploymentType deploymentType =
+          serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
+
+      String hostName = isEmpty(getHostnameTemplate())
+          ? instanceElement.getHostName()
+          : context.renderExpression(getHostnameTemplate(),
+                StateExecutionContext.builder().contextElements(Lists.newArrayList(instanceElement)).build());
+      if (instanceElement.isNewInstance()) {
+        testNodes.put(hostName, getGroupName(instanceElement, deploymentType));
+        continue;
+      }
+      if (getComparisonStrategy() != COMPARE_WITH_PREVIOUS) {
+        controlNodes.put(hostName, getGroupName(instanceElement, deploymentType));
+      }
+    }
   }
 
   protected Map<String, String> getCanaryNewHostNames(ExecutionContext context) {
