@@ -126,7 +126,23 @@ public class WaitNotifyEngine {
 
   public void sendNotification(WaitInstance waitInstance) {
     try (AutoLogRemoveContext ignore = new AutoLogRemoveContext(WaitInstanceLogContext.ID)) {
+      String publisher = waitInstance.getPublisher();
+
+      // TODO: remove after 15/01/20202
+      // this is temporary to handle the transition for wait instances without publisher {{
+      if (publisher == null) {
+        publisher = "general";
+      }
+      // }}
       final NotifyQueuePublisher notifyQueuePublisher = publisherRegister.obtain(waitInstance.getPublisher());
+
+      if (notifyQueuePublisher == null) {
+        // There is nothing smart that we can do.
+        // If there is no publisher we should let people evaluate and handle the problem.
+        logger.error("Unknown publisher {}", publisher);
+        return;
+      }
+
       notifyQueuePublisher.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
     }
   }
