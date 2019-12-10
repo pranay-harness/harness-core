@@ -4,6 +4,7 @@ import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pcf.model.PcfConstants.APP_TOKEN;
+import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_APP_LOG_TAILING;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_APP_AUTOSCALAR_BINDING;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCALAR;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
@@ -12,12 +13,15 @@ import static io.harness.pcf.model.PcfConstants.CONFIGURE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.DISABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.ENABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.PCF_ROUTE_PATH_SEPARATOR;
+import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static io.harness.pcf.model.PcfConstants.SYS_VAR_CF_PLUGIN_HOME;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static software.wings.beans.Log.LogColor.Red;
+import static software.wings.beans.Log.color;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -65,7 +69,9 @@ import org.cloudfoundry.reactor.tokenprovider.PasswordGrantTokenProvider;
 import org.jetbrains.annotations.NotNull;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.LogOutputStream;
+import software.wings.beans.Log.LogWeight;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
@@ -371,7 +377,7 @@ public class PcfClientImpl implements PcfClient {
 
       executionLogCallback.saveExecutionLog("# CF_HOME value: " + requestData.getConfigPathVar());
       boolean loginSuccessful = true;
-      if (requestData.isLoginNeeded()) {
+      if (!requestData.getPcfRequestConfig().isLoggedin()) {
         loginSuccessful = doLogin(pcfRequestConfig, executionLogCallback, requestData.getConfigPathVar());
       }
 
@@ -568,11 +574,11 @@ public class PcfClientImpl implements PcfClient {
   boolean logInForAppAutoscalarCliCommand(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws InterruptedException, TimeoutException, IOException {
     boolean loginSuccessful = true;
-    if (!appAutoscalarRequestData.isLoggedin()) {
+    if (!appAutoscalarRequestData.getPcfRequestConfig().isLoggedin()) {
       loginSuccessful = doLogin(appAutoscalarRequestData.getPcfRequestConfig(), executionLogCallback,
           appAutoscalarRequestData.getConfigPathVar());
     }
-    appAutoscalarRequestData.setLoggedin(loginSuccessful);
+    appAutoscalarRequestData.getPcfRequestConfig().setLoggedin(loginSuccessful);
     return loginSuccessful;
   }
 
@@ -1242,6 +1248,42 @@ public class PcfClientImpl implements PcfClient {
     return processExecutor.execute();
   }
 
+  public StartedProcess tailLogsForPcf(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback)
+      throws PivotalClientApiException {
+    try {
+      boolean loginSuccessful = pcfRequestConfig.isLoggedin()
+          ? pcfRequestConfig.isLoggedin()
+          : doLogin(pcfRequestConfig, executionLogCallback, pcfRequestConfig.getCfHomeDirPath());
+
+      if (!loginSuccessful) {
+        executionLogCallback.saveExecutionLog(color("Failed to login", Red, LogWeight.Bold));
+        throw new PivotalClientApiException("Failed to login");
+      }
+
+      ProcessExecutor processExecutor = getProcessExecutorForLogTailing(pcfRequestConfig, executionLogCallback);
+
+      return processExecutor.start();
+    } catch (Exception e) {
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + "Failed while tailing logs", e);
+    }
+  }
+
+  @VisibleForTesting
+  ProcessExecutor getProcessExecutorForLogTailing(
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) {
+    return new ProcessExecutor()
+        .timeout(pcfRequestConfig.getTimeOutIntervalInMins(), TimeUnit.MINUTES)
+        .command(BIN_SH, "-c", CF_COMMAND_FOR_APP_LOG_TAILING.replace(APP_TOKEN, pcfRequestConfig.getApplicationName()))
+        .readOutput(true)
+        .environment(getEnvironmentMapForPcfExecutor(pcfRequestConfig.getCfHomeDirPath()))
+        .redirectOutput(new LogOutputStream() {
+          @Override
+          protected void processLine(String line) {
+            executionLogCallback.saveExecutionLog(line);
+          }
+        });
+  }
+
   public void unmapRoutesForApplication(PcfRequestConfig pcfRequestConfig, List<String> routes)
       throws PivotalClientApiException, InterruptedException {
     logger.info(new StringBuilder()
@@ -1442,7 +1484,7 @@ public class PcfClientImpl implements PcfClient {
       long timeout = pcfRequestConfig.getTimeOutIntervalInMins() <= 0 ? 5 : pcfRequestConfig.getTimeOutIntervalInMins();
       return DefaultConnectionContext.builder()
           .apiHost(pcfRequestConfig.getEndpointUrl())
-          .skipSslValidation(false)
+          .skipSslValidation(true)
           .connectTimeout(Duration.ofMinutes(timeout))
           .build();
     } catch (Exception t) {

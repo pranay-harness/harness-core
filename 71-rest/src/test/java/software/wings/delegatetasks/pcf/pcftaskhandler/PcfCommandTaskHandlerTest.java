@@ -336,34 +336,37 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                                       .memoryUsage((long) 1)
                                       .build())
                  .build())
-        .doReturn(ApplicationDetail.builder()
-                      .id("10")
-                      .diskQuota(1)
-                      .instances(2)
-                      .memoryLimit(1)
-                      .name("a_s_e__6")
-                      .requestedState("RUNNING")
-                      .stack("")
-                      .runningInstances(2)
-                      .instanceDetails(InstanceDetail.builder()
-                                           .cpu(1.0)
-                                           .diskQuota((long) 1.23)
-                                           .diskUsage((long) 1.23)
-                                           .index("0")
-                                           .memoryQuota((long) 1)
-                                           .memoryUsage((long) 1)
-                                           .build(),
-                          InstanceDetail.builder()
-                              .cpu(1.0)
-                              .diskQuota((long) 1.23)
-                              .diskUsage((long) 1.23)
-                              .index("1")
-                              .memoryQuota((long) 1)
-                              .memoryUsage((long) 1)
-                              .build())
-                      .build())
         .when(pcfDeploymentManager)
         .resizeApplication(any());
+
+    doReturn(ApplicationDetail.builder()
+                 .id("10")
+                 .requestedState("RUNNING")
+                 .stack("")
+                 .diskQuota(1)
+                 .instances(2)
+                 .memoryLimit(1)
+                 .name("a_s_e__6")
+                 .runningInstances(2)
+                 .instanceDetails(InstanceDetail.builder()
+                                      .cpu(1.0)
+                                      .diskQuota((long) 1.23)
+                                      .diskUsage((long) 1.23)
+                                      .index("0")
+                                      .memoryQuota((long) 1)
+                                      .memoryUsage((long) 1)
+                                      .build(),
+                     InstanceDetail.builder()
+                         .cpu(1.0)
+                         .diskQuota((long) 1.23)
+                         .diskUsage((long) 1.23)
+                         .index("1")
+                         .memoryQuota((long) 1)
+                         .memoryUsage((long) 1)
+                         .build())
+                 .build())
+        .when(pcfDeploymentManager)
+        .upsizeApplicationWithSteadyStateCheck(any(), any());
 
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
         pcfDeployCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
@@ -526,6 +529,36 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                  .memoryLimit(1)
                  .name("a_s_e__4")
                  .requestedState("RUNNING")
+                 .stack("")
+                 .runningInstances(1)
+                 .build())
+        .doReturn(applicationDetailDownsize)
+        .when(pcfDeploymentManager)
+        .upsizeApplicationWithSteadyStateCheck(any(), any());
+
+    doReturn(ApplicationDetail.builder()
+                 .instanceDetails(Arrays.asList(InstanceDetail.builder()
+                                                    .cpu(1.0)
+                                                    .diskQuota((long) 1.23)
+                                                    .diskUsage((long) 1.23)
+                                                    .index("1")
+                                                    .memoryQuota((long) 1)
+                                                    .memoryUsage((long) 1)
+                                                    .build(),
+                     InstanceDetail.builder()
+                         .cpu(1.0)
+                         .diskQuota((long) 1.23)
+                         .diskUsage((long) 1.23)
+                         .index("0")
+                         .memoryQuota((long) 1)
+                         .memoryUsage((long) 1)
+                         .build()))
+                 .id("Guid:a_s_e__4")
+                 .diskQuota(1)
+                 .requestedState("RUNNING")
+                 .instances(1)
+                 .memoryLimit(1)
+                 .name("a_s_e__4")
                  .stack("")
                  .runningInstances(1)
                  .build())
@@ -723,35 +756,37 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     doNothing().when(pcfCommandTaskHelper).mapRouteMaps(anyString(), anyList(), any(), any());
     doNothing().when(pcfCommandTaskHelper).unmapRouteMaps(anyString(), anyList(), any(), any());
+    doReturn(null).when(pcfDeploymentManager).upsizeApplicationWithSteadyStateCheck(any(), any());
+    doReturn(null).when(pcfDeploymentManager).resizeApplication(any());
 
-    // 2
+    // 2 Rollback True, existingApplication : available
     reset(pcfDeploymentManager);
     routeUpdateRequestConfigData.setDownsizeOldApplication(true);
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
         pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
-    verify(pcfDeploymentManager, times(1)).resizeApplication(any());
+    verify(pcfDeploymentManager, times(1)).upsizeApplicationWithSteadyStateCheck(any(), any());
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
 
-    // 3
+    // 3 Rollback True, existingApplication : unavailable
     reset(pcfDeploymentManager);
     routeUpdateRequestConfigData.setDownsizeOldApplication(true);
     routeUpdateRequestConfigData.setExistingApplicationDetails(null);
     pcfCommandExecutionResponse =
         pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
-    verify(pcfDeploymentManager, never()).resizeApplication(any());
+    verify(pcfDeploymentManager, never()).upsizeApplicationWithSteadyStateCheck(any(), any());
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
 
-    // 4
+    // 4 Rollback False, existingApplication : unavailable
     reset(pcfDeploymentManager);
     routeUpdateRequestConfigData.setDownsizeOldApplication(true);
     routeUpdateRequestConfigData.setRollback(false);
     routeUpdateRequestConfigData.setExistingApplicationDetails(null);
     pcfCommandExecutionResponse =
         pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
-    verify(pcfDeploymentManager, times(0)).resizeApplication(any());
+    verify(pcfDeploymentManager, never()).upsizeApplicationWithSteadyStateCheck(any(), any());
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
 
-    // 5
+    // 5  Rollback False, existingApplication : available
     reset(pcfDeploymentManager);
     routeUpdateRequestConfigData.setDownsizeOldApplication(true);
     routeUpdateRequestConfigData.setExistingApplicationDetails(
@@ -759,6 +794,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     pcfCommandExecutionResponse =
         pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
     verify(pcfDeploymentManager, times(1)).resizeApplication(any());
+    verify(pcfDeploymentManager, never()).upsizeApplicationWithSteadyStateCheck(any(), any());
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
 

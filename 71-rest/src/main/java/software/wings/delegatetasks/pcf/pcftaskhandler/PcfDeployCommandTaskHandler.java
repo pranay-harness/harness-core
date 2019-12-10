@@ -79,14 +79,16 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
                                               .timeOutIntervalInMins(pcfCommandDeployRequest.getTimeoutIntervalInMin())
                                               .build();
 
+      // This will be CF_HOME for any cli related operations
+      String randomToken = UUIDGenerator.generateUuid();
+      workingDirectory = pcfCommandTaskHelper.generateWorkingDirectoryForDeployment(randomToken);
+      if (workingDirectory == null) {
+        throw new PivotalClientApiException("Failed to create working CF directory");
+      }
+      pcfRequestConfig.setCfHomeDirPath(workingDirectory.getAbsolutePath());
+
       // Init AppAutoscalarRequestData If Needed
       if (pcfCommandDeployRequest.isUseAppAutoscalar()) {
-        // This will be CF_HOME for any cli related operations
-        String randomToken = UUIDGenerator.generateUuid();
-        workingDirectory = pcfCommandTaskHelper.generateWorkingDirectoryForDeployment(randomToken);
-        if (workingDirectory == null) {
-          throw new PivotalClientApiException("Failed to create working CF directory");
-        }
         pcfAppAutoscalarRequestData.setPcfRequestConfig(pcfRequestConfig);
         pcfAppAutoscalarRequestData.setConfigPathVar(workingDirectory.getAbsolutePath());
         pcfAppAutoscalarRequestData.setTimeoutInMins(pcfCommandDeployRequest.getTimeoutIntervalInMin());

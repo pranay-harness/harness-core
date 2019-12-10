@@ -10,6 +10,7 @@ public interface PcfConstants {
   String SYS_VAR_CF_PLUGIN_HOME = "harness.pcf.plugin.home";
   String CF_COMMAND_FOR_CHECKING_AUTOSCALAR = "cf plugins | grep autoscaling-apps";
   String CF_COMMAND_FOR_CHECKING_APP_AUTOSCALAR_BINDING = "cf autoscaling-apps | grep <APP_NAME>";
+  String CF_COMMAND_FOR_APP_LOG_TAILING = "cf logs <APP_NAME>";
   String APP_TOKEN = "<APP_NAME>";
   String ENABLE_AUTOSCALING = "enable-autoscaling";
   String DISABLE_AUTOSCALING = "disable-autoscaling";
@@ -71,4 +72,5 @@ public interface PcfConstants {
 
   String PCF_AUTOSCALAR_MANIFEST_INSTANCE_LIMITS_ELE = "instance_limits";
   String PCF_AUTOSCALAR_MANIFEST_RULES_ELE = "rules";
+  long THREAD_SLEEP_INTERVAL_FOR_STEADY_STATE_CHECK = 20000l;
 }

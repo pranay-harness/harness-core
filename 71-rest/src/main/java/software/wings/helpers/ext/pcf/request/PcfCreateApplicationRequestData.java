@@ -17,5 +17,4 @@ public class PcfCreateApplicationRequestData {
   private PcfCommandSetupRequest setupRequest;
   private String newReleaseName;
   private boolean varsYmlFilePresent;
-  private boolean loginNeeded;
 }

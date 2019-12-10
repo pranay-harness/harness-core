@@ -52,4 +52,6 @@ public interface PcfDeploymentManager {
   boolean checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
   String resolvePcfPluginHome();
+  ApplicationDetail upsizeApplicationWithSteadyStateCheck(
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
 }

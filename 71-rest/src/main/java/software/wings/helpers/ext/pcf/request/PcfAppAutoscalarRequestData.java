@@ -15,5 +15,4 @@ public class PcfAppAutoscalarRequestData {
   private String applicationGuid;
   private boolean expectedEnabled;
   private int timeoutInMins;
-  private boolean loggedin;
 }
