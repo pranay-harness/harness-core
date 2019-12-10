@@ -122,7 +122,7 @@ import java.util.stream.Collectors;
 public class ExecutionContextImpl implements DeploymentExecutionContext {
   public static final String PHASE_PARAM = "PHASE_PARAM";
 
-  private static final Pattern wildCharPattern = Pattern.compile("[+*/\\\\ &$\"'.|]");
+  private static final Pattern wildCharPattern = Pattern.compile("[-+*/\\\\ &$\"'.|]");
   private static final Pattern argsCharPattern = Pattern.compile("[()\"']");
 
   @Inject private transient ArtifactService artifactService;
