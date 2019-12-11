@@ -12,6 +12,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.metrics.TimeSeriesCustomThresholdType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.sm.StateType;
 
@@ -42,6 +43,8 @@ public class TimeSeriesMLTransactionThresholds extends Base {
   @NotEmpty private String cvConfigId;
 
   TimeSeriesMetricDefinition thresholds;
+
+  TimeSeriesCustomThresholdType thresholdType = TimeSeriesCustomThresholdType.ACCEPTABLE;
 
   private int version;
 }

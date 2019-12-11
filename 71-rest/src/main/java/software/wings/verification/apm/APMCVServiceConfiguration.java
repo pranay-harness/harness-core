@@ -65,6 +65,30 @@ public class APMCVServiceConfiguration extends CVConfiguration {
     return isAllThroughput.get();
   }
 
+  public boolean validateUniqueMetricTxnCombination(List<MetricCollectionInfo> metricCollectionInfoList) {
+    boolean isValidCombination = true;
+
+    Map<String, String> metricNameTxnNameMap = new HashMap<>();
+
+    if (isNotEmpty(metricCollectionInfoList)) {
+      for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfoList) {
+        String txnName = metricCollectionInfo.getResponseMapping().getTxnNameFieldValue() == null
+            ? "*"
+            : metricCollectionInfo.getResponseMapping().getTxnNameFieldValue();
+
+        if (metricNameTxnNameMap.containsKey(metricCollectionInfo.getMetricName())
+            && metricNameTxnNameMap.get(metricCollectionInfo.getMetricName()).equals(txnName)) {
+          isValidCombination = false;
+          break;
+        } else {
+          metricNameTxnNameMap.put(metricCollectionInfo.getMetricName(), txnName);
+        }
+      }
+      return isValidCombination;
+    }
+    return false;
+  }
+
   private boolean validateErrorOrResponseTime() {
     AtomicBoolean isValidConfig = new AtomicBoolean(true);
     if (isEmpty(metricCollectionInfos)) {
