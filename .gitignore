@@ -7,7 +7,6 @@
 # if you have a legacy files after obtaining a new version of the gitignore that have previously recursive patterns
 # removed, you can use `git clean -df` to cleanup your repo.
 
-.idea
 portal.iml
 /target
 jacoco-it.exec
