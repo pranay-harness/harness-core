@@ -236,6 +236,11 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
               "The configuration should contain atleast one throughput if ERROR or Response Time is present. Throughput alone is not analyzed by itself";
           throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
         }
+        if (!apmCvConfiguration.validateUniqueMetricTxnCombination(apmCvConfiguration.getMetricCollectionInfos())) {
+          String errMsg =
+              "Each verification configuration should have a unique metric name - transaction name combination";
+          throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
+        }
         break;
 
       case LOG_VERIFICATION:
@@ -1060,5 +1065,29 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       clonedConfig.setUuid(generateUuid());
       saveToDatabase(clonedConfig, false);
     });
+  }
+
+  @Override
+  public Map<String, String> getTxnMetricPairsForAPMCVConfig(String cvConfigId) {
+    if (isEmpty(cvConfigId)) {
+      logger.error("Empty cvConfigId passed into getTxnMetricPairsForAPMCVConfig");
+      return null;
+    }
+    CVConfiguration cvConfiguration = getConfiguration(cvConfigId);
+    if (cvConfiguration == null || !StateType.APM_VERIFICATION.equals(cvConfiguration.getStateType())) {
+      logger.error(
+          "The cvConfigId provided in getTxnMetricPairsForAPMCVConfig doesn't correspond to a Custom Metrics Config");
+      return null;
+    }
+    APMCVServiceConfiguration apmcvServiceConfiguration = (APMCVServiceConfiguration) cvConfiguration;
+    Map<String, String> txnMetricCombination = new HashMap<>();
+    apmcvServiceConfiguration.getMetricCollectionInfos().forEach(metricCollectionInfo -> {
+      String txnName = "*";
+      if (metricCollectionInfo.getResponseMapping().getTxnNameFieldValue() != null) {
+        txnName = metricCollectionInfo.getResponseMapping().getTxnNameFieldValue();
+      }
+      txnMetricCombination.put(metricCollectionInfo.getMetricName(), txnName);
+    });
+    return txnMetricCombination;
   }
 }

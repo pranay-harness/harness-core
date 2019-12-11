@@ -14,6 +14,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+import static software.wings.sm.StateType.APM_VERIFICATION;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
@@ -41,6 +42,7 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
@@ -52,6 +54,8 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.APMVerificationState;
+import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
 import software.wings.sm.states.CustomLogVerificationState.LogCollectionInfo;
 import software.wings.sm.states.CustomLogVerificationState.Method;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapping;
@@ -61,6 +65,7 @@ import software.wings.sm.states.DatadogState.Metric;
 import software.wings.sm.states.StackDriverState;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
+import software.wings.verification.apm.APMCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.log.CustomLogCVServiceConfiguration;
@@ -764,5 +769,149 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
       assertThat(definitions.size()).isEqualTo(1);
       assertThat(definitions.get(0).getMetricTemplates().size()).isEqualTo(1);
     }
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testValidateUniqueTxnMetricNameCombination() {
+    APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfig(true);
+    assertThat(apmcvServiceConfiguration.validate()).isTrue();
+    assertThat(apmcvServiceConfiguration.validateUniqueMetricTxnCombination(
+                   apmcvServiceConfiguration.getMetricCollectionInfos()))
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testValidateUniqueTxnMetricNameCombinationInvalidCaseTxnFieldValue() {
+    APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfigWithInvalidCollectionInfo(true);
+    assertThat(apmcvServiceConfiguration.validate()).isTrue();
+    assertThat(apmcvServiceConfiguration.validateUniqueMetricTxnCombination(
+                   apmcvServiceConfiguration.getMetricCollectionInfos()))
+        .isFalse();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testValidateUniqueTxnMetricNameCombinationInvalidCaseTxnJsonPath() {
+    APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfig(true);
+
+    List<MetricCollectionInfo> metricCollectionInfos = new ArrayList<>();
+    APMVerificationState.ResponseMapping responseMapping = new APMVerificationState.ResponseMapping(null, "sometxnName",
+        "sometxnname", "somemetricjsonpath", "hostpath", "hostregex", "timestamppath", "formattimestamp");
+
+    MetricCollectionInfo metricCollectionInfo =
+        new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag", "dummyuri", null, "bodycollection",
+            APMVerificationState.ResponseType.JSON, responseMapping, APMVerificationState.Method.POST);
+
+    APMVerificationState.ResponseMapping responseMapping2 =
+        new APMVerificationState.ResponseMapping(null, "differentJsonPath", "sometxnname", "somemetricjsonpath",
+            "hostpath", "hostregex", "timestamppath", "formattimestamp");
+
+    MetricCollectionInfo metricCollectionInfo2 =
+        new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag", "dummyuri", null, "bodycollection",
+            APMVerificationState.ResponseType.JSON, responseMapping2, APMVerificationState.Method.POST);
+
+    metricCollectionInfos.add(metricCollectionInfo);
+    metricCollectionInfos.add(metricCollectionInfo2);
+    apmcvServiceConfiguration.setMetricCollectionInfos(metricCollectionInfos);
+
+    assertThat(apmcvServiceConfiguration.validate()).isTrue();
+    assertThat(apmcvServiceConfiguration.validateUniqueMetricTxnCombination(
+                   apmcvServiceConfiguration.getMetricCollectionInfos()))
+        .isFalse();
+  }
+
+  @Test(expected = VerificationOperationException.class)
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testSaveInvalidCustomMetricConfig() {
+    APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfigWithInvalidCollectionInfo(true);
+    cvConfigurationService.saveConfiguration(apmcvServiceConfiguration.getAccountId(),
+        apmcvServiceConfiguration.getAppId(), StateType.APM_VERIFICATION, apmcvServiceConfiguration);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetMetricTxnCombination() {
+    APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfig(true);
+    String cvConfigId = generateUuid();
+    apmcvServiceConfiguration.setUuid(cvConfigId);
+    wingsPersistence.save(apmcvServiceConfiguration);
+    Map<String, String> metricTxnMap = cvConfigurationService.getTxnMetricPairsForAPMCVConfig(cvConfigId);
+    assertThat(metricTxnMap).isNotEmpty();
+    assertThat(metricTxnMap.size()).isEqualTo(1);
+    assertThat(metricTxnMap.containsKey("metricName")).isTrue();
+    assertThat(metricTxnMap.get("metricName")).isEqualTo("myhardcodedtxnName");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetMetricTxnCombinationBadState() throws Exception {
+    StackDriverMetricCVConfiguration cvConfiguration = createStackDriverConfig(accountId);
+    String cvConfigId = generateUuid();
+    cvConfiguration.setUuid(cvConfigId);
+    wingsPersistence.save(cvConfiguration);
+    Map<String, String> metricTxnMap = cvConfigurationService.getTxnMetricPairsForAPMCVConfig(cvConfigId);
+    assertThat(metricTxnMap).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetMetricTxnCombinationBadCvConfigId() throws Exception {
+    Map<String, String> metricTxnMap = cvConfigurationService.getTxnMetricPairsForAPMCVConfig(generateUuid());
+    assertThat(metricTxnMap).isNull();
+  }
+
+  private APMCVServiceConfiguration createAPMCVConfig(boolean enabled24x7) {
+    APMCVServiceConfiguration apmcvServiceConfiguration = new APMCVServiceConfiguration();
+    apmcvServiceConfiguration.setName("APM config");
+    apmcvServiceConfiguration.setAppId(appId);
+    apmcvServiceConfiguration.setEnvId(generateUuid());
+    apmcvServiceConfiguration.setServiceId(generateUuid());
+    apmcvServiceConfiguration.setEnabled24x7(enabled24x7);
+    apmcvServiceConfiguration.setConnectorId(generateUuid());
+    apmcvServiceConfiguration.setStateType(APM_VERIFICATION);
+    apmcvServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+
+    List<MetricCollectionInfo> metricCollectionInfos = new ArrayList<>();
+    APMVerificationState.ResponseMapping responseMapping =
+        new APMVerificationState.ResponseMapping("myhardcodedtxnName", null, "sometxnname", "somemetricjsonpath",
+            "hostpath", "hostregex", "timestamppath", "formattimestamp");
+
+    MetricCollectionInfo metricCollectionInfo =
+        new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag", "dummyuri", null, "bodycollection",
+            APMVerificationState.ResponseType.JSON, responseMapping, APMVerificationState.Method.POST);
+
+    metricCollectionInfos.add(metricCollectionInfo);
+    apmcvServiceConfiguration.setMetricCollectionInfos(metricCollectionInfos);
+    return apmcvServiceConfiguration;
+  }
+
+  private APMCVServiceConfiguration createAPMCVConfigWithInvalidCollectionInfo(boolean enabled24x7) {
+    APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfig(true);
+
+    List<MetricCollectionInfo> metricCollectionInfos = new ArrayList<>();
+    APMVerificationState.ResponseMapping responseMapping = new APMVerificationState.ResponseMapping("sometxnName", null,
+        "sometxnname", "somemetricjsonpath", "hostpath", "hostregex", "timestamppath", "formattimestamp");
+
+    MetricCollectionInfo metricCollectionInfo =
+        new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag", "dummyuri", null, "bodycollection",
+            APMVerificationState.ResponseType.JSON, responseMapping, APMVerificationState.Method.POST);
+
+    MetricCollectionInfo metricCollectionInfo2 =
+        new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag", "dummyuri", null, "bodycollection",
+            APMVerificationState.ResponseType.JSON, responseMapping, APMVerificationState.Method.POST);
+
+    metricCollectionInfos.add(metricCollectionInfo);
+    metricCollectionInfos.add(metricCollectionInfo2);
+    apmcvServiceConfiguration.setMetricCollectionInfos(metricCollectionInfos);
+    return apmcvServiceConfiguration;
   }
 }

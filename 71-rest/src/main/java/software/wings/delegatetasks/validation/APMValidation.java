@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 
 import io.harness.beans.DelegateTask;
-import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -155,7 +154,7 @@ public class APMValidation extends AbstractSecretManagerValidation {
         return false;
       }
     } catch (Exception e) {
-      throw new WingsException(e);
+      return false;
     }
   }
 

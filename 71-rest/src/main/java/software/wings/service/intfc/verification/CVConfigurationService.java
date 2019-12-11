@@ -43,4 +43,6 @@ public interface CVConfigurationService extends OwnedByAccount, OwnedByEnvironme
   boolean updateSnooze(String cvConfigId, CVConfiguration cvConfiguration);
 
   void cloneServiceGuardConfigs(String sourceEnvID, String targetEnvID);
+
+  Map<String, String> getTxnMetricPairsForAPMCVConfig(String cvConfigId);
 }
