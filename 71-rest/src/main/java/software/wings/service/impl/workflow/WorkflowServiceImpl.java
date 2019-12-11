@@ -3014,7 +3014,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         notNullCheck("Invalid serviceId", workflow.getServiceId(), USER);
       }
 
-      if (orchestrationWorkflow.isInfraMappingTemplatized()) {
+      if (orchestrationWorkflow.isInfraMappingTemplatized() || orchestrationWorkflow.isInfraDefinitionTemplatized()) {
         return;
       }
       InfrastructureMapping infrastructureMapping;
