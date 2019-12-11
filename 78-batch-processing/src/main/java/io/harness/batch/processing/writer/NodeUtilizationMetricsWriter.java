@@ -30,11 +30,10 @@ public class NodeUtilizationMetricsWriter extends EventWriter implements ItemWri
           NodeMetric nodeUtilizationMetric = (NodeMetric) publishedMessage.getMessage();
           logger.info("Node Utilization {} ", nodeUtilizationMetric);
 
-          Long endTime = nodeUtilizationMetric.getTimestamp().getSeconds() * 1000;
-          Long startTime = endTime - (nodeUtilizationMetric.getWindow().getSeconds() * 1000);
-          // TODO: (Rohit) Remove this typecast once fixed on the PT end
-          Double cpuUsageWithUnits = Double.valueOf(nodeUtilizationMetric.getUsage().getCpu());
-          Double memoryUsageWithUnits = Double.valueOf(nodeUtilizationMetric.getUsage().getMemory());
+          long endTime = nodeUtilizationMetric.getTimestamp().getSeconds() * 1000;
+          long startTime = endTime - (nodeUtilizationMetric.getWindow().getSeconds() * 1000);
+          long cpuUsageWithUnits = nodeUtilizationMetric.getUsage().getCpuNano();
+          long memoryUsageWithUnits = nodeUtilizationMetric.getUsage().getMemoryByte();
 
           K8sGranularUtilizationData k8sGranularUtilizationData =
               K8sGranularUtilizationData.builder()

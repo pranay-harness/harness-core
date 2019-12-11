@@ -208,13 +208,10 @@ public class PodWatcherTest extends CategoryTest {
                 .setImage("us.gcr.io/platform-205701/harness/feature-manager:19204")
                 .setResource(
                     Resource.newBuilder()
-                        .putLimits("cpu",
-                            Quantity.newBuilder().setAmount("1").setUnit("DECIMAL_SI").build()) // TODO: the amount
-                                                                                                // usually have units
-                        .putLimits("memory", Quantity.newBuilder().setAmount("2861563904").setUnit("BINARY_SI").build())
-                        .putRequests("cpu", Quantity.newBuilder().setAmount("1").setUnit("DECIMAL_SI").build())
-                        .putRequests(
-                            "memory", Quantity.newBuilder().setAmount("2861563904").setUnit("BINARY_SI").build())
+                        .putLimits("cpu", Quantity.newBuilder().setAmount(1_000_000_000).setUnit("n").build())
+                        .putLimits("memory", Quantity.newBuilder().setAmount(2861563904L).setUnit("").build())
+                        .putRequests("cpu", Quantity.newBuilder().setAmount(1_000_000_000).setUnit("n").build())
+                        .putRequests("memory", Quantity.newBuilder().setAmount(2861563904L).setUnit("").build())
                         .build())
                 .build());
     assertThat(podInfo.getLabelsMap())

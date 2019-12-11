@@ -94,17 +94,15 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
             break;
           }
           case 58: {
-            io.harness.perpetualtask.k8s.watch.Resource.Builder subBuilder = null;
-            if (allocatableResource_ != null) {
-              subBuilder = allocatableResource_.toBuilder();
+            if (!((mutable_bitField0_ & 0x00000040) != 0)) {
+              allocatableResource_ =
+                  com.google.protobuf.MapField.newMapField(AllocatableResourceDefaultEntryHolder.defaultEntry);
+              mutable_bitField0_ |= 0x00000040;
             }
-            allocatableResource_ =
-                input.readMessage(io.harness.perpetualtask.k8s.watch.Resource.parser(), extensionRegistry);
-            if (subBuilder != null) {
-              subBuilder.mergeFrom(allocatableResource_);
-              allocatableResource_ = subBuilder.buildPartial();
-            }
-
+            com.google.protobuf.MapEntry<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity>
+                allocatableResource__ = input.readMessage(
+                AllocatableResourceDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+            allocatableResource_.getMutableMap().put(allocatableResource__.getKey(), allocatableResource__.getValue());
             break;
           }
           case 66: {
@@ -148,6 +146,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     switch (number) {
       case 6:
         return internalGetLabels();
+      case 7:
+        return internalGetAllocatableResource();
       default:
         throw new RuntimeException("Invalid map field number: " + number);
     }
@@ -374,25 +374,83 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
   }
 
   public static final int ALLOCATABLE_RESOURCE_FIELD_NUMBER = 7;
-  private io.harness.perpetualtask.k8s.watch.Resource allocatableResource_;
-  /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
-   */
-  public boolean hasAllocatableResource() {
-    return allocatableResource_ != null;
+  private static final class AllocatableResourceDefaultEntryHolder {
+    static final com.google.protobuf
+        .MapEntry<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> defaultEntry =
+        com.google.protobuf.MapEntry
+            .<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity>newDefaultInstance(
+                io.harness.perpetualtask.k8s.watch.K8SMessages
+                    .internal_static_io_harness_perpetualtask_k8s_watch_NodeInfo_AllocatableResourceEntry_descriptor,
+                com.google.protobuf.WireFormat.FieldType.STRING, "", com.google.protobuf.WireFormat.FieldType.MESSAGE,
+                io.harness.perpetualtask.k8s.watch.Resource.Quantity.getDefaultInstance());
+  }
+  private com.google.protobuf
+      .MapField<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> allocatableResource_;
+  private com.google.protobuf.MapField<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity>
+  internalGetAllocatableResource() {
+    if (allocatableResource_ == null) {
+      return com.google.protobuf.MapField.emptyMapField(AllocatableResourceDefaultEntryHolder.defaultEntry);
+    }
+    return allocatableResource_;
+  }
+
+  public int getAllocatableResourceCount() {
+    return internalGetAllocatableResource().getMap().size();
   }
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
    */
-  public io.harness.perpetualtask.k8s.watch.Resource getAllocatableResource() {
-    return allocatableResource_ == null ? io.harness.perpetualtask.k8s.watch.Resource.getDefaultInstance()
-                                        : allocatableResource_;
+
+  public boolean containsAllocatableResource(java.lang.String key) {
+    if (key == null) {
+      throw new java.lang.NullPointerException();
+    }
+    return internalGetAllocatableResource().getMap().containsKey(key);
   }
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+   * Use {@link #getAllocatableResourceMap()} instead.
    */
-  public io.harness.perpetualtask.k8s.watch.ResourceOrBuilder getAllocatableResourceOrBuilder() {
-    return getAllocatableResource();
+  @java.
+  lang.Deprecated
+  public java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity>
+  getAllocatableResource() {
+    return getAllocatableResourceMap();
+  }
+  /**
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   */
+
+  public java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity>
+  getAllocatableResourceMap() {
+    return internalGetAllocatableResource().getMap();
+  }
+  /**
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   */
+
+  public io.harness.perpetualtask.k8s.watch.Resource.Quantity getAllocatableResourceOrDefault(
+      java.lang.String key, io.harness.perpetualtask.k8s.watch.Resource.Quantity defaultValue) {
+    if (key == null) {
+      throw new java.lang.NullPointerException();
+    }
+    java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> map =
+        internalGetAllocatableResource().getMap();
+    return map.containsKey(key) ? map.get(key) : defaultValue;
+  }
+  /**
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   */
+
+  public io.harness.perpetualtask.k8s.watch.Resource.Quantity getAllocatableResourceOrThrow(java.lang.String key) {
+    if (key == null) {
+      throw new java.lang.NullPointerException();
+    }
+    java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> map =
+        internalGetAllocatableResource().getMap();
+    if (!map.containsKey(key)) {
+      throw new java.lang.IllegalArgumentException();
+    }
+    return map.get(key);
   }
 
   public static final int CLUSTER_ID_FIELD_NUMBER = 8;
@@ -487,9 +545,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
     com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
         output, internalGetLabels(), LabelsDefaultEntryHolder.defaultEntry, 6);
-    if (allocatableResource_ != null) {
-      output.writeMessage(7, getAllocatableResource());
-    }
+    com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
+        output, internalGetAllocatableResource(), AllocatableResourceDefaultEntryHolder.defaultEntry, 7);
     if (!getClusterIdBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 8, clusterId_);
     }
@@ -529,8 +586,15 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
               .build();
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(6, labels__);
     }
-    if (allocatableResource_ != null) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(7, getAllocatableResource());
+    for (java.util.Map.Entry<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> entry :
+        internalGetAllocatableResource().getMap().entrySet()) {
+      com.google.protobuf
+          .MapEntry<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> allocatableResource__ =
+          AllocatableResourceDefaultEntryHolder.defaultEntry.newBuilderForType()
+              .setKey(entry.getKey())
+              .setValue(entry.getValue())
+              .build();
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(7, allocatableResource__);
     }
     if (!getClusterIdBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, clusterId_);
@@ -569,12 +633,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
     if (!internalGetLabels().equals(other.internalGetLabels()))
       return false;
-    if (hasAllocatableResource() != other.hasAllocatableResource())
+    if (!internalGetAllocatableResource().equals(other.internalGetAllocatableResource()))
       return false;
-    if (hasAllocatableResource()) {
-      if (!getAllocatableResource().equals(other.getAllocatableResource()))
-        return false;
-    }
     if (!getClusterId().equals(other.getClusterId()))
       return false;
     if (!getClusterName().equals(other.getClusterName()))
@@ -607,9 +667,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       hash = (37 * hash) + LABELS_FIELD_NUMBER;
       hash = (53 * hash) + internalGetLabels().hashCode();
     }
-    if (hasAllocatableResource()) {
+    if (!internalGetAllocatableResource().getMap().isEmpty()) {
       hash = (37 * hash) + ALLOCATABLE_RESOURCE_FIELD_NUMBER;
-      hash = (53 * hash) + getAllocatableResource().hashCode();
+      hash = (53 * hash) + internalGetAllocatableResource().hashCode();
     }
     hash = (37 * hash) + CLUSTER_ID_FIELD_NUMBER;
     hash = (53 * hash) + getClusterId().hashCode();
@@ -708,6 +768,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       switch (number) {
         case 6:
           return internalGetLabels();
+        case 7:
+          return internalGetAllocatableResource();
         default:
           throw new RuntimeException("Invalid map field number: " + number);
       }
@@ -717,6 +779,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       switch (number) {
         case 6:
           return internalGetMutableLabels();
+        case 7:
+          return internalGetMutableAllocatableResource();
         default:
           throw new RuntimeException("Invalid map field number: " + number);
       }
@@ -761,12 +825,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
         creationTimeBuilder_ = null;
       }
       internalGetMutableLabels().clear();
-      if (allocatableResourceBuilder_ == null) {
-        allocatableResource_ = null;
-      } else {
-        allocatableResource_ = null;
-        allocatableResourceBuilder_ = null;
-      }
+      internalGetMutableAllocatableResource().clear();
       clusterId_ = "";
 
       clusterName_ = "";
@@ -814,11 +873,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
       result.labels_ = internalGetLabels();
       result.labels_.makeImmutable();
-      if (allocatableResourceBuilder_ == null) {
-        result.allocatableResource_ = allocatableResource_;
-      } else {
-        result.allocatableResource_ = allocatableResourceBuilder_.build();
-      }
+      result.allocatableResource_ = internalGetAllocatableResource();
+      result.allocatableResource_.makeImmutable();
       result.clusterId_ = clusterId_;
       result.clusterName_ = clusterName_;
       result.bitField0_ = to_bitField0_;
@@ -884,9 +940,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
         mergeCreationTime(other.getCreationTime());
       }
       internalGetMutableLabels().mergeFrom(other.internalGetLabels());
-      if (other.hasAllocatableResource()) {
-        mergeAllocatableResource(other.getAllocatableResource());
-      }
+      internalGetMutableAllocatableResource().mergeFrom(other.internalGetAllocatableResource());
       if (!other.getClusterId().isEmpty()) {
         clusterId_ = other.clusterId_;
         onChanged();
@@ -1400,122 +1454,134 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
 
-    private io.harness.perpetualtask.k8s.watch.Resource allocatableResource_;
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Resource,
-        io.harness.perpetualtask.k8s.watch.Resource.Builder, io.harness.perpetualtask.k8s.watch.ResourceOrBuilder>
-        allocatableResourceBuilder_;
-    /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
-     */
-    public boolean hasAllocatableResource() {
-      return allocatableResourceBuilder_ != null || allocatableResource_ != null;
-    }
-    /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
-     */
-    public io.harness.perpetualtask.k8s.watch.Resource getAllocatableResource() {
-      if (allocatableResourceBuilder_ == null) {
-        return allocatableResource_ == null ? io.harness.perpetualtask.k8s.watch.Resource.getDefaultInstance()
-                                            : allocatableResource_;
-      } else {
-        return allocatableResourceBuilder_.getMessage();
+    private com.google.protobuf
+        .MapField<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> allocatableResource_;
+    private com.google.protobuf.MapField<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity>
+    internalGetAllocatableResource() {
+      if (allocatableResource_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(AllocatableResourceDefaultEntryHolder.defaultEntry);
       }
+      return allocatableResource_;
     }
-    /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
-     */
-    public Builder setAllocatableResource(io.harness.perpetualtask.k8s.watch.Resource value) {
-      if (allocatableResourceBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        allocatableResource_ = value;
-        onChanged();
-      } else {
-        allocatableResourceBuilder_.setMessage(value);
-      }
-
-      return this;
-    }
-    /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
-     */
-    public Builder setAllocatableResource(io.harness.perpetualtask.k8s.watch.Resource.Builder builderForValue) {
-      if (allocatableResourceBuilder_ == null) {
-        allocatableResource_ = builderForValue.build();
-        onChanged();
-      } else {
-        allocatableResourceBuilder_.setMessage(builderForValue.build());
-      }
-
-      return this;
-    }
-    /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
-     */
-    public Builder mergeAllocatableResource(io.harness.perpetualtask.k8s.watch.Resource value) {
-      if (allocatableResourceBuilder_ == null) {
-        if (allocatableResource_ != null) {
-          allocatableResource_ = io.harness.perpetualtask.k8s.watch.Resource.newBuilder(allocatableResource_)
-                                     .mergeFrom(value)
-                                     .buildPartial();
-        } else {
-          allocatableResource_ = value;
-        }
-        onChanged();
-      } else {
-        allocatableResourceBuilder_.mergeFrom(value);
-      }
-
-      return this;
-    }
-    /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
-     */
-    public Builder clearAllocatableResource() {
-      if (allocatableResourceBuilder_ == null) {
-        allocatableResource_ = null;
-        onChanged();
-      } else {
-        allocatableResource_ = null;
-        allocatableResourceBuilder_ = null;
-      }
-
-      return this;
-    }
-    /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
-     */
-    public io.harness.perpetualtask.k8s.watch.Resource.Builder getAllocatableResourceBuilder() {
+    private com.google.protobuf.MapField<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity>
+    internalGetMutableAllocatableResource() {
       onChanged();
-      return getAllocatableResourceFieldBuilder().getBuilder();
+      ;
+      if (allocatableResource_ == null) {
+        allocatableResource_ =
+            com.google.protobuf.MapField.newMapField(AllocatableResourceDefaultEntryHolder.defaultEntry);
+      }
+      if (!allocatableResource_.isMutable()) {
+        allocatableResource_ = allocatableResource_.copy();
+      }
+      return allocatableResource_;
+    }
+
+    public int getAllocatableResourceCount() {
+      return internalGetAllocatableResource().getMap().size();
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
      */
-    public io.harness.perpetualtask.k8s.watch.ResourceOrBuilder getAllocatableResourceOrBuilder() {
-      if (allocatableResourceBuilder_ != null) {
-        return allocatableResourceBuilder_.getMessageOrBuilder();
-      } else {
-        return allocatableResource_ == null ? io.harness.perpetualtask.k8s.watch.Resource.getDefaultInstance()
-                                            : allocatableResource_;
+
+    public boolean containsAllocatableResource(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
       }
+      return internalGetAllocatableResource().getMap().containsKey(key);
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+     * Use {@link #getAllocatableResourceMap()} instead.
      */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Resource,
-        io.harness.perpetualtask.k8s.watch.Resource.Builder, io.harness.perpetualtask.k8s.watch.ResourceOrBuilder>
-    getAllocatableResourceFieldBuilder() {
-      if (allocatableResourceBuilder_ == null) {
-        allocatableResourceBuilder_ =
-            new com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Resource,
-                io.harness.perpetualtask.k8s.watch.Resource.Builder,
-                io.harness.perpetualtask.k8s.watch.ResourceOrBuilder>(
-                getAllocatableResource(), getParentForChildren(), isClean());
-        allocatableResource_ = null;
+    @java.
+    lang.Deprecated
+    public java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity>
+    getAllocatableResource() {
+      return getAllocatableResourceMap();
+    }
+    /**
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+     */
+
+    public java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity>
+    getAllocatableResourceMap() {
+      return internalGetAllocatableResource().getMap();
+    }
+    /**
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+     */
+
+    public io.harness.perpetualtask.k8s.watch.Resource.Quantity getAllocatableResourceOrDefault(
+        java.lang.String key, io.harness.perpetualtask.k8s.watch.Resource.Quantity defaultValue) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
       }
-      return allocatableResourceBuilder_;
+      java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> map =
+          internalGetAllocatableResource().getMap();
+      return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+    /**
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+     */
+
+    public io.harness.perpetualtask.k8s.watch.Resource.Quantity getAllocatableResourceOrThrow(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> map =
+          internalGetAllocatableResource().getMap();
+      if (!map.containsKey(key)) {
+        throw new java.lang.IllegalArgumentException();
+      }
+      return map.get(key);
+    }
+
+    public Builder clearAllocatableResource() {
+      internalGetMutableAllocatableResource().getMutableMap().clear();
+      return this;
+    }
+    /**
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+     */
+
+    public Builder removeAllocatableResource(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      internalGetMutableAllocatableResource().getMutableMap().remove(key);
+      return this;
+    }
+    /**
+     * Use alternate mutation accessors instead.
+     */
+    @java.
+    lang.Deprecated
+    public java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity>
+    getMutableAllocatableResource() {
+      return internalGetMutableAllocatableResource().getMutableMap();
+    }
+    /**
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+     */
+    public Builder putAllocatableResource(
+        java.lang.String key, io.harness.perpetualtask.k8s.watch.Resource.Quantity value) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      if (value == null) {
+        throw new java.lang.NullPointerException();
+      }
+      internalGetMutableAllocatableResource().getMutableMap().put(key, value);
+      return this;
+    }
+    /**
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+     */
+
+    public Builder putAllAllocatableResource(
+        java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> values) {
+      internalGetMutableAllocatableResource().getMutableMap().putAll(values);
+      return this;
     }
 
     private java.lang.Object clusterId_ = "";

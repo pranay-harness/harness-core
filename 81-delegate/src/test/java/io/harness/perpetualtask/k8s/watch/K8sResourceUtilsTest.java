@@ -1,9 +1,13 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableMap;
+
 import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -49,5 +53,23 @@ public class K8sResourceUtilsTest extends CategoryTest {
   public void testGetTotalResourceRequest() {
     Resource actualResource = K8sResourceUtils.getTotalResourceRequest(k8sContainers);
     assertThat(actualResource).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void testGetResourceMapNoCpu() throws Exception {
+    assertThat(K8sResourceUtils.getResourceMap(ImmutableMap.of("memory", new Quantity("0.5Mi"))))
+        .isEqualTo(ImmutableMap.of("cpu", Resource.Quantity.newBuilder().setUnit("n").setAmount(0).build(), "memory",
+            Resource.Quantity.newBuilder().setAmount(512 * 1024).build()));
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void testGetResourceMapNoMemory() throws Exception {
+    assertThat(K8sResourceUtils.getResourceMap(ImmutableMap.of("cpu", new Quantity("100m"))))
+        .isEqualTo(ImmutableMap.of("cpu", Resource.Quantity.newBuilder().setUnit("n").setAmount(100_000_000L).build(),
+            "memory", Resource.Quantity.newBuilder().setAmount(0).build()));
   }
 }

@@ -115,9 +115,10 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                    .setName(nodeMetric.getMetadata().getName())
                    .setTimestamp(HTimestamps.parse(nodeMetric.getTimestamp()))
                    .setWindow(HDurations.parse(nodeMetric.getWindow()))
-                   .setUsage(Usage.newBuilder()
-                                 .setCpu(nodeMetric.getUsage().getCpu())
-                                 .setMemory(nodeMetric.getUsage().getMemory()))
+                   .setUsage(
+                       Usage.newBuilder()
+                           .setCpuNano(K8sResourceStandardizer.getCpuNano(nodeMetric.getUsage().getCpu()))
+                           .setMemoryByte(K8sResourceStandardizer.getMemoryByte(nodeMetric.getUsage().getMemory())))
                    .build())
         .forEach(nodeMetric -> eventPublisher.publishMessage(nodeMetric, HTimestamps.fromInstant(heartbeatTime)));
   }
@@ -144,8 +145,10 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                                              -> PodMetric.Container.newBuilder()
                                                     .setName(container.getName())
                                                     .setUsage(Usage.newBuilder()
-                                                                  .setCpu(container.getUsage().getCpu())
-                                                                  .setMemory(container.getUsage().getMemory())
+                                                                  .setCpuNano(K8sResourceStandardizer.getCpuNano(
+                                                                      container.getUsage().getCpu()))
+                                                                  .setMemoryByte(K8sResourceStandardizer.getMemoryByte(
+                                                                      container.getUsage().getMemory()))
                                                                   .build())
                                                     .build())
                                          .collect(toList()))

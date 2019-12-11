@@ -163,22 +163,25 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
     K8SWatchTaskExecutor.publishNodeMetrics(k8sMetricClient, eventPublisher, CLOUD_PROVIDER_ID, heartbeatTime);
     assertThat(messageArgumentCaptor.getAllValues())
         .hasSize(2)
-        .containsExactlyInAnyOrder(
-            NodeMetric.newBuilder()
-                .setCloudProviderId(CLOUD_PROVIDER_ID)
-                .setName("node1-name")
-                .setTimestamp(HTimestamps.parse("2019-11-26T07:00:32Z"))
-                .setWindow(HDurations.parse("30s"))
-                .setUsage(
-                    io.harness.event.payloads.Usage.newBuilder().setCpu("746640510n").setMemory("6825124Ki").build())
-                .build(),
+        .containsExactlyInAnyOrder(NodeMetric.newBuilder()
+                                       .setCloudProviderId(CLOUD_PROVIDER_ID)
+                                       .setName("node1-name")
+                                       .setTimestamp(HTimestamps.parse("2019-11-26T07:00:32Z"))
+                                       .setWindow(HDurations.parse("30s"))
+                                       .setUsage(io.harness.event.payloads.Usage.newBuilder()
+                                                     .setCpuNano(746640510L)
+                                                     .setMemoryByte(6825124L * 1024)
+                                                     .build())
+                                       .build(),
             NodeMetric.newBuilder()
                 .setCloudProviderId(CLOUD_PROVIDER_ID)
                 .setName("node2-name")
                 .setTimestamp(HTimestamps.parse("2019-11-26T07:00:28Z"))
                 .setWindow(HDurations.parse("30s"))
-                .setUsage(
-                    io.harness.event.payloads.Usage.newBuilder().setCpu("2938773795n").setMemory("18281752Ki").build())
+                .setUsage(io.harness.event.payloads.Usage.newBuilder()
+                              .setCpuNano(2938773795L)
+                              .setMemoryByte(18281752L * 1024)
+                              .build())
                 .build());
   }
 
@@ -266,8 +269,8 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                                        .addContainers(PodMetric.Container.newBuilder()
                                                           .setName("p1-ctr1")
                                                           .setUsage(io.harness.event.payloads.Usage.newBuilder()
-                                                                        .setCpu("41181421n")
-                                                                        .setMemory("139304Ki")
+                                                                        .setCpuNano(41181421L)
+                                                                        .setMemoryByte(139304L * 1024)
                                                                         .build())
                                                           .build())
                                        .build(),
@@ -277,17 +280,18 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                 .setNamespace("ns1")
                 .setTimestamp(HTimestamps.parse("2019-11-26T07:00:32Z"))
                 .setWindow(HDurations.parse("30s"))
-                .addContainers(
-                    PodMetric.Container.newBuilder()
-                        .setName("p2-ctr1")
-                        .setUsage(
-                            io.harness.event.payloads.Usage.newBuilder().setCpu("185503n").setMemory("7460Ki").build())
-                        .build())
+                .addContainers(PodMetric.Container.newBuilder()
+                                   .setName("p2-ctr1")
+                                   .setUsage(io.harness.event.payloads.Usage.newBuilder()
+                                                 .setCpuNano(185503L)
+                                                 .setMemoryByte(7460L * 1024)
+                                                 .build())
+                                   .build())
                 .addContainers(PodMetric.Container.newBuilder()
                                    .setName("p2-ctr2")
                                    .setUsage(io.harness.event.payloads.Usage.newBuilder()
-                                                 .setCpu("735522992n")
-                                                 .setMemory("225144Ki")
+                                                 .setCpuNano(735522992L)
+                                                 .setMemoryByte(225144L * 1024)
                                                  .build())
                                    .build())
                 .build());

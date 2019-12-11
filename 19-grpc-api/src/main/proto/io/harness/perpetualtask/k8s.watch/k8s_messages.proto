@@ -8,9 +8,8 @@ import "google/protobuf/timestamp.proto";
 
 message Resource {
   message Quantity {
-    string amount = 1;
+    int64 amount = 1;
     string unit = 2;
-    string format = 3;
   }
   map<string, Quantity> requests = 1;
   map<string, Quantity> limits = 2;
@@ -66,7 +65,7 @@ message NodeInfo {
   string node_name = 4;
   google.protobuf.Timestamp creation_time = 5;
   map<string, string> labels = 6;
-  Resource allocatable_resource = 7;
+  map<string, Resource.Quantity> allocatable_resource = 7;
   string cluster_id = 8;
   string cluster_name = 9;
 }

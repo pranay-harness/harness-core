@@ -69,7 +69,7 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
         .instanceName(podInfo.getPodName())
         .instanceType(InstanceType.K8S_POD)
         .instanceState(InstanceState.INITIALIZING)
-        .resource(K8sResourceUtils.getResource(podInfo.getTotalResource()))
+        .resource(K8sResourceUtils.getResource(podInfo.getTotalResource().getRequestsMap()))
         .metaData(metaData)
         //.containerList(podInfo.getContainersList())
         .labels(labelsMap)

@@ -81,17 +81,17 @@ public class NodeWatcher implements Watcher<Node> {
   private void publishNodeInfo(Node node) {
     if (!publishedNodes.contains(node.getMetadata().getUid())) {
       final Timestamp timestamp = HTimestamps.parse(node.getMetadata().getCreationTimestamp());
-      NodeInfo nodeInfo = NodeInfo.newBuilder()
-                              .setCloudProviderId(cloudProviderId)
-                              .setClusterId(clusterId)
-                              .setClusterName(clusterName)
-                              .setNodeUid(node.getMetadata().getUid())
-                              .setNodeName(node.getMetadata().getName())
-                              .setCreationTime(timestamp)
-                              .putAllLabels(node.getMetadata().getLabels())
-                              .setAllocatableResource(K8sResourceUtils.getResource(
-                                  node.getMetadata().getName(), node.getStatus().getAllocatable()))
-                              .build();
+      NodeInfo nodeInfo =
+          NodeInfo.newBuilder()
+              .setCloudProviderId(cloudProviderId)
+              .setClusterId(clusterId)
+              .setClusterName(clusterName)
+              .setNodeUid(node.getMetadata().getUid())
+              .setNodeName(node.getMetadata().getName())
+              .setCreationTime(timestamp)
+              .putAllLabels(node.getMetadata().getLabels())
+              .putAllAllocatableResource(K8sResourceUtils.getResourceMap(node.getStatus().getAllocatable()))
+              .build();
       eventPublisher.publishMessage(nodeInfo, timestamp);
       publishedNodes.add(node.getMetadata().getUid());
     }

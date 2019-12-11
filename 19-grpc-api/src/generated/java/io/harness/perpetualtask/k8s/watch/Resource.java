@@ -109,13 +109,9 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.k8s.watch.Resource.Quantity)
       com.google.protobuf.MessageOrBuilder {
     /**
-     * <code>string amount = 1;</code>
+     * <code>int64 amount = 1;</code>
      */
-    java.lang.String getAmount();
-    /**
-     * <code>string amount = 1;</code>
-     */
-    com.google.protobuf.ByteString getAmountBytes();
+    long getAmount();
 
     /**
      * <code>string unit = 2;</code>
@@ -125,15 +121,6 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
      * <code>string unit = 2;</code>
      */
     com.google.protobuf.ByteString getUnitBytes();
-
-    /**
-     * <code>string format = 3;</code>
-     */
-    java.lang.String getFormat();
-    /**
-     * <code>string format = 3;</code>
-     */
-    com.google.protobuf.ByteString getFormatBytes();
   }
   /**
    * Protobuf type {@code io.harness.perpetualtask.k8s.watch.Resource.Quantity}
@@ -147,9 +134,7 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       super(builder);
     }
     private Quantity() {
-      amount_ = "";
       unit_ = "";
-      format_ = "";
     }
 
     @java.
@@ -174,22 +159,14 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
             case 0:
               done = true;
               break;
-            case 10: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              amount_ = s;
+            case 8: {
+              amount_ = input.readInt64();
               break;
             }
             case 18: {
               java.lang.String s = input.readStringRequireUtf8();
 
               unit_ = s;
-              break;
-            }
-            case 26: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              format_ = s;
               break;
             }
             default: {
@@ -224,33 +201,12 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
     }
 
     public static final int AMOUNT_FIELD_NUMBER = 1;
-    private volatile java.lang.Object amount_;
+    private long amount_;
     /**
-     * <code>string amount = 1;</code>
+     * <code>int64 amount = 1;</code>
      */
-    public java.lang.String getAmount() {
-      java.lang.Object ref = amount_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        amount_ = s;
-        return s;
-      }
-    }
-    /**
-     * <code>string amount = 1;</code>
-     */
-    public com.google.protobuf.ByteString getAmountBytes() {
-      java.lang.Object ref = amount_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-        amount_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
+    public long getAmount() {
+      return amount_;
     }
 
     public static final int UNIT_FIELD_NUMBER = 2;
@@ -283,36 +239,6 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
 
-    public static final int FORMAT_FIELD_NUMBER = 3;
-    private volatile java.lang.Object format_;
-    /**
-     * <code>string format = 3;</code>
-     */
-    public java.lang.String getFormat() {
-      java.lang.Object ref = format_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        format_ = s;
-        return s;
-      }
-    }
-    /**
-     * <code>string format = 3;</code>
-     */
-    public com.google.protobuf.ByteString getFormatBytes() {
-      java.lang.Object ref = format_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-        format_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -328,14 +254,11 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
 
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-      if (!getAmountBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, amount_);
+      if (amount_ != 0L) {
+        output.writeInt64(1, amount_);
       }
       if (!getUnitBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, unit_);
-      }
-      if (!getFormatBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, format_);
       }
       unknownFields.writeTo(output);
     }
@@ -347,14 +270,11 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
         return size;
 
       size = 0;
-      if (!getAmountBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, amount_);
+      if (amount_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream.computeInt64Size(1, amount_);
       }
       if (!getUnitBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, unit_);
-      }
-      if (!getFormatBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, format_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -372,11 +292,9 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       io.harness.perpetualtask.k8s.watch.Resource.Quantity other =
           (io.harness.perpetualtask.k8s.watch.Resource.Quantity) obj;
 
-      if (!getAmount().equals(other.getAmount()))
+      if (getAmount() != other.getAmount())
         return false;
       if (!getUnit().equals(other.getUnit()))
-        return false;
-      if (!getFormat().equals(other.getFormat()))
         return false;
       if (!unknownFields.equals(other.unknownFields))
         return false;
@@ -391,11 +309,9 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + AMOUNT_FIELD_NUMBER;
-      hash = (53 * hash) + getAmount().hashCode();
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getAmount());
       hash = (37 * hash) + UNIT_FIELD_NUMBER;
       hash = (53 * hash) + getUnit().hashCode();
-      hash = (37 * hash) + FORMAT_FIELD_NUMBER;
-      hash = (53 * hash) + getFormat().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -510,11 +426,9 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        amount_ = "";
+        amount_ = 0L;
 
         unit_ = "";
-
-        format_ = "";
 
         return this;
       }
@@ -549,7 +463,6 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
             new io.harness.perpetualtask.k8s.watch.Resource.Quantity(this);
         result.amount_ = amount_;
         result.unit_ = unit_;
-        result.format_ = format_;
         onBuilt();
         return result;
       }
@@ -592,16 +505,11 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       public Builder mergeFrom(io.harness.perpetualtask.k8s.watch.Resource.Quantity other) {
         if (other == io.harness.perpetualtask.k8s.watch.Resource.Quantity.getDefaultInstance())
           return this;
-        if (!other.getAmount().isEmpty()) {
-          amount_ = other.amount_;
-          onChanged();
+        if (other.getAmount() != 0L) {
+          setAmount(other.getAmount());
         }
         if (!other.getUnit().isEmpty()) {
           unit_ = other.unit_;
-          onChanged();
-        }
-        if (!other.getFormat().isEmpty()) {
-          format_ = other.format_;
           onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
@@ -631,64 +539,26 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
         return this;
       }
 
-      private java.lang.Object amount_ = "";
+      private long amount_;
       /**
-       * <code>string amount = 1;</code>
+       * <code>int64 amount = 1;</code>
        */
-      public java.lang.String getAmount() {
-        java.lang.Object ref = amount_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          amount_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
+      public long getAmount() {
+        return amount_;
       }
       /**
-       * <code>string amount = 1;</code>
+       * <code>int64 amount = 1;</code>
        */
-      public com.google.protobuf.ByteString getAmountBytes() {
-        java.lang.Object ref = amount_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-          amount_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>string amount = 1;</code>
-       */
-      public Builder setAmount(java.lang.String value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-
+      public Builder setAmount(long value) {
         amount_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>string amount = 1;</code>
+       * <code>int64 amount = 1;</code>
        */
       public Builder clearAmount() {
-        amount_ = getDefaultInstance().getAmount();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string amount = 1;</code>
-       */
-      public Builder setAmountBytes(com.google.protobuf.ByteString value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        checkByteStringIsUtf8(value);
-
-        amount_ = value;
+        amount_ = 0L;
         onChanged();
         return this;
       }
@@ -751,68 +621,6 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
         checkByteStringIsUtf8(value);
 
         unit_ = value;
-        onChanged();
-        return this;
-      }
-
-      private java.lang.Object format_ = "";
-      /**
-       * <code>string format = 3;</code>
-       */
-      public java.lang.String getFormat() {
-        java.lang.Object ref = format_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          format_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>string format = 3;</code>
-       */
-      public com.google.protobuf.ByteString getFormatBytes() {
-        java.lang.Object ref = format_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-          format_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>string format = 3;</code>
-       */
-      public Builder setFormat(java.lang.String value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-
-        format_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string format = 3;</code>
-       */
-      public Builder clearFormat() {
-        format_ = getDefaultInstance().getFormat();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string format = 3;</code>
-       */
-      public Builder setFormatBytes(com.google.protobuf.ByteString value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        checkByteStringIsUtf8(value);
-
-        format_ = value;
         onChanged();
         return this;
       }

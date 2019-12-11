@@ -50,8 +50,8 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
 
   private static final String POD_UID = "pod_uid";
   private static final String NAMESPACE = "namespace";
-  private static final String CPU_AMOUNT = "1.0";
-  private static final String MEMORY_AMOUNT = "1024.0";
+  private static final long CPU_AMOUNT = 1_000_000_000L; // 1 vcpu in nanocores
+  private static final long MEMORY_AMOUNT = 1024L * 1024; // 1Mi in bytes
   private static final String NODE_NAME = "node_name";
   private static final String CLOUD_PROVIDER_ID = "cloud_provider_id";
   private static final String ACCOUNT_ID = "account_id";
@@ -103,8 +103,8 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     Map<String, String> label = new HashMap<>();
     label.put(K8sCCMConstants.RELEASE_NAME, K8sCCMConstants.RELEASE_NAME);
     Map<String, Quantity> requestQuantity = new HashMap<>();
-    requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M", ""));
-    requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M", ""));
+    requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M"));
+    requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M"));
     Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).build();
     PublishedMessage k8sNodeEventMessage = getK8sPodInfoMessage(POD_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
         CLUSTER_ID, CLUSTER_NAME, NAMESPACE, label, resource, START_TIMESTAMP);
@@ -116,10 +116,12 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     assertThat(instanceInfo.getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(instanceInfo.getClusterName()).isEqualTo(CLUSTER_NAME);
     assertThat(instanceInfo.getInstanceType()).isEqualTo(InstanceType.K8S_POD);
-    assertThat(infoResource.getCpuUnits()).isEqualTo(Double.valueOf(CPU_AMOUNT));
-    assertThat(infoResource.getMemoryMb()).isEqualTo(Double.valueOf(MEMORY_AMOUNT));
-    assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY)).isEqualTo(MEMORY_AMOUNT);
-    assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_CPU)).isEqualTo(CPU_AMOUNT);
+    assertThat(infoResource.getCpuUnits()).isEqualTo(1.0);
+    assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
+    assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY))
+        .isEqualTo(String.valueOf((double) MEMORY_AMOUNT));
+    assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_CPU))
+        .isEqualTo(String.valueOf((double) CPU_AMOUNT));
   }
 
   @Test
@@ -147,8 +149,8 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
         .build();
   }
 
-  private Quantity getQuantity(String amount, String unit, String format) {
-    return Quantity.newBuilder().setAmount(amount).setUnit(unit).setFormat(format).build();
+  private Quantity getQuantity(long amount, String unit) {
+    return Quantity.newBuilder().setAmount(amount).setUnit(unit).build();
   }
 
   private PublishedMessage getK8sPodInfoMessage(String podUid, String nodeName, String cloudProviderId,
