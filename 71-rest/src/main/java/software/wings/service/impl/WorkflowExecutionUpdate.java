@@ -306,7 +306,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   }
 
   private boolean isProdEnv(WorkflowExecution workflowExecution) {
-    return workflowExecution.getEnvType().equals(EnvironmentType.PROD);
+    return EnvironmentType.PROD == workflowExecution.getEnvType();
   }
 
   @VisibleForTesting
