@@ -99,6 +99,7 @@ public class AccountChangeHandler implements EventHandler {
     Builder<String, Object> identityTraits = ImmutableMap.builder();
 
     integrations.put(SegmentHandler.Keys.NATERO, true);
+    integrations.put(SegmentHandler.Keys.SALESFORCE, false);
 
     IdentifyMessage.Builder identity = IdentifyMessage.builder()
                                            .userId(user.getId())

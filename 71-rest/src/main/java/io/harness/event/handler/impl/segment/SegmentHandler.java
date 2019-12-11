@@ -257,7 +257,8 @@ public class SegmentHandler implements EventHandler {
     String userInviteUrl = utils.getUserInviteUrl(userInvite, account);
 
     Map<String, Boolean> integrations = new HashMap<>();
-    integrations.put(SegmentHandler.Keys.NATERO, true);
+    integrations.put(Keys.NATERO, true);
+    integrations.put(Keys.SALESFORCE, false);
 
     String identity = segmentHelper.createOrUpdateIdentity(
         user.getUuid(), user.getEmail(), user.getName(), account, userInviteUrl, user.getOauthProvider(), integrations);
@@ -282,7 +283,8 @@ public class SegmentHandler implements EventHandler {
 
   public String reportIdentity(String userName, String email) throws IOException {
     Map<String, Boolean> integrations = new HashMap<>();
-    integrations.put(SegmentHandler.Keys.NATERO, true);
+    integrations.put(Keys.NATERO, true);
+    integrations.put(Keys.SALESFORCE, false);
 
     return segmentHelper.createOrUpdateIdentity(null, email, userName, null, null, null, integrations);
   }
