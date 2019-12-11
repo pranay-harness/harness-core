@@ -1,9 +1,11 @@
 package software.wings.scim;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.GROUP;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +31,7 @@ import javax.ws.rs.core.Response.Status;
 public class ScimGroupServiceImpl implements ScimGroupService {
   @Inject private UserGroupService userGroupService;
   @Inject private WingsPersistence wingsPersistence;
+  public static final String EXC_MSG_GROUP_DOESNT_EXIST = "Group does not exist";
 
   private Integer MAX_RESULT_COUNT = 20;
 
@@ -203,6 +206,9 @@ public class ScimGroupServiceImpl implements ScimGroupService {
   @Override
   public ScimGroup getGroup(String groupId, String accountId) {
     UserGroup userGroup = userGroupService.get(accountId, groupId);
+    if (userGroup == null) {
+      throw new UnauthorizedException(EXC_MSG_GROUP_DOESNT_EXIST, GROUP);
+    }
     ScimGroup scimGroup = buildGroupResponse(userGroup);
     logger.info("Response to get group call: {}", scimGroup);
     return scimGroup;
