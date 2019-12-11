@@ -239,6 +239,23 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testNoneGroupByInClusterViewCharts() {
+    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeStartTimeEntityGroupBy());
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeNotNullClusterFilter());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
+  }
+
+  @Test
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testFetchMethodInBillingTimeSeriesDataFetcherInstanceIdQuery() {
@@ -457,6 +474,12 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
 
   public QLBillingDataFilter makeClusterFilter(String[] values) {
     QLIdFilter clusterFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().cluster(clusterFilter).build();
+  }
+
+  private QLBillingDataFilter makeNotNullClusterFilter() {
+    String[] values = new String[] {""};
+    QLIdFilter clusterFilter = QLIdFilter.builder().operator(QLIdOperator.NOT_NULL).values(values).build();
     return QLBillingDataFilter.builder().cluster(clusterFilter).build();
   }
 

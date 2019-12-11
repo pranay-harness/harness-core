@@ -220,7 +220,9 @@ public class PermissionAttribute {
 
     TEMPLATE(ACCOUNT),
 
-    CUSTOM_DASHBOARD(ACCOUNT);
+    CUSTOM_DASHBOARD(ACCOUNT),
+
+    BUDGET(PermissionType.LOGGED_IN);
 
     private ImmutableMap<Action, PermissionType> actionPermissionScopeMap;
 
