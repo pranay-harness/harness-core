@@ -31,16 +31,15 @@ public class PodUtilizationMetricsWriter extends EventWriter implements ItemWrit
           PodMetric podUtilizationMetric = (PodMetric) publishedMessage.getMessage();
           logger.info("Pod Utilization {} ", podUtilizationMetric);
 
-          Long endTime = podUtilizationMetric.getTimestamp().getSeconds() * 1000;
-          Long startTime = endTime - (podUtilizationMetric.getWindow().getSeconds() * 1000);
+          long endTime = podUtilizationMetric.getTimestamp().getSeconds() * 1000;
+          long startTime = endTime - (podUtilizationMetric.getWindow().getSeconds() * 1000);
 
-          Double cpuUsageWithUnits = 0.0;
-          Double memoryUsageWithUnits = 0.0;
+          long cpuUsageWithUnits = 0L;
+          long memoryUsageWithUnits = 0L;
 
           for (Container container : podUtilizationMetric.getContainersList()) {
-            // TODO: (Rohit) Remove this typecast once fixed on the PT end
-            cpuUsageWithUnits += Double.valueOf(container.getUsage().getCpu());
-            memoryUsageWithUnits += Double.valueOf(container.getUsage().getMemory());
+            cpuUsageWithUnits += container.getUsage().getCpuNano();
+            memoryUsageWithUnits += container.getUsage().getMemoryByte();
           }
 
           K8sGranularUtilizationData k8sGranularUtilizationData =

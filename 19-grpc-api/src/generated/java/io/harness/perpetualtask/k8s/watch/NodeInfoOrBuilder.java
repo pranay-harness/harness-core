@@ -84,17 +84,33 @@ public interface NodeInfoOrBuilder extends
   java.lang.String getLabelsOrThrow(java.lang.String key);
 
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
    */
-  boolean hasAllocatableResource();
+  int getAllocatableResourceCount();
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
    */
-  io.harness.perpetualtask.k8s.watch.Resource getAllocatableResource();
+  boolean containsAllocatableResource(java.lang.String key);
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+   * Use {@link #getAllocatableResourceMap()} instead.
    */
-  io.harness.perpetualtask.k8s.watch.ResourceOrBuilder getAllocatableResourceOrBuilder();
+  @java.lang.Deprecated
+  java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> getAllocatableResource();
+  /**
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   */
+  java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> getAllocatableResourceMap();
+  /**
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   */
+
+  io.harness.perpetualtask.k8s.watch.Resource.Quantity getAllocatableResourceOrDefault(
+      java.lang.String key, io.harness.perpetualtask.k8s.watch.Resource.Quantity defaultValue);
+  /**
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   */
+
+  io.harness.perpetualtask.k8s.watch.Resource.Quantity getAllocatableResourceOrThrow(java.lang.String key);
 
   /**
    * <code>string cluster_id = 8;</code>

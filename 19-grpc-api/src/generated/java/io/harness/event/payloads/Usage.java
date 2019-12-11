@@ -15,10 +15,7 @@ public final class Usage extends com.google.protobuf.GeneratedMessageV3 implemen
   private Usage(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private Usage() {
-    cpu_ = "";
-    memory_ = "";
-  }
+  private Usage() {}
 
   @java.
   lang.Override
@@ -41,16 +38,12 @@ public final class Usage extends com.google.protobuf.GeneratedMessageV3 implemen
           case 0:
             done = true;
             break;
-          case 10: {
-            java.lang.String s = input.readStringRequireUtf8();
-
-            cpu_ = s;
+          case 8: {
+            cpuNano_ = input.readInt64();
             break;
           }
-          case 18: {
-            java.lang.String s = input.readStringRequireUtf8();
-
-            memory_ = s;
+          case 16: {
+            memoryByte_ = input.readInt64();
             break;
           }
           default: {
@@ -82,64 +75,22 @@ public final class Usage extends com.google.protobuf.GeneratedMessageV3 implemen
             io.harness.event.payloads.Usage.class, io.harness.event.payloads.Usage.Builder.class);
   }
 
-  public static final int CPU_FIELD_NUMBER = 1;
-  private volatile java.lang.Object cpu_;
+  public static final int CPU_NANO_FIELD_NUMBER = 1;
+  private long cpuNano_;
   /**
-   * <code>string cpu = 1;</code>
+   * <code>int64 cpu_nano = 1;</code>
    */
-  public java.lang.String getCpu() {
-    java.lang.Object ref = cpu_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      cpu_ = s;
-      return s;
-    }
-  }
-  /**
-   * <code>string cpu = 1;</code>
-   */
-  public com.google.protobuf.ByteString getCpuBytes() {
-    java.lang.Object ref = cpu_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-      cpu_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
+  public long getCpuNano() {
+    return cpuNano_;
   }
 
-  public static final int MEMORY_FIELD_NUMBER = 2;
-  private volatile java.lang.Object memory_;
+  public static final int MEMORY_BYTE_FIELD_NUMBER = 2;
+  private long memoryByte_;
   /**
-   * <code>string memory = 2;</code>
+   * <code>int64 memory_byte = 2;</code>
    */
-  public java.lang.String getMemory() {
-    java.lang.Object ref = memory_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      memory_ = s;
-      return s;
-    }
-  }
-  /**
-   * <code>string memory = 2;</code>
-   */
-  public com.google.protobuf.ByteString getMemoryBytes() {
-    java.lang.Object ref = memory_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-      memory_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
+  public long getMemoryByte() {
+    return memoryByte_;
   }
 
   private byte memoizedIsInitialized = -1;
@@ -157,11 +108,11 @@ public final class Usage extends com.google.protobuf.GeneratedMessageV3 implemen
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (!getCpuBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, cpu_);
+    if (cpuNano_ != 0L) {
+      output.writeInt64(1, cpuNano_);
     }
-    if (!getMemoryBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, memory_);
+    if (memoryByte_ != 0L) {
+      output.writeInt64(2, memoryByte_);
     }
     unknownFields.writeTo(output);
   }
@@ -173,11 +124,11 @@ public final class Usage extends com.google.protobuf.GeneratedMessageV3 implemen
       return size;
 
     size = 0;
-    if (!getCpuBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, cpu_);
+    if (cpuNano_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream.computeInt64Size(1, cpuNano_);
     }
-    if (!getMemoryBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, memory_);
+    if (memoryByte_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream.computeInt64Size(2, memoryByte_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -194,9 +145,9 @@ public final class Usage extends com.google.protobuf.GeneratedMessageV3 implemen
     }
     io.harness.event.payloads.Usage other = (io.harness.event.payloads.Usage) obj;
 
-    if (!getCpu().equals(other.getCpu()))
+    if (getCpuNano() != other.getCpuNano())
       return false;
-    if (!getMemory().equals(other.getMemory()))
+    if (getMemoryByte() != other.getMemoryByte())
       return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
@@ -210,10 +161,10 @@ public final class Usage extends com.google.protobuf.GeneratedMessageV3 implemen
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + CPU_FIELD_NUMBER;
-    hash = (53 * hash) + getCpu().hashCode();
-    hash = (37 * hash) + MEMORY_FIELD_NUMBER;
-    hash = (53 * hash) + getMemory().hashCode();
+    hash = (37 * hash) + CPU_NANO_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getCpuNano());
+    hash = (37 * hash) + MEMORY_BYTE_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getMemoryByte());
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -325,9 +276,9 @@ public final class Usage extends com.google.protobuf.GeneratedMessageV3 implemen
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      cpu_ = "";
+      cpuNano_ = 0L;
 
-      memory_ = "";
+      memoryByte_ = 0L;
 
       return this;
     }
@@ -359,8 +310,8 @@ public final class Usage extends com.google.protobuf.GeneratedMessageV3 implemen
     lang.Override
     public io.harness.event.payloads.Usage buildPartial() {
       io.harness.event.payloads.Usage result = new io.harness.event.payloads.Usage(this);
-      result.cpu_ = cpu_;
-      result.memory_ = memory_;
+      result.cpuNano_ = cpuNano_;
+      result.memoryByte_ = memoryByte_;
       onBuilt();
       return result;
     }
@@ -403,13 +354,11 @@ public final class Usage extends com.google.protobuf.GeneratedMessageV3 implemen
     public Builder mergeFrom(io.harness.event.payloads.Usage other) {
       if (other == io.harness.event.payloads.Usage.getDefaultInstance())
         return this;
-      if (!other.getCpu().isEmpty()) {
-        cpu_ = other.cpu_;
-        onChanged();
+      if (other.getCpuNano() != 0L) {
+        setCpuNano(other.getCpuNano());
       }
-      if (!other.getMemory().isEmpty()) {
-        memory_ = other.memory_;
-        onChanged();
+      if (other.getMemoryByte() != 0L) {
+        setMemoryByte(other.getMemoryByte());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -438,126 +387,50 @@ public final class Usage extends com.google.protobuf.GeneratedMessageV3 implemen
       return this;
     }
 
-    private java.lang.Object cpu_ = "";
+    private long cpuNano_;
     /**
-     * <code>string cpu = 1;</code>
+     * <code>int64 cpu_nano = 1;</code>
      */
-    public java.lang.String getCpu() {
-      java.lang.Object ref = cpu_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        cpu_ = s;
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
+    public long getCpuNano() {
+      return cpuNano_;
     }
     /**
-     * <code>string cpu = 1;</code>
+     * <code>int64 cpu_nano = 1;</code>
      */
-    public com.google.protobuf.ByteString getCpuBytes() {
-      java.lang.Object ref = cpu_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-        cpu_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <code>string cpu = 1;</code>
-     */
-    public Builder setCpu(java.lang.String value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-
-      cpu_ = value;
+    public Builder setCpuNano(long value) {
+      cpuNano_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>string cpu = 1;</code>
+     * <code>int64 cpu_nano = 1;</code>
      */
-    public Builder clearCpu() {
-      cpu_ = getDefaultInstance().getCpu();
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string cpu = 1;</code>
-     */
-    public Builder setCpuBytes(com.google.protobuf.ByteString value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-      checkByteStringIsUtf8(value);
-
-      cpu_ = value;
+    public Builder clearCpuNano() {
+      cpuNano_ = 0L;
       onChanged();
       return this;
     }
 
-    private java.lang.Object memory_ = "";
+    private long memoryByte_;
     /**
-     * <code>string memory = 2;</code>
+     * <code>int64 memory_byte = 2;</code>
      */
-    public java.lang.String getMemory() {
-      java.lang.Object ref = memory_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        memory_ = s;
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
+    public long getMemoryByte() {
+      return memoryByte_;
     }
     /**
-     * <code>string memory = 2;</code>
+     * <code>int64 memory_byte = 2;</code>
      */
-    public com.google.protobuf.ByteString getMemoryBytes() {
-      java.lang.Object ref = memory_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-        memory_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <code>string memory = 2;</code>
-     */
-    public Builder setMemory(java.lang.String value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-
-      memory_ = value;
+    public Builder setMemoryByte(long value) {
+      memoryByte_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>string memory = 2;</code>
+     * <code>int64 memory_byte = 2;</code>
      */
-    public Builder clearMemory() {
-      memory_ = getDefaultInstance().getMemory();
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string memory = 2;</code>
-     */
-    public Builder setMemoryBytes(com.google.protobuf.ByteString value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-      checkByteStringIsUtf8(value);
-
-      memory_ = value;
+    public Builder clearMemoryByte() {
+      memoryByte_ = 0L;
       onChanged();
       return this;
     }

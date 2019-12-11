@@ -19,7 +19,6 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeEvent;
 import io.harness.perpetualtask.k8s.watch.NodeEvent.EventType;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;
-import io.harness.perpetualtask.k8s.watch.Resource;
 import io.harness.perpetualtask.k8s.watch.Resource.Quantity;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
@@ -39,8 +38,8 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   @InjectMocks private K8sNodeInfoProcessor k8sNodeInfoProcessor;
 
   private static final String NODE_UID = "node_uid";
-  private static final String CPU_AMOUNT = "1";
-  private static final String MEMORY_AMOUNT = "1024";
+  private static final long CPU_AMOUNT = 1_000_000_000L; // 1 vcpu in nanocores
+  private static final long MEMORY_AMOUNT = 1024L * 1024; // 1Mi in bytes
   private static final String NODE_NAME = "node_name";
   private static final String CLOUD_PROVIDER_ID = "cloud_provider_id";
   private static final String ACCOUNT_ID = "account_id";
@@ -90,11 +89,10 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
     label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
     Map<String, Quantity> requestQuantity = new HashMap<>();
-    requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M", ""));
-    requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M", ""));
-    Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).build();
-    PublishedMessage k8sNodeEventMessage = getK8sNodeInfoMessage(
-        NODE_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_NAME, CLUSTER_ID, label, resource, START_TIMESTAMP);
+    requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "n"));
+    requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, ""));
+    PublishedMessage k8sNodeEventMessage = getK8sNodeInfoMessage(NODE_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
+        CLUSTER_NAME, CLUSTER_ID, label, requestQuantity, START_TIMESTAMP);
     InstanceInfo instanceInfo = k8sNodeInfoProcessor.process(k8sNodeEventMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
     Map<String, String> metaData = instanceInfo.getMetaData();
@@ -103,17 +101,17 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     assertThat(instanceInfo.getInstanceType()).isEqualTo(InstanceType.K8S_NODE);
     assertThat(instanceInfo.getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(instanceInfo.getClusterName()).isEqualTo(CLUSTER_NAME);
-    assertThat(infoResource.getCpuUnits()).isEqualTo(Double.valueOf(CPU_AMOUNT));
-    assertThat(infoResource.getMemoryMb()).isEqualTo(Double.valueOf(MEMORY_AMOUNT));
+    assertThat(infoResource.getCpuUnits()).isEqualTo(1.0);
+    assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
     assertThat(metaData.get(InstanceMetaDataConstants.REGION)).isEqualTo(InstanceMetaDataConstants.REGION);
   }
 
-  private Quantity getQuantity(String amount, String unit, String format) {
-    return Quantity.newBuilder().setAmount(amount).setUnit(unit).setFormat(format).build();
+  private Quantity getQuantity(long amount, String unit) {
+    return Quantity.newBuilder().setAmount(amount).setUnit(unit).build();
   }
 
   private PublishedMessage getK8sNodeInfoMessage(String nodeUid, String nodeName, String cloudProviderId,
-      String accountId, String clusterName, String clusterId, Map<String, String> label, Resource resource,
+      String accountId, String clusterName, String clusterId, Map<String, String> label, Map<String, Quantity> resource,
       Timestamp timestamp) {
     NodeInfo nodeInfo = NodeInfo.newBuilder()
                             .setNodeUid(nodeUid)
@@ -124,7 +122,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
                             .setClusterName(clusterName)
                             .setCreationTime(timestamp)
                             .putAllLabels(label)
-                            .setAllocatableResource(resource)
+                            .putAllAllocatableResource(resource)
                             .build();
     return getPublishedMessage(accountId, nodeInfo);
   }

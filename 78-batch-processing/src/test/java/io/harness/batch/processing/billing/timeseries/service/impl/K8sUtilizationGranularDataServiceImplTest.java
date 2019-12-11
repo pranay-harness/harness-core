@@ -143,8 +143,8 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
         .settingId("settingId")
         .instanceType("instanceType")
         .instanceId("instanceId")
-        .memory(2.0)
-        .cpu(2.0)
+        .memory(2)
+        .cpu(2)
         .endTimestamp(12000000000L)
         .startTimestamp(10000000000L)
         .build();

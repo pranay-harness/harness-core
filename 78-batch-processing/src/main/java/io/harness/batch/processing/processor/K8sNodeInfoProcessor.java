@@ -41,7 +41,7 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
         .instanceName(nodeInfo.getNodeName())
         .instanceType(InstanceType.K8S_NODE)
         .instanceState(InstanceState.INITIALIZING)
-        .resource(K8sResourceUtils.getResource(nodeInfo.getAllocatableResource()))
+        .resource(K8sResourceUtils.getResource(nodeInfo.getAllocatableResourceMap()))
         .labels(nodeInfo.getLabelsMap())
         .metaData(metaData)
         .build();

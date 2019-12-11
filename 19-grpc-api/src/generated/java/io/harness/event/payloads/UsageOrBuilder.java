@@ -8,20 +8,12 @@ public interface UsageOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.payloads.Usage)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string cpu = 1;</code>
+   * <code>int64 cpu_nano = 1;</code>
    */
-  java.lang.String getCpu();
-  /**
-   * <code>string cpu = 1;</code>
-   */
-  com.google.protobuf.ByteString getCpuBytes();
+  long getCpuNano();
 
   /**
-   * <code>string memory = 2;</code>
+   * <code>int64 memory_byte = 2;</code>
    */
-  java.lang.String getMemory();
-  /**
-   * <code>string memory = 2;</code>
-   */
-  com.google.protobuf.ByteString getMemoryBytes();
+  long getMemoryByte();
 }
