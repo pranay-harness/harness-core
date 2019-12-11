@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.Converter;
+import com.healthmarketscience.sqlbuilder.CustomExpression;
 import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.InCondition;
 import com.healthmarketscience.sqlbuilder.OrderObject;
@@ -25,6 +26,7 @@ import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilterType;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
@@ -55,7 +57,7 @@ public class BillingDataQueryBuilder {
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
     List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
 
-    if (isGroupByClusterPresent(groupBy)) {
+    if (isGroupByClusterPresent(groupBy) || isNoneGroupBySelectedInClusterView(groupBy, filters)) {
       addInstanceTypeFilter(filters);
     }
 
@@ -97,7 +99,7 @@ public class BillingDataQueryBuilder {
 
     selectQuery.addCustomFromTable(schema.getBillingDataTable());
 
-    if (isClusterNotNullFilterPresent(filters)) {
+    if (isClusterFilterPresent(filters)) {
       addInstanceTypeFilter(filters);
     }
 
@@ -145,6 +147,40 @@ public class BillingDataQueryBuilder {
     queryMetaDataBuilder.fieldNames(fieldNames);
     queryMetaDataBuilder.query(selectQuery.toString());
     queryMetaDataBuilder.groupByFields(groupByFields);
+    queryMetaDataBuilder.filters(filters);
+    return queryMetaDataBuilder.build();
+  }
+
+  public BillingDataQueryMetadata formBudgetInsightQuery(String accountId, List<QLBillingDataFilter> filters,
+      QLCCMAggregationFunction aggregateFunction, QLTimeSeriesAggregation groupBy,
+      List<QLBillingSortCriteria> sortCriteria) {
+    BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
+    SelectQuery selectQuery = new SelectQuery();
+    ResultType resultType;
+    resultType = ResultType.STACKED_TIME_SERIES;
+
+    queryMetaDataBuilder.resultType(resultType);
+    List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
+    decorateQueryWithAggregation(selectQuery, aggregateFunction, fieldNames);
+
+    selectQuery.addCustomFromTable(schema.getBillingDataTable());
+
+    if (!Lists.isNullOrEmpty(filters)) {
+      decorateQueryWithFilters(selectQuery, filters);
+    }
+
+    if (isValidGroupByTime(groupBy)) {
+      decorateQueryWithGroupByTime(fieldNames, selectQuery, groupBy);
+    }
+
+    List<QLBillingSortCriteria> finalSortCriteria = validateAndAddSortCriteria(selectQuery, sortCriteria, fieldNames);
+
+    addAccountFilter(selectQuery, accountId);
+
+    selectQuery.getWhereClause().setDisableParens(true);
+    queryMetaDataBuilder.fieldNames(fieldNames);
+    queryMetaDataBuilder.query(selectQuery.toString());
+    queryMetaDataBuilder.sortCriteria(finalSortCriteria);
     queryMetaDataBuilder.filters(filters);
     return queryMetaDataBuilder.build();
   }
@@ -444,9 +480,27 @@ public class BillingDataQueryBuilder {
     return groupByList.stream().anyMatch(groupBy -> groupBy == QLCCMEntityGroupBy.Cluster);
   }
 
-  private boolean isClusterNotNullFilterPresent(List<QLBillingDataFilter> filters) {
-    return filters.stream().anyMatch(
-        filter -> filter.getCluster() != null && filter.getCluster().getOperator() == QLIdOperator.NOT_NULL);
+  private boolean isGroupByStartTimePresent(List<QLCCMEntityGroupBy> groupByList) {
+    return groupByList.stream().anyMatch(groupBy -> groupBy == QLCCMEntityGroupBy.StartTime);
+  }
+
+  private boolean isNoneGroupBySelectedInClusterView(
+      List<QLCCMEntityGroupBy> groupByList, List<QLBillingDataFilter> filters) {
+    if (isClusterFilterPresent(filters) && isGroupByNonePresent(groupByList)) {
+      return true;
+    }
+    return false;
+  }
+
+  private boolean isGroupByNonePresent(List<QLCCMEntityGroupBy> groupByList) {
+    if (isEmpty(groupByList) || (groupByList.size() == 1 && isGroupByStartTimePresent(groupByList))) {
+      return true;
+    }
+    return false;
+  }
+
+  private boolean isClusterFilterPresent(List<QLBillingDataFilter> filters) {
+    return filters.stream().anyMatch(filter -> filter.getCluster() != null);
   }
 
   private void addInstanceTypeFilter(List<QLBillingDataFilter> filters) {
@@ -468,5 +522,38 @@ public class BillingDataQueryBuilder {
 
   private boolean isInstanceTypeFilterPresent(List<QLBillingDataFilter> filters) {
     return filters.stream().anyMatch(filter -> filter.getInstanceType() != null);
+  }
+
+  private void decorateQueryWithGroupByTime(
+      List<BillingDataMetaDataFields> fieldNames, SelectQuery selectQuery, QLTimeSeriesAggregation groupByTime) {
+    String timeBucket = getGroupByTimeQueryWithDateTrunc(groupByTime, "starttime");
+
+    selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
+        new CustomExpression(timeBucket).setDisableParens(true), BillingDataMetaDataFields.TIME_SERIES.getFieldName()));
+    selectQuery.addCustomGroupings(BillingDataMetaDataFields.TIME_SERIES.getFieldName());
+    selectQuery.addCustomOrdering(BillingDataMetaDataFields.TIME_SERIES.getFieldName(), Dir.ASCENDING);
+    fieldNames.add(BillingDataMetaDataFields.TIME_SERIES);
+  }
+
+  private boolean isValidGroupByTime(QLTimeSeriesAggregation groupByTime) {
+    return groupByTime != null && groupByTime.getTimeAggregationType() != null
+        && groupByTime.getTimeAggregationValue() != null;
+  }
+
+  public String getGroupByTimeQueryWithDateTrunc(QLTimeSeriesAggregation groupByTime, String dbFieldName) {
+    String unit;
+    switch (groupByTime.getTimeAggregationType()) {
+      case DAY:
+        unit = "day";
+        break;
+      case HOUR:
+        unit = "hour";
+        break;
+      default:
+        logger.warn("Unsupported timeAggregationType " + groupByTime.getTimeAggregationType());
+        throw new InvalidRequestException("Cant apply time group by");
+    }
+
+    return new StringBuilder("date_trunc('").append(unit).append("',").append(dbFieldName).append(")").toString();
   }
 }

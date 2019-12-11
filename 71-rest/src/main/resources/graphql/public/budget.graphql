@@ -1,0 +1,16 @@
+extend type Query {
+  # Get details about CCM Budget.
+  budget(budgetId: String!): BudgetDataList @dataFetcher(name: budget)
+}
+
+type BudgetDataList {
+  data: [BudgetData]
+}
+
+type BudgetData {
+  time: Number
+  actualCost: Number
+  budgetVariance: Number
+  budgeted: Number
+  budgetVariancePercentage: Number
+}
