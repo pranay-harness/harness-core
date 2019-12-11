@@ -56,6 +56,11 @@ public class TerraformProvisionParameters implements ExecutionCapabilityDemander
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateExecutionCapabilitiesForTerraform(sourceRepoEncryptionDetails);
+    List<ExecutionCapability> capabilities =
+        CapabilityHelper.generateExecutionCapabilitiesForTerraform(sourceRepoEncryptionDetails);
+    if (sourceRepo != null) {
+      capabilities.addAll(sourceRepo.fetchRequiredExecutionCapabilities());
+    }
+    return capabilities;
   }
 }
