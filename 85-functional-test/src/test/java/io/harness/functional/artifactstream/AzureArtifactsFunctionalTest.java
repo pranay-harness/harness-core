@@ -154,13 +154,21 @@ public class AzureArtifactsFunctionalTest extends AbstractFunctionalTest {
   }
 
   private void listProjects(SettingAttribute azureArtifactsSetting, String project) {
-    Response response = Setup.portal()
-                            .auth()
-                            .oauth2(bearerToken)
-                            .queryParam("accountId", application.getAccountId())
-                            .queryParam("settingId", azureArtifactsSetting.getUuid())
-                            .get("/build-sources/projects");
-    logger.info("List projects response: {}, ", response.prettyPrint());
+    Response response = null;
+    for (int i = 0; i < 3; i++) {
+      response = Setup.portal()
+                     .auth()
+                     .oauth2(bearerToken)
+                     .queryParam("accountId", application.getAccountId())
+                     .queryParam("settingId", azureArtifactsSetting.getUuid())
+                     .get("/build-sources/projects");
+      logger.info("List projects response: {}, ", response.prettyPrint());
+      if (response.getStatusCode() < 400) {
+        break;
+      }
+    }
+
+    assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(200);
 
     GenericType<RestResponse<List<AzureDevopsProject>>> projectType =
@@ -176,14 +184,22 @@ public class AzureArtifactsFunctionalTest extends AbstractFunctionalTest {
   }
 
   private void listFeeds(SettingAttribute azureArtifactsSetting, String projectId, String feed) {
-    Response response = Setup.portal()
-                            .auth()
-                            .oauth2(bearerToken)
-                            .queryParam("accountId", application.getAccountId())
-                            .queryParam("settingId", azureArtifactsSetting.getUuid())
-                            .queryParam("project", projectId)
-                            .get("/build-sources/feeds");
-    logger.info("List feeds response: {}, ", response.prettyPrint());
+    Response response = null;
+    for (int i = 0; i < 3; i++) {
+      response = Setup.portal()
+                     .auth()
+                     .oauth2(bearerToken)
+                     .queryParam("accountId", application.getAccountId())
+                     .queryParam("settingId", azureArtifactsSetting.getUuid())
+                     .queryParam("project", projectId)
+                     .get("/build-sources/feeds");
+      logger.info("List feeds response: {}, ", response.prettyPrint());
+      if (response.getStatusCode() < 400) {
+        break;
+      }
+    }
+
+    assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(200);
 
     GenericType<RestResponse<List<AzureArtifactsFeed>>> feedType =
@@ -200,15 +216,23 @@ public class AzureArtifactsFunctionalTest extends AbstractFunctionalTest {
 
   private void listPackages(SettingAttribute azureArtifactsSetting, String projectId, String feed, String protocolType,
       String packageId, String packageName) {
-    Response response = Setup.portal()
-                            .auth()
-                            .oauth2(bearerToken)
-                            .queryParam("accountId", application.getAccountId())
-                            .queryParam("settingId", azureArtifactsSetting.getUuid())
-                            .queryParam("project", projectId)
-                            .queryParam("protocolType", protocolType)
-                            .get(format("/build-sources/feeds/%s/packages", feed));
-    logger.info("List packages response: {}, ", response.prettyPrint());
+    Response response = null;
+    for (int i = 0; i < 3; i++) {
+      response = Setup.portal()
+                     .auth()
+                     .oauth2(bearerToken)
+                     .queryParam("accountId", application.getAccountId())
+                     .queryParam("settingId", azureArtifactsSetting.getUuid())
+                     .queryParam("project", projectId)
+                     .queryParam("protocolType", protocolType)
+                     .get(format("/build-sources/feeds/%s/packages", feed));
+      logger.info("List packages response: {}, ", response.prettyPrint());
+      if (response.getStatusCode() < 400) {
+        break;
+      }
+    }
+
+    assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(200);
 
     GenericType<RestResponse<List<AzureArtifactsPackage>>> packageType =
@@ -241,15 +265,23 @@ public class AzureArtifactsFunctionalTest extends AbstractFunctionalTest {
             .autoPopulate(false)
             .build();
 
-    Response response = Setup.portal()
-                            .auth()
-                            .oauth2(bearerToken)
-                            .queryParam("accountId", application.getAccountId())
-                            .queryParam("appId", application.getUuid())
-                            .body(azureArtifactsArtifactStream, ObjectMapperType.GSON)
-                            .contentType(ContentType.JSON)
-                            .post("/artifactstreams");
-    logger.info("Save artifact stream response: {}, ", response.prettyPrint());
+    Response response = null;
+    for (int i = 0; i < 3; i++) {
+      response = Setup.portal()
+                     .auth()
+                     .oauth2(bearerToken)
+                     .queryParam("accountId", application.getAccountId())
+                     .queryParam("appId", application.getUuid())
+                     .body(azureArtifactsArtifactStream, ObjectMapperType.GSON)
+                     .contentType(ContentType.JSON)
+                     .post("/artifactstreams");
+      logger.info("Save artifact stream response: {}, ", response.prettyPrint());
+      if (response.getStatusCode() < 400) {
+        break;
+      }
+    }
+
+    assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(200);
 
     GenericType<RestResponse<AzureArtifactsArtifactStream>> artifactStreamType =
