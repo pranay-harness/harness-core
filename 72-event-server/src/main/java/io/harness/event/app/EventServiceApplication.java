@@ -1,8 +1,8 @@
 package io.harness.event.app;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -10,10 +10,11 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
-import io.harness.event.grpc.PublishedMessage;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
+import io.harness.persistence.HPersistence;
+import io.harness.persistence.Store;
 import io.harness.serializer.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -25,13 +26,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
 @Slf4j
 public class EventServiceApplication {
-  private final Set<Class> morphiaClasses = ImmutableSet.of(PublishedMessage.class);
+  private static final Store EVENTS_STORE = Store.builder().name("events").build();
   private final EventServiceConfig config;
 
   private EventServiceApplication(EventServiceConfig config) {
@@ -60,7 +60,7 @@ public class EventServiceApplication {
       @Provides
       @Singleton
       MongoConfig mongoConfig() {
-        return config.getMongoConnectionFactory();
+        return config.getHarnessMongo();
       }
     });
 
@@ -68,6 +68,7 @@ public class EventServiceApplication {
     modules.add(new EventServiceModule(config));
 
     Injector injector = Guice.createInjector(modules);
+    registerStores(config, injector);
 
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
     serviceManager.awaitHealthy();
@@ -79,5 +80,13 @@ public class EventServiceApplication {
     serviceManager.awaitStopped();
     logger.info("Server shutdown complete");
     LogManager.shutdown();
+  }
+
+  private static void registerStores(EventServiceConfig config, Injector injector) {
+    final String eventsMongoUri = config.getEventsMongo().getUri();
+    if (isNotEmpty(eventsMongoUri) && !eventsMongoUri.equals(config.getHarnessMongo().getUri())) {
+      final HPersistence hPersistence = injector.getInstance(HPersistence.class);
+      hPersistence.register(EVENTS_STORE, config.getEventsMongo().getUri());
+    }
   }
 }

@@ -4,6 +4,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
+import io.harness.annotation.StoreIn;
 import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
 import io.harness.exception.WingsException;
 import io.harness.persistence.CreatedAtAware;
@@ -24,6 +25,7 @@ import org.mongodb.morphia.annotations.PostLoad;
 
 import java.util.Map;
 
+@StoreIn("events")
 @Data
 @Entity(value = "publishedMessages", noClassnameStored = true)
 @Indexes({

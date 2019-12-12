@@ -58,3 +58,4 @@ delegate_sequence_config
 **/*.tfstate.backup
 **/tfplan
 **/*.lock.info
+eventQueue/
