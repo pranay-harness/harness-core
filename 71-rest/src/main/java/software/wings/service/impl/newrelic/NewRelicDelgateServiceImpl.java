@@ -522,8 +522,6 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       }
       return metricsWithNoData;
     } catch (RuntimeException e) {
-      throw e;
-    } catch (Exception e) {
       if (!failOnException) {
         logger.info("for {} marking all metrics to be not with data", apiCallLog.getStateExecutionId(), e);
         return metricNames;
