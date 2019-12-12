@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 @Slf4j
 public class OwnerRule implements TestRule {
   public static final String AADITI = "aaditi.joag";
+  public static final String ABHINAV = "abhinav.singh";
   public static final String ADWAIT = "adwait.bhandare";
   public static final String AMAN = "aman.singh";
   public static final String ANKIT = "ankit.singhal";
@@ -82,6 +83,7 @@ public class OwnerRule implements TestRule {
   private static final Map<String, DevInfo> active =
       ImmutableMap.<String, DevInfo>builder()
           .put(AADITI, DevInfo.builder().email("aaditi.joag@harness.io").slack("UCFPUNRAQ").build())
+          .put(ABHINAV, DevInfo.builder().email("abhinav.singh@harness.io").slack("UQQPR8M6Y").build())
           .put(ADWAIT, DevInfo.builder().email("adwait.bhandare@harness.io").slack("U8PL7JRMG").build())
           .put(AMAN, DevInfo.builder().email("aman.singh@harness.io").slack("UDJG47CHF").build())
           .put(ANKIT, DevInfo.builder().email("ankit.singhal@harness.io").slack("UF76W0NN5").build())

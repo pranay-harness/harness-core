@@ -1,10 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
@@ -57,6 +59,7 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -337,5 +340,27 @@ public class PipelineServiceImplTest extends WingsBaseTest {
 
     pipelineServiceImpl.updateRelatedFieldEnvironment(false, workflowVariables, pseWorkflowVariables, pipelineVariable);
     assertThat(pipelineVariable.getMetadata().get("relatedField")).isEqualTo("infra,infra2");
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testUniquePipelineName() throws Exception {
+    PipelineStageElement pipelineStageElement = PipelineStageElement.builder().name("test").build();
+    PipelineStageElement pipelineStageElement1 = PipelineStageElement.builder().name("test_1").build();
+
+    PipelineStage pipelineStage =
+        PipelineStage.builder().pipelineStageElements(Arrays.asList(pipelineStageElement)).build();
+    Pipeline pipeline = Pipeline.builder().pipelineStages(Arrays.asList(pipelineStage, pipelineStage)).build();
+
+    assertThatThrownBy(() -> pipelineServiceImpl.checkUniquePipelineStepName(pipeline))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Duplicate step name test");
+
+    PipelineStage pipelineStage1 =
+        PipelineStage.builder().pipelineStageElements(Arrays.asList(pipelineStageElement1)).build();
+    Pipeline pipeline1 = Pipeline.builder().pipelineStages(Arrays.asList(pipelineStage1, pipelineStage)).build();
+
+    pipelineServiceImpl.checkUniquePipelineStepName(pipeline1);
   }
 }

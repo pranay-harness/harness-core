@@ -35,6 +35,7 @@ import static software.wings.expression.ManagerExpressionEvaluator.matchesVariab
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -205,6 +206,11 @@ public class PipelineServiceImpl implements PipelineService {
     ensurePipelineStageUuidAndParallelIndex(pipeline);
 
     validatePipeline(pipeline, keywords);
+    checkUniquePipelineStepName(pipeline);
+
+    // TODO: remove this when all the needed verification is done from validatePipeline
+    new StateMachine(pipeline, workflowService.stencilMap(pipeline.getAppId()));
+
     UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
     setUnset(ops, "description", pipeline.getDescription());
     setUnset(ops, "name", pipeline.getName());
@@ -216,9 +222,6 @@ public class PipelineServiceImpl implements PipelineService {
                                 .filter("appId", pipeline.getAppId())
                                 .filter(ID_KEY, pipeline.getUuid()),
         ops);
-
-    // TODO: remove this when all the needed verification is done from validatePipeline
-    new StateMachine(pipeline, workflowService.stencilMap(pipeline.getAppId()));
 
     Pipeline updatedPipeline = wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
 
@@ -1142,6 +1145,7 @@ public class PipelineServiceImpl implements PipelineService {
   public Pipeline save(Pipeline pipeline) {
     validatePipelineNameForDuplicates(pipeline);
     ensurePipelineStageUuidAndParallelIndex(pipeline);
+    checkUniquePipelineStepName(pipeline);
 
     String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
     pipeline.setAccountId(accountId);
@@ -1358,6 +1362,28 @@ public class PipelineServiceImpl implements PipelineService {
       if (!to.contains(el)) {
         to.add(el);
       }
+    }
+  }
+
+  @VisibleForTesting
+  void checkUniquePipelineStepName(Pipeline pipeline) {
+    List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+    if (pipelineStages == null) {
+      return;
+    }
+    Set<String> pipelineStageNameSet = new HashSet<>();
+    for (PipelineStage pipelineStage : pipelineStages) {
+      if (pipelineStage == null) {
+        continue;
+      }
+      PipelineStageElement stageElement = pipelineStage.getPipelineStageElements().get(0);
+      if (stageElement == null) {
+        continue;
+      }
+      if (pipelineStageNameSet.contains(stageElement.getName())) {
+        throw new InvalidRequestException(String.format("Duplicate step name %s.", stageElement.getName()), USER);
+      }
+      pipelineStageNameSet.add(stageElement.getName());
     }
   }
 
