@@ -71,6 +71,7 @@ public class OwnerRule implements TestRule {
   public static final String VIKAS = "vikas.naiyar";
   public static final String YOGESH_CHAUHAN = "yogesh.chauhan";
   public static final String VARDAN_BANSAL = "vardan.bansal";
+  public static final String NANDAN = "nandan.chandrashekar";
   @Deprecated public static final String UNKNOWN = "unknown";
 
   @Value
@@ -129,6 +130,7 @@ public class OwnerRule implements TestRule {
           .put(VIKAS, DevInfo.builder().email("vikas.naiyar@harness.io").slack("UE7M4CNMA").build())
           .put(YOGESH_CHAUHAN, DevInfo.builder().email("yogesh.chauhan@harness.io").slack("UJVLUUXAT").build())
           .put(VARDAN_BANSAL, DevInfo.builder().email("vardan.bansal@harness.io").slack("UH8NYAAUU").build())
+          .put(NANDAN, DevInfo.builder().email("nandan.chandrashekar@harness.io").slack("UKMS5KCBS").build())
           .put(UNKNOWN, DevInfo.builder().email("n/a").slack("channel").build())
           .build();
 
