@@ -116,7 +116,6 @@ public class APMValidation extends AbstractSecretManagerValidation {
         break;
       } else if (config instanceof APMValidateCollectorConfig) {
         validateCollectorConfig = (APMValidateCollectorConfig) config;
-        validateCollectorConfig.setUrl(null);
         validateCollectorConfig.setBody(null);
         validateCollectorConfig.setOptions(null);
         validateCollectorConfig.setHeaders(null);
