@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example
+  template:
+    metadata:
+      labels:
+        app: example
+    spec:
+      imagePullSecrets:
+      - name: image_pull_secret
+      volumes:
+      - name: config-volume
+        configMap:
+          name: volume-config
+        secret:
+          secretName: volume-secret
+      - name: projection
+        projected:
+          sources:
+          - configMap:
+              name: configmap-projection
+          - secret:
+              name: secret-projection
+      containers:
+      - name: example
+        image: nginx:stable-alpine-perl
+        env:
+        - name: config_env_var
+          valueFrom:
+            configMapKeyRef:
+              name: myconfig
+              key: special.how
+        - name: secret_env_var
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: username
+        envFrom:
+        - configMapRef:
+            name: example
+        - secretRef:
+            name: example

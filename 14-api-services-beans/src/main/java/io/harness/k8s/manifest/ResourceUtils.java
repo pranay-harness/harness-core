@@ -1,13 +1,11 @@
 package io.harness.k8s.manifest;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.createYamlObjectMapper;
-import static io.fabric8.kubernetes.api.KubernetesHelper.toYaml;
-
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.fabric8.kubernetes.api.model.HasMetadata;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,15 +20,13 @@ public class ResourceUtils {
   // this method is a workaround until we default to NON_EMPTY on the kubernetes model
   // see: https://github.com/fabric8io/kubernetes-model/issues/154
 
-  // This method is copied from KubernetesHelper.java
-  public static String toYamlNotEmpty(HasMetadata entity) throws IOException {
-    String yaml = toYaml(entity);
-    ObjectMapper objectMapper = createYamlObjectMapper();
+  public static String removeEmptyOrNullFields(String yaml) throws IOException {
+    ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+    objectMapper.setSerializationInclusion(Include.NON_EMPTY);
 
-    // TODO we must convert to YAML, parse as JsonNode
+    // We convert to YAML, parse as JsonNode
     // then remove empty nodes then write to YAML
-    // again which is a hack around this issue:
-    // https://github.com/fabric8io/kubernetes-model/issues/154
+    // again which is a hack around above issue:
     JsonNode jsonNode = objectMapper.readTree(yaml);
     removeNullOrEmptyValues(jsonNode);
 

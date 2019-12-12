@@ -2,6 +2,7 @@ package io.harness.k8s.model;
 
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static junit.framework.TestCase.assertEquals;
@@ -119,7 +120,15 @@ public class KubernetesResourceTest extends CategoryTest {
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void nameUpdateTests() throws Exception {
-    URL url = this.getClass().getResource("/deploy.yaml");
+    nameUpdateTestsUtil("deploy.yaml", true);
+    nameUpdateTestsUtil("service.yaml", true);
+    nameUpdateTestsUtil("configmap.yaml", true);
+    nameUpdateTestsUtil("secret.yaml", true);
+    nameUpdateTestsUtil("daemonset.yaml", false);
+  }
+
+  private void nameUpdateTestsUtil(String resourceFile, boolean shouldNameChange) throws Exception {
+    URL url = this.getClass().getResource("/" + resourceFile);
     String fileContents = Resources.toString(url, Charsets.UTF_8);
     KubernetesResource resource = processYaml(fileContents).get(0);
     UnaryOperator<Object> appendRevision = t -> t + "-1";
@@ -128,7 +137,11 @@ public class KubernetesResourceTest extends CategoryTest {
 
     resource.transformName(appendRevision);
 
-    assertThat(resource.getField("metadata.name")).isEqualTo(oldName + "-1");
+    if (shouldNameChange) {
+      assertThat(resource.getField("metadata.name")).isEqualTo(oldName + "-1");
+    } else {
+      assertThat(resource.getField("metadata.name")).isEqualTo(oldName);
+    }
   }
 
   @Test
@@ -179,5 +192,162 @@ public class KubernetesResourceTest extends CategoryTest {
 
     KubernetesResource denormalizedResource = processYaml(spec).get(0);
     assertEquals(spec.trim(), denormalizedResource.getSpec().trim());
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testAddLabelsInPodSpec() throws Exception {
+    addLabelsInPodSpecUtil("job.yaml", true);
+    addLabelsInPodSpecUtil("daemonset.yaml", true);
+    addLabelsInPodSpecUtil("statefulset.yaml", true);
+    addLabelsInPodSpecUtil("secret.yaml", false);
+  }
+
+  private void addLabelsInPodSpecUtil(String resourceFile, boolean verifyLabels) throws Exception {
+    URL url = this.getClass().getResource("/" + resourceFile);
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    resource = resource.addLabelsInPodSpec(ImmutableMap.of("key", "val"));
+    assertThat(resource).isNotNull();
+    if (verifyLabels) {
+      assertThat(resource.getField("spec.template.metadata.labels.key")).isEqualTo("val");
+    }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetV1PodSpec() throws Exception {
+    testGetV1PodSpecUtil("job.yaml");
+    testGetV1PodSpecUtil("daemonset.yaml");
+    testGetV1PodSpecUtil("statefulset.yaml");
+
+    URL url = this.getClass().getResource("/pod.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    resource = resource.transformConfigMapAndSecretRef(UnaryOperator.identity(), UnaryOperator.identity());
+    assertThat(resource.getField("spec.containers")).isNotNull();
+
+    url = this.getClass().getResource("/secret.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    resource = processYaml(fileContents).get(0);
+    resource = resource.transformConfigMapAndSecretRef(UnaryOperator.identity(), UnaryOperator.identity());
+    assertThat(resource).isNotNull();
+  }
+
+  private void testGetV1PodSpecUtil(String resourceFile) throws Exception {
+    URL url = this.getClass().getResource("/" + resourceFile);
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    resource = resource.transformConfigMapAndSecretRef(UnaryOperator.identity(), UnaryOperator.identity());
+    assertThat(resource.getField("spec.template.spec.containers")).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testIsLoadBalancerService() throws Exception {
+    URL url = this.getClass().getResource("/pod.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    assertThat(resource.isLoadBalancerService()).isFalse();
+
+    url = this.getClass().getResource("/loadbalancer_service.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    resource = processYaml(fileContents).get(0);
+    assertThat(resource.isLoadBalancerService()).isTrue();
+
+    url = this.getClass().getResource("/service.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    resource = processYaml(fileContents).get(0);
+    assertThat(resource.isLoadBalancerService()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testAddColorSelectorInService() throws Exception {
+    URL url = this.getClass().getResource("/loadbalancer_service.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    resource = resource.addColorSelectorInService("blue");
+    Map<String, String> selectors = (Map<String, String>) resource.getField("spec.selector");
+    assertThat(selectors).containsKey("harness.io/color");
+    assertThat(selectors.get("harness.io/color")).isEqualTo("blue");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetReplicaCount() throws Exception {
+    URL url = this.getClass().getResource("/deploy.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    assertThat(resource.getReplicaCount()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testSetReplicaCount() throws Exception {
+    URL url = this.getClass().getResource("/deploy.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    resource = resource.setReplicaCount(5);
+    assertThat(resource.getReplicaCount()).isEqualTo(5);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testAddLabelsInDeploymentSelector() throws Exception {
+    URL url = this.getClass().getResource("/deploy.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    resource = resource.addLabelsInDeploymentSelector(ImmutableMap.of("key", "val"));
+    assertThat(resource.getField("spec.selector.matchLabels.key")).isEqualTo("val");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testRedactSecretValues() throws Exception {
+    URL url = this.getClass().getResource("/secret.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    resource = processYaml(resource.redactSecretValues(resource.getSpec())).get(0);
+    assertThat(resource.getField("stringData.cred")).isEqualTo("***");
+    assertThat(resource.getField("data.username")).isEqualTo("***");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testUpdateConfigMapAndSecretRef() throws Exception {
+    URL url = this.getClass().getResource("/deployment-envfrom.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+
+    UnaryOperator<Object> configMapRevision = t -> t + "-1";
+    UnaryOperator<Object> secretRevision = t -> t + "-2";
+    resource = resource.transformConfigMapAndSecretRef(configMapRevision, secretRevision);
+    assertThat(resource).isNotNull();
+    assertThat(resource.getField("spec.template.spec.containers[0].envFrom.configMapRef[0].configMapRef.name"))
+        .isEqualTo("example-1");
+    assertThat(resource.getField("spec.template.spec.containers[0].env[0].valueFrom.configMapKeyRef.name"))
+        .isEqualTo("myconfig-1");
+
+    assertThat(resource.getField("spec.template.spec.volumes[0].configMap.name")).isEqualTo("volume-config-1");
+    assertThat(resource.getField("spec.template.spec.volumes[1].projected.sources[0].configMap.name"))
+        .isEqualTo("configmap-projection-1");
+
+    assertThat(resource.getField("spec.template.spec.containers[0].envFrom[1].secretRef.name")).isEqualTo("example-2");
+    assertThat(resource.getField("spec.template.spec.containers[0].env[1].valueFrom.secretKeyRef.name"))
+        .isEqualTo("mysecret-2");
+    assertThat(resource.getField("spec.template.spec.volumes[0].secret.secretName")).isEqualTo("volume-secret-2");
+    assertThat(resource.getField("spec.template.spec.volumes[1].projected.sources[1].secret.name"))
+        .isEqualTo("secret-projection-2");
+    assertThat(resource.getField("spec.template.spec.imagePullSecrets[0].name")).isEqualTo("image_pull_secret-2");
   }
 }
