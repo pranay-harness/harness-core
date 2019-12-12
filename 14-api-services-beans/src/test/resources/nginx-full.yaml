@@ -4,8 +4,8 @@ metadata:
   name: ssl
 type: kubernetes.io/tls
 data:
-  tls.crt: <REDACTED>
-  tls.key: <REDACTED>
+  tls.crt: certificate
+  tls.key: key
 ---
 apiVersion: v1
 kind: ConfigMap
