@@ -28,10 +28,10 @@ public class ConditionsValidator {
   }
 
   private static boolean allTrue(Map<String, Supplier<Boolean>> booleanFns) {
-    for (String key : booleanFns.keySet()) {
-      Supplier<Boolean> fn = booleanFns.get(key);
+    for (Map.Entry<String, Supplier<Boolean>> entry : booleanFns.entrySet()) {
+      Supplier<Boolean> fn = entry.getValue();
       if (!fn.get()) {
-        logger.info("All conditions not true. Condition returned false: {}", key);
+        logger.info("All conditions not true. Condition returned false: {}", entry.getKey());
         return false;
       }
     }

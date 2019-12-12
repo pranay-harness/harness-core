@@ -390,7 +390,9 @@ public enum ErrorCode {
 
   INVALID_ROLLBACK,
 
-  SUMO_DATA_COLLECTION_ERROR;
+  SUMO_DATA_COLLECTION_ERROR,
+
+  DEPLOYMENT_GOVERNANCE_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;

@@ -7,6 +7,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
+import io.harness.governance.WeeklyFreezeConfig;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
@@ -39,17 +40,24 @@ public class GovernanceConfig implements PersistentEntity, UuidAware, UpdatedByA
   private boolean deploymentFreeze;
   private EmbeddedUser lastUpdatedBy;
   private List<TimeRangeBasedFreezeConfig> timeRangeBasedFreezeConfigs;
+  private List<WeeklyFreezeConfig> weeklyFreezeConfigs;
 
   @Builder
-  public GovernanceConfig(
-      String accountId, boolean deploymentFreeze, List<TimeRangeBasedFreezeConfig> timeRangeBasedFreezeConfigs) {
+  public GovernanceConfig(String accountId, boolean deploymentFreeze,
+      List<TimeRangeBasedFreezeConfig> timeRangeBasedFreezeConfigs, List<WeeklyFreezeConfig> weeklyFreezeConfigs) {
     this.accountId = accountId;
     this.deploymentFreeze = deploymentFreeze;
     this.timeRangeBasedFreezeConfigs = timeRangeBasedFreezeConfigs;
+    this.weeklyFreezeConfigs = weeklyFreezeConfigs;
   }
 
   @Nonnull
   public List<TimeRangeBasedFreezeConfig> getTimeRangeBasedFreezeConfigs() {
     return CollectionUtils.emptyIfNull(timeRangeBasedFreezeConfigs);
+  }
+
+  @Nonnull
+  public List<WeeklyFreezeConfig> getWeeklyFreezeConfigs() {
+    return CollectionUtils.emptyIfNull(weeklyFreezeConfigs);
   }
 }

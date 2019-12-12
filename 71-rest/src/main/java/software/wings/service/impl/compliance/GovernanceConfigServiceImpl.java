@@ -74,7 +74,8 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
       UpdateOperations<GovernanceConfig> updateOperations =
           wingsPersistence.createUpdateOperations(GovernanceConfig.class)
               .set(GovernanceConfigKeys.deploymentFreeze, governanceConfig.isDeploymentFreeze())
-              .set(GovernanceConfigKeys.timeRangeBasedFreezeConfigs, governanceConfig.getTimeRangeBasedFreezeConfigs());
+              .set(GovernanceConfigKeys.timeRangeBasedFreezeConfigs, governanceConfig.getTimeRangeBasedFreezeConfigs())
+              .set(GovernanceConfigKeys.weeklyFreezeConfigs, governanceConfig.getWeeklyFreezeConfigs());
 
       User user = UserThreadLocal.get();
       if (null != user) {
@@ -90,6 +91,10 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
 
       if (!ListUtils.isEqualList(
               oldSetting.getTimeRangeBasedFreezeConfigs(), governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+        publishToSegment(accountId, user, EventType.BLACKOUT_WINDOW_UPDATED);
+      }
+
+      if (!ListUtils.isEqualList(oldSetting.getWeeklyFreezeConfigs(), governanceConfig.getWeeklyFreezeConfigs())) {
         publishToSegment(accountId, user, EventType.BLACKOUT_WINDOW_UPDATED);
       }
 
