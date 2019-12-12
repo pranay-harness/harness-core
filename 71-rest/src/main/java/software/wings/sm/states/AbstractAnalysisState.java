@@ -685,6 +685,9 @@ public abstract class AbstractAnalysisState extends State {
     if (serviceSetupElement == null) {
       throw new WingsException("Could not find service element for  " + context.getStateExecutionInstanceId());
     }
+    if (serviceSetupElement.getPreDeploymentData() == null) {
+      return hosts;
+    }
     Set<String> asgNames = new HashSet<>();
     asgNames.addAll(serviceSetupElement.getPreDeploymentData().getAsgNameToDesiredCapacity().keySet());
     getLogger().info("For {} going to fetch instance from asg {}", context.getStateExecutionInstanceId(), asgNames);
