@@ -284,25 +284,32 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   public void updateDeploymentInformation(WorkflowExecution workflowExecution) {
     UpdateOperations<WorkflowExecution> updateOps;
     updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
+    boolean update = false;
     final List<String> deployedCloudProviders =
         workflowExecutionService.getCloudProviderIdsForExecution(workflowExecution);
 
     if (!Lists.isNullOrEmpty(deployedCloudProviders)) {
+      update = true;
       setUnset(updateOps, WorkflowExecutionKeys.deployedCloudProviders, deployedCloudProviders);
     }
     final List<String> deployedServices = workflowExecutionService.getServiceIdsForExecution(workflowExecution);
     if (!Lists.isNullOrEmpty(deployedServices)) {
+      update = true;
       setUnset(updateOps, WorkflowExecutionKeys.deployedServices, deployedServices);
     }
     final List<EnvSummary> deployedEnvironments =
         workflowExecutionService.getEnvironmentsForExecution(workflowExecution);
 
     if (!Lists.isNullOrEmpty(deployedEnvironments)) {
+      update = true;
       setUnset(updateOps, WorkflowExecutionKeys.deployedEnvironments, deployedEnvironments);
     }
-    wingsPersistence.findAndModify(wingsPersistence.createQuery(WorkflowExecution.class)
-                                       .filter(WorkflowExecutionKeys.uuid, workflowExecution.getUuid()),
-        updateOps, callbackFindAndModifyOptions);
+
+    if (update) {
+      wingsPersistence.findAndModify(wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .filter(WorkflowExecutionKeys.uuid, workflowExecution.getUuid()),
+          updateOps, callbackFindAndModifyOptions);
+    }
   }
 
   private boolean isProdEnv(WorkflowExecution workflowExecution) {
