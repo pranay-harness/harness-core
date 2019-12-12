@@ -8,7 +8,7 @@ else
     echo '\033[0;34m' checking message ... to disable: '\033[0;37m'git config --add $CHECK_MESSAGE false '\033[0m'
 
     # regex to validate in commit msg
-    commit_regex='^\[(CCM|CD|CE|DOC|ER|HAR|LE|PL|SEC|SWAT)-[0-9]+]: |Merge branch '
+    commit_regex='^\[(CCM|CCE|CD|CE|DOC|ER|HAR|LE|PL|SEC|SWAT)-[0-9]+]: |Merge branch '
     error_msg="Aborting commit. [`cat $1`] is missing a JIRA Issue"
 
     if [ ! -z "`cat $1`" ]
