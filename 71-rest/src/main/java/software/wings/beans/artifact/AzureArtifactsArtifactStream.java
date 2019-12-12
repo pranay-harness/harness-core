@@ -129,17 +129,17 @@ public class AzureArtifactsArtifactStream extends ArtifactStream {
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends ArtifactStream.Yaml {
-    private String protocolType;
+    private String packageType;
     private String project;
     private String feed;
     private String packageId;
     private String packageName;
 
     @Builder
-    public Yaml(String harnessApiVersion, String serverName, String protocolType, String project, String feed,
+    public Yaml(String harnessApiVersion, String serverName, String packageType, String project, String feed,
         String packageId, String packageName) {
       super(AZURE_ARTIFACTS.name(), harnessApiVersion, serverName);
-      this.protocolType = protocolType;
+      this.packageType = packageType;
       this.project = project;
       this.feed = feed;
       this.packageId = packageId;

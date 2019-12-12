@@ -13,7 +13,7 @@ public class AzureArtifactsArtifactStreamYamlHandler
   public Yaml toYaml(AzureArtifactsArtifactStream bean, String appId) {
     Yaml yaml = Yaml.builder().build();
     super.toYaml(yaml, bean);
-    yaml.setProtocolType(bean.getProtocolType());
+    yaml.setPackageType(bean.getProtocolType());
     yaml.setProject(bean.getProject());
     yaml.setFeed(bean.getFeed());
     yaml.setPackageId(bean.getPackageId());
@@ -25,7 +25,7 @@ public class AzureArtifactsArtifactStreamYamlHandler
   protected void toBean(AzureArtifactsArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();
-    bean.setProtocolType(yaml.getProtocolType());
+    bean.setProtocolType(yaml.getPackageType());
     bean.setProject(yaml.getProject());
     bean.setFeed(yaml.getFeed());
     bean.setPackageId(yaml.getPackageId());

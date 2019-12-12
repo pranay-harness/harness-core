@@ -966,11 +966,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                          .put(BAMBOO.name(), BAMBOO.name())
                                                          .put(GCS.name(), GCS.name())
                                                          .put(AMAZON_S3.name(), AMAZON_S3.name())
-                                                         .put(AMI.name(), AMI.name());
-      if (featureFlagService.isEnabled(FeatureName.AZURE_ARTIFACTS, appService.getAccountIdByAppId(appId))) {
-        builder.put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name());
-      }
-      builder.put(SMB.name(), SMB.name()).put(SFTP.name(), SFTP.name()).put(CUSTOM.name(), CUSTOM.name());
+                                                         .put(AMI.name(), AMI.name())
+                                                         .put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name())
+                                                         .put(SMB.name(), SMB.name())
+                                                         .put(SFTP.name(), SFTP.name())
+                                                         .put(CUSTOM.name(), CUSTOM.name());
       return builder.build();
     }
 
@@ -981,11 +981,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                        .put(BAMBOO.name(), BAMBOO.name())
                                                        .put(GCS.name(), GCS.name())
                                                        .put(AMAZON_S3.name(), AMAZON_S3.name())
-                                                       .put(AMI.name(), AMI.name());
-    if (featureFlagService.isEnabled(FeatureName.AZURE_ARTIFACTS, appService.getAccountIdByAppId(appId))) {
-      builder.put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name());
-    }
-    builder.put(SMB.name(), SMB.name()).put(SFTP.name(), SFTP.name()).put(CUSTOM.name(), CUSTOM.name());
+                                                       .put(AMI.name(), AMI.name())
+                                                       .put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name())
+                                                       .put(SMB.name(), SMB.name())
+                                                       .put(SFTP.name(), SFTP.name())
+                                                       .put(CUSTOM.name(), CUSTOM.name());
     return builder.build();
   }
 
