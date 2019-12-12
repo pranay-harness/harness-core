@@ -41,6 +41,7 @@ import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
+import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.resources.PrometheusResource;
@@ -269,6 +270,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     cvConfiguration.setAppId(appId);
     cvConfiguration.setStateType(stateType);
     cvConfiguration.setUuid(generateUuid());
+
+    if (VerificationConstants.getLogAnalysisStates().contains(cvConfiguration.getStateType())
+        && featureFlagService.isEnabled(FeatureName.LOGS_V2_247, cvConfiguration.getAccountId())) {
+      LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
+      logsCVConfiguration.set247LogsV2(true);
+    }
 
     String dbConfiguration = saveToDatabase(cvConfiguration, createdFromYaml).getUuid();
 

@@ -20,6 +20,7 @@ public class LogsCVConfiguration extends CVConfiguration {
 
   private long baselineStartMinute = -1;
   private long baselineEndMinute = -1;
+  private boolean is247LogsV2;
 
   public void setQuery(String query) {
     this.query = isNotEmpty(query) ? query.trim() : query;

@@ -80,7 +80,8 @@ public enum FeatureName {
   SEND_SLACK_NOTIFICATION_FROM_DELEGATE,
   TIME_SERIES_SERVICEGUARD_V2,
   TF_USE_VAR_CL,
-  GOOGLE_KMS;
+  GOOGLE_KMS,
+  LOGS_V2_247;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

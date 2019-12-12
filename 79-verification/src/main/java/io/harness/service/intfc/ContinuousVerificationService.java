@@ -2,6 +2,7 @@ package io.harness.service.intfc;
 
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.verification.log.LogsCVConfiguration;
 
 /**
  * Created by rsingh on 10/9/18.
@@ -22,6 +23,8 @@ public interface ContinuousVerificationService {
   void triggerLogsL2Clustering(String accountId);
 
   void triggerLogDataAnalysis(String accountId);
+
+  void trigger247LogDataV2Analysis(LogsCVConfiguration logsCVConfiguration);
 
   void triggerFeedbackAnalysis(String accountId);
 

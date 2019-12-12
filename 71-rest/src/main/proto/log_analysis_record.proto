@@ -33,6 +33,13 @@ message LogAnalysisCluster {
 
 }
 
+message FrequencyPattern {
+  required int32 label = 1;
+  required string text = 2;
+  repeated int32 sequence = 3;
+  repeated int64 timestamps = 4;
+}
+
 message LogAnalysisClusterList {
   repeated LogAnalysisCluster analysis_clusters = 1;
 }
@@ -49,4 +56,5 @@ message LogMLAnalysisRecordDetails {
   map<string, LogAnalysisClusterMap> unknown_clusters = 5;
   map<string, LogAnalysisClusterMap> test_clusters = 6;
   map<string, LogAnalysisClusterMap> ignore_clusters = 7;
+  map<string, FrequencyPattern> frequency_patterns = 8;
 }
