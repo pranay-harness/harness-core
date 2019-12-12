@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,6 +14,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.yaml.Change.ChangeType.RENAME;
+import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -27,13 +30,16 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.filesystem.FileIo;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.lib.AbbreviatedObjectId;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig;
 import org.eclipse.jgit.transport.SshSessionFactory;
@@ -48,7 +54,10 @@ import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitConfig.GitRepositoryType;
+import software.wings.beans.GitOperationContext;
 import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFileChange;
@@ -58,11 +67,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class GitClientImplTest extends WingsBaseTest {
@@ -346,6 +358,96 @@ public class GitClientImplTest extends WingsBaseTest {
     FileIo.deleteDirectoryAndItsContentIfExists(repoPath);
   }
 
+  @Test
+  @Owner(developers = YOGESH_CHAUHAN)
+  @Category(UnitTests.class)
+  public void testApplyChangeSetOnFileSystem() throws Exception {
+    GitConfig gitConfig = GitConfig.builder().accountId(ACCOUNT_ID).gitRepoType(GitRepositoryType.YAML).build();
+    GitCommitRequest gitCommitRequest = GitCommitRequest.builder().gitFileChanges(getSampleGitFileChanges()).build();
+    GitOperationContext gitOperationContext =
+        GitOperationContext.builder().gitConfig(gitConfig).gitCommitRequest(gitCommitRequest).build();
+    List<String> filesToAdd = new ArrayList<>();
+
+    String repoPath = Files.createTempDirectory(UUID.randomUUID().toString()).toString();
+    File rootDirectory = new File(repoPath);
+    FileUtils.cleanDirectory(rootDirectory);
+    createLocalRepo(repoPath);
+    Git git = Git.open(rootDirectory);
+    // should not delete since files they are not tracked
+    gitClient.applyChangeSetOnFileSystem(repoPath, gitConfig, gitCommitRequest, filesToAdd, git);
+
+    Status status = git.status().call();
+    assertThat(status.getAdded()).hasSize(0);
+    assertThat(status.getRemoved()).hasSize(0);
+    assertThat(status.getUntracked()).isNotEmpty();
+
+    gitClient.applyGitAddCommand(gitOperationContext, filesToAdd, git);
+    filesToAdd.clear();
+
+    status = git.status().call();
+    assertThat(status.getAdded().stream().map(filePath -> Paths.get(filePath).getFileName().toString()))
+        .containsExactlyInAnyOrderElementsOf(
+            gitCommitRequest.getGitFileChanges()
+                .stream()
+                .filter(gfc -> ChangeType.ADD.equals(gfc.getChangeType()))
+                .map(gitFileChange -> Paths.get(gitFileChange.getFilePath()).getFileName().toString())
+                .collect(Collectors.toSet()));
+
+    // should delete the required files
+    gitClient.applyChangeSetOnFileSystem(repoPath, gitConfig, gitCommitRequest, filesToAdd, git);
+
+    status = git.status().call();
+    assertThat(status.getRemoved()).isEmpty();
+    assertThat(status.getAdded().stream().map(filePath -> Paths.get(filePath).getFileName().toString()))
+        .doesNotContainAnyElementsOf(
+            gitCommitRequest.getGitFileChanges()
+                .stream()
+                .filter(gfc -> ChangeType.DELETE.equals(gfc.getChangeType()))
+                .map(gitFileChange -> Paths.get(gitFileChange.getFilePath()).getFileName().toString())
+                .collect(Collectors.toSet()));
+
+    doGitCommit(git);
+
+    // Test Rename
+    Path anyExistingFile = Files.list(Paths.get(repoPath)).findFirst().orElse(null);
+    assertThat(anyExistingFile).isNotNull();
+    String anyExistingFileName = anyExistingFile.getFileName().toString();
+    String newFileName = anyExistingFileName + "-new";
+    GitFileChange renameGitFileChange = GitFileChange.Builder.aGitFileChange()
+                                            .withChangeType(RENAME)
+                                            .withOldFilePath(anyExistingFileName)
+                                            .withFilePath(newFileName)
+                                            .build();
+    gitCommitRequest.setGitFileChanges(asList(renameGitFileChange));
+
+    gitClient.applyChangeSetOnFileSystem(repoPath, gitConfig, gitCommitRequest, filesToAdd, git);
+
+    gitClient.applyGitAddCommand(gitOperationContext, filesToAdd, git);
+    filesToAdd.clear();
+    status = git.status().call();
+    assertThat(status.getAdded()).containsExactly(newFileName);
+    assertThat(status.getRemoved()).containsExactly(anyExistingFileName);
+
+    // CleanUp
+    FileUtils.deleteQuietly(rootDirectory);
+  }
+
+  private List<GitFileChange> getSampleGitFileChanges() {
+    List<GitFileChange> gitFileChanges = new ArrayList<>();
+    for (int i = 0; i < 10; i++) {
+      gitFileChanges.add(aGitFileChange()
+                             .withChangeType(ChangeType.ADD)
+                             .withFilePath(i + ".txt")
+                             .withFileContent(i + " " + System.currentTimeMillis())
+                             .build());
+    }
+    for (int i = 0; i < 10; i += 3) {
+      gitFileChanges.add(aGitFileChange().withChangeType(ChangeType.DELETE).withFilePath(i + ".txt").build());
+    }
+    logger.info(gitFileChanges.toString());
+    return gitFileChanges;
+  }
+
   private void createLocalRepo(String repoPath) {
     String command = new StringBuilder(128)
                          .append("mkdir -p " + repoPath + ";")
@@ -354,6 +456,10 @@ public class GitClientImplTest extends WingsBaseTest {
                          .toString();
 
     executeCommand(command);
+  }
+
+  private void doGitCommit(Git git) throws Exception {
+    RevCommit revCommit = git.commit().setCommitter("dummy", "dummy@Dummy").setAll(true).setMessage("dummy").call();
   }
 
   private void executeCommand(String command) {
