@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.AdvancedDatastore;
 
-@StoreIn(name = "foo")
+@StoreIn("foo")
 class Dummy implements PersistentEntity {}
 
 public class EntityStoreTest extends PersistenceTest {
