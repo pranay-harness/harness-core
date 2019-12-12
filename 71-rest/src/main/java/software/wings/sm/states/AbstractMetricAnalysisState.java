@@ -6,6 +6,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.common.VerificationConstants.LAMBDA_HOST_NAME;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
@@ -447,7 +448,12 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           getComparisonStrategy() == COMPARE_WITH_PREVIOUS ? Collections.emptyMap() : getLastExecutionNodes(context);
       testNodes = getCanaryNewHostNames(context);
     }
+    if (getComparisonStrategy() == COMPARE_WITH_CURRENT) {
+      getLogger().info("For {}, the lastExecutionNodes returned for canary is {}",
+          context.getStateExecutionInstanceId(), controlNodes);
+    }
     testNodes.keySet().forEach(controlNodes::remove);
+
     int timeDurationInt = Integer.parseInt(getTimeDuration());
     String accountId = this.appService.get(context.getAppId()).getAccountId();
 

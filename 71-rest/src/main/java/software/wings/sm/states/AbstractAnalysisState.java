@@ -309,13 +309,21 @@ public abstract class AbstractAnalysisState extends State {
     getLogger().info("Deployed hosts so far: {}", phaseHosts);
 
     if (service.isK8sV2()) {
+      getLogger().info(
+          "For {}, executionContext in getLastExecutionNodes is {}", context.getStateExecutionInstanceId(), context);
       final Map<String, String> hosts = new HashMap<>();
       K8sElement k8sElement = k8sStateHelper.getK8sElement(context);
       if (k8sElement != null) {
         ContainerInfrastructureMapping containerInfrastructureMapping =
             (ContainerInfrastructureMapping) infrastructureMapping;
+        getLogger().info(
+            "For {} Calling tryGetPodList with containerInfrastructureMapping : {}, Namespace: {}, releaseName: {}",
+            context.getStateExecutionInstanceId(), containerInfrastructureMapping,
+            containerInfrastructureMapping.getNamespace(), k8sElement.getReleaseName());
         List<K8sPod> currentPods = k8sStateHelper.tryGetPodList(
             containerInfrastructureMapping, containerInfrastructureMapping.getNamespace(), k8sElement.getReleaseName());
+        getLogger().info(
+            "For {}, Current Pods returned in K8sV2 are {}", context.getStateExecutionInstanceId(), currentPods);
         if (currentPods != null) {
           currentPods.forEach(pod -> {
             if (isEmpty(hostnameTemplate)) {
