@@ -1,6 +1,8 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
+import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -14,6 +16,7 @@ import io.harness.category.element.IntegrationTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
+import io.harness.governance.WeeklyFreezeConfig;
 import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
@@ -29,6 +32,7 @@ import software.wings.features.api.PremiumFeature;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.licensing.LicenseService;
 import software.wings.resources.stats.model.TimeRange;
+import software.wings.resources.stats.model.WeeklyRange;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
@@ -90,14 +94,18 @@ public class GovernanceConfigServiceTest extends BaseIntegrationTest {
     savedGovernanceConfig = governanceConfigService.get(accountId);
     compare(inputConfig, savedGovernanceConfig);
 
-    TimeRange range = new TimeRange(100L, 200L);
+    TimeRange range = new TimeRange(100L, 200L, "Asia/Kolkata");
+    WeeklyRange weeklyRange = new WeeklyRange(null, "Tuesday", "7:00 PM", "Monday", "5:00 AM", "Asia/Kolkata");
     TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig = new TimeRangeBasedFreezeConfig(
         true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD), range);
+    WeeklyFreezeConfig weeklyFreezeConfig = new WeeklyFreezeConfig(
+        true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD), weeklyRange);
 
     inputConfig = GovernanceConfig.builder()
                       .accountId(accountId)
                       .deploymentFreeze(false)
                       .timeRangeBasedFreezeConfigs(Collections.singletonList(timeRangeBasedFreezeConfig))
+                      .weeklyFreezeConfigs(Collections.singletonList(weeklyFreezeConfig))
                       .build();
 
     savedGovernanceConfig = governanceConfigService.upsert(accountId, inputConfig);
@@ -118,6 +126,20 @@ public class GovernanceConfigServiceTest extends BaseIntegrationTest {
       } catch (WingsException e) {
         assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
       }
+    }
+  }
+
+  /**
+   * Should not be able to add a weekly window with invalid range
+   */
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(IntegrationTests.class)
+  public void createGovernanceConfig_shouldThrowException() {
+    try {
+      new WeeklyRange(null, "Monday", "7:00 PM", "Tuesday", "5:00 AM", "Asia/Kolkata");
+    } catch (Exception ex) {
+      assertTrue(ex instanceof IllegalArgumentException);
     }
   }
 

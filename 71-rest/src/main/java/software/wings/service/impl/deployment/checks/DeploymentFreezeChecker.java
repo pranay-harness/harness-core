@@ -6,7 +6,9 @@ import static io.harness.exception.WingsException.USER;
 import io.harness.data.validator.ConditionsValidator;
 import io.harness.data.validator.ConditionsValidator.Condition;
 import io.harness.exception.WingsException;
+import io.harness.governance.GovernanceFreezeConfig;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
+import io.harness.governance.WeeklyFreezeConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import software.wings.beans.Environment;
@@ -55,13 +57,18 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
   }
 
   public boolean matches(DeploymentCtx deploymentCtx, GovernanceConfig freezeConfig) {
-    boolean itsAMatch = freezeConfig.getTimeRangeBasedFreezeConfigs().stream().anyMatch(
-        (TimeRangeBasedFreezeConfig it) -> this.matches(deploymentCtx, it));
-    logger.info("DeploymentCtx: {}, governanceConfig: {}. Match: {}", deploymentCtx, freezeConfig.getUuid(), itsAMatch);
-    return itsAMatch;
+    boolean timeBasedFreezeMatch = freezeConfig.getTimeRangeBasedFreezeConfigs().stream().anyMatch(
+        (TimeRangeBasedFreezeConfig it) -> this.matches(deploymentCtx, it) && this.matchesTimeRange(it));
+    logger.info("DeploymentCtx: {}, governanceConfig(date range based): {}. Match: {}", deploymentCtx,
+        freezeConfig.getUuid(), timeBasedFreezeMatch);
+    boolean weeklyFreezeMatch = freezeConfig.getWeeklyFreezeConfigs().stream().anyMatch(
+        (WeeklyFreezeConfig it) -> this.matches(deploymentCtx, it) && this.matchesWeeklyRange(it));
+    logger.info("DeploymentCtx: {}, governanceConfig(weekly window): {}. Match: {}", deploymentCtx,
+        freezeConfig.getUuid(), weeklyFreezeMatch);
+    return timeBasedFreezeMatch || weeklyFreezeMatch;
   }
 
-  public boolean matches(final DeploymentCtx deploymentCtx, final TimeRangeBasedFreezeConfig freezeConfig) {
+  public boolean matches(final DeploymentCtx deploymentCtx, final GovernanceFreezeConfig freezeConfig) {
     ConditionsValidator conditions = new ConditionsValidator();
 
     // apps should match
@@ -74,16 +81,30 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
         () -> envTypeMatcher(freezeConfig, deploymentCtx));
     conditions.addCondition(condition);
 
+    return conditions.allConditionsSatisfied();
+  }
+
+  public boolean matchesTimeRange(final TimeRangeBasedFreezeConfig freezeConfig) {
+    ConditionsValidator conditions = new ConditionsValidator();
     // time range should match
-    final long now = System.currentTimeMillis();
-    condition = new Condition(
-        "Freeze configuration contains current timestamp", () -> freezeConfig.getTimeRange().isInRange(now));
+    Condition condition =
+        new Condition("Freeze configuration contains current timestamp", () -> freezeConfig.getTimeRange().isInRange());
     conditions.addCondition(condition);
 
     return conditions.allConditionsSatisfied();
   }
 
-  private Boolean envTypeMatcher(final TimeRangeBasedFreezeConfig freezeConfig, final DeploymentCtx deploymentCtx) {
+  public boolean matchesWeeklyRange(final WeeklyFreezeConfig freezeConfig) {
+    ConditionsValidator conditions = new ConditionsValidator();
+    // time range should match
+    Condition condition = new Condition(
+        "Freeze configuration contains current timestamp", () -> freezeConfig.getWeeklyRange().isInRange());
+    conditions.addCondition(condition);
+
+    return conditions.allConditionsSatisfied();
+  }
+
+  private Boolean envTypeMatcher(final GovernanceFreezeConfig freezeConfig, final DeploymentCtx deploymentCtx) {
     boolean envTypesIsAll = false;
 
     if (!freezeConfig.getEnvironmentTypes().isEmpty()) {
@@ -107,7 +128,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
   /**
    * @return true if deployment context satisfies the freeze config. That is the freeze should be applied.
    */
-  private Boolean appsMatcher(final TimeRangeBasedFreezeConfig freezeConfig, final DeploymentCtx deploymentCtx) {
+  private Boolean appsMatcher(final GovernanceFreezeConfig freezeConfig, final DeploymentCtx deploymentCtx) {
     boolean freezeEnabledForAllApps = freezeConfig.isFreezeForAllApps();
 
     if (freezeEnabledForAllApps) {
