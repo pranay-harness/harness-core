@@ -3,7 +3,6 @@ package software.wings.delegatetasks.validation;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.singletonList;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -16,7 +15,6 @@ import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -31,15 +29,8 @@ public class TerraformValidation extends AbstractDelegateValidateTask {
     super(delegateId, delegateTask, consumer);
   }
 
-  private DelegateConnectionResult makeGitValidationResultObject(boolean value, String url) {
-    return DelegateConnectionResult.builder().criteria(createGitCriteria(url)).validated(value).build();
-  }
-
-  private String createGitCriteria(String url) {
-    return "GIT: " + url;
-  }
-
-  private DelegateConnectionResult validateTerraform() {
+  private boolean validateTerraform() {
+    logger.info("Running terraform validation for task {}", delegateTaskId);
     final ProcessExecutor processExecutor = new ProcessExecutor().command("/bin/sh", "-c", "terraform --version");
     boolean valid = false;
     try {
@@ -48,50 +39,51 @@ public class TerraformValidation extends AbstractDelegateValidateTask {
     } catch (Exception e) {
       logger.error("Checking terraform version threw exception", e);
     }
-    return DelegateConnectionResult.builder().criteria(TERRAFORM_CRITERIA).validated(valid).build();
+    return valid;
   }
 
-  private DelegateConnectionResult validateGit() {
+  private String getRepoUrl() {
+    TerraformProvisionParameters terraformProvisionParameters = (TerraformProvisionParameters) getParameters()[0];
+    if (terraformProvisionParameters.getSourceRepo() != null) {
+      return terraformProvisionParameters.getSourceRepo().getRepoUrl();
+    }
+    return null;
+  }
+
+  private boolean validateGit() {
     TerraformProvisionParameters terraformProvisionParameters = (TerraformProvisionParameters) getParameters()[0];
     final GitConfig gitConfig = terraformProvisionParameters.getSourceRepo();
     if (gitConfig != null) {
-      logger.info("Running validation for task {} for repo [{}]", delegateTaskId, gitConfig.getRepoUrl());
+      logger.info("Running git validation for task {} for repo [{}]", delegateTaskId, gitConfig.getRepoUrl());
       List<EncryptedDataDetail> encryptionDetails = terraformProvisionParameters.getSourceRepoEncryptionDetails();
 
       try {
         encryptionService.decrypt(gitConfig, encryptionDetails);
       } catch (Exception e) {
         logger.info("Failed to decrypt " + gitConfig.getRepoUrl(), e);
-        return makeGitValidationResultObject(false, gitConfig.getRepoUrl());
+        return false;
       }
-      return makeGitValidationResultObject(isEmpty(gitClient.validate(gitConfig)), gitConfig.getRepoUrl());
+      return isEmpty(gitClient.validate(gitConfig));
     }
-    return null;
+    return false;
   }
 
   @Override
   public List<DelegateConnectionResult> validate() {
-    DelegateConnectionResult terraformValidate = validateTerraform();
-    DelegateConnectionResult gitValidate = validateGit();
-
-    final List<DelegateConnectionResult> resultList = Lists.newArrayList(terraformValidate);
-    return addIfNotNull(resultList, gitValidate);
-  }
-
-  private <E> List<E> addIfNotNull(List<E> list, E object) {
-    if (object != null) {
-      list.add(object);
+    boolean terraformValidate = validateTerraform();
+    logger.info("Terraform validation result: {}", terraformValidate);
+    if (!terraformValidate) {
+      return singletonList(DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(false).build());
     }
-    return list;
+    boolean gitValidate = validateGit();
+    logger.info("Git validation result: {}", gitValidate);
+    return singletonList(
+        DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(gitValidate).build());
   }
 
   @Override
   public List<String> getCriteria() {
-    TerraformProvisionParameters terraformProvisionParameters = (TerraformProvisionParameters) getParameters()[0];
-    if (terraformProvisionParameters.getSourceRepo() != null) {
-      return Arrays.asList(
-          TERRAFORM_CRITERIA, createGitCriteria(terraformProvisionParameters.getSourceRepo().getRepoUrl()));
-    }
-    return singletonList(TERRAFORM_CRITERIA);
+    return getRepoUrl() == null ? singletonList(TERRAFORM_CRITERIA)
+                                : singletonList(TERRAFORM_CRITERIA + ":" + getRepoUrl());
   }
 }
