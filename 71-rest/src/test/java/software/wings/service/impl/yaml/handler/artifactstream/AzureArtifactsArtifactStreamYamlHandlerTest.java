@@ -71,7 +71,7 @@ public class AzureArtifactsArtifactStreamYamlHandlerTest extends WingsBaseTest {
 
     AzureArtifactsArtifactStream.Yaml yaml = yamlHandler.toYaml(azureArtifactsArtifactStream, APP_ID);
     assertThat(yaml).isNotNull();
-    assertThat(yaml.getProtocolType()).isEqualTo(ProtocolType.maven.name());
+    assertThat(yaml.getPackageType()).isEqualTo(ProtocolType.maven.name());
     assertThat(yaml.getProject()).isEqualTo(PROJECT);
     assertThat(yaml.getFeed()).isEqualTo(FEED);
     assertThat(yaml.getPackageId()).isEqualTo(PACKAGE_ID);
@@ -90,7 +90,7 @@ public class AzureArtifactsArtifactStreamYamlHandlerTest extends WingsBaseTest {
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, settingName)).thenReturn(settingAttribute);
     AzureArtifactsArtifactStream.Yaml baseYaml = AzureArtifactsArtifactStream.Yaml.builder()
-                                                     .protocolType(ProtocolType.maven.name())
+                                                     .packageType(ProtocolType.maven.name())
                                                      .project(PROJECT)
                                                      .feed(FEED)
                                                      .packageId(PACKAGE_ID)

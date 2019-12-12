@@ -416,17 +416,15 @@ public class PluginServiceImpl implements PluginService {
                          .build());
     }
 
-    if (featureFlagService.isEnabled(FeatureName.AZURE_ARTIFACTS, accountId)) {
-      pluginList.add(anAccountPlugin()
-                         .withSettingClass(AzureArtifactsPATConfig.class)
-                         .withAccountId(accountId)
-                         .withIsEnabled(true)
-                         .withDisplayName(SettingVariableTypes.AZURE_ARTIFACTS_PAT.getDisplayName())
-                         .withType(SettingVariableTypes.AZURE_ARTIFACTS_PAT.name())
-                         .withPluginCategories(asList(AzureArtifacts))
-                         .withUiSchema(readUiSchema(SettingVariableTypes.AZURE_ARTIFACTS_PAT.name()))
-                         .build());
-    }
+    pluginList.add(anAccountPlugin()
+                       .withSettingClass(AzureArtifactsPATConfig.class)
+                       .withAccountId(accountId)
+                       .withIsEnabled(true)
+                       .withDisplayName(SettingVariableTypes.AZURE_ARTIFACTS_PAT.getDisplayName())
+                       .withType(SettingVariableTypes.AZURE_ARTIFACTS_PAT.name())
+                       .withPluginCategories(asList(AzureArtifacts))
+                       .withUiSchema(readUiSchema(SettingVariableTypes.AZURE_ARTIFACTS_PAT.name()))
+                       .build());
     return pluginList;
   }
 
