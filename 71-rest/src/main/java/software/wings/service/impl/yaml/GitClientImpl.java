@@ -50,7 +50,6 @@ import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
-import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -117,6 +116,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -320,16 +320,14 @@ public class GitClientImpl implements GitClient {
     GitCommitRequest gitCommitRequest = gitOperationContext.getGitCommitRequest();
 
     List<String> filesToAdd = new ArrayList<>();
-    List<String> filesToDelete = new ArrayList<>();
 
     ensureRepoLocallyClonedAndUpdated(gitOperationContext);
 
     try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
-      applyChangeSetOnFileSystem(gitClientHelper.getRepoDirectory(gitOperationContext), gitConfig, gitCommitRequest,
-          filesToAdd, filesToDelete);
+      applyChangeSetOnFileSystem(
+          gitClientHelper.getRepoDirectory(gitOperationContext), gitConfig, gitCommitRequest, filesToAdd, git);
 
       /* Removal of files should happen before addition of files. TODO:: Add test to ensure behaviour */
-      applyGitRmCommand(gitOperationContext, filesToDelete, git);
       applyGitAddCommand(gitOperationContext, filesToAdd, git);
 
       Status status = git.status().call();
@@ -374,10 +372,16 @@ public class GitClientImpl implements GitClient {
       status.getRemoved().forEach(
           filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.DELETE, filePath)));
     }
+    logger.info(format("Commit message for git sync for accountId: [%s]  repoUrl: [%s] %n "
+            + "Additions: [%d] Modifications:[%d] Deletions:[%d]"
+            + "%n Message: [%s]",
+        gitConfig.getAccountId(), gitConfig.getRepoUrl(), status.getAdded().size(), status.getChanged().size(),
+        status.getRemoved().size(), commitMessage));
     return commitMessage;
   }
 
-  private void applyGitAddCommand(GitOperationContext gitOperationContext, List<String> filesToAdd, Git git) {
+  @VisibleForTesting
+  void applyGitAddCommand(GitOperationContext gitOperationContext, List<String> filesToAdd, Git git) {
     /*
     We do not need to specifically git add every added/modified file. git add . will take care
     of this
@@ -393,22 +397,16 @@ public class GitClientImpl implements GitClient {
     }
   }
 
-  private void applyGitRmCommand(GitOperationContext gitOperationContext, List<String> filesToDelete, Git git) {
-    if (isNotEmpty(filesToDelete)) {
-      try {
-        RmCommand rmCommand = git.rm();
-        filesToDelete.forEach(rmCommand::addFilepattern);
-        rmCommand.call();
-      } catch (GitAPIException ex) {
-        throw new YamlException(format("Error in delete git operation for files [%s] connectorId:[%s]",
-                                    String.join(",", filesToDelete), gitOperationContext.getGitConnectorId()),
-            ADMIN_SRE);
-      }
-    }
-  }
-
-  private void applyChangeSetOnFileSystem(String repoDirectory, GitConfig gitConfig, GitCommitRequest gitCommitRequest,
-      List<String> filesToAdd, List<String> filesToDelete) {
+  /*
+      We need to ensure creation/deletion in the same order as the gitFileChanges but we do not
+      want to git add each file individually because that slows down things but deleting is easy
+      since we can just do git delete root_folder if some entity is deleted. Therefore, git rm is
+      done here and just creation of files is done here and git add . should be done after this
+      method call.
+  */
+  @VisibleForTesting
+  void applyChangeSetOnFileSystem(
+      String repoDirectory, GitConfig gitConfig, GitCommitRequest gitCommitRequest, List<String> filesToAdd, Git git) {
     gitCommitRequest.getGitFileChanges().forEach(gitFileChange -> {
       String filePath = repoDirectory + PATH_DELIMITER + gitFileChange.getFilePath();
       File file = new File(filePath);
@@ -438,8 +436,14 @@ public class GitClientImpl implements GitClient {
           File newFile = new File(newFilePath);
 
           if (oldFile.exists()) {
-            filesToAdd.add(gitFileChange.getFilePath());
-            filesToDelete.add(gitFileChange.getOldFilePath());
+            try {
+              Path path = Files.move(oldFile.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+              filesToAdd.add(gitFileChange.getFilePath());
+              git.rm().addFilepattern(gitFileChange.getOldFilePath()).call();
+            } catch (IOException | GitAPIException e) {
+              throw new YamlException(
+                  format("Exception in renaming file [%s]->[%s]", oldFile.toPath(), newFile.toPath()), ADMIN_SRE);
+            }
           } else {
             logger.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "File doesn't exist. path: [{}]",
                 gitFileChange.getOldFilePath());
@@ -448,9 +452,14 @@ public class GitClientImpl implements GitClient {
         case DELETE:
           File fileToBeDeleted = new File(repoDirectory + PATH_DELIMITER + gitFileChange.getFilePath());
           if (fileToBeDeleted.exists()) {
+            try {
+              git.rm().addFilepattern(gitFileChange.getFilePath()).call();
+            } catch (GitAPIException e) {
+              throw new YamlException(
+                  format("Exception in deleting file [%s]", gitFileChange.getFilePath()), ADMIN_SRE);
+            }
             logger.info(
                 getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Deleting git file " + gitFileChange.toString());
-            filesToDelete.add(gitFileChange.getFilePath());
           } else {
             logger.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "File already deleted. path: [{}]",
                 gitFileChange.getFilePath());
