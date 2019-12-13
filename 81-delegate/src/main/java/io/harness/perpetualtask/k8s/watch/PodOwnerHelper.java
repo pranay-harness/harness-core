@@ -55,6 +55,6 @@ public class PodOwnerHelper {
           }
           return owner;
         })
-        .orElse(null);
+        .orElse(Owner.newBuilder().build());
   }
 }

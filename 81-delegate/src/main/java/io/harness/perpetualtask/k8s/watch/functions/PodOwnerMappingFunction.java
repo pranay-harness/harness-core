@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.k8s.watch.functions;
 
 @FunctionalInterface
-public interface PodOwnerMappingFunction<OwnerReference, KubernetesClient, String, Owner> {
-  Owner apply(OwnerReference ownerReference, KubernetesClient kubernetesClient, String namespace);
+public interface PodOwnerMappingFunction<R, K, N, O> {
+  O apply(R r, K k, N n);
 }
