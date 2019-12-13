@@ -2,6 +2,7 @@ package software.wings.helpers.ext.customrepository;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.deleteFileIfExists;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -11,7 +12,6 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.jayway.jsonpath.DocumentContext;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
@@ -20,6 +20,7 @@ import io.harness.shell.ShellExecutionResponse;
 import io.harness.shell.ShellExecutionService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.CustomRepositoryResponse;
 import software.wings.helpers.ext.jenkins.CustomRepositoryResponse.CustomRepositoryResponseBuilder;
@@ -66,8 +67,7 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
       String artifactResultPath = map.get(ARTIFACT_RESULT_PATH);
       if (artifactResultPath == null) {
         logger.info("ShellExecution did not return artifact result path");
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, WingsException.USER)
-            .addParam("message", "ShellExecution did not return artifact result path");
+        throw new InvalidArtifactServerException("ShellExecution did not return artifact result path", USER);
       }
       // Convert to Build details
       File file = new File(artifactResultPath);
@@ -126,8 +126,7 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
       }
 
     } else {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, WingsException.USER)
-          .addParam("message", "ShellExecution returned non-zero exit code...");
+      throw new InvalidArtifactServerException("ShellExecution returned non-zero exit code...", USER);
     }
 
     return buildDetails;
@@ -135,13 +134,12 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
 
   private void validateAttributeMapping(String artifactRoot, String buildNoPath) {
     if (EmptyPredicate.isEmpty(artifactRoot)) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, WingsException.USER)
-          .addParam("message",
-              "Artifacts Array Path cannot be null or empty. Please provide a valid value for Artifacts Array Path.");
+      throw new InvalidArtifactServerException(
+          "Artifacts Array Path cannot be null or empty. Please provide a valid value for Artifacts Array Path.", USER);
     }
     if (EmptyPredicate.isEmpty(buildNoPath)) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, WingsException.USER)
-          .addParam("message", "BuildNo Path cannot be null or empty. Please provide a valid value for BuildNo Path");
+      throw new InvalidArtifactServerException(
+          "BuildNo Path cannot be null or empty. Please provide a valid value for BuildNo Path", USER);
     }
   }
 
@@ -174,9 +172,9 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
   public boolean validateArtifactSource(ArtifactStreamAttributes artifactStreamAttributes) {
     List<BuildDetails> buildDetails = getBuilds(artifactStreamAttributes);
     if (isEmpty(buildDetails)) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, WingsException.USER)
-          .addParam("message",
-              "Script execution was successful. However, no artifacts were found matching the criteria provided in script.");
+      throw new InvalidArtifactServerException(
+          "Script execution was successful. However, no artifacts were found matching the criteria provided in script.",
+          USER);
     }
     return true;
   }

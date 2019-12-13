@@ -97,6 +97,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -296,7 +297,8 @@ public class ArtifactCollectionUtils {
     long timeout = isEmpty(artifactStreamAttributes.getCustomScriptTimeout())
         ? Long.parseLong(CustomArtifactStream.DEFAULT_SCRIPT_TIME_OUT)
         : Long.parseLong(artifactStreamAttributes.getCustomScriptTimeout());
-    dataBuilder.parameters(new Object[] {buildSourceParametersBuilder.build()}).timeout(timeout);
+    dataBuilder.parameters(new Object[] {buildSourceParametersBuilder.build()})
+        .timeout(Duration.ofSeconds(timeout).toMillis());
     delegateTaskBuilder.tags(tags);
     delegateTaskBuilder.accountId(accountId);
     delegateTaskBuilder.data(dataBuilder.build());
