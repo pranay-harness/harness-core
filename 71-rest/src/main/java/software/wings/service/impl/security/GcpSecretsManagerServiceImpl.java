@@ -161,13 +161,13 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
     if (EmptyPredicate.isEmpty(gcpKmsConfig.getName()) || !nameValidator.matcher(gcpKmsConfig.getName()).find()) {
       String message =
-          "Name cannot be empty and can only have alphanumeric, hyphen, single comma, space and exclamation mark characters.";
+          "Name cannot be empty and can only have alphanumeric, hyphen, single inverted comma, space and exclamation mark characters.";
       throw new SecretManagementException(GCP_KMS_OPERATION_ERROR, message, USER_SRE);
     }
     if (EmptyPredicate.isEmpty(gcpKmsConfig.getProjectId())
         || !nameValidator.matcher(gcpKmsConfig.getProjectId()).find()) {
       String message =
-          "Project name cannot be empty and can only have alphanumeric, hyphen, single comma, space and exclamation mark characters.";
+          "Project name cannot be empty and can only have alphanumeric, hyphen, single inverted comma, space and exclamation mark characters.";
       throw new SecretManagementException(GCP_KMS_OPERATION_ERROR, message, USER_SRE);
     }
     if (EmptyPredicate.isEmpty(gcpKmsConfig.getKeyRing()) || !keyValidator.matcher(gcpKmsConfig.getKeyRing()).find()) {
