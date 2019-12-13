@@ -100,6 +100,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.GovernanceFeature;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.AlertCheckJob;
@@ -218,6 +219,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private SegmentGroupEventJobService segmentGroupEventJobService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  @Inject private GovernanceFeature governanceFeature;
   private Map<String, UrlInfo> techStackDocLinks;
 
   @Override
@@ -1001,20 +1003,26 @@ public class AccountServiceImpl implements AccountService {
       throw new WingsException("Invalid account status: " + accountStatus, USER);
     }
 
+    if (AccountStatus.INACTIVE.equals(accountStatus)) {
+      updateDeploymentFreeze(accountId, true);
+      deleteQuartzJobs(accountId);
+    } else if (AccountStatus.ACTIVE.equals(accountStatus)) {
+      updateDeploymentFreeze(accountId, false);
+      scheduleQuartzJobs(accountId);
+    }
+
     LicenseInfo newLicenseInfo = account.getLicenseInfo();
     newLicenseInfo.setAccountStatus(accountStatus);
     licenseService.updateAccountLicense(accountId, newLicenseInfo);
 
-    if (AccountStatus.INACTIVE.equals(accountStatus)) {
-      setDeploymentFreeze(accountId, true);
-      deleteQuartzJobs(accountId);
-    } else if (AccountStatus.ACTIVE.equals(accountStatus)) {
-      setDeploymentFreeze(accountId, false);
-      scheduleQuartzJobs(accountId);
-    }
-
     logger.info("Updated status for account {}, new status is {}", accountId, accountStatus);
     return true;
+  }
+
+  private void updateDeploymentFreeze(String accountId, boolean deploymentFreezeStatus) {
+    if (governanceFeature.isAvailableForAccount(accountId)) {
+      setDeploymentFreeze(accountId, deploymentFreezeStatus);
+    }
   }
 
   @Override
