@@ -13,6 +13,7 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -29,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -51,6 +53,7 @@ import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
+import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -63,7 +66,10 @@ import software.wings.beans.StringValue.Builder;
 import software.wings.beans.TechStack;
 import software.wings.beans.UrlInfo;
 import software.wings.beans.User;
+import software.wings.beans.governance.GovernanceConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.GovernanceFeature;
+import software.wings.features.api.PremiumFeature;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.licensing.LicenseService;
 import software.wings.security.AppPermissionSummary;
@@ -78,6 +84,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
@@ -107,9 +114,11 @@ public class AccountServiceTest extends WingsBaseTest {
   @Mock private AuthService authService;
   @Mock private EmailNotificationService emailNotificationService;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
-
   @InjectMocks @Inject private LicenseService licenseService;
   @InjectMocks @Inject private AccountService accountService;
+
+  @Mock private GovernanceConfigService governanceConfigService;
+  @Inject @Named(GovernanceFeature.FEATURE_NAME) private PremiumFeature governanceFeature;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -127,6 +136,55 @@ public class AccountServiceTest extends WingsBaseTest {
   public void setup() throws IllegalAccessException {
     FieldUtils.writeField(licenseService, "accountService", accountService, true);
     FieldUtils.writeField(accountService, "licenseService", licenseService, true);
+  }
+
+  public Account setUpDataForTestingSetAccountStatusInternal(String accountType) {
+    return accountService.save(anAccount()
+                                   .withCompanyName(HARNESS_NAME)
+                                   .withAccountName(HARNESS_NAME)
+                                   .withAccountKey("ACCOUNT_KEY")
+                                   .withLicenseInfo(getLicenseInfo(AccountStatus.ACTIVE, accountType))
+                                   .build(),
+        false);
+  }
+
+  public GovernanceConfig getGovernanceConfig(String accountId, boolean deploymentFreezeFlag) {
+    GovernanceConfig governanceConfig = GovernanceConfig.builder().deploymentFreeze(deploymentFreezeFlag).build();
+    when(governanceConfigService.get(accountId)).thenReturn(governanceConfig);
+
+    when(governanceConfigService.upsert(any(String.class), any(GovernanceConfig.class))).thenReturn(governanceConfig);
+    return governanceConfig;
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testSetAccountStatusInternalForPaidAccount() {
+    Account account = setUpDataForTestingSetAccountStatusInternal(AccountType.PAID);
+    GovernanceConfig governanceConfig = getGovernanceConfig(account.getUuid(), false);
+    boolean result = accountService.disableAccount(account.getUuid(), null);
+    assertThat(result).isTrue();
+    assertThat(governanceConfig.isDeploymentFreeze()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testSetAccountStatusInternalForCommunityAccount() {
+    Account account = setUpDataForTestingSetAccountStatusInternal(AccountType.COMMUNITY);
+    GovernanceConfig governanceConfig = getGovernanceConfig(account.getUuid(), false);
+    boolean result = accountService.disableAccount(account.getUuid(), null);
+    assertThat(result).isTrue();
+    assertThat(governanceConfig.isDeploymentFreeze()).isFalse();
+  }
+
+  private LicenseInfo getLicenseInfo(String accountStatus, String accountType) {
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountStatus(accountStatus);
+    licenseInfo.setAccountType(accountType);
+    licenseInfo.setLicenseUnits(100);
+    licenseInfo.setExpireAfterDays(15);
+    return licenseInfo;
   }
 
   @Test
