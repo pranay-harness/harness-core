@@ -1,10 +1,12 @@
 package io.harness.perpetualtask.k8s.watch.functions;
 
+import static io.harness.perpetualtask.k8s.watch.functions.OwnerMappingUtils.getOwnerFromParent;
+
 import io.fabric8.kubernetes.api.model.Job;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.harness.k8s.model.Kind;
 import io.harness.perpetualtask.k8s.watch.Owner;
-import io.harness.perpetualtask.k8s.watch.Owner.Builder;
 
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -20,19 +22,19 @@ public class JobOwnerMappingFunction
                             .list()
                             .getItems()
                             .stream()
-                            .filter(j -> j != null && j.getMetadata().getName().equals(ownerReference.getName()))
+                            .filter(item -> ownerReference.getName().equals(item.getMetadata().getName()))
                             .findFirst();
-    Builder ownerBuilder = Owner.newBuilder();
-    if (job.isPresent()) {
-      Optional<OwnerReference> parentOwnerReference =
-          job.get().getMetadata().getOwnerReferences().stream().filter(or -> or != null).findFirst();
 
-      if (parentOwnerReference.isPresent()) {
-        ownerBuilder.setUid(parentOwnerReference.get().getUid())
-            .setName(parentOwnerReference.get().getName())
-            .setKind(parentOwnerReference.get().getKind());
-      }
+    Owner owner = null;
+    if (job.isPresent()) {
+      owner = getOwnerFromParent(job.get());
     }
-    return ownerBuilder.build();
+
+    return owner == null ? Owner.newBuilder()
+                               .setName(ownerReference.getName())
+                               .setKind(Kind.Job.name())
+                               .setUid(ownerReference.getUid())
+                               .build()
+                         : owner;
   }
 }

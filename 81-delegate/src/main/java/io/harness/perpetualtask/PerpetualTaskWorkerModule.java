@@ -26,6 +26,7 @@ import io.harness.perpetualtask.k8s.watch.PodWatcher;
 import io.harness.perpetualtask.k8s.watch.WatcherFactory;
 import io.harness.perpetualtask.k8s.watch.functions.JobOwnerMappingFunction;
 import io.harness.perpetualtask.k8s.watch.functions.PodOwnerMappingFunction;
+import io.harness.perpetualtask.k8s.watch.functions.ReplicaSetOwnerMappingFunction;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -49,6 +50,7 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
         workloadKindToNameFunctionMap = MapBinder.newMapBinder(binder(), new TypeLiteral<String>() {},
             new TypeLiteral<PodOwnerMappingFunction<OwnerReference, KubernetesClient, String, Owner>>() {});
     workloadKindToNameFunctionMap.addBinding(Kind.Job.name()).toInstance(new JobOwnerMappingFunction());
+    workloadKindToNameFunctionMap.addBinding(Kind.ReplicaSet.name()).toInstance(new ReplicaSetOwnerMappingFunction());
   }
 
   @Provides

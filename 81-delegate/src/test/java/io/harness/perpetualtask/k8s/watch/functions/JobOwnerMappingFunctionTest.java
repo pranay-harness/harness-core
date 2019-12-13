@@ -1,19 +1,19 @@
 package io.harness.perpetualtask.k8s.watch.functions;
 
+import static io.harness.perpetualtask.k8s.watch.functions.OwnerMappingUtils.getOwnerReference;
+import static io.harness.perpetualtask.k8s.watch.functions.OwnerMappingUtils.getOwnerReferences;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static junit.framework.TestCase.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static junit.framework.TestCase.assertTrue;
 
 import io.fabric8.kubernetes.api.model.JobBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.model.Kind;
 import io.harness.perpetualtask.k8s.watch.Owner;
-import org.assertj.core.util.Lists;
+import io.harness.rule.OwnerRule;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -21,58 +21,62 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.List;
-import java.util.UUID;
-
 @RunWith(MockitoJUnitRunner.class)
 public class JobOwnerMappingFunctionTest extends CategoryTest {
   @Rule public final KubernetesServer server = new KubernetesServer(true, true);
   private KubernetesClient kubernetesClient;
-  private OwnerReference ownerReference;
   private static final String OWNER_NAME = "ttl-1575975600";
   private static final String PARENT_OWNER_NAME = "ttl";
   private static final String PARENT_KIND_NAME = Kind.CronJob.name();
   private static final String OWNER_KIND_NAME = Kind.Job.name();
-  private static final String POD_NAMESPACE = "harness-test";
+  private static final String POD_NAMESPACE = "test";
 
   @Before
-  @Category(UnitTests.class)
   public void setUp() {
-    ownerReference = mock(OwnerReference.class);
-    when(ownerReference.getName()).thenReturn(OWNER_NAME);
-
     kubernetesClient = server.getClient();
-
-    kubernetesClient.extensions()
-        .jobs()
-        .inNamespace(POD_NAMESPACE)
-        .create(new JobBuilder().withMetadata(getObjectMeta(OWNER_NAME, PARENT_KIND_NAME, PARENT_OWNER_NAME)).build());
   }
 
   @Test
+  @OwnerRule.Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void apply() {
+    kubernetesClient.extensions()
+        .jobs()
+        .inNamespace(POD_NAMESPACE)
+        .create(new JobBuilder()
+                    .withNewMetadata()
+                    .withName(OWNER_NAME)
+                    .withOwnerReferences(getOwnerReferences(PARENT_KIND_NAME, PARENT_OWNER_NAME))
+                    .endMetadata()
+                    .build());
+
+    //.withMetadata(getObjectMeta(OWNER_NAME, PARENT_KIND_NAME, PARENT_OWNER_NAME)).build());
     JobOwnerMappingFunction jobOwnerMappingFunction = new JobOwnerMappingFunction();
     Owner owner =
         jobOwnerMappingFunction.apply(getOwnerReference(OWNER_KIND_NAME, OWNER_NAME), kubernetesClient, POD_NAMESPACE);
+    assertTrue(owner.getKind() != null);
     assertEquals(PARENT_KIND_NAME, owner.getKind());
     assertEquals(PARENT_OWNER_NAME, owner.getName());
   }
 
-  private OwnerReference getOwnerReference(String kind, String name) {
-    OwnerReference ownerReference = new OwnerReference();
-    ownerReference.setUid(UUID.randomUUID().toString());
-    ownerReference.setKind(kind);
-    ownerReference.setName(name);
-    return ownerReference;
-  }
-
-  private ObjectMeta getObjectMeta(String name, String parentKindName, String parentOwnerName) {
-    List<OwnerReference> ownerReferenceList = Lists.newArrayList();
-    ownerReferenceList.add(getOwnerReference(parentKindName, parentOwnerName));
-    ObjectMeta ownerObjectMeta = new ObjectMeta();
-    ownerObjectMeta.setName(name);
-    ownerObjectMeta.setOwnerReferences(ownerReferenceList);
-    return ownerObjectMeta;
+  @Test
+  @OwnerRule.Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void applyWhenJobIsNotAvailable() {
+    String incorrectParentOwnerName = PARENT_OWNER_NAME.concat("incorrect");
+    kubernetesClient.extensions()
+        .jobs()
+        .inNamespace(POD_NAMESPACE)
+        .create(new JobBuilder()
+                    .withNewMetadata()
+                    .withName(OWNER_NAME)
+                    .withOwnerReferences(getOwnerReferences(PARENT_KIND_NAME, incorrectParentOwnerName))
+                    .endMetadata()
+                    .build());
+    JobOwnerMappingFunction jobOwnerMappingFunction = new JobOwnerMappingFunction();
+    Owner owner = jobOwnerMappingFunction.apply(
+        getOwnerReference(OWNER_KIND_NAME, incorrectParentOwnerName), kubernetesClient, POD_NAMESPACE);
+    assertTrue(owner.getKind() != null);
+    assertEquals(incorrectParentOwnerName, owner.getName());
   }
 }
