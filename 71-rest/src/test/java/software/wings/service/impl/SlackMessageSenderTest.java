@@ -41,7 +41,7 @@ public class SlackMessageSenderTest extends WingsBaseTest {
 
     ArgumentCaptor<Payload> argumentCaptor = ArgumentCaptor.forClass(Payload.class);
 
-    slackMessageSender.send(slackMessage);
+    slackMessageSender.send(slackMessage, false);
     verify(slackWebhookClient).post(argumentCaptor.capture());
 
     Payload payload = argumentCaptor.getValue();
@@ -55,7 +55,7 @@ public class SlackMessageSenderTest extends WingsBaseTest {
     slackMessage = new SlackMessage("https://hooks.test.com/services/", "#channel", "sender",
         "message||something||something||completed||something");
 
-    slackMessageSender.send(slackMessage);
+    slackMessageSender.send(slackMessage, false);
 
     verify(slackHttpClient).PostMsg(anyString(), argumentCaptor.capture());
   }

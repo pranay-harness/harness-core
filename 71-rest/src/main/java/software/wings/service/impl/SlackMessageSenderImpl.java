@@ -36,7 +36,7 @@ import java.io.IOException;
 public class SlackMessageSenderImpl implements SlackMessageSender {
   private static final String WHITE_COLOR = "#FFFFFF";
 
-  public void send(SlackMessage slackMessage) {
+  public void send(SlackMessage slackMessage, boolean sendFromDelegate) {
     String outgoingWebhookUrl = slackMessage.getOutgoingWebhookUrl();
     String slackChannel = slackMessage.getSlackChannel();
     String senderName = slackMessage.getSenderName();
@@ -70,7 +70,9 @@ public class SlackMessageSenderImpl implements SlackMessageSender {
     payload.setIcon_url("https://s3.amazonaws.com/wings-assets/slackicons/logo-slack.png");
 
     outgoingWebhookUrl = StringUtils.trim(outgoingWebhookUrl);
-    if (isSlackWebhookUrl(outgoingWebhookUrl)) {
+    // the SlackWebhookClient doesn't uses proxy. If you want to use the proxy on delegate, set
+    // sendFromDelegate true.
+    if (isSlackWebhookUrl(outgoingWebhookUrl) && !sendFromDelegate) {
       SlackWebhookClient webhookClient = getWebhookClient(outgoingWebhookUrl);
       webhookClient.post(payload);
     } else {
