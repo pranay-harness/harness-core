@@ -64,13 +64,14 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
                                               .build();
         logger.info("Sending message for account {} via delegate", accountId);
         delegateProxyFactory.get(SlackMessageSender.class, syncTaskContext)
-            .send(new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message));
+            .send(new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message), true);
       } catch (Exception ex) {
         logger.error("Failed to send slack message", ex);
       }
     } else {
       logger.info("Sending message for account {} via manager", accountId);
-      slackMessageSender.send(new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message));
+      slackMessageSender.send(
+          new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message), false);
     }
   }
 

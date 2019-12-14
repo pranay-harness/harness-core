@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.AMAN;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
@@ -46,7 +47,7 @@ public class SlackNotificationServiceTest extends WingsBaseTest {
   public void shouldSendMessageFromDelegate() {
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(true);
     when(delegateProxyFactory.get(any(Class.class), any(SyncTaskContext.class))).thenReturn(slackMessageSender);
-    doNothing().when(slackMessageSender).send(any(SlackMessage.class));
+    doNothing().when(slackMessageSender).send(any(SlackMessage.class), anyBoolean());
 
     slackNotificationService.sendMessage(
         new SlackNotificationSetting("name", "url"), "abc", "sender", "message", "accountId");
@@ -59,11 +60,11 @@ public class SlackNotificationServiceTest extends WingsBaseTest {
   public void shouldSendMessageFromManager() {
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
     when(delegateProxyFactory.get(any(Class.class), any(SyncTaskContext.class))).thenReturn(slackMessageSender);
-    doNothing().when(slackMessageSender).send(any(SlackMessage.class));
+    doNothing().when(slackMessageSender).send(any(SlackMessage.class), anyBoolean());
 
     slackNotificationService.sendMessage(
         new SlackNotificationSetting("name", "url"), "abc", "sender", "message", "accountId");
-    verify(slackMessageSender, times(1)).send(any(SlackMessage.class));
+    verify(slackMessageSender, times(1)).send(any(SlackMessage.class), anyBoolean());
   }
 
   @Test
@@ -72,12 +73,12 @@ public class SlackNotificationServiceTest extends WingsBaseTest {
   public void shouldNotSendMessageIfWebhookUrlIsEmpty() {
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
     when(delegateProxyFactory.get(any(Class.class), any(SyncTaskContext.class))).thenReturn(slackMessageSender);
-    doNothing().when(slackMessageSender).send(any(SlackMessage.class));
+    doNothing().when(slackMessageSender).send(any(SlackMessage.class), anyBoolean());
 
     slackNotificationService.sendMessage(
         new SlackNotificationSetting("name", ""), "abc", "sender", "message", "accountId");
-    verify(slackMessageSender, times(0)).send(any(SlackMessage.class));
-    verify(slackMessageSender, times(0)).send(any(SlackMessage.class));
+    verify(slackMessageSender, times(0)).send(any(SlackMessage.class), anyBoolean());
+    verify(slackMessageSender, times(0)).send(any(SlackMessage.class), anyBoolean());
     verify(delegateProxyFactory, times(0)).get(any(), any());
   }
 }
