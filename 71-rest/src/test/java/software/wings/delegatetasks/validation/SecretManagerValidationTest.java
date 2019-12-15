@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
-import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -16,12 +15,14 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.Data;
+import net.openhft.chronicle.core.util.Time;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -61,14 +62,20 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = VIKAS)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testValidationWithEncryptionConfig() {
     EncryptionConfig encryptionConfig = mock(EncryptionConfig.class);
     when(encryptionConfig.getEncryptionServiceUrl()).thenReturn("https://www.google.com");
     validation.setParameters(new Object[] {encryptionConfig});
+    int retries = 0;
     DelegateConnectionResult result = validation.validateSecretManager();
     assertThat(result).isNotNull();
+    while (retries < 8 && !result.isValidated()) {
+      Time.sleep(3, TimeUnit.SECONDS);
+      retries++;
+      result = validation.validateSecretManager();
+    }
     assertThat(result.isValidated()).isTrue();
   }
 
@@ -81,8 +88,14 @@ public class SecretManagerValidationTest extends CategoryTest {
     when(encryptionConfig.getEncryptionServiceUrl()).thenReturn("https://www.google.com");
     when(encryptedDataDetail.getEncryptionConfig()).thenReturn(encryptionConfig);
     validation.setParameters(new Object[] {encryptedDataDetail});
+    int retries = 0;
     DelegateConnectionResult result = validation.validateSecretManager();
     assertThat(result).isNotNull();
+    while (retries < 8 && !result.isValidated()) {
+      Time.sleep(3, TimeUnit.SECONDS);
+      retries++;
+      result = validation.validateSecretManager();
+    }
     assertThat(result.isValidated()).isTrue();
   }
 
@@ -95,8 +108,14 @@ public class SecretManagerValidationTest extends CategoryTest {
     when(encryptionConfig.getEncryptionServiceUrl()).thenReturn("https://www.google.com");
     when(encryptedDataDetail.getEncryptionConfig()).thenReturn(encryptionConfig);
     validation.setParameters(new Object[] {Arrays.asList(encryptedDataDetail)});
+    int retries = 0;
     DelegateConnectionResult result = validation.validateSecretManager();
     assertThat(result).isNotNull();
+    while (retries < 8 && !result.isValidated()) {
+      Time.sleep(3, TimeUnit.SECONDS);
+      retries++;
+      result = validation.validateSecretManager();
+    }
     assertThat(result.isValidated()).isTrue();
   }
 
