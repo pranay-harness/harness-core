@@ -21,6 +21,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
@@ -326,10 +327,18 @@ public class PcfDeployState extends State {
                                      .build());
     }
 
+    InstanceElementListParam instanceElementListParam =
+        InstanceElementListParam.builder()
+            .instanceElements(emptyList())
+            .pcfInstanceElements(pcfDeployCommandResponse.getPcfInstanceElements())
+            .build();
+
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .errorMessage(executionResponse.getErrorMessage())
         .stateExecutionData(stateExecutionData)
+        .contextElement(instanceElementListParam)
+        .notifyElement(instanceElementListParam)
         .build();
   }
 
