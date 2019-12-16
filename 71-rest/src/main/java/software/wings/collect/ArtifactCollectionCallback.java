@@ -7,7 +7,6 @@ import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.FAILED;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
-import static software.wings.beans.artifact.Artifact.Status.ERROR;
 
 import com.google.inject.Inject;
 
@@ -105,7 +104,7 @@ public class ArtifactCollectionCallback implements NotifyCallback {
       logger.info("Artifact Id {} was deleted - nothing to do", artifactId);
       return;
     }
-    artifactService.updateStatus(artifact.getUuid(), artifact.getAccountId(), ERROR, FAILED);
+    artifactService.updateStatus(artifact.getUuid(), artifact.getAccountId(), APPROVED, FAILED);
     if (!GLOBAL_APP_ID.equals(artifact.fetchAppId())) {
       eventEmitter.send(Channel.ARTIFACTS,
           anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.fetchAppId()).build());
