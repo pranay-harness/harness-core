@@ -107,7 +107,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
       delegateService.queueTask(delegateTask);
     } catch (Exception ex) {
       logger.error("Failed to collect artifact. Reason {}", ExceptionUtils.getMessage(ex), ex);
-      artifactService.updateStatus(uuid, accountId, Status.FAILED, ContentStatus.FAILED);
+      artifactService.updateStatus(uuid, accountId, Status.APPROVED, ContentStatus.FAILED);
       if (!GLOBAL_APP_ID.equals(artifact.fetchAppId())) {
         eventEmitter.send(
             Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(uuid).withAppId(artifact.fetchAppId()).build());

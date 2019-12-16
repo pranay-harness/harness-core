@@ -13,7 +13,7 @@ import static software.wings.beans.TaskType.BAMBOO_COLLECTION;
 import static software.wings.beans.TaskType.JENKINS_COLLECTION;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADING;
-import static software.wings.beans.artifact.Artifact.Status.FAILED;
+import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import static software.wings.beans.artifact.Artifact.Status.RUNNING;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -194,6 +194,6 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                                .build());
 
     verify(artifactService).updateStatus(ARTIFACT_ID, ACCOUNT_ID, RUNNING, DOWNLOADING);
-    verify(artifactService).updateStatus(ARTIFACT_ID, ACCOUNT_ID, FAILED, Artifact.ContentStatus.FAILED);
+    verify(artifactService).updateStatus(ARTIFACT_ID, ACCOUNT_ID, APPROVED, Artifact.ContentStatus.FAILED);
   }
 }
