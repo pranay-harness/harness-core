@@ -3,7 +3,11 @@
 CONFIG_FILE=/opt/harness/batch-processing-config.yml
 
 if [[ "" != "$MONGO_URI" ]]; then
-  yq write -i $CONFIG_FILE mongo.uri "$MONGO_URI"
+  yq write -i $CONFIG_FILE harness-mongo.uri "$MONGO_URI"
+fi
+
+if [[ "" != "$EVENTS_MONGO_URI" ]]; then
+  yq write -i $CONFIG_FILE events-mongo.uri "$EVENTS_MONGO_URI"
 fi
 
 if [[ "" != "$TIMESCALEDB_URI" ]]; then

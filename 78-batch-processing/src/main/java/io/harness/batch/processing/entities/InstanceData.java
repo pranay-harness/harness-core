@@ -1,5 +1,8 @@
 package io.harness.batch.processing.entities;
 
+import static io.harness.event.app.EventServiceApplication.EVENTS_DB;
+
+import io.harness.annotation.StoreIn;
 import io.harness.batch.processing.ccm.Container;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
@@ -42,6 +45,7 @@ import java.util.Map;
 })
 @FieldNameConstants(innerTypeName = "InstanceDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@StoreIn(EVENTS_DB)
 public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   String accountId;

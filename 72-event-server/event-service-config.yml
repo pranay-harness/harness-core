@@ -7,4 +7,4 @@ connectors:
 harness-mongo:
   uri: mongodb://localhost:27017/harness
 events-mongo:
-  uri: mongodb://localhost:27017/harness
+  uri: mongodb://localhost:27017/events

@@ -31,7 +31,9 @@ import javax.validation.ValidatorFactory;
 
 @Slf4j
 public class EventServiceApplication {
-  private static final Store EVENTS_STORE = Store.builder().name("events").build();
+  public static final String EVENTS_DB = "events";
+  public static final Store EVENTS_STORE = Store.builder().name(EVENTS_DB).build();
+
   private final EventServiceConfig config;
 
   private EventServiceApplication(EventServiceConfig config) {

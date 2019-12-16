@@ -1,5 +1,7 @@
 package io.harness.event.grpc;
 
+import static io.harness.event.app.EventServiceApplication.EVENTS_DB;
+
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
@@ -25,7 +27,7 @@ import org.mongodb.morphia.annotations.PostLoad;
 
 import java.util.Map;
 
-@StoreIn("events")
+@StoreIn(EVENTS_DB)
 @Data
 @Entity(value = "publishedMessages", noClassnameStored = true)
 @Indexes({
