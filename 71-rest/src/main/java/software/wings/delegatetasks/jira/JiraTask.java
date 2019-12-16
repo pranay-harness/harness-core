@@ -436,7 +436,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       logger.error("Unable to create a new Jira ticket", e);
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
-          .errorMessage("Unable to create a new Jira ticket. ")
+          .errorMessage("Unable to create a new Jira ticket. " + ExceptionUtils.getMessage(e))
           .jiraServerResponse(extractResponseMessage(e))
           .build();
     } catch (WingsException e) {
