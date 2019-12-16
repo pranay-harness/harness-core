@@ -199,11 +199,15 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     String infraDefId = bean.getInfraDefinitionId();
     String infraDefName = null;
     String accountId = appService.getAccountIdByAppId(appId);
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId) && isNotEmpty(infraDefId)) {
-      InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefId);
-      if (infrastructureDefinition != null) {
-        infraDefName = infrastructureDefinition.getName();
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
+      InfrastructureDefinition infrastructureDefinition = null;
+      if (isNotEmpty(infraDefId)) {
+        infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefId);
+        if (infrastructureDefinition != null) {
+          infraDefName = infrastructureDefinition.getName();
+        }
       }
+
       // when templatized infraMappings used, we do expect infraMapping can be null, so don't perform this check
       if (infrastructureDefinition == null && !bean.checkInfraDefinitionTemplatized()) {
         String message = format("Infra-definition:%s could not be found for workflowPhase:%s, for app:%s", infraDefId,
