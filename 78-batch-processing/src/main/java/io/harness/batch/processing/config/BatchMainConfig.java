@@ -10,5 +10,6 @@ import lombok.Data;
 @Builder
 public class BatchMainConfig {
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
-  @JsonProperty("mongo") private MongoConfig mongoConnectionFactory;
+  @JsonProperty("harness-mongo") private MongoConfig harnessMongo;
+  @JsonProperty("events-mongo") private MongoConfig eventsMongo;
 }

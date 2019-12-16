@@ -1,5 +1,8 @@
 package io.harness.batch.processing.entities;
 
+import static io.harness.event.app.EventServiceApplication.EVENTS_DB;
+
+import io.harness.annotation.StoreIn;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.entities.BatchJobScheduledData.BatchJobScheduledDataKeys;
 import io.harness.persistence.CreatedAtAware;
@@ -28,6 +31,7 @@ import java.time.Instant;
 })
 @FieldNameConstants(innerTypeName = "BatchJobScheduledDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@StoreIn(EVENTS_DB)
 public class BatchJobScheduledData implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   BatchJobType batchJobType;

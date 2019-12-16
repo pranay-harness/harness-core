@@ -98,7 +98,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = MEENAKSHI)
+  @Owner(developers = MEENAKSHI, intermittent = true)
   @Category(FunctionalTests.class)
   public void runBambooConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC10_createBambooConnector, booleanMatcher, true);

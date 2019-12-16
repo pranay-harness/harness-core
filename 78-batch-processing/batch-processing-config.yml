@@ -1,5 +1,7 @@
-mongo:
+harness-mongo:
   uri: mongodb://localhost:27017/harness
+events-mongo:
+  uri: mongodb://localhost:27017/events
 
 timescaledb:
   timescaledbUrl: "jdbc:postgresql://localhost:5432/harness"
