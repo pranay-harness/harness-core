@@ -37,7 +37,7 @@ public class BatchJobRunner {
       throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException,
              JobInstanceAlreadyCompleteException {
     Instant startAt = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(batchJobType);
-    Instant endAt = Instant.now();
+    Instant endAt = Instant.now().minus(4, ChronoUnit.HOURS);
     BatchJobScheduleTimeProvider batchJobScheduleTimeProvider =
         new BatchJobScheduleTimeProvider(startAt, endAt, duration, chronoUnit);
     Instant startInstant = startAt;
