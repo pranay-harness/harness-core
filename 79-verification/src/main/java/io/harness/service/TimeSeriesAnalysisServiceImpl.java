@@ -145,8 +145,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public void saveAnalysisRecords(final NewRelicMetricAnalysisRecord metricAnalysisRecord) {
-    wingsPersistence.save(metricAnalysisRecord);
+  public void saveAnalysisRecordsIgnoringDuplicate(final NewRelicMetricAnalysisRecord metricAnalysisRecord) {
+    wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(metricAnalysisRecord));
     logger.info(
         "inserted NewRelicMetricAnalysisRecord to persistence layer for workflowExecutionId: {} StateExecutionInstanceId: {}",
         metricAnalysisRecord.getWorkflowExecutionId(), metricAnalysisRecord.getStateExecutionId());

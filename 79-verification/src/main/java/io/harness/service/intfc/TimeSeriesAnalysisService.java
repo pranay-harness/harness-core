@@ -29,7 +29,8 @@ public interface TimeSeriesAnalysisService {
   boolean saveMetricData(@NotNull String accountId, String appId, String stateExecutionId, String delegateTaskId,
       @Valid List<NewRelicMetricDataRecord> metricData);
 
-  @ValidationGroups(Create.class) void saveAnalysisRecords(@Valid NewRelicMetricAnalysisRecord metricAnalysisRecord);
+  @ValidationGroups(Create.class)
+  void saveAnalysisRecordsIgnoringDuplicate(NewRelicMetricAnalysisRecord metricAnalysisRecord);
 
   @ValidationGroups(Create.class)
   boolean saveAnalysisRecordsML(String accountId, @NotNull StateType stateType, @NotNull String appId,

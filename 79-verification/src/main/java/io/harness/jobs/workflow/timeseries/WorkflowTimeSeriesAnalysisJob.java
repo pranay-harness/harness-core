@@ -450,7 +450,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
           if (!runTimeSeriesML) {
             logger.info("running local time series analysis for {}", context.getStateExecutionId());
             NewRelicMetricAnalysisRecord analysisRecord = analyzeLocal(analysisMinute, groupName);
-            analysisService.saveAnalysisRecords(analysisRecord);
+            analysisService.saveAnalysisRecordsIgnoringDuplicate(analysisRecord);
             analysisService.bumpCollectionMinuteToProcess(context.getAppId(), context.getStateExecutionId(),
                 context.getWorkflowExecutionId(), groupName, analysisMinute, context.getAccountId(), false);
           } else if (!taskQueued) {
