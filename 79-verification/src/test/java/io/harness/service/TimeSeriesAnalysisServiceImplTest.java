@@ -87,7 +87,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 @Slf4j
-public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
+public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   private String cvConfigId;
   private String serviceId;
   private String accountId;
@@ -210,20 +210,6 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
             .filter(TimeSeriesMetricRecordKeys.stateExecutionId, newRelicMetricDataRecord.getStateExecutionId())
             .get();
     assertThat(timeSeriesDataRecord).isNotNull();
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testSaveAnalysisRecords() {
-    NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
-        NewRelicMetricAnalysisRecord.builder().message("data not found").stateExecutionId(generateUuid()).build();
-    timeSeriesAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
-    NewRelicMetricAnalysisRecord savedRecord =
-        wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
-            .filter("stateExecutionId", newRelicMetricAnalysisRecord.getStateExecutionId())
-            .get();
-    assertThat(savedRecord).isNotNull();
   }
 
   @Test
@@ -1312,5 +1298,66 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
     TimeSeriesAnomaliesRecord result =
         timeSeriesAnalysisService.getPreviousAnomalies(appId, cvConfigId, new HashMap<>(), "tag");
     assertThat(result.getAnomalies()).isEqualTo(anomalies);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSaveAnalysisRecordsIgnoringDuplicate_NoExistingEntries() {
+    NewRelicMetricAnalysisRecord record = NewRelicMetricAnalysisRecord.builder()
+                                              .stateExecutionId(stateExecutionId)
+                                              .workflowExecutionId(workflowExecutionId)
+                                              .groupName(DEFAULT_GROUP_NAME)
+                                              .analysisMinute(1)
+                                              .build();
+    timeSeriesAnalysisService.saveAnalysisRecordsIgnoringDuplicate(record);
+
+    List<NewRelicMetricAnalysisRecord> savedRecord =
+        wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).asList();
+    assertThat(savedRecord.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSaveAnalysisRecordsIgnoringDuplicate_WithDuplicate() {
+    NewRelicMetricAnalysisRecord record = NewRelicMetricAnalysisRecord.builder()
+                                              .stateExecutionId(stateExecutionId)
+                                              .workflowExecutionId(workflowExecutionId)
+                                              .groupName(DEFAULT_GROUP_NAME)
+                                              .analysisMinute(1)
+                                              .build();
+    wingsPersistence.save(record);
+
+    timeSeriesAnalysisService.saveAnalysisRecordsIgnoringDuplicate(record);
+
+    List<NewRelicMetricAnalysisRecord> savedRecord =
+        wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).asList();
+    assertThat(savedRecord.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSaveAnalysisRecordsIgnoringDuplicate_WithoutDuplicate() {
+    NewRelicMetricAnalysisRecord record = NewRelicMetricAnalysisRecord.builder()
+                                              .stateExecutionId(stateExecutionId)
+                                              .workflowExecutionId(workflowExecutionId)
+                                              .groupName(DEFAULT_GROUP_NAME)
+                                              .analysisMinute(1)
+                                              .build();
+    wingsPersistence.save(record);
+
+    NewRelicMetricAnalysisRecord newRecord = NewRelicMetricAnalysisRecord.builder()
+                                                 .stateExecutionId(stateExecutionId)
+                                                 .workflowExecutionId(workflowExecutionId)
+                                                 .groupName(DEFAULT_GROUP_NAME)
+                                                 .analysisMinute(2)
+                                                 .build();
+    timeSeriesAnalysisService.saveAnalysisRecordsIgnoringDuplicate(newRecord);
+
+    List<NewRelicMetricAnalysisRecord> savedRecord =
+        wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).asList();
+    assertThat(savedRecord.size()).isEqualTo(2);
   }
 }
