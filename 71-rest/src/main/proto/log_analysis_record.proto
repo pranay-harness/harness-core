@@ -40,6 +40,12 @@ message FrequencyPattern {
   repeated int64 timestamps = 4;
 }
 
+message LogAnalysisResult {
+  required int32 label = 1;
+  required string tag = 2;
+  required string text = 3;
+}
+
 message LogAnalysisClusterList {
   repeated LogAnalysisCluster analysis_clusters = 1;
 }
@@ -57,4 +63,5 @@ message LogMLAnalysisRecordDetails {
   map<string, LogAnalysisClusterMap> test_clusters = 6;
   map<string, LogAnalysisClusterMap> ignore_clusters = 7;
   map<string, FrequencyPattern> frequency_patterns = 8;
+  map<string, LogAnalysisResult> log_analysis_result = 9;
 }
