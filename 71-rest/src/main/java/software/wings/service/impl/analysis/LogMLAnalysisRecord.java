@@ -30,6 +30,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.service.impl.splunk.FrequencyPattern;
+import software.wings.service.impl.splunk.LogAnalysisResult;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
@@ -121,6 +122,7 @@ public class LogMLAnalysisRecord extends Base {
   private Map<String, Map<String, SplunkAnalysisCluster>> test_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters;
   private Map<String, FrequencyPattern> frequency_patterns;
+  private Map<String, LogAnalysisResult> log_analysis_result;
   private double overallScore = -1.0;
   private int timesLabeled;
   private boolean deprecated;

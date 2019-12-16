@@ -4686,6 +4686,839 @@ public final class LogMLAnalysisRecordProto {
     }
   }
 
+  public interface LogAnalysisResultOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:log.verification.LogAnalysisResult)
+      com.google.protobuf.MessageOrBuilder {
+    /**
+     * <code>required int32 label = 1;</code>
+     */
+    boolean hasLabel();
+    /**
+     * <code>required int32 label = 1;</code>
+     */
+    int getLabel();
+
+    /**
+     * <code>required string tag = 2;</code>
+     */
+    boolean hasTag();
+    /**
+     * <code>required string tag = 2;</code>
+     */
+    java.lang.String getTag();
+    /**
+     * <code>required string tag = 2;</code>
+     */
+    com.google.protobuf.ByteString getTagBytes();
+
+    /**
+     * <code>required string text = 3;</code>
+     */
+    boolean hasText();
+    /**
+     * <code>required string text = 3;</code>
+     */
+    java.lang.String getText();
+    /**
+     * <code>required string text = 3;</code>
+     */
+    com.google.protobuf.ByteString getTextBytes();
+  }
+  /**
+   * Protobuf type {@code log.verification.LogAnalysisResult}
+   */
+  public static final class LogAnalysisResult extends com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:log.verification.LogAnalysisResult)
+      LogAnalysisResultOrBuilder {
+    private static final long serialVersionUID = 0L;
+    // Use LogAnalysisResult.newBuilder() to construct.
+    private LogAnalysisResult(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private LogAnalysisResult() {
+      tag_ = "";
+      text_ = "";
+    }
+
+    @java.
+    lang.Override
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+      return this.unknownFields;
+    }
+    private LogAnalysisResult(
+        com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 8: {
+              bitField0_ |= 0x00000001;
+              label_ = input.readInt32();
+              break;
+            }
+            case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              tag_ = bs;
+              break;
+            }
+            case 26: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000004;
+              text_ = bs;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
+          .internal_static_log_verification_LogAnalysisResult_descriptor;
+    }
+
+    @java.
+    lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
+      return software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
+          .internal_static_log_verification_LogAnalysisResult_fieldAccessorTable.ensureFieldAccessorsInitialized(
+              software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult.class,
+              software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult.Builder
+                  .class);
+    }
+
+    private int bitField0_;
+    public static final int LABEL_FIELD_NUMBER = 1;
+    private int label_;
+    /**
+     * <code>required int32 label = 1;</code>
+     */
+    public boolean hasLabel() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required int32 label = 1;</code>
+     */
+    public int getLabel() {
+      return label_;
+    }
+
+    public static final int TAG_FIELD_NUMBER = 2;
+    private volatile java.lang.Object tag_;
+    /**
+     * <code>required string tag = 2;</code>
+     */
+    public boolean hasTag() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>required string tag = 2;</code>
+     */
+    public java.lang.String getTag() {
+      java.lang.Object ref = tag_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          tag_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string tag = 2;</code>
+     */
+    public com.google.protobuf.ByteString getTagBytes() {
+      java.lang.Object ref = tag_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        tag_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int TEXT_FIELD_NUMBER = 3;
+    private volatile java.lang.Object text_;
+    /**
+     * <code>required string text = 3;</code>
+     */
+    public boolean hasText() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>required string text = 3;</code>
+     */
+    public java.lang.String getText() {
+      java.lang.Object ref = text_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          text_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string text = 3;</code>
+     */
+    public com.google.protobuf.ByteString getTextBytes() {
+      java.lang.Object ref = text_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        text_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1)
+        return true;
+      if (isInitialized == 0)
+        return false;
+
+      if (!hasLabel()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasTag()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasText()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeInt32(1, label_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, tag_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, text_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1)
+        return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream.computeInt32Size(1, label_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, tag_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, text_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+        return true;
+      }
+      if (!(obj
+              instanceof software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
+                             .LogAnalysisResult)) {
+        return super.equals(obj);
+      }
+      software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult other =
+          (software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult) obj;
+
+      if (hasLabel() != other.hasLabel())
+        return false;
+      if (hasLabel()) {
+        if (getLabel() != other.getLabel())
+          return false;
+      }
+      if (hasTag() != other.hasTag())
+        return false;
+      if (hasTag()) {
+        if (!getTag().equals(other.getTag()))
+          return false;
+      }
+      if (hasText() != other.hasText())
+        return false;
+      if (hasText()) {
+        if (!getText().equals(other.getText()))
+          return false;
+      }
+      if (!unknownFields.equals(other.unknownFields))
+        return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasLabel()) {
+        hash = (37 * hash) + LABEL_FIELD_NUMBER;
+        hash = (53 * hash) + getLabel();
+      }
+      if (hasTag()) {
+        hash = (37 * hash) + TAG_FIELD_NUMBER;
+        hash = (53 * hash) + getTag().hashCode();
+      }
+      if (hasText()) {
+        hash = (37 * hash) + TEXT_FIELD_NUMBER;
+        hash = (53 * hash) + getText().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    parseFrom(java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    parseFrom(java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    parseFrom(com.google.protobuf.ByteString data) throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    parseFrom(com.google.protobuf.ByteString data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    parseFrom(byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    parseFrom(byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    parseFrom(java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    parseFrom(java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    parseDelimitedFrom(java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    parseFrom(com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    parseFrom(com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code log.verification.LogAnalysisResult}
+     */
+    public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:log.verification.LogAnalysisResult)
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResultOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
+            .internal_static_log_verification_LogAnalysisResult_descriptor;
+      }
+
+      @java.
+      lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
+        return software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
+            .internal_static_log_verification_LogAnalysisResult_fieldAccessorTable.ensureFieldAccessorsInitialized(
+                software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult.class,
+                software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult.Builder
+                    .class);
+      }
+
+      // Construct using
+      // software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        label_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        tag_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        text_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      @java.
+      lang.Override
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
+            .internal_static_log_verification_LogAnalysisResult_descriptor;
+      }
+
+      @java.
+      lang.Override
+      public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+      getDefaultInstanceForType() {
+        return software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+            .getDefaultInstance();
+      }
+
+      @java.
+      lang.Override
+      public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult build() {
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult result =
+            buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.
+      lang.Override
+      public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+      buildPartial() {
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult result =
+            new software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.label_ = label_;
+          to_bitField0_ |= 0x00000001;
+        }
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.tag_ = tag_;
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.text_ = text_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field, int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other
+            instanceof software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult) {
+          return mergeFrom(
+              (software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult) other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult other) {
+        if (other
+            == software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+                   .getDefaultInstance())
+          return this;
+        if (other.hasLabel()) {
+          setLabel(other.getLabel());
+        }
+        if (other.hasTag()) {
+          bitField0_ |= 0x00000002;
+          tag_ = other.tag_;
+          onChanged();
+        }
+        if (other.hasText()) {
+          bitField0_ |= 0x00000004;
+          text_ = other.text_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasLabel()) {
+          return false;
+        }
+        if (!hasTag()) {
+          return false;
+        }
+        if (!hasText()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult parsedMessage =
+            null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage =
+              (software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult)
+                  e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private int label_;
+      /**
+       * <code>required int32 label = 1;</code>
+       */
+      public boolean hasLabel() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required int32 label = 1;</code>
+       */
+      public int getLabel() {
+        return label_;
+      }
+      /**
+       * <code>required int32 label = 1;</code>
+       */
+      public Builder setLabel(int value) {
+        bitField0_ |= 0x00000001;
+        label_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int32 label = 1;</code>
+       */
+      public Builder clearLabel() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        label_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object tag_ = "";
+      /**
+       * <code>required string tag = 2;</code>
+       */
+      public boolean hasTag() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>required string tag = 2;</code>
+       */
+      public java.lang.String getTag() {
+        java.lang.Object ref = tag_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            tag_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string tag = 2;</code>
+       */
+      public com.google.protobuf.ByteString getTagBytes() {
+        java.lang.Object ref = tag_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          tag_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string tag = 2;</code>
+       */
+      public Builder setTag(java.lang.String value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000002;
+        tag_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string tag = 2;</code>
+       */
+      public Builder clearTag() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        tag_ = getDefaultInstance().getTag();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string tag = 2;</code>
+       */
+      public Builder setTagBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000002;
+        tag_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object text_ = "";
+      /**
+       * <code>required string text = 3;</code>
+       */
+      public boolean hasText() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <code>required string text = 3;</code>
+       */
+      public java.lang.String getText() {
+        java.lang.Object ref = text_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            text_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string text = 3;</code>
+       */
+      public com.google.protobuf.ByteString getTextBytes() {
+        java.lang.Object ref = text_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          text_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string text = 3;</code>
+       */
+      public Builder setText(java.lang.String value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000004;
+        text_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string text = 3;</code>
+       */
+      public Builder clearText() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        text_ = getDefaultInstance().getText();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string text = 3;</code>
+       */
+      public Builder setTextBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000004;
+        text_ = value;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+      // @@protoc_insertion_point(builder_scope:log.verification.LogAnalysisResult)
+    }
+
+    // @@protoc_insertion_point(class_scope:log.verification.LogAnalysisResult)
+    private static final software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
+        .LogAnalysisResult DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE =
+          new software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult();
+    }
+
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated
+    public static final com.google.protobuf.Parser<LogAnalysisResult> PARSER =
+        new com.google.protobuf.AbstractParser<LogAnalysisResult>() {
+          @java.lang.Override
+          public LogAnalysisResult parsePartialFrom(
+              com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new LogAnalysisResult(input, extensionRegistry);
+          }
+        };
+
+    public static com.google.protobuf.Parser<LogAnalysisResult> parser() {
+      return PARSER;
+    }
+
+    @java.
+    lang.Override
+    public com.google.protobuf.Parser<LogAnalysisResult> getParserForType() {
+      return PARSER;
+    }
+
+    @java.
+    lang.Override
+    public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+  }
+
   public interface LogAnalysisClusterListOrBuilder extends
       // @@protoc_insertion_point(interface_extends:log.verification.LogAnalysisClusterList)
       com.google.protobuf.MessageOrBuilder {
@@ -6543,6 +7376,41 @@ public final class LogMLAnalysisRecordProto {
 
     software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern
     getFrequencyPatternsOrThrow(java.lang.String key);
+
+    /**
+     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     */
+    int getLogAnalysisResultCount();
+    /**
+     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     */
+    boolean containsLogAnalysisResult(java.lang.String key);
+    /**
+     * Use {@link #getLogAnalysisResultMap()} instead.
+     */
+    @java.lang.Deprecated
+    java.util.Map<java.lang.String,
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+    getLogAnalysisResult();
+    /**
+     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     */
+    java.util.Map<java.lang.String,
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+    getLogAnalysisResultMap();
+    /**
+     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     */
+
+    software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    getLogAnalysisResultOrDefault(java.lang.String key,
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult defaultValue);
+    /**
+     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     */
+
+    software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    getLogAnalysisResultOrThrow(java.lang.String key);
   }
   /**
    * Protobuf type {@code log.verification.LogMLAnalysisRecordDetails}
@@ -6680,6 +7548,19 @@ public final class LogMLAnalysisRecordProto {
               frequencyPatterns_.getMutableMap().put(frequencyPatterns__.getKey(), frequencyPatterns__.getValue());
               break;
             }
+            case 74: {
+              if (!((mutable_bitField0_ & 0x00000100) != 0)) {
+                logAnalysisResult_ =
+                    com.google.protobuf.MapField.newMapField(LogAnalysisResultDefaultEntryHolder.defaultEntry);
+                mutable_bitField0_ |= 0x00000100;
+              }
+              com.google.protobuf.MapEntry<java.lang.String,
+                  software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+                  logAnalysisResult__ = input.readMessage(
+                  LogAnalysisResultDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+              logAnalysisResult_.getMutableMap().put(logAnalysisResult__.getKey(), logAnalysisResult__.getValue());
+              break;
+            }
             default: {
               if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
                 done = true;
@@ -6724,6 +7605,8 @@ public final class LogMLAnalysisRecordProto {
           return internalGetIgnoreClusters();
         case 8:
           return internalGetFrequencyPatterns();
+        case 9:
+          return internalGetLogAnalysisResult();
         default:
           throw new RuntimeException("Invalid map field number: " + number);
       }
@@ -7415,6 +8298,96 @@ public final class LogMLAnalysisRecordProto {
       return map.get(key);
     }
 
+    public static final int LOG_ANALYSIS_RESULT_FIELD_NUMBER = 9;
+    private static final class LogAnalysisResultDefaultEntryHolder {
+      static final com.google.protobuf.MapEntry<java.lang.String,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+          defaultEntry = com.google.protobuf.MapEntry.<java.lang.String,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
+              .LogAnalysisResult>newDefaultInstance(software.wings.service.impl.verification.generated
+                                                        .LogMLAnalysisRecordProto
+                                                        .internal_static_log_verification_LogMLAnalysisRecordDetails_LogAnalysisResultEntry_descriptor,
+          com.google.protobuf.WireFormat.FieldType.STRING, "", com.google.protobuf.WireFormat.FieldType.MESSAGE,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+              .getDefaultInstance());
+    }
+    private com.google.protobuf.MapField<java.lang.String,
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+        logAnalysisResult_;
+    private com.google.protobuf.MapField<java.lang.String,
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+    internalGetLogAnalysisResult() {
+      if (logAnalysisResult_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(LogAnalysisResultDefaultEntryHolder.defaultEntry);
+      }
+      return logAnalysisResult_;
+    }
+
+    public int getLogAnalysisResultCount() {
+      return internalGetLogAnalysisResult().getMap().size();
+    }
+    /**
+     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     */
+
+    public boolean containsLogAnalysisResult(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      return internalGetLogAnalysisResult().getMap().containsKey(key);
+    }
+    /**
+     * Use {@link #getLogAnalysisResultMap()} instead.
+     */
+    @java.
+    lang.Deprecated
+    public java.util.Map<java.lang.String,
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+    getLogAnalysisResult() {
+      return getLogAnalysisResultMap();
+    }
+    /**
+     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     */
+
+    public java.util.Map<java.lang.String,
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+    getLogAnalysisResultMap() {
+      return internalGetLogAnalysisResult().getMap();
+    }
+    /**
+     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     */
+
+    public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    getLogAnalysisResultOrDefault(java.lang.String key,
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult defaultValue) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      java.util.Map<java.lang.String,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult> map =
+          internalGetLogAnalysisResult().getMap();
+      return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+    /**
+     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     */
+
+    public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+    getLogAnalysisResultOrThrow(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      java.util.Map<java.lang.String,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult> map =
+          internalGetLogAnalysisResult().getMap();
+      if (!map.containsKey(key)) {
+        throw new java.lang.IllegalArgumentException();
+      }
+      return map.get(key);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -7479,6 +8452,13 @@ public final class LogMLAnalysisRecordProto {
           return false;
         }
       }
+      for (software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult item :
+          getLogAnalysisResultMap().values()) {
+        if (!item.isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -7502,6 +8482,8 @@ public final class LogMLAnalysisRecordProto {
           output, internalGetIgnoreClusters(), IgnoreClustersDefaultEntryHolder.defaultEntry, 7);
       com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
           output, internalGetFrequencyPatterns(), FrequencyPatternsDefaultEntryHolder.defaultEntry, 8);
+      com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
+          output, internalGetLogAnalysisResult(), LogAnalysisResultDefaultEntryHolder.defaultEntry, 9);
       unknownFields.writeTo(output);
     }
 
@@ -7592,6 +8574,17 @@ public final class LogMLAnalysisRecordProto {
                                       .build();
         size += com.google.protobuf.CodedOutputStream.computeMessageSize(8, frequencyPatterns__);
       }
+      for (java.util.Map.Entry<java.lang.String,
+               software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult> entry :
+          internalGetLogAnalysisResult().getMap().entrySet()) {
+        com.google.protobuf.MapEntry<java.lang.String,
+            software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+            logAnalysisResult__ = LogAnalysisResultDefaultEntryHolder.defaultEntry.newBuilderForType()
+                                      .setKey(entry.getKey())
+                                      .setValue(entry.getValue())
+                                      .build();
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(9, logAnalysisResult__);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -7625,6 +8618,8 @@ public final class LogMLAnalysisRecordProto {
       if (!internalGetIgnoreClusters().equals(other.internalGetIgnoreClusters()))
         return false;
       if (!internalGetFrequencyPatterns().equals(other.internalGetFrequencyPatterns()))
+        return false;
+      if (!internalGetLogAnalysisResult().equals(other.internalGetLogAnalysisResult()))
         return false;
       if (!unknownFields.equals(other.unknownFields))
         return false;
@@ -7669,6 +8664,10 @@ public final class LogMLAnalysisRecordProto {
       if (!internalGetFrequencyPatterns().getMap().isEmpty()) {
         hash = (37 * hash) + FREQUENCY_PATTERNS_FIELD_NUMBER;
         hash = (53 * hash) + internalGetFrequencyPatterns().hashCode();
+      }
+      if (!internalGetLogAnalysisResult().getMap().isEmpty()) {
+        hash = (37 * hash) + LOG_ANALYSIS_RESULT_FIELD_NUMBER;
+        hash = (53 * hash) + internalGetLogAnalysisResult().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -7780,6 +8779,8 @@ public final class LogMLAnalysisRecordProto {
             return internalGetIgnoreClusters();
           case 8:
             return internalGetFrequencyPatterns();
+          case 9:
+            return internalGetLogAnalysisResult();
           default:
             throw new RuntimeException("Invalid map field number: " + number);
         }
@@ -7801,6 +8802,8 @@ public final class LogMLAnalysisRecordProto {
             return internalGetMutableIgnoreClusters();
           case 8:
             return internalGetMutableFrequencyPatterns();
+          case 9:
+            return internalGetMutableLogAnalysisResult();
           default:
             throw new RuntimeException("Invalid map field number: " + number);
         }
@@ -7847,6 +8850,7 @@ public final class LogMLAnalysisRecordProto {
         internalGetMutableTestClusters().clear();
         internalGetMutableIgnoreClusters().clear();
         internalGetMutableFrequencyPatterns().clear();
+        internalGetMutableLogAnalysisResult().clear();
         return this;
       }
 
@@ -7908,6 +8912,8 @@ public final class LogMLAnalysisRecordProto {
         result.ignoreClusters_.makeImmutable();
         result.frequencyPatterns_ = internalGetFrequencyPatterns();
         result.frequencyPatterns_.makeImmutable();
+        result.logAnalysisResult_ = internalGetLogAnalysisResult();
+        result.logAnalysisResult_.makeImmutable();
         onBuilt();
         return result;
       }
@@ -7989,6 +8995,7 @@ public final class LogMLAnalysisRecordProto {
         internalGetMutableTestClusters().mergeFrom(other.internalGetTestClusters());
         internalGetMutableIgnoreClusters().mergeFrom(other.internalGetIgnoreClusters());
         internalGetMutableFrequencyPatterns().mergeFrom(other.internalGetFrequencyPatterns());
+        internalGetMutableLogAnalysisResult().mergeFrom(other.internalGetLogAnalysisResult());
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -8039,6 +9046,12 @@ public final class LogMLAnalysisRecordProto {
         }
         for (software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern item :
             getFrequencyPatternsMap().values()) {
+          if (!item.isInitialized()) {
+            return false;
+          }
+        }
+        for (software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult item :
+            getLogAnalysisResultMap().values()) {
           if (!item.isInitialized()) {
             return false;
           }
@@ -9320,6 +10333,147 @@ public final class LogMLAnalysisRecordProto {
         internalGetMutableFrequencyPatterns().getMutableMap().putAll(values);
         return this;
       }
+
+      private com.google.protobuf.MapField<java.lang.String,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+          logAnalysisResult_;
+      private com.google.protobuf.MapField<java.lang.String,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+      internalGetLogAnalysisResult() {
+        if (logAnalysisResult_ == null) {
+          return com.google.protobuf.MapField.emptyMapField(LogAnalysisResultDefaultEntryHolder.defaultEntry);
+        }
+        return logAnalysisResult_;
+      }
+      private com.google.protobuf.MapField<java.lang.String,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+      internalGetMutableLogAnalysisResult() {
+        onChanged();
+        ;
+        if (logAnalysisResult_ == null) {
+          logAnalysisResult_ =
+              com.google.protobuf.MapField.newMapField(LogAnalysisResultDefaultEntryHolder.defaultEntry);
+        }
+        if (!logAnalysisResult_.isMutable()) {
+          logAnalysisResult_ = logAnalysisResult_.copy();
+        }
+        return logAnalysisResult_;
+      }
+
+      public int getLogAnalysisResultCount() {
+        return internalGetLogAnalysisResult().getMap().size();
+      }
+      /**
+       * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+       */
+
+      public boolean containsLogAnalysisResult(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        return internalGetLogAnalysisResult().getMap().containsKey(key);
+      }
+      /**
+       * Use {@link #getLogAnalysisResultMap()} instead.
+       */
+      @java.
+      lang.Deprecated
+      public java.util.Map<java.lang.String,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+      getLogAnalysisResult() {
+        return getLogAnalysisResultMap();
+      }
+      /**
+       * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+       */
+
+      public java.util.Map<java.lang.String,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+      getLogAnalysisResultMap() {
+        return internalGetLogAnalysisResult().getMap();
+      }
+      /**
+       * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+       */
+
+      public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+      getLogAnalysisResultOrDefault(java.lang.String key,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult defaultValue) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        java.util.Map<java.lang.String,
+            software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult> map =
+            internalGetLogAnalysisResult().getMap();
+        return map.containsKey(key) ? map.get(key) : defaultValue;
+      }
+      /**
+       * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+       */
+
+      public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
+      getLogAnalysisResultOrThrow(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        java.util.Map<java.lang.String,
+            software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult> map =
+            internalGetLogAnalysisResult().getMap();
+        if (!map.containsKey(key)) {
+          throw new java.lang.IllegalArgumentException();
+        }
+        return map.get(key);
+      }
+
+      public Builder clearLogAnalysisResult() {
+        internalGetMutableLogAnalysisResult().getMutableMap().clear();
+        return this;
+      }
+      /**
+       * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+       */
+
+      public Builder removeLogAnalysisResult(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        internalGetMutableLogAnalysisResult().getMutableMap().remove(key);
+        return this;
+      }
+      /**
+       * Use alternate mutation accessors instead.
+       */
+      @java.
+      lang.Deprecated
+      public java.util.Map<java.lang.String,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
+      getMutableLogAnalysisResult() {
+        return internalGetMutableLogAnalysisResult().getMutableMap();
+      }
+      /**
+       * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+       */
+      public Builder putLogAnalysisResult(java.lang.String key,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult value) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        if (value == null) {
+          throw new java.lang.NullPointerException();
+        }
+        internalGetMutableLogAnalysisResult().getMutableMap().put(key, value);
+        return this;
+      }
+      /**
+       * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+       */
+
+      public Builder putAllLogAnalysisResult(
+          java.util.Map<java.lang.String,
+              software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult> values) {
+        internalGetMutableLogAnalysisResult().getMutableMap().putAll(values);
+        return this;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
@@ -9388,6 +10542,10 @@ public final class LogMLAnalysisRecordProto {
   private static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_log_verification_FrequencyPattern_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_log_verification_LogAnalysisResult_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_log_verification_LogAnalysisResult_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors
       .Descriptor internal_static_log_verification_LogAnalysisClusterList_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_log_verification_LogAnalysisClusterList_fieldAccessorTable;
@@ -9431,6 +10589,10 @@ public final class LogMLAnalysisRecordProto {
       .Descriptor internal_static_log_verification_LogMLAnalysisRecordDetails_FrequencyPatternsEntry_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_log_verification_LogMLAnalysisRecordDetails_FrequencyPatternsEntry_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_log_verification_LogMLAnalysisRecordDetails_LogAnalysisResultEntry_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_log_verification_LogMLAnalysisRecordDetails_LogAnalysisResultEntry_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -9452,52 +10614,59 @@ public final class LogMLAnalysisRecordProto {
         + "ssage_frequencies\030\027 \003(\0132-.log.verificati"
         + "on.LogAnalysisMessageFrequency\"U\n\020Freque"
         + "ncyPattern\022\r\n\005label\030\001 \002(\005\022\014\n\004text\030\002 \002(\t\022"
-        + "\020\n\010sequence\030\003 \003(\005\022\022\n\ntimestamps\030\004 \003(\003\"Y\n"
-        + "\026LogAnalysisClusterList\022?\n\021analysis_clus"
-        + "ters\030\001 \003(\0132$.log.verification.LogAnalysi"
-        + "sCluster\"\332\001\n\025LogAnalysisClusterMap\022_\n\025an"
-        + "alysis_clusters_map\030\001 \003(\0132@.log.verifica"
-        + "tion.LogAnalysisClusterMap.AnalysisClust"
-        + "ersMapEntry\032`\n\030AnalysisClustersMapEntry\022"
-        + "\013\n\003key\030\001 \001(\t\0223\n\005value\030\002 \001(\0132$.log.verifi"
-        + "cation.LogAnalysisCluster:\0028\001\"\362\n\n\032LogMLA"
-        + "nalysisRecordDetails\022@\n\016unknown_events\030\001"
-        + " \003(\0132(.log.verification.LogAnalysisClust"
-        + "erList\022Q\n\013test_events\030\002 \003(\0132<.log.verifi"
-        + "cation.LogMLAnalysisRecordDetails.TestEv"
-        + "entsEntry\022W\n\016control_events\030\003 \003(\0132?.log."
+        + "\020\n\010sequence\030\003 \003(\005\022\022\n\ntimestamps\030\004 \003(\003\"=\n"
+        + "\021LogAnalysisResult\022\r\n\005label\030\001 \002(\005\022\013\n\003tag"
+        + "\030\002 \002(\t\022\014\n\004text\030\003 \002(\t\"Y\n\026LogAnalysisClust"
+        + "erList\022?\n\021analysis_clusters\030\001 \003(\0132$.log."
+        + "verification.LogAnalysisCluster\"\332\001\n\025LogA"
+        + "nalysisClusterMap\022_\n\025analysis_clusters_m"
+        + "ap\030\001 \003(\0132@.log.verification.LogAnalysisC"
+        + "lusterMap.AnalysisClustersMapEntry\032`\n\030An"
+        + "alysisClustersMapEntry\022\013\n\003key\030\001 \001(\t\0223\n\005v"
+        + "alue\030\002 \001(\0132$.log.verification.LogAnalysi"
+        + "sCluster:\0028\001\"\263\014\n\032LogMLAnalysisRecordDeta"
+        + "ils\022@\n\016unknown_events\030\001 \003(\0132(.log.verifi"
+        + "cation.LogAnalysisClusterList\022Q\n\013test_ev"
+        + "ents\030\002 \003(\0132<.log.verification.LogMLAnaly"
+        + "sisRecordDetails.TestEventsEntry\022W\n\016cont"
+        + "rol_events\030\003 \003(\0132?.log.verification.LogM"
+        + "LAnalysisRecordDetails.ControlEventsEntr"
+        + "y\022[\n\020control_clusters\030\004 \003(\0132A.log.verifi"
+        + "cation.LogMLAnalysisRecordDetails.Contro"
+        + "lClustersEntry\022[\n\020unknown_clusters\030\005 \003(\013"
+        + "2A.log.verification.LogMLAnalysisRecordD"
+        + "etails.UnknownClustersEntry\022U\n\rtest_clus"
+        + "ters\030\006 \003(\0132>.log.verification.LogMLAnaly"
+        + "sisRecordDetails.TestClustersEntry\022Y\n\017ig"
+        + "nore_clusters\030\007 \003(\0132@.log.verification.L"
+        + "ogMLAnalysisRecordDetails.IgnoreClusters"
+        + "Entry\022_\n\022frequency_patterns\030\010 \003(\0132C.log."
         + "verification.LogMLAnalysisRecordDetails."
-        + "ControlEventsEntry\022[\n\020control_clusters\030\004"
-        + " \003(\0132A.log.verification.LogMLAnalysisRec"
-        + "ordDetails.ControlClustersEntry\022[\n\020unkno"
-        + "wn_clusters\030\005 \003(\0132A.log.verification.Log"
-        + "MLAnalysisRecordDetails.UnknownClustersE"
-        + "ntry\022U\n\rtest_clusters\030\006 \003(\0132>.log.verifi"
-        + "cation.LogMLAnalysisRecordDetails.TestCl"
-        + "ustersEntry\022Y\n\017ignore_clusters\030\007 \003(\0132@.l"
-        + "og.verification.LogMLAnalysisRecordDetai"
-        + "ls.IgnoreClustersEntry\022_\n\022frequency_patt"
-        + "erns\030\010 \003(\0132C.log.verification.LogMLAnaly"
-        + "sisRecordDetails.FrequencyPatternsEntry\032"
-        + "[\n\017TestEventsEntry\022\013\n\003key\030\001 \001(\t\0227\n\005value"
-        + "\030\002 \001(\0132(.log.verification.LogAnalysisClu"
-        + "sterList:\0028\001\032^\n\022ControlEventsEntry\022\013\n\003ke"
-        + "y\030\001 \001(\t\0227\n\005value\030\002 \001(\0132(.log.verificatio"
-        + "n.LogAnalysisClusterList:\0028\001\032_\n\024ControlC"
-        + "lustersEntry\022\013\n\003key\030\001 \001(\t\0226\n\005value\030\002 \001(\013"
-        + "2\'.log.verification.LogAnalysisClusterMa"
-        + "p:\0028\001\032_\n\024UnknownClustersEntry\022\013\n\003key\030\001 \001"
-        + "(\t\0226\n\005value\030\002 \001(\0132\'.log.verification.Log"
-        + "AnalysisClusterMap:\0028\001\032\\\n\021TestClustersEn"
-        + "try\022\013\n\003key\030\001 \001(\t\0226\n\005value\030\002 \001(\0132\'.log.ve"
-        + "rification.LogAnalysisClusterMap:\0028\001\032^\n\023"
-        + "IgnoreClustersEntry\022\013\n\003key\030\001 \001(\t\0226\n\005valu"
-        + "e\030\002 \001(\0132\'.log.verification.LogAnalysisCl"
-        + "usterMap:\0028\001\032\\\n\026FrequencyPatternsEntry\022\013"
-        + "\n\003key\030\001 \001(\t\0221\n\005value\030\002 \001(\0132\".log.verific"
-        + "ation.FrequencyPattern:\0028\001BN\n2software.w"
-        + "ings.service.impl.verification.generated"
-        + "B\030LogMLAnalysisRecordProto"};
+        + "FrequencyPatternsEntry\022`\n\023log_analysis_r"
+        + "esult\030\t \003(\0132C.log.verification.LogMLAnal"
+        + "ysisRecordDetails.LogAnalysisResultEntry"
+        + "\032[\n\017TestEventsEntry\022\013\n\003key\030\001 \001(\t\0227\n\005valu"
+        + "e\030\002 \001(\0132(.log.verification.LogAnalysisCl"
+        + "usterList:\0028\001\032^\n\022ControlEventsEntry\022\013\n\003k"
+        + "ey\030\001 \001(\t\0227\n\005value\030\002 \001(\0132(.log.verificati"
+        + "on.LogAnalysisClusterList:\0028\001\032_\n\024Control"
+        + "ClustersEntry\022\013\n\003key\030\001 \001(\t\0226\n\005value\030\002 \001("
+        + "\0132\'.log.verification.LogAnalysisClusterM"
+        + "ap:\0028\001\032_\n\024UnknownClustersEntry\022\013\n\003key\030\001 "
+        + "\001(\t\0226\n\005value\030\002 \001(\0132\'.log.verification.Lo"
+        + "gAnalysisClusterMap:\0028\001\032\\\n\021TestClustersE"
+        + "ntry\022\013\n\003key\030\001 \001(\t\0226\n\005value\030\002 \001(\0132\'.log.v"
+        + "erification.LogAnalysisClusterMap:\0028\001\032^\n"
+        + "\023IgnoreClustersEntry\022\013\n\003key\030\001 \001(\t\0226\n\005val"
+        + "ue\030\002 \001(\0132\'.log.verification.LogAnalysisC"
+        + "lusterMap:\0028\001\032\\\n\026FrequencyPatternsEntry\022"
+        + "\013\n\003key\030\001 \001(\t\0221\n\005value\030\002 \001(\0132\".log.verifi"
+        + "cation.FrequencyPattern:\0028\001\032]\n\026LogAnalys"
+        + "isResultEntry\022\013\n\003key\030\001 \001(\t\0222\n\005value\030\002 \001("
+        + "\0132#.log.verification.LogAnalysisResult:\002"
+        + "8\001BN\n2software.wings.service.impl.verifi"
+        + "cation.generatedB\030LogMLAnalysisRecordPro"
+        + "to"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -9551,14 +10720,23 @@ public final class LogMLAnalysisRecordProto {
                 "Sequence",
                 "Timestamps",
             });
-    internal_static_log_verification_LogAnalysisClusterList_descriptor = getDescriptor().getMessageTypes().get(3);
+    internal_static_log_verification_LogAnalysisResult_descriptor = getDescriptor().getMessageTypes().get(3);
+    internal_static_log_verification_LogAnalysisResult_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_log_verification_LogAnalysisResult_descriptor,
+            new java.lang.String[] {
+                "Label",
+                "Tag",
+                "Text",
+            });
+    internal_static_log_verification_LogAnalysisClusterList_descriptor = getDescriptor().getMessageTypes().get(4);
     internal_static_log_verification_LogAnalysisClusterList_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_log_verification_LogAnalysisClusterList_descriptor,
             new java.lang.String[] {
                 "AnalysisClusters",
             });
-    internal_static_log_verification_LogAnalysisClusterMap_descriptor = getDescriptor().getMessageTypes().get(4);
+    internal_static_log_verification_LogAnalysisClusterMap_descriptor = getDescriptor().getMessageTypes().get(5);
     internal_static_log_verification_LogAnalysisClusterMap_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_log_verification_LogAnalysisClusterMap_descriptor,
@@ -9574,7 +10752,7 @@ public final class LogMLAnalysisRecordProto {
                 "Key",
                 "Value",
             });
-    internal_static_log_verification_LogMLAnalysisRecordDetails_descriptor = getDescriptor().getMessageTypes().get(5);
+    internal_static_log_verification_LogMLAnalysisRecordDetails_descriptor = getDescriptor().getMessageTypes().get(6);
     internal_static_log_verification_LogMLAnalysisRecordDetails_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_log_verification_LogMLAnalysisRecordDetails_descriptor,
@@ -9587,6 +10765,7 @@ public final class LogMLAnalysisRecordProto {
                 "TestClusters",
                 "IgnoreClusters",
                 "FrequencyPatterns",
+                "LogAnalysisResult",
             });
     internal_static_log_verification_LogMLAnalysisRecordDetails_TestEventsEntry_descriptor =
         internal_static_log_verification_LogMLAnalysisRecordDetails_descriptor.getNestedTypes().get(0);
@@ -9647,6 +10826,15 @@ public final class LogMLAnalysisRecordProto {
     internal_static_log_verification_LogMLAnalysisRecordDetails_FrequencyPatternsEntry_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_log_verification_LogMLAnalysisRecordDetails_FrequencyPatternsEntry_descriptor,
+            new java.lang.String[] {
+                "Key",
+                "Value",
+            });
+    internal_static_log_verification_LogMLAnalysisRecordDetails_LogAnalysisResultEntry_descriptor =
+        internal_static_log_verification_LogMLAnalysisRecordDetails_descriptor.getNestedTypes().get(7);
+    internal_static_log_verification_LogMLAnalysisRecordDetails_LogAnalysisResultEntry_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_log_verification_LogMLAnalysisRecordDetails_LogAnalysisResultEntry_descriptor,
             new java.lang.String[] {
                 "Key",
                 "Value",

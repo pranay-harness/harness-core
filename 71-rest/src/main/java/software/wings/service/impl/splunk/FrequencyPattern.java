@@ -6,7 +6,6 @@ import lombok.Data;
 import java.util.List;
 
 // TODO Compress Frequency pattern in log_analysis_record.proto
-// TODO Add Tag variable to Frequency Pattern.
 @Data
 @Builder
 public class FrequencyPattern {
