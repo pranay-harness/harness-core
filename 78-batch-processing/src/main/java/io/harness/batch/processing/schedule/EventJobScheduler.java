@@ -24,47 +24,35 @@ public class EventJobScheduler {
   @Autowired private BatchJobRunner batchJobRunner;
 
   @Scheduled(cron = "0 */1 * * * ?")
-  public void runEcsEventJob() {
+  public void runCloudEfficiencyEventJobs() {
     try {
-      batchJobRunner.runJob(ecsJob, BatchJobType.ECS_EVENT, 1, ChronoUnit.DAYS);
+      batchJobRunner.runJob(ecsJob, BatchJobType.ECS_EVENT, 1, ChronoUnit.HOURS);
     } catch (Exception ex) {
       logger.error("Exception while running runEcsEventJob job ", ex);
     }
-  }
 
-  @Scheduled(cron = "0 */1 * * * ?")
-  public void runK8sUtilizationJob() {
+    try {
+      batchJobRunner.runJob(k8sJob, BatchJobType.K8S_EVENT, 1, ChronoUnit.HOURS);
+    } catch (Exception ex) {
+      logger.error("Exception while running runK8sEventJob job ", ex);
+    }
+
+    try {
+      batchJobRunner.runJob(ecsUtilizationJob, BatchJobType.ECS_UTILIZATION, 1, ChronoUnit.HOURS);
+    } catch (Exception ex) {
+      logger.error("Exception while running runEcsUtilizationJob job ", ex);
+    }
+
     try {
       batchJobRunner.runJob(k8sUtilizationJob, BatchJobType.K8S_UTILIZATION, 1, ChronoUnit.HOURS);
     } catch (Exception ex) {
       logger.error("Exception while running runK8sUtilizationJob job ", ex);
     }
-  }
 
-  @Scheduled(cron = "0 */1 * * * ?")
-  public void runBillingBatchJob() {
     try {
-      batchJobRunner.runJob(instanceBillingJob, BatchJobType.INSTANCE_BILLING, 1, ChronoUnit.DAYS);
+      batchJobRunner.runJob(instanceBillingJob, BatchJobType.INSTANCE_BILLING, 1, ChronoUnit.HOURS);
     } catch (Exception ex) {
       logger.error("Exception while running runBillingBatchJob job ", ex);
-    }
-  }
-
-  @Scheduled(cron = "0 */1 * * * ?")
-  public void runK8sEventJob() {
-    try {
-      batchJobRunner.runJob(k8sJob, BatchJobType.K8S_EVENT, 1, ChronoUnit.DAYS); // TODO: change to DAYS
-    } catch (Exception ex) {
-      logger.error("Exception while running runK8sEventJob job ", ex);
-    }
-  }
-
-  @Scheduled(cron = "0 */1 * * * ?")
-  public void runEcsUtilizationJob() {
-    try {
-      batchJobRunner.runJob(ecsUtilizationJob, BatchJobType.ECS_UTILIZATION, 1, ChronoUnit.DAYS);
-    } catch (Exception ex) {
-      logger.error("Exception while running runEcsUtilizationJob job ", ex);
     }
   }
 }
