@@ -57,7 +57,7 @@ public class BillingDataQueryBuilder {
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
     List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
 
-    if (isGroupByClusterPresent(groupBy) || isNoneGroupBySelectedInClusterView(groupBy, filters)) {
+    if (isGroupByClusterPresent(groupBy) || isNoneGroupBySelectedWithoutFilterInClusterView(groupBy, filters)) {
       addInstanceTypeFilter(filters);
     }
 
@@ -484,9 +484,10 @@ public class BillingDataQueryBuilder {
     return groupByList.stream().anyMatch(groupBy -> groupBy == QLCCMEntityGroupBy.StartTime);
   }
 
-  private boolean isNoneGroupBySelectedInClusterView(
+  private boolean isNoneGroupBySelectedWithoutFilterInClusterView(
       List<QLCCMEntityGroupBy> groupByList, List<QLBillingDataFilter> filters) {
-    if (isClusterFilterPresent(filters) && isGroupByNonePresent(groupByList)) {
+    if (isClusterFilterPresent(filters) && !checkForAdditionalFilterInClusterDrillDown(filters)
+        && isGroupByNonePresent(groupByList)) {
       return true;
     }
     return false;
@@ -495,6 +496,15 @@ public class BillingDataQueryBuilder {
   private boolean isGroupByNonePresent(List<QLCCMEntityGroupBy> groupByList) {
     if (isEmpty(groupByList) || (groupByList.size() == 1 && isGroupByStartTimePresent(groupByList))) {
       return true;
+    }
+    return false;
+  }
+
+  private boolean checkForAdditionalFilterInClusterDrillDown(List<QLBillingDataFilter> filters) {
+    for (QLBillingDataFilter filter : filters) {
+      if (!(filter.getCluster() != null || filter.getStartTime() != null || filter.getEndTime() != null)) {
+        return true;
+      }
     }
     return false;
   }
