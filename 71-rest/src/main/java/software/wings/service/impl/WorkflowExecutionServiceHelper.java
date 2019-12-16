@@ -28,7 +28,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
-import software.wings.service.impl.workflow.queuing.WorkflowConcurrencyHelper;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
@@ -49,7 +48,6 @@ public class WorkflowExecutionServiceHelper {
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private WorkflowConcurrencyHelper workflowConcurrencyHelper;
   @Inject private PipelineService pipelineService;
 
   public WorkflowVariablesMetadata fetchWorkflowVariables(
@@ -90,10 +88,7 @@ public class WorkflowExecutionServiceHelper {
     if (!workflow.getOrchestrationWorkflow().isValid()) {
       throw new InvalidRequestException("Workflow requested for execution is not valid/complete.");
     }
-    if (infraRefactor) {
-      workflow.setOrchestrationWorkflow(workflowConcurrencyHelper.enhanceWithConcurrencySteps(
-          workflow.getAppId(), workflow.getOrchestrationWorkflow()));
-    }
+
     return workflow;
   }
 
