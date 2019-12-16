@@ -7,15 +7,10 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.settings.SettingValue;
-import software.wings.settings.UsageRestrictions;
-import software.wings.yaml.setting.CollaborationProviderYaml;
 
 import java.util.Arrays;
 import java.util.List;
@@ -109,20 +104,6 @@ public class SlackConfig extends SettingValue implements SlackNotificationConfig
      */
     public Builder but() {
       return aSlackConfig().withOutgoingWebhookUrl(outgoingWebhookUrl);
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends CollaborationProviderYaml {
-    private String outgoingWebhookUrl;
-
-    @lombok.Builder
-    public Yaml(
-        String type, String harnessApiVersion, String outgoingWebhookUrl, UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.outgoingWebhookUrl = outgoingWebhookUrl;
     }
   }
 }
