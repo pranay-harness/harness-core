@@ -131,7 +131,26 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
-  public void testGroupByNoneInClusterTableView() {
+  public void testGroupByNoneWithFiltersInClusterDrillDownTableView() {
+    Long filterTime = 0L;
+    String[] clusterValues = new String[] {CLUSTER1_ID};
+    String[] namespaceValues = new String[] {NAMESPACE1};
+    List<QLCCMAggregationFunction> aggregationFunction =
+        Arrays.asList(makeBillingAmtAggregation(), makeIdleCostAggregation());
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeTimeFilter(filterTime));
+    filters.add(makeClusterFilter(clusterValues));
+    filters.add(makeNamespaceFilter(namespaceValues));
+    QLEntityTableListData data = (QLEntityTableListData) billingStatsEntityDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+    assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
+    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(5.0);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGroupByNoneInClusterDrillDownTableView() {
     Long filterTime = 0L;
     String[] clusterValues = new String[] {CLUSTER1_ID};
     List<QLCCMAggregationFunction> aggregationFunction =
@@ -381,6 +400,11 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
   public QLBillingDataFilter makeClusterFilter(String[] values) {
     QLIdFilter clusterFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().cluster(clusterFilter).build();
+  }
+
+  public QLBillingDataFilter makeNamespaceFilter(String[] values) {
+    QLIdFilter namespaceFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().namespace(namespaceFilter).build();
   }
 
   private void mockResultSet() throws SQLException {
