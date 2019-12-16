@@ -13,7 +13,9 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_NAME;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
@@ -35,6 +37,8 @@ import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
+import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.PcfInfraStructure;
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
@@ -49,6 +53,7 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -67,6 +72,7 @@ import java.util.Optional;
  */
 public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
   protected InfrastructureMapping infrastructureMapping = getInfraMapping();
+  protected InfrastructureDefinition infrastructureDefinition = getInfraDefinition();
   protected Service service = getService();
   protected Environment environment = getEnvironment();
   protected ArtifactStream artifactStream = getArtifactStream();
@@ -78,6 +84,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
 
   @Mock protected AppService appService;
   @Mock protected InfrastructureMappingService infrastructureMappingService;
+  @Mock protected InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock protected ServiceResourceService serviceResourceService;
   @Mock protected ArtifactStreamService artifactStreamService;
   @Mock protected SettingsService settingsService;
@@ -126,7 +133,10 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
 
     when(infrastructureMappingService.getInfraMappingByName(anyString(), anyString(), anyString()))
         .thenReturn(infrastructureMapping);
+    when(infrastructureDefinitionService.getInfraDefByName(anyString(), anyString(), anyString()))
+        .thenReturn(infrastructureDefinition);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
+    when(infrastructureDefinitionService.get(any(), any())).thenReturn(infrastructureDefinition);
 
     when(yamlHandlerFactory.getYamlHandler(YamlType.PHASE)).thenReturn(phaseYamlHandler);
     when(yamlHandlerFactory.getYamlHandler(YamlType.PHASE_STEP)).thenReturn(phaseStepYamlHandler);
@@ -152,6 +162,15 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
         .withComputeProviderType("DIRECT")
         .withUuid(INFRA_MAPPING_ID)
         .withDeploymentType(DeploymentType.KUBERNETES.name())
+        .build();
+  }
+
+  private InfrastructureDefinition getInfraDefinition() {
+    return InfrastructureDefinition.builder()
+        .uuid(INFRA_DEFINITION_ID)
+        .name(INFRA_NAME)
+        .appId(APP_ID)
+        .infrastructure(PcfInfraStructure.builder().build())
         .build();
   }
 
