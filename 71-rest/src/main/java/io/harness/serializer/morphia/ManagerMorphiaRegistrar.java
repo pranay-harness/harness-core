@@ -9,8 +9,6 @@ import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
-import io.harness.marketplace.gcp.events.AccountActiveEvent;
-import io.harness.marketplace.gcp.events.GcpMarketplaceEvent;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
@@ -799,7 +797,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(GCPBillingJobEntity.class);
     set.add(GcpKmsConfig.class);
     set.add(GcpKubernetesInfrastructureMapping.class);
-    set.add(GcpMarketplaceEvent.class);
     set.add(GCPUsageReport.class);
     set.add(GcrArtifactStream.class);
     set.add(GcsArtifactStream.class);
@@ -959,7 +956,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
   public void registerImplementationClasses(Map<String, Class> map) {
     final HelperPut h = (name, clazz) -> map.put(PKG_HARNESS + name, clazz);
 
-    h.put("marketplace.gcp.events.AccountActiveEvent", AccountActiveEvent.class);
     h.put("ccm.cluster.entities.DirectKubernetesCluster", DirectKubernetesCluster.class);
     h.put("ccm.cluster.entities.EcsCluster", EcsCluster.class);
     h.put("ccm.budget.entities.ApplicationBudgetScope", ApplicationBudgetScope.class);

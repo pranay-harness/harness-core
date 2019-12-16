@@ -4,8 +4,6 @@ import com.google.inject.AbstractModule;
 
 import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
 import io.harness.marketplace.gcp.GcpMarketPlaceApiHandlerImpl;
-import io.harness.marketplace.gcp.events.GcpMarketplaceEventService;
-import io.harness.marketplace.gcp.events.GcpMarketplaceEventServiceImpl;
 import io.harness.marketplace.gcp.signup.ExistingUserRegistrationHandler;
 import io.harness.marketplace.gcp.signup.GcpMarketplaceSignUpHandler;
 import io.harness.marketplace.gcp.signup.NewUserRegistrationHandler;
@@ -21,7 +19,6 @@ import software.wings.service.intfc.marketplace.gcp.GCPUsageReportService;
 public final class GcpMarketplaceIntegrationModule extends AbstractModule {
   @Override
   protected void configure() {
-    bind(GcpMarketplaceEventService.class).to(GcpMarketplaceEventServiceImpl.class);
     bind(GcpMarketPlaceApiHandler.class).to(GcpMarketPlaceApiHandlerImpl.class);
     bind(GCPUsageReportService.class).to(GCPUsageReportServiceImpl.class);
     bind(GCPBillingPollingService.class).to(GCPBillingPollingServiceImpl.class);
