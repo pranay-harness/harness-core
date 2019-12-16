@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
 
 @Value
 @Slf4j
-@JsonIgnoreProperties({"label", "inRange"})
+@JsonIgnoreProperties({"inRange"})
 public class TimeRange {
   @Nullable private String label;
 
