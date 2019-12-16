@@ -1116,6 +1116,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     deploymentFreezeChecker.check(accountId);
     checkPreDeploymentConditions(accountId, appId);
 
+    if (infraRefactor) {
+      workflow.setOrchestrationWorkflow(workflowConcurrencyHelper.enhanceWithConcurrencySteps(
+          workflow.getAppId(), workflow.getOrchestrationWorkflow()));
+    }
+
     StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
         ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(),
         workflowService.stencilMap(appId), infraRefactor, false);
@@ -1941,6 +1946,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     // Not including instance limit and deployment limit check as it is a emergency rollback
     accountExpirationChecker.check(accountId);
+    if (infraRefactor) {
+      workflow.setOrchestrationWorkflow(workflowConcurrencyHelper.enhanceWithConcurrencySteps(
+          workflow.getAppId(), workflow.getOrchestrationWorkflow()));
+    }
 
     StateMachine stateMachine = rollbackStateMachineGenerator.generateForRollbackExecution(
         appId, previousWorkflowExecution.getUuid(), infraRefactor);
