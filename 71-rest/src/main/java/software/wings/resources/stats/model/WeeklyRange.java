@@ -68,8 +68,8 @@ public class WeeklyRange {
     calendar.setTime(CalendarUtils.getDate(endTime));
     int endingHourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
 
-    return checkIfLiesInRange(startingDayOfWindow, endingDayOfWindow, currentDayOfWeek)
-        && checkIfLiesInRange(startingHourOfDay, endingHourOfDay, currentHourOfDay);
+    return checkIfLiesInRangeAllInclusive(startingDayOfWindow, endingDayOfWindow, currentDayOfWeek)
+        && checkIfLiesInRangeLeftInclusive(startingHourOfDay, endingHourOfDay, currentHourOfDay);
   }
 
   /***
@@ -98,7 +98,10 @@ public class WeeklyRange {
     }
   }
 
-  private static boolean checkIfLiesInRange(long start, long end, long value) {
+  private static boolean checkIfLiesInRangeAllInclusive(long start, long end, long value) {
+    return start <= value && value <= end;
+  }
+  private static boolean checkIfLiesInRangeLeftInclusive(long start, long end, long value) {
     return start <= value && value < end;
   }
 }

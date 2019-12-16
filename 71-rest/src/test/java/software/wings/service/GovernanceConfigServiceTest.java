@@ -1,8 +1,6 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.RAMA;
-import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
-import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -126,20 +124,6 @@ public class GovernanceConfigServiceTest extends BaseIntegrationTest {
       } catch (WingsException e) {
         assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
       }
-    }
-  }
-
-  /**
-   * Should not be able to add a weekly window with invalid range
-   */
-  @Test
-  @Owner(developers = VARDAN_BANSAL)
-  @Category(IntegrationTests.class)
-  public void createGovernanceConfig_shouldThrowException() {
-    try {
-      new WeeklyRange(null, "Monday", "7:00 PM", "Tuesday", "5:00 AM", "Asia/Kolkata");
-    } catch (Exception ex) {
-      assertTrue(ex instanceof IllegalArgumentException);
     }
   }
 
