@@ -367,11 +367,27 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
   @Override
   public DataCollectionInfoV2 createDataCollectionInfo(ExecutionContext context, Set<String> hosts) {
-    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     String envId = getEnvId(context);
-    final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
+    String finalAnalysisServerConfigId = analysisServerConfigId;
+    String finalIndices = indices;
+
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression configIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
+      if (configIdExpression != null) {
+        SettingAttribute settingAttribute =
+            templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
+        finalAnalysisServerConfigId = settingAttribute.getUuid();
+      }
+      TemplateExpression indicesExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "indices");
+      if (indicesExpression != null) {
+        finalIndices = templateExpressionProcessor.resolveTemplateExpression(context, indicesExpression);
+      }
+    }
+
     return ElkDataCollectionInfoV2.builder()
-        .elkConfig(elkConfig)
+        .connectorId(finalAnalysisServerConfigId)
         .workflowExecutionId(context.getWorkflowExecutionId())
         .stateExecutionId(context.getStateExecutionInstanceId())
         .workflowId(context.getWorkflowId())
@@ -381,7 +397,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
         .query(getRenderedQuery())
         .hostnameField(getHostnameField())
         .hosts(hosts)
-        .indices(indices)
+        .indices(finalIndices)
         .messageField(messageField)
         .timestampField(getTimestampField())
         .timestampFieldFormat(getTimestampFormat())

@@ -1,6 +1,7 @@
 package software.wings.verification;
 
 import static java.lang.Boolean.parseBoolean;
+import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 
 import com.google.common.base.Preconditions;
 
@@ -23,9 +24,11 @@ import software.wings.beans.Base;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.sm.StateType;
 import software.wings.yaml.BaseEntityYaml;
 
+import java.util.Collections;
 import java.util.Date;
 import javax.validation.constraints.NotNull;
 
@@ -102,6 +105,21 @@ public class CVConfiguration extends Base implements NameAccess {
   @JsonIgnore
   public CVConfiguration deepCopy() {
     throw new UnsupportedOperationException("Deep clone is being called from base method");
+  }
+
+  @JsonIgnore
+  public DataCollectionInfoV2 toDataCollectionInfo() {
+    throw new UnsupportedOperationException("DataCollectionInfo creation is not supported for this type.");
+  }
+
+  protected void fillDataCollectionInfoWithCommonFields(DataCollectionInfoV2 dataCollectionInfo) {
+    dataCollectionInfo.setConnectorId(this.getConnectorId());
+    dataCollectionInfo.setCvConfigId(this.getUuid());
+    dataCollectionInfo.setAccountId(this.getAccountId());
+    dataCollectionInfo.setApplicationId(this.getAppId());
+    dataCollectionInfo.setServiceId(this.getServiceId());
+    dataCollectionInfo.setStateExecutionId(CV_24x7_STATE_EXECUTION + "-" + this.getUuid());
+    dataCollectionInfo.setHosts(Collections.emptySet());
   }
 
   protected void copy(CVConfiguration cvConfiguration) {

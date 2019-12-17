@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import lombok.Builder;
@@ -43,7 +42,6 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -151,8 +149,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
         newRelicService.metricDefinitions(metricNameToObjectMap);
     metricAnalysisService.saveMetricTemplates(
         context.getAppId(), StateType.NEW_RELIC, context.getStateExecutionInstanceId(), null, metricTemplate);
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = getEnvId(context);
     SettingAttribute settingAttribute = null;
     String finalServerConfigId = analysisServerConfigId;
     String finalNewRelicApplicationId = applicationId;
@@ -243,8 +240,6 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   @Override
   protected DataCollectionInfoV2 createDataCollectionInfo(
       ExecutionContext context, Map<String, String> hostsToCollect) {
-    NewRelicConfig newRelicConfig;
-    String envId;
     String finalNewRelicApplicationId = applicationId;
     final Collection<Metric> metricNameToObjectMap =
         newRelicService.getMetricsCorrespondingToMetricNames(metrics).values();
@@ -252,8 +247,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
         newRelicService.metricDefinitions(metricNameToObjectMap);
     metricAnalysisService.saveMetricTemplates(
         context.getAppId(), StateType.NEW_RELIC, context.getStateExecutionInstanceId(), null, metricTemplate);
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = getEnvId(context);
     SettingAttribute settingAttribute = null;
     String finalServerConfigId = analysisServerConfigId;
 
@@ -281,11 +275,9 @@ public class NewRelicState extends AbstractMetricAnalysisState {
         }
       }
     }
-    settingAttribute = settingsService.get(analysisServerConfigId);
-    newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
-    String finalNewRelicApplicationIdTmp = finalNewRelicApplicationId;
+
     return NewRelicDataCollectionInfoV2.builder()
-        .newRelicConfig(newRelicConfig)
+        .connectorId(analysisServerConfigId)
         .workflowExecutionId(context.getWorkflowExecutionId())
         .stateExecutionId(context.getStateExecutionInstanceId())
         .workflowId(context.getWorkflowId())
@@ -293,7 +285,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
         .envId(envId)
         .applicationId(context.getAppId())
         .hosts(hostsToCollect.keySet())
-        .newRelicAppId(Long.parseLong(finalNewRelicApplicationIdTmp))
+        .newRelicAppId(Long.parseLong(finalNewRelicApplicationId))
         .hostsToGroupNameMap(hostsToCollect)
         .serviceId(getPhaseServiceId(context))
         .build();

@@ -553,7 +553,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .thenReturn(managerFeatureFlagCall);
     SplunkCVConfiguration splunkCVConfiguration = SplunkCVConfiguration.builder().build();
     splunkCVConfiguration.setEnabled24x7(true);
-    splunkCVConfiguration.setUuid(generateUuid());
+    splunkCVConfiguration.setUuid(cvConfigId);
     splunkCVConfiguration.setAccountId(accountId);
     splunkCVConfiguration.setStateType(StateType.SPLUNKV2);
     splunkCVConfiguration.setBaselineStartMinute(
@@ -561,25 +561,19 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     splunkCVConfiguration.setBaselineEndMinute(
         TimeUnit.MILLISECONDS.toMinutes(Instant.now().minus(30, ChronoUnit.MINUTES).toEpochMilli()));
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(splunkCVConfiguration));
-    Call<RestResponse<DataCollectionInfoV2>> managerCall = mock(Call.class);
-    DataCollectionInfoV2 dataCollectionInfoV2 = mock(DataCollectionInfoV2.class);
-    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(dataCollectionInfoV2)));
-    when(verificationManagerClient.createDataCollectionInfo(any(), anyLong(), anyLong())).thenReturn(managerCall);
-
     continuousVerificationService.triggerLogDataCollection(accountId);
     ArgumentCaptor<CVTask> capture = ArgumentCaptor.forClass(CVTask.class);
     verify(cvTaskService).saveCVTask(capture.capture());
     CVTask savedTask = capture.getValue();
     assertThat(savedTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
-    assertThat(savedTask.getDataCollectionInfo()).isEqualTo(dataCollectionInfoV2);
-    assertThat(savedTask.getCvConfigId()).isEqualTo(splunkCVConfiguration.getUuid());
-    assertThat(savedTask.getAccountId()).isEqualTo(accountId);
+    DataCollectionInfoV2 savedDataCollectionInfo = savedTask.getDataCollectionInfo();
+    assertThat(savedDataCollectionInfo.getCvConfigId()).isEqualTo(cvConfigId);
   }
 
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
-  public void testDatadogLogsCollection() throws IOException {
+  public void testDatadogLogsCollection() {
     continuousVerificationService.triggerLogDataCollection(accountId);
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();

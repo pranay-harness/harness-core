@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -38,6 +39,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.User;
@@ -57,14 +59,13 @@ import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVConfigurationService;
-import software.wings.service.intfc.verification.DataCollectionInfoService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DatadogState.Metric;
-import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMapResolution;
 import software.wings.verification.apm.APMCVServiceConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
@@ -108,7 +109,6 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Mock private WingsPersistence mockWingsPersistence;
   @Mock private UserPermissionInfo mockUserPermissionInfo;
   @Mock private CVConfigurationService cvConfigurationService;
-  @Mock private DataCollectionInfoService dataCollectionInfoService;
   @InjectMocks private ContinuousVerificationServiceImpl continuousVerificationService;
 
   @Before
@@ -135,7 +135,6 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
 
     when(mockAuthService.getUserPermissionInfo(accountId, user, false)).thenReturn(mockUserPermissionInfo);
     FieldUtils.writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
-    FieldUtils.writeField(continuousVerificationService, "dataCollectionInfoService", dataCollectionInfoService, true);
   }
 
   private ContinuousVerificationExecutionMetaData getExecutionMetadata() {
@@ -344,49 +343,76 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testCreateDataCollectionInfo() {
-    CVConfiguration cvConfiguration = mock(CVConfiguration.class);
-    Instant startTime = Instant.now().minus(5, ChronoUnit.MINUTES);
-    Instant endTime = Instant.now();
-    String cvConfigId = UUID.randomUUID().toString();
-    when(cvConfigurationService.getConfiguration(eq(cvConfigId))).thenReturn(cvConfiguration);
-    when(cvConfiguration.getUuid()).thenReturn(cvConfigId);
-    when(cvConfiguration.getAccountId()).thenReturn(accountId);
-    DataCollectionInfoV2 dataCollectionInfo = mock(DataCollectionInfoV2.class);
-    when(dataCollectionInfoService.create(any(), any(), any())).thenReturn(dataCollectionInfo);
-    DataCollectionInfoV2 createdDataCollectionInfo =
-        continuousVerificationService.createDataCollectionInfo(cvConfigId, startTime, endTime);
-    assertThat(createdDataCollectionInfo).isEqualTo(dataCollectionInfo);
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testCollectCVData() throws IllegalAccessException {
+  public void testCollectCVData_withAllCorrectParams() throws IllegalAccessException {
     String cvTaskId = generateUuid();
     DataCollectionInfoV2 dataCollectionInfoV2 = SplunkDataCollectionInfoV2.builder()
                                                     .accountId(accountId)
+                                                    .connectorId(generateUuid())
                                                     .stateExecutionId(generateUuid())
-                                                    .splunkConfig(mock(SplunkConfig.class))
+                                                    .startTime(Instant.now().minus(10, ChronoUnit.MINUTES))
+                                                    .endTime(Instant.now())
+                                                    .applicationId(generateUuid())
+                                                    .query("query")
+                                                    .hostnameField("hostnameField")
                                                     .build();
+    SplunkConfig splunkConfig = mock(SplunkConfig.class);
     DelegateService delegateService = mock(DelegateService.class);
     SecretManager secretManager = mock(SecretManager.class);
+    SettingsService settingsService = mock(SettingsService.class);
     FieldUtils.writeField(continuousVerificationService, "delegateService", delegateService, true);
     FieldUtils.writeField(continuousVerificationService, "secretManager", secretManager, true);
+    FieldUtils.writeField(continuousVerificationService, "settingsService", settingsService, true);
+    SettingAttribute settingAttribute = mock(SettingAttribute.class);
+    when(settingsService.get(eq(dataCollectionInfoV2.getConnectorId()))).thenReturn(settingAttribute);
+    when(settingAttribute.getValue()).thenReturn(splunkConfig);
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     encryptedDataDetails.add(mock(EncryptedDataDetail.class));
     when(secretManager.getEncryptionDetails(any(), anyString(), anyString())).thenReturn(encryptedDataDetails);
+
     continuousVerificationService.collectCVData(cvTaskId, dataCollectionInfoV2);
     ArgumentCaptor<DelegateTask> argumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(argumentCaptor.capture());
     DelegateTask delegateTask = argumentCaptor.getValue();
     assertThat(delegateTask.getAccountId()).isEqualTo(dataCollectionInfoV2.getAccountId());
     assertThat(delegateTask.getData().getParameters()).hasSize(1);
-    DataCollectionInfoV2 params = (DataCollectionInfoV2) delegateTask.getData().getParameters()[0];
+    SplunkDataCollectionInfoV2 params = (SplunkDataCollectionInfoV2) delegateTask.getData().getParameters()[0];
     assertThat(params).isEqualTo(dataCollectionInfoV2);
     assertThat(delegateTask.getData().getTaskType()).isEqualTo(TaskType.SPLUNK_COLLECT_LOG_DATAV2.toString());
     assertThat(params.getCvTaskId()).isEqualTo(cvTaskId);
     assertThat(params.getEncryptedDataDetails()).isEqualTo(encryptedDataDetails);
+    assertThat(params.getSplunkConfig()).isEqualTo(splunkConfig);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCollectCVData_validationFailures() throws IllegalAccessException {
+    String cvTaskId = generateUuid();
+    DataCollectionInfoV2 dataCollectionInfoV2 = SplunkDataCollectionInfoV2.builder()
+                                                    .accountId(accountId)
+                                                    .connectorId(generateUuid())
+                                                    .stateExecutionId(generateUuid())
+                                                    .startTime(Instant.now().minus(10, ChronoUnit.MINUTES))
+                                                    .endTime(Instant.now())
+                                                    .applicationId(generateUuid())
+                                                    .hostnameField("hostnameField")
+                                                    .build();
+    SplunkConfig splunkConfig = mock(SplunkConfig.class);
+    DelegateService delegateService = mock(DelegateService.class);
+    SecretManager secretManager = mock(SecretManager.class);
+    SettingsService settingsService = mock(SettingsService.class);
+    FieldUtils.writeField(continuousVerificationService, "delegateService", delegateService, true);
+    FieldUtils.writeField(continuousVerificationService, "secretManager", secretManager, true);
+    FieldUtils.writeField(continuousVerificationService, "settingsService", settingsService, true);
+    SettingAttribute settingAttribute = mock(SettingAttribute.class);
+    when(settingsService.get(eq(dataCollectionInfoV2.getConnectorId()))).thenReturn(settingAttribute);
+    when(settingAttribute.getValue()).thenReturn(splunkConfig);
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    encryptedDataDetails.add(mock(EncryptedDataDetail.class));
+    when(secretManager.getEncryptionDetails(any(), anyString(), anyString())).thenReturn(encryptedDataDetails);
+
+    assertThatThrownBy(() -> continuousVerificationService.collectCVData(cvTaskId, dataCollectionInfoV2))
+        .isInstanceOf(NullPointerException.class);
   }
 
   @Test

@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.ElkAnalysisState.DEFAULT_TIME_FIELD;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
 import io.harness.beans.DelegateTask;
@@ -40,6 +41,7 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
@@ -59,6 +61,7 @@ import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -322,25 +325,8 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testCreateDataCollectionInfo() throws ParseException, IllegalAccessException {
-    ElkConfig elkConfig = ElkConfig.builder()
-                              .accountId(accountId)
-                              .elkConnector(ElkConnector.ELASTIC_SEARCH_SERVER)
-                              .elkUrl(UUID.randomUUID().toString())
-                              .username(UUID.randomUUID().toString())
-                              .password(UUID.randomUUID().toString().toCharArray())
-                              .validationType(ElkValidationType.PASSWORD)
-                              .kibanaVersion(String.valueOf(0))
-                              .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withName("elk-config")
-                                            .withValue(elkConfig)
-                                            .build();
-    wingsPersistence.save(settingAttribute);
-    elkAnalysisState.setAnalysisServerConfigId(settingAttribute.getUuid());
-
+  public void testCreateDataCollectionInfo_withoutTemplatization() throws IllegalAccessException {
+    elkAnalysisState.setAnalysisServerConfigId(generateUuid());
     String indices = UUID.randomUUID().toString();
     elkAnalysisState.setIndices(indices);
 
@@ -358,14 +344,77 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
         (ElkDataCollectionInfoV2) elkAnalysisState.createDataCollectionInfo(
             executionContext, Sets.newHashSet("host1", "host2"));
     assertThat(StateType.ELK).isEqualTo(elkDataCollectionInfoV2.getStateType());
-    assertThat(elkConfig).isEqualTo(elkDataCollectionInfoV2.getElkConfig());
-    assertThat(executionContext.getStateExecutionInstanceId()).isEqualTo(elkDataCollectionInfoV2.getStateExecutionId());
-    assertThat(elkAnalysisState.getMessageField()).isEqualTo(elkDataCollectionInfoV2.getMessageField());
-    assertThat(elkAnalysisState.getRenderedQuery()).isEqualTo(elkDataCollectionInfoV2.getQuery());
-    assertThat(elkAnalysisState.getTimestampField()).isEqualTo(elkDataCollectionInfoV2.getTimestampField());
-    assertThat(elkAnalysisState.getTimestampFormat()).isEqualTo(elkDataCollectionInfoV2.getTimestampFieldFormat());
-    assertThat(elkAnalysisState.getIndices()).isEqualTo(elkDataCollectionInfoV2.getIndices());
-    assertThat(elkAnalysisState.getQueryType()).isEqualTo(elkDataCollectionInfoV2.getQueryType());
-    assertThat(Sets.newHashSet("host1", "host2")).isEqualTo(elkDataCollectionInfoV2.getHosts());
+    assertThat(elkDataCollectionInfoV2.getElkConfig()).isNull();
+    assertThat(elkDataCollectionInfoV2.getStateExecutionId()).isEqualTo(executionContext.getStateExecutionInstanceId());
+    assertThat(elkDataCollectionInfoV2.getMessageField()).isEqualTo(elkAnalysisState.getMessageField());
+    assertThat(elkDataCollectionInfoV2.getQuery()).isEqualTo(elkAnalysisState.getRenderedQuery());
+    assertThat(elkDataCollectionInfoV2.getTimestampField()).isEqualTo(elkAnalysisState.getTimestampField());
+    assertThat(elkDataCollectionInfoV2.getTimestampFieldFormat()).isEqualTo(elkAnalysisState.getTimestampFormat());
+    assertThat(elkDataCollectionInfoV2.getIndices()).isEqualTo(elkAnalysisState.getIndices());
+    assertThat(elkDataCollectionInfoV2.getQueryType()).isEqualTo(elkAnalysisState.getQueryType());
+    assertThat(elkDataCollectionInfoV2.getConnectorId()).isEqualTo(elkAnalysisState.getAnalysisServerConfigId());
+    assertThat(elkDataCollectionInfoV2.getHosts()).isEqualTo(Sets.newHashSet("host1", "host2"));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateDataCollectionInfo_withTemplatization() throws IllegalAccessException {
+    ElkConfig elkConfig = ElkConfig.builder()
+                              .accountId(accountId)
+                              .elkConnector(ElkConnector.ELASTIC_SEARCH_SERVER)
+                              .elkUrl(UUID.randomUUID().toString())
+                              .username(UUID.randomUUID().toString())
+                              .password(UUID.randomUUID().toString().toCharArray())
+                              .validationType(ElkValidationType.PASSWORD)
+                              .kibanaVersion(String.valueOf(0))
+                              .build();
+    elkAnalysisState.setAnalysisServerConfigId(generateUuid());
+    String indices = UUID.randomUUID().toString();
+    elkAnalysisState.setIndices(indices);
+    String messageField = UUID.randomUUID().toString();
+    elkAnalysisState.setMessageField(messageField);
+    String timestampFieldFormat = UUID.randomUUID().toString();
+    elkAnalysisState.setTimestampFormat(timestampFieldFormat);
+    elkAnalysisState.setQueryType(ElkQueryType.MATCH.name());
+    elkAnalysisState.setTimestampField("@time");
+    elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
+    FieldUtils.writeField(elkAnalysisState, "renderedQuery", "rendered query", true);
+    FieldUtils.writeField(elkAnalysisState, "templateExpressionProcessor", templateExpressionProcessor, true);
+    ElkAnalysisState spyState = spy(elkAnalysisState);
+    doReturn(Arrays.asList(TemplateExpression.builder()
+                               .fieldName("analysisServerConfigId")
+                               .expression("${ELK_Server}")
+                               .metadata(ImmutableMap.of("entityType", "ELK_CONFIGID"))
+                               .build(),
+                 TemplateExpression.builder()
+                     .fieldName("indices")
+                     .expression("${indices}")
+                     .metadata(ImmutableMap.of("entityType", "ELK_INDICES"))
+                     .build()))
+        .when(spyState)
+        .getTemplateExpressions();
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withName("elk-config")
+                                            .withValue(elkConfig)
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+    when(executionContext.renderExpression("${workflow.variables.ELK_Server}")).thenReturn(settingAttribute.getUuid());
+    when(executionContext.renderExpression("${workflow.variables.indices}")).thenReturn("rendered index");
+    ElkDataCollectionInfoV2 elkDataCollectionInfoV2 = (ElkDataCollectionInfoV2) spyState.createDataCollectionInfo(
+        executionContext, Sets.newHashSet("host1", "host2"));
+
+    assertThat(StateType.ELK).isEqualTo(elkDataCollectionInfoV2.getStateType());
+    assertThat(elkDataCollectionInfoV2.getElkConfig()).isNull();
+    assertThat(elkDataCollectionInfoV2.getStateExecutionId()).isEqualTo(executionContext.getStateExecutionInstanceId());
+    assertThat(elkDataCollectionInfoV2.getMessageField()).isEqualTo(elkAnalysisState.getMessageField());
+    assertThat(elkDataCollectionInfoV2.getQuery()).isEqualTo(elkAnalysisState.getRenderedQuery());
+    assertThat(elkDataCollectionInfoV2.getTimestampField()).isEqualTo(elkAnalysisState.getTimestampField());
+    assertThat(elkDataCollectionInfoV2.getTimestampFieldFormat()).isEqualTo(elkAnalysisState.getTimestampFormat());
+    assertThat(elkDataCollectionInfoV2.getIndices()).isEqualTo("rendered index");
+    assertThat(elkDataCollectionInfoV2.getQueryType()).isEqualTo(elkAnalysisState.getQueryType());
+    assertThat(elkDataCollectionInfoV2.getConnectorId()).isEqualTo(settingAttribute.getUuid());
+    assertThat(elkDataCollectionInfoV2.getHosts()).isEqualTo(Sets.newHashSet("host1", "host2"));
   }
 }

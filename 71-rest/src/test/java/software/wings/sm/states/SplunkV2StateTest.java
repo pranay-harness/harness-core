@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.rule.OwnerRule.SRIRAM;
@@ -48,6 +49,7 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
+import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
@@ -59,6 +61,7 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 import java.text.ParseException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -512,5 +515,66 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   public void testTimestampFormat() {
     SimpleDateFormat sdf = new SimpleDateFormat(ElkAnalysisState.DEFAULT_TIME_FORMAT);
     assertThat(sdf.parse("2013-10-07T12:13:27.001Z", new ParsePosition(0))).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateDataCollectionInfo_withoutTemplatization() throws IllegalAccessException {
+    splunkState.setAnalysisServerConfigId(generateUuid());
+    splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
+    FieldUtils.writeField(splunkState, "renderedQuery", "rendered query", true);
+    SplunkDataCollectionInfoV2 splunkDataCollectionInfoV2 =
+        (software.wings.service.impl.splunk.SplunkDataCollectionInfoV2) splunkState.createDataCollectionInfo(
+            executionContext, Sets.newHashSet("host1", "host2"));
+    assertThat(StateType.SPLUNKV2).isEqualTo(splunkDataCollectionInfoV2.getStateType());
+    assertThat(splunkDataCollectionInfoV2.getSplunkConfig()).isNull();
+    assertThat(splunkDataCollectionInfoV2.getStateExecutionId())
+        .isEqualTo(executionContext.getStateExecutionInstanceId());
+    assertThat(splunkDataCollectionInfoV2.getQuery()).isEqualTo(splunkState.getRenderedQuery());
+    assertThat(splunkDataCollectionInfoV2.getConnectorId()).isEqualTo(splunkState.getAnalysisServerConfigId());
+    assertThat(splunkDataCollectionInfoV2.getHosts()).isEqualTo(Sets.newHashSet("host1", "host2"));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateDataCollectionInfo_withTemplatization() throws IllegalAccessException {
+    SplunkConfig splunkConfig = SplunkConfig.builder()
+                                    .accountId(accountId)
+                                    .splunkUrl(UUID.randomUUID().toString())
+                                    .username(UUID.randomUUID().toString())
+                                    .password(UUID.randomUUID().toString().toCharArray())
+                                    .build();
+    splunkState.setAnalysisServerConfigId(generateUuid());
+    splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
+    FieldUtils.writeField(splunkState, "renderedQuery", "rendered query", true);
+    FieldUtils.writeField(splunkState, "templateExpressionProcessor", templateExpressionProcessor, true);
+    SplunkV2State spyState = spy(splunkState);
+    doReturn(Arrays.asList(TemplateExpression.builder()
+                               .fieldName("analysisServerConfigId")
+                               .expression("${SPLUNK_Server}")
+                               .metadata(ImmutableMap.of("entityType", "SPLUNK_CONFIGID"))
+                               .build()))
+        .when(spyState)
+        .getTemplateExpressions();
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withName("splunk-config")
+                                            .withValue(splunkConfig)
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+    when(executionContext.renderExpression("${workflow.variables.SPLUNK_Server}"))
+        .thenReturn(settingAttribute.getUuid());
+    SplunkDataCollectionInfoV2 splunkDataCollectionInfoV2 =
+        (software.wings.service.impl.splunk.SplunkDataCollectionInfoV2) splunkState.createDataCollectionInfo(
+            executionContext, Sets.newHashSet("host1", "host2"));
+    assertThat(StateType.SPLUNKV2).isEqualTo(splunkDataCollectionInfoV2.getStateType());
+    assertThat(splunkDataCollectionInfoV2.getSplunkConfig()).isNull();
+    assertThat(splunkDataCollectionInfoV2.getStateExecutionId())
+        .isEqualTo(executionContext.getStateExecutionInstanceId());
+    assertThat(splunkDataCollectionInfoV2.getQuery()).isEqualTo(splunkState.getRenderedQuery());
+    assertThat(splunkDataCollectionInfoV2.getConnectorId()).isEqualTo(splunkState.getAnalysisServerConfigId());
+    assertThat(splunkDataCollectionInfoV2.getHosts()).isEqualTo(Sets.newHashSet("host1", "host2"));
   }
 }

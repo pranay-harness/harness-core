@@ -1,7 +1,6 @@
 package software.wings.resources;
 
 import static software.wings.common.VerificationConstants.COLLECT_CV_DATA;
-import static software.wings.common.VerificationConstants.CREATE_DATA_COLLECTION_INFO_PATH;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
@@ -28,7 +27,6 @@ import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
-import java.time.Instant;
 import java.util.List;
 import javax.validation.Valid;
 import javax.ws.rs.GET;
@@ -124,16 +122,6 @@ public class ContinuousVerificationResource {
   public RestResponse<Boolean> collectCVData(
       @QueryParam("cvTaskId") String cvTaskId, DataCollectionInfoV2 dataCollectionInfoV2) {
     return new RestResponse<>(cvManagerService.collectCVData(cvTaskId, dataCollectionInfoV2));
-  }
-
-  @GET
-  @Path(CREATE_DATA_COLLECTION_INFO_PATH)
-  @Timed
-  @LearningEngineAuth
-  public RestResponse<DataCollectionInfoV2> createDataCollectionInfo(@QueryParam("cvConfigId") String cvConfigId,
-      @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime) {
-    return new RestResponse<>(cvManagerService.createDataCollectionInfo(
-        cvConfigId, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
   }
 
   @GET

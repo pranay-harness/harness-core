@@ -209,11 +209,9 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     // TODO: some common part needs to be refactored
 
     String finalServerConfigId = getServerConfigId(context);
-    final SettingAttribute settingAttribute = settingsService.get(finalServerConfigId);
     String envId = getEnvId(context);
-    final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
     return SplunkDataCollectionInfoV2.builder()
-        .splunkConfig(splunkConfig)
+        .connectorId(finalServerConfigId)
         .workflowExecutionId(context.getWorkflowExecutionId())
         .stateExecutionId(context.getStateExecutionInstanceId())
         .workflowId(context.getWorkflowId())

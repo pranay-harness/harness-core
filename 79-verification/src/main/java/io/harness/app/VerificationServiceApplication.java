@@ -61,6 +61,7 @@ import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.jobs.sg247.collection.ServiceGuardDataCollectionJob;
 import io.harness.jobs.sg247.logs.ServiceGuardLogAnalysisJob;
+import io.harness.jobs.workflow.WorkflowCVTaskCreationHandler;
 import io.harness.jobs.workflow.collection.CVDataCollectionJob;
 import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob;
 import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
@@ -323,6 +324,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
         AnalysisContextKeys.timeSeriesAnalysisIteration, MLAnalysisType.TIME_SERIES, ofMinutes(1), 4);
     registerWorkflowIterator(injector, workflowVerificationExecutor, new WorkflowLogAnalysisJob(),
         AnalysisContextKeys.logAnalysisIteration, MLAnalysisType.LOG_ML, ofSeconds(30), 4);
+    registerCreateCVTaskIterator(injector, workflowVerificationExecutor, ofSeconds(30), 4);
   }
 
   private void registerWorkflowIterator(Injector injector, ScheduledThreadPoolExecutor workflowVerificationExecutor,
@@ -343,6 +345,28 @@ public class VerificationServiceApplication extends Application<VerificationServ
                 -> query.filter(AnalysisContextKeys.analysisType, analysisType)
                        .field(AnalysisContextKeys.executionStatus)
                        .in(Lists.newArrayList(ExecutionStatus.QUEUED, ExecutionStatus.RUNNING)))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(dataCollectionIterator);
+    workflowVerificationExecutor.scheduleAtFixedRate(
+        () -> dataCollectionIterator.process(ProcessMode.PUMP), 0, 5, TimeUnit.SECONDS);
+  }
+
+  private void registerCreateCVTaskIterator(Injector injector, ScheduledThreadPoolExecutor workflowVerificationExecutor,
+      Duration interval, int maxAllowedThreads) {
+    Handler<AnalysisContext> handler = new WorkflowCVTaskCreationHandler();
+    injector.injectMembers(handler);
+    PersistenceIterator dataCollectionIterator =
+        MongoPersistenceIterator.<AnalysisContext>builder()
+            .clazz(AnalysisContext.class)
+            .fieldName(AnalysisContextKeys.cvTaskCreationIteration)
+            .targetInterval(interval)
+            .acceptableNoAlertDelay(ofSeconds(30))
+            .executorService(workflowVerificationExecutor)
+            .semaphore(new Semaphore(maxAllowedThreads))
+            .handler(handler)
+            .schedulingType(REGULAR)
+            .filterExpander(query -> query.filter(AnalysisContextKeys.cvTasksCreated, false))
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionIterator);

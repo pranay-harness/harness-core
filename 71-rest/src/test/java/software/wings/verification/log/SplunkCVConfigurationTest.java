@@ -1,14 +1,21 @@
 package software.wings.verification.log;
 
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SplunkConfig;
+import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.sm.StateType;
 
 @Slf4j
@@ -36,7 +43,7 @@ public class SplunkCVConfigurationTest extends WingsBaseTest {
     config.setHostnameField(hostnameField);
     config.setAdvancedQuery(true);
     config.setQuery(query);
-
+    config.setEnabled24x7(true);
     return config;
   }
 
@@ -59,5 +66,25 @@ public class SplunkCVConfigurationTest extends WingsBaseTest {
     assertThat(clonedConfig.getHostnameField()).isEqualTo(hostnameField);
     assertThat(clonedConfig.isAdvancedQuery()).isTrue();
     assertThat(clonedConfig.getQuery()).isEqualTo(query);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testSplunkDataCollectionInfoCreation() {
+    SplunkCVConfiguration splunkCVConfiguration = createSplunkConfig();
+    SplunkConfig splunkConfig = SplunkConfig.builder().splunkUrl("test").username("test").build();
+    SettingAttribute settingAttribute = Mockito.mock(SettingAttribute.class);
+    when(settingAttribute.getValue()).thenReturn(splunkConfig);
+    SplunkDataCollectionInfoV2 dataCollectionInfo =
+        (SplunkDataCollectionInfoV2) splunkCVConfiguration.toDataCollectionInfo();
+    assertThat(dataCollectionInfo.getAccountId()).isEqualTo(splunkCVConfiguration.getAccountId());
+    assertThat(dataCollectionInfo.getCvConfigId()).isEqualTo(splunkCVConfiguration.getUuid());
+    assertThat(dataCollectionInfo.getStateExecutionId())
+        .isEqualTo(CV_24x7_STATE_EXECUTION + "-" + splunkCVConfiguration.getUuid());
+    assertThat(dataCollectionInfo.getStartTime()).isNull();
+    assertThat(dataCollectionInfo.getEndTime()).isNull();
+    assertThat(dataCollectionInfo.getQuery()).isEqualTo(query);
+    assertThat(dataCollectionInfo.getHostnameField()).isEqualTo(hostnameField);
   }
 }

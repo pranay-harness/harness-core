@@ -107,13 +107,11 @@ public class WorkflowVerificationTaskPoller {
   }
 
   private void scheduleDataCollection(AnalysisContext context) {
-    if (context.getDataCollectionInfov2() != null) {
-      cvTaskService.createCVTasks(context);
-    } else if ((verificationManagerClientHelper
-                       .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
-                           FeatureName.CV_DATA_COLLECTION_JOB, context.getAccountId()))
-                       .getResource()
-                   && PER_MINUTE_CV_STATES.contains(context.getStateType()))
+    if ((verificationManagerClientHelper
+                .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
+                    FeatureName.CV_DATA_COLLECTION_JOB, context.getAccountId()))
+                .getResource()
+            && PER_MINUTE_CV_STATES.contains(context.getStateType()))
         || GA_PER_MINUTE_CV_STATES.contains(context.getStateType())) {
       logger.info("PER MINUTE data collection will be triggered for accountId : {} and stateExecutionId : {}",
           context.getAccountId(), context.getStateExecutionId());
@@ -147,31 +145,27 @@ public class WorkflowVerificationTaskPoller {
 
   private void schedulePredictiveDataCollectionCronJob(AnalysisContext context) {
     if (context != null && PREDICTIVE.equals(context.getComparisonStrategy())) {
-      if (context.getDataCollectionInfov2() != null) {
-        cvTaskService.createCVTasks(context);
-      } else {
-        String cvConfigUuid = context.getPredictiveCvConfigId();
-        if (isNotEmpty(cvConfigUuid)) {
-          return;
-        }
-        logger.info("Creating CV Configuration for PREDICTIVE Analysis with context : {}", context);
-        cvConfigUuid = generateUuid();
-        CVConfiguration cvConfiguration;
-        switch (context.getStateType()) {
-          case SUMO:
-          case DATA_DOG_LOG:
-            cvConfiguration = createLogCVConfiguration(context, cvConfigUuid);
-            break;
-          default:
-            throw new IllegalArgumentException("Invalid state: " + context.getStateType());
-        }
-        logger.info("Created Configuration for Type {}, cvConfigId {}, stateExecutionId {}",
-            cvConfiguration.getStateType(), cvConfiguration.getUuid(), context.getStateExecutionId());
-        context.setPredictiveCvConfigId(cvConfigUuid);
-        wingsPersistence.updateField(AnalysisContext.class, context.getUuid(), "predictiveCvConfigId", cvConfigUuid);
-        wingsPersistence.updateField(
-            StateExecutionInstance.class, context.getStateExecutionId(), "lastUpdatedAt", System.currentTimeMillis());
+      String cvConfigUuid = context.getPredictiveCvConfigId();
+      if (isNotEmpty(cvConfigUuid)) {
+        return;
       }
+      logger.info("Creating CV Configuration for PREDICTIVE Analysis with context : {}", context);
+      cvConfigUuid = generateUuid();
+      CVConfiguration cvConfiguration;
+      switch (context.getStateType()) {
+        case SUMO:
+        case DATA_DOG_LOG:
+          cvConfiguration = createLogCVConfiguration(context, cvConfigUuid);
+          break;
+        default:
+          throw new IllegalArgumentException("Invalid state: " + context.getStateType());
+      }
+      logger.info("Created Configuration for Type {}, cvConfigId {}, stateExecutionId {}",
+          cvConfiguration.getStateType(), cvConfiguration.getUuid(), context.getStateExecutionId());
+      context.setPredictiveCvConfigId(cvConfigUuid);
+      wingsPersistence.updateField(AnalysisContext.class, context.getUuid(), "predictiveCvConfigId", cvConfigUuid);
+      wingsPersistence.updateField(
+          StateExecutionInstance.class, context.getStateExecutionId(), "lastUpdatedAt", System.currentTimeMillis());
     }
   }
 

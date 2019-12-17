@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
+import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVConfiguration;
@@ -49,6 +51,20 @@ public class ElkCVConfiguration extends LogsCVConfiguration {
     return clonedConfig;
   }
 
+  @Override
+  public DataCollectionInfoV2 toDataCollectionInfo() {
+    ElkDataCollectionInfoV2 elkDataCollectionInfoV2 = ElkDataCollectionInfoV2.builder()
+                                                          .query(this.getQuery())
+                                                          .indices(this.getIndex())
+                                                          .hostnameField(this.getHostnameField())
+                                                          .messageField(this.getMessageField())
+                                                          .timestampField(this.getTimestampField())
+                                                          .timestampFieldFormat(this.getTimestampFormat())
+                                                          .queryType(this.getQueryType())
+                                                          .build();
+    fillDataCollectionInfoWithCommonFields(elkDataCollectionInfoV2);
+    return elkDataCollectionInfoV2;
+  }
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

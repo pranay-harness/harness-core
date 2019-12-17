@@ -9,6 +9,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
+import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVConfiguration;
 
@@ -44,6 +46,13 @@ public class SplunkCVConfiguration extends LogsCVConfiguration {
     return clonedConfig;
   }
 
+  @Override
+  public DataCollectionInfoV2 toDataCollectionInfo() {
+    SplunkDataCollectionInfoV2 splunkDataCollectionInfoV2 =
+        SplunkDataCollectionInfoV2.builder().query(getQuery()).hostnameField(getHostnameField()).build();
+    fillDataCollectionInfoWithCommonFields(splunkDataCollectionInfoV2);
+    return splunkDataCollectionInfoV2;
+  }
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

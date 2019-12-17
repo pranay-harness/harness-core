@@ -147,7 +147,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVConfigurationService;
-import software.wings.service.intfc.verification.DataCollectionInfoService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionData;
@@ -243,7 +242,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private CVActivityLogService cvActivityLogService;
-  @Inject private DataCollectionInfoService dataCollectionInfoService;
   @Inject private StateExecutionService stateExecutionService;
 
   private static final int PAGE_LIMIT = 999;
@@ -439,19 +437,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Override
   public boolean collectCVData(String cvTaskId, DataCollectionInfoV2 dataCollectionInfo) {
     dataCollectionInfo.setCvTaskId(cvTaskId);
-    // This method call should go away once EncryptionConfig is serializable
-    dataCollectionInfo.setEncryptionDataDetails(secretManager);
+    dataCollectionInfo.setSettingValue(settingsService.get(dataCollectionInfo.getConnectorId()).getValue());
+    dataCollectionInfo.getEncryptableSetting().ifPresent(encryptableSetting
+        -> dataCollectionInfo.setEncryptedDataDetails(secretManager.getEncryptionDetails(
+            encryptableSetting, dataCollectionInfo.getApplicationId(), dataCollectionInfo.getWorkflowExecutionId())));
+    dataCollectionInfo.validate();
     DelegateTask delegateTask = createDelegateTask(dataCollectionInfo.getTaskType(), dataCollectionInfo.getAccountId(),
         dataCollectionInfo.getApplicationId(), null, new Object[] {dataCollectionInfo}, dataCollectionInfo.getEnvId(),
         dataCollectionInfo.getCvConfigId(), dataCollectionInfo.getStateExecutionId(),
         dataCollectionInfo.getStateType());
     delegateService.queueTask(delegateTask);
     return true;
-  }
-
-  @Override
-  public DataCollectionInfoV2 createDataCollectionInfo(String cvConfigId, Instant startTime, Instant endTime) {
-    return dataCollectionInfoService.create(cvConfigurationService.getConfiguration(cvConfigId), startTime, endTime);
   }
 
   @Override
