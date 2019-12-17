@@ -39,6 +39,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
+import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.ResizeStrategy;
@@ -47,6 +48,7 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
+import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
@@ -998,5 +1000,53 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     assertThat(requestData.getPcfManifestFileData().getVarFiles()).isNotEmpty();
     assertThat(requestData.getPcfManifestFileData().getVarFiles().size()).isEqualTo(2);
     assertThat(requestData.getPcfManifestFileData().getVarFiles()).containsExactly(f1, f2);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testGeneratePcfInstancesElementsForExistingApp() throws Exception {
+    List<PcfInstanceElement> pcfInstanceElements = new ArrayList<>();
+
+    ApplicationDetail applicationDetail = ApplicationDetail.builder()
+                                              .id("10")
+                                              .diskQuota(1)
+                                              .instances(1)
+                                              .memoryLimit(1)
+                                              .name("app1")
+                                              .requestedState("STOPPED")
+                                              .stack("")
+                                              .runningInstances(1)
+                                              .instanceDetails(Arrays.asList(InstanceDetail.builder()
+                                                                                 .cpu(1.0)
+                                                                                 .diskQuota((long) 1.23)
+                                                                                 .diskUsage((long) 1.23)
+                                                                                 .index("2")
+                                                                                 .memoryQuota((long) 1)
+                                                                                 .memoryUsage((long) 1)
+                                                                                 .build()))
+                                              .diskQuota(1)
+                                              .instances(1)
+                                              .memoryLimit(1)
+                                              .name("app1")
+                                              .requestedState("RUNNING")
+                                              .stack("")
+                                              .runningInstances(1)
+                                              .build();
+    doReturn(applicationDetail).when(pcfDeploymentManager).getApplicationByName(any());
+
+    PcfCommandDeployRequest request = PcfCommandDeployRequest.builder().build();
+    pcfDeployCommandTaskHandler.generatePcfInstancesElementsForExistingApp(
+        pcfInstanceElements, PcfRequestConfig.builder().build(), request, executionLogCallback);
+
+    request.setDownsizeAppDetail(PcfAppSetupTimeDetails.builder().applicationName("app").build());
+    pcfDeployCommandTaskHandler.generatePcfInstancesElementsForExistingApp(
+        pcfInstanceElements, PcfRequestConfig.builder().build(), request, executionLogCallback);
+    assertThat(pcfInstanceElements.size()).isEqualTo(1);
+    assertThat(pcfInstanceElements.get(0).getInstanceIndex()).isEqualTo("2");
+
+    doThrow(new PivotalClientApiException("e")).when(pcfDeploymentManager).getApplicationByName(any());
+    pcfDeployCommandTaskHandler.generatePcfInstancesElementsForExistingApp(
+        pcfInstanceElements, PcfRequestConfig.builder().build(), request, executionLogCallback);
   }
 }
