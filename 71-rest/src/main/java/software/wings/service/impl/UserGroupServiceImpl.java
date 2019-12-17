@@ -24,6 +24,8 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SortOrder;
+import io.harness.beans.SortOrder.OrderType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -265,10 +267,16 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   private void loadUsers(UserGroup userGroup, Account account) {
     if (userGroup.getMemberIds() != null) {
+      SortOrder sortOrder = new SortOrder();
+      sortOrder.setFieldName(UserGroupKeys.name);
+      sortOrder.setOrderType(OrderType.ASC);
+
       PageRequest<User> req = aPageRequest()
                                   .addFilter(ID_KEY, Operator.IN, userGroup.getMemberIds().toArray())
                                   .addFilter("accounts", Operator.IN, account)
+                                  .addOrder(sortOrder)
                                   .build();
+
       PageResponse<User> res = userService.list(req, false);
       userGroup.setMembers(res.getResponse());
     } else {

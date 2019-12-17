@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,6 +88,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
 public class UserGroupServiceImplTest extends WingsBaseTest {
   @Mock private AuthService authService;
@@ -101,6 +103,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                                 .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
                                 .withUuid(ACCOUNT_ID)
                                 .build();
+
   private User user = anUser()
                           .withUuid(generateUuid())
                           .withAppId(APP_ID)
@@ -123,8 +126,12 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   private String description = "test description";
   private String name = "userGroup1";
   private String name2 = "userGroup2";
+  private String userName1 = "userName1";
+  private String userName2 = "userName2";
+  private String userName = "userName";
   private String user1Id = generateUuid();
   private String user2Id = generateUuid();
+  private String userId = generateUuid();
   private AppPermission envPermission = getEnvPermission();
 
   @Before
@@ -140,6 +147,71 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     wingsPersistence.save(user);
   }
 
+  private Account createAndSaveAccount(String id) {
+    Account account = new Account();
+    account.setUuid(id);
+    String accountId = wingsPersistence.save(account);
+    return wingsPersistence.get(Account.class, accountId);
+  }
+
+  private User createUserAndSave(
+      @NotNull String userId, @NotNull String userName, @NotNull UserGroup userGroup, @NotNull Account testAccount) {
+    User user = new User();
+    user.setDefaultAccountId(testAccount.getUuid());
+    user.setUuid(userId);
+    user.setName(userName);
+    user.setAccounts(Arrays.asList(testAccount));
+    user.setUserGroups(Arrays.asList(userGroup));
+    userService.save(user, testAccount.getUuid());
+    return userService.get(userId);
+  }
+
+  private void compareUsersOrder(UserGroup userGroup, String firstUserName, String secondUserName) {
+    assertThat(userGroup.getMembers().get(0).getName()).isEqualTo(firstUserName);
+    assertThat(userGroup.getMembers().get(1).getName()).isEqualTo(secondUserName);
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testloadUsersForUserSortOrder() {
+    account = createAndSaveAccount(accountId);
+    when(accountService.get(accountId)).thenReturn(account);
+    UserGroup userGroup = builder()
+                              .accountId(accountId)
+                              .uuid(userGroupId)
+                              .description(description)
+                              .name(name + System.currentTimeMillis())
+                              .appPermissions(Sets.newHashSet(envPermission))
+                              .memberIds(asList(user1Id, user2Id))
+                              .build();
+
+    User user1 = createUserAndSave(user1Id, userName1, userGroup, account);
+    User user2 = createUserAndSave(user2Id, userName2, userGroup, account);
+
+    UserGroup savedUserGroup = userGroupService.save(userGroup);
+    compareUsersOrder(savedUserGroup, userName1, userName2);
+
+    userGroup = builder()
+                    .accountId(accountId)
+                    .uuid(userGroup2Id)
+                    .description(description)
+                    .name(name + System.currentTimeMillis())
+                    .appPermissions(Sets.newHashSet(envPermission))
+                    .memberIds(asList(user2Id, user1Id, userId))
+                    .build();
+
+    user1.getUserGroups().add(userGroup);
+    userService.save(user1, accountId);
+    user2.getUserGroups().add(userGroup);
+    userService.save(user2, accountId);
+
+    createUserAndSave(userId, userName, userGroup, account);
+
+    savedUserGroup = userGroupService.save(userGroup);
+    compareUsersOrder(savedUserGroup, userName, userName1);
+  }
+
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
@@ -152,6 +224,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                               .appPermissions(Sets.newHashSet(envPermission))
                               .memberIds(asList(user1Id, user2Id))
                               .build();
+
     UserGroup savedUserGroup = userGroupService.save(userGroup);
     compare(userGroup, savedUserGroup);
 
