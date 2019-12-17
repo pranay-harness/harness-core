@@ -11,7 +11,7 @@ public class TestNoTopicQueuableObjectListener extends QueueListener<TestNoTopic
   }
 
   TestNoTopicQueuableObjectListener() {
-    super(true);
+    super(null, true);
   }
 
   @Override

@@ -20,6 +20,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownArtifactStreamTypeException;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -69,8 +70,9 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
   @Inject private EventEmitter eventEmitter;
   @Inject private SecretManager secretManager;
 
-  public ArtifactCollectEventListener() {
-    super(true);
+  @Inject
+  public ArtifactCollectEventListener(QueueConsumer<CollectEvent> queueConsumer) {
+    super(queueConsumer, true);
   }
 
   /* (non-Javadoc)

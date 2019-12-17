@@ -67,6 +67,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   @Inject private SecretManager secretManager;
   @Inject private QueueConsumer<KmsTransitionEvent> transitionKmsQueue;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private QueueConsumer<KmsTransitionEvent> kmsTransitionConsumer;
   private KmsTransitionEventListener transitionEventListener;
 
   @Before
@@ -194,7 +195,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   }
 
   private Thread startTransitionListener() throws IllegalAccessException {
-    transitionEventListener = new KmsTransitionEventListener();
+    transitionEventListener = new KmsTransitionEventListener(kmsTransitionConsumer);
     FieldUtils.writeField(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1), true);
     FieldUtils.writeField(transitionEventListener, "queueController", new ConfigurationController(1), true);
     FieldUtils.writeField(transitionEventListener, "queue", transitionKmsQueue, true);

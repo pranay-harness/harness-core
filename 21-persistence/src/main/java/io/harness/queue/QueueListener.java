@@ -28,8 +28,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public abstract class QueueListener<T extends Queuable> implements Runnable {
-  @Inject @Getter @Setter private QueueConsumer<T> queue;
-
   @Setter private boolean runOnce;
   private final boolean primaryOnly;
 
@@ -38,13 +36,16 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
   @Inject private TimerScheduledExecutorService timer;
   @Inject private QueueController queueController;
 
-  public QueueListener(boolean primaryOnly) {
+  @Getter @Setter private QueueConsumer<T> queueConsumer;
+
+  public QueueListener(QueueConsumer<T> queueConsumer, boolean primaryOnly) {
+    this.queueConsumer = queueConsumer;
     this.primaryOnly = primaryOnly;
   }
 
   @Override
   public void run() {
-    String threadName = queue.getName() + "-handler-" + generateUuid();
+    String threadName = queueConsumer.getName() + "-handler-" + generateUuid();
     logger.debug("Setting thread name to {}", threadName);
     Thread.currentThread().setName(threadName);
 
@@ -64,13 +65,13 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
     T message = null;
     try {
       logger.trace("Waiting for message");
-      message = queue.get(ofSeconds(3), ofSeconds(1));
+      message = queueConsumer.get(ofSeconds(3), ofSeconds(1));
     } catch (Exception exception) {
       if (exception.getCause() instanceof InterruptedException) {
-        logger.info("Thread interrupted, shutting down for queue {}", queue.getName());
+        logger.info("Thread interrupted, shutting down for queue {}", queueConsumer.getName());
         return false;
       }
-      logger.error("Exception happened while fetching message from queue {}", queue.getName(), exception);
+      logger.error("Exception happened while fetching message from queue {}", queueConsumer.getName(), exception);
     }
 
     if (message != null) {
@@ -84,13 +85,13 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       T message = null;
       try {
         logger.trace("Waiting for message");
-        message = queue.get(Duration.ZERO, Duration.ZERO);
+        message = queueConsumer.get(Duration.ZERO, Duration.ZERO);
       } catch (Exception exception) {
         if (exception.getCause() instanceof InterruptedException) {
-          logger.info("Thread interrupted, shutting down for queue {}", queue.getName());
+          logger.info("Thread interrupted, shutting down for queue {}", queueConsumer.getName());
           return;
         }
-        logger.error("Exception happened while fetching message from queue {}", queue.getName(), exception);
+        logger.error("Exception happened while fetching message from queue {}", queueConsumer.getName(), exception);
       }
 
       if (message == null) {
@@ -105,10 +106,10 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
     long startTime = currentTimeMillis();
 
     try (MessageLogContext ignore = new MessageLogContext(message, OVERRIDE_ERROR)) {
-      long timerInterval = queue.heartbeat().toMillis() - 500;
+      long timerInterval = queueConsumer.heartbeat().toMillis() - 500;
       final T finalizedMessage = message;
       ScheduledFuture<?> future = timer.scheduleAtFixedRate(
-          () -> queue.updateHeartbeat(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
+          () -> queueConsumer.updateHeartbeat(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
 
       try (GlobalContextGuard guard = initGlobalContextGuard(message.getGlobalContext())) {
         long delay = startTime - message.getEarliestGet().toInstant().toEpochMilli();
@@ -121,10 +122,10 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
         future.cancel(true);
       }
 
-      queue.ack(message);
+      queueConsumer.ack(message);
     } catch (InstantiationError exception) {
-      logger.error("Critical exception happened in onMessage {}", queue.getName(), exception);
-      queue.ack(message);
+      logger.error("Critical exception happened in onMessage {}", queueConsumer.getName(), exception);
+      queueConsumer.ack(message);
     } catch (Throwable exception) {
       onException(exception, message);
     } finally {
@@ -140,7 +141,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
   public abstract void onMessage(T message);
 
   protected void requeue(T message) {
-    queue.requeue(message.getId(), message.getRetries() - 1);
+    queueConsumer.requeue(message.getId(), message.getRetries() - 1);
   }
 
   public void onException(Throwable exception, T message) {
@@ -154,7 +155,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       requeue(message);
     } else {
       logger.error("Out of retries for message " + message, exception);
-      queue.ack(message);
+      queueConsumer.ack(message);
     }
   }
 

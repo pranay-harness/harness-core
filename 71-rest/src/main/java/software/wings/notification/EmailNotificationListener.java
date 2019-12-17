@@ -2,6 +2,7 @@ package software.wings.notification;
 
 import com.google.inject.Inject;
 
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
@@ -14,8 +15,9 @@ import software.wings.service.intfc.EmailNotificationService;
 public class EmailNotificationListener extends QueueListener<EmailData> {
   @Inject private EmailNotificationService emailNotificationService;
 
-  public EmailNotificationListener() {
-    super(true);
+  @Inject
+  public EmailNotificationListener(QueueConsumer<EmailData> queueConsumer) {
+    super(queueConsumer, true);
   }
 
   /* (non-Javadoc)

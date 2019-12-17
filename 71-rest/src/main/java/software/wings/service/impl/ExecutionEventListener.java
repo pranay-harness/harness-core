@@ -17,6 +17,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.AutoLogContext;
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -53,8 +54,9 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
   @Inject private AppService appService;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
-  public ExecutionEventListener() {
-    super(false);
+  @Inject
+  public ExecutionEventListener(QueueConsumer<ExecutionEvent> queueConsumer) {
+    super(queueConsumer, false);
   }
 
   @Override

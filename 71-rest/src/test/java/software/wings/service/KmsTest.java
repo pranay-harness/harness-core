@@ -41,6 +41,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
@@ -61,6 +62,7 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.Activity;
@@ -160,6 +162,7 @@ public class KmsTest extends WingsBaseTest {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceVariableResource serviceVariableResource;
   @Inject private SecretManagementDelegateService delegateService;
+  @Inject private QueueConsumer<KmsTransitionEvent> kmsTransitionConsumer;
   @Mock private ContainerService containerService;
   @Mock private NewRelicService newRelicService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
@@ -2984,10 +2987,10 @@ public class KmsTest extends WingsBaseTest {
   }
 
   private Thread startTransitionListener() throws IllegalAccessException {
-    transitionEventListener = new KmsTransitionEventListener();
+    transitionEventListener = new KmsTransitionEventListener(kmsTransitionConsumer);
     FieldUtils.writeField(transitionEventListener, "timer", new TimerScheduledExecutorService(), true);
     FieldUtils.writeField(transitionEventListener, "queueController", new ConfigurationController(1), true);
-    FieldUtils.writeField(transitionEventListener, "queue", transitionKmsQueue, true);
+    FieldUtils.writeField(transitionEventListener, "queueConsumer", transitionKmsQueue, true);
     FieldUtils.writeField(transitionEventListener, "secretManager", secretManager, true);
 
     Thread eventListenerThread = new Thread(() -> transitionEventListener.run());

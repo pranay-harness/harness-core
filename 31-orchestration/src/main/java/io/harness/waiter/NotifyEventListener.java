@@ -12,6 +12,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
@@ -32,8 +33,9 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
   @Inject private Injector injector;
   @Inject private HPersistence persistence;
 
-  public NotifyEventListener() {
-    super(false);
+  @Inject
+  public NotifyEventListener(QueueConsumer<NotifyEvent> queueConsumer) {
+    super(queueConsumer, false);
   }
 
   FindAndModifyOptions findAndModifyOptions =
