@@ -40,8 +40,8 @@ public class PodUtilizationMetricsWriterTest extends CategoryTest implements Ecs
   private final long START_TIME_STAMP = 1000000000L;
   private final long END_TIME_STAMP = 1200000000L;
   private final long WINDOW = 200000000L;
-  private final long CPU = 2;
-  private final long MEMORY = 1024;
+  private final long CPU = 2 * 1_000_000_000L;
+  private final long MEMORY = 1024 * (1 << 20);
 
   @Test
   @Owner(developers = ROHIT)
@@ -53,8 +53,8 @@ public class PodUtilizationMetricsWriterTest extends CategoryTest implements Ecs
         ArgumentCaptor.forClass(K8sGranularUtilizationData.class);
     verify(k8sUtilizationGranularDataService).create(K8sGranularUtilizationDataArgumentCaptor.capture());
     K8sGranularUtilizationData k8sGranularUtilizationData = K8sGranularUtilizationDataArgumentCaptor.getValue();
-    assertThat(k8sGranularUtilizationData.getCpu()).isEqualTo(CPU);
-    assertThat(k8sGranularUtilizationData.getMemory()).isEqualTo(MEMORY);
+    assertThat(k8sGranularUtilizationData.getCpu()).isEqualTo(2048);
+    assertThat(k8sGranularUtilizationData.getMemory()).isEqualTo(1024);
     assertThat(k8sGranularUtilizationData.getStartTimestamp()).isEqualTo(START_TIME_STAMP * 1000);
     assertThat(k8sGranularUtilizationData.getEndTimestamp()).isEqualTo(END_TIME_STAMP * 1000);
     assertThat(k8sGranularUtilizationData.getInstanceId()).isEqualTo(INSTANCEID);

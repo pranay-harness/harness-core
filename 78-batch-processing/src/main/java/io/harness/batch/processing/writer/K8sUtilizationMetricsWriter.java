@@ -45,30 +45,29 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
         String accountId = instanceUtilizationData.getAccountId();
         String instanceId = entry.getKey();
 
-        InstanceData instanceData = instanceDataService.fetchInstanceData(accountId, instanceId);
-        Double totalCpuResource = instanceData.getTotalResource().getCpuUnits();
-        Double totalMemoryResource = instanceData.getTotalResource().getMemoryMb();
-
+        InstanceData instanceData = instanceDataService.fetchInstanceDataWithName(accountId, instanceId, startDate);
         // Initialisation to 100% Utilisation
         double cpuAvgPercentage = 1;
         double cpuMaxPercentage = 1;
         double memoryAvgPercentage = 1;
         double memoryMaxPercentage = 1;
 
-        if (totalCpuResource != null && totalCpuResource != 0) {
+        if (null != instanceData && instanceData.getTotalResource() != null) {
+          Double totalCpuResource = instanceData.getTotalResource().getCpuUnits();
+          Double totalMemoryResource = instanceData.getTotalResource().getMemoryMb();
           cpuAvgPercentage = instanceUtilizationData.getCpuUtilizationAvg() / totalCpuResource;
           cpuMaxPercentage = instanceUtilizationData.getCpuUtilizationMax() / totalCpuResource;
-        }
-
-        if (totalMemoryResource != null && totalMemoryResource != 0) {
           memoryAvgPercentage = instanceUtilizationData.getMemoryUtilizationAvg() / totalMemoryResource;
           memoryMaxPercentage = instanceUtilizationData.getMemoryUtilizationMax() / totalMemoryResource;
+          instanceUtilizationData.setInstanceId(instanceData.getInstanceId());
         }
 
         instanceUtilizationData.setCpuUtilizationAvg(cpuAvgPercentage);
         instanceUtilizationData.setCpuUtilizationMax(cpuMaxPercentage);
         instanceUtilizationData.setMemoryUtilizationAvg(memoryAvgPercentage);
         instanceUtilizationData.setMemoryUtilizationMax(memoryMaxPercentage);
+        instanceUtilizationData.setStartTimestamp(startDate);
+        instanceUtilizationData.setEndTimestamp(endDate);
 
         utilizationDataService.create(instanceUtilizationData);
       }

@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
+import io.harness.batch.processing.processor.util.K8sResourceUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.PodMetric;
@@ -34,12 +35,12 @@ public class PodUtilizationMetricsWriter extends EventWriter implements ItemWrit
           long endTime = podUtilizationMetric.getTimestamp().getSeconds() * 1000;
           long startTime = endTime - (podUtilizationMetric.getWindow().getSeconds() * 1000);
 
-          long cpuUsageWithUnits = 0L;
-          long memoryUsageWithUnits = 0L;
+          double cpuUnits = 0.0;
+          double memoryMb = 0.0;
 
           for (Container container : podUtilizationMetric.getContainersList()) {
-            cpuUsageWithUnits += container.getUsage().getCpuNano();
-            memoryUsageWithUnits += container.getUsage().getMemoryByte();
+            cpuUnits += K8sResourceUtils.getCpuUnits(container.getUsage().getCpuNano());
+            memoryMb += K8sResourceUtils.getMemoryMb(container.getUsage().getMemoryByte());
           }
 
           K8sGranularUtilizationData k8sGranularUtilizationData =
@@ -50,8 +51,8 @@ public class PodUtilizationMetricsWriter extends EventWriter implements ItemWrit
                   .settingId(podUtilizationMetric.getCloudProviderId())
                   .startTimestamp(startTime)
                   .endTimestamp(endTime)
-                  .cpu(cpuUsageWithUnits)
-                  .memory(memoryUsageWithUnits)
+                  .cpu(cpuUnits)
+                  .memory(memoryMb)
                   .build();
 
           k8sUtilizationGranularDataService.create(k8sGranularUtilizationData);

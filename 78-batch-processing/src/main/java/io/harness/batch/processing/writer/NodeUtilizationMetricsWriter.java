@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
+import io.harness.batch.processing.processor.util.K8sResourceUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.NodeMetric;
@@ -32,8 +33,8 @@ public class NodeUtilizationMetricsWriter extends EventWriter implements ItemWri
 
           long endTime = nodeUtilizationMetric.getTimestamp().getSeconds() * 1000;
           long startTime = endTime - (nodeUtilizationMetric.getWindow().getSeconds() * 1000);
-          long cpuUsageWithUnits = nodeUtilizationMetric.getUsage().getCpuNano();
-          long memoryUsageWithUnits = nodeUtilizationMetric.getUsage().getMemoryByte();
+          double cpuUnits = K8sResourceUtils.getCpuUnits(nodeUtilizationMetric.getUsage().getCpuNano());
+          double memoryMb = K8sResourceUtils.getMemoryMb(nodeUtilizationMetric.getUsage().getMemoryByte());
 
           K8sGranularUtilizationData k8sGranularUtilizationData =
               K8sGranularUtilizationData.builder()
@@ -43,8 +44,8 @@ public class NodeUtilizationMetricsWriter extends EventWriter implements ItemWri
                   .settingId(nodeUtilizationMetric.getCloudProviderId())
                   .startTimestamp(startTime)
                   .endTimestamp(endTime)
-                  .cpu(cpuUsageWithUnits)
-                  .memory(memoryUsageWithUnits)
+                  .cpu(cpuUnits)
+                  .memory(memoryMb)
                   .build();
 
           k8sUtilizationGranularDataService.create(k8sGranularUtilizationData);

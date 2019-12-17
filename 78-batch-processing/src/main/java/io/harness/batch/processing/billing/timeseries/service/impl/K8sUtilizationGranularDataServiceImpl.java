@@ -17,6 +17,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +37,8 @@ public class K8sUtilizationGranularDataServiceImpl {
       "SELECT DISTINCT INSTANCEID FROM KUBERNETES_UTILIZATION_DATA WHERE STARTTIME >= '%s' AND ENDTIME <= '%s'";
   static final String UTILIZATION_DATA_QUERY =
       "SELECT MAX(CPU) as CPUUTILIZATIONMAX, MAX(MEMORY) as MEMORYUTILIZATIONMAX, AVG(CPU) as CPUUTILIZATIONAVG, AVG(MEMORY) as MEMORYUTILIZATIONAVG,"
-      + " SETTINGID, INSTANCEID,  INSTANCETYPE, ACCOUNTID FROM UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND ENDTIME <= '%s' GROUP BY INSTANCEID";
+      + " SETTINGID, INSTANCEID,  INSTANCETYPE, ACCOUNTID FROM KUBERNETES_UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND ENDTIME <= '%s' "
+      + " GROUP BY ACCOUNTID, INSTANCEID, SETTINGID, INSTANCETYPE ";
 
   public boolean create(K8sGranularUtilizationData k8sGranularUtilizationData) {
     boolean successfulInsert = false;
@@ -81,7 +83,8 @@ public class K8sUtilizationGranularDataServiceImpl {
     ResultSet resultSet = null;
     List<String> instanceIdsList = new ArrayList<>();
 
-    String query = String.format(SELECT_DISTINCT_INSTANCEID, startDate, endDate);
+    String query =
+        String.format(SELECT_DISTINCT_INSTANCEID, Instant.ofEpochMilli(startDate), Instant.ofEpochMilli(endDate));
 
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
@@ -101,7 +104,8 @@ public class K8sUtilizationGranularDataServiceImpl {
   public Map<String, InstanceUtilizationData> getAggregatedUtilizationData(
       List<String> distinctIdsList, long startDate, long endDate) {
     ResultSet resultSet = null;
-    String query = String.format(UTILIZATION_DATA_QUERY, String.join("','", distinctIdsList), startDate, endDate);
+    String query = String.format(UTILIZATION_DATA_QUERY, String.join("','", distinctIdsList),
+        Instant.ofEpochMilli(startDate), Instant.ofEpochMilli(endDate));
 
     Map<String, InstanceUtilizationData> instanceUtilizationDataMap = new HashMap<>();
     try (Connection connection = timeScaleDBService.getDBConnection();

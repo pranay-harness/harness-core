@@ -80,7 +80,6 @@ public class K8sBatchConfiguration {
   }
 
   @Bean
-  @StepScope
   public ItemReader<List<String>> k8sUtilizationAggregationReader() {
     return new K8sGranularUtilizationMetricsReader();
   }

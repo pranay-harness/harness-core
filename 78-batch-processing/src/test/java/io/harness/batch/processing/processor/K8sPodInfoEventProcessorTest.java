@@ -116,7 +116,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     assertThat(instanceInfo.getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(instanceInfo.getClusterName()).isEqualTo(CLUSTER_NAME);
     assertThat(instanceInfo.getInstanceType()).isEqualTo(InstanceType.K8S_POD);
-    assertThat(infoResource.getCpuUnits()).isEqualTo(1.0);
+    assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
     assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
     assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY))
         .isEqualTo(String.valueOf((double) MEMORY_AMOUNT));
