@@ -612,13 +612,10 @@ public abstract class TerraformProvisionState extends State {
       }
 
     } else {
-      logger.info("Variables before filtering: {}", getAllVariables());
       final List<NameValuePair> validVariables =
           validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
-      logger.info("Variables after filtering: {}", validVariables);
 
       variables = infrastructureProvisionerService.extractTextVariables(validVariables, context);
-      logger.info("Variables after extracting text type: {}", variables);
       encryptedVariables =
           infrastructureProvisionerService.extractEncryptedTextVariables(validVariables, context.getAppId());
 
