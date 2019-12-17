@@ -20,14 +20,4 @@ public class CalendarUtilsTest extends CategoryTest {
     Calendar calendar = CalendarUtils.getCalendarForTimeZone("Asia/Kolkata");
     assertThat(calendar.getTimeZone().getID()).isEqualTo("Asia/Kolkata");
   }
-
-  //  @Test
-  //  @Owner(developers = VARDAN_BANSAL)
-  //  @Category(UnitTests.class)
-  //  public void testGetCalendar() {
-  //    Calendar calendar = CalendarUtils.getCalendar(1, "1:00 AM", "Asia/Kolkata");
-  //    assertThat(calendar.get(Calendar.DAY_OF_WEEK)).isEqualTo(5);
-  //    assertThat(calendar.get(Calendar.HOUR_OF_DAY)).isEqualTo(1);
-  //    assertThat(calendar.getTimeZone().getID()).isEqualTo("Asia/Kolkata");
-  //  }
 }

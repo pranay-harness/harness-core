@@ -10,6 +10,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 import javax.annotation.Nullable;
 
 @Value
@@ -57,19 +58,20 @@ public class WeeklyRange {
 
     int currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
     int currentHourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
+    TimeZone tz = TimeZone.getTimeZone(timeZone);
 
     calendar.set(Calendar.DAY_OF_WEEK, getDayEnum(startDay));
     int startingDayOfWindow = calendar.get(Calendar.DAY_OF_WEEK);
-    calendar.setTime(CalendarUtils.getDate(startTime));
+    calendar.setTime(CalendarUtils.getDate(startTime, tz));
     int startingHourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
 
     calendar.set(Calendar.DAY_OF_WEEK, getDayEnum(endDay));
     int endingDayOfWindow = calendar.get(Calendar.DAY_OF_WEEK);
-    calendar.setTime(CalendarUtils.getDate(endTime));
+    calendar.setTime(CalendarUtils.getDate(endTime, tz));
     int endingHourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
 
     return checkIfLiesInRangeAllInclusive(startingDayOfWindow, endingDayOfWindow, currentDayOfWeek)
-        && checkIfLiesInRangeLeftInclusive(startingHourOfDay, endingHourOfDay, currentHourOfDay);
+        && checkIfLiesInRangeAllInclusive(startingHourOfDay, endingHourOfDay, currentHourOfDay);
   }
 
   /***
@@ -100,8 +102,5 @@ public class WeeklyRange {
 
   private static boolean checkIfLiesInRangeAllInclusive(long start, long end, long value) {
     return start <= value && value <= end;
-  }
-  private static boolean checkIfLiesInRangeLeftInclusive(long start, long end, long value) {
-    return start <= value && value < end;
   }
 }
