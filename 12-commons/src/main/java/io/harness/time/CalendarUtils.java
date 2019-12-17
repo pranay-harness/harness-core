@@ -16,9 +16,7 @@ public class CalendarUtils {
    * @return calendar instance for a timezone
    */
   public static Calendar getCalendarForTimeZone(String timeZone) {
-    SimpleDateFormat dateFormatTimeZone = new SimpleDateFormat("EEEE");
     TimeZone userTimeZone = TimeZone.getTimeZone(timeZone);
-    dateFormatTimeZone.setTimeZone(userTimeZone);
     return Calendar.getInstance(userTimeZone);
   }
 
@@ -38,9 +36,10 @@ public class CalendarUtils {
    * @param time for instance "7:00 AM"
    * @return hour of the day as a number
    */
-  public static Date getDate(String time) {
+  public static Date getDate(String time, TimeZone timeZone) {
     try {
       DateFormat timeFormat = new SimpleDateFormat("hh:mm aa");
+      timeFormat.setTimeZone(timeZone);
       return timeFormat.parse(time);
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -57,7 +56,7 @@ public class CalendarUtils {
   public static Calendar getCalendar(int dayofWeek, String time, String timeZone) {
     Calendar calendar = getCalendarForTimeZone(timeZone);
     calendar.set(Calendar.DAY_OF_WEEK, dayofWeek);
-    calendar.setTime(CalendarUtils.getDate(time));
+    calendar.setTime(CalendarUtils.getDate(time, TimeZone.getTimeZone(timeZone)));
     calendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY));
     return calendar;
   }
