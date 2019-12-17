@@ -400,14 +400,6 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
     assertThat(pcfServiceDataList.get(0).getId()).isEqualTo("id");
     assertThat(pcfServiceDataList.get(0).getName()).isEqualTo("app");
 
-    assertThat(pcfInstanceElements.size()).isEqualTo(2);
-    assertThat(pcfInstanceElements.get(0).getApplicationId()).isEqualTo("id");
-    assertThat(pcfInstanceElements.get(0).getDisplayName()).isEqualTo("app");
-    assertThat(pcfInstanceElements.get(0).getInstanceIndex()).isEqualTo("0");
-    assertThat(pcfInstanceElements.get(1).getApplicationId()).isEqualTo("id");
-    assertThat(pcfInstanceElements.get(1).getDisplayName()).isEqualTo("app");
-    assertThat(pcfInstanceElements.get(1).getInstanceIndex()).isEqualTo("1");
-
     // Downsize application from 2 to 1
     doReturn(applicationDetailAfterDownsize).when(pcfDeploymentManager).resizeApplication(any());
     pcfInstanceElements.clear();

@@ -31,6 +31,7 @@ import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
+import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.utils.Misc;
@@ -116,6 +117,11 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
             pcfServiceDataUpdated, stepDecrease, pcfInstanceElementsForVerification, pcfAppAutoscalarRequestData);
         unmapRoutesIfAppDownsizedToZero(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback);
       }
+
+      // This data will be used by verification phase for analysis
+      generatePcfInstancesElementsForExistingApp(
+          pcfInstanceElementsForVerification, pcfRequestConfig, pcfCommandDeployRequest, executionLogCallback);
+
       // generate response to be sent back to Manager
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
       pcfDeployCommandResponse.setOutput(StringUtils.EMPTY);
@@ -153,6 +159,34 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
         .errorMessage(pcfDeployCommandResponse.getOutput())
         .pcfCommandResponse(pcfDeployCommandResponse)
         .build();
+  }
+
+  private void generatePcfInstancesElementsForExistingApp(List<PcfInstanceElement> pcfInstanceElementsForVerification,
+      PcfRequestConfig pcfRequestConfig, PcfCommandDeployRequest pcfCommandDeployRequest,
+      ExecutionLogCallback executionLogCallback) {
+    PcfAppSetupTimeDetails downsizeAppDetail = pcfCommandDeployRequest.getDownsizeAppDetail();
+    if (downsizeAppDetail == null || isBlank(downsizeAppDetail.getApplicationName())) {
+      return;
+    }
+
+    try {
+      pcfRequestConfig.setApplicationName(downsizeAppDetail.getApplicationName());
+      ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+      applicationDetail.getInstanceDetails().forEach(instanceDetail
+          -> pcfInstanceElementsForVerification.add(PcfInstanceElement.builder()
+                                                        .applicationId(applicationDetail.getId())
+                                                        .displayName(applicationDetail.getName())
+                                                        .instanceIndex(instanceDetail.getIndex())
+                                                        .isUpsize(false)
+                                                        .build()));
+    } catch (Exception e) {
+      executionLogCallback.saveExecutionLog(
+          new StringBuilder(128)
+              .append("# Failed to fetch InstanceDetails for existing Application: ")
+              .append(downsizeAppDetail.getApplicationName())
+              .append(", Verification may be able to use older instances to compare data")
+              .toString());
+    }
   }
 
   private void performUpsize(ExecutionLogCallback executionLogCallback, PcfCommandDeployRequest pcfCommandDeployRequest,
