@@ -5,13 +5,14 @@ import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
 import static io.harness.pcf.model.ManifestType.AUTOSCALAR_MANIFEST;
 import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
-import static io.harness.pcf.model.PcfConstants.MEMORY_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.NAME_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.PCF_AUTOSCALAR_MANIFEST_INSTANCE_LIMITS_ELE;
 import static io.harness.pcf.model.PcfConstants.PCF_AUTOSCALAR_MANIFEST_RULES_ELE;
 
 import com.google.inject.Singleton;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import io.harness.pcf.model.ManifestType;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +33,9 @@ public class PcfFileTypeChecker {
 
   public ManifestType getManifestType(String content) {
     Map<String, Object> map = null;
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     try {
-      map = (Map<String, Object>) yaml.load(content);
+      map = mapper.readValue(content, Map.class);
     } catch (Exception e) {
       return null;
     }
@@ -78,9 +80,7 @@ public class PcfFileTypeChecker {
       Map application = applicationMaps.get(0);
       Map<String, Object> treeMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
       treeMap.putAll(application);
-      if (treeMap.containsKey(NAME_MANIFEST_YML_ELEMENT) && treeMap.containsKey(MEMORY_MANIFEST_YML_ELEMENT)) {
-        return true;
-      }
+      return treeMap.containsKey(NAME_MANIFEST_YML_ELEMENT);
     }
 
     return false;

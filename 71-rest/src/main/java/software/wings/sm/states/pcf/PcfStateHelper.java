@@ -30,7 +30,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
@@ -505,10 +506,15 @@ public class PcfStateHelper {
 
   @VisibleForTesting
   Map<String, Object> getApplicationYamlMap(String applicationManifestYmlContent) {
-    Yaml yaml = new Yaml();
-    Map<String, Object> yamlMap = (Map<String, Object>) yaml.load(applicationManifestYmlContent);
-    List<Map> applicationsMaps = (List<Map>) yamlMap.get(APPLICATION_YML_ELEMENT);
+    Map<String, Object> yamlMap;
+    try {
+      ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+      yamlMap = (Map<String, Object>) mapper.readValue(applicationManifestYmlContent, Map.class);
+    } catch (Exception e) {
+      throw new UnexpectedException("failed to get application Yaml Map", e);
+    }
 
+    List<Map> applicationsMaps = (List<Map>) yamlMap.get(APPLICATION_YML_ELEMENT);
     if (isEmpty(applicationsMaps)) {
       throw new InvalidArgumentsException(Pair.of("Manifest", "contains no application config"));
     }
@@ -523,8 +529,8 @@ public class PcfStateHelper {
   public Object getVaribleValue(String content, String key) {
     try {
       Map<String, Object> map = null;
-      Yaml yaml = new Yaml();
-      map = (Map<String, Object>) yaml.load(content);
+      ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+      map = mapper.readValue(content, Map.class);
       return map.get(key);
     } catch (Exception e) {
       throw new UnexpectedException("Failed while trying to substitute vars yml value", e);

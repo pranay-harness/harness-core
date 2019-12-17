@@ -18,6 +18,11 @@ public class PcfFileTypeCheckerTest extends CategoryTest {
       + "  instances : 2\n"
       + "  random-route: true\n";
 
+  private String MANIFEST_YML_NO_MEM = "applications:\n"
+      + "- name: ((PCF_APP_NAME))\n"
+      + "  instances : 2\n"
+      + "  random-route: true\n";
+
   private String MANIFEST_YML_CREATE_SERVICE_PUSH_YML = "applications:\n"
       + "- name: ((PCF_APP_NAME))\n"
       + "  memory: ((PCF_APP_MEMORY))\n"
@@ -75,6 +80,7 @@ public class PcfFileTypeCheckerTest extends CategoryTest {
     PcfFileTypeChecker pcfFileTypeChecker = new PcfFileTypeChecker();
     assertThat(pcfFileTypeChecker.getManifestType(MANIFEST_YML)).isEqualTo(APPLICATION_MANIFEST);
     assertThat(pcfFileTypeChecker.getManifestType(MANIFEST_YML)).isEqualTo(APPLICATION_MANIFEST);
+    assertThat(pcfFileTypeChecker.getManifestType(MANIFEST_YML_NO_MEM)).isEqualTo(APPLICATION_MANIFEST);
     assertThat(pcfFileTypeChecker.getManifestType(TEST_VAR)).isEqualTo(VARIABLE_MANIFEST);
     assertThat(pcfFileTypeChecker.getManifestType("test:val")).isNotEqualTo(VARIABLE_MANIFEST);
     assertThat(pcfFileTypeChecker.getManifestType(MANIFEST_YML)).isNotEqualTo(VARIABLE_MANIFEST);
