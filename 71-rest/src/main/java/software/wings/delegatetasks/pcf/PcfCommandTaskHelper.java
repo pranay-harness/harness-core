@@ -257,10 +257,7 @@ public class PcfCommandTaskHelper {
     pcfServiceDataUpdated.add(pcfServiceData);
 
     if (updateCount >= applicationDetail.getInstances()) {
-      // If 0 instances are to be downsized in this stage, then find one of the previous applications, to be downsized
-      // and return guid of that application, so verification phase can use that guid.
       executionLogCallback.saveExecutionLog("# No Downsize was required.\n");
-      getGuidForAppToBeDownsized(pcfInstanceElements, applicationDetail);
       return;
     }
 
@@ -284,18 +281,6 @@ public class PcfCommandTaskHelper {
                                          .displayName(applicationDetailAfterResize.getName())
                                          .instanceIndex(instance.getIndex())
                                          .isUpsize(false)
-                                         .build()));
-    }
-  }
-
-  private void getGuidForAppToBeDownsized(List<PcfInstanceElement> pcfInstanceElements,
-      ApplicationDetail applicationDetail) throws PivotalClientApiException {
-    if (EmptyPredicate.isNotEmpty(applicationDetail.getInstanceDetails())) {
-      applicationDetail.getInstanceDetails().forEach(instanceDetail
-          -> pcfInstanceElements.add(PcfInstanceElement.builder()
-                                         .displayName(applicationDetail.getName())
-                                         .applicationId(applicationDetail.getId())
-                                         .instanceIndex(instanceDetail.getIndex())
                                          .build()));
     }
   }
