@@ -56,8 +56,7 @@ public class QueueListenerTest extends PersistenceTest {
     consumer = spy(new MongoQueueConsumer<>(TestTopicQueuableObject.class, ofSeconds(5), asList(asList("topic"))));
     on(consumer).set("persistence", persistence);
 
-    listener = new TestTopicQueuableObjectListener();
-    listener.setQueue(consumer);
+    listener = new TestTopicQueuableObjectListener(consumer);
     listener.setRunOnce(true);
     on(listener).set("timer", timer);
     on(listener).set("queueController", queueController);

@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import com.google.inject.Inject;
 
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import software.wings.api.DeploymentEvent;
 
@@ -16,8 +17,9 @@ import software.wings.api.DeploymentEvent;
 public class DeploymentEventListener extends QueueListener<DeploymentEvent> {
   @Inject private InstanceHelper instanceHelper;
 
-  public DeploymentEventListener() {
-    super(false);
+  @Inject
+  public DeploymentEventListener(QueueConsumer<DeploymentEvent> queueConsumer) {
+    super(queueConsumer, false);
   }
 
   /* (non-Javadoc)

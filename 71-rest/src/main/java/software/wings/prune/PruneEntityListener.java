@@ -11,6 +11,7 @@ import io.harness.exception.WingsException;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.logging.ExceptionLogger;
 import io.harness.manage.GlobalContextManager;
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Activity;
@@ -64,8 +65,9 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private SettingsService settingsService;
 
-  public PruneEntityListener() {
-    super(true);
+  @Inject
+  public PruneEntityListener(QueueConsumer<PruneEvent> queueConsumer) {
+    super(queueConsumer, true);
   }
 
   public static <T> void pruneDescendingEntities(Iterable<T> descendingServices, Consumer<T> lambda) {
@@ -178,7 +180,7 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
 
   @Override
   protected void requeue(PruneEvent message) {
-    getQueue().requeue(
+    getQueueConsumer().requeue(
         message.getId(), message.getRetries() - 1, Date.from(OffsetDateTime.now().plusHours(1).toInstant()));
   }
 }

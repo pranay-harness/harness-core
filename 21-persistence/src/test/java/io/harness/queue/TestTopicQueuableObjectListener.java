@@ -1,5 +1,6 @@
 package io.harness.queue;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
@@ -10,8 +11,9 @@ public class TestTopicQueuableObjectListener extends QueueListener<TestTopicQueu
     this.throwException = throwException;
   }
 
-  TestTopicQueuableObjectListener() {
-    super(true);
+  @Inject
+  TestTopicQueuableObjectListener(QueueConsumer<TestTopicQueuableObject> consumer) {
+    super(consumer, true);
   }
 
   @Override

@@ -3,6 +3,7 @@ package software.wings.service.impl.event;
 import com.google.inject.Inject;
 
 import io.harness.event.timeseries.processor.DeploymentEventProcessor;
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import software.wings.api.DeploymentTimeSeriesEvent;
 
@@ -14,8 +15,9 @@ import software.wings.api.DeploymentTimeSeriesEvent;
 public class DeploymentTimeSeriesEventListener extends QueueListener<DeploymentTimeSeriesEvent> {
   @Inject private DeploymentEventProcessor deploymentEventProcessor;
 
-  public DeploymentTimeSeriesEventListener() {
-    super(false);
+  @Inject
+  public DeploymentTimeSeriesEventListener(QueueConsumer<DeploymentTimeSeriesEvent> queueConsumer) {
+    super(queueConsumer, false);
   }
 
   /* (non-Javadoc)

@@ -7,6 +7,7 @@ import static software.wings.service.intfc.security.SecretManagementDelegateServ
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.KmsTransitionEvent;
@@ -21,8 +22,9 @@ import java.io.IOException;
 public class KmsTransitionEventListener extends QueueListener<KmsTransitionEvent> {
   @Inject private SecretManager secretManager;
 
-  public KmsTransitionEventListener() {
-    super(true);
+  @Inject
+  public KmsTransitionEventListener(QueueConsumer<KmsTransitionEvent> queueConsumer) {
+    super(queueConsumer, true);
   }
 
   @Override

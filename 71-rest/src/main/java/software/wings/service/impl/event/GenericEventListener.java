@@ -5,12 +5,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.event.handler.EventHandler;
 import io.harness.event.listener.EventListener;
 import io.harness.event.model.EventType;
 import io.harness.event.model.GenericEvent;
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,8 +27,9 @@ import java.util.Set;
 public class GenericEventListener extends QueueListener<GenericEvent> implements EventListener {
   private Multimap<EventType, EventHandler> handlerRegistry;
 
-  public GenericEventListener() {
-    super(false);
+  @Inject
+  public GenericEventListener(QueueConsumer<GenericEvent> queueConsumer) {
+    super(queueConsumer, false);
     handlerRegistry = getMultimap();
   }
 
