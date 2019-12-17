@@ -92,6 +92,8 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
 
   @Indexed private String parentInstanceId;
 
+  private String subGraphFilterId;
+
   private String prevInstanceId;
 
   private String nextInstanceId;
@@ -148,6 +150,7 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
     private OrchestrationWorkflowType orchestrationWorkflowType;
     private String executionUuid;
     private String parentInstanceId;
+    private String subGraphFilterId;
     private String prevInstanceId;
     private String nextInstanceId;
     private String cloneInstanceId;
@@ -268,6 +271,11 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
       return this;
     }
 
+    public Builder subGraphFilterId(String subGraphFilterId) {
+      this.subGraphFilterId = subGraphFilterId;
+      return this;
+    }
+
     public Builder prevInstanceId(String prevInstanceId) {
       this.prevInstanceId = prevInstanceId;
       return this;
@@ -350,6 +358,7 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
           .orchestrationWorkflowType(orchestrationWorkflowType)
           .executionUuid(executionUuid)
           .parentInstanceId(parentInstanceId)
+          .subGraphFilterId(subGraphFilterId)
           .prevInstanceId(prevInstanceId)
           .nextInstanceId(nextInstanceId)
           .cloneInstanceId(cloneInstanceId)
@@ -382,6 +391,7 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
       stateExecutionInstance.setOrchestrationWorkflowType(orchestrationWorkflowType);
       stateExecutionInstance.setExecutionUuid(executionUuid);
       stateExecutionInstance.setParentInstanceId(parentInstanceId);
+      stateExecutionInstance.setSubGraphFilterId(subGraphFilterId);
       stateExecutionInstance.setPrevInstanceId(prevInstanceId);
       stateExecutionInstance.setNextInstanceId(nextInstanceId);
       stateExecutionInstance.setCloneInstanceId(cloneInstanceId);
