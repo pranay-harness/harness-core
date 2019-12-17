@@ -71,19 +71,21 @@ public class SegmentHelper {
 
     Map<String, String> traits = new HashMap<>();
     traits.put(EMAIL, email);
-    traits.put(GROUP_ID, account.getUuid());
     String firstName = utils.getFirstName(userName, email);
     traits.put(FIRST_NAME, isNotEmpty(firstName) ? firstName : email);
     String lastName = utils.getLastName(userName, email);
     traits.put(LAST_NAME, isNotEmpty(lastName) ? lastName : "");
 
-    traits.put(COMPANY_NAME, account.getCompanyName());
-    traits.put(EventConstants.ACCOUNT_ID, account.getUuid());
+    if (account != null) {
+      traits.put(GROUP_ID, account.getUuid());
+      traits.put(COMPANY_NAME, account.getCompanyName());
+      traits.put(EventConstants.ACCOUNT_ID, account.getUuid());
 
-    LicenseInfo licenseInfo = account.getLicenseInfo();
-    if (licenseInfo != null) {
-      traits.put(ACCOUNT_STATUS, licenseInfo.getAccountStatus());
-      traits.put(DAYS_LEFT_IN_TRIAL, utils.getDaysLeft(licenseInfo.getExpiryTime()));
+      LicenseInfo licenseInfo = account.getLicenseInfo();
+      if (licenseInfo != null) {
+        traits.put(ACCOUNT_STATUS, licenseInfo.getAccountStatus());
+        traits.put(DAYS_LEFT_IN_TRIAL, utils.getDaysLeft(licenseInfo.getExpiryTime()));
+      }
     }
 
     if (isNotEmpty(userInviteUrl)) {
