@@ -64,8 +64,9 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
-    when(instanceDataService.fetchInstanceData(ACCOUNTID, INSTANCEID))
+    when(instanceDataService.fetchInstanceDataWithName(ACCOUNTID, INSTANCEID, START_TIME_MILLIS))
         .thenReturn(InstanceData.builder()
+                        .instanceId(INSTANCEID)
                         .totalResource(Resource.builder().cpuUnits(CPUTOTAL).memoryMb(MEMORYTOTAL).build())
                         .build());
   }

@@ -101,7 +101,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     assertThat(instanceInfo.getInstanceType()).isEqualTo(InstanceType.K8S_NODE);
     assertThat(instanceInfo.getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(instanceInfo.getClusterName()).isEqualTo(CLUSTER_NAME);
-    assertThat(infoResource.getCpuUnits()).isEqualTo(1.0);
+    assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
     assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
     assertThat(metaData.get(InstanceMetaDataConstants.REGION)).isEqualTo(InstanceMetaDataConstants.REGION);
   }

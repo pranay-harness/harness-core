@@ -36,7 +36,7 @@ public class UtilizationDataServiceImpl {
   private static final int MAX_RETRY_COUNT = 5;
 
   static final String INSERT_STATEMENT =
-      "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, CLUSTERARN, CLUTERNAME, SERVICEARN, SERVICENAME, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTANCEID, INSTANCETYPE, SETTINGID ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, ACCOUNTID, CLUSTERARN, CLUTERNAME, SERVICEARN, SERVICENAME, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTANCEID, INSTANCETYPE, SETTINGID ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
   private static final String UTILIZATION_DATA_QUERY =
       "SELECT MAX(MAXCPU) as MAXCPUUTILIZATION, MAX(MAXMEMORY) as MAXMEMORYUTILIZATION, AVG(AVGCPU) as AVGCPUUTILIZATION, AVG(AVGMEMORY) as AVGMEMORYUTILIZATION, INSTANCEID FROM UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND ENDTIME <= '%s' GROUP BY INSTANCEID;";
 
@@ -70,17 +70,18 @@ public class UtilizationDataServiceImpl {
       throws SQLException {
     statement.setTimestamp(1, new Timestamp(instanceUtilizationData.getStartTimestamp()), utils.getDefaultCalendar());
     statement.setTimestamp(2, new Timestamp(instanceUtilizationData.getEndTimestamp()), utils.getDefaultCalendar());
-    statement.setString(3, instanceUtilizationData.getClusterArn());
-    statement.setString(4, instanceUtilizationData.getClusterName());
-    statement.setString(5, instanceUtilizationData.getServiceArn());
-    statement.setString(6, instanceUtilizationData.getServiceName());
-    statement.setDouble(7, instanceUtilizationData.getCpuUtilizationMax());
-    statement.setDouble(8, instanceUtilizationData.getMemoryUtilizationMax());
-    statement.setDouble(9, instanceUtilizationData.getCpuUtilizationAvg());
-    statement.setDouble(10, instanceUtilizationData.getMemoryUtilizationAvg());
-    statement.setString(11, instanceUtilizationData.getInstanceId());
-    statement.setString(12, instanceUtilizationData.getInstanceType());
-    statement.setString(13, instanceUtilizationData.getSettingId());
+    statement.setString(3, instanceUtilizationData.getAccountId());
+    statement.setString(4, instanceUtilizationData.getClusterArn());
+    statement.setString(5, instanceUtilizationData.getClusterName());
+    statement.setString(6, instanceUtilizationData.getServiceArn());
+    statement.setString(7, instanceUtilizationData.getServiceName());
+    statement.setDouble(8, instanceUtilizationData.getCpuUtilizationMax());
+    statement.setDouble(9, instanceUtilizationData.getMemoryUtilizationMax());
+    statement.setDouble(10, instanceUtilizationData.getCpuUtilizationAvg());
+    statement.setDouble(11, instanceUtilizationData.getMemoryUtilizationAvg());
+    statement.setString(12, instanceUtilizationData.getInstanceId());
+    statement.setString(13, instanceUtilizationData.getInstanceType());
+    statement.setString(14, instanceUtilizationData.getSettingId());
   }
 
   public Map<String, UtilizationData> getUtilizationDataForInstances(

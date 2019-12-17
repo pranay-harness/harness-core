@@ -25,12 +25,14 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @RunWith(MockitoJUnitRunner.class)
 public class K8sGranularUtilizationMetricsReaderTest extends WingsBaseTest {
   @Inject @InjectMocks private K8sGranularUtilizationMetricsReader k8sGranularUtilizationMetricsReader;
   @Mock private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
   @Mock private JobParameters parameters;
+  @Mock private AtomicBoolean runOnlyOnce;
 
   private final Instant NOW = Instant.now();
   private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
@@ -44,6 +46,7 @@ public class K8sGranularUtilizationMetricsReaderTest extends WingsBaseTest {
         .thenReturn(Collections.singletonList(INSTANCE_ID));
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
+    runOnlyOnce = new AtomicBoolean(false);
   }
 
   @Test
