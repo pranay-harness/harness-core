@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.ROHIT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -24,11 +25,11 @@ import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLAggregationKind;
+import software.wings.graphql.schema.type.aggregation.QLBillingStackedTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
-import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
@@ -61,6 +62,15 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   final double[] doubleVal = {0};
   final long currentTime = System.currentTimeMillis();
   final long[] calendar = {currentTime};
+  private List<QLCCMAggregationFunction> aggregationFunction;
+
+  private static String IDLECOST = "idlecost";
+  private static String CPUIDLECOST = "cpuidlecost";
+  private static String MEMORYIDLECOST = "memoryidlecost";
+  private static String MAXCPUUTILIZATION = "maxcpuutilization";
+  private static String MAXMEMORYUTILIZATION = "maxmemoryutilization";
+  private static String AVGCPUUTILIZATION = "avgcpuutilization";
+  private static String AVGMEMORYTILIZATION = "avgmemoryutilization";
 
   @Before
   public void setup() throws SQLException {
@@ -69,6 +79,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     // Account1
     createAccount(ACCOUNT1_ID, getLicenseInfo());
     createApp(ACCOUNT1_ID, APP1_ID_ACCOUNT1, APP1_ID_ACCOUNT1, TAG_TEAM, TAG_VALUE_TEAM1);
+    aggregationFunction = Collections.singletonList(makeBillingAmtAggregation());
 
     Connection mockConnection = mock(Connection.class);
     Statement mockStatement = mock(Statement.class);
@@ -85,7 +96,6 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   @Category(UnitTests.class)
   public void testGetBillingTrendWhenDbIsInvalid() {
     when(timeScaleDBService.isValid()).thenReturn(false);
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
     assertThatThrownBy(()
                            -> billingStatsTimeSeriesDataFetcher.fetch(ACCOUNT1_ID, aggregationFunction,
                                Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST))
@@ -103,7 +113,6 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     when(mockConnection.createStatement()).thenReturn(mockStatement);
     when(mockStatement.executeQuery(anyString())).thenThrow(new SQLException());
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
     QLData data = billingStatsTimeSeriesDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNull();
@@ -115,20 +124,45 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   public void testFetchMethodInBillingTimeSeriesDataFetcher() {
     String[] appIdFilterValues = new String[] {APP1_ID_ACCOUNT1};
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
     List<QLBillingDataFilter> filters = Arrays.asList(makeApplicationFilter(appIdFilterValues), makeTimeFilter(0L));
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeApplicationEntityGroupBy(), makeStartTimeEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
-    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
 
-    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
-    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
     assertThat(filters.get(0).getApplication().getValues()).isEqualTo(appIdFilterValues);
     assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(APP1_ID_ACCOUNT1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("APPID");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testFetchMethodWithMultipleAggregationInBillingTimeSeriesDataFetcher() {
+    String[] appIdFilterValues = new String[] {APP1_ID_ACCOUNT1};
+    List<QLCCMAggregationFunction> multiAggregationFunctionForIdleCost =
+        Arrays.asList(makeIdleCostAggregation(), makeCpuIdleCostAggregation(), makeMemoryIdleCostAggregation(),
+            makeMaxCpuUtilizationAggregation(), makeAvgCpuUtilizationAggregation(),
+            makeMaxMemoryUtilizationAggregation(), makeAvgMemoryUtilizationAggregation());
+    List<QLBillingDataFilter> filters = Arrays.asList(makeApplicationFilter(appIdFilterValues), makeTimeFilter(0L));
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeApplicationEntityGroupBy(), makeStartTimeEntityGroupBy());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList();
+
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, multiAggregationFunctionForIdleCost, filters, groupBy, sortCriteria);
+
+    assertThat(multiAggregationFunctionForIdleCost.get(0).getColumnName()).isEqualTo("idlecost");
+    assertThat(multiAggregationFunctionForIdleCost.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(filters.get(0).getApplication().getValues()).isEqualTo(appIdFilterValues);
+    assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(APP1_ID_ACCOUNT1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("APPID");
@@ -141,16 +175,16 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   public void testFetchMethodInBillingTimeSeriesDataFetcherForClusterInsight() {
     String[] cloudServiceNameFilterValues = new String[] {CLOUD_SERVICE_NAME_ACCOUNT1};
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeCloudServiceNameEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters = Arrays.asList(makeCloudServiceNameFilter(cloudServiceNameFilterValues));
+    List<QLBillingDataFilter> filters =
+        Collections.singletonList(makeCloudServiceNameFilter(cloudServiceNameFilterValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
-    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
 
-    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
-    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
     assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
@@ -166,16 +200,15 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   public void testFetchMethodInBillingTimeSeriesDataFetcherServiceQuery() {
     String[] serviceValues = new String[] {SERVICE1_ID_APP1_ACCOUNT1};
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeServiceEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters = Arrays.asList(makeServiceFilter(serviceValues));
+    List<QLBillingDataFilter> filters = Collections.singletonList(makeServiceFilter(serviceValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
-    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
 
-    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
-    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
     assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
@@ -191,16 +224,15 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   public void testFetchMethodInBillingTimeSeriesDataFetcherEnvironmentQuery() {
     String[] environmentValues = new String[] {SERVICE1_ID_APP1_ACCOUNT1};
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeEnvironmentEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters = Arrays.asList(makeEnvironmentFilter(environmentValues));
+    List<QLBillingDataFilter> filters = Collections.singletonList(makeEnvironmentFilter(environmentValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
-    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
 
-    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
-    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
     assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
@@ -217,18 +249,17 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     String[] clusterValues = new String[] {CLUSTER1_ID};
     String[] workloadNameValues = new String[] {WORKLOAD_NAME_ACCOUNT1};
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeClusterEntityGroupBy(), makeStartTimeEntityGroupBy());
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(makeClusterFilter(clusterValues));
     filters.add(makeWorkloadNameFilter(workloadNameValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
-    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
 
-    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
-    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
     assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
@@ -242,13 +273,12 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testNoneGroupByInClusterViewCharts() {
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
-    List<QLCCMGroupBy> groupBy = Arrays.asList(makeStartTimeEntityGroupBy());
+    List<QLCCMGroupBy> groupBy = Collections.singletonList(makeStartTimeEntityGroupBy());
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(makeNotNullClusterFilter());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
-    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
 
     assertThat(data).isNotNull();
@@ -261,16 +291,15 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   public void testFetchMethodInBillingTimeSeriesDataFetcherInstanceIdQuery() {
     String[] instanceIdValues = new String[] {INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1};
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeInstanceIdEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters = Arrays.asList(makeInstanceIdFilter(instanceIdValues));
+    List<QLBillingDataFilter> filters = Collections.singletonList(makeInstanceIdFilter(instanceIdValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
-    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
 
-    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
-    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
     assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
@@ -287,16 +316,15 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   public void testFetchMethodInBillingTimeSeriesDataFetcherLaunchTypeQuery() {
     String[] launchTypeValues = new String[] {LAUNCH_TYPE1};
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeLaunchTypeEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters = Arrays.asList(makeLaunchTypeFilter(launchTypeValues));
+    List<QLBillingDataFilter> filters = Collections.singletonList(makeLaunchTypeFilter(launchTypeValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
-    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
 
-    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
-    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
     assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
@@ -312,16 +340,15 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   public void testFetchMethodInBillingTimeSeriesDataFetcherRegionQuery() {
     String[] instanceTypeValues = new String[] {INSTANCE_TYPE1};
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeRegionEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters = Arrays.asList(makeInstanceTypeFilter(instanceTypeValues));
+    List<QLBillingDataFilter> filters = Collections.singletonList(makeInstanceTypeFilter(instanceTypeValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
-    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
 
-    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
-    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
     assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
@@ -337,16 +364,15 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   public void testFetchMethodInBillingTimeSeriesDataFetcherNamespaceQuery() {
     String[] namespaceValues = new String[] {NAMESPACE1};
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeNamespaceEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters = Arrays.asList(makeNamespaceFilter(namespaceValues));
+    List<QLBillingDataFilter> filters = Collections.singletonList(makeNamespaceFilter(namespaceValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
-    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
 
-    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
-    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
     assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
@@ -362,16 +388,15 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   public void testFetchMethodInBillingTimeSeriesDataFetcherClusterTypeQuery() {
     String[] clusterIdValues = new String[] {CLUSTER1_ID};
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeClusterTypeEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters = Arrays.asList(makeNamespaceFilter(clusterIdValues));
+    List<QLBillingDataFilter> filters = Collections.singletonList(makeNamespaceFilter(clusterIdValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
-    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
 
-    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
-    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
     assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
@@ -381,98 +406,144 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
   }
 
-  public QLCCMAggregationFunction makeBillingAmtAggregation() {
+  private QLCCMAggregationFunction makeBillingAmtAggregation() {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.SUM)
         .columnName("billingamount")
         .build();
   }
 
-  public QLBillingSortCriteria makeAscByAmountSortingCriteria() {
+  private QLCCMAggregationFunction makeIdleCostAggregation() {
+    return QLCCMAggregationFunction.builder().operationType(QLCCMAggregateOperation.SUM).columnName(IDLECOST).build();
+  }
+
+  private QLCCMAggregationFunction makeCpuIdleCostAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.SUM)
+        .columnName(CPUIDLECOST)
+        .build();
+  }
+
+  private QLCCMAggregationFunction makeMemoryIdleCostAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.SUM)
+        .columnName(MEMORYIDLECOST)
+        .build();
+  }
+
+  private QLCCMAggregationFunction makeMaxCpuUtilizationAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.SUM)
+        .columnName(MAXCPUUTILIZATION)
+        .build();
+  }
+
+  private QLCCMAggregationFunction makeAvgCpuUtilizationAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.SUM)
+        .columnName(AVGCPUUTILIZATION)
+        .build();
+  }
+
+  private QLCCMAggregationFunction makeMaxMemoryUtilizationAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.SUM)
+        .columnName(MAXMEMORYUTILIZATION)
+        .build();
+  }
+
+  private QLCCMAggregationFunction makeAvgMemoryUtilizationAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.SUM)
+        .columnName(AVGMEMORYTILIZATION)
+        .build();
+  }
+
+  private QLBillingSortCriteria makeAscByAmountSortingCriteria() {
     return QLBillingSortCriteria.builder().sortOrder(QLSortOrder.ASCENDING).sortType(QLBillingSortType.Amount).build();
   }
 
-  public QLCCMGroupBy makeStartTimeEntityGroupBy() {
+  private QLCCMGroupBy makeStartTimeEntityGroupBy() {
     QLCCMEntityGroupBy startTimeGroupBy = QLCCMEntityGroupBy.StartTime;
     return QLCCMGroupBy.builder().entityGroupBy(startTimeGroupBy).build();
   }
 
-  public QLCCMGroupBy makeApplicationEntityGroupBy() {
+  private QLCCMGroupBy makeApplicationEntityGroupBy() {
     QLCCMEntityGroupBy applicationGroupBy = QLCCMEntityGroupBy.Application;
     return QLCCMGroupBy.builder().entityGroupBy(applicationGroupBy).build();
   }
 
-  public QLCCMGroupBy makeCloudServiceNameEntityGroupBy() {
+  private QLCCMGroupBy makeCloudServiceNameEntityGroupBy() {
     QLCCMEntityGroupBy cloudServiceNameGroupBy = QLCCMEntityGroupBy.CloudServiceName;
     return QLCCMGroupBy.builder().entityGroupBy(cloudServiceNameGroupBy).build();
   }
 
-  public QLCCMGroupBy makeServiceEntityGroupBy() {
+  private QLCCMGroupBy makeServiceEntityGroupBy() {
     QLCCMEntityGroupBy serviceGroupBy = QLCCMEntityGroupBy.Service;
     return QLCCMGroupBy.builder().entityGroupBy(serviceGroupBy).build();
   }
 
-  public QLCCMGroupBy makeRegionEntityGroupBy() {
+  private QLCCMGroupBy makeRegionEntityGroupBy() {
     QLCCMEntityGroupBy regionGroupBy = QLCCMEntityGroupBy.Region;
     return QLCCMGroupBy.builder().entityGroupBy(regionGroupBy).build();
   }
 
-  public QLCCMGroupBy makeClusterEntityGroupBy() {
+  private QLCCMGroupBy makeClusterEntityGroupBy() {
     QLCCMEntityGroupBy clusterGroupBy = QLCCMEntityGroupBy.Cluster;
     return QLCCMGroupBy.builder().entityGroupBy(clusterGroupBy).build();
   }
 
-  public QLCCMGroupBy makeInstanceIdEntityGroupBy() {
+  private QLCCMGroupBy makeInstanceIdEntityGroupBy() {
     QLCCMEntityGroupBy instanceIdGroupBy = QLCCMEntityGroupBy.InstanceId;
     return QLCCMGroupBy.builder().entityGroupBy(instanceIdGroupBy).build();
   }
 
-  public QLCCMGroupBy makeEnvironmentEntityGroupBy() {
+  private QLCCMGroupBy makeEnvironmentEntityGroupBy() {
     QLCCMEntityGroupBy environmentGroupBy = QLCCMEntityGroupBy.Environment;
     return QLCCMGroupBy.builder().entityGroupBy(environmentGroupBy).build();
   }
 
-  public QLCCMGroupBy makeLaunchTypeEntityGroupBy() {
+  private QLCCMGroupBy makeLaunchTypeEntityGroupBy() {
     QLCCMEntityGroupBy launchTypeGroupBy = QLCCMEntityGroupBy.LaunchType;
     return QLCCMGroupBy.builder().entityGroupBy(launchTypeGroupBy).build();
   }
 
-  public QLCCMGroupBy makeNamespaceEntityGroupBy() {
+  private QLCCMGroupBy makeNamespaceEntityGroupBy() {
     QLCCMEntityGroupBy namespaceGroupBy = QLCCMEntityGroupBy.Namespace;
     return QLCCMGroupBy.builder().entityGroupBy(namespaceGroupBy).build();
   }
 
-  public QLCCMGroupBy makeClusterTypeEntityGroupBy() {
+  private QLCCMGroupBy makeClusterTypeEntityGroupBy() {
     QLCCMEntityGroupBy clusterTypeGroupBy = QLCCMEntityGroupBy.ClusterType;
     return QLCCMGroupBy.builder().entityGroupBy(clusterTypeGroupBy).build();
   }
 
-  public QLBillingDataFilter makeApplicationFilter(String[] values) {
+  private QLBillingDataFilter makeApplicationFilter(String[] values) {
     QLIdFilter applicationFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().application(applicationFilter).build();
   }
 
-  public QLBillingDataFilter makeInstanceIdFilter(String[] values) {
+  private QLBillingDataFilter makeInstanceIdFilter(String[] values) {
     QLIdFilter instanceIdFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().instanceId(instanceIdFilter).build();
   }
 
-  public QLBillingDataFilter makeLaunchTypeFilter(String[] values) {
+  private QLBillingDataFilter makeLaunchTypeFilter(String[] values) {
     QLIdFilter launchTypeFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().launchType(launchTypeFilter).build();
   }
 
-  public QLBillingDataFilter makeTimeFilter(Long filterTime) {
+  private QLBillingDataFilter makeTimeFilter(Long filterTime) {
     QLTimeFilter timeFilter = QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build();
     return QLBillingDataFilter.builder().startTime(timeFilter).build();
   }
 
-  public QLBillingDataFilter makeServiceFilter(String[] values) {
+  private QLBillingDataFilter makeServiceFilter(String[] values) {
     QLIdFilter serviceFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().service(serviceFilter).build();
   }
 
-  public QLBillingDataFilter makeClusterFilter(String[] values) {
+  private QLBillingDataFilter makeClusterFilter(String[] values) {
     QLIdFilter clusterFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().cluster(clusterFilter).build();
   }
@@ -483,27 +554,27 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     return QLBillingDataFilter.builder().cluster(clusterFilter).build();
   }
 
-  public QLBillingDataFilter makeEnvironmentFilter(String[] values) {
+  private QLBillingDataFilter makeEnvironmentFilter(String[] values) {
     QLIdFilter environmentFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().service(environmentFilter).build();
   }
 
-  public QLBillingDataFilter makeCloudServiceNameFilter(String[] values) {
+  private QLBillingDataFilter makeCloudServiceNameFilter(String[] values) {
     QLIdFilter cloudServiceNameFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().cloudServiceName(cloudServiceNameFilter).build();
   }
 
-  public QLBillingDataFilter makeInstanceTypeFilter(String[] values) {
+  private QLBillingDataFilter makeInstanceTypeFilter(String[] values) {
     QLIdFilter instanceTypeFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().instanceType(instanceTypeFilter).build();
   }
 
-  public QLBillingDataFilter makeNamespaceFilter(String[] values) {
+  private QLBillingDataFilter makeNamespaceFilter(String[] values) {
     QLIdFilter namespaceFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().namespace(namespaceFilter).build();
   }
 
-  public QLBillingDataFilter makeWorkloadNameFilter(String[] values) {
+  private QLBillingDataFilter makeWorkloadNameFilter(String[] values) {
     QLIdFilter workloadNameFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().workloadName(workloadNameFilter).build();
   }
@@ -529,6 +600,14 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getString("NAMESPACE")).thenAnswer((Answer<String>) invocation -> NAMESPACE1);
     when(resultSet.getString("REGION")).thenAnswer((Answer<String>) invocation -> REGION1);
     when(resultSet.getString("CLUSTERTYPE")).thenAnswer((Answer<String>) invocation -> CLUSTER_TYPE1);
+    when(resultSet.getString("IDLECOST")).thenAnswer((Answer<String>) invocation -> IDLECOST);
+    when(resultSet.getString("CPUIDLECOST")).thenAnswer((Answer<String>) invocation -> CPUIDLECOST);
+    when(resultSet.getString("MEMORYIDLECOST")).thenAnswer((Answer<String>) invocation -> MEMORYIDLECOST);
+    when(resultSet.getString("MAXCPUUTILIZATION")).thenAnswer((Answer<String>) invocation -> MAXCPUUTILIZATION);
+    when(resultSet.getString("MAXMEMORYUTILIZATION")).thenAnswer((Answer<String>) invocation -> MAXMEMORYUTILIZATION);
+    when(resultSet.getString("AVGCPUUTILIZATION")).thenAnswer((Answer<String>) invocation -> AVGCPUUTILIZATION);
+    when(resultSet.getString("AVGMEMORYTILIZATION")).thenAnswer((Answer<String>) invocation -> AVGMEMORYTILIZATION);
+
     when(resultSet.getString("INSTANCEID"))
         .thenAnswer((Answer<String>) invocation -> INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
     when(resultSet.getTimestamp("STARTTIME", utils.getDefaultCalendar())).thenAnswer((Answer<Timestamp>) invocation -> {

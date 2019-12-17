@@ -1,10 +1,10 @@
 extend type Query {
   billingStatsTimeSeries(
     filters: [CCMFilter]
-    aggregateFunction: CCMAggregationFunction
+    aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]
     sortCriteria: [BillingSortCriteria]
-  ): StackedTimeSeriesData @dataFetcher(name: billingStatsTimeSeries)
+  ): BillingStackedTimeSeriesData @dataFetcher(name: billingStatsTimeSeries)
 
   billingTrendStats(
     filters: [CCMFilter]
@@ -126,6 +126,27 @@ type BillingStatsData {
   totalCost: BillingStatsInfo
   costTrend: BillingStatsInfo
   forecastCost: BillingStatsInfo
+}
+
+type BillingStackedTimeSeriesData {
+  data: [BillingStackedTimeSeriesDataPoint]
+  cpuIdleCost: [BillingStackedTimeSeriesDataPoint]
+  memoryIdleCost: [BillingStackedTimeSeriesDataPoint]
+  cpuUtilMetrics: [BillingStackedTimeSeriesDataPoint]
+  memoryUtilMetrics: [BillingStackedTimeSeriesDataPoint]
+  label: String
+}
+
+type BillingStackedTimeSeriesDataPoint {
+  values: [BillingDataPoint]
+  time: DateTime
+}
+
+type BillingDataPoint {
+  key: Reference # Key refers to the label
+  value: Number
+  Avg: Number
+  Max: Number
 }
 
 type BillingStatsInfo {
