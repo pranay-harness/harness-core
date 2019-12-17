@@ -161,7 +161,8 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
         .build();
   }
 
-  private void generatePcfInstancesElementsForExistingApp(List<PcfInstanceElement> pcfInstanceElementsForVerification,
+  @VisibleForTesting
+  void generatePcfInstancesElementsForExistingApp(List<PcfInstanceElement> pcfInstanceElementsForVerification,
       PcfRequestConfig pcfRequestConfig, PcfCommandDeployRequest pcfCommandDeployRequest,
       ExecutionLogCallback executionLogCallback) {
     PcfAppSetupTimeDetails downsizeAppDetail = pcfCommandDeployRequest.getDownsizeAppDetail();
