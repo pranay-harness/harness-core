@@ -175,7 +175,7 @@ public class RepeatState extends State {
     } else {
       ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
 
-      Integer repeatElementIndex = repeatStateExecutionData.getRepeatElementIndex();
+      int repeatElementIndex = repeatStateExecutionData.getRepeatElementIndex();
       repeatElementIndex++;
       repeatStateExecutionData.setRepeatElementIndex(repeatElementIndex);
       ContextElement repeatElement = repeatElements.get(repeatElementIndex);
@@ -223,6 +223,7 @@ public class RepeatState extends State {
     childStateExecutionInstance.setNotifyId(notifyId);
     childStateExecutionInstance.setPrevInstanceId(null);
     childStateExecutionInstance.setDelegateTaskId(null);
+    childStateExecutionInstance.setSubGraphFilterId(repeatElement.getUuid());
     childStateExecutionInstance.getContextElements().push(repeatElement);
     childStateExecutionInstance.setContextElement(repeatElement);
     childStateExecutionInstance.setContextTransition(true);

@@ -1248,6 +1248,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       stateExecutionInstance.setExecutionEventAdvisors(asList(workflowExecutionAdvisor));
     }
     stateExecutionInstance.setContextElements(elements);
+    stateExecutionInstance.setSubGraphFilterId("dummy");
 
     stateExecutionInstance = stateMachineExecutor.queue(stateMachine, stateExecutionInstance);
 
