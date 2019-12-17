@@ -43,6 +43,8 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
@@ -544,7 +546,14 @@ public class PcfCommandTaskHelper {
     // Substitute name,
     String manifestYaml = requestData.getSetupRequest().getManifestYaml();
 
-    Map<String, Object> map = (Map<String, Object>) yaml.load(manifestYaml);
+    Map<String, Object> map;
+    try {
+      ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+      map = (Map<String, Object>) mapper.readValue(manifestYaml, Map.class);
+    } catch (Exception e) {
+      throw new UnexpectedException("Failed to get Yaml Map", e);
+    }
+
     List<Map> applicationMaps = (List<Map>) map.get(APPLICATION_YML_ELEMENT);
 
     if (isEmpty(applicationMaps)) {
