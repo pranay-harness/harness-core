@@ -16,7 +16,6 @@ import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.text.ParseException;
-import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,8 +69,6 @@ public interface ContinuousVerificationService {
       PageRequest<ContinuousVerificationExecutionMetaData> pageRequest);
 
   boolean collectCVData(String cvTaskId, DataCollectionInfoV2 dataCollectionInfo);
-
-  DataCollectionInfoV2 createDataCollectionInfo(String cvConfigId, Instant startTime, Instant endTime);
 
   VerificationStateAnalysisExecutionData getVerificationStateExecutionData(String stateExecutionId);
 

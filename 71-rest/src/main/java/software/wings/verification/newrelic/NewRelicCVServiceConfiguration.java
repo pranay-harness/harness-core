@@ -1,5 +1,7 @@
 package software.wings.verification.newrelic;
 
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import lombok.AllArgsConstructor;
@@ -7,9 +9,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
+import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.verification.CVConfiguration;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Vaibhav Tulsyan
@@ -32,6 +38,19 @@ public class NewRelicCVServiceConfiguration extends CVConfiguration {
     clonedConfig.setApplicationId(this.getApplicationId());
     clonedConfig.setMetrics(this.getMetrics());
     return clonedConfig;
+  }
+
+  @Override
+  public DataCollectionInfoV2 toDataCollectionInfo() {
+    Map<String, String> hostsMap = new HashMap<>();
+    hostsMap.put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME);
+    NewRelicDataCollectionInfoV2 newRelicDataCollectionInfoV2 =
+        NewRelicDataCollectionInfoV2.builder()
+            .newRelicAppId(Long.parseLong(this.getApplicationId()))
+            .hostsToGroupNameMap(hostsMap)
+            .build();
+    fillDataCollectionInfoWithCommonFields(newRelicDataCollectionInfoV2);
+    return newRelicDataCollectionInfoV2;
   }
 
   /**

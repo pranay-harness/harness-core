@@ -87,8 +87,4 @@ public interface VerificationManagerClient {
   @POST(VerificationConstants.LEARNING_METRIC_EXP_URL + VerificationConstants.UPDATE_MISMATCH)
   Call<RestResponse<Boolean>> updateMismatchStatusInExperiment(
       @Query("stateExecutionId") String stateExecutionId, @Query("analysisMinute") Integer analysisMinute);
-
-  @GET("apm" + VerificationConstants.CREATE_DATA_COLLECTION_INFO_PATH)
-  Call<RestResponse<DataCollectionInfoV2>> createDataCollectionInfo(
-      @Query("cvConfigId") String cvConfigId, @Query("startTime") long startTime, @Query("endTime") long endTime);
 }

@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 public class VerificationConstants {
   public static final long ML_RECORDS_TTL_MONTHS = 6;
   public static final long CV_TASK_TTL_MONTHS = 1;
-  public static final String CREATE_DATA_COLLECTION_INFO_PATH = "/create-data-collection-info";
   public static final long ACTIVITY_LOG_TTL_WEEKS = 2;
   /*
     New Relic constants

@@ -91,11 +91,13 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
   private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
   private DataCollectionInfo dataCollectionInfo;
   private DataCollectionInfoV2 dataCollectionInfov2;
+  private boolean cvTasksCreated;
 
   private int retry;
   private final Map<FeatureName, Boolean> featureFlags = new HashMap<>();
   @Indexed private Long timeSeriesAnalysisIteration;
   @Indexed private Long logAnalysisIteration;
+  @Indexed private Long cvTaskCreationIteration;
 
   @JsonIgnore
   @SchemaIgnore
@@ -179,12 +181,14 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
       this.timeSeriesAnalysisIteration = nextIteration;
       return;
     }
-
     if (AnalysisContextKeys.logAnalysisIteration.equals(fieldName)) {
       this.logAnalysisIteration = nextIteration;
       return;
     }
-
+    if (AnalysisContextKeys.cvTaskCreationIteration.equals(fieldName)) {
+      this.cvTaskCreationIteration = nextIteration;
+      return;
+    }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -193,11 +197,12 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
     if (AnalysisContextKeys.timeSeriesAnalysisIteration.equals(fieldName)) {
       return this.timeSeriesAnalysisIteration;
     }
-
     if (AnalysisContextKeys.logAnalysisIteration.equals(fieldName)) {
       return this.logAnalysisIteration;
     }
-
+    if (AnalysisContextKeys.cvTaskCreationIteration.equals(fieldName)) {
+      return this.cvTaskCreationIteration;
+    }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 

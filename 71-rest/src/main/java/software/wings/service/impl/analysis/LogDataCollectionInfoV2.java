@@ -1,15 +1,18 @@
 package software.wings.service.impl.analysis;
 
+import com.google.common.base.Preconditions;
+
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
-
+@FieldNameConstants(innerTypeName = "LogDataCollectionInfoV2Keys")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,10 +23,10 @@ public abstract class LogDataCollectionInfoV2 extends DataCollectionInfoV2 {
 
   public LogDataCollectionInfoV2(String accountId, String applicationId, String envId, Instant startTime,
       Instant endTime, Set<String> hosts, String cvConfigId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, String serviceId, String cvTaskId, List<EncryptedDataDetail> encryptedDataDetails,
-      String query, String hostnameField) {
+      String workflowExecutionId, String serviceId, String cvTaskId, String connectorId,
+      List<EncryptedDataDetail> encryptedDataDetails, String query, String hostnameField) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, cvTaskId, encryptedDataDetails);
+        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails);
     this.query = query;
     this.hostnameField = hostnameField;
   }
@@ -32,5 +35,12 @@ public abstract class LogDataCollectionInfoV2 extends DataCollectionInfoV2 {
     super.copy(logDataCollectionInfo);
     logDataCollectionInfo.setQuery(this.query);
     logDataCollectionInfo.setHostnameField(this.hostnameField);
+  }
+
+  @Override
+  public void validate() {
+    super.validate();
+    Preconditions.checkNotNull(query, LogDataCollectionInfoV2Keys.query);
+    Preconditions.checkNotNull(hostnameField, LogDataCollectionInfoV2Keys.hostnameField);
   }
 }

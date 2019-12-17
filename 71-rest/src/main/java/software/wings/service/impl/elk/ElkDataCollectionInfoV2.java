@@ -2,6 +2,8 @@ package software.wings.service.impl.elk;
 
 import static software.wings.beans.TaskType.ELK_COLLECT_LOG_DATAV2;
 
+import com.google.common.base.Preconditions;
+
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
@@ -10,6 +12,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.FieldNameConstants;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.TaskType;
@@ -18,12 +21,14 @@ import software.wings.delegatetasks.cv.ElkDataCollector;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.LogDataCollectionInfoV2;
+import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+@FieldNameConstants(innerTypeName = "ElkDataCollectionInfoV2Keys")
 @Data
 @NoArgsConstructor
 @ToString(callSuper = true)
@@ -38,11 +43,11 @@ public class ElkDataCollectionInfoV2 extends LogDataCollectionInfoV2 {
   @Builder
   public ElkDataCollectionInfoV2(String accountId, String applicationId, String envId, Instant startTime,
       Instant endTime, Set<String> hosts, String cvConfigId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, String serviceId, String cvTaskId, String query, String hostnameField,
-      List<EncryptedDataDetail> encryptedDataDetails, ElkConfig elkConfig, String indices, String messageField,
-      String timestampField, String timestampFieldFormat, ElkQueryType queryType) {
+      String workflowExecutionId, String serviceId, String cvTaskId, String connectorId, String query,
+      String hostnameField, List<EncryptedDataDetail> encryptedDataDetails, ElkConfig elkConfig, String indices,
+      String messageField, String timestampField, String timestampFieldFormat, ElkQueryType queryType) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, cvTaskId, encryptedDataDetails, query, hostnameField);
+        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, query, hostnameField);
     this.elkConfig = elkConfig;
     this.indices = indices;
     this.messageField = messageField;
@@ -98,5 +103,20 @@ public class ElkDataCollectionInfoV2 extends LogDataCollectionInfoV2 {
                                                         .build();
     super.copy(elkDataCollectionInfo);
     return elkDataCollectionInfo;
+  }
+
+  @Override
+  public void setSettingValue(SettingValue settingValue) {
+    elkConfig = (ElkConfig) settingValue;
+  }
+
+  @Override
+  protected void validateParams() {
+    Preconditions.checkNotNull(elkConfig, ElkDataCollectionInfoV2Keys.elkConfig);
+    Preconditions.checkNotNull(indices, ElkDataCollectionInfoV2Keys.indices);
+    Preconditions.checkNotNull(messageField, ElkDataCollectionInfoV2Keys.messageField);
+    Preconditions.checkNotNull(timestampField, ElkDataCollectionInfoV2Keys.timestampField);
+    Preconditions.checkNotNull(timestampFieldFormat, ElkDataCollectionInfoV2Keys.timestampFieldFormat);
+    Preconditions.checkNotNull(queryType, ElkDataCollectionInfoV2Keys.queryType);
   }
 }

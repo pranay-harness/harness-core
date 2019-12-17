@@ -1,14 +1,21 @@
 package software.wings.verification.log;
 
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.beans.ElkConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.sm.StateType;
 
@@ -73,5 +80,28 @@ public class ElkCVConfigurationTest extends WingsBaseTest {
     assertThat(clonedConfig.getQuery()).isEqualTo(query);
     assertThat(clonedConfig.getTimestampField()).isEqualTo(timestampField);
     assertThat(clonedConfig.getTimestampFormat()).isEqualTo(timestampFormat);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testElkDataCollectionInfoCreation() {
+    ElkCVConfiguration elkCVConfig = createElkConfig();
+    ElkConfig elkConfig = ElkConfig.builder().elkUrl("test").build();
+    SettingAttribute settingAttribute = Mockito.mock(SettingAttribute.class);
+    when(settingAttribute.getValue()).thenReturn(elkConfig);
+    ElkDataCollectionInfoV2 dataCollectionInfo = (ElkDataCollectionInfoV2) elkCVConfig.toDataCollectionInfo();
+    assertThat(dataCollectionInfo.getAccountId()).isEqualTo(elkCVConfig.getAccountId());
+    assertThat(dataCollectionInfo.getCvConfigId()).isEqualTo(elkCVConfig.getUuid());
+    assertThat(dataCollectionInfo.getStateExecutionId())
+        .isEqualTo(CV_24x7_STATE_EXECUTION + "-" + elkCVConfig.getUuid());
+    assertThat(dataCollectionInfo.getStartTime()).isNull();
+    assertThat(dataCollectionInfo.getEndTime()).isNull();
+    assertThat(dataCollectionInfo.getQuery()).isEqualTo(query);
+    assertThat(dataCollectionInfo.getHostnameField()).isEqualTo(hostnameField);
+    assertThat(dataCollectionInfo.getIndices()).isEqualTo(index);
+    assertThat(dataCollectionInfo.getTimestampFieldFormat()).isEqualTo(timestampFormat);
+    assertThat(dataCollectionInfo.getTimestampField()).isEqualTo(timestampField);
+    assertThat(dataCollectionInfo.getMessageField()).isEqualTo(messageField);
   }
 }

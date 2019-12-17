@@ -45,7 +45,6 @@ import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.metrics.HarnessMetricRegistry;
-import io.harness.rest.RestResponse;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -92,6 +91,7 @@ import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.SplunkCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -644,13 +644,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private void createCVTask(CVConfiguration cvConfiguration, long startTime, long endTime) {
-    RestResponse<DataCollectionInfoV2> dataCollectionInfo = verificationManagerClientHelper.callManagerWithRetry(
-        verificationManagerClient.createDataCollectionInfo(cvConfiguration.getUuid(), startTime, endTime));
+    DataCollectionInfoV2 dataCollectionInfo = cvConfiguration.toDataCollectionInfo();
+    dataCollectionInfo.setStartTime(Instant.ofEpochMilli(startTime));
+    dataCollectionInfo.setEndTime(Instant.ofEpochMilli(endTime));
     CVTask cvTask = CVTask.builder()
                         .status(ExecutionStatus.QUEUED)
                         .cvConfigId(cvConfiguration.getUuid())
                         .accountId(cvConfiguration.getAccountId())
-                        .dataCollectionInfo(dataCollectionInfo.getResource())
+                        .dataCollectionInfo(dataCollectionInfo)
                         .build();
     cvTaskService.saveCVTask(cvTask);
   }
