@@ -210,8 +210,9 @@ public class ArtifactServiceImpl implements ArtifactService {
           artifactCollectionUtils.getArtifactStreamAttributes(artifactStream, isMultiArtifact);
       Artifact savedArtifact = getArtifactByUniqueKey(artifactStream, artifactStreamAttributes, artifact);
       if (savedArtifact != null) {
-        logger.info("Skipping creation of duplicate artifact for artifact stream: [{}], saved artifact: [{}]",
-            artifactStream.getUuid(), savedArtifact.getUuid());
+        logger.info(
+            "Skipping creation of duplicate artifact for artifact stream: [{}], saved artifact: [{}] with status {} and build number {}",
+            artifactStream.getUuid(), savedArtifact.getUuid(), savedArtifact.getStatus(), artifact.getBuildNo());
         return savedArtifact;
       }
       updateArtifactIdentity(artifactStream, artifactStreamAttributes, artifact);
