@@ -335,4 +335,64 @@ public class ManifestHelperTest extends CategoryTest {
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
   }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testRemoveNullTimeStampFromSpec() throws Exception {
+    // Deployment
+    URL url = this.getClass().getResource("/"
+        + "deployment-null-timestamp.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    assertThat(fileContents.contains("creationTimestamp")).isTrue();
+    assertThat(fileContents.contains("deletionTimestamp")).isTrue();
+
+    String updatedSpec = ManifestHelper.removeNullTimeStampFromSpec(fileContents);
+
+    url = this.getClass().getResource("/"
+        + "deploy.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    assertThat(updatedSpec).isEqualTo(fileContents + "\n");
+    assertThat(updatedSpec.contains("deletionTimestamp")).isFalse();
+    assertThat(updatedSpec.contains("creationTimestamp")).isFalse();
+
+    // Service
+    url = this.getClass().getResource("/"
+        + "service-null-timestamp.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    assertThat(fileContents.contains("deletionTimestamp")).isTrue();
+    updatedSpec = ManifestHelper.removeNullTimeStampFromSpec(fileContents);
+
+    url = this.getClass().getResource("/"
+        + "service.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    assertThat(updatedSpec).isEqualTo(fileContents + "\n");
+    assertThat(updatedSpec.contains("deletionTimestamp")).isFalse();
+
+    // Daemonset
+    url = this.getClass().getResource("/"
+        + "daemonset-null-timestamp.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    assertThat(fileContents.contains("creationTimestamp")).isTrue();
+    updatedSpec = ManifestHelper.removeNullTimeStampFromSpec(fileContents);
+
+    url = this.getClass().getResource("/"
+        + "daemonset.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    assertThat(updatedSpec).isEqualTo(fileContents + "\n");
+    assertThat(updatedSpec.contains("creationTimestamp")).isFalse();
+
+    // ConfigMap
+    url = this.getClass().getResource("/"
+        + "configmap-null-timestamp.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    assertThat(fileContents.contains("creationTimestamp")).isTrue();
+    updatedSpec = ManifestHelper.removeNullTimeStampFromSpec(fileContents);
+
+    url = this.getClass().getResource("/"
+        + "configmap.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    assertThat(updatedSpec).isEqualTo(fileContents + "\n");
+    assertThat(updatedSpec.contains("creationTimestamp")).isFalse();
+  }
 }
