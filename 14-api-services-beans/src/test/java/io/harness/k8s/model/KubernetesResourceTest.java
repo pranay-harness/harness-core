@@ -337,6 +337,10 @@ public class KubernetesResourceTest extends CategoryTest {
         .isEqualTo("example-1");
     assertThat(resource.getField("spec.template.spec.containers[0].env[0].valueFrom.configMapKeyRef.name"))
         .isEqualTo("myconfig-1");
+    assertThat(resource.getField("spec.template.spec.initContainers[0].envFrom.configMapRef[0].configMapRef.name"))
+        .isEqualTo("example-1");
+    assertThat(resource.getField("spec.template.spec.initContainers[0].env[0].valueFrom.configMapKeyRef.name"))
+        .isEqualTo("myconfig-1");
 
     assertThat(resource.getField("spec.template.spec.volumes[0].configMap.name")).isEqualTo("volume-config-1");
     assertThat(resource.getField("spec.template.spec.volumes[1].projected.sources[0].configMap.name"))
@@ -344,6 +348,10 @@ public class KubernetesResourceTest extends CategoryTest {
 
     assertThat(resource.getField("spec.template.spec.containers[0].envFrom[1].secretRef.name")).isEqualTo("example-2");
     assertThat(resource.getField("spec.template.spec.containers[0].env[1].valueFrom.secretKeyRef.name"))
+        .isEqualTo("mysecret-2");
+    assertThat(resource.getField("spec.template.spec.initContainers[0].envFrom[1].secretRef.name"))
+        .isEqualTo("example-2");
+    assertThat(resource.getField("spec.template.spec.initContainers[0].env[1].valueFrom.secretKeyRef.name"))
         .isEqualTo("mysecret-2");
     assertThat(resource.getField("spec.template.spec.volumes[0].secret.secretName")).isEqualTo("volume-secret-2");
     assertThat(resource.getField("spec.template.spec.volumes[1].projected.sources[1].secret.name"))

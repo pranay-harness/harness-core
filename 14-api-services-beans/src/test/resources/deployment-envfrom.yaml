@@ -27,6 +27,25 @@ spec:
               name: configmap-projection
           - secret:
               name: secret-projection
+      initContainers:
+        - name: msginit
+          image: centos:7
+          env:
+            - name: config_env_var
+              valueFrom:
+                configMapKeyRef:
+                  name: myconfig
+                  key: special.how
+            - name: secret_env_var
+              valueFrom:
+                  secretKeyRef:
+                    name: mysecret
+                    key: username
+          envFrom:
+            - configMapRef:
+                name: example
+            - secretRef:
+                name: example
       containers:
       - name: example
         image: nginx:stable-alpine-perl
