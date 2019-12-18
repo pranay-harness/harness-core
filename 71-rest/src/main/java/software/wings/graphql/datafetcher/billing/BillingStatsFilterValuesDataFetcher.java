@@ -34,6 +34,7 @@ public class BillingStatsFilterValuesDataFetcher
     extends AbstractStatsDataFetcherWithAggregationList<QLCCMAggregationFunction, QLBillingDataFilter, QLCCMGroupBy,
         QLBillingSortCriteria> {
   @Inject private TimeScaleDBService timeScaleDBService;
+  @Inject QLBillingStatsHelper statsHelper;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
 
   @Override
@@ -79,7 +80,11 @@ public class BillingStatsFilterValuesDataFetcher
     Set<String> launchTypes = new HashSet<>();
     Set<String> instanceIds = new HashSet<>();
     Set<String> namespaces = new HashSet<>();
-    Set<String> clusters = new HashSet<>();
+    Set<String> applicationIds = new HashSet<>();
+    Set<String> environmentIds = new HashSet<>();
+    Set<String> cloudProviders = new HashSet<>();
+    Set<String> serviceIds = new HashSet<>();
+    List<QLEntityData> clusters = new ArrayList<>();
     while (resultSet != null && resultSet.next()) {
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
@@ -93,7 +98,11 @@ public class BillingStatsFilterValuesDataFetcher
             instanceIds.add(resultSet.getString(field.getFieldName()));
             break;
           case CLUSTERID:
-            clusters.add(resultSet.getString(field.getFieldName()));
+            clusters.add(QLEntityData.builder()
+                             .name(resultSet.getString(BillingDataMetaDataFields.CLUSTERNAME.getFieldName()))
+                             .id(resultSet.getString(field.getFieldName()))
+                             .type(resultSet.getString(BillingDataMetaDataFields.CLUSTERTYPE.getFieldName()))
+                             .build());
             break;
           case NAMESPACE:
             namespaces.add(resultSet.getString(field.getFieldName()));
@@ -101,20 +110,50 @@ public class BillingStatsFilterValuesDataFetcher
           case WORKLOADNAME:
             workloadNames.add(resultSet.getString(field.getFieldName()));
             break;
+          case APPID:
+            applicationIds.add(resultSet.getString(field.getFieldName()));
+            break;
+          case CLOUDPROVIDER:
+            cloudProviders.add(resultSet.getString(field.getFieldName()));
+            break;
+          case ENVID:
+            environmentIds.add(resultSet.getString(field.getFieldName()));
+            break;
+          case SERVICEID:
+            serviceIds.add(resultSet.getString(field.getFieldName()));
+            break;
           default:
             break;
         }
       }
     }
+
     filterValuesDataBuilder.cloudServiceNames(cloudServiceNames.toArray(new String[0]))
         .instanceIds(instanceIds.toArray(new String[0]))
         .launchTypes(launchTypes.toArray(new String[0]))
-        .clusterIds(clusters.toArray(new String[0]))
+        .clusters(clusters)
         .namespaces(namespaces.toArray(new String[0]))
-        .workloadNames(workloadNames.toArray(new String[0]));
+        .workloadNames(workloadNames.toArray(new String[0]))
+        .applications(getEntity(BillingDataMetaDataFields.APPID, applicationIds))
+        .environments(getEntity(BillingDataMetaDataFields.ENVID, environmentIds))
+        .services(getEntity(BillingDataMetaDataFields.SERVICEID, serviceIds))
+        .cloudProviders(cloudProviders.toArray(new String[0]));
+
     List<QLFilterValuesData> filterValuesDataList = new ArrayList<>();
     filterValuesDataList.add(filterValuesDataBuilder.build());
     return QLFilterValuesListData.builder().data(filterValuesDataList).build();
+  }
+
+  private List<QLEntityData> getEntity(BillingDataMetaDataFields field, Set<String> entityIds) {
+    List<QLEntityData> entityData = new ArrayList<>();
+    for (String entityId : entityIds) {
+      entityData.add(QLEntityData.builder()
+                         .name(statsHelper.getEntityName(field, entityId))
+                         .id(entityId)
+                         .type(field.toString())
+                         .build());
+    }
+    return entityData;
   }
 
   @Override

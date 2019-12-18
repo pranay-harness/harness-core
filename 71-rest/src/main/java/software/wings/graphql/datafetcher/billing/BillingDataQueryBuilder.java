@@ -131,6 +131,15 @@ public class BillingDataQueryBuilder {
       addInstanceTypeFilter(filters);
     }
 
+    if (isGroupByClusterPresent(groupBy)) {
+      if (!isGroupByClusterTypePresent(groupBy)) {
+        addClusterTypeGroupBy(groupBy);
+      }
+      if (!isGroupByClusterNamePresent(groupBy)) {
+        addClusterNameGroupBy(groupBy);
+      }
+    }
+
     selectQuery.addCustomFromTable(schema.getBillingDataTable());
 
     if (!Lists.isNullOrEmpty(filters)) {
@@ -363,6 +372,8 @@ public class BillingDataQueryBuilder {
         return schema.getWorkloadName();
       case Namespace:
         return schema.getNamespace();
+      case CloudProvider:
+        return schema.getCloudProvider();
       default:
         throw new InvalidRequestException("Filter type not supported " + type);
     }
@@ -423,6 +434,9 @@ public class BillingDataQueryBuilder {
       case ClusterType:
         groupBy = schema.getClusterType();
         break;
+      case CloudProvider:
+        groupBy = schema.getCloudProvider();
+        break;
       default:
         throw new InvalidRequestException("Invalid groupBy clause");
     }
@@ -478,6 +492,26 @@ public class BillingDataQueryBuilder {
 
   private boolean isGroupByClusterPresent(List<QLCCMEntityGroupBy> groupByList) {
     return groupByList.stream().anyMatch(groupBy -> groupBy == QLCCMEntityGroupBy.Cluster);
+  }
+
+  private boolean isGroupByClusterNamePresent(List<QLCCMEntityGroupBy> groupByList) {
+    return groupByList.stream().anyMatch(groupBy -> groupBy == QLCCMEntityGroupBy.ClusterName);
+  }
+
+  private boolean isGroupByClusterTypePresent(List<QLCCMEntityGroupBy> groupByList) {
+    return groupByList.stream().anyMatch(groupBy -> groupBy == QLCCMEntityGroupBy.ClusterType);
+  }
+
+  public void addClusterGroupBy(List<QLCCMEntityGroupBy> groupByList) {
+    groupByList.add(QLCCMEntityGroupBy.Cluster);
+  }
+
+  public void addClusterNameGroupBy(List<QLCCMEntityGroupBy> groupByList) {
+    groupByList.add(QLCCMEntityGroupBy.ClusterName);
+  }
+
+  public void addClusterTypeGroupBy(List<QLCCMEntityGroupBy> groupByList) {
+    groupByList.add(QLCCMEntityGroupBy.ClusterType);
   }
 
   private boolean isGroupByStartTimePresent(List<QLCCMEntityGroupBy> groupByList) {

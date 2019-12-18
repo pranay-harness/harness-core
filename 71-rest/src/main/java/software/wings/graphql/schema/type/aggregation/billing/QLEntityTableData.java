@@ -30,10 +30,13 @@ public class QLEntityTableData implements QLData {
   String namespace;
   String clusterType;
   String clusterId;
+  String environment;
+  String cloudProvider;
   int totalNamespaces;
   int totalWorkloads;
   Double maxCpuUtilization;
   Double maxMemoryUtilization;
   Double avgCpuUtilization;
   Double avgMemoryUtilization;
+  Double unallocatedCost;
 }
