@@ -88,7 +88,8 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
   @Category(UnitTests.class)
   public void testFetchMethodInBillingStatsFilterValuesDataFetcher() {
     List<QLBillingDataFilter> filters = new ArrayList<>();
-    List<QLCCMGroupBy> groupBy = Arrays.asList(makeClusterEntityGroupBy());
+    List<QLCCMGroupBy> groupBy =
+        Arrays.asList(makeClusterEntityGroupBy(), makeClusterNameEntityGroupBy(), makeCloudProviderEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
 
     QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetch(
@@ -97,12 +98,77 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
     assertThat(data).isNotNull();
-    assertThat(data.getData().get(0).getClusterIds()[0]).isEqualTo(CLUSTER1_ID);
+    assertThat(data.getData().get(0).getClusters().get(0).getId()).isEqualTo(CLUSTER1_ID);
+    assertThat(data.getData().get(0).getClusters().get(0).getName()).isEqualTo(CLUSTER1_NAME);
+    assertThat(data.getData().get(0).getClusters().get(0).getType()).isEqualTo(CLUSTER_TYPE1);
+    assertThat(data.getData().get(0).getCloudProviders()[0]).isEqualTo(CLOUD_PROVIDER1_ID_ACCOUNT1);
     assertThat(data.getData().get(0).getCloudServiceNames().length).isEqualTo(0);
     assertThat(data.getData().get(0).getInstanceIds().length).isEqualTo(0);
     assertThat(data.getData().get(0).getLaunchTypes().length).isEqualTo(0);
     assertThat(data.getData().get(0).getWorkloadNames().length).isEqualTo(0);
     assertThat(data.getData().get(0).getNamespaces().length).isEqualTo(0);
+    assertThat(data.getData().get(0).getApplications().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getEnvironments().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getServices().size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingStatsFilterValuesDataFetcherWithoutClusterNameGroupBy() {
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    List<QLCCMGroupBy> groupBy =
+        Arrays.asList(makeClusterEntityGroupBy(), makeClusterTypeEntityGroupBy(), makeCloudProviderEntityGroupBy());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetch(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria);
+
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getClusters().get(0).getId()).isEqualTo(CLUSTER1_ID);
+    assertThat(data.getData().get(0).getClusters().get(0).getName()).isEqualTo(CLUSTER1_NAME);
+    assertThat(data.getData().get(0).getClusters().get(0).getType()).isEqualTo(CLUSTER_TYPE1);
+    assertThat(data.getData().get(0).getCloudProviders()[0]).isEqualTo(CLOUD_PROVIDER1_ID_ACCOUNT1);
+    assertThat(data.getData().get(0).getCloudServiceNames().length).isEqualTo(0);
+    assertThat(data.getData().get(0).getInstanceIds().length).isEqualTo(0);
+    assertThat(data.getData().get(0).getLaunchTypes().length).isEqualTo(0);
+    assertThat(data.getData().get(0).getWorkloadNames().length).isEqualTo(0);
+    assertThat(data.getData().get(0).getNamespaces().length).isEqualTo(0);
+    assertThat(data.getData().get(0).getApplications().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getEnvironments().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getServices().size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingStatsFilterValuesDataFetcherForApplications() {
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    List<QLCCMGroupBy> groupBy =
+        Arrays.asList(makeApplicationEntityGroupBy(), makeServiceEntityGroupBy(), makeEnvironmentEntityGroupBy());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetch(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria);
+
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getApplications().get(0).getName()).isEqualTo(APP1_ID_ACCOUNT1);
+    assertThat(data.getData().get(0).getApplications().get(0).getId()).isEqualTo(APP1_ID_ACCOUNT1);
+    assertThat(data.getData().get(0).getEnvironments().get(0).getName()).isEqualTo(ENV1_ID_APP1_ACCOUNT1);
+    assertThat(data.getData().get(0).getEnvironments().get(0).getId()).isEqualTo(ENV1_ID_APP1_ACCOUNT1);
+    assertThat(data.getData().get(0).getServices().get(0).getName()).isEqualTo(SERVICE1_ID_APP1_ACCOUNT1);
+    assertThat(data.getData().get(0).getServices().get(0).getId()).isEqualTo(SERVICE1_ID_APP1_ACCOUNT1);
+    assertThat(data.getData().get(0).getNamespaces().length).isEqualTo(0);
+    assertThat(data.getData().get(0).getInstanceIds().length).isEqualTo(0);
+    assertThat(data.getData().get(0).getLaunchTypes().length).isEqualTo(0);
+    assertThat(data.getData().get(0).getWorkloadNames().length).isEqualTo(0);
+    assertThat(data.getData().get(0).getNamespaces().length).isEqualTo(0);
+    assertThat(data.getData().get(0).getCloudProviders().length).isEqualTo(0);
+    assertThat(data.getData().get(0).getClusters().size()).isEqualTo(0);
   }
 
   @Test
@@ -128,7 +194,11 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     assertThat(data.getData().get(0).getCloudServiceNames().length).isEqualTo(0);
     assertThat(data.getData().get(0).getInstanceIds().length).isEqualTo(0);
     assertThat(data.getData().get(0).getLaunchTypes().length).isEqualTo(0);
-    assertThat(data.getData().get(0).getClusterIds().length).isEqualTo(0);
+    assertThat(data.getData().get(0).getClusters().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getApplications().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getEnvironments().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getServices().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getCloudProviders().length).isEqualTo(0);
   }
 
   @Test
@@ -155,7 +225,11 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     assertThat(data.getData().get(0).getLaunchTypes()[0]).isEqualTo(LAUNCH_TYPE1);
     assertThat(data.getData().get(0).getWorkloadNames().length).isEqualTo(0);
     assertThat(data.getData().get(0).getNamespaces().length).isEqualTo(0);
-    assertThat(data.getData().get(0).getClusterIds().length).isEqualTo(0);
+    assertThat(data.getData().get(0).getClusters().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getApplications().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getEnvironments().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getServices().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getCloudProviders().length).isEqualTo(0);
   }
 
   public QLBillingSortCriteria makeDescByTimeSortingCriteria() {
@@ -192,6 +266,36 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     return QLCCMGroupBy.builder().entityGroupBy(clusterGroupBy).build();
   }
 
+  public QLCCMGroupBy makeClusterNameEntityGroupBy() {
+    QLCCMEntityGroupBy clusterNameGroupBy = QLCCMEntityGroupBy.ClusterName;
+    return QLCCMGroupBy.builder().entityGroupBy(clusterNameGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeClusterTypeEntityGroupBy() {
+    QLCCMEntityGroupBy clusterTypeGroupBy = QLCCMEntityGroupBy.ClusterType;
+    return QLCCMGroupBy.builder().entityGroupBy(clusterTypeGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeCloudProviderEntityGroupBy() {
+    QLCCMEntityGroupBy cloudProviderGroupBy = QLCCMEntityGroupBy.CloudProvider;
+    return QLCCMGroupBy.builder().entityGroupBy(cloudProviderGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeApplicationEntityGroupBy() {
+    QLCCMEntityGroupBy applicationGroupBy = QLCCMEntityGroupBy.Application;
+    return QLCCMGroupBy.builder().entityGroupBy(applicationGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeServiceEntityGroupBy() {
+    QLCCMEntityGroupBy serviceGroupBy = QLCCMEntityGroupBy.Service;
+    return QLCCMGroupBy.builder().entityGroupBy(serviceGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeEnvironmentEntityGroupBy() {
+    QLCCMEntityGroupBy environmentGroupBy = QLCCMEntityGroupBy.Environment;
+    return QLCCMGroupBy.builder().entityGroupBy(environmentGroupBy).build();
+  }
+
   public QLBillingDataFilter makeClusterFilter(String[] values) {
     QLIdFilter clusterFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().cluster(clusterFilter).build();
@@ -206,6 +310,12 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     when(statement.executeQuery(anyString())).thenReturn(resultSet);
 
     when(resultSet.getString("CLUSTERID")).thenAnswer((Answer<String>) invocation -> CLUSTER1_ID);
+    when(resultSet.getString("CLUSTERNAME")).thenAnswer((Answer<String>) invocation -> CLUSTER1_NAME);
+    when(resultSet.getString("CLUSTERTYPE")).thenAnswer((Answer<String>) invocation -> CLUSTER_TYPE1);
+    when(resultSet.getString("APPID")).thenAnswer((Answer<String>) invocation -> APP1_ID_ACCOUNT1);
+    when(resultSet.getString("ENVID")).thenAnswer((Answer<String>) invocation -> ENV1_ID_APP1_ACCOUNT1);
+    when(resultSet.getString("CLOUDPROVIDER")).thenAnswer((Answer<String>) invocation -> CLOUD_PROVIDER1_ID_ACCOUNT1);
+    when(resultSet.getString("SERVICEID")).thenAnswer((Answer<String>) invocation -> SERVICE1_ID_APP1_ACCOUNT1);
     when(resultSet.getString("WORKLOADNAME")).thenAnswer((Answer<String>) invocation -> WORKLOAD_NAME_ACCOUNT1);
     when(resultSet.getString("NAMESPACE")).thenAnswer((Answer<String>) invocation -> NAMESPACE1);
     when(resultSet.getString("LAUNCHTYPE")).thenAnswer((Answer<String>) invocation -> LAUNCH_TYPE1);

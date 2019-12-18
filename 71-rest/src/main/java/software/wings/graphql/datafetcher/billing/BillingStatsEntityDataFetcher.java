@@ -100,11 +100,13 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
       Double maxMemoryUtilization = BillingStatsDefaultKeys.MAXMEMORYUTILIZATION;
       Double avgCpuUtilization = BillingStatsDefaultKeys.AVGCPUUTILIZATION;
       Double avgMemoryUtilization = BillingStatsDefaultKeys.AVGMEMORYUTILIZATION;
+      String environment = BillingStatsDefaultKeys.ENVIRONMENT;
+      String cloudProvider = BillingStatsDefaultKeys.CLOUDPROVIDER;
+      Double unallocatedCost = BillingStatsDefaultKeys.UNALLOCATEDCOST;
 
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
           case APPID:
-          case ENVID:
           case SERVICEID:
           case CLUSTERNAME:
           case INSTANCEID:
@@ -167,6 +169,15 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
           case TOTALWORKLOADS:
             // Todo: query db to get total workloads in a given namespace
             break;
+          case CLOUDPROVIDER:
+            cloudProvider = resultSet.getString(field.getFieldName());
+            break;
+          case ENVID:
+            environment = resultSet.getString(field.getFieldName());
+            break;
+          case UNALLOCATEDCOST:
+            // Todo: get unallocated resource cost here
+            break;
           default:
             break;
         }
@@ -195,7 +206,10 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
           .maxCpuUtilization(maxCpuUtilization)
           .maxMemoryUtilization(maxMemoryUtilization)
           .avgCpuUtilization(avgCpuUtilization)
-          .avgMemoryUtilization(avgMemoryUtilization);
+          .avgMemoryUtilization(avgMemoryUtilization)
+          .environment(environment)
+          .cloudProvider(cloudProvider)
+          .unallocatedCost(unallocatedCost);
 
       entityTableListData.add(entityTableDataBuilder.build());
     }

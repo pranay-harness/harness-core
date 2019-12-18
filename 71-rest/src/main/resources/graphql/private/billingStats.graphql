@@ -57,6 +57,7 @@ enum CCMEntityGroupBy {
   Namespace
   ClusterType
   ClusterName
+  CloudProvider
 }
 
 input TimeSeriesGroupBy {
@@ -103,6 +104,9 @@ type BillingEntityDataPoint {
   maxMemoryUtilization: Number
   avgCpuUtilization: Number
   avgMemoryUtilization: Number
+  environment: String
+  cloudProvider: String
+  unallocatedCost: Number
 }
 
 type BillingEntityData {
@@ -113,9 +117,19 @@ type BillingFilterDataPoint {
   cloudServiceNames: [String]
   instanceIds: [String]
   launchTypes: [String]
-  clusterIds: [String]
   workloadNames: [String]
   namespaces: [String]
+  cloudProviders: [String]
+  applications: [EntityData]
+  environments: [EntityData]
+  services: [EntityData]
+  clusters: [EntityData]
+}
+
+type EntityData {
+  name: String
+  id: String
+  type: String
 }
 
 type BillingFilterData {
@@ -167,4 +181,5 @@ input CCMFilter {
   workloadName: IdFilter
   endTime: TimeFilter
   startTime: TimeFilter
+  cloudProvider: IdFilter
 }
