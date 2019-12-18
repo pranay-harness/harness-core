@@ -203,8 +203,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
         ? new HashSet<>()
         : builds.parallelStream().map(BuildDetails::getNumber).collect(Collectors.toSet());
     List<Artifact> deletedArtifactsNew = new ArrayList<>();
-    try (HIterator<Artifact> artifacts =
-             new HIterator<>(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
+    try (HIterator<Artifact> artifacts = new HIterator<>(artifactService.prepareCleanupQuery(artifactStream).fetch())) {
       for (Artifact artifact : artifacts) {
         if (!buildNumbers.contains(artifact.getBuildNo())) {
           deletedArtifactsNew.add(artifact);
@@ -225,8 +224,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
         ? new HashSet<>()
         : builds.parallelStream().map(BuildDetails::getRevision).collect(Collectors.toSet());
     List<Artifact> artifactsToBeDeleted = new ArrayList<>();
-    try (HIterator<Artifact> artifacts =
-             new HIterator<>(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
+    try (HIterator<Artifact> artifacts = new HIterator<>(artifactService.prepareCleanupQuery(artifactStream).fetch())) {
       for (Artifact artifact : artifacts) {
         if (artifact != null && (artifact.getRevision() != null) && !revisionNumbers.contains(artifact.getRevision())) {
           artifactsToBeDeleted.add(artifact);

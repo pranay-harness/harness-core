@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -160,6 +161,15 @@ public class ArtifactServiceTest extends WingsBaseTest {
     assertThat(artifactService.create(artifactBuilder.but().build(), true))
         .isNotNull()
         .hasFieldOrPropertyWithValue("artifactSourceName", "ARTIFACT_SOURCE");
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldNotCreateDuplicateArtifact() {
+    Artifact artifact = artifactService.create(artifactBuilder.but().build(), false);
+    Artifact dupArtifact = artifactService.create(artifactBuilder.but().build(), false);
+    assertThat(artifact.getUuid()).isEqualTo(dupArtifact.getUuid());
   }
 
   @Test
