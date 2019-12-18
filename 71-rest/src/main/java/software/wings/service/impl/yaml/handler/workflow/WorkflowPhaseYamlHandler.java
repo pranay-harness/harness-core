@@ -209,7 +209,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
       }
 
       // when templatized infraMappings used, we do expect infraMapping can be null, so don't perform this check
-      if (infrastructureDefinition == null && !bean.checkInfraDefinitionTemplatized()) {
+      if (isNotEmpty(infraDefId) && infrastructureDefinition == null && !bean.checkInfraDefinitionTemplatized()) {
         String message = format("Infra-definition:%s could not be found for workflowPhase:%s, for app:%s", infraDefId,
             bean.getName(), appId);
         throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", message);
