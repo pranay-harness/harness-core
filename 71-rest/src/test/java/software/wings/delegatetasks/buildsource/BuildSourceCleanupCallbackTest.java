@@ -212,6 +212,7 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(ARTIFACT_STREAM);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_3)).thenReturn(amiArtifactStream);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_4)).thenReturn(artifactoryStream);
+    when(artifactService.prepareCleanupQuery(any())).thenReturn(query);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_5)).thenReturn(gcrArtifactStream);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_6)).thenReturn(ecrArtifactStream);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_7)).thenReturn(nexusArtifactStream);

@@ -25,6 +25,7 @@ import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADING;
 import static software.wings.beans.artifact.Artifact.ContentStatus.METADATA_ONLY;
 import static software.wings.beans.artifact.Artifact.ContentStatus.NOT_DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
+import static software.wings.beans.artifact.Artifact.Status.ERROR;
 import static software.wings.beans.artifact.Artifact.Status.FAILED;
 import static software.wings.beans.artifact.Artifact.Status.QUEUED;
 import static software.wings.beans.artifact.Artifact.Status.READY;
@@ -781,11 +782,12 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   public Query<Artifact> prepareArtifactWithMetadataQuery(ArtifactStream artifactStream) {
     // TODO: ASR: update with accountId
-    Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class, excludeAuthority)
-                                        .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid())
-                                        .field(ArtifactKeys.status)
-                                        .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
-                                        .disableValidation();
+    Query<Artifact> artifactQuery =
+        wingsPersistence.createQuery(Artifact.class, excludeAuthority)
+            .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid())
+            .field(ArtifactKeys.status)
+            .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED, ERROR))
+            .disableValidation();
 
     if (AMI.name().equals(artifactStream.getArtifactStreamType())) {
       artifactQuery.project(ArtifactKeys.revision, true);
@@ -803,12 +805,13 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public Query<Artifact> prepareCleanupQuery(ArtifactStream artifactStream) {
-    Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class, excludeAuthority)
-                                        .project(ArtifactKeys.artifactFiles, true)
-                                        .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid())
-                                        .field(ArtifactKeys.status)
-                                        .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
-                                        .disableValidation();
+    Query<Artifact> artifactQuery =
+        wingsPersistence.createQuery(Artifact.class, excludeAuthority)
+            .project(ArtifactKeys.artifactFiles, true)
+            .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid())
+            .field(ArtifactKeys.status)
+            .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED, ERROR))
+            .disableValidation();
 
     if (AMI.name().equals(artifactStream.getArtifactStreamType())) {
       artifactQuery.project(ArtifactKeys.revision, true);
