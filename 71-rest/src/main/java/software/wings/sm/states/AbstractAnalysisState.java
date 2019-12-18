@@ -345,7 +345,10 @@ public abstract class AbstractAnalysisState extends State {
       return hosts;
     } else if (containerInstanceHandler.isContainerDeployment(infrastructureMapping)) {
       Set<ContainerMetadata> containerMetadataSet =
-          containerInstanceHandler.getContainerServiceNames(context, serviceId, infraMappingId);
+          containerInstanceHandler.getContainerServiceNames(context, serviceId, infraMappingId,
+              isEmpty(infrastructureMapping.getInfrastructureDefinitionId())
+                  ? Optional.empty()
+                  : Optional.of(infrastructureMapping.getInfrastructureDefinitionId()));
 
       if (isEmpty(containerMetadataSet)) {
         getLogger().info("state {} has no containers deployed for service {} infra {}. Returning empty",

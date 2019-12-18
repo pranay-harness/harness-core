@@ -747,11 +747,11 @@ public class ContainerInstanceHandler extends InstanceHandler {
   }
 
   public Set<ContainerMetadata> getContainerServiceNames(
-      ExecutionContext context, String serviceId, String infraMappingId) {
+      ExecutionContext context, String serviceId, String infraMappingId, Optional<String> infrastructureDefinitionId) {
     Set<ContainerMetadata> containerMetadataSet = Sets.newHashSet();
     List<StateExecutionInstance> executionDataList =
         workflowExecutionService.getStateExecutionData(context.getAppId(), context.getWorkflowExecutionId(), serviceId,
-            infraMappingId, StateType.PHASE_STEP, WorkflowServiceHelper.DEPLOY_CONTAINERS);
+            infraMappingId, infrastructureDefinitionId, StateType.PHASE_STEP, WorkflowServiceHelper.DEPLOY_CONTAINERS);
     executionDataList.forEach(stateExecutionData -> {
       List<StateExecutionData> deployPhaseStepList =
           stateExecutionData.getStateExecutionMap()
