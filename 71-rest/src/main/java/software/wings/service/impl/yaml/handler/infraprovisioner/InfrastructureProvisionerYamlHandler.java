@@ -177,6 +177,8 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends InfraProvis
     bean.setDescription(yaml.getDescription());
 
     String accountId = appService.getAccountIdByAppId(appId);
+    bean.setAccountId(accountId);
+
     if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)
         && isNotEmpty(yaml.getMappingBlueprints())) {
       List<InfrastructureMappingBlueprint> infrastructureMappingBlueprints =

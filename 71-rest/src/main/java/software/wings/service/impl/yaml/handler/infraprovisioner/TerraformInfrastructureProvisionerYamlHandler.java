@@ -99,6 +99,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
     bean.setPath(yaml.getPath());
     bean.setSourceRepoSettingId(getSourceRepoSettingId(appId, yaml.getSourceRepoSettingName()));
     bean.setSourceRepoBranch(yaml.getSourceRepoBranch());
+
     if (isNotEmpty(yaml.getBackendConfigs())) {
       List<NameValuePair> nameValuePairList = yaml.getBackendConfigs()
                                                   .stream()
