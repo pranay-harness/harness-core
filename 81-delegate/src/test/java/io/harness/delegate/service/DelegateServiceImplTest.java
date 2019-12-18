@@ -14,7 +14,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.ManagerClientV2;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.security.encryption.EncryptionConfig;
@@ -38,7 +38,7 @@ import java.util.Map;
 public class DelegateServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock private ManagerClient managerClient;
+  @Mock private ManagerClientV2 managerClient;
   @Mock private Call<DelegatePackage> delegatePackageCall;
   @Mock private DelegateDecryptionService delegateDecryptionService;
 

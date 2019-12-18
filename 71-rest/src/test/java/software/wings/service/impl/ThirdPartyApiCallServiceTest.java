@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.resources.ActivityResource;
-import software.wings.resources.DelegateResource;
+import software.wings.resources.DelegateAgentResource;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 
@@ -32,7 +32,7 @@ public class ThirdPartyApiCallServiceTest extends WingsBaseTest {
   private String stateExecutionId;
   private String delegateId;
   private String appId;
-  @Inject private DelegateResource delegateResource;
+  @Inject private DelegateAgentResource delegateResource;
   @Inject private ActivityResource activityResource;
 
   @Before

@@ -21,8 +21,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-@Deprecated
-class ManagerClientX509TrustManager implements X509TrustManager {
+class ManagerClientV2X509TrustManager implements X509TrustManager {
   public java.security.cert.X509Certificate[] getAcceptedIssuers() {
     return new java.security.cert.X509Certificate[] {};
   }
@@ -32,21 +31,20 @@ class ManagerClientX509TrustManager implements X509TrustManager {
   public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
 }
 
-@Deprecated
-public class ManagerClientFactory implements Provider<ManagerClient> {
+public class ManagerClientV2Factory implements Provider<ManagerClientV2> {
   private static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
-      ImmutableList.of(new ManagerClientX509TrustManager());
+      ImmutableList.of(new ManagerClientV2X509TrustManager());
 
   private String baseUrl;
   private TokenGenerator tokenGenerator;
 
-  ManagerClientFactory(String baseUrl, TokenGenerator tokenGenerator) {
+  ManagerClientV2Factory(String baseUrl, TokenGenerator tokenGenerator) {
     this.baseUrl = baseUrl;
     this.tokenGenerator = tokenGenerator;
   }
 
   @Override
-  public ManagerClient get() {
+  public ManagerClientV2 get() {
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.registerModule(new Jdk8Module());
     objectMapper.registerModule(new GuavaModule());
@@ -56,7 +54,7 @@ public class ManagerClientFactory implements Provider<ManagerClient> {
                             .client(getUnsafeOkHttpClient())
                             .addConverterFactory(JacksonConverterFactory.create(objectMapper))
                             .build();
-    return retrofit.create(ManagerClient.class);
+    return retrofit.create(ManagerClientV2.class);
   }
 
   private OkHttpClient getUnsafeOkHttpClient() {

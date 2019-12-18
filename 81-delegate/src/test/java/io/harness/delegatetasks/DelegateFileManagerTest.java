@@ -13,7 +13,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.service.DelegateFileManagerImpl;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.ManagerClientV2;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.Repeat;
 import org.apache.commons.io.FileUtils;
@@ -48,7 +48,7 @@ public class DelegateFileManagerTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
-  @Mock ManagerClient managerClient;
+  @Mock ManagerClientV2 managerClient;
 
   DelegateConfiguration delegateConfiguration = DelegateConfiguration.builder().maxCachedArtifacts(10).build();
   @InjectMocks
