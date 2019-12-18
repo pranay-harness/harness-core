@@ -9,7 +9,6 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.manifest.ObjectYamlUtils;
-
 import io.harness.k8s.manifest.ResourceUtils;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1ConfigMapEnvSource;
@@ -399,13 +398,14 @@ public class KubernetesResource {
   }
 
   private void updateConfigMapRef(V1PodSpec v1PodSpec, UnaryOperator<Object> transformer) {
-    updateConfigMapRefInContainers(v1PodSpec, transformer);
+    updateConfigMapRefInContainers(v1PodSpec.getContainers(), transformer);
+    updateConfigMapRefInContainers(v1PodSpec.getInitContainers(), transformer);
     updateConfigMapRefInVolumes(v1PodSpec, transformer);
   }
 
-  private void updateConfigMapRefInContainers(V1PodSpec v1PodSpec, UnaryOperator<Object> transformer) {
-    if (isNotEmpty(v1PodSpec.getContainers())) {
-      for (V1Container v1Container : v1PodSpec.getContainers()) {
+  private void updateConfigMapRefInContainers(List<V1Container> containers, UnaryOperator<Object> transformer) {
+    if (isNotEmpty(containers)) {
+      for (V1Container v1Container : containers) {
         if (isNotEmpty(v1Container.getEnv())) {
           for (V1EnvVar v1EnvVar : v1Container.getEnv()) {
             V1EnvVarSource v1EnvVarSource = v1EnvVar.getValueFrom();
@@ -455,7 +455,8 @@ public class KubernetesResource {
   }
 
   private void updateSecretRef(V1PodSpec v1PodSpec, UnaryOperator<Object> transformer) {
-    updateSecretRefInContainers(v1PodSpec, transformer);
+    updateSecretRefInContainers(v1PodSpec.getContainers(), transformer);
+    updateSecretRefInContainers(v1PodSpec.getInitContainers(), transformer);
     updateSecretRefInImagePullSecrets(v1PodSpec, transformer);
     updateSecretRefInVolumes(v1PodSpec, transformer);
   }
@@ -491,9 +492,9 @@ public class KubernetesResource {
     }
   }
 
-  private void updateSecretRefInContainers(V1PodSpec v1PodSpec, UnaryOperator<Object> transformer) {
-    if (isNotEmpty(v1PodSpec.getContainers())) {
-      for (V1Container v1Container : v1PodSpec.getContainers()) {
+  private void updateSecretRefInContainers(List<V1Container> containers, UnaryOperator<Object> transformer) {
+    if (isNotEmpty(containers)) {
+      for (V1Container v1Container : containers) {
         if (isNotEmpty(v1Container.getEnv())) {
           for (V1EnvVar v1EnvVar : v1Container.getEnv()) {
             V1EnvVarSource v1EnvVarSource = v1EnvVar.getValueFrom();
