@@ -7,6 +7,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -114,7 +115,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
     doReturn(singletonList(instanceCount).iterator()).when(mocks.aggregationPipelineMock).aggregate(any(Class.class));
     doReturn(Collections.emptyList())
         .when(serverlessDashboardService)
-        .getEntitySummaryStats(anyString(), anyString(), anyString(), any(Query.class));
+        .getEntitySummaryStats(anyString(), anyString(), anyString(), any(Query.class), anyObject());
   }
 
   @Test
@@ -401,7 +402,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
         .aggregate(any(Class.class));
 
     final List<EntitySummaryStats> summaryStats = serverlessDashboardService.getEntitySummaryStats(
-        SERVICE_ID, "serviceName", EntityType.SERVICE.name(), queryMock);
+        SERVICE_ID, "serviceName", EntityType.SERVICE.name(), queryMock, 1);
 
     assertThat(summaryStats.get(0).getEntitySummary().getId()).isEqualTo("entityid");
   }

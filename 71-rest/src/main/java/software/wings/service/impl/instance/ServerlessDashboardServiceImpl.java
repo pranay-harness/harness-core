@@ -124,15 +124,16 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
       if (EntityType.SERVICE.name().equals(groupByEntityType)) {
         entityIdColumn = SERVICE_ID;
         entityNameColumn = "serviceName";
-        entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query);
+        entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query, 1);
       } else if (SettingCategory.CLOUD_PROVIDER.name().equals(groupByEntityType)) {
         entityIdColumn = "computeProviderId";
         entityNameColumn = "computeProviderName";
-        entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query);
+        entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query, 1);
       } else if (SERVERLESS_FUNCTION_INVOCATION.equals(groupByEntityType)) {
-        //  todo @rk clarify:  what exactly is meant by this grouping as such, implement grouping based on invocation
-        //  count
-        entitySummaryStatsList = emptyList();
+        entityIdColumn = ServerlessInstanceKeys.serviceId;
+        entityNameColumn = ServerlessInstanceKeys.serviceName;
+        entitySummaryStatsList = getEntitySummaryStats(
+            entityIdColumn, entityNameColumn, groupByEntityType, query, "$" + invocationCountFieldPath);
       } else {
         throw new GeneralException("Unsupported groupBy entity type:" + groupByEntityType);
       }
@@ -382,13 +383,13 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
   }
 
   @VisibleForTesting
-  List<EntitySummaryStats> getEntitySummaryStats(
-      String entityIdColumn, String entityNameColumn, String groupByEntityType, Query<ServerlessInstance> query) {
+  List<EntitySummaryStats> getEntitySummaryStats(String entityIdColumn, String entityNameColumn,
+      String groupByEntityType, Query<ServerlessInstance> query, Object accumulatorObject) {
     List<EntitySummaryStats> entitySummaryStatsList = new ArrayList<>();
     wingsPersistence.getDatastore(query.getEntityClass())
         .createAggregation(ServerlessInstance.class)
         .match(query)
-        .group(Group.id(grouping(entityIdColumn)), grouping(COUNT, accumulator("$sum", 1)),
+        .group(Group.id(grouping(entityIdColumn)), grouping(COUNT, accumulator("$sum", accumulatorObject)),
             grouping(entityNameColumn, grouping($_FIRST, entityNameColumn)))
         .project(projection("_id").suppress(), projection("entityId", "_id." + entityIdColumn),
             projection("entityName", entityNameColumn), projection(COUNT))
