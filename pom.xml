@@ -822,12 +822,12 @@
             <dependency>
                 <groupId>io.kubernetes</groupId>
                 <artifactId>client-java</artifactId>
-                <version>6.0.1</version>
+                <version>7.0.0-harness-patch-2</version>
             </dependency>
             <dependency>
                 <groupId>io.kubernetes</groupId>
                 <artifactId>client-java-api</artifactId>
-                <version>7.0.0-harness-patch-1</version>
+                <version>7.0.0-harness-patch-2</version>
             </dependency>
             <dependency>
                 <groupId>io.projectreactor</groupId>
