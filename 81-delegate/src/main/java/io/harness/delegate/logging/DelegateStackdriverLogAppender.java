@@ -10,7 +10,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import io.harness.logging.AccessTokenBean;
 import io.harness.logging.RemoteStackdriverLogAppender;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.ManagerClientV2;
 import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +21,7 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
   private static final String APP_NAME = "delegate";
 
   private static TimeLimiter timeLimiter;
-  private static ManagerClient managerClient;
+  private static ManagerClientV2 managerClient;
   private static String delegateId;
 
   private String accountId = "";
@@ -78,7 +78,7 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
     DelegateStackdriverLogAppender.timeLimiter = timeLimiter;
   }
 
-  public static void setManagerClient(ManagerClient managerClient) {
+  public static void setManagerClient(ManagerClientV2 managerClient) {
     DelegateStackdriverLogAppender.managerClient = managerClient;
   }
 

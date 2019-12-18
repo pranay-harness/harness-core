@@ -35,37 +35,36 @@ import software.wings.sm.StateType;
 
 import java.util.List;
 
-@Deprecated
-public interface ManagerClient {
-  @POST("delegates/register")
+public interface ManagerClientV2 {
+  @POST("agent/delegates/register")
   Call<RestResponse<Delegate>> registerDelegate(@Query("accountId") String accountId, @Body Delegate delegate);
 
-  @POST("delegates/connectionHeartbeat/{delegateId}")
+  @POST("agent/delegates/connectionHeartbeat/{delegateId}")
   Call<RestResponse> doConnectionHeartbeat(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
       @Body DelegateConnectionHeartbeat heartbeat);
 
   @Headers({"Content-Type: application/x-kryo"})
   @KryoRequest
-  @POST("delegates/{delegateId}/tasks/{taskId}")
+  @POST("agent/delegates/{delegateId}/tasks/{taskId}")
   Call<ResponseBody> sendTaskStatus(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
       @Query("accountId") String accountId, @Body DelegateTaskResponse delegateTaskResponse);
 
   @Multipart
-  @POST("delegateFiles/{delegateId}/tasks/{taskId}")
+  @POST("agent/delegateFiles/{delegateId}/tasks/{taskId}")
   Call<RestResponse<String>> uploadFile(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
       @Query("accountId") String accountId, @Query("fileBucket") FileBucket bucket, @Part MultipartBody.Part file);
 
-  @GET("delegates/{delegateId}/profile")
+  @GET("agent/delegates/{delegateId}/profile")
   Call<RestResponse<DelegateProfileParams>> checkForProfile(@Path("delegateId") String delegateId,
       @Query("accountId") String accountId, @Query("profileId") String profileId,
       @Query("lastUpdatedAt") Long lastUpdatedAt);
 
   @Multipart
-  @POST("delegateFiles/{delegateId}/profile-result")
+  @POST("agent/delegateFiles/{delegateId}/profile-result")
   Call<RestResponse> saveProfileResult(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
       @Query("error") boolean error, @Query("fileBucket") FileBucket bucket, @Part MultipartBody.Part file);
 
-  @GET("delegates/delegateScripts")
+  @GET("agent/delegates/delegateScripts")
   Call<RestResponse<DelegateScripts>> getDelegateScripts(
       @Query("accountId") String accountId, @Query("delegateVersion") String delegateVersion);
 
@@ -78,7 +77,7 @@ public interface ManagerClient {
   Call<RestResponse> saveCommandUnitLogs(@Path("activityId") String activityId, @Path("unitName") String unitName,
       @Query("accountId") String accountId, @Body Log log);
 
-  @POST("delegates/{delegateId}/state-executions")
+  @POST("agent/delegates/{delegateId}/state-executions")
   Call<RestResponse> saveApiCallLogs(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
       @Body List<ThirdPartyApiCallLog> log);
 
@@ -89,44 +88,44 @@ public interface ManagerClient {
       @Query("clusterLevel") ClusterLevel clusterLevel, @Query("delegateTaskId") String delegateTaskId,
       @Query("stateType") StateType stateType, @Body List<LogElement> metricData);
 
-  @GET("delegateFiles/fileId")
+  @GET("agent/delegateFiles/fileId")
   Call<RestResponse<String>> getFileIdByVersion(@Query("entityId") String entityId,
       @Query("fileBucket") FileBucket fileBucket, @Query("version") int version, @Query("accountId") String accountId);
 
-  @GET("delegateFiles/download")
+  @GET("agent/delegateFiles/download")
   Call<ResponseBody> downloadFile(
       @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
 
-  @GET("delegateFiles/downloadConfig")
+  @GET("agent/delegateFiles/downloadConfig")
   Call<ResponseBody> downloadFile(@Query("fileId") String fileId, @Query("accountId") String accountId,
       @Query("appId") String appId, @Query("activityId") String activityId);
 
-  @GET("delegateFiles/metainfo")
+  @GET("agent/delegateFiles/metainfo")
   Call<RestResponse<DelegateFile>> getMetaInfo(
       @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
 
   @KryoResponse
-  @PUT("delegates/{delegateId}/tasks/{taskId}/acquire")
+  @PUT("agent/delegates/{delegateId}/tasks/{taskId}/acquire")
   Call<DelegatePackage> acquireTask(
       @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
 
   @KryoResponse
-  @POST("delegates/{delegateId}/tasks/{taskId}/report")
+  @POST("agent/delegates/{delegateId}/tasks/{taskId}/report")
   Call<DelegatePackage> reportConnectionResults(@Path("delegateId") String delegateId, @Path("taskId") String uuid,
       @Query("accountId") String accountId, @Body List<DelegateConnectionResult> results);
 
   @KryoResponse
-  @GET("delegates/{delegateId}/tasks/{taskId}/fail")
+  @GET("agent/delegates/{delegateId}/tasks/{taskId}/fail")
   Call<DelegateTask> failIfAllDelegatesFailed(
       @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
 
-  @GET("delegates/{delegateId}/task-events")
+  @GET("agent/delegates/{delegateId}/task-events")
   Call<List<DelegateTaskEvent>> pollTaskEvents(
       @Path("delegateId") String delegateId, @Query("accountId") String accountId);
 
-  @POST("delegates/heartbeat-with-polling")
+  @POST("agent/delegates/heartbeat-with-polling")
   Call<RestResponse<Delegate>> delegateHeartbeat(@Query("accountId") String accountId, @Body Delegate delegate);
 
-  @GET("infra-download/delegate-auth/delegate/logging-token")
+  @GET("agent/infra-download/delegate-auth/delegate/logging-token")
   Call<RestResponse<AccessTokenBean>> getLoggingToken(@Query("accountId") String accountId);
 }

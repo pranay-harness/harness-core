@@ -5,3 +5,5 @@ local-scripts
 repository
 restart.sh
 delgate.out
+profile
+profile.result

@@ -77,7 +77,7 @@ import io.harness.delegate.message.MessageService;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
 import io.harness.exception.GeneralException;
 import io.harness.filesystem.FileIo;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.ManagerClientV2;
 import io.harness.managerclient.SafeHttpCall;
 import io.harness.network.Http;
 import io.harness.rest.RestResponse;
@@ -152,7 +152,7 @@ public class WatcherServiceImpl implements WatcherService {
   @Inject private TimeLimiter timeLimiter;
   @Inject private WatcherConfiguration watcherConfiguration;
   @Inject private MessageService messageService;
-  @Inject private ManagerClient managerClient;
+  @Inject private ManagerClientV2 managerClient;
 
   @Nullable @Inject(optional = true) private ChronicleEventTailer chronicleEventTailer;
 

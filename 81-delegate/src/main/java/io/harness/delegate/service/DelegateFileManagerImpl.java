@@ -14,7 +14,7 @@ import com.google.inject.Singleton;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.ManagerClientV2;
 import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
@@ -54,7 +54,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class DelegateFileManagerImpl implements DelegateFileManager {
   private static final int DEFAULT_MAX_CACHED_ARTIFACT = 2;
-  private ManagerClient managerClient;
+  private ManagerClientV2 managerClient;
   private DelegateConfiguration delegateConfiguration;
 
   private static final LoadingCache<String, Object> fileIdLocks =
@@ -66,7 +66,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
   @Inject
-  public DelegateFileManagerImpl(ManagerClient managerClient, DelegateConfiguration delegateConfiguration) {
+  public DelegateFileManagerImpl(ManagerClientV2 managerClient, DelegateConfiguration delegateConfiguration) {
     this.managerClient = managerClient;
     this.delegateConfiguration = delegateConfiguration;
     Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this ::deleteCachedArtifacts, 1000, 5 * 60 * 1000,

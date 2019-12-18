@@ -10,7 +10,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import io.harness.logging.AccessTokenBean;
 import io.harness.logging.RemoteStackdriverLogAppender;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.ManagerClientV2;
 import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +21,7 @@ public class WatcherStackdriverLogAppender extends RemoteStackdriverLogAppender 
   private static final String APP_NAME = "watcher";
 
   private static TimeLimiter timeLimiter;
-  private static ManagerClient managerClient;
+  private static ManagerClientV2 managerClient;
 
   private String accountId = "";
   private String managerHost = "";
@@ -77,7 +77,7 @@ public class WatcherStackdriverLogAppender extends RemoteStackdriverLogAppender 
     WatcherStackdriverLogAppender.timeLimiter = timeLimiter;
   }
 
-  public static void setManagerClient(ManagerClient managerClient) {
+  public static void setManagerClient(ManagerClientV2 managerClient) {
     WatcherStackdriverLogAppender.managerClient = managerClient;
   }
 }

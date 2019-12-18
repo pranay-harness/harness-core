@@ -296,6 +296,10 @@ public interface WingsTestConstants {
 
   String INTEGRATION_TEST_ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
 
+  String DELEGATE_NAME = "delegatename";
+  String DELEGATE_PROFILE_ID = "delegateprofileid";
+  String DELEGATE_GROUP_NAME = "delegateGroupName";
+
   String CV_CONFIG_ID = "CV_CONFIG_ID";
   String WHITELIST_ID = "WHITELIST_ID";
 
