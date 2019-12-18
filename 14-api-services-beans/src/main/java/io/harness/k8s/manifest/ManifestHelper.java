@@ -1,6 +1,5 @@
 package io.harness.k8s.manifest;
 
-import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.WRITE_DOC_START_MARKER;
 import static io.harness.k8s.manifest.ObjectYamlUtils.YAML_DOCUMENT_DELIMITER;
 import static io.harness.k8s.manifest.ObjectYamlUtils.newLineRegex;
 import static io.harness.k8s.manifest.ObjectYamlUtils.splitYamlFile;
@@ -15,9 +14,6 @@ import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
 import com.esotericsoftware.yamlbeans.parser.Parser.ParserException;
 import com.esotericsoftware.yamlbeans.tokenizer.Tokenizer.TokenizerException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
@@ -25,7 +21,6 @@ import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -36,16 +31,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Slf4j
 public class ManifestHelper {
   public static final String values_filename = "values.yaml";
   public static final String yaml_file_extension = ".yaml";
   public static final String yml_file_extension = ".yml";
   public static final String currentReleaseWorkloadExpression = "${k8s.currentReleaseWorkload}";
   public static final String previousReleaseWorkloadExpression = "${k8s.previousReleaseWorkload}";
-  public static final String CREATION_TIMESTAMP = "creationTimestamp";
-  public static final String METADATA = "metadata";
-  public static final String DELETION_TIMESTAMP = "deletionTimestamp";
 
   private static final String VALUES_EXPRESSION = ".Values";
   public static final int MAX_VALUES_EXPRESSION_RECURSION_DEPTH = 10;
@@ -74,11 +65,11 @@ public class ManifestHelper {
 
     String kind = map.get("kind").toString();
 
-    if (!map.containsKey(METADATA)) {
+    if (!map.containsKey("metadata")) {
       throw new KubernetesYamlException("Error processing yaml manifest. metadata not found in spec.");
     }
 
-    Map metadata = (Map) map.get(METADATA);
+    Map metadata = (Map) map.get("metadata");
     if (!metadata.containsKey("name")) {
       throw new KubernetesYamlException("Error processing yaml manifest. metadata.name not found in spec.");
     }
@@ -93,64 +84,8 @@ public class ManifestHelper {
     return KubernetesResource.builder()
         .resourceId(KubernetesResourceId.builder().kind(kind).name(name).namespace(namespace).build())
         .value(map)
-        .spec(removeNullTimeStampFromSpec(spec))
+        .spec(spec)
         .build();
-  }
-
-  public static String removeNullTimeStampFromSpec(String spec) {
-    Map<String, Object> yamlMap;
-    try {
-      ObjectMapper mapper =
-          new ObjectMapper(new YAMLFactory().enable(Feature.MINIMIZE_QUOTES).configure(WRITE_DOC_START_MARKER, false));
-      yamlMap = (Map<String, Object>) mapper.readValue(spec, Map.class);
-      Set<String> workloads =
-          ImmutableSet.of("Deployment", "StatefulSet", "DaemonSet", "Service", "Job", "Secret", "ConfigMap", "Pod");
-
-      String kind = yamlMap.get("kind").toString();
-      if (!workloads.contains(kind)) {
-        return spec;
-      }
-
-      boolean updateNeeded = false;
-      Map metadata = (Map) yamlMap.get(METADATA);
-      if (metadata.containsKey(CREATION_TIMESTAMP) && metadata.get(CREATION_TIMESTAMP) == null) {
-        metadata.remove(CREATION_TIMESTAMP);
-        updateNeeded = true;
-      }
-      if (metadata.containsKey(DELETION_TIMESTAMP) && metadata.get(DELETION_TIMESTAMP) == null) {
-        metadata.remove(DELETION_TIMESTAMP);
-        updateNeeded = true;
-      }
-
-      if (yamlMap.containsKey("spec")) {
-        Map specMap = (Map) yamlMap.get("spec");
-        if (specMap != null && specMap.containsKey("template")) {
-          Map templateMap = (Map) specMap.get("template");
-          if (templateMap != null && templateMap.containsKey("metadata")) {
-            Map metaDataMap = (Map) templateMap.get("metadata");
-            if (metaDataMap != null) {
-              if (metaDataMap.containsKey(CREATION_TIMESTAMP) && metaDataMap.get(CREATION_TIMESTAMP) == null) {
-                metaDataMap.remove(CREATION_TIMESTAMP);
-                updateNeeded = true;
-              }
-
-              if (metaDataMap.containsKey(DELETION_TIMESTAMP) && metaDataMap.get(DELETION_TIMESTAMP) == null) {
-                metaDataMap.remove(DELETION_TIMESTAMP);
-                updateNeeded = true;
-              }
-            }
-          }
-        }
-      }
-
-      if (updateNeeded) {
-        spec = mapper.writeValueAsString(yamlMap);
-      }
-    } catch (Exception e) {
-      logger.warn("Exception in removing null value createTimestamp and deleteTimestamp", e);
-    }
-
-    return spec;
   }
 
   public static List<KubernetesResource> processYaml(String yamlString) {
