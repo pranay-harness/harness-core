@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -47,6 +48,7 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.infra.InfraDefinitionTestConstants.RESOURCE_CONSTRAINT_NAME;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
+import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateType.EMAIL;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
@@ -98,6 +100,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
+import software.wings.api.ServiceElement;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
@@ -2404,5 +2407,39 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     List<String> wIds = workflowExecutions.stream().map(WorkflowExecution::getUuid).collect(toList());
     assertThat(wIds).isEqualTo(ids);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetStateExecutionDataInfraMapping() {
+    String executionUuid = generateUuid();
+    String displayName = generateUuid();
+    String serviceId = generateUuid();
+    String infraMappingId = generateUuid();
+    String infraDefinitionId = generateUuid();
+
+    final StateExecutionInstance stateExecutionInstance =
+        aStateExecutionInstance()
+            .appId(app.getUuid())
+            .executionUuid(executionUuid)
+            .stateType(StateType.PHASE_STEP.name())
+            .displayName(displayName)
+            .contextElement(PhaseElement.builder()
+                                .infraMappingId(infraMappingId)
+                                .infraDefinitionId(infraDefinitionId)
+                                .serviceElement(ServiceElement.builder().uuid(serviceId).build())
+                                .build())
+            .build();
+
+    wingsPersistence.save(stateExecutionInstance);
+
+    List<StateExecutionInstance> stateExecutionData = workflowExecutionService.getStateExecutionData(
+        app.getUuid(), executionUuid, serviceId, infraMappingId, Optional.empty(), StateType.PHASE_STEP, displayName);
+    assertThat(stateExecutionData.size()).isEqualTo(1);
+
+    stateExecutionData = workflowExecutionService.getStateExecutionData(app.getUuid(), executionUuid, serviceId, null,
+        Optional.of(infraDefinitionId), StateType.PHASE_STEP, displayName);
+    assertThat(stateExecutionData.size()).isEqualTo(1);
   }
 }

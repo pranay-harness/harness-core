@@ -57,8 +57,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
@@ -98,8 +96,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
-  public void testGetLastExecutionNodesECS()
-      throws NoSuchAlgorithmException, KeyManagementException, IllegalAccessException {
+  public void testGetLastExecutionNodesECS() throws IllegalAccessException {
     AwsConfig awsConfig = AwsConfig.builder()
                               .accessKey(scmSecret.decryptToString(new SecretName("aws_config_access_key_1")))
                               .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_config_secret_key_1")))
@@ -136,7 +133,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
                         .withDeploymentType(DeploymentType.ECS.name())
                         .withComputeProviderSettingId(awsConfigid)
                         .build());
-    when(containerInstanceHandler.getContainerServiceNames(anyObject(), anyString(), anyString()))
+    when(containerInstanceHandler.getContainerServiceNames(anyObject(), anyString(), anyString(), anyObject()))
         .thenReturn(Sets.newHashSet(ContainerMetadata.builder()
                                         .containerServiceName("Harness__Verification__Learning__Engine__ECS__2")
                                         .namespace("default")

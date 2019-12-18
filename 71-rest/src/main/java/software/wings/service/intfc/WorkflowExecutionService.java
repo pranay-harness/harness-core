@@ -46,6 +46,7 @@ import software.wings.sm.StateType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -120,7 +121,7 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   StateExecutionInstance getStateExecutionData(String appId, String stateExecutionInstanceId);
 
   List<StateExecutionInstance> getStateExecutionData(String appId, String executionUuid, String serviceId,
-      String infraMappingId, StateType stateType, String stateName);
+      String infraMappingId, Optional<String> infrastructureDefinitionId, StateType stateType, String stateName);
 
   List<InfrastructureMapping> getResolvedInfraMappings(Workflow workflow, WorkflowExecution workflowExecution);
 

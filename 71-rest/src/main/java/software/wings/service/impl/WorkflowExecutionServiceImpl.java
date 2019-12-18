@@ -28,7 +28,7 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static io.harness.persistence.HQuery.excludeValidate;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.time.Duration.ofDays;
@@ -2344,20 +2344,33 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public List<StateExecutionInstance> getStateExecutionData(String appId, String executionUuid, String serviceId,
-      String infraMappingId, StateType stateType, String stateName) {
-    PageRequest<StateExecutionInstance> pageRequest =
-        aPageRequest()
-            .addFilter("appId", EQ, appId)
-            .addFilter("executionUuid", EQ, executionUuid)
-            .addFilter("stateType", EQ, stateType)
-            .addFilter("displayName", EQ, stateName)
-            .addFilter("contextElement.serviceElement.uuid", EQ, serviceId)
-            .addFilter("contextElement.infraMappingId", EQ, infraMappingId)
-            .build();
+      String infraMappingId, Optional<String> infrastructureDefinitionId, StateType stateType, String stateName) {
+    logger.info(
+        "for execution {} looking for following appId: {} executionUuid: {} , stateType: {}, displayName: {}, contextElement.serviceElement.uuid:  {}, contextElement.infraMappingId: {}",
+        executionUuid, appId, executionUuid, stateType, stateName, serviceId, infraMappingId);
+    Query<StateExecutionInstance> stateExecutionInstanceQuery =
+        wingsPersistence.createQuery(StateExecutionInstance.class, excludeAuthority)
+            .disableValidation()
+            .filter(StateExecutionInstanceKeys.appId, appId)
+            .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+            .filter(StateExecutionInstanceKeys.stateType, stateType)
+            .filter(StateExecutionInstanceKeys.displayName, stateName)
+            .filter("contextElement.serviceElement.uuid", serviceId);
+    if (infrastructureDefinitionId.isPresent()) {
+      stateExecutionInstanceQuery.filter("contextElement.infraDefinitionId", infrastructureDefinitionId.get());
+    } else {
+      // once all the infra mappings are moved to infra mapping definition, we can get rid of this else block
+      stateExecutionInstanceQuery.filter("contextElement.infraMappingId", infraMappingId);
+    }
+    List<StateExecutionInstance> rv = new ArrayList<>();
+    try (HIterator<StateExecutionInstance> stateExecutionInstances =
+             new HIterator<>(stateExecutionInstanceQuery.fetch())) {
+      while (stateExecutionInstances.hasNext()) {
+        rv.add(stateExecutionInstances.next());
+      }
+    }
 
-    PageResponse<StateExecutionInstance> query =
-        wingsPersistence.query(StateExecutionInstance.class, pageRequest, excludeValidate);
-    return query.getResponse();
+    return rv;
   }
 
   private void refreshSummaries(WorkflowExecution workflowExecution) {
