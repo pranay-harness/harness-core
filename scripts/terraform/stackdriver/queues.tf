@@ -10,9 +10,15 @@ resource "google_logging_metric" "queues_working_on_message_by_thread_pool" {
       value_type = "STRING"
       description = "The thread pool the message is processed in"
     }
+    labels {
+      key = "topic"
+      value_type = "STRING"
+      description = "The topic the message has"
+    }
   }
   label_extractors = {
     "thread_pool": "REGEXP_EXTRACT(jsonPayload.thread, \"(.*).......................\")",
+    "topic": "EXTRACT(jsonPayload.harness.messageTopic)",
   }
 }
 
