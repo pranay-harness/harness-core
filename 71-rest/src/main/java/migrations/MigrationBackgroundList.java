@@ -37,6 +37,7 @@ import migrations.all.NoOpMigration;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.ScheduleSegmentPublishJob;
 import migrations.all.SendInviteUrlForAllUserInvites;
+import migrations.all.SetAccountIdProvisioners;
 import migrations.all.SetDummyTechStackForOldAccounts;
 import migrations.all.SetEmailToIndividualMemberFlag;
 import migrations.all.SetLastLoginTimeToAllUsers;
@@ -144,6 +145,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(83, AddHarnessOwnedToResourceConstraint.class))
         .add(Pair.of(84, BaseMigration.class))
         .add(Pair.of(85, WFEAddDeploymentMetaData.class))
+        .add(Pair.of(86, SetAccountIdProvisioners.class))
         .build();
   }
 }
