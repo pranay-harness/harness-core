@@ -81,7 +81,8 @@ public enum FeatureName {
   TIME_SERIES_SERVICEGUARD_V2,
   TF_USE_VAR_CL,
   GOOGLE_KMS,
-  LOGS_V2_247;
+  LOGS_V2_247,
+  WEEKLY_WINDOW;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
