@@ -110,7 +110,7 @@ public class K8sResourceUtils {
     for (Container k8sContainer : k8sContainerList) {
       Map<String, Quantity> resourceRequests = k8sContainer.getResources().getRequests();
       cpuNanos += getCpuNanos(resourceRequests);
-      memBytes += getCpuNanos(resourceRequests);
+      memBytes += getMemBytes(resourceRequests);
     }
     return Resource.newBuilder()
         .putRequests(K8S_CPU_RESOURCE, Resource.Quantity.newBuilder().setAmount(cpuNanos).setUnit("n").build())

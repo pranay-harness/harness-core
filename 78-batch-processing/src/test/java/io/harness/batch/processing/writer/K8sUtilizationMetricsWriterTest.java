@@ -104,4 +104,44 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
     assertThat(instanceUtilizationData.getMemoryUtilizationAvg()).isEqualTo(MEMORYAVG / MEMORYTOTAL);
     assertThat(instanceUtilizationData.getMemoryUtilizationMax()).isEqualTo(MEMORYMAX / MEMORYTOTAL);
   }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void shouldWriteK8sUtilizationMetricsWhenResourceIsZero() {
+    when(instanceDataService.fetchInstanceDataWithName(ACCOUNTID, INSTANCEID, START_TIME_MILLIS))
+        .thenReturn(InstanceData.builder()
+                        .instanceId(INSTANCEID)
+                        .totalResource(Resource.builder().cpuUnits(0.0).memoryMb(0.0).build())
+                        .build());
+
+    Map<String, InstanceUtilizationData> aggregatedDataMap = new HashMap<>();
+    aggregatedDataMap.put(INSTANCEID,
+        InstanceUtilizationData.builder()
+            .accountId(ACCOUNTID)
+            .settingId(SETTINGID)
+            .instanceType(INSTANCETYPE)
+            .instanceId(INSTANCEID)
+            .cpuUtilizationMax(CPUMAX)
+            .cpuUtilizationAvg(CPUAVG)
+            .memoryUtilizationMax(MEMORYMAX)
+            .memoryUtilizationAvg(MEMORYAVG)
+            .build());
+    Mockito
+        .when(k8sUtilizationGranularDataService.getAggregatedUtilizationData(
+            Collections.singletonList(INSTANCEID), START_TIME_MILLIS, END_TIME_MILLIS))
+        .thenReturn(aggregatedDataMap);
+    k8sUtilizationMetricsWriter.write(Collections.singletonList(Arrays.asList(INSTANCEID)));
+    ArgumentCaptor<InstanceUtilizationData> instanceUtilizationDataArgumentCaptor =
+        ArgumentCaptor.forClass(InstanceUtilizationData.class);
+    verify(utilizationDataService).create(instanceUtilizationDataArgumentCaptor.capture());
+    InstanceUtilizationData instanceUtilizationData = instanceUtilizationDataArgumentCaptor.getValue();
+    assertThat(instanceUtilizationData.getInstanceId()).isEqualTo(INSTANCEID);
+    assertThat(instanceUtilizationData.getInstanceType()).isEqualTo(INSTANCETYPE);
+    assertThat(instanceUtilizationData.getSettingId()).isEqualTo(SETTINGID);
+    assertThat(instanceUtilizationData.getCpuUtilizationAvg()).isEqualTo(1);
+    assertThat(instanceUtilizationData.getCpuUtilizationMax()).isEqualTo(1);
+    assertThat(instanceUtilizationData.getMemoryUtilizationAvg()).isEqualTo(1);
+    assertThat(instanceUtilizationData.getMemoryUtilizationMax()).isEqualTo(1);
+  }
 }

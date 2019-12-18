@@ -55,10 +55,14 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
         if (null != instanceData && instanceData.getTotalResource() != null) {
           Double totalCpuResource = instanceData.getTotalResource().getCpuUnits();
           Double totalMemoryResource = instanceData.getTotalResource().getMemoryMb();
-          cpuAvgPercentage = instanceUtilizationData.getCpuUtilizationAvg() / totalCpuResource;
-          cpuMaxPercentage = instanceUtilizationData.getCpuUtilizationMax() / totalCpuResource;
-          memoryAvgPercentage = instanceUtilizationData.getMemoryUtilizationAvg() / totalMemoryResource;
-          memoryMaxPercentage = instanceUtilizationData.getMemoryUtilizationMax() / totalMemoryResource;
+          if (totalCpuResource != 0) {
+            cpuAvgPercentage = instanceUtilizationData.getCpuUtilizationAvg() / totalCpuResource;
+            cpuMaxPercentage = instanceUtilizationData.getCpuUtilizationMax() / totalCpuResource;
+          }
+          if (totalMemoryResource != 0) {
+            memoryAvgPercentage = instanceUtilizationData.getMemoryUtilizationAvg() / totalMemoryResource;
+            memoryMaxPercentage = instanceUtilizationData.getMemoryUtilizationMax() / totalMemoryResource;
+          }
           instanceUtilizationData.setInstanceId(instanceData.getInstanceId());
         }
 
