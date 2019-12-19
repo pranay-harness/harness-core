@@ -126,8 +126,8 @@ public class HelmTaskHelper {
 
     try {
       resourceDirectory = createNewDirectoryAtPath(RESOURCE_DIR_BASE);
-      chartMuseumServer = chartMuseumClient.startChartMuseumServer(
-          helmChartConfigParams.getHelmRepoConfig(), connectorConfig, resourceDirectory);
+      chartMuseumServer = chartMuseumClient.startChartMuseumServer(helmChartConfigParams.getHelmRepoConfig(),
+          connectorConfig, resourceDirectory, helmChartConfigParams.getBasePath());
 
       addChartMuseumRepo(helmChartConfigParams.getRepoName(), helmChartConfigParams.getRepoDisplayName(),
           chartMuseumServer.getPort(), chartDirectory);
@@ -191,11 +191,13 @@ public class HelmTaskHelper {
 
     ProcessResult processResult = executeCommand(helmFetchCommand, chartDirectory);
     if (processResult.getExitValue() != 0) {
-      StringBuilder builder =
-          new StringBuilder(64).append("Failed to fetch chart ").append(helmChartConfigParams.getChartName());
+      StringBuilder builder = new StringBuilder(64)
+                                  .append("Failed to fetch chart \"")
+                                  .append(helmChartConfigParams.getChartName())
+                                  .append("\" ");
 
       if (isNotBlank(helmChartConfigParams.getRepoDisplayName())) {
-        builder.append(" from repo ").append(helmChartConfigParams.getRepoDisplayName());
+        builder.append(" from repo \"").append(helmChartConfigParams.getRepoDisplayName()).append("\" ");
       }
       builder.append("Executed command ")
           .append(helmFetchCommand)
@@ -402,12 +404,13 @@ public class HelmTaskHelper {
   }
 
   public void addHelmRepo(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig, String repoName,
-      String repoDisplayName, String workingDirectory) throws Exception {
+      String repoDisplayName, String workingDirectory, String basePath) throws Exception {
     ChartMuseumServer chartMuseumServer = null;
     String resourceDirectory = null;
     try {
       resourceDirectory = createNewDirectoryAtPath(RESOURCE_DIR_BASE);
-      chartMuseumServer = chartMuseumClient.startChartMuseumServer(helmRepoConfig, connectorConfig, resourceDirectory);
+      chartMuseumServer =
+          chartMuseumClient.startChartMuseumServer(helmRepoConfig, connectorConfig, resourceDirectory, basePath);
 
       addChartMuseumRepo(repoName, repoDisplayName, chartMuseumServer.getPort(), workingDirectory);
     } finally {

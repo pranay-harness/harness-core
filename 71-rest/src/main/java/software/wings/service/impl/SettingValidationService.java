@@ -451,10 +451,6 @@ public class SettingValidationService {
           throw new InvalidRequestException("S3 bucket cannot be empty", USER);
         }
 
-        if (isBlank(amazonS3HelmRepoConfig.getFolderPath())) {
-          throw new InvalidRequestException("Base path cannot be empty", USER);
-        }
-
         if (isBlank(amazonS3HelmRepoConfig.getRegion())) {
           throw new InvalidRequestException("Region cannot be empty", USER);
         }
@@ -462,7 +458,6 @@ public class SettingValidationService {
         amazonS3HelmRepoConfig.setConnectorId(getTrimmedValue(amazonS3HelmRepoConfig.getConnectorId()));
         amazonS3HelmRepoConfig.setBucketName(getTrimmedValue(amazonS3HelmRepoConfig.getBucketName()));
         amazonS3HelmRepoConfig.setRegion(getTrimmedValue(amazonS3HelmRepoConfig.getRegion()));
-        amazonS3HelmRepoConfig.setFolderPath(getTrimmedValue(amazonS3HelmRepoConfig.getFolderPath()));
 
         break;
       case GCS_HELM_REPO:

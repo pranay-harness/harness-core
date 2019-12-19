@@ -92,7 +92,6 @@ public class AmazonS3HelmRepoConfigYamlHandlerTest extends BaseSettingValueConfi
                                                    .accountId(ACCOUNT_ID)
                                                    .bucketName("ABC")
                                                    .region("abc")
-                                                   .folderPath("abc/def")
                                                    .connectorId(CLOUD_PROVIDER_ID)
                                                    .build())
                                     .build());

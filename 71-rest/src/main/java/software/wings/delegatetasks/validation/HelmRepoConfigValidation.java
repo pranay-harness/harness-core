@@ -72,12 +72,11 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
       return singletonList("HTTP_HELM_REPO: " + ((HttpHelmRepoConfig) helmRepoConfig).getChartRepoUrl());
     } else if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
       AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) helmRepoConfig;
-      return singletonList("AMAZON_S3_HELM_REPO: " + amazonS3HelmRepoConfig.getBucketName() + ":"
-          + amazonS3HelmRepoConfig.getFolderPath() + ":" + amazonS3HelmRepoConfig.getRegion());
+      return singletonList(
+          "AMAZON_S3_HELM_REPO: " + amazonS3HelmRepoConfig.getBucketName() + ":" + amazonS3HelmRepoConfig.getRegion());
     } else if (helmRepoConfig instanceof GCSHelmRepoConfig) {
       GCSHelmRepoConfig gcsHelmRepoConfig = (GCSHelmRepoConfig) helmRepoConfig;
-      return singletonList(gcsHelmRepoConfig.getType() + ":" + gcsHelmRepoConfig.getBucketName() + ":"
-          + gcsHelmRepoConfig.getFolderPath());
+      return singletonList(gcsHelmRepoConfig.getType() + ":" + gcsHelmRepoConfig.getBucketName());
     }
 
     throw new WingsException(UNHANDLED_CONFIG_MSG + helmRepoConfig.getSettingType());

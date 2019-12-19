@@ -81,6 +81,7 @@ public class HelmChartConfigHelperService {
         .chartVersion(helmChartConfig.getChartVersion())
         .connectorName(helmChartConfig.getConnectorName())
         .chartUrl(helmChartConfig.getChartUrl())
+        .basePath(helmChartConfig.getBasePath())
         .build();
   }
 
@@ -140,7 +141,8 @@ public class HelmChartConfigHelperService {
     helmChartConfigParamsBuilder.helmRepoConfig(helmRepoConfig)
         .encryptedDataDetails(encryptionDataDetails)
         .repoDisplayName(settingAttribute.getName())
-        .repoName(repoName);
+        .repoName(repoName)
+        .basePath(context.renderExpression(helmChartConfig.getBasePath()));
 
     if (isNotBlank(helmRepoConfig.getConnectorId())) {
       SettingAttribute connectorSettingAttribute = settingsService.get(helmRepoConfig.getConnectorId());

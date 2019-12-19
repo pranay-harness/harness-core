@@ -16,7 +16,6 @@ public class AmazonS3HelmRepoConfigYamlHandler extends HelmRepoYamlHandler<Yaml,
                     .harnessApiVersion(getHarnessApiVersion())
                     .type(amazonS3HelmRepoConfig.getType())
                     .bucket(amazonS3HelmRepoConfig.getBucketName())
-                    .folderPath(amazonS3HelmRepoConfig.getFolderPath())
                     .region(amazonS3HelmRepoConfig.getRegion())
                     .cloudProvider(getCloudProviderName(appId, amazonS3HelmRepoConfig.getConnectorId()))
                     .build();
@@ -29,6 +28,7 @@ public class AmazonS3HelmRepoConfigYamlHandler extends HelmRepoYamlHandler<Yaml,
   protected SettingAttribute toBean(
       SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
+    String folderPath = previous == null ? null : ((AmazonS3HelmRepoConfig) previous.getValue()).getFolderPath();
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
@@ -37,8 +37,8 @@ public class AmazonS3HelmRepoConfigYamlHandler extends HelmRepoYamlHandler<Yaml,
             .accountId(accountId)
             .bucketName(yaml.getBucket())
             .region(yaml.getRegion())
-            .folderPath(yaml.getFolderPath())
             .connectorId(getCloudProviderIdByName(accountId, yaml.getCloudProvider()))
+            .folderPath(folderPath)
             .build();
 
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, amazonS3HelmRepoConfig);

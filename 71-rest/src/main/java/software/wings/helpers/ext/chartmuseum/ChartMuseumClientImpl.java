@@ -50,21 +50,21 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   @Override
-  public ChartMuseumServer startChartMuseumServer(
-      HelmRepoConfig helmRepoConfig, SettingValue connectorConfig, String resourceDirectory) throws Exception {
+  public ChartMuseumServer startChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig,
+      String resourceDirectory, String basePath) throws Exception {
     logger.info("Starting chart museum server");
 
     if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
-      return startAmazonS3ChartMuseumServer(helmRepoConfig, connectorConfig);
+      return startAmazonS3ChartMuseumServer(helmRepoConfig, connectorConfig, basePath);
     } else if (helmRepoConfig instanceof GCSHelmRepoConfig) {
-      return startGCSChartMuseumServer(helmRepoConfig, connectorConfig, resourceDirectory);
+      return startGCSChartMuseumServer(helmRepoConfig, connectorConfig, resourceDirectory, basePath);
     }
 
     throw new WingsException("Unhandled type of helm repo config. Type : " + helmRepoConfig.getSettingType());
   }
 
-  private ChartMuseumServer startGCSChartMuseumServer(
-      HelmRepoConfig helmRepoConfig, SettingValue connectorConfig, String resourceDirectory) throws Exception {
+  private ChartMuseumServer startGCSChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig,
+      String resourceDirectory, String basePath) throws Exception {
     GCSHelmRepoConfig gcsHelmRepoConfig = (GCSHelmRepoConfig) helmRepoConfig;
     GcpConfig config = (GcpConfig) connectorConfig;
 
@@ -75,7 +75,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     environment.put(GOOGLE_APPLICATION_CREDENTIALS, credentialFilePath);
 
     String evaluatedTemplate = GCS_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", gcsHelmRepoConfig.getBucketName())
-                                   .replace("${FOLDER_PATH}", gcsHelmRepoConfig.getFolderPath());
+                                   .replace("${FOLDER_PATH}", basePath);
 
     StringBuilder builder = new StringBuilder(128);
     builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getChartMuseumPath()))
@@ -85,8 +85,8 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     return startServer(builder.toString(), environment);
   }
 
-  private ChartMuseumServer startAmazonS3ChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig)
-      throws Exception {
+  private ChartMuseumServer startAmazonS3ChartMuseumServer(
+      HelmRepoConfig helmRepoConfig, SettingValue connectorConfig, String basePath) throws Exception {
     AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) helmRepoConfig;
     AwsConfig awsConfig = (AwsConfig) connectorConfig;
 
@@ -96,7 +96,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
 
     String evaluatedTemplate =
         AMAZON_S3_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", amazonS3HelmRepoConfig.getBucketName())
-            .replace("${FOLDER_PATH}", amazonS3HelmRepoConfig.getFolderPath())
+            .replace("${FOLDER_PATH}", basePath)
             .replace("${REGION}", amazonS3HelmRepoConfig.getRegion());
 
     StringBuilder builder = new StringBuilder(128);

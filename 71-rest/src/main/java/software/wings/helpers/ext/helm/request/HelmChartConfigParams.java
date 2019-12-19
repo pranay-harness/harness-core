@@ -25,6 +25,7 @@ public class HelmChartConfigParams implements ExecutionCapabilityDemander {
   private String chartName;
   private String chartVersion;
   private String chartUrl;
+  private String basePath;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
