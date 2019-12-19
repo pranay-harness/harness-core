@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -102,7 +103,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
   @JsonIgnore
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 
   private String managerVersion;
 
@@ -147,7 +148,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
     this.delegateTaskId = delegateTaskId;
     this.executionStatus = executionStatus == null ? ExecutionStatus.QUEUED : executionStatus;
     this.analysisType = analysisType;
-    this.validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
+    this.validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
     this.version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
     this.retry = 0;
     this.managerVersion = managerVersion;
