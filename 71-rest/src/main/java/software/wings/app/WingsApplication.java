@@ -50,6 +50,7 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.ccm.CCMPerpetualTaskHandler;
+import io.harness.ccm.budget.BudgetHandler;
 import io.harness.ccm.cluster.ClusterRecordHandler;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
@@ -672,6 +673,8 @@ public class WingsApplication extends Application<MainConfiguration> {
       injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
       injector.getInstance(RecentlyDisconnectedDelegateHandler.class).registerIterators();
     }
+
+    injector.getInstance(BudgetHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

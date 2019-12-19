@@ -10,6 +10,7 @@ public interface BudgetService {
   void update(String budgetId, Budget budget);
 
   Budget get(String budgetId);
+  void incAlertCount(Budget budget, int threshold_index);
 
   List<Budget> list(String accountId);
   List<Budget> list(String accountId, Integer count, Integer startIndex);

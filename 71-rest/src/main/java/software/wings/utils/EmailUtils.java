@@ -9,6 +9,6 @@ import software.wings.helpers.ext.mail.EmailData;
 @Singleton
 public class EmailUtils {
   public String getErrorString(EmailData emailData) {
-    return format("Failed to send email for subject:[%s] , to:%s", emailData.getTemplateName(), emailData.getTo());
+    return format("Failed to send an email with subject:[%s] , to:%s", emailData.getSubject(), emailData.getTo());
   }
 }

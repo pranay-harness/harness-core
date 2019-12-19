@@ -20,11 +20,11 @@ import software.wings.WingsBaseTest;
 import java.util.List;
 
 public class BudgetDaoTest extends WingsBaseTest {
-  String accountId = "ACCOUNT_ID";
-  String applicationId1 = "APPLICATION_ID_1";
-  String applicationId2 = "APPLICATION_ID_2";
-  Budget budget1;
-  Budget budget2;
+  private String accountId = "ACCOUNT_ID";
+  private String applicationId1 = "APPLICATION_ID_1";
+  private String applicationId2 = "APPLICATION_ID_2";
+  private Budget budget1;
+  private Budget budget2;
 
   @Inject private BudgetDao budgetDao;
 

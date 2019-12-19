@@ -2,6 +2,7 @@ package io.harness.ccm.budget;
 
 import com.google.inject.Inject;
 
+import io.harness.ccm.budget.entities.AlertThreshold;
 import io.harness.ccm.budget.entities.Budget;
 
 import java.util.List;
@@ -19,6 +20,16 @@ public class BudgetServiceImpl implements BudgetService {
     budgetDao.update(budgetId, budget);
   }
 
+  @Override
+  public void incAlertCount(Budget budget, int thresholdIndex) {
+    AlertThreshold[] alertThresholds = budget.getAlertThresholds();
+    int prevAlertThreshold = alertThresholds[thresholdIndex].getAlertsSent();
+    alertThresholds[thresholdIndex].setAlertsSent(prevAlertThreshold + 1);
+    budget.setAlertThresholds(alertThresholds);
+    update(budget.getUuid(), budget);
+  }
+
+  @Override
   public Budget get(String budgetId) {
     return budgetDao.get(budgetId);
   }
