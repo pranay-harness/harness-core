@@ -2575,10 +2575,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   public VerificationStateAnalysisExecutionData getVerificationStateExecutionData(String stateExecutionId) {
     final StateExecutionInstance stateExecutionInstance =
         wingsPersistence.get(StateExecutionInstance.class, stateExecutionId);
-    if (stateExecutionInstance == null) {
-      logger.info("No state execution found for {}", stateExecutionId);
-      return null;
-    }
+    Preconditions.checkNotNull(stateExecutionInstance);
 
     Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
 
@@ -2605,29 +2602,25 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       demoStatExecutionData.setEndTs(Timestamp.currentMinuteBoundary());
       return demoStatExecutionData;
     }
-
-    if (isEmpty(stateExecutionMap)) {
-      logger.info("No state execution map found for {}", stateExecutionId);
-      return null;
-    }
-
-    AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
-                                          .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
-                                          .get();
-    if (analysisContext == null) {
-      logger.info("No analysis context found for {}", stateExecutionId);
-      return null;
-    }
-
+    Preconditions.checkState(isNotEmpty(stateExecutionMap), "No state execution map found");
     Preconditions.checkState(stateExecutionMap.containsKey(stateExecutionInstance.getDisplayName()),
         "The details for the state are not in the stateExecutionMap for " + stateExecutionId);
-
     final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
         (VerificationStateAnalysisExecutionData) stateExecutionMap.get(stateExecutionInstance.getDisplayName());
-    setProgress(stateAnalysisExecutionData, analysisContext);
-    setRemainingtTime(stateAnalysisExecutionData, analysisContext);
     if (!ExecutionStatus.isBrokeStatus(stateAnalysisExecutionData.getStatus())) {
       stateAnalysisExecutionData.setErrorMsg(null);
+    }
+    if (ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus())) {
+      stateAnalysisExecutionData.setProgressPercentage(100);
+      stateAnalysisExecutionData.setRemainingMinutes(0);
+    } else {
+      AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+                                            .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
+                                            .get();
+      if (analysisContext != null) {
+        setProgress(stateAnalysisExecutionData, analysisContext);
+        setRemainingTime(stateAnalysisExecutionData, analysisContext);
+      }
     }
     return stateAnalysisExecutionData;
   }
@@ -2662,7 +2655,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     stateAnalysisExecutionData.setProgressPercentage((numOfAnalysis * 100) / analysisContext.getTimeDuration());
   }
 
-  private void setRemainingtTime(
+  private void setRemainingTime(
       VerificationStateAnalysisExecutionData stateAnalysisExecutionData, AnalysisContext analysisContext) {
     final String stateExecutionId = stateAnalysisExecutionData.getStateExecutionInstanceId();
     long timeTakenPerMinAnalysis = 0;

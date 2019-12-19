@@ -2,16 +2,16 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.when;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
 import com.google.common.collect.Sets;
@@ -32,7 +32,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertCategory;
 import software.wings.api.ExecutionDataValue;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Notification;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
@@ -97,15 +96,69 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetVerificationStateExecutionData_whenInvalidStateExecutionId() {
+    assertThatThrownBy(() -> continuousVerificationService.getVerificationStateExecutionData(generateUuid()))
+        .isInstanceOf(NullPointerException.class);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetVerificationStateExecutionData_whenStateExecutionMapIsEmpty() {
+    String stateExecutionId = wingsPersistence.save(Builder.aStateExecutionInstance().build());
+    assertThatThrownBy(() -> continuousVerificationService.getVerificationStateExecutionData(stateExecutionId))
+        .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetVerificationStateExecutionData_whenAnalysisContextExpires() {
+    String stateExecutionId =
+        wingsPersistence.save(Builder.aStateExecutionInstance().status(ExecutionStatus.SUCCESS).build());
+    final String displayName = "new relic";
+    Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
+    final VerificationStateAnalysisExecutionData verificationStateAnalysisExecutionData =
+        VerificationStateAnalysisExecutionData.builder()
+            .stateExecutionInstanceId(stateExecutionId)
+            .canaryNewHostNames(Sets.newHashSet("host1", "host2", "controlNode-1", "controlNode-2", "testNode-1"))
+            .lastExecutionNodes(Sets.newHashSet("host3", "host4", "controlNode-3", "controlNode-4", "testNode-2"))
+            .query(generateUuid())
+            .baselineExecutionId(generateUuid())
+            .correlationId(generateUuid())
+            .analysisMinute(5)
+            .build();
+    stateExecutionMap.put(displayName, verificationStateAnalysisExecutionData);
+
+    wingsPersistence.updateField(StateExecutionInstance.class, stateExecutionId,
+        StateExecutionInstanceKeys.stateExecutionMap, stateExecutionMap);
+    wingsPersistence.updateField(
+        StateExecutionInstance.class, stateExecutionId, StateExecutionInstanceKeys.displayName, displayName);
+    VerificationStateAnalysisExecutionData verificationStateExecutionData =
+        continuousVerificationService.getVerificationStateExecutionData(stateExecutionId);
+    assertThat(verificationStateExecutionData).isNotNull();
+    assertThat(verificationStateExecutionData.getStateExecutionInstanceId())
+        .isEqualTo(verificationStateAnalysisExecutionData.getStateExecutionInstanceId());
+    assertThat(verificationStateExecutionData.getCanaryNewHostNames())
+        .isEqualTo(verificationStateAnalysisExecutionData.getCanaryNewHostNames());
+    assertThat(verificationStateExecutionData.getLastExecutionNodes())
+        .isEqualTo(verificationStateAnalysisExecutionData.getLastExecutionNodes());
+    assertThat(verificationStateExecutionData.getQuery()).isEqualTo(verificationStateAnalysisExecutionData.getQuery());
+    assertThat(verificationStateExecutionData.getBaselineExecutionId())
+        .isEqualTo(verificationStateAnalysisExecutionData.getBaselineExecutionId());
+    assertThat(verificationStateExecutionData.getAnalysisMinute())
+        .isEqualTo(verificationStateAnalysisExecutionData.getAnalysisMinute());
+    assertThat(verificationStateExecutionData.getProgressPercentage()).isEqualTo(100);
+    assertThat(verificationStateExecutionData.getRemainingMinutes()).isEqualTo(0);
+  }
+
+  @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetVerificationStateExecutionData() {
-    assertThat(continuousVerificationService.getVerificationStateExecutionData(generateUuid())).isNull();
     String stateExecutionId = wingsPersistence.save(Builder.aStateExecutionInstance().build());
-    assertThat(continuousVerificationService.getVerificationStateExecutionData(stateExecutionId)).isNull();
-
-    when(featureFlagService.isEnabled(any(FeatureName.class), anyString())).thenReturn(false);
-
     final String displayName = "new relic";
     Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
     final VerificationStateAnalysisExecutionData verificationStateAnalysisExecutionData =
