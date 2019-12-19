@@ -7,7 +7,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
+import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
 import static software.wings.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
 import static software.wings.beans.FeatureName.PERPETUAL_TASK_SERVICE;
 import static software.wings.common.VerificationConstants.CV_24X7_METRIC_LABELS;
@@ -88,9 +90,9 @@ import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
-import io.harness.waiter.NotifyEventListener;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
+import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.workers.background.critical.iterator.ArtifactCollectionHandler;
 import io.harness.workers.background.critical.iterator.ResourceConstraintBackupHandler;
 import io.harness.workers.background.critical.iterator.WorkflowExecutionMonitorHandler;
@@ -558,7 +560,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
-    notifyQueuePublisherRegister.register(GENERAL, publisher::send);
+    notifyQueuePublisherRegister.register(GENERAL, payload -> publisher.send(asList(GENERAL), payload));
+    notifyQueuePublisherRegister.register(ORCHESTRATION, payload -> publisher.send(asList(ORCHESTRATION), payload));
   }
 
   private void registerQueueListeners(Injector injector) {
@@ -579,7 +582,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
     queueListenerController.register(injector.getInstance(ExecutionEventListener.class), 3);
     queueListenerController.register(injector.getInstance(KmsTransitionEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(NotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(GeneralNotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(PruneEntityListener.class), 1);
   }
 

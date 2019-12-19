@@ -19,13 +19,13 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.threading.ThreadPool;
-import io.harness.waiter.NotifyEventListener;
 import io.harness.waiter.StringNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
+import software.wings.app.GeneralNotifyEventListener;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.rules.Listeners;
@@ -42,7 +42,7 @@ import java.util.Objects;
 /**
  * The Class StateMachineTest.
  */
-@Listeners(NotifyEventListener.class)
+@Listeners(GeneralNotifyEventListener.class)
 @Slf4j
 public class StateMachineTest extends WingsBaseTest {
   /**

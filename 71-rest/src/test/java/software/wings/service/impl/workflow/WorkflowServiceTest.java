@@ -250,7 +250,6 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.JsonUtils;
-import io.harness.waiter.NotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -265,6 +264,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
+import software.wings.app.GeneralNotifyEventListener;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
@@ -376,7 +376,7 @@ import javax.validation.ConstraintViolationException;
  * @author Rishi
  */
 @Slf4j
-@Listeners(NotifyEventListener.class)
+@Listeners(GeneralNotifyEventListener.class)
 public class WorkflowServiceTest extends WingsBaseTest {
   private static String envId = generateUuid();
 

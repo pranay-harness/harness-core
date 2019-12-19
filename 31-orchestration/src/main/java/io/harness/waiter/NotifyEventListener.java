@@ -5,7 +5,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Singleton;
 
 import com.mongodb.WriteConcern;
 import io.harness.delegate.beans.ResponseData;
@@ -25,9 +24,8 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-@Singleton
 @Slf4j
-public final class NotifyEventListener extends QueueListener<NotifyEvent> {
+public class NotifyEventListener extends QueueListener<NotifyEvent> {
   private static final Duration MAX_CALLBACK_PROCESSING_TIME = Duration.ofMinutes(1);
 
   @Inject private Injector injector;

@@ -87,7 +87,7 @@ import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.threading.Poller;
-import io.harness.waiter.NotifyEventListener;
+import io.harness.waiter.OrchestrationNotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -186,7 +186,7 @@ import java.util.function.Function;
  *
  * @author Rishi
  */
-@Listeners({NotifyEventListener.class, ExecutionEventListener.class})
+@Listeners({OrchestrationNotifyEventListener.class, ExecutionEventListener.class})
 @Slf4j
 public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Inject private WorkflowService workflowService;

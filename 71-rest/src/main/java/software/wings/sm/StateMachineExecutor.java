@@ -26,9 +26,9 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.STATE_NOT_FOR_TYPE;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.validation.Validator.notNullCheck;
+import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
@@ -395,7 +395,7 @@ public class StateMachineExecutor implements StateInspectionListener {
               .findFirst();
       if (pauseAll.isPresent()) {
         updateStatus(stateExecutionInstance, PAUSED, Lists.newArrayList(NEW, QUEUED), pauseAll.get());
-        waitNotifyEngine.waitForAllOn(GENERAL,
+        waitNotifyEngine.waitForAllOn(ORCHESTRATION,
             new ExecutionResumeAllCallback(stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(),
                 stateExecutionInstance.getUuid()),
             pauseAll.get().getUuid());
@@ -434,7 +434,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         throw new WingsException("updateStateExecutionData failed");
       }
       String resumeId = delayEventHelper.delay(currentState.getWaitInterval(), Collections.emptyMap());
-      waitNotifyEngine.waitForAllOn(GENERAL,
+      waitNotifyEngine.waitForAllOn(ORCHESTRATION,
           new ExecutionWaitCallback(stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(),
               stateExecutionInstance.getUuid()),
           resumeId);
@@ -543,7 +543,8 @@ public class StateMachineExecutor implements StateInspectionListener {
         }
         NotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getAppId(),
             stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
-        waitNotifyEngine.waitForAllOn(GENERAL, callback, executionResponse.getCorrelationIds().toArray(new String[0]));
+        waitNotifyEngine.waitForAllOn(
+            ORCHESTRATION, callback, executionResponse.getCorrelationIds().toArray(new String[0]));
       }
 
       boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
@@ -664,7 +665,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         if (executionEventAdvice.getWaitInterval() != null && executionEventAdvice.getWaitInterval() > 0) {
           logger.info("Retry Wait Interval : {}", executionEventAdvice.getWaitInterval());
           String resumeId = delayEventHelper.delay(executionEventAdvice.getWaitInterval(), Collections.emptyMap());
-          waitNotifyEngine.waitForAllOn(GENERAL,
+          waitNotifyEngine.waitForAllOn(ORCHESTRATION,
               new ExecutionWaitRetryCallback(stateExecutionInstance.getAppId(),
                   stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid()),
               resumeId);

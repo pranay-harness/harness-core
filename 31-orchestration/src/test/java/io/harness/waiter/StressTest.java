@@ -1,8 +1,8 @@
 package io.harness.waiter;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OrchestrationRule.TEST_PUBLISHER;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.waiter.TestNotifyEventListener.TEST_PUBLISHER;
 
 import com.google.inject.Inject;
 

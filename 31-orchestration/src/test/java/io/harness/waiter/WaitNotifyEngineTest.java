@@ -3,8 +3,8 @@ package io.harness.waiter;
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.OrchestrationRule.TEST_PUBLISHER;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.waiter.TestNotifyEventListener.TEST_PUBLISHER;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,7 +40,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   @Inject private HPersistence persistence;
   @Inject private QueueConsumer<NotifyEvent> notifyConsumer;
   @Inject private NotifyResponseCleaner notifyResponseCleaner;
-  @Inject private NotifyEventListener notifyEventListener;
+  @Inject private TestNotifyEventListener notifyEventListener;
   @Inject private QueueListenerController queueListenerController;
 
   /**
