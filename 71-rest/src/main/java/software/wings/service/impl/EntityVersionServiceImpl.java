@@ -49,7 +49,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
                                                      .filter(EntityVersionCollection.APP_ID_KEY, appId)
                                                      .filter(EntityVersionKeys.entityType, entityType)
                                                      .filter(EntityVersionKeys.entityUuid, entityUuid)
-                                                     .order(Sort.descending(EntityVersionCollection.CREATED_AT_KEY));
+                                                     .order(Sort.descending(EntityVersionKeys.version));
 
     if (isNotBlank(parentUuid)) {
       query.filter(EntityVersionKeys.entityParentUuid, parentUuid);
@@ -85,12 +85,14 @@ public class EntityVersionServiceImpl implements EntityVersionService {
         } else {
           entityVersion.setVersion(lastEntityVersion.getVersion() + 1);
         }
-        entityVersion = wingsPersistence.saveAndGet(EntityVersionCollection.class, entityVersion);
+        wingsPersistence.save(entityVersion);
         done = true;
       } catch (Exception e) {
         logger.warn("EntityVersion save failed for entityType: {}, entityUuid: {} - attemptNo: {}", entityType,
             entityUuid, i, e);
         i++;
+        // If we exception out then done is still 'false' and we will retry again
+        entityVersion.setCreatedAt(0);
       }
     } while (!done && i < 3);
 
