@@ -34,6 +34,7 @@ cp ../../71-rest/cert.pem .
 cp ../../71-rest/newrelic.yml .
 cp ../../71-rest/config.yml .
 cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
+cp ../../tools/monitoring/datadog/dd-java-agent.jar .
 
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8 ./Dockerfile
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-gcr ./Dockerfile-gcr
