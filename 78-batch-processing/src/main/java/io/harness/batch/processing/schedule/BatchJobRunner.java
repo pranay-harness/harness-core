@@ -28,14 +28,14 @@ public class BatchJobRunner {
   /**
    * Runs the batch job from previous end time and save the job logs
    * @param job - Job
-   * @param batchJobType - type of batch job
    * @param duration - event duration for job (endTime - startTime)
    * @param chronoUnit - duration unit
    * @throws Exception
    */
-  public void runJob(Job job, BatchJobType batchJobType, long duration, ChronoUnit chronoUnit)
+  public void runJob(Job job, long duration, ChronoUnit chronoUnit)
       throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException,
              JobInstanceAlreadyCompleteException {
+    BatchJobType batchJobType = BatchJobType.fromJob(job);
     Instant startAt = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(batchJobType);
     Instant endAt = Instant.now().minus(4, ChronoUnit.HOURS);
     BatchJobScheduleTimeProvider batchJobScheduleTimeProvider =

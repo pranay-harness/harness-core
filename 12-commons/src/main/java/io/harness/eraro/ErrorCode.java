@@ -392,7 +392,9 @@ public enum ErrorCode {
 
   SUMO_DATA_COLLECTION_ERROR,
 
-  DEPLOYMENT_GOVERNANCE_ERROR;
+  DEPLOYMENT_GOVERNANCE_ERROR,
+
+  BATCH_PROCESSING_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;

@@ -3,6 +3,7 @@ package io.harness.batch.processing.config;
 import io.harness.batch.processing.billing.reader.InstanceDataEventReader;
 import io.harness.batch.processing.billing.reader.InstanceDataMongoEventReader;
 import io.harness.batch.processing.billing.writer.InstanceBillingDataWriter;
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.entities.InstanceData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -48,18 +49,19 @@ public class BillingBatchConfiguration {
   @Bean
   @Qualifier(value = "instanceBillingJob")
   public Job instanceBillingJob(JobBuilderFactory jobBuilderFactory, Step instanceBillingStep) {
-    return jobBuilderFactory.get("instanceBillingJob")
+    return jobBuilderFactory.get(BatchJobType.INSTANCE_BILLING.name())
         .incrementer(new RunIdIncrementer())
         .start(instanceBillingStep)
         .build();
   }
 
   @Bean
-  public Step instanceBillingStep(StepBuilderFactory stepBuilderFactory) {
+  public Step instanceBillingStep(StepBuilderFactory stepBuilderFactory,
+      ItemReader<InstanceData> instanceInfoMessageReader, ItemWriter<InstanceData> instanceBillingDataWriter) {
     return stepBuilderFactory.get("instanceBillingStep")
         .<InstanceData, InstanceData>chunk(BATCH_SIZE)
-        .reader(instanceInfoMessageReader(null, null))
-        .writer(instanceBillingDataWriter())
+        .reader(instanceInfoMessageReader)
+        .writer(instanceBillingDataWriter)
         .build();
   }
 }

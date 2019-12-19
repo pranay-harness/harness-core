@@ -1,5 +1,6 @@
 package io.harness.batch.processing.config;
 
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.processor.K8sNodeEventProcessor;
@@ -143,7 +144,7 @@ public class K8sBatchConfiguration {
   @Qualifier(value = "k8sJob")
   public Job k8sJob(JobBuilderFactory jobBuilderFactory, Step k8sNodeInfoStep, Step k8sNodeEventStep,
       Step k8sPodInfoStep, Step k8sPodEventStep, Step k8sClusterSyncEventStep) {
-    return jobBuilderFactory.get("k8sJob")
+    return jobBuilderFactory.get(BatchJobType.K8S_EVENT.name())
         .incrementer(new RunIdIncrementer())
         .start(k8sNodeInfoStep)
         .next(k8sNodeEventStep)
@@ -158,7 +159,7 @@ public class K8sBatchConfiguration {
   @Qualifier(value = "k8sUtilizationJob")
   public Job k8sUtilizationJob(JobBuilderFactory jobBuilderFactory, Step k8sPodUtilizationEventStep,
       Step k8sNodeUtilizationEventStep, Step k8sUtilizationAggregationStep) {
-    return jobBuilderFactory.get("k8sUtilizationJob")
+    return jobBuilderFactory.get(BatchJobType.K8S_UTILIZATION.name())
         .incrementer(new RunIdIncrementer())
         .start(k8sPodUtilizationEventStep)
         .next(k8sNodeUtilizationEventStep)
