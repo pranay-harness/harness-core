@@ -6,17 +6,27 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
+import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
 
-@Indexes(@Index(
-    fields = { @Field("templateUuid")
-               , @Field("version") }, options = @IndexOptions(name = "yaml", unique = true)))
+@FieldNameConstants(innerTypeName = "TemplateVersionKeys")
+@Indexes({
+  @Index(fields = { @Field("templateUuid")
+                    , @Field("version") }, options = @IndexOptions(name = "yaml", unique = true))
+  , @Index(options = @IndexOptions(name = "account_template_version"), fields = {
+    @Field(value = TemplateVersionKeys.accountId)
+    , @Field(value = TemplateVersionKeys.templateUuid),
+        @Field(value = TemplateVersionKeys.version, type = IndexType.DESC)
+  })
+})
 @Data
 @Builder
 @NoArgsConstructor

@@ -1,7 +1,6 @@
 package software.wings.service.impl.template;
 
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.template.TemplateVersion.INITIAL_VERSION;
 import static software.wings.beans.template.TemplateVersion.TEMPLATE_UUID_KEY;
 
@@ -13,6 +12,7 @@ import io.harness.beans.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
 import software.wings.beans.template.TemplateVersion;
+import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateVersionService;
 
@@ -31,7 +31,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     return wingsPersistence.createQuery(TemplateVersion.class)
         .filter(ACCOUNT_ID_KEY, accountId)
         .filter(TEMPLATE_UUID_KEY, templateUuid)
-        .order(Sort.descending(CREATED_AT_KEY))
+        .order(Sort.descending(TemplateVersionKeys.version))
         .get();
   }
 
@@ -56,11 +56,13 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
         } else {
           templateVersion.setVersion(lastTemplateVersion.getVersion() + 1);
         }
-        templateVersion = wingsPersistence.saveAndGet(TemplateVersion.class, templateVersion);
+        wingsPersistence.save(templateVersion);
         done = true;
       } catch (Exception e) {
         logger.warn("TemplateVersion save failed templateUuid: {} - attemptNo: {}", templateUuid, i, e);
         i++;
+        // If we exception out then done is still 'false' and we will retry again
+        templateVersion.setCreatedAt(0);
       }
     } while (!done && i < 3);
 
