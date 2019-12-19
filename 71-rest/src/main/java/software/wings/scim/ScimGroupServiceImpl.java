@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.dl.WingsPersistence;
@@ -156,7 +157,15 @@ public class ScimGroupServiceImpl implements ScimGroupService {
       if (patchOperation.getOpType().equals("Replace")) {
         newGroupName = processReplaceOperationOnGroup(groupId, accountId, patchOperation);
       } else if (patchOperation.getOpType().equals("Add")) {
-        newMemberIds.addAll(userIdsFromOperation);
+        // We will add only those users which exists in the db
+        for (String userId : userIdsFromOperation) {
+          User user = wingsPersistence.get(User.class, userId);
+          if (user != null) {
+            newMemberIds.add(userId);
+          } else {
+            logger.info("No user exists in the db with the id {}", userId);
+          }
+        }
       } else if (patchOperation.getOpType().equals("Remove")) {
         newMemberIds.removeAll(userIdsFromOperation);
       } else {
@@ -256,7 +265,12 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     List<String> newMemberIds = new ArrayList<>();
     scimGroup.getMembers().forEach(member -> {
       if (!newMemberIds.contains(member.getValue())) {
-        newMemberIds.add(member.getValue());
+        User user = wingsPersistence.get(User.class, member.getValue());
+        if (user != null) {
+          newMemberIds.add(member.getValue());
+        } else {
+          logger.info("No user exists in the db with the id {}", member.getValue());
+        }
       }
     });
     return newMemberIds;
