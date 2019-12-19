@@ -2,6 +2,8 @@ package io.harness.batch.processing.processor;
 
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.Message;
@@ -11,6 +13,8 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.batch.processing.service.intfc.CloudProviderService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.category.element.UnitTests;
@@ -25,6 +29,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.time.Instant;
@@ -36,6 +41,7 @@ import java.util.Map;
 public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   @InjectMocks private K8sNodeEventProcessor k8sNodeEventProcessor;
   @InjectMocks private K8sNodeInfoProcessor k8sNodeInfoProcessor;
+  @Mock private CloudProviderService cloudProviderService;
 
   private static final String NODE_UID = "node_uid";
   private static final long CPU_AMOUNT = 1_000_000_000L; // 1 vcpu in nanocores
@@ -84,6 +90,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInstanceNodeInfo() throws Exception {
+    when(cloudProviderService.getK8SCloudProvider(any(), any())).thenReturn(CloudProvider.GCP);
     Map<String, String> label = new HashMap<>();
     label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
     label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
@@ -104,6 +111,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
     assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
     assertThat(metaData.get(InstanceMetaDataConstants.REGION)).isEqualTo(InstanceMetaDataConstants.REGION);
+    assertThat(metaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER)).isEqualTo(CloudProvider.GCP.name());
   }
 
   private Quantity getQuantity(long amount, String unit) {

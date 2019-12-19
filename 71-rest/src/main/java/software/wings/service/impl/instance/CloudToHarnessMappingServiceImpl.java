@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DeploymentService;
@@ -43,5 +45,11 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
       }
     }
     return Optional.empty();
+  }
+
+  @Override
+  public Optional<SettingAttribute> getSettingAttribute(String id) {
+    return Optional.ofNullable(
+        persistence.createQuery(SettingAttribute.class).filter(SettingAttributeKeys.uuid, id).get());
   }
 }

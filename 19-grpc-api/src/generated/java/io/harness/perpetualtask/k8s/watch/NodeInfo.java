@@ -22,6 +22,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     nodeName_ = "";
     clusterId_ = "";
     clusterName_ = "";
+    providerId_ = "";
   }
 
   @java.
@@ -115,6 +116,12 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
             java.lang.String s = input.readStringRequireUtf8();
 
             clusterName_ = s;
+            break;
+          }
+          case 82: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            providerId_ = s;
             break;
           }
           default: {
@@ -513,6 +520,36 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
   }
 
+  public static final int PROVIDER_ID_FIELD_NUMBER = 10;
+  private volatile java.lang.Object providerId_;
+  /**
+   * <code>string provider_id = 10;</code>
+   */
+  public java.lang.String getProviderId() {
+    java.lang.Object ref = providerId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      providerId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string provider_id = 10;</code>
+   */
+  public com.google.protobuf.ByteString getProviderIdBytes() {
+    java.lang.Object ref = providerId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      providerId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -552,6 +589,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
     if (!getClusterNameBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 9, clusterName_);
+    }
+    if (!getProviderIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 10, providerId_);
     }
     unknownFields.writeTo(output);
   }
@@ -602,6 +642,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     if (!getClusterNameBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(9, clusterName_);
     }
+    if (!getProviderIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(10, providerId_);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -639,6 +682,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return false;
     if (!getClusterName().equals(other.getClusterName()))
       return false;
+    if (!getProviderId().equals(other.getProviderId()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -675,6 +720,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     hash = (53 * hash) + getClusterId().hashCode();
     hash = (37 * hash) + CLUSTER_NAME_FIELD_NUMBER;
     hash = (53 * hash) + getClusterName().hashCode();
+    hash = (37 * hash) + PROVIDER_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getProviderId().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -830,6 +877,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
 
       clusterName_ = "";
 
+      providerId_ = "";
+
       return this;
     }
 
@@ -877,6 +926,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       result.allocatableResource_.makeImmutable();
       result.clusterId_ = clusterId_;
       result.clusterName_ = clusterName_;
+      result.providerId_ = providerId_;
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -947,6 +997,10 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
       if (!other.getClusterName().isEmpty()) {
         clusterName_ = other.clusterName_;
+        onChanged();
+      }
+      if (!other.getProviderId().isEmpty()) {
+        providerId_ = other.providerId_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -1704,6 +1758,68 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       checkByteStringIsUtf8(value);
 
       clusterName_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object providerId_ = "";
+    /**
+     * <code>string provider_id = 10;</code>
+     */
+    public java.lang.String getProviderId() {
+      java.lang.Object ref = providerId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        providerId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string provider_id = 10;</code>
+     */
+    public com.google.protobuf.ByteString getProviderIdBytes() {
+      java.lang.Object ref = providerId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        providerId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string provider_id = 10;</code>
+     */
+    public Builder setProviderId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      providerId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string provider_id = 10;</code>
+     */
+    public Builder clearProviderId() {
+      providerId_ = getDefaultInstance().getProviderId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string provider_id = 10;</code>
+     */
+    public Builder setProviderIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      providerId_ = value;
       onChanged();
       return this;
     }

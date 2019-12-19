@@ -49,6 +49,8 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
       metaData.put(
           InstanceMetaDataConstants.INSTANCE_FAMILY, nodeMetaData.get(InstanceMetaDataConstants.INSTANCE_FAMILY));
       metaData.put(
+          InstanceMetaDataConstants.CLOUD_PROVIDER, nodeMetaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER));
+      metaData.put(
           InstanceMetaDataConstants.OPERATING_SYSTEM, nodeMetaData.get(InstanceMetaDataConstants.OPERATING_SYSTEM));
       metaData.put(InstanceMetaDataConstants.POD_NAME, podInfo.getPodName());
       metaData.put(

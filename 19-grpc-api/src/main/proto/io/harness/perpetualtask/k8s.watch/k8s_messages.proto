@@ -68,6 +68,7 @@ message NodeInfo {
   map<string, Resource.Quantity> allocatable_resource = 7;
   string cluster_id = 8;
   string cluster_name = 9;
+  string provider_id = 10;
 }
 
 message NodeEvent {

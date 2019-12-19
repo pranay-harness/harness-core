@@ -129,4 +129,13 @@ public interface NodeInfoOrBuilder extends
    * <code>string cluster_name = 9;</code>
    */
   com.google.protobuf.ByteString getClusterNameBytes();
+
+  /**
+   * <code>string provider_id = 10;</code>
+   */
+  java.lang.String getProviderId();
+  /**
+   * <code>string provider_id = 10;</code>
+   */
+  com.google.protobuf.ByteString getProviderIdBytes();
 }

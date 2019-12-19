@@ -112,7 +112,7 @@ public final class K8SMessages {
         + "ent.EventType\022-\n\ttimestamp\030\005 \001(\0132\032.googl"
         + "e.protobuf.Timestamp\"U\n\tEventType\022\026\n\022EVE"
         + "NT_TYPE_INVALID\020\000\022\030\n\024EVENT_TYPE_SCHEDULE"
-        + "D\020\001\022\026\n\022EVENT_TYPE_DELETED\020\002\"\214\004\n\010NodeInfo"
+        + "D\020\001\022\026\n\022EVENT_TYPE_DELETED\020\002\"\241\004\n\010NodeInfo"
         + "\022\022\n\naccount_id\030\001 \001(\t\022\031\n\021cloud_provider_i"
         + "d\030\002 \001(\t\022\020\n\010node_uid\030\003 \001(\t\022\021\n\tnode_name\030\004"
         + " \001(\t\0221\n\rcreation_time\030\005 \001(\0132\032.google.pro"
@@ -121,24 +121,25 @@ public final class K8SMessages {
         + "belsEntry\022c\n\024allocatable_resource\030\007 \003(\0132"
         + "E.io.harness.perpetualtask.k8s.watch.Nod"
         + "eInfo.AllocatableResourceEntry\022\022\n\ncluste"
-        + "r_id\030\010 \001(\t\022\024\n\014cluster_name\030\t \001(\t\032-\n\013Labe"
-        + "lsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\032"
-        + "q\n\030AllocatableResourceEntry\022\013\n\003key\030\001 \001(\t"
-        + "\022D\n\005value\030\002 \001(\01325.io.harness.perpetualta"
-        + "sk.k8s.watch.Resource.Quantity:\0028\001\"\245\002\n\tN"
-        + "odeEvent\022\022\n\naccount_id\030\001 \001(\t\022\031\n\021cloud_pr"
-        + "ovider_id\030\002 \001(\t\022\020\n\010node_uid\030\003 \001(\t\022E\n\004typ"
-        + "e\030\004 \001(\01627.io.harness.perpetualtask.k8s.w"
-        + "atch.NodeEvent.EventType\022-\n\ttimestamp\030\005 "
-        + "\001(\0132\032.google.protobuf.Timestamp\022\021\n\tnode_"
-        + "name\030\006 \001(\t\"N\n\tEventType\022\026\n\022EVENT_TYPE_IN"
-        + "VALID\020\000\022\024\n\020EVENT_TYPE_START\020\001\022\023\n\017EVENT_T"
-        + "YPE_STOP\020\002\"\313\001\n\023K8SClusterSyncEvent\022\022\n\ncl"
-        + "uster_id\030\001 \001(\t\022\024\n\014cluster_name\030\002 \001(\t\022\031\n\021"
-        + "cloud_provider_id\030\003 \001(\t\022\027\n\017active_pod_ui"
-        + "ds\030\004 \003(\t\022\030\n\020active_node_uids\030\005 \003(\t\022<\n\030la"
-        + "st_processed_timestamp\030\006 \001(\0132\032.google.pr"
-        + "otobuf.TimestampB\002P\001b\006proto3"};
+        + "r_id\030\010 \001(\t\022\024\n\014cluster_name\030\t \001(\t\022\023\n\013prov"
+        + "ider_id\030\n \001(\t\032-\n\013LabelsEntry\022\013\n\003key\030\001 \001("
+        + "\t\022\r\n\005value\030\002 \001(\t:\0028\001\032q\n\030AllocatableResou"
+        + "rceEntry\022\013\n\003key\030\001 \001(\t\022D\n\005value\030\002 \001(\01325.i"
+        + "o.harness.perpetualtask.k8s.watch.Resour"
+        + "ce.Quantity:\0028\001\"\245\002\n\tNodeEvent\022\022\n\naccount"
+        + "_id\030\001 \001(\t\022\031\n\021cloud_provider_id\030\002 \001(\t\022\020\n\010"
+        + "node_uid\030\003 \001(\t\022E\n\004type\030\004 \001(\01627.io.harnes"
+        + "s.perpetualtask.k8s.watch.NodeEvent.Even"
+        + "tType\022-\n\ttimestamp\030\005 \001(\0132\032.google.protob"
+        + "uf.Timestamp\022\021\n\tnode_name\030\006 \001(\t\"N\n\tEvent"
+        + "Type\022\026\n\022EVENT_TYPE_INVALID\020\000\022\024\n\020EVENT_TY"
+        + "PE_START\020\001\022\023\n\017EVENT_TYPE_STOP\020\002\"\313\001\n\023K8SC"
+        + "lusterSyncEvent\022\022\n\ncluster_id\030\001 \001(\t\022\024\n\014c"
+        + "luster_name\030\002 \001(\t\022\031\n\021cloud_provider_id\030\003"
+        + " \001(\t\022\027\n\017active_pod_uids\030\004 \003(\t\022\030\n\020active_"
+        + "node_uids\030\005 \003(\t\022<\n\030last_processed_timest"
+        + "amp\030\006 \001(\0132\032.google.protobuf.TimestampB\002P"
+        + "\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -259,6 +260,7 @@ public final class K8SMessages {
                 "AllocatableResource",
                 "ClusterId",
                 "ClusterName",
+                "ProviderId",
             });
     internal_static_io_harness_perpetualtask_k8s_watch_NodeInfo_LabelsEntry_descriptor =
         internal_static_io_harness_perpetualtask_k8s_watch_NodeInfo_descriptor.getNestedTypes().get(0);
