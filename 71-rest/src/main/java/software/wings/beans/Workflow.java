@@ -4,6 +4,7 @@
 
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -291,6 +292,9 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
   }
 
   private TemplateExpression fetchEnvTemplateExpression() {
+    if (isEmpty(templateExpressions)) {
+      return null;
+    }
     return templateExpressions.stream()
         .filter(templateExpression -> templateExpression.getFieldName().equals("envId"))
         .findFirst()

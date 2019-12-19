@@ -3194,6 +3194,28 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldObtainEnvironmentIdWithoutOrchestration() {
+    Workflow workflow2 = workflowService.createWorkflow(constructBasicWorkflowWithPhase());
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+    assertThat(workflowService.obtainTemplatedEnvironmentId(workflow2, null)).isEqualTo(ENV_ID);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldObtainEnvironmentIdWithoutOrchestrationForTemplatizedWorkflow() {
+    Workflow workflow = constructBasicWorkflowWithPhase();
+    workflow.setTemplateExpressions(Collections.singletonList(getEnvTemplateExpression()));
+    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+    assertThat(
+        workflowService.obtainEnvIdWithoutOrchestration(workflow2, ImmutableMap.of("Environment", ENV_ID_CHANGED)))
+        .isEqualTo(ENV_ID_CHANGED);
+  }
+
+  @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetResolvedEnvironmentId() {

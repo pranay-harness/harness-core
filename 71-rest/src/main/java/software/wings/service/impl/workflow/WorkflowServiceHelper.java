@@ -402,6 +402,17 @@ public class WorkflowServiceHelper {
     }
   }
 
+  public String obtainEnvIdWithoutOrchestration(Workflow workflow, Map<String, String> workflowVariables) {
+    final String envTemplatizedName = workflow.fetchEnvTemplatizedName();
+    if (isEmpty(envTemplatizedName)) {
+      return workflow.getEnvId();
+    }
+    if (isEmpty(workflowVariables)) {
+      return null;
+    }
+    return workflowVariables.get(envTemplatizedName);
+  }
+
   public String obtainTemplatedEnvironmentId(Workflow workflow, Map<String, String> workflowVariables) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (!workflow.checkEnvironmentTemplatized()) {

@@ -120,8 +120,8 @@ public class PipelineResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Pipeline> create(@QueryParam("appId") String appId, Pipeline pipeline) {
-    authService.checkPipelinePermissionsForEnv(appId, pipeline, Action.CREATE);
     pipeline.setAppId(appId);
+    authService.checkPipelinePermissionsForEnv(appId, pipeline, Action.CREATE);
     return new RestResponse<>(pipelineService.save(pipeline));
   }
 
@@ -139,9 +139,9 @@ public class PipelineResource {
   @ExceptionMetered
   public RestResponse<Pipeline> update(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
-    authService.checkPipelinePermissionsForEnv(appId, pipeline, Action.UPDATE);
     pipeline.setAppId(appId);
     pipeline.setUuid(pipelineId);
+    authService.checkPipelinePermissionsForEnv(appId, pipeline, Action.UPDATE);
     try {
       return new RestResponse<>(pipelineService.update(pipeline, false));
     } catch (WingsException exception) {
@@ -175,8 +175,8 @@ public class PipelineResource {
   public RestResponse<Pipeline> clone(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     Pipeline originalPipeline = pipelineService.readPipeline(appId, pipelineId, false);
-    authService.checkPipelinePermissionsForEnv(appId, originalPipeline, Action.CREATE);
     pipeline.setAppId(appId);
+    authService.checkPipelinePermissionsForEnv(appId, originalPipeline, Action.CREATE);
     return new RestResponse<>(pipelineService.clonePipeline(originalPipeline, pipeline));
   }
 

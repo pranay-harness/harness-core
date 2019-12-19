@@ -169,6 +169,8 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   List<InstanceElement> getDeployedNodes(String appId, String workflowId);
 
+  String obtainEnvIdWithoutOrchestration(Workflow workflow, Map<String, String> workflowVariables);
+
   String resolveEnvironmentId(Workflow workflow, Map<String, String> workflowVariables);
 
   String obtainTemplatedEnvironmentId(Workflow workflow, Map<String, String> workflowVariables);
