@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.protobuf.Timestamp;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.entities.BatchJobScheduledData;
 import io.harness.batch.processing.entities.InstanceData;
@@ -106,7 +105,7 @@ public class EcsJobIntegrationTest extends CategoryTest implements EcsEventGener
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldRunEcsJob() throws Exception {
-    batchJobRunner.runJob(ecsJob, BatchJobType.ECS_EVENT, 1, ChronoUnit.DAYS);
+    batchJobRunner.runJob(ecsJob, 1, ChronoUnit.DAYS);
 
     List<InstanceState> stoppedInstanceState = getStoppedInstanceState();
     InstanceData stoppedInstanceData =

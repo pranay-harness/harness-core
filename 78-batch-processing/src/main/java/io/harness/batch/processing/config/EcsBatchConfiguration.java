@@ -1,5 +1,6 @@
 package io.harness.batch.processing.config;
 
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.reader.EventReaderFactory;
 import io.harness.batch.processing.writer.Ec2InstanceInfoWriter;
 import io.harness.batch.processing.writer.Ec2InstanceLifecycleWriter;
@@ -190,7 +191,7 @@ public class EcsBatchConfiguration {
   @Qualifier(value = "ecsJob")
   public Job ecsEventJob(Step ec2InstanceInfoStep, Step ec2InstanceLifecycleStep, Step ecsContainerInstanceInfoStep,
       Step ecsContainerInstanceLifecycleStep, Step ecsTaskInfoStep, Step ecsTaskLifecycleStep, Step ecsSyncEventStep) {
-    return jobBuilderFactory.get("ecsEventJob")
+    return jobBuilderFactory.get(BatchJobType.ECS_EVENT.name())
         .incrementer(new RunIdIncrementer())
         .start(ec2InstanceInfoStep)
         .next(ec2InstanceLifecycleStep)
@@ -205,7 +206,7 @@ public class EcsBatchConfiguration {
   @Bean
   @Qualifier(value = "ecsUtilizationJob")
   public Job ecsUtilizationJob(Step ecsUtilizationMetricsStep) {
-    return jobBuilderFactory.get("ecsEventJob")
+    return jobBuilderFactory.get(BatchJobType.ECS_UTILIZATION.name())
         .incrementer(new RunIdIncrementer())
         .start(ecsUtilizationMetricsStep)
         .build();
