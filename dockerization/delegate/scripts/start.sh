@@ -2,7 +2,7 @@
 
 JRE_DIR=jre1.8.0_191
 JRE_BINARY=$JRE_DIR/bin/java
-JVM_URL=_delegateStorageUrl_/jre/8u191/jre-8u191-linux-x64.tar.gz
+JVM_URL=$DELEGATE_STORAGE_URL/jre/8u191/jre-8u191-linux-x64.tar.gz
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -13,13 +13,13 @@ done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 if [ ! -e proxy.config ]; then
-  echo "PROXY_HOST=_proxyHost_" > proxy.config
-  echo "PROXY_PORT=_proxyPort_" >> proxy.config
-  echo "PROXY_SCHEME=_proxyScheme_" >> proxy.config
-  echo "PROXY_USER=_proxyUser_" >> proxy.config
-  echo "PROXY_PASSWORD=_proxyPass_" >> proxy.config
-  echo "NO_PROXY=_noProxy_" >> proxy.config
-  echo "PROXY_MANAGER=_proxyManager_" >> proxy.config
+  echo "PROXY_HOST=$PROXY_HOST" > proxy.config
+  echo "PROXY_PORT=$PROXY_PORT" >> proxy.config
+  echo "PROXY_SCHEME=$PROXY_SCHEME" >> proxy.config
+  echo "PROXY_USER=$PROXY_USER" >> proxy.config
+  echo "PROXY_PASSWORD=$PROXY_PASSWORD" >> proxy.config
+  echo "NO_PROXY=$NO_PROXY" >> proxy.config
+  echo "PROXY_MANAGER=${PROXY_MANAGER:-true}" >> proxy.config
 fi
 
 source proxy.config
@@ -62,7 +62,7 @@ fi
 
 echo $PROXY_SYS_PROPS
 
-ACCOUNT_STATUS=$(curl $MANAGER_PROXY_CURL -ks _managerHostAndPort_/api/account/_accountId_/status | cut -d ":" -f 3 | cut -d "," -f 1 | cut -d "\"" -f 2)
+ACCOUNT_STATUS=$(curl $MANAGER_PROXY_CURL -ks _managerHostAndPort_/api/account/$ACCOUNT_ID/status | cut -d ":" -f 3 | cut -d "," -f 1 | cut -d "\"" -f 2)
 if [[ $ACCOUNT_STATUS == "DELETED" ]]; then
   rm -rf *
   touch __deleted__
@@ -84,7 +84,7 @@ if [ ! -d $JRE_DIR  -o ! -e $JRE_BINARY ]; then
   exit 1
 fi
 
-DESIRED_VERSION=_helmVersion_
+DESIRED_VERSION=$HELM_DESIRED_VERSION
 if [[ $DESIRED_VERSION != "" ]]; then
   export DESIRED_VERSION
   echo "Installing Helm $DESIRED_VERSION ..."
@@ -93,8 +93,7 @@ if [[ $DESIRED_VERSION != "" ]]; then
 fi
 
 echo "Checking Watcher latest version..."
-WATCHER_STORAGE_URL=_watcherStorageUrl_
-REMOTE_WATCHER_LATEST=$(curl $MANAGER_PROXY_CURL -ks $WATCHER_STORAGE_URL/_watcherCheckLocation_)
+REMOTE_WATCHER_LATEST=$(curl $MANAGER_PROXY_CURL -ks $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION)
 REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
@@ -111,12 +110,9 @@ else
   fi
 fi
 
-export DEPLOY_MODE=_deployMode_
-
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
-  DELEGATE_STORAGE_URL=_delegateStorageUrl_
-  REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
+  REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/$DELEGATE_CHECK_LOCATION)
   REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
   REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 
@@ -135,50 +131,50 @@ if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
 fi
 
 if [ ! -e config-watcher.yml ]; then
-  echo "accountId: _accountId_" > config-watcher.yml
+  echo "accountId: $ACCOUNT_ID" > config-watcher.yml
 fi
 test "$(tail -c 1 config-watcher.yml)" && `echo "" >> config-watcher.yml`
 if ! `grep accountSecret config-watcher.yml > /dev/null`; then
-  echo "accountSecret: _accountSecret_" >> config-watcher.yml
+  echo "accountSecret: $ACCOUNT_SECRET" >> config-watcher.yml
 fi
 if ! `grep managerUrl config-watcher.yml > /dev/null`; then
-  echo "managerUrl: _managerHostAndPort_/api/" >> config-watcher.yml
+  echo "managerUrl: $MANAGER_HOST_AND_PORT/api/" >> config-watcher.yml
 fi
 if ! `grep doUpgrade config-watcher.yml > /dev/null`; then
   echo "doUpgrade: true" >> config-watcher.yml
 fi
 if ! `grep upgradeCheckLocation config-watcher.yml > /dev/null`; then
-  echo "upgradeCheckLocation: _watcherStorageUrl_/_watcherCheckLocation_" >> config-watcher.yml
+  echo "upgradeCheckLocation: $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION" >> config-watcher.yml
 fi
 if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
   echo "upgradeCheckIntervalSeconds: 60" >> config-watcher.yml
 fi
 if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
-  echo "delegateCheckLocation: _delegateStorageUrl_/_delegateCheckLocation_" >> config-watcher.yml
+  echo "delegateCheckLocation: $DELEGATE_STORAGE_URL/$DELEGATE_CHECK_LOCATION" >> config-watcher.yml
 fi
 if ! `grep publishTarget config-watcher.yml > /dev/null`; then
-  echo "publishTarget: _publishTarget_" >> config-watcher.yml
+  echo "publishTarget: $PUBLISH_TARGET" >> config-watcher.yml
 fi
 if ! `grep publishAuthority config-watcher.yml > /dev/null`; then
-  echo "publishAuthority: _publishAuthority_" >> config-watcher.yml
+  echo "publishAuthority: $PUBLISH_AUTHORITY" >> config-watcher.yml
 fi
 if ! `grep queueFilePath config-watcher.yml > /dev/null`; then
-  echo "queueFilePath: _queueFilePath_" >> config-watcher.yml
+  echo "queueFilePath: $QUEUE_FILE_PATH" >> config-watcher.yml
 fi
 
 if [ ! -e config-delegate.yml ]; then
-  echo "accountId: _accountId_" > config-delegate.yml
-  echo "accountSecret: _accountSecret_" >> config-delegate.yml
+  echo "accountId: $ACCOUNT_ID" > config-delegate.yml
+  echo "accountSecret: $ACCOUNT_SECRET" >> config-delegate.yml
 fi
 test "$(tail -c 1 config-delegate.yml)" && `echo "" >> config-delegate.yml`
 if ! `grep managerUrl config-delegate.yml > /dev/null`; then
-  echo "managerUrl: _managerHostAndPort_/api/" >> config-delegate.yml
+  echo "managerUrl: $MANAGER_HOST_AND_PORT/api/" >> config-delegate.yml
 fi
 if ! `grep verificationServiceUrl config-delegate.yml > /dev/null`; then
-  echo "verificationServiceUrl: _managerHostAndPort_/verification/" >> config-delegate.yml
+  echo "verificationServiceUrl: $MANAGER_HOST_AND_PORT/verification/" >> config-delegate.yml
 fi
 if ! `grep watcherCheckLocation config-delegate.yml > /dev/null`; then
-  echo "watcherCheckLocation: _watcherStorageUrl_/_watcherCheckLocation_" >> config-delegate.yml
+  echo "watcherCheckLocation: $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION" >> config-delegate.yml
 fi
 if ! `grep heartbeatIntervalMs config-delegate.yml > /dev/null`; then
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
@@ -199,20 +195,20 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
   if [ "$DEPLOY_MODE" == "ONPREM" ]; then
       echo "pollForTasks: true" >> config-delegate.yml
   else
-      echo "pollForTasks: _pollForTasks_" >> config-delegate.yml
+      echo "pollForTasks: ${POLL_FOR_TASKS:-false}" >> config-delegate.yml
   fi
 fi
 if ! `grep queueFilePath config-delegate.yml > /dev/null`; then
-  echo "queueFilePath : _queueFilePath_" >> config-delegate.yml
+  echo "queueFilePath: $QUEUE_FILE_PATH" >> config-delegate.yml
 fi
 if ! `grep managerTarget config-delegate.yml > /dev/null`; then
-  echo "managerTarget : _managerTarget_" >> config-delegate.yml
+  echo "managerTarget: $MANAGER_TARGET" >> config-delegate.yml
 fi
 if ! `grep managerAuthority config-delegate.yml > /dev/null`; then
-  echo "managerAuthority : _managerAuthority_" >> config-delegate.yml
+  echo "managerAuthority: $MANAGER_AUTHORITY" >> config-delegate.yml
 fi
 if ! `grep enablePerpetualTasks config-delegate.yml > /dev/null`; then
-  echo "enablePerpetualTasks : _enablePerpetualTasks_" >> config-delegate.yml
+  echo "enablePerpetualTasks: $ENABLE_PERPETUAL_TASKS" >> config-delegate.yml
 fi
 
 export HOSTNAME
