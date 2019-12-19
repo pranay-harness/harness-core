@@ -108,7 +108,8 @@ public class APMValidation extends AbstractSecretManagerValidation {
         break;
       } else if (config instanceof APMDataCollectionInfo) {
         APMDataCollectionInfo dInfo = (APMDataCollectionInfo) config;
-        validateCollectorConfig = APMValidateCollectorConfig.builder().baseUrl(dInfo.getBaseUrl()).build();
+        validateCollectorConfig =
+            APMValidateCollectorConfig.builder().baseUrl(dInfo.getBaseUrl()).url(dInfo.getValidationUrl()).build();
         break;
       } else if (config instanceof CustomLogDataCollectionInfo) {
         CustomLogDataCollectionInfo dInfo = (CustomLogDataCollectionInfo) config;
