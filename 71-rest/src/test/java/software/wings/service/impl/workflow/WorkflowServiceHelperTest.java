@@ -3,10 +3,12 @@ package software.wings.service.impl.workflow;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.anyList;
@@ -544,6 +546,27 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
 
     assertThat(workflowServiceHelper.ensureArtifactCheckInPreDeployment(canaryOrchestrationWorkflow)).isTrue();
     assertThat(workflowServiceHelper.ensureArtifactCheckInPreDeployment(canaryOrchestrationWorkflow)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testObtainEnvIdWithoutOrchestration() {
+    Workflow workflow = aWorkflow().envId(ENV_ID).build();
+    assertThat(workflowServiceHelper.obtainEnvIdWithoutOrchestration(workflow, null)).isEqualTo(workflow.getEnvId());
+
+    Workflow workflowTemplated =
+        aWorkflow()
+            .templateExpressions(singletonList(
+                TemplateExpression.builder().fieldName(WorkflowKeys.envId).expression("${envVar}").build()))
+            .build();
+    assertThat(
+        workflowServiceHelper.obtainEnvIdWithoutOrchestration(workflowTemplated, ImmutableMap.of("envVar", ENV_ID)))
+        .isEqualTo(ENV_ID);
+    assertThat(workflowServiceHelper.obtainEnvIdWithoutOrchestration(
+                   workflowTemplated, ImmutableMap.of("envVarOther", ENV_ID)))
+        .isNull();
+    assertThat(workflowServiceHelper.obtainEnvIdWithoutOrchestration(workflowTemplated, null)).isNull();
   }
 
   @Test

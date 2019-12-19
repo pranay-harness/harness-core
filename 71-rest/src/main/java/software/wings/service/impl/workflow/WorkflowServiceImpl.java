@@ -662,7 +662,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Workflow readWorkflowWithoutOrchestration(String appId, String workflowId) {
-    return wingsPersistence.getWithAppId(Workflow.class, appId, workflowId);
+    return wingsPersistence.createQuery(Workflow.class)
+        .project(WorkflowKeys.orchestration, false)
+        .filter(WorkflowKeys.appId, appId)
+        .filter(WorkflowKeys.uuid, workflowId)
+        .get();
   }
 
   @Override
@@ -3203,6 +3207,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                              .hostName("No workflow execution found with deployed nodes for this workflow. "
                                  + "Please run the workflow to get deployed nodes")
                              .build());
+  }
+
+  @Override
+  public String obtainEnvIdWithoutOrchestration(Workflow workflow, Map<String, String> workflowVariables) {
+    return workflowServiceHelper.obtainEnvIdWithoutOrchestration(workflow, workflowVariables);
   }
 
   @Override
