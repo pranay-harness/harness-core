@@ -34,7 +34,6 @@ ARTIFACT_APPROVAL_NOTIFICATION_STATUS:
       pagerDuty:
         summary: ${ENTITY_TYPE} ${ENTITY_NAME} is ${NOTIFICATION_STATUS} by ${USER_NAME}
 
-
 WORKFLOW_NOTIFICATION:
       web: <<top-div>>${PHASE_NAME}<b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> ${VERB} for <b>${ARTIFACTS}</b> in <b>${ENV_NAME}</b>, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<${VERB}-color>><i>Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
       slack: ${PHASE_NAME}\*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* ${VERB} for \*${ARTIFACTS}\* in \*${ENV_NAME}\*, triggered by \*${USER_NAME}\*${PIPELINE} in \*${APP_NAME}\* application||_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
@@ -46,6 +45,7 @@ WORKFLOW_NOTIFICATION:
           link:
             href: ${WORKFLOW_URL}
             text: ${WORKFLOW_NAME} - Started ${START_DATE}
+
 DELEGATE_STATE_NOTIFICATION:
       web: ${COUNT} ${ENTITY_AFFECTED} down with following ${DESCRIPTION_FIELD} <b>${HOST_NAMES}</b>
       slack: ${COUNT} ${ENTITY_AFFECTED} down with following ${DESCRIPTION_FIELD} ${HOST_NAMES}
@@ -105,6 +105,7 @@ APPROVAL_NEEDED_NOTIFICATION:
         link:
           href: ${WORKFLOW_URL}
           text: ${WORKFLOW_NAME} - Started ${START_DATE}
+
 APPROVAL_STATE_CHANGE_NOTIFICATION:
       web: Approval ${STATUS_CAMELCASE} - ${WORKFLOW_NAME} in ${APP_NAME} is ${STATUS}
       slack: Approval ${STATUS_CAMELCASE} - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* is ${STATUS} by \*${USER_NAME}\* in \*${APP_NAME}\* application|| ${APPROVAL_TYPE} _paused<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${STATUS} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
@@ -140,6 +141,7 @@ MANUAL_INTERVENTION_NEEDED_NOTIFICATION:
         link:
           href: ${WORKFLOW_URL}
           text: ${WORKFLOW_NAME} - Started ${START_DATE}
+
 RESOURCE_CONSTRAINT_BLOCKED_NOTIFICATION:
       web: Resource constraint ${RESOURCE_CONSTRAINT_NAME} is in use and it is blocking ${WORKFLOW_NAME}> in ${APP_NAME}.
       slack: Resource constraint ${RESOURCE_CONSTRAINT_NAME} is in use and it is blocking \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* in ${APP_NAME}.
@@ -170,7 +172,6 @@ USER_LOCKED_NOTIFICATION:
     body: The user ${lockedUser} has been locked out to multiple incorrect password attempts. To unlock them, log in and go to <b>Continuous Security → Access Management → Users </b>
 
 
-
 SSO_PROVIDER_NOT_REACHABLE_NOTIFICATION:
   web: "The default Single Sign-on Provider ${SSO_PROVIDER_NAME} (Type: ${SSO_PROVIDER_TYPE}, URL: ${SSO_PROVIDER_URL}) is no longer reachable. This will impact user's ability to login into Harness System. Please make sure at least one delegate is up and running and can reach the provider. ${DELEGATE_HOSTS}"
   slack: "The default Single Sign-on Provider ${SSO_PROVIDER_NAME} (Type: ${SSO_PROVIDER_TYPE}, URL: ${SSO_PROVIDER_URL}) is no longer reachable. This will impact user's ability to login into Harness System. Please make sure at least one delegate is up and running and can reach the provider. ${DELEGATE_HOSTS}"
@@ -179,3 +180,9 @@ SSO_PROVIDER_NOT_REACHABLE_NOTIFICATION:
     body: "The default Single Sign-on Provider ${SSO_PROVIDER_NAME} (Type: ${SSO_PROVIDER_TYPE}, URL: ${SSO_PROVIDER_URL}) is no longer reachable. This will impact user's ability to login into Harness System. Please make sure at least one delegate is up and running and can reach the provider. ${DELEGATE_HOSTS_HTML}"
   pagerDuty:
     summary: "The default Single Sign-on Provider ${SSO_PROVIDER_NAME} (Type: ${SSO_PROVIDER_TYPE}, URL: ${SSO_PROVIDER_URL}) is no longer reachable. This will impact user's ability to login into Harness System. Please make sure at least one delegate is up and running and can reach the provider. ${DELEGATE_HOSTS}"
+
+BUDGET_NOTIFICATION:
+  email:
+    subject: ${THRESHOLD_PERCENTAGE}% of the budget ${BUDGET_NAME} has been spent so far.
+    body: "Dear Harness customer, You requested that we alert you when the cost associated with your ${BUDGET_NAME} budget exceeds ${THRESHOLD_PERCENTAGE}% for the current month. The cost associated with this budget is ${CURRENT_COST}. "
+  slack: ${THRESHOLD_PERCENTAGE}% of the budget ${BUDGET_NAME} has been spent so far.

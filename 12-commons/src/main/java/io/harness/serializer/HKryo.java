@@ -40,6 +40,7 @@ import de.javakaffee.kryoserializers.guava.UnmodifiableNavigableSetSerializer;
 import io.harness.beans.FileData;
 import io.harness.context.GlobalContext;
 import io.harness.context.GlobalContextData;
+import io.harness.context.MdcGlobalContextData;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
@@ -204,6 +205,7 @@ public class HKryo extends Kryo {
     register(GlobalContextData.class, 1203);
     register(SocketException.class, 1204);
     register(FailureType.class, 1205);
+    register(MdcGlobalContextData.class, 1206);
   }
 
   private Registration check(Registration registration, int id) {

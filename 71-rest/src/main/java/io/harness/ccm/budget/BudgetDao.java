@@ -6,7 +6,6 @@ import com.google.inject.Inject;
 
 import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.budget.entities.Budget.BudgetKeys;
-import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -32,7 +31,7 @@ public class BudgetDao {
   }
 
   public void update(String budgetId, Budget budget) {
-    Query query = persistence.createQuery(Budget.class).field(PerpetualTaskRecordKeys.uuid).equal(budgetId);
+    Query query = persistence.createQuery(Budget.class).field(BudgetKeys.uuid).equal(budgetId);
     UpdateOperations<Budget> updateOperations = persistence.createUpdateOperations(Budget.class)
                                                     .set(BudgetKeys.name, budget.getName())
                                                     .set(BudgetKeys.scope, budget.getScope())
@@ -43,6 +42,9 @@ public class BudgetDao {
     }
     if (null != budget.getAlertThresholds()) {
       updateOperations.set(BudgetKeys.alertThresholds, budget.getAlertThresholds());
+    }
+    if (null != budget.getUserGroupId()) {
+      updateOperations.set(BudgetKeys.userGroupId, budget.getUserGroupId());
     }
     persistence.update(query, updateOperations);
   }

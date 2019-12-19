@@ -74,7 +74,8 @@ public class NotificationMessageResolver {
     DELEGATE_DOWN_ALERT_NOTIFICATION,
     GENERIC_ALERT_NOTIFICATION,
     CV_SERVICE_GUARD_NOTIFICATION,
-    USER_LOCKED_NOTIFICATION
+    USER_LOCKED_NOTIFICATION,
+    BUDGET_NOTIFICATION
   }
 
   private static Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?}");
