@@ -29,17 +29,23 @@ import java.util.Optional;
 public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, InstanceInfo> {
   @Autowired private InstanceDataService instanceDataService;
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
+  private static String POD = "pod";
 
   @Override
   public InstanceInfo process(PublishedMessage publishedMessage) {
     String accountId = publishedMessage.getAccountId();
     PodInfo podInfo = (PodInfo) publishedMessage.getMessage();
+    String workloadName = podInfo.getOwner(0).getName();
+    String workloadType = podInfo.getOwner(0).getKind();
 
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.GCP.name());
     metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_ID, podInfo.getNodeName());
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
     metaData.put(InstanceMetaDataConstants.NAMESPACE, podInfo.getNamespace());
+    metaData.put(
+        InstanceMetaDataConstants.WORKLOAD_NAME, workloadName.equals("") ? podInfo.getPodName() : workloadName);
+    metaData.put(InstanceMetaDataConstants.WORKLOAD_TYPE, workloadType.equals("") ? POD : workloadType);
 
     InstanceData instanceData = instanceDataService.fetchInstanceDataWithName(
         accountId, podInfo.getNodeName(), publishedMessage.getOccurredAt());

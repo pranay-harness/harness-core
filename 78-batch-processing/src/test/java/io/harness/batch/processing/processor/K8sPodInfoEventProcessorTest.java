@@ -57,6 +57,9 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   private static final String ACCOUNT_ID = "account_id";
   private static final String CLUSTER_ID = "cluster_id";
   private static final String CLUSTER_NAME = "cluster_name";
+  private static final String WORKLOAD_NAME = "workload_name";
+  private static final String WORKLOAD_TYPE = "workload_type";
+  private static final String WORKLOAD_ID = "workload_id";
   private final Instant NOW = Instant.now();
   private final Timestamp START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
 
@@ -118,6 +121,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     assertThat(instanceInfo.getInstanceType()).isEqualTo(InstanceType.K8S_POD);
     assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
     assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
+    assertThat(metaData.get(InstanceMetaDataConstants.WORKLOAD_NAME)).isEqualTo(WORKLOAD_NAME);
     assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY))
         .isEqualTo(String.valueOf((double) MEMORY_AMOUNT));
     assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_CPU))
@@ -167,6 +171,11 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
                            .putAllLabels(label)
                            .setTotalResource(resource)
                            .setCreationTimestamp(timestamp)
+                           .addOwner(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
+                                         .setName(WORKLOAD_NAME)
+                                         .setKind(WORKLOAD_TYPE)
+                                         .setUid(WORKLOAD_ID)
+                                         .build())
                            .build();
     return getPublishedMessage(accountId, nodeInfo, HTimestamps.toMillis(timestamp));
   }
