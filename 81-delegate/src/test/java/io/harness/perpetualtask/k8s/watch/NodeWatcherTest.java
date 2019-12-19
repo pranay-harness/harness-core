@@ -20,6 +20,7 @@ import com.google.protobuf.Timestamp;
 import io.fabric8.kubernetes.api.model.DoneableNode;
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.NodeList;
+import io.fabric8.kubernetes.api.model.NodeSpec;
 import io.fabric8.kubernetes.api.model.NodeStatus;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -47,6 +48,7 @@ import java.util.UUID;
 public class NodeWatcherTest extends CategoryTest {
   private static final String UID = UUID.randomUUID().toString();
   private static final String NAME = "test-node";
+  private static final String GCP_PROVIDER_ID = "gce://ccm-play/us-east4-a/gke-ccm-test-default-pool-d13df1f8-zk7p";
 
   private NodeWatcher nodeWatcher;
   private EventPublisher eventPublisher;
@@ -76,7 +78,7 @@ public class NodeWatcherTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldPublishNodeStartedEvent() throws Exception {
     Instant creationTime = now().minus(5, ChronoUnit.MINUTES);
-    Node node = node(UID, NAME, creationTime.toString(), new HashMap<>(), nodeStatus());
+    Node node = node(UID, NAME, creationTime.toString(), new HashMap<>(), nodeStatus(), GCP_PROVIDER_ID);
     nodeWatcher.eventReceived(Action.ADDED, node);
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
     verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
@@ -93,7 +95,7 @@ public class NodeWatcherTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldPublishNodeStoppedEvent() throws Exception {
     String creationTimestamp = now().minus(5, ChronoUnit.MINUTES).toString();
-    Node node = node(UID, NAME, creationTimestamp, new HashMap<>(), nodeStatus());
+    Node node = node(UID, NAME, creationTimestamp, new HashMap<>(), nodeStatus(), GCP_PROVIDER_ID);
     nodeWatcher.eventReceived(Action.DELETED, node);
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
     verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
@@ -112,7 +114,7 @@ public class NodeWatcherTest extends CategoryTest {
   public void shouldPublishNodeInfoOnlyOnce() throws Exception {
     Instant creationTime = now().minus(5, ChronoUnit.MINUTES);
     Map<String, String> labels = ImmutableMap.of("k1", "v1", "k2", "v2");
-    Node node = node(UID, NAME, creationTime.toString(), labels, nodeStatus());
+    Node node = node(UID, NAME, creationTime.toString(), labels, nodeStatus(), GCP_PROVIDER_ID);
     nodeWatcher.eventReceived(Action.ADDED, node);
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
     verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
@@ -144,8 +146,8 @@ public class NodeWatcherTest extends CategoryTest {
     return nodeStatus;
   }
 
-  private Node node(
-      String uid, String name, String creationTimestamp, Map<String, String> labels, NodeStatus nodeStatus) {
+  private Node node(String uid, String name, String creationTimestamp, Map<String, String> labels,
+      NodeStatus nodeStatus, String providerId) {
     Node node = new Node();
     ObjectMeta nodeMeta = new ObjectMeta();
     nodeMeta.setUid(uid);
@@ -154,6 +156,9 @@ public class NodeWatcherTest extends CategoryTest {
     nodeMeta.setLabels(labels);
     node.setMetadata(nodeMeta);
     node.setStatus(nodeStatus);
+    NodeSpec spec = new NodeSpec();
+    spec.setProviderID(providerId);
+    node.setSpec(spec);
     return node;
   }
 }

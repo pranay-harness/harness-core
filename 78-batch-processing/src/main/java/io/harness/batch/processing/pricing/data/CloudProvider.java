@@ -2,6 +2,7 @@ package io.harness.batch.processing.pricing.data;
 
 public enum CloudProvider {
   AWS("amazon"),
+  AZURE("azure"),
   GCP("google");
 
   CloudProvider(String cloudProviderName) {
