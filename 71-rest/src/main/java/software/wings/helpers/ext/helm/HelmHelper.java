@@ -157,7 +157,7 @@ public class HelmHelper {
       return new StringBuilder("s3://")
           .append(amazonS3HelmRepoConfig.getBucketName())
           .append("/")
-          .append(amazonS3HelmRepoConfig.getFolderPath())
+          .append(helmChartConfigParams.getBasePath())
           .toString();
     } else if (helmRepoConfig instanceof GCSHelmRepoConfig) {
       GCSHelmRepoConfig gcsHelmRepoConfig = (GCSHelmRepoConfig) helmRepoConfig;
@@ -165,7 +165,7 @@ public class HelmHelper {
       return new StringBuilder("gs://")
           .append(gcsHelmRepoConfig.getBucketName())
           .append("/")
-          .append(gcsHelmRepoConfig.getFolderPath())
+          .append(helmChartConfigParams.getBasePath())
           .toString();
     } else {
       return null;

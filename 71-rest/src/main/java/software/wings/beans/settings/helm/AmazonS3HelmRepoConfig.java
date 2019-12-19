@@ -28,7 +28,7 @@ public class AmazonS3HelmRepoConfig extends SettingValue implements HelmRepoConf
 
   @NotEmpty private String connectorId;
   @NotEmpty private String bucketName;
-  @NotEmpty private String folderPath;
+  private String folderPath;
   @NotEmpty private String region;
 
   public AmazonS3HelmRepoConfig() {
@@ -66,16 +66,14 @@ public class AmazonS3HelmRepoConfig extends SettingValue implements HelmRepoConf
   public static final class Yaml extends HelmRepoYaml {
     private String cloudProvider;
     private String bucket;
-    private String folderPath;
     private String region;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String cloudProvider, String bucket, String folderPath,
-        String region, UsageRestrictions.Yaml usageRestrictions) {
+    public Yaml(String type, String harnessApiVersion, String cloudProvider, String bucket, String region,
+        UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.cloudProvider = cloudProvider;
       this.bucket = bucket;
-      this.folderPath = folderPath;
       this.region = region;
     }
   }

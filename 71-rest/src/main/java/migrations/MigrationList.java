@@ -297,6 +297,7 @@ public class MigrationList {
         .add(Pair.of(286, BaseMigration.class))
         .add(Pair.of(287, InstanceComputerProviderNameFixMigration.class))
         .add(Pair.of(288, DeleteServiceGuardAlertMigration.class))
+        .add(Pair.of(289, HelmConnectorPathMigration.class))
         .build();
   }
 }

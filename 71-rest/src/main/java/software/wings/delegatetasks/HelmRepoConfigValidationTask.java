@@ -104,7 +104,8 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     List<EncryptedDataDetail> connectorEncryptedDataDetails = taskParams.getConnectorEncryptedDataDetails();
     encryptionService.decrypt(gcpConfig, connectorEncryptedDataDetails);
 
-    helmTaskHelper.addHelmRepo(helmRepoConfig, gcpConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory);
+    helmTaskHelper.addHelmRepo(
+        helmRepoConfig, gcpConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory, "");
   }
 
   private void tryAddingHttpHelmRepo(HelmRepoConfig helmRepoConfig, String repoName, String repoDisplayName,
@@ -121,6 +122,7 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     List<EncryptedDataDetail> connectorEncryptedDataDetails = taskParams.getConnectorEncryptedDataDetails();
     encryptionService.decrypt(awsConfig, connectorEncryptedDataDetails);
 
-    helmTaskHelper.addHelmRepo(helmRepoConfig, awsConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory);
+    helmTaskHelper.addHelmRepo(
+        helmRepoConfig, awsConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory, "");
   }
 }

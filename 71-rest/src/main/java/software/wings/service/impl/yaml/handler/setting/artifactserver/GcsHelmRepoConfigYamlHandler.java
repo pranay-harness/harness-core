@@ -16,7 +16,6 @@ public class GcsHelmRepoConfigYamlHandler extends HelmRepoYamlHandler<Yaml, GCSH
                     .harnessApiVersion(getHarnessApiVersion())
                     .type(gcsHelmRepoConfig.getType())
                     .bucket(gcsHelmRepoConfig.getBucketName())
-                    .folderPath(gcsHelmRepoConfig.getFolderPath())
                     .cloudProvider(getCloudProviderName(appId, gcsHelmRepoConfig.getConnectorId()))
                     .build();
 
@@ -34,7 +33,6 @@ public class GcsHelmRepoConfigYamlHandler extends HelmRepoYamlHandler<Yaml, GCSH
     GCSHelmRepoConfig gcsHelmRepoConfig = GCSHelmRepoConfig.builder()
                                               .accountId(accountId)
                                               .bucketName(yaml.getBucket())
-                                              .folderPath(yaml.getFolderPath())
                                               .connectorId(getCloudProviderIdByName(accountId, yaml.getCloudProvider()))
                                               .build();
 

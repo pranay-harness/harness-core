@@ -15,4 +15,9 @@ public class HelmChartConfig {
   @Trimmed private String chartVersion;
   @Trimmed private String chartUrl;
   @Transient @JsonInclude(Include.NON_EMPTY) private String connectorName;
+  private String basePath;
+
+  public String getBasePath() {
+    return basePath == null ? "" : basePath;
+  }
 }

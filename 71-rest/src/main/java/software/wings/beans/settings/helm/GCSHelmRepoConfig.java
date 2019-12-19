@@ -16,7 +16,6 @@ import software.wings.yaml.setting.HelmRepoYaml;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @JsonTypeName("GCS_HELM_REPO")
 @Data
@@ -27,7 +26,7 @@ public class GCSHelmRepoConfig extends SettingValue implements HelmRepoConfig {
 
   @NotEmpty private String connectorId;
   @NotEmpty private String bucketName;
-  @NotNull private String folderPath;
+  private String folderPath;
 
   public GCSHelmRepoConfig() {
     super(SettingVariableTypes.GCS_HELM_REPO.name());
@@ -60,15 +59,13 @@ public class GCSHelmRepoConfig extends SettingValue implements HelmRepoConfig {
   public static final class Yaml extends HelmRepoYaml {
     private String cloudProvider;
     private String bucket;
-    private String folderPath;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String cloudProvider, String bucket, String folderPath,
+    public Yaml(String type, String harnessApiVersion, String cloudProvider, String bucket,
         UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.cloudProvider = cloudProvider;
       this.bucket = bucket;
-      this.folderPath = folderPath;
     }
   }
 }

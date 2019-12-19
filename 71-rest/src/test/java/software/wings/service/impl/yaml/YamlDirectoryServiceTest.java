@@ -537,7 +537,6 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
                                               .withCategory(CONNECTOR)
                                               .withValue(AmazonS3HelmRepoConfig.builder()
                                                              .bucketName("default")
-                                                             .folderPath("default")
                                                              .region("us-east-1")
                                                              .connectorId("default")
                                                              .build())
