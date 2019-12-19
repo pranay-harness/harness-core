@@ -2,7 +2,7 @@
 
 JRE_DIR=jre1.8.0_191
 JRE_BINARY=$JRE_DIR/bin/java
-JVM_URL=_delegateStorageUrl_/jre/8u191/jre-8u191-linux-x64.tar.gz
+JVM_URL=$DELEGATE_STORAGE_URL/jre/8u191/jre-8u191-linux-x64.tar.gz
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -36,7 +36,6 @@ if [ -e proxy.config ]; then
   if [[ $PROXY_MANAGER == "true" || $PROXY_MANAGER == "" ]]; then
     export MANAGER_PROXY_CURL=$PROXY_CURL
   else
-    MANAGER_HOST_AND_PORT=_managerHostAndPort_
     HOST_AND_PORT_ARRAY=(${MANAGER_HOST_AND_PORT//:/ })
     MANAGER_HOST="${HOST_AND_PORT_ARRAY[1]}"
     MANAGER_HOST="${MANAGER_HOST:2}"
@@ -66,12 +65,9 @@ if [ ! -d $JRE_DIR -o ! -e $JRE_BINARY ]; then
   rm -f $JVM_TAR_FILENAME
 fi
 
-export DEPLOY_MODE=_deployMode_
-
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
-  DELEGATE_STORAGE_URL=_delegateStorageUrl_
-  REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
+  REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/$DELEGATE_CHECK_LOCATION)
   REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
   REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 
@@ -90,18 +86,18 @@ if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
 fi
 
 if [ ! -e config-delegate.yml ]; then
-  echo "accountId: _accountId_" > config-delegate.yml
-  echo "accountSecret: _accountSecret_" >> config-delegate.yml
+  echo "accountId: $ACCOUNT_ID" > config-delegate.yml
+  echo "accountSecret: $ACCOUNT_SECRET" >> config-delegate.yml
 fi
 test "$(tail -c 1 config-delegate.yml)" && `echo "" >> config-delegate.yml`
 if ! `grep managerUrl config-delegate.yml > /dev/null`; then
-  echo "managerUrl: _managerHostAndPort_/api/" >> config-delegate.yml
+  echo "managerUrl: $MANAGER_HOST_AND_PORT/api/" >> config-delegate.yml
 fi
 if ! `grep verificationServiceUrl config-delegate.yml > /dev/null`; then
-  echo "verificationServiceUrl: _managerHostAndPort_/verification/" >> config-delegate.yml
+  echo "verificationServiceUrl: $MANAGER_HOST_AND_PORT/verification/" >> config-delegate.yml
 fi
 if ! `grep watcherCheckLocation config-delegate.yml > /dev/null`; then
-  echo "watcherCheckLocation: _watcherStorageUrl_/_watcherCheckLocation_" >> config-delegate.yml
+  echo "watcherCheckLocation: $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION" >> config-delegate.yml
 fi
 if ! `grep heartbeatIntervalMs config-delegate.yml > /dev/null`; then
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
@@ -122,20 +118,20 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
   if [ "$DEPLOY_MODE" == "ONPREM" ]; then
       echo "pollForTasks: true" >> config-delegate.yml
   else
-      echo "pollForTasks: _pollForTasks_" >> config-delegate.yml
+      echo "pollForTasks: ${POLL_FOR_TASKS:-false}" >> config-delegate.yml
   fi
 fi
 if ! `grep queueFilePath config-delegate.yml > /dev/null`; then
-  echo "queueFilePath : _queueFilePath_" >> config-delegate.yml
+  echo "queueFilePath: $QUEUE_FILE_PATH" >> config-delegate.yml
 fi
 if ! `grep managerTarget config-delegate.yml > /dev/null`; then
-  echo "managerTarget : _managerTarget_" >> config-delegate.yml
+  echo "managerTarget: $MANAGER_TARGET" >> config-delegate.yml
 fi
 if ! `grep managerAuthority config-delegate.yml > /dev/null`; then
-  echo "managerAuthority  : _managerAuthority_" >> config-delegate.yml
+  echo "managerAuthority: $MANAGER_AUTHORITY" >> config-delegate.yml
 fi
 if ! `grep enablePerpetualTasks config-delegate.yml > /dev/null`; then
-  echo "enablePerpetualTasks : _enablePerpetualTasks_" >> config-delegate.yml
+  echo "enablePerpetualTasks: $ENABLE_PERPETUAL_TASKS" >> config-delegate.yml
 fi
 
 export HOSTNAME
