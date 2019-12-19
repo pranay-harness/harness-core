@@ -1,30 +1,41 @@
 package io.harness.rule;
 
+import static io.harness.waiter.TestNotifyEventListener.TEST_PUBLISHER;
+import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.harness.OrchestrationModule;
+import io.harness.config.PublisherConfiguration;
 import io.harness.factory.ClosingFactory;
+import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.QueryFactory;
+import io.harness.mongo.queue.QueueFactory;
 import io.harness.persistence.HPersistence;
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.harness.version.VersionInfoManager;
 import io.harness.version.VersionModule;
 import io.harness.waiter.NotifyEvent;
-import io.harness.waiter.NotifyEventListener;
 import io.harness.waiter.NotifyQueuePublisherRegister;
+import io.harness.waiter.TestNotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
@@ -39,8 +50,6 @@ import java.util.List;
 
 @Slf4j
 public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
-  public static final String TEST_PUBLISHER = "test";
-
   ClosingFactory closingFactory;
   private AdvancedDatastore datastore;
 
@@ -88,6 +97,16 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     });
 
     modules.add(new VersionModule());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      QueueConsumer<NotifyEvent> notifyQueueConsumer(
+          Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+        return QueueFactory.createQueueConsumer(injector, NotifyEvent.class, ofSeconds(5),
+            asList(asList(versionInfoManager.getVersionInfo().getVersion()), asList(TEST_PUBLISHER)), config);
+      }
+    });
+
     modules.add(new TimeModule());
     modules.addAll(new TestMongoModule(datastore, distributedLockSvc).cumulativeDependencies());
     modules.addAll(new OrchestrationModule().cumulativeDependencies());
@@ -105,13 +124,13 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     }
 
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(NotifyEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(TestNotifyEventListener.class), 1);
 
     final QueuePublisher<NotifyEvent> publisher =
         injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
-    notifyQueuePublisherRegister.register(TEST_PUBLISHER, publisher::send);
+    notifyQueuePublisherRegister.register(TEST_PUBLISHER, payload -> publisher.send(asList(TEST_PUBLISHER), payload));
   }
 
   @Override

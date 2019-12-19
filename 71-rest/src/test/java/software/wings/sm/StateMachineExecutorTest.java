@@ -34,7 +34,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.waiter.NotifyEventListener;
+import io.harness.waiter.OrchestrationNotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -69,7 +69,7 @@ import java.util.Map;
 /**
  * Created by rishi on 2/25/17.
  */
-@Listeners(NotifyEventListener.class)
+@Listeners(OrchestrationNotifyEventListener.class)
 @Slf4j
 public class StateMachineExecutorTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;

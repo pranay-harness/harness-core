@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.microservice.NotifyEngineTarget.GENERAL;
+import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
@@ -291,7 +291,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
       waitIds[i++] = waitId;
     }
 
-    waitNotifyEngine.waitForAllOn(GENERAL,
+    waitNotifyEngine.waitForAllOn(ORCHESTRATION,
         DataCollectionCallback.builder()
             .appId(context.getAppId())
             .stateExecutionId(context.getStateExecutionInstanceId())

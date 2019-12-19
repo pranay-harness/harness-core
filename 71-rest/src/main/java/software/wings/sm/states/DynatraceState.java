@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.microservice.NotifyEngineTarget.GENERAL;
+import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
@@ -137,7 +137,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
             .envId(envId)
             .infrastructureMappingId(infrastructureMappingId)
             .build();
-    waitNotifyEngine.waitForAllOn(GENERAL,
+    waitNotifyEngine.waitForAllOn(ORCHESTRATION,
         DataCollectionCallback.builder()
             .appId(context.getAppId())
             .stateExecutionId(context.getStateExecutionInstanceId())

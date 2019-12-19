@@ -4,6 +4,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.maintenance.MaintenanceController.forceMaintenance;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
+import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -51,9 +52,9 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
-import io.harness.waiter.NotifyEventListener;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
+import io.harness.waiter.OrchestrationNotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -70,6 +71,7 @@ import software.wings.WingsTestModule;
 import software.wings.app.AuthModule;
 import software.wings.app.CacheModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
+import software.wings.app.GeneralNotifyEventListener;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -339,12 +341,19 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
   private void registerListeners(java.util.Optional<Annotation> listenerOptional) {
     if (listenerOptional.isPresent()) {
       for (Class<? extends QueueListener> queueListenerClass : ((Listeners) listenerOptional.get()).value()) {
-        if (queueListenerClass.equals(NotifyEventListener.class)) {
+        if (queueListenerClass.equals(GeneralNotifyEventListener.class)) {
           final QueuePublisher<NotifyEvent> publisher =
               injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
           final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
               injector.getInstance(NotifyQueuePublisherRegister.class);
-          notifyQueuePublisherRegister.register(GENERAL, publisher::send);
+          notifyQueuePublisherRegister.register(GENERAL, payload -> publisher.send(asList(GENERAL), payload));
+        } else if (queueListenerClass.equals(OrchestrationNotifyEventListener.class)) {
+          final QueuePublisher<NotifyEvent> publisher =
+              injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
+          final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
+              injector.getInstance(NotifyQueuePublisherRegister.class);
+          notifyQueuePublisherRegister.register(
+              ORCHESTRATION, payload -> publisher.send(asList(ORCHESTRATION), payload));
         }
         injector.getInstance(QueueListenerController.class).register(injector.getInstance(queueListenerClass), 1);
       }

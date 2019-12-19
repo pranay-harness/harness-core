@@ -58,7 +58,6 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.waiter.NotifyEventListener;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,6 +74,7 @@ import org.mongodb.morphia.query.UpdateResults;
 import software.wings.WingsBaseTest;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.InstanceElement;
+import software.wings.app.GeneralNotifyEventListener;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.ApprovalDetails;
@@ -115,7 +115,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
-@Listeners(NotifyEventListener.class)
+@Listeners(GeneralNotifyEventListener.class)
 public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowExecutionService workflowExecutionService;
 

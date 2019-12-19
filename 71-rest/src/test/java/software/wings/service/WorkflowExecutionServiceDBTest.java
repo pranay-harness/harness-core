@@ -41,7 +41,6 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.waiter.NotifyEventListener;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,6 +49,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.jira.JiraExecutionData;
+import software.wings.app.GeneralNotifyEventListener;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
@@ -94,7 +94,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
-@Listeners(NotifyEventListener.class)
+@Listeners(GeneralNotifyEventListener.class)
 public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Inject private WorkflowExecutionService workflowExecutionService;
 

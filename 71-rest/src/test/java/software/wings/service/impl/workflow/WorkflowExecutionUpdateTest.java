@@ -30,7 +30,6 @@ import io.harness.event.listener.EventListener;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.waiter.NotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
@@ -39,6 +38,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.app.GeneralNotifyEventListener;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.User;
@@ -57,7 +57,7 @@ import java.time.Duration;
  * @author rktummala
  */
 @Slf4j
-@Listeners(NotifyEventListener.class)
+@Listeners(GeneralNotifyEventListener.class)
 public class WorkflowExecutionUpdateTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private PersistentLocker persistentLocker;

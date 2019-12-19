@@ -1,19 +1,15 @@
 package io.harness.waiter;
 
-import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
 
 import io.harness.config.PublisherConfiguration;
 import io.harness.govern.DependencyModule;
 import io.harness.mongo.queue.QueueFactory;
-import io.harness.queue.QueueConsumer;
-import io.harness.queue.QueueListener;
 import io.harness.queue.QueueModule;
 import io.harness.queue.QueuePublisher;
 import io.harness.version.VersionInfoManager;
@@ -38,17 +34,9 @@ public class WaiterModule extends DependencyModule {
         injector, NotifyEvent.class, asList(versionInfoManager.getVersionInfo().getVersion()), config);
   }
 
-  @Provides
-  @Singleton
-  QueueConsumer<NotifyEvent> notifyQueueConsumer(
-      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, NotifyEvent.class, ofSeconds(5),
-        asList(asList(versionInfoManager.getVersionInfo().getVersion())), config);
-  }
-
   @Override
   protected void configure() {
-    bind(new TypeLiteral<QueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
+    // nothing to do
   }
 
   @Override
