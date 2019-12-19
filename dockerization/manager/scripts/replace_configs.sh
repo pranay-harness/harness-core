@@ -199,6 +199,14 @@ if [[ "" != "$SEGMENT_APIKEY" ]]; then
   yq write -i $CONFIG_FILE segmentConfig.apiKey "$SEGMENT_APIKEY"
 fi
 
+if [[ "" != "$DATADOG_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE datadogConfig.enabled "$DATADOG_ENABLED"
+fi
+
+if [[ "" != "$DATADOG_APIKEY" ]]; then
+  yq write -i $CONFIG_FILE datadogConfig.apiKey "$DATADOG_APIKEY"
+fi
+
 if [[ "" != "$DELEGATE_DOCKER_IMAGE" ]]; then
   yq write -i $CONFIG_FILE portal.delegateDockerImage "$DELEGATE_DOCKER_IMAGE"
 fi
