@@ -334,6 +334,11 @@ public class UserResource {
   @ExceptionMetered
   @AuthRule(permissionType = USER_PERMISSION_MANAGEMENT)
   public RestResponse delete(@QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId) {
+    User user = userService.get(userId);
+    // If user doesn't exists, userService.get throws exception, so we don't have to handle it.
+    if (user.isImported()) {
+      throw new InvalidRequestException("Can not delete user added via SCIM", USER);
+    }
     userService.delete(accountId, userId);
     return new RestResponse();
   }

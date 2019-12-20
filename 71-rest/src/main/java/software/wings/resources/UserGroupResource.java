@@ -11,6 +11,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -267,6 +268,12 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<Boolean> delete(
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId) {
+    UserGroup userGroup = userGroupService.get(accountId, userGroupId);
+    if (userGroup == null) {
+      throw new InvalidRequestException("UserGroup Doesn't Exists", WingsException.GROUP);
+    } else if (userGroup.isImportedByScim()) {
+      throw new InvalidRequestException("Cannot Delete Group Imported From SCIM", WingsException.GROUP);
+    }
     return new RestResponse<>(userGroupService.delete(accountId, userGroupId, false));
   }
 
