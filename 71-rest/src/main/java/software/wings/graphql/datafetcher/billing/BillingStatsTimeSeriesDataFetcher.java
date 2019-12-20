@@ -52,12 +52,11 @@ public class BillingStatsTimeSeriesDataFetcher
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria) {
+    if (!timeScaleDBService.isValid()) {
+      throw new InvalidRequestException("Cannot process request in BillingStatsTimeSeriesDataFetcher");
+    }
     try {
-      if (timeScaleDBService.isValid()) {
-        return getData(accountId, filters, aggregateFunction, groupBy, sortCriteria);
-      } else {
-        throw new InvalidRequestException("Cannot process request in BillingStatsTimeSeriesDataFetcher");
-      }
+      return getData(accountId, filters, aggregateFunction, groupBy, sortCriteria);
     } catch (Exception e) {
       throw new InvalidRequestException("Error while fetching billing data {}", e);
     }
@@ -80,7 +79,7 @@ public class BillingStatsTimeSeriesDataFetcher
 
     queryData =
         billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, sortCriteria);
-    logger.info("BillingStatsTimeSeriesDataFetcher query!! {}", queryData.getQuery());
+    logger.info("BillingStatsTimeSeriesDataFetcher query: {}", queryData.getQuery());
     logger.info(queryData.getQuery());
 
     try (Connection connection = timeScaleDBService.getDBConnection();
