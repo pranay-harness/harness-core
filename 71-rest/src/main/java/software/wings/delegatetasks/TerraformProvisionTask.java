@@ -86,7 +86,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final String TERRAFORM_INTERNAL_FOLDER = ".terraform";
   private static final long RESOURCE_READY_WAIT_TIME_SECONDS = 15;
   private static final String VAR_FILE_FORMAT = " -var-file=\"%s\" ";
-  private static final String TF_WORKING_DIR = "./terraform/${ACCOUNT_ID}/${ENTITY_ID}";
+  private static final String TF_WORKING_DIR = "./terraform-working-dir/${ACCOUNT_ID}/${ENTITY_ID}";
 
   @Inject private GitClient gitClient;
   @Inject private GitClientHelper gitClientHelper;
