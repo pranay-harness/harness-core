@@ -3706,6 +3706,715 @@ public final class LogMLAnalysisRecordProto {
     }
   }
 
+  public interface PatternOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:log.verification.Pattern)
+      com.google.protobuf.MessageOrBuilder {
+    /**
+     * <code>repeated int32 sequence = 1;</code>
+     */
+    java.util.List<java.lang.Integer> getSequenceList();
+    /**
+     * <code>repeated int32 sequence = 1;</code>
+     */
+    int getSequenceCount();
+    /**
+     * <code>repeated int32 sequence = 1;</code>
+     */
+    int getSequence(int index);
+
+    /**
+     * <code>repeated int64 timestamps = 2;</code>
+     */
+    java.util.List<java.lang.Long> getTimestampsList();
+    /**
+     * <code>repeated int64 timestamps = 2;</code>
+     */
+    int getTimestampsCount();
+    /**
+     * <code>repeated int64 timestamps = 2;</code>
+     */
+    long getTimestamps(int index);
+  }
+  /**
+   * Protobuf type {@code log.verification.Pattern}
+   */
+  public static final class Pattern extends com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:log.verification.Pattern)
+      PatternOrBuilder {
+    private static final long serialVersionUID = 0L;
+    // Use Pattern.newBuilder() to construct.
+    private Pattern(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private Pattern() {
+      sequence_ = emptyIntList();
+      timestamps_ = emptyLongList();
+    }
+
+    @java.
+    lang.Override
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Pattern(
+        com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 8: {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                sequence_ = newIntList();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              sequence_.addInt(input.readInt32());
+              break;
+            }
+            case 10: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000001) != 0) && input.getBytesUntilLimit() > 0) {
+                sequence_ = newIntList();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                sequence_.addInt(input.readInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            case 16: {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                timestamps_ = newLongList();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              timestamps_.addLong(input.readInt64());
+              break;
+            }
+            case 18: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000002) != 0) && input.getBytesUntilLimit() > 0) {
+                timestamps_ = newLongList();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                timestamps_.addLong(input.readInt64());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            default: {
+              if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          sequence_.makeImmutable(); // C
+        }
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
+          timestamps_.makeImmutable(); // C
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
+          .internal_static_log_verification_Pattern_descriptor;
+    }
+
+    @java.
+    lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
+      return software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
+          .internal_static_log_verification_Pattern_fieldAccessorTable.ensureFieldAccessorsInitialized(
+              software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.class,
+              software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.Builder.class);
+    }
+
+    public static final int SEQUENCE_FIELD_NUMBER = 1;
+    private com.google.protobuf.Internal.IntList sequence_;
+    /**
+     * <code>repeated int32 sequence = 1;</code>
+     */
+    public java.util.List<java.lang.Integer> getSequenceList() {
+      return sequence_;
+    }
+    /**
+     * <code>repeated int32 sequence = 1;</code>
+     */
+    public int getSequenceCount() {
+      return sequence_.size();
+    }
+    /**
+     * <code>repeated int32 sequence = 1;</code>
+     */
+    public int getSequence(int index) {
+      return sequence_.getInt(index);
+    }
+
+    public static final int TIMESTAMPS_FIELD_NUMBER = 2;
+    private com.google.protobuf.Internal.LongList timestamps_;
+    /**
+     * <code>repeated int64 timestamps = 2;</code>
+     */
+    public java.util.List<java.lang.Long> getTimestampsList() {
+      return timestamps_;
+    }
+    /**
+     * <code>repeated int64 timestamps = 2;</code>
+     */
+    public int getTimestampsCount() {
+      return timestamps_.size();
+    }
+    /**
+     * <code>repeated int64 timestamps = 2;</code>
+     */
+    public long getTimestamps(int index) {
+      return timestamps_.getLong(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1)
+        return true;
+      if (isInitialized == 0)
+        return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+      for (int i = 0; i < sequence_.size(); i++) {
+        output.writeInt32(1, sequence_.getInt(i));
+      }
+      for (int i = 0; i < timestamps_.size(); i++) {
+        output.writeInt64(2, timestamps_.getLong(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1)
+        return size;
+
+      size = 0;
+      {
+        int dataSize = 0;
+        for (int i = 0; i < sequence_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream.computeInt32SizeNoTag(sequence_.getInt(i));
+        }
+        size += dataSize;
+        size += 1 * getSequenceList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < timestamps_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream.computeInt64SizeNoTag(timestamps_.getLong(i));
+        }
+        size += dataSize;
+        size += 1 * getTimestampsList().size();
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+        return true;
+      }
+      if (!(obj instanceof software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern)) {
+        return super.equals(obj);
+      }
+      software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern other =
+          (software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern) obj;
+
+      if (!getSequenceList().equals(other.getSequenceList()))
+        return false;
+      if (!getTimestampsList().equals(other.getTimestampsList()))
+        return false;
+      if (!unknownFields.equals(other.unknownFields))
+        return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getSequenceCount() > 0) {
+        hash = (37 * hash) + SEQUENCE_FIELD_NUMBER;
+        hash = (53 * hash) + getSequenceList().hashCode();
+      }
+      if (getTimestampsCount() > 0) {
+        hash = (37 * hash) + TIMESTAMPS_FIELD_NUMBER;
+        hash = (53 * hash) + getTimestampsList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern parseFrom(
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern parseFrom(
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern parseFrom(
+        com.google.protobuf.ByteString data) throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern parseFrom(
+        com.google.protobuf.ByteString data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern parseFrom(
+        byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern parseFrom(
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern parseFrom(
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern
+    parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern
+    parseDelimitedFrom(java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern parseFrom(
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    }
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern parseFrom(
+        com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code log.verification.Pattern}
+     */
+    public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:log.verification.Pattern)
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.PatternOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
+            .internal_static_log_verification_Pattern_descriptor;
+      }
+
+      @java.
+      lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
+        return software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
+            .internal_static_log_verification_Pattern_fieldAccessorTable.ensureFieldAccessorsInitialized(
+                software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.class,
+                software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.Builder.class);
+      }
+
+      // Construct using
+      // software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        sequence_ = emptyIntList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        timestamps_ = emptyLongList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.
+      lang.Override
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
+            .internal_static_log_verification_Pattern_descriptor;
+      }
+
+      @java.
+      lang.Override
+      public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern
+      getDefaultInstanceForType() {
+        return software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.getDefaultInstance();
+      }
+
+      @java.
+      lang.Override
+      public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern build() {
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.
+      lang.Override
+      public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern buildPartial() {
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern result =
+            new software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern(this);
+        int from_bitField0_ = bitField0_;
+        if (((bitField0_ & 0x00000001) != 0)) {
+          sequence_.makeImmutable();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.sequence_ = sequence_;
+        if (((bitField0_ & 0x00000002) != 0)) {
+          timestamps_.makeImmutable();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        }
+        result.timestamps_ = timestamps_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field, int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern) {
+          return mergeFrom((software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern) other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern other) {
+        if (other
+            == software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.getDefaultInstance())
+          return this;
+        if (!other.sequence_.isEmpty()) {
+          if (sequence_.isEmpty()) {
+            sequence_ = other.sequence_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensureSequenceIsMutable();
+            sequence_.addAll(other.sequence_);
+          }
+          onChanged();
+        }
+        if (!other.timestamps_.isEmpty()) {
+          if (timestamps_.isEmpty()) {
+            timestamps_ = other.timestamps_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureTimestampsIsMutable();
+            timestamps_.addAll(other.timestamps_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
+        software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern)
+                              e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.Internal.IntList sequence_ = emptyIntList();
+      private void ensureSequenceIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          sequence_ = mutableCopy(sequence_);
+          bitField0_ |= 0x00000001;
+        }
+      }
+      /**
+       * <code>repeated int32 sequence = 1;</code>
+       */
+      public java.util.List<java.lang.Integer> getSequenceList() {
+        return ((bitField0_ & 0x00000001) != 0) ? java.util.Collections.unmodifiableList(sequence_) : sequence_;
+      }
+      /**
+       * <code>repeated int32 sequence = 1;</code>
+       */
+      public int getSequenceCount() {
+        return sequence_.size();
+      }
+      /**
+       * <code>repeated int32 sequence = 1;</code>
+       */
+      public int getSequence(int index) {
+        return sequence_.getInt(index);
+      }
+      /**
+       * <code>repeated int32 sequence = 1;</code>
+       */
+      public Builder setSequence(int index, int value) {
+        ensureSequenceIsMutable();
+        sequence_.setInt(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 sequence = 1;</code>
+       */
+      public Builder addSequence(int value) {
+        ensureSequenceIsMutable();
+        sequence_.addInt(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 sequence = 1;</code>
+       */
+      public Builder addAllSequence(java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensureSequenceIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, sequence_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 sequence = 1;</code>
+       */
+      public Builder clearSequence() {
+        sequence_ = emptyIntList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.Internal.LongList timestamps_ = emptyLongList();
+      private void ensureTimestampsIsMutable() {
+        if (!((bitField0_ & 0x00000002) != 0)) {
+          timestamps_ = mutableCopy(timestamps_);
+          bitField0_ |= 0x00000002;
+        }
+      }
+      /**
+       * <code>repeated int64 timestamps = 2;</code>
+       */
+      public java.util.List<java.lang.Long> getTimestampsList() {
+        return ((bitField0_ & 0x00000002) != 0) ? java.util.Collections.unmodifiableList(timestamps_) : timestamps_;
+      }
+      /**
+       * <code>repeated int64 timestamps = 2;</code>
+       */
+      public int getTimestampsCount() {
+        return timestamps_.size();
+      }
+      /**
+       * <code>repeated int64 timestamps = 2;</code>
+       */
+      public long getTimestamps(int index) {
+        return timestamps_.getLong(index);
+      }
+      /**
+       * <code>repeated int64 timestamps = 2;</code>
+       */
+      public Builder setTimestamps(int index, long value) {
+        ensureTimestampsIsMutable();
+        timestamps_.setLong(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int64 timestamps = 2;</code>
+       */
+      public Builder addTimestamps(long value) {
+        ensureTimestampsIsMutable();
+        timestamps_.addLong(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int64 timestamps = 2;</code>
+       */
+      public Builder addAllTimestamps(java.lang.Iterable<? extends java.lang.Long> values) {
+        ensureTimestampsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, timestamps_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int64 timestamps = 2;</code>
+       */
+      public Builder clearTimestamps() {
+        timestamps_ = emptyLongList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+      // @@protoc_insertion_point(builder_scope:log.verification.Pattern)
+    }
+
+    // @@protoc_insertion_point(class_scope:log.verification.Pattern)
+    private static final software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
+        .Pattern DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern();
+    }
+
+    public static software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern
+    getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated
+    public static final com.google.protobuf.Parser<Pattern> PARSER = new com.google.protobuf.AbstractParser<Pattern>() {
+      @java.lang.Override
+      public Pattern parsePartialFrom(
+          com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Pattern(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Pattern> parser() {
+      return PARSER;
+    }
+
+    @java.
+    lang.Override
+    public com.google.protobuf.Parser<Pattern> getParserForType() {
+      return PARSER;
+    }
+
+    @java.
+    lang.Override
+    public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern
+    getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+  }
+
   public interface FrequencyPatternOrBuilder extends
       // @@protoc_insertion_point(interface_extends:log.verification.FrequencyPattern)
       com.google.protobuf.MessageOrBuilder {
@@ -3732,30 +4441,29 @@ public final class LogMLAnalysisRecordProto {
     com.google.protobuf.ByteString getTextBytes();
 
     /**
-     * <code>repeated int32 sequence = 3;</code>
+     * <code>repeated .log.verification.Pattern patterns = 3;</code>
      */
-    java.util.List<java.lang.Integer> getSequenceList();
+    java.util.List<software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern>
+    getPatternsList();
     /**
-     * <code>repeated int32 sequence = 3;</code>
+     * <code>repeated .log.verification.Pattern patterns = 3;</code>
      */
-    int getSequenceCount();
+    software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern getPatterns(int index);
     /**
-     * <code>repeated int32 sequence = 3;</code>
+     * <code>repeated .log.verification.Pattern patterns = 3;</code>
      */
-    int getSequence(int index);
-
+    int getPatternsCount();
     /**
-     * <code>repeated int64 timestamps = 4;</code>
+     * <code>repeated .log.verification.Pattern patterns = 3;</code>
      */
-    java.util.List<java.lang.Long> getTimestampsList();
+    java.util
+        .List<? extends software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.PatternOrBuilder>
+        getPatternsOrBuilderList();
     /**
-     * <code>repeated int64 timestamps = 4;</code>
+     * <code>repeated .log.verification.Pattern patterns = 3;</code>
      */
-    int getTimestampsCount();
-    /**
-     * <code>repeated int64 timestamps = 4;</code>
-     */
-    long getTimestamps(int index);
+    software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.PatternOrBuilder getPatternsOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code log.verification.FrequencyPattern}
@@ -3770,8 +4478,7 @@ public final class LogMLAnalysisRecordProto {
     }
     private FrequencyPattern() {
       text_ = "";
-      sequence_ = emptyIntList();
-      timestamps_ = emptyLongList();
+      patterns_ = java.util.Collections.emptyList();
     }
 
     @java.
@@ -3807,46 +4514,15 @@ public final class LogMLAnalysisRecordProto {
               text_ = bs;
               break;
             }
-            case 24: {
-              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
-                sequence_ = newIntList();
-                mutable_bitField0_ |= 0x00000004;
-              }
-              sequence_.addInt(input.readInt32());
-              break;
-            }
             case 26: {
-              int length = input.readRawVarint32();
-              int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000004) != 0) && input.getBytesUntilLimit() > 0) {
-                sequence_ = newIntList();
+              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+                patterns_ = new java.util.ArrayList<
+                    software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern>();
                 mutable_bitField0_ |= 0x00000004;
               }
-              while (input.getBytesUntilLimit() > 0) {
-                sequence_.addInt(input.readInt32());
-              }
-              input.popLimit(limit);
-              break;
-            }
-            case 32: {
-              if (!((mutable_bitField0_ & 0x00000008) != 0)) {
-                timestamps_ = newLongList();
-                mutable_bitField0_ |= 0x00000008;
-              }
-              timestamps_.addLong(input.readInt64());
-              break;
-            }
-            case 34: {
-              int length = input.readRawVarint32();
-              int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000008) != 0) && input.getBytesUntilLimit() > 0) {
-                timestamps_ = newLongList();
-                mutable_bitField0_ |= 0x00000008;
-              }
-              while (input.getBytesUntilLimit() > 0) {
-                timestamps_.addLong(input.readInt64());
-              }
-              input.popLimit(limit);
+              patterns_.add(input.readMessage(
+                  software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.PARSER,
+                  extensionRegistry));
               break;
             }
             default: {
@@ -3863,10 +4539,7 @@ public final class LogMLAnalysisRecordProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000004) != 0)) {
-          sequence_.makeImmutable(); // C
-        }
-        if (((mutable_bitField0_ & 0x00000008) != 0)) {
-          timestamps_.makeImmutable(); // C
+          patterns_ = java.util.Collections.unmodifiableList(patterns_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -3941,46 +4614,42 @@ public final class LogMLAnalysisRecordProto {
       }
     }
 
-    public static final int SEQUENCE_FIELD_NUMBER = 3;
-    private com.google.protobuf.Internal.IntList sequence_;
+    public static final int PATTERNS_FIELD_NUMBER = 3;
+    private java.util
+        .List<software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern> patterns_;
     /**
-     * <code>repeated int32 sequence = 3;</code>
+     * <code>repeated .log.verification.Pattern patterns = 3;</code>
      */
-    public java.util.List<java.lang.Integer> getSequenceList() {
-      return sequence_;
+    public java.util.List<software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern>
+    getPatternsList() {
+      return patterns_;
     }
     /**
-     * <code>repeated int32 sequence = 3;</code>
+     * <code>repeated .log.verification.Pattern patterns = 3;</code>
      */
-    public int getSequenceCount() {
-      return sequence_.size();
+    public java.util
+        .List<? extends software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.PatternOrBuilder>
+        getPatternsOrBuilderList() {
+      return patterns_;
     }
     /**
-     * <code>repeated int32 sequence = 3;</code>
+     * <code>repeated .log.verification.Pattern patterns = 3;</code>
      */
-    public int getSequence(int index) {
-      return sequence_.getInt(index);
-    }
-
-    public static final int TIMESTAMPS_FIELD_NUMBER = 4;
-    private com.google.protobuf.Internal.LongList timestamps_;
-    /**
-     * <code>repeated int64 timestamps = 4;</code>
-     */
-    public java.util.List<java.lang.Long> getTimestampsList() {
-      return timestamps_;
+    public int getPatternsCount() {
+      return patterns_.size();
     }
     /**
-     * <code>repeated int64 timestamps = 4;</code>
+     * <code>repeated .log.verification.Pattern patterns = 3;</code>
      */
-    public int getTimestampsCount() {
-      return timestamps_.size();
+    public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern getPatterns(int index) {
+      return patterns_.get(index);
     }
     /**
-     * <code>repeated int64 timestamps = 4;</code>
+     * <code>repeated .log.verification.Pattern patterns = 3;</code>
      */
-    public long getTimestamps(int index) {
-      return timestamps_.getLong(index);
+    public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.PatternOrBuilder
+    getPatternsOrBuilder(int index) {
+      return patterns_.get(index);
     }
 
     private byte memoizedIsInitialized = -1;
@@ -4012,11 +4681,8 @@ public final class LogMLAnalysisRecordProto {
       if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, text_);
       }
-      for (int i = 0; i < sequence_.size(); i++) {
-        output.writeInt32(3, sequence_.getInt(i));
-      }
-      for (int i = 0; i < timestamps_.size(); i++) {
-        output.writeInt64(4, timestamps_.getLong(i));
+      for (int i = 0; i < patterns_.size(); i++) {
+        output.writeMessage(3, patterns_.get(i));
       }
       unknownFields.writeTo(output);
     }
@@ -4034,21 +4700,8 @@ public final class LogMLAnalysisRecordProto {
       if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, text_);
       }
-      {
-        int dataSize = 0;
-        for (int i = 0; i < sequence_.size(); i++) {
-          dataSize += com.google.protobuf.CodedOutputStream.computeInt32SizeNoTag(sequence_.getInt(i));
-        }
-        size += dataSize;
-        size += 1 * getSequenceList().size();
-      }
-      {
-        int dataSize = 0;
-        for (int i = 0; i < timestamps_.size(); i++) {
-          dataSize += com.google.protobuf.CodedOutputStream.computeInt64SizeNoTag(timestamps_.getLong(i));
-        }
-        size += dataSize;
-        size += 1 * getTimestampsList().size();
+      for (int i = 0; i < patterns_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, patterns_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -4080,9 +4733,7 @@ public final class LogMLAnalysisRecordProto {
         if (!getText().equals(other.getText()))
           return false;
       }
-      if (!getSequenceList().equals(other.getSequenceList()))
-        return false;
-      if (!getTimestampsList().equals(other.getTimestampsList()))
+      if (!getPatternsList().equals(other.getPatternsList()))
         return false;
       if (!unknownFields.equals(other.unknownFields))
         return false;
@@ -4104,13 +4755,9 @@ public final class LogMLAnalysisRecordProto {
         hash = (37 * hash) + TEXT_FIELD_NUMBER;
         hash = (53 * hash) + getText().hashCode();
       }
-      if (getSequenceCount() > 0) {
-        hash = (37 * hash) + SEQUENCE_FIELD_NUMBER;
-        hash = (53 * hash) + getSequenceList().hashCode();
-      }
-      if (getTimestampsCount() > 0) {
-        hash = (37 * hash) + TIMESTAMPS_FIELD_NUMBER;
-        hash = (53 * hash) + getTimestampsList().hashCode();
+      if (getPatternsCount() > 0) {
+        hash = (37 * hash) + PATTERNS_FIELD_NUMBER;
+        hash = (53 * hash) + getPatternsList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -4226,6 +4873,7 @@ public final class LogMLAnalysisRecordProto {
       }
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+          getPatternsFieldBuilder();
         }
       }
       @java.lang.Override
@@ -4235,10 +4883,12 @@ public final class LogMLAnalysisRecordProto {
         bitField0_ = (bitField0_ & ~0x00000001);
         text_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
-        sequence_ = emptyIntList();
-        bitField0_ = (bitField0_ & ~0x00000004);
-        timestamps_ = emptyLongList();
-        bitField0_ = (bitField0_ & ~0x00000008);
+        if (patternsBuilder_ == null) {
+          patterns_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        } else {
+          patternsBuilder_.clear();
+        }
         return this;
       }
 
@@ -4284,16 +4934,15 @@ public final class LogMLAnalysisRecordProto {
           to_bitField0_ |= 0x00000002;
         }
         result.text_ = text_;
-        if (((bitField0_ & 0x00000004) != 0)) {
-          sequence_.makeImmutable();
-          bitField0_ = (bitField0_ & ~0x00000004);
+        if (patternsBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) != 0)) {
+            patterns_ = java.util.Collections.unmodifiableList(patterns_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.patterns_ = patterns_;
+        } else {
+          result.patterns_ = patternsBuilder_.build();
         }
-        result.sequence_ = sequence_;
-        if (((bitField0_ & 0x00000008) != 0)) {
-          timestamps_.makeImmutable();
-          bitField0_ = (bitField0_ & ~0x00000008);
-        }
-        result.timestamps_ = timestamps_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -4350,25 +4999,30 @@ public final class LogMLAnalysisRecordProto {
           text_ = other.text_;
           onChanged();
         }
-        if (!other.sequence_.isEmpty()) {
-          if (sequence_.isEmpty()) {
-            sequence_ = other.sequence_;
-            bitField0_ = (bitField0_ & ~0x00000004);
-          } else {
-            ensureSequenceIsMutable();
-            sequence_.addAll(other.sequence_);
+        if (patternsBuilder_ == null) {
+          if (!other.patterns_.isEmpty()) {
+            if (patterns_.isEmpty()) {
+              patterns_ = other.patterns_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensurePatternsIsMutable();
+              patterns_.addAll(other.patterns_);
+            }
+            onChanged();
           }
-          onChanged();
-        }
-        if (!other.timestamps_.isEmpty()) {
-          if (timestamps_.isEmpty()) {
-            timestamps_ = other.timestamps_;
-            bitField0_ = (bitField0_ & ~0x00000008);
-          } else {
-            ensureTimestampsIsMutable();
-            timestamps_.addAll(other.timestamps_);
+        } else {
+          if (!other.patterns_.isEmpty()) {
+            if (patternsBuilder_.isEmpty()) {
+              patternsBuilder_.dispose();
+              patternsBuilder_ = null;
+              patterns_ = other.patterns_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              patternsBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ? getPatternsFieldBuilder() : null;
+            } else {
+              patternsBuilder_.addAllMessages(other.patterns_);
+            }
           }
-          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -4508,128 +5162,257 @@ public final class LogMLAnalysisRecordProto {
         return this;
       }
 
-      private com.google.protobuf.Internal.IntList sequence_ = emptyIntList();
-      private void ensureSequenceIsMutable() {
+      private java.util
+          .List<software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern> patterns_ =
+          java.util.Collections.emptyList();
+      private void ensurePatternsIsMutable() {
         if (!((bitField0_ & 0x00000004) != 0)) {
-          sequence_ = mutableCopy(sequence_);
+          patterns_ =
+              new java.util
+                  .ArrayList<software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern>(
+                      patterns_);
           bitField0_ |= 0x00000004;
         }
       }
-      /**
-       * <code>repeated int32 sequence = 3;</code>
-       */
-      public java.util.List<java.lang.Integer> getSequenceList() {
-        return ((bitField0_ & 0x00000004) != 0) ? java.util.Collections.unmodifiableList(sequence_) : sequence_;
-      }
-      /**
-       * <code>repeated int32 sequence = 3;</code>
-       */
-      public int getSequenceCount() {
-        return sequence_.size();
-      }
-      /**
-       * <code>repeated int32 sequence = 3;</code>
-       */
-      public int getSequence(int index) {
-        return sequence_.getInt(index);
-      }
-      /**
-       * <code>repeated int32 sequence = 3;</code>
-       */
-      public Builder setSequence(int index, int value) {
-        ensureSequenceIsMutable();
-        sequence_.setInt(index, value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated int32 sequence = 3;</code>
-       */
-      public Builder addSequence(int value) {
-        ensureSequenceIsMutable();
-        sequence_.addInt(value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated int32 sequence = 3;</code>
-       */
-      public Builder addAllSequence(java.lang.Iterable<? extends java.lang.Integer> values) {
-        ensureSequenceIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, sequence_);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated int32 sequence = 3;</code>
-       */
-      public Builder clearSequence() {
-        sequence_ = emptyIntList();
-        bitField0_ = (bitField0_ & ~0x00000004);
-        onChanged();
-        return this;
-      }
 
-      private com.google.protobuf.Internal.LongList timestamps_ = emptyLongList();
-      private void ensureTimestampsIsMutable() {
-        if (!((bitField0_ & 0x00000008) != 0)) {
-          timestamps_ = mutableCopy(timestamps_);
-          bitField0_ |= 0x00000008;
+      private com.google.protobuf
+          .RepeatedFieldBuilderV3<software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern,
+              software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.Builder,
+              software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.PatternOrBuilder>
+              patternsBuilder_;
+
+      /**
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
+       */
+      public java.util.List<software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern>
+      getPatternsList() {
+        if (patternsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(patterns_);
+        } else {
+          return patternsBuilder_.getMessageList();
         }
       }
       /**
-       * <code>repeated int64 timestamps = 4;</code>
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
        */
-      public java.util.List<java.lang.Long> getTimestampsList() {
-        return ((bitField0_ & 0x00000008) != 0) ? java.util.Collections.unmodifiableList(timestamps_) : timestamps_;
+      public int getPatternsCount() {
+        if (patternsBuilder_ == null) {
+          return patterns_.size();
+        } else {
+          return patternsBuilder_.getCount();
+        }
       }
       /**
-       * <code>repeated int64 timestamps = 4;</code>
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
        */
-      public int getTimestampsCount() {
-        return timestamps_.size();
+      public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern getPatterns(
+          int index) {
+        if (patternsBuilder_ == null) {
+          return patterns_.get(index);
+        } else {
+          return patternsBuilder_.getMessage(index);
+        }
       }
       /**
-       * <code>repeated int64 timestamps = 4;</code>
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
        */
-      public long getTimestamps(int index) {
-        return timestamps_.getLong(index);
-      }
-      /**
-       * <code>repeated int64 timestamps = 4;</code>
-       */
-      public Builder setTimestamps(int index, long value) {
-        ensureTimestampsIsMutable();
-        timestamps_.setLong(index, value);
-        onChanged();
+      public Builder setPatterns(
+          int index, software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern value) {
+        if (patternsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePatternsIsMutable();
+          patterns_.set(index, value);
+          onChanged();
+        } else {
+          patternsBuilder_.setMessage(index, value);
+        }
         return this;
       }
       /**
-       * <code>repeated int64 timestamps = 4;</code>
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
        */
-      public Builder addTimestamps(long value) {
-        ensureTimestampsIsMutable();
-        timestamps_.addLong(value);
-        onChanged();
+      public Builder setPatterns(int index,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.Builder builderForValue) {
+        if (patternsBuilder_ == null) {
+          ensurePatternsIsMutable();
+          patterns_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          patternsBuilder_.setMessage(index, builderForValue.build());
+        }
         return this;
       }
       /**
-       * <code>repeated int64 timestamps = 4;</code>
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
        */
-      public Builder addAllTimestamps(java.lang.Iterable<? extends java.lang.Long> values) {
-        ensureTimestampsIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, timestamps_);
-        onChanged();
+      public Builder addPatterns(
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern value) {
+        if (patternsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePatternsIsMutable();
+          patterns_.add(value);
+          onChanged();
+        } else {
+          patternsBuilder_.addMessage(value);
+        }
         return this;
       }
       /**
-       * <code>repeated int64 timestamps = 4;</code>
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
        */
-      public Builder clearTimestamps() {
-        timestamps_ = emptyLongList();
-        bitField0_ = (bitField0_ & ~0x00000008);
-        onChanged();
+      public Builder addPatterns(
+          int index, software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern value) {
+        if (patternsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePatternsIsMutable();
+          patterns_.add(index, value);
+          onChanged();
+        } else {
+          patternsBuilder_.addMessage(index, value);
+        }
         return this;
+      }
+      /**
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
+       */
+      public Builder addPatterns(
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.Builder builderForValue) {
+        if (patternsBuilder_ == null) {
+          ensurePatternsIsMutable();
+          patterns_.add(builderForValue.build());
+          onChanged();
+        } else {
+          patternsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
+       */
+      public Builder addPatterns(int index,
+          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.Builder builderForValue) {
+        if (patternsBuilder_ == null) {
+          ensurePatternsIsMutable();
+          patterns_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          patternsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
+       */
+      public Builder addAllPatterns(java.lang.Iterable<? extends software.wings.service.impl.verification.generated
+                                                                     .LogMLAnalysisRecordProto.Pattern> values) {
+        if (patternsBuilder_ == null) {
+          ensurePatternsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, patterns_);
+          onChanged();
+        } else {
+          patternsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
+       */
+      public Builder clearPatterns() {
+        if (patternsBuilder_ == null) {
+          patterns_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          patternsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
+       */
+      public Builder removePatterns(int index) {
+        if (patternsBuilder_ == null) {
+          ensurePatternsIsMutable();
+          patterns_.remove(index);
+          onChanged();
+        } else {
+          patternsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
+       */
+      public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.Builder
+      getPatternsBuilder(int index) {
+        return getPatternsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
+       */
+      public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.PatternOrBuilder
+      getPatternsOrBuilder(int index) {
+        if (patternsBuilder_ == null) {
+          return patterns_.get(index);
+        } else {
+          return patternsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
+       */
+      public java.util
+          .List<? extends software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.PatternOrBuilder>
+          getPatternsOrBuilderList() {
+        if (patternsBuilder_ != null) {
+          return patternsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(patterns_);
+        }
+      }
+      /**
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
+       */
+      public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.Builder
+      addPatternsBuilder() {
+        return getPatternsFieldBuilder().addBuilder(
+            software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
+       */
+      public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.Builder
+      addPatternsBuilder(int index) {
+        return getPatternsFieldBuilder().addBuilder(index,
+            software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .log.verification.Pattern patterns = 3;</code>
+       */
+      public java.util.List<software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.Builder>
+      getPatternsBuilderList() {
+        return getPatternsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf
+          .RepeatedFieldBuilderV3<software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern,
+              software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.Builder,
+              software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.PatternOrBuilder>
+          getPatternsFieldBuilder() {
+        if (patternsBuilder_ == null) {
+          patternsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern,
+              software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.Pattern.Builder,
+              software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.PatternOrBuilder>(
+              patterns_, ((bitField0_ & 0x00000004) != 0), getParentForChildren(), isClean());
+          patterns_ = null;
+        }
+        return patternsBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -10537,6 +11320,9 @@ public final class LogMLAnalysisRecordProto {
       .Descriptor internal_static_log_verification_LogAnalysisCluster_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_log_verification_LogAnalysisCluster_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor internal_static_log_verification_Pattern_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_log_verification_Pattern_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors
       .Descriptor internal_static_log_verification_FrequencyPattern_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3
@@ -10612,61 +11398,62 @@ public final class LogMLAnalysisRecordProto {
         + "\010priority\030\r \001(\t\022\014\n\004tags\030\024 \003(\t\022\030\n\020anomalo"
         + "us_counts\030\025 \003(\005\022\021\n\tdiff_tags\030\026 \003(\t\022J\n\023me"
         + "ssage_frequencies\030\027 \003(\0132-.log.verificati"
-        + "on.LogAnalysisMessageFrequency\"U\n\020Freque"
-        + "ncyPattern\022\r\n\005label\030\001 \002(\005\022\014\n\004text\030\002 \002(\t\022"
-        + "\020\n\010sequence\030\003 \003(\005\022\022\n\ntimestamps\030\004 \003(\003\"=\n"
-        + "\021LogAnalysisResult\022\r\n\005label\030\001 \002(\005\022\013\n\003tag"
-        + "\030\002 \002(\t\022\014\n\004text\030\003 \002(\t\"Y\n\026LogAnalysisClust"
-        + "erList\022?\n\021analysis_clusters\030\001 \003(\0132$.log."
-        + "verification.LogAnalysisCluster\"\332\001\n\025LogA"
-        + "nalysisClusterMap\022_\n\025analysis_clusters_m"
-        + "ap\030\001 \003(\0132@.log.verification.LogAnalysisC"
-        + "lusterMap.AnalysisClustersMapEntry\032`\n\030An"
-        + "alysisClustersMapEntry\022\013\n\003key\030\001 \001(\t\0223\n\005v"
-        + "alue\030\002 \001(\0132$.log.verification.LogAnalysi"
-        + "sCluster:\0028\001\"\263\014\n\032LogMLAnalysisRecordDeta"
-        + "ils\022@\n\016unknown_events\030\001 \003(\0132(.log.verifi"
-        + "cation.LogAnalysisClusterList\022Q\n\013test_ev"
-        + "ents\030\002 \003(\0132<.log.verification.LogMLAnaly"
-        + "sisRecordDetails.TestEventsEntry\022W\n\016cont"
-        + "rol_events\030\003 \003(\0132?.log.verification.LogM"
-        + "LAnalysisRecordDetails.ControlEventsEntr"
-        + "y\022[\n\020control_clusters\030\004 \003(\0132A.log.verifi"
-        + "cation.LogMLAnalysisRecordDetails.Contro"
-        + "lClustersEntry\022[\n\020unknown_clusters\030\005 \003(\013"
-        + "2A.log.verification.LogMLAnalysisRecordD"
-        + "etails.UnknownClustersEntry\022U\n\rtest_clus"
-        + "ters\030\006 \003(\0132>.log.verification.LogMLAnaly"
-        + "sisRecordDetails.TestClustersEntry\022Y\n\017ig"
-        + "nore_clusters\030\007 \003(\0132@.log.verification.L"
-        + "ogMLAnalysisRecordDetails.IgnoreClusters"
-        + "Entry\022_\n\022frequency_patterns\030\010 \003(\0132C.log."
-        + "verification.LogMLAnalysisRecordDetails."
-        + "FrequencyPatternsEntry\022`\n\023log_analysis_r"
-        + "esult\030\t \003(\0132C.log.verification.LogMLAnal"
-        + "ysisRecordDetails.LogAnalysisResultEntry"
-        + "\032[\n\017TestEventsEntry\022\013\n\003key\030\001 \001(\t\0227\n\005valu"
-        + "e\030\002 \001(\0132(.log.verification.LogAnalysisCl"
-        + "usterList:\0028\001\032^\n\022ControlEventsEntry\022\013\n\003k"
+        + "on.LogAnalysisMessageFrequency\"/\n\007Patter"
+        + "n\022\020\n\010sequence\030\001 \003(\005\022\022\n\ntimestamps\030\002 \003(\003\""
+        + "\\\n\020FrequencyPattern\022\r\n\005label\030\001 \002(\005\022\014\n\004te"
+        + "xt\030\002 \002(\t\022+\n\010patterns\030\003 \003(\0132\031.log.verific"
+        + "ation.Pattern\"=\n\021LogAnalysisResult\022\r\n\005la"
+        + "bel\030\001 \002(\005\022\013\n\003tag\030\002 \002(\t\022\014\n\004text\030\003 \002(\t\"Y\n\026"
+        + "LogAnalysisClusterList\022?\n\021analysis_clust"
+        + "ers\030\001 \003(\0132$.log.verification.LogAnalysis"
+        + "Cluster\"\332\001\n\025LogAnalysisClusterMap\022_\n\025ana"
+        + "lysis_clusters_map\030\001 \003(\0132@.log.verificat"
+        + "ion.LogAnalysisClusterMap.AnalysisCluste"
+        + "rsMapEntry\032`\n\030AnalysisClustersMapEntry\022\013"
+        + "\n\003key\030\001 \001(\t\0223\n\005value\030\002 \001(\0132$.log.verific"
+        + "ation.LogAnalysisCluster:\0028\001\"\263\014\n\032LogMLAn"
+        + "alysisRecordDetails\022@\n\016unknown_events\030\001 "
+        + "\003(\0132(.log.verification.LogAnalysisCluste"
+        + "rList\022Q\n\013test_events\030\002 \003(\0132<.log.verific"
+        + "ation.LogMLAnalysisRecordDetails.TestEve"
+        + "ntsEntry\022W\n\016control_events\030\003 \003(\0132?.log.v"
+        + "erification.LogMLAnalysisRecordDetails.C"
+        + "ontrolEventsEntry\022[\n\020control_clusters\030\004 "
+        + "\003(\0132A.log.verification.LogMLAnalysisReco"
+        + "rdDetails.ControlClustersEntry\022[\n\020unknow"
+        + "n_clusters\030\005 \003(\0132A.log.verification.LogM"
+        + "LAnalysisRecordDetails.UnknownClustersEn"
+        + "try\022U\n\rtest_clusters\030\006 \003(\0132>.log.verific"
+        + "ation.LogMLAnalysisRecordDetails.TestClu"
+        + "stersEntry\022Y\n\017ignore_clusters\030\007 \003(\0132@.lo"
+        + "g.verification.LogMLAnalysisRecordDetail"
+        + "s.IgnoreClustersEntry\022_\n\022frequency_patte"
+        + "rns\030\010 \003(\0132C.log.verification.LogMLAnalys"
+        + "isRecordDetails.FrequencyPatternsEntry\022`"
+        + "\n\023log_analysis_result\030\t \003(\0132C.log.verifi"
+        + "cation.LogMLAnalysisRecordDetails.LogAna"
+        + "lysisResultEntry\032[\n\017TestEventsEntry\022\013\n\003k"
         + "ey\030\001 \001(\t\0227\n\005value\030\002 \001(\0132(.log.verificati"
-        + "on.LogAnalysisClusterList:\0028\001\032_\n\024Control"
-        + "ClustersEntry\022\013\n\003key\030\001 \001(\t\0226\n\005value\030\002 \001("
-        + "\0132\'.log.verification.LogAnalysisClusterM"
-        + "ap:\0028\001\032_\n\024UnknownClustersEntry\022\013\n\003key\030\001 "
-        + "\001(\t\0226\n\005value\030\002 \001(\0132\'.log.verification.Lo"
-        + "gAnalysisClusterMap:\0028\001\032\\\n\021TestClustersE"
-        + "ntry\022\013\n\003key\030\001 \001(\t\0226\n\005value\030\002 \001(\0132\'.log.v"
-        + "erification.LogAnalysisClusterMap:\0028\001\032^\n"
-        + "\023IgnoreClustersEntry\022\013\n\003key\030\001 \001(\t\0226\n\005val"
+        + "on.LogAnalysisClusterList:\0028\001\032^\n\022Control"
+        + "EventsEntry\022\013\n\003key\030\001 \001(\t\0227\n\005value\030\002 \001(\0132"
+        + "(.log.verification.LogAnalysisClusterLis"
+        + "t:\0028\001\032_\n\024ControlClustersEntry\022\013\n\003key\030\001 \001"
+        + "(\t\0226\n\005value\030\002 \001(\0132\'.log.verification.Log"
+        + "AnalysisClusterMap:\0028\001\032_\n\024UnknownCluster"
+        + "sEntry\022\013\n\003key\030\001 \001(\t\0226\n\005value\030\002 \001(\0132\'.log"
+        + ".verification.LogAnalysisClusterMap:\0028\001\032"
+        + "\\\n\021TestClustersEntry\022\013\n\003key\030\001 \001(\t\0226\n\005val"
         + "ue\030\002 \001(\0132\'.log.verification.LogAnalysisC"
-        + "lusterMap:\0028\001\032\\\n\026FrequencyPatternsEntry\022"
-        + "\013\n\003key\030\001 \001(\t\0221\n\005value\030\002 \001(\0132\".log.verifi"
-        + "cation.FrequencyPattern:\0028\001\032]\n\026LogAnalys"
-        + "isResultEntry\022\013\n\003key\030\001 \001(\t\0222\n\005value\030\002 \001("
-        + "\0132#.log.verification.LogAnalysisResult:\002"
-        + "8\001BN\n2software.wings.service.impl.verifi"
-        + "cation.generatedB\030LogMLAnalysisRecordPro"
-        + "to"};
+        + "lusterMap:\0028\001\032^\n\023IgnoreClustersEntry\022\013\n\003"
+        + "key\030\001 \001(\t\0226\n\005value\030\002 \001(\0132\'.log.verificat"
+        + "ion.LogAnalysisClusterMap:\0028\001\032\\\n\026Frequen"
+        + "cyPatternsEntry\022\013\n\003key\030\001 \001(\t\0221\n\005value\030\002 "
+        + "\001(\0132\".log.verification.FrequencyPattern:"
+        + "\0028\001\032]\n\026LogAnalysisResultEntry\022\013\n\003key\030\001 \001"
+        + "(\t\0222\n\005value\030\002 \001(\0132#.log.verification.Log"
+        + "AnalysisResult:\0028\001BN\n2software.wings.ser"
+        + "vice.impl.verification.generatedB\030LogMLA"
+        + "nalysisRecordProto"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -10710,17 +11497,24 @@ public final class LogMLAnalysisRecordProto {
                 "DiffTags",
                 "MessageFrequencies",
             });
-    internal_static_log_verification_FrequencyPattern_descriptor = getDescriptor().getMessageTypes().get(2);
+    internal_static_log_verification_Pattern_descriptor = getDescriptor().getMessageTypes().get(2);
+    internal_static_log_verification_Pattern_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_log_verification_Pattern_descriptor,
+            new java.lang.String[] {
+                "Sequence",
+                "Timestamps",
+            });
+    internal_static_log_verification_FrequencyPattern_descriptor = getDescriptor().getMessageTypes().get(3);
     internal_static_log_verification_FrequencyPattern_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_log_verification_FrequencyPattern_descriptor,
             new java.lang.String[] {
                 "Label",
                 "Text",
-                "Sequence",
-                "Timestamps",
+                "Patterns",
             });
-    internal_static_log_verification_LogAnalysisResult_descriptor = getDescriptor().getMessageTypes().get(3);
+    internal_static_log_verification_LogAnalysisResult_descriptor = getDescriptor().getMessageTypes().get(4);
     internal_static_log_verification_LogAnalysisResult_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_log_verification_LogAnalysisResult_descriptor,
@@ -10729,14 +11523,14 @@ public final class LogMLAnalysisRecordProto {
                 "Tag",
                 "Text",
             });
-    internal_static_log_verification_LogAnalysisClusterList_descriptor = getDescriptor().getMessageTypes().get(4);
+    internal_static_log_verification_LogAnalysisClusterList_descriptor = getDescriptor().getMessageTypes().get(5);
     internal_static_log_verification_LogAnalysisClusterList_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_log_verification_LogAnalysisClusterList_descriptor,
             new java.lang.String[] {
                 "AnalysisClusters",
             });
-    internal_static_log_verification_LogAnalysisClusterMap_descriptor = getDescriptor().getMessageTypes().get(5);
+    internal_static_log_verification_LogAnalysisClusterMap_descriptor = getDescriptor().getMessageTypes().get(6);
     internal_static_log_verification_LogAnalysisClusterMap_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_log_verification_LogAnalysisClusterMap_descriptor,
@@ -10752,7 +11546,7 @@ public final class LogMLAnalysisRecordProto {
                 "Key",
                 "Value",
             });
-    internal_static_log_verification_LogMLAnalysisRecordDetails_descriptor = getDescriptor().getMessageTypes().get(6);
+    internal_static_log_verification_LogMLAnalysisRecordDetails_descriptor = getDescriptor().getMessageTypes().get(7);
     internal_static_log_verification_LogMLAnalysisRecordDetails_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_log_verification_LogMLAnalysisRecordDetails_descriptor,
