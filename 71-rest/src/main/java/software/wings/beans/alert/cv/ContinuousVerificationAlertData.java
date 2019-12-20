@@ -47,8 +47,8 @@ public class ContinuousVerificationAlertData implements AlertData {
       case TIME_SERIES:
         switch (alertStatus) {
           case Open:
-            // if its been less than an hour since alert opened, don't open another alert
-            if (analysisEndTime - other.analysisEndTime < TimeUnit.HOURS.toMillis(1)) {
+            // if its been less than 4 hours since alert opened, don't open another alert
+            if (analysisEndTime - other.analysisEndTime < TimeUnit.HOURS.toMillis(4)) {
               return true;
             }
             return false;

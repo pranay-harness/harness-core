@@ -45,6 +45,7 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeries;
+import software.wings.service.impl.analysis.TimeSeriesKeyTransactions;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
@@ -845,8 +846,8 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     Map<String, String> metricTxnMap = cvConfigurationService.getTxnMetricPairsForAPMCVConfig(cvConfigId);
     assertThat(metricTxnMap).isNotEmpty();
     assertThat(metricTxnMap.size()).isEqualTo(1);
-    assertThat(metricTxnMap.containsKey("metricName")).isTrue();
-    assertThat(metricTxnMap.get("metricName")).isEqualTo("myhardcodedtxnName");
+    assertThat(metricTxnMap.containsKey("metricName,INFRA")).isTrue();
+    assertThat(metricTxnMap.get("metricName,INFRA")).isEqualTo("myhardcodedtxnName");
   }
 
   @Test
@@ -867,6 +868,96 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   public void testGetMetricTxnCombinationBadCvConfigId() throws Exception {
     Map<String, String> metricTxnMap = cvConfigurationService.getTxnMetricPairsForAPMCVConfig(generateUuid());
     assertThat(metricTxnMap).isNull();
+  }
+
+  @Test(expected = VerificationOperationException.class)
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testSaveKeyTransactionsNullInput() throws Exception {
+    cvConfigurationService.saveKeyTransactionsForCVConfiguration(generateUuid(), null);
+  }
+
+  @Test(expected = VerificationOperationException.class)
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testSaveKeyTransactionsNullInputTransactions() throws Exception {
+    StackDriverMetricCVConfiguration cvConfiguration = createStackDriverConfig(accountId);
+    String cvConfigId = generateUuid();
+    cvConfiguration.setUuid(cvConfigId);
+    wingsPersistence.save(cvConfiguration);
+    cvConfigurationService.saveKeyTransactionsForCVConfiguration(cvConfigId, null);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testSaveKeyTransactionsHappyCase() throws Exception {
+    StackDriverMetricCVConfiguration cvConfiguration = createStackDriverConfig(accountId);
+    String cvConfigId = generateUuid();
+    cvConfiguration.setUuid(cvConfigId);
+    wingsPersistence.save(cvConfiguration);
+    boolean saved = cvConfigurationService.saveKeyTransactionsForCVConfiguration(
+        cvConfigId, Arrays.asList("transaction1", "tranasaction2"));
+    assertThat(saved).isTrue();
+    TimeSeriesKeyTransactions keyTxns = cvConfigurationService.getKeyTransactionsForCVConfiguration(cvConfigId);
+    assertThat(keyTxns).isNotNull();
+    assertThat(keyTxns.getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(keyTxns.getKeyTransactions().size()).isEqualTo(2);
+    assertThat(keyTxns.getKeyTransactions().containsAll(Arrays.asList("transaction1", "tranasaction2"))).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testSaveKeyTransactionsHappyCaseAddtoKeyTxns() throws Exception {
+    StackDriverMetricCVConfiguration cvConfiguration = createStackDriverConfig(accountId);
+    String cvConfigId = generateUuid();
+    cvConfiguration.setUuid(cvConfigId);
+    wingsPersistence.save(cvConfiguration);
+    boolean saved = cvConfigurationService.saveKeyTransactionsForCVConfiguration(
+        cvConfigId, Arrays.asList("transaction1", "transaction2"));
+    assertThat(saved).isTrue();
+    TimeSeriesKeyTransactions keyTxns = cvConfigurationService.getKeyTransactionsForCVConfiguration(cvConfigId);
+    assertThat(keyTxns).isNotNull();
+    assertThat(keyTxns.getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(keyTxns.getKeyTransactions().size()).isEqualTo(2);
+    assertThat(keyTxns.getKeyTransactions().containsAll(Arrays.asList("transaction1", "transaction2"))).isTrue();
+    saved = cvConfigurationService.addToKeyTransactionsForCVConfiguration(cvConfigId, Arrays.asList("transaction3"));
+
+    assertThat(saved).isTrue();
+    keyTxns = cvConfigurationService.getKeyTransactionsForCVConfiguration(cvConfigId);
+    assertThat(keyTxns).isNotNull();
+    assertThat(keyTxns.getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(keyTxns.getKeyTransactions().size()).isEqualTo(3);
+    assertThat(keyTxns.getKeyTransactions().containsAll(Arrays.asList("transaction1", "transaction2", "transaction3")))
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testRemoveFromKeyTransactionsHappyCase() throws Exception {
+    StackDriverMetricCVConfiguration cvConfiguration = createStackDriverConfig(accountId);
+    String cvConfigId = generateUuid();
+    cvConfiguration.setUuid(cvConfigId);
+    wingsPersistence.save(cvConfiguration);
+    boolean saved = cvConfigurationService.saveKeyTransactionsForCVConfiguration(
+        cvConfigId, Arrays.asList("transaction1", "transaction2"));
+    assertThat(saved).isTrue();
+    TimeSeriesKeyTransactions keyTxns = cvConfigurationService.getKeyTransactionsForCVConfiguration(cvConfigId);
+    assertThat(keyTxns).isNotNull();
+    assertThat(keyTxns.getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(keyTxns.getKeyTransactions().size()).isEqualTo(2);
+    assertThat(keyTxns.getKeyTransactions().containsAll(Arrays.asList("transaction1", "transaction2"))).isTrue();
+    saved =
+        cvConfigurationService.removeFromKeyTransactionsForCVConfiguration(cvConfigId, Arrays.asList("transaction2"));
+
+    assertThat(saved).isTrue();
+    keyTxns = cvConfigurationService.getKeyTransactionsForCVConfiguration(cvConfigId);
+    assertThat(keyTxns).isNotNull();
+    assertThat(keyTxns.getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(keyTxns.getKeyTransactions().size()).isEqualTo(1);
+    assertThat(keyTxns.getKeyTransactions().containsAll(Arrays.asList("transaction1"))).isTrue();
   }
 
   private APMCVServiceConfiguration createAPMCVConfig(boolean enabled24x7) {

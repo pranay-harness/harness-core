@@ -12,6 +12,7 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.DeploymentTimeSeriesAnalysis;
+import software.wings.service.impl.analysis.TimeSeriesKeyTransactions;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
@@ -116,6 +117,17 @@ public class TimeSeriesResource {
         appId, stateType, serviceId, cvConfigId, transactionName, groupName, timeSeriesMetricDefinition));
   }
 
+  @POST
+  @Path("/custom-threshold-list")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> saveCustomThresholdList(@QueryParam("accountId") String accountId,
+      @QueryParam("serviceId") String serviceId, @QueryParam("cvConfigId") String cvConfigId,
+      List<TimeSeriesMLTransactionThresholds> timeSeriesMLTransactionThresholds) {
+    return new RestResponse<>(
+        metricDataAnalysisService.saveCustomThreshold(serviceId, cvConfigId, timeSeriesMLTransactionThresholds));
+  }
+
   @GET
   @Path("/threshold")
   @Timed
@@ -169,5 +181,44 @@ public class TimeSeriesResource {
   public RestResponse<Map<String, String>> getTxnMetricPairsForAPMCVConfig(
       @QueryParam("accountId") String accountId, @QueryParam("cvConfigId") String cvConfigId) {
     return new RestResponse<>(cvConfigurationService.getTxnMetricPairsForAPMCVConfig(cvConfigId));
+  }
+
+  @POST
+  @Path("/key-transactions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> saveKeyTransactions(@QueryParam("accountId") String accountId,
+      @QueryParam("cvConfigId") String cvConfigId, List<String> transactionNames) {
+    return new RestResponse<>(
+        cvConfigurationService.saveKeyTransactionsForCVConfiguration(cvConfigId, transactionNames));
+  }
+
+  @POST
+  @Path("/add-to-key-transactions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> addToKeyTransactions(@QueryParam("accountId") String accountId,
+      @QueryParam("cvConfigId") String cvConfigId, List<String> transactionName) {
+    return new RestResponse<>(
+        cvConfigurationService.addToKeyTransactionsForCVConfiguration(cvConfigId, transactionName));
+  }
+
+  @POST
+  @Path("/remove-from-key-transactions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> removeFromKeyTransactions(@QueryParam("accountId") String accountId,
+      @QueryParam("cvConfigId") String cvConfigId, List<String> transactionName) {
+    return new RestResponse<>(
+        cvConfigurationService.removeFromKeyTransactionsForCVConfiguration(cvConfigId, transactionName));
+  }
+
+  @GET
+  @Path("/key-transactions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<TimeSeriesKeyTransactions> getKeyTransactions(
+      @QueryParam("accountId") String accountId, @QueryParam("cvConfigId") String cvConfigId) {
+    return new RestResponse<>(cvConfigurationService.getKeyTransactionsForCVConfiguration(cvConfigId));
   }
 }

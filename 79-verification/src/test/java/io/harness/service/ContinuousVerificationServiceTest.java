@@ -1193,8 +1193,15 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(alerts).hasSize(1);
     alerts.forEach(cvAlert -> assertThat(cvAlert.getStatus()).isEqualTo(AlertStatus.Open));
 
-    // diff minute after an hour should trigger an alert
+    // diff minute after an hour but within 4 hours should not throw an alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 80);
+    waitForAlert(1);
+    alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+    assertThat(alerts).hasSize(1);
+    alerts.forEach(cvAlert -> assertThat(cvAlert.getStatus()).isEqualTo(AlertStatus.Open));
+
+    // diff minute after 4 hours should trigger an alert
+    continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 250);
     waitForAlert(2);
 
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
