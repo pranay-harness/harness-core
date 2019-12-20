@@ -135,14 +135,16 @@ public class BuildSourceCallback implements NotifyCallback {
       List<Artifact> artifacts = processBuilds(artifactStream);
 
       if (artifacts.size() > MAX_ARTIFACTS_COLLECTION_FOR_WARN) {
-        logger.warn("Collected {} artifacts in single collection", artifacts.size());
+        logger.warn(
+            "Collected {} artifacts in single collection artifactStreamId:[{}]", artifacts.size(), artifactStreamId);
       }
       if (isNotEmpty(artifacts)) {
         artifacts.stream().limit(MAX_LOGS).forEach(artifact -> {
           try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
                AutoLogContext ignore2 = new ArtifactStreamLogContext(
                    artifactStream.getUuid(), artifactStream.getArtifactStreamType(), OVERRIDE_ERROR)) {
-            logger.info("Build number {} new artifacts collected", artifact.getBuildNo());
+            logger.info("Build number {} new artifacts collected artifactStreamId:[{}]", artifact.getBuildNo(),
+                artifactStreamId);
           }
         });
 
@@ -197,7 +199,8 @@ public class BuildSourceCallback implements NotifyCallback {
       artifactStreamService.updateFailedCronAttempts(
           artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts);
       logger.warn(
-          "ASYNC_ARTIFACT_COLLECTION: failed to fetch/process builds totalFailedAttempt:[{}]", failedCronAttempts);
+          "ASYNC_ARTIFACT_COLLECTION: failed to fetch/process builds totalFailedAttempt:[{}] artifactStreamId:[{}]",
+          failedCronAttempts, artifactStreamId);
       if (PermitServiceImpl.shouldSendAlert(failedCronAttempts)) {
         String appId = artifactStream.fetchAppId();
         if (!GLOBAL_APP_ID.equals(appId)) {
