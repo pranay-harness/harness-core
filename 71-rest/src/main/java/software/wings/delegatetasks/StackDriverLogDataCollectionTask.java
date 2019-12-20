@@ -128,44 +128,38 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
                 dataCollectionInfo.getHostnameField(), dataCollectionInfo.getGcpConfig(),
                 dataCollectionInfo.getEncryptedDataDetails(), is24X7Task(), true);
             int clusterLabel = 0;
-            if (isNotEmpty(entries)) {
-              logger.info("Total no. of log records found : {}", entries.size());
-              for (LogEntry entry : entries) {
-                long timeStamp = new DateTime(entry.getTimestamp()).getMillis();
-                LogElement logElement;
-                try {
-                  String logMessageField = isNotEmpty(dataCollectionInfo.getLogMessageField())
-                      ? dataCollectionInfo.getLogMessageField()
-                      : STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
-                  String logMessage = JsonPath.read(entry.toString(), logMessageField);
-                  String host = JsonPath.read(entry.toString(),
-                      isNotEmpty(dataCollectionInfo.getHostnameField()) ? dataCollectionInfo.getHostnameField()
-                                                                        : STACKDRIVER_DEFAULT_HOST_NAME_FIELD);
-                  if (isEmpty(logMessage) || isEmpty(host)) {
-                    logger.error(
-                        "either log message or host is empty for stateExId {} cvConfigId {}. Log message field: {} host field: {} entry: {} ",
-                        dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getCvConfigId(), logMessageField,
-                        dataCollectionInfo.getHostnameField(), entry);
-                  } else {
-                    logElement =
-                        LogElement.builder()
-                            .query(dataCollectionInfo.getQuery())
-                            .logCollectionMinute(
-                                is24X7Task() ? (int) TimeUnit.MILLISECONDS.toMinutes(timeStamp) : logCollectionMinute)
-                            .clusterLabel(String.valueOf(clusterLabel++))
-                            .count(1)
-                            .logMessage(logMessage)
-                            .timeStamp(timeStamp)
-                            .host(host)
-                            .build();
-                    logElements.add(logElement);
-                  }
-                } catch (Exception e) {
-                  logger.warn("Unable to parse logEntry due to exception : ", e);
-                  continue;
-                }
+
+            logger.info("Total no. of log records found : {}", entries.size());
+            for (LogEntry entry : entries) {
+              long timeStamp = new DateTime(entry.getTimestamp()).getMillis();
+              String logMessageField = isNotEmpty(dataCollectionInfo.getLogMessageField())
+                  ? dataCollectionInfo.getLogMessageField()
+                  : STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
+              String logMessage = JsonPath.read(entry.toString(), logMessageField);
+              String host = JsonPath.read(entry.toString(),
+                  isNotEmpty(dataCollectionInfo.getHostnameField()) ? dataCollectionInfo.getHostnameField()
+                                                                    : STACKDRIVER_DEFAULT_HOST_NAME_FIELD);
+              if (isEmpty(logMessage) || isEmpty(host)) {
+                logger.error(
+                    "either log message or host is empty for stateExId {} cvConfigId {}. Log message field: {} host field: {} entry: {} ",
+                    dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getCvConfigId(), logMessageField,
+                    dataCollectionInfo.getHostnameField(), entry);
+              } else {
+                LogElement logElement =
+                    LogElement.builder()
+                        .query(dataCollectionInfo.getQuery())
+                        .logCollectionMinute(
+                            is24X7Task() ? (int) TimeUnit.MILLISECONDS.toMinutes(timeStamp) : logCollectionMinute)
+                        .clusterLabel(String.valueOf(clusterLabel++))
+                        .count(1)
+                        .logMessage(logMessage)
+                        .timeStamp(timeStamp)
+                        .host(host)
+                        .build();
+                logElements.add(logElement);
               }
             }
+
           } catch (Exception e) {
             logger.info("Search job was cancelled. Retrying ...", e);
             apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());

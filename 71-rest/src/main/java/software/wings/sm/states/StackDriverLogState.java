@@ -27,7 +27,7 @@ public class StackDriverLogState extends AbstractLogAnalysisState {
 
   @Attributes(title = "Region") @DefaultValue("us-central1") private String region = "us-central1";
 
-  @Attributes(title = "LogMessageField") @DefaultValue("textPayload") private String logMessageField = "textPayload";
+  @Attributes(title = "LogMessageField") @DefaultValue("textPayload") private String messageField = "textPayload";
 
   public StackDriverLogState(String name) {
     super(name, StateType.STACK_DRIVER_LOG.name());
@@ -50,15 +50,15 @@ public class StackDriverLogState extends AbstractLogAnalysisState {
     this.hostnameField = hostnameField;
   }
 
-  public String getLogMessageField() {
-    if (isEmpty(logMessageField)) {
+  public String getMessageField() {
+    if (isEmpty(messageField)) {
       return STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
     }
-    return logMessageField;
+    return messageField;
   }
 
-  public void setLogMessageField(String logMessageField) {
-    this.logMessageField = logMessageField;
+  public void setMessageField(String messageField) {
+    this.messageField = messageField;
   }
 
   @Override

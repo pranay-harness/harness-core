@@ -504,7 +504,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .hostnameField(analysisContext.getHostNameField())
             .stateType(StateType.STACK_DRIVER_LOG)
             .applicationId(analysisContext.getAppId())
-            .logMessageField(stackDriverLogState.getLogMessageField())
+            .logMessageField(stackDriverLogState.getMessageField())
             .stateExecutionId(analysisContext.getStateExecutionId())
             .workflowId(analysisContext.getWorkflowId())
             .workflowExecutionId(analysisContext.getWorkflowExecutionId())
