@@ -34,15 +34,20 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortType;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class BillingDataQueryBuilder {
   private BillingDataTableSchema schema = new BillingDataTableSchema();
+  private static final String DEFAULT_TIME_ZONE = "America/Los_Angeles";
 
   protected BillingDataQueryMetadata formQuery(String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
@@ -88,12 +93,19 @@ public class BillingDataQueryBuilder {
 
   protected BillingDataQueryMetadata formTrendStatsQuery(
       String accountId, QLCCMAggregationFunction aggregateFunction, List<QLBillingDataFilter> filters) {
+    List<QLCCMAggregationFunction> aggregationFunctions = new ArrayList<>();
+    aggregationFunctions.add(aggregateFunction);
+    return formTrendStatsQuery(accountId, aggregationFunctions, filters);
+  }
+
+  protected BillingDataQueryMetadata formTrendStatsQuery(
+      String accountId, List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
     BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
     SelectQuery selectQuery = new SelectQuery();
 
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
 
-    decorateQueryWithAggregation(selectQuery, aggregateFunction, fieldNames);
+    decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
 
     decorateQueryWithMinMaxStartTime(selectQuery, fieldNames);
 
@@ -599,5 +611,23 @@ public class BillingDataQueryBuilder {
     }
 
     return new StringBuilder("date_trunc('").append(unit).append("',").append(dbFieldName).append(")").toString();
+  }
+
+  protected QLTimeFilter getStartTimeFilter(List<QLBillingDataFilter> filters) {
+    Optional<QLBillingDataFilter> startTimeDataFilter =
+        filters.stream().filter(qlBillingDataFilter -> qlBillingDataFilter.getStartTime() != null).findFirst();
+    if (startTimeDataFilter.isPresent()) {
+      return startTimeDataFilter.get().getStartTime();
+    } else {
+      throw new InvalidRequestException("Start time cannot be null");
+    }
+  }
+
+  protected String getFormattedDate(Instant instant, String datePattern) {
+    return instant.atZone(ZoneId.of(DEFAULT_TIME_ZONE)).format(DateTimeFormatter.ofPattern(datePattern));
+  }
+
+  protected double getRoundedDoubleValue(BigDecimal value) {
+    return Math.round(value.doubleValue() * 100D) / 100D;
   }
 }
