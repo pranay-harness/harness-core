@@ -27,14 +27,14 @@ public interface AppdynamicsDelegateService {
 
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_TIER_TASK)
   Set<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      List<EncryptedDataDetail> encryptionDetails) throws IOException;
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException;
 
   Set<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
       List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException;
 
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_TIER_MAP)
   Set<AppdynamicsTier> getTierDependencies(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      List<EncryptedDataDetail> encryptionDetails) throws IOException;
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException;
 
   @DelegateTaskType(TaskType.APPDYNAMICS_CONFIGURATION_VALIDATE_TASK)
   boolean validateConfig(AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptedDataDetails)

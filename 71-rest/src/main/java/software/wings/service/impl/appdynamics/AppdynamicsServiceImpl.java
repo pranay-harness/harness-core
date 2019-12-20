@@ -2,7 +2,9 @@ package software.wings.service.impl.appdynamics;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.service.impl.ThirdPartyApiCallLog.NO_STATE_EXECUTION_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
@@ -18,6 +20,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -60,6 +63,13 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
 
   @Override
   public Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId) throws IOException {
+    return this.getTiers(
+        settingId, appdynamicsAppId, ThirdPartyApiCallLog.createApiCallLog(GLOBAL_ACCOUNT_ID, NO_STATE_EXECUTION_ID));
+  }
+
+  @Override
+  public Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId, ThirdPartyApiCallLog apiCallLog)
+      throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
@@ -69,12 +79,18 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-        .getTiers(appDynamicsConfig, appdynamicsAppId, encryptionDetails);
+        .getTiers(appDynamicsConfig, appdynamicsAppId, encryptionDetails, apiCallLog);
   }
 
   @Override
   public Set<AppdynamicsTier> getDependentTiers(String settingId, long appdynamicsAppId, AppdynamicsTier tier)
       throws IOException {
+    return getDependentTiers(settingId, appdynamicsAppId, tier,
+        ThirdPartyApiCallLog.createApiCallLog(GLOBAL_ACCOUNT_ID, NO_STATE_EXECUTION_ID));
+  }
+  @Override
+  public Set<AppdynamicsTier> getDependentTiers(String settingId, long appdynamicsAppId, AppdynamicsTier tier,
+      ThirdPartyApiCallLog apiCallLog) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
@@ -86,7 +102,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
 
     Set<AppdynamicsTier> tierDependencies =
         delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-            .getTierDependencies(appDynamicsConfig, appdynamicsAppId, encryptionDetails);
+            .getTierDependencies(appDynamicsConfig, appdynamicsAppId, encryptionDetails, apiCallLog);
 
     return getDependentTiers(tierDependencies, tier);
   }
@@ -188,9 +204,16 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
 
   @Override
   public AppdynamicsTier getTier(String connectorId, long appdynamicsAppId, String tierId) {
+    return getTier(connectorId, appdynamicsAppId, tierId,
+        ThirdPartyApiCallLog.createApiCallLog(GLOBAL_ACCOUNT_ID, NO_STATE_EXECUTION_ID));
+  }
+
+  @Override
+  public AppdynamicsTier getTier(
+      String connectorId, long appdynamicsAppId, String tierId, ThirdPartyApiCallLog apiCallLog) {
     try {
       AppdynamicsTier appdynamicsTier = null;
-      Set<AppdynamicsTier> tiers = getTiers(connectorId, appdynamicsAppId);
+      Set<AppdynamicsTier> tiers = getTiers(connectorId, appdynamicsAppId, apiCallLog);
       for (AppdynamicsTier tier : tiers) {
         if (String.valueOf(tier.getId()).equals(tierId)) {
           appdynamicsTier = tier;
@@ -224,10 +247,11 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public String getTierByName(String analysisServerConfigId, String applicationId, String tierName) {
+  public String getTierByName(
+      String analysisServerConfigId, String applicationId, String tierName, ThirdPartyApiCallLog apiCallLog) {
     try {
       String tierId = null;
-      Set<AppdynamicsTier> tiers = getTiers(analysisServerConfigId, Long.valueOf(applicationId));
+      Set<AppdynamicsTier> tiers = getTiers(analysisServerConfigId, Long.parseLong(applicationId), apiCallLog);
       for (AppdynamicsTier tier : tiers) {
         if (String.valueOf(tier.getName()).equals(tierName)) {
           tierId = String.valueOf(tier.getId());

@@ -16,7 +16,6 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -32,6 +31,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -48,7 +48,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -185,9 +184,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
-
+    String envId = getEnvId(context);
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.APP_DYNAMICS,
         context.getStateExecutionInstanceId(), null, APP_DYNAMICS_VALUES_TO_ANALYZE);
 
@@ -222,10 +219,14 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
         tierId = templateExpressionProcessor.resolveTemplateExpression(context, tierIdExpression);
         if (isTriggerBased) {
           final AppdynamicsTier tier =
-              appdynamicsService.getTier(analysisServerConfigId, Long.parseLong(applicationId), tierId);
+              appdynamicsService.getTier(analysisServerConfigId, Long.parseLong(applicationId), tierId,
+                  ThirdPartyApiCallLog.createApiCallLog(
+                      appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
           if (tier == null) {
             // tierId will actually contain tier Name
-            tierId = appdynamicsService.getTierByName(analysisServerConfigId, applicationId, tierId);
+            tierId = appdynamicsService.getTierByName(analysisServerConfigId, applicationId, tierId,
+                ThirdPartyApiCallLog.createApiCallLog(
+                    appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
           }
         }
       }
@@ -251,7 +252,9 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
         ? PREDICTIVE
         : TimeSeriesMlAnalysisType.COMPARATIVE;
     try {
-      Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(analysisServerConfigId, Long.parseLong(applicationId));
+      Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(analysisServerConfigId, Long.parseLong(applicationId),
+          ThirdPartyApiCallLog.createApiCallLog(
+              appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
       tiers.stream().filter(tier -> tier.getId() == Long.parseLong(tierId)).forEach(tier -> {
         metricGroups.put(tier.getName(),
             TimeSeriesMlAnalysisGroupInfo.builder()
@@ -265,7 +268,9 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
       if (!isEmpty(dependentTiersToAnalyze)) {
         dependentTiers = Lists.newArrayList(
-            appdynamicsService.getDependentTiers(analysisServerConfigId, Long.parseLong(applicationId), analyzedTier));
+            appdynamicsService.getDependentTiers(analysisServerConfigId, Long.parseLong(applicationId), analyzedTier,
+                ThirdPartyApiCallLog.createApiCallLog(
+                    appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId())));
 
         for (Iterator<AppdynamicsTier> iterator = dependentTiers.iterator(); iterator.hasNext();) {
           AppdynamicsTier tier = iterator.next();

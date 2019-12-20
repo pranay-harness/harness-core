@@ -1,12 +1,8 @@
 package software.wings.delegatetasks.cv;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static io.harness.threading.Morpheus.sleep;
-import static software.wings.common.VerificationConstants.RATE_LIMIT_STATUS;
-import static software.wings.common.VerificationConstants.URL_STRING;
+import static software.wings.delegatetasks.cv.CVConstants.RETRY_SLEEP_DURATION;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -17,31 +13,20 @@ import io.harness.delegate.task.TaskParameters;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import okhttp3.Request;
-import okio.Buffer;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.http.HttpStatus;
 import retrofit2.Call;
-import retrofit2.Response;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.delegatetasks.DelegateCVActivityLogService.Logger;
 import software.wings.delegatetasks.DelegateCVTaskService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
-import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.intfc.security.EncryptionService;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
@@ -49,7 +34,6 @@ import java.util.function.Supplier;
 
 @Slf4j
 public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2> extends AbstractDelegateRunnableTask {
-  @VisibleForTesting static Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(10);
   private static final int MAX_RETRIES = 3;
   @Inject private DelegateLogService delegateLogService;
   @Inject private Injector injector;
@@ -57,6 +41,7 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateCVActivityLogService cvActivityLogService;
   @Inject private DelegateCVTaskService cvTaskService;
+  @Inject private RequestExecutor requestExecutor;
   private DataCollectionInfoV2 dataCollectionInfo;
   private DataCollector<T> dataCollector;
   private DataCollectionExecutionContext dataCollectionExecutionContext;
@@ -181,91 +166,9 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
 
       @Override
       public <U> U executeRequest(String thirdPartyApiCallTitle, Call<U> request) {
-        int retryCount = 0;
-        while (true) {
-          try {
-            return executeRequest(thirdPartyApiCallTitle, request, retryCount);
-          } catch (RateLimitExceededException e) {
-            int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
-            logger.info("Encountered Rate limiting. Sleeping {} seconds for stateExecutionId {}",
-                RETRY_SLEEP_DURATION.getSeconds() + randomNum, dataCollectionInfo.getStateExecutionId());
-            sleep(RETRY_SLEEP_DURATION.plus(Duration.ofSeconds(randomNum)));
-            if (retryCount == MAX_RETRIES) {
-              logger.error("Request did not succeed after " + MAX_RETRIES + "  retries stateExecutionId {}",
-                  dataCollectionInfo.getStateExecutionId());
-              throw new DataCollectionException(e);
-            }
-          } catch (Exception e) {
-            if (retryCount == MAX_RETRIES) {
-              logger.error("Request did not succeed after " + MAX_RETRIES + "  retries", e);
-              throw new DataCollectionException(e);
-            }
-          }
-          retryCount++;
-        }
-      }
-
-      private String bodyToString(final Request request) {
-        try {
-          final Request copy = request.newBuilder().build();
-          final Buffer buffer = new Buffer();
-          copy.body().writeTo(buffer);
-          return buffer.readUtf8();
-        } catch (final IOException e) {
-          throw new DataCollectionException(e);
-        }
-      }
-      private <U> U executeRequest(String thirdPartyApiCallTitle, Call<U> request, int retryCount) {
-        ThirdPartyApiCallLog apiCallLog = createApiCallLog();
-        apiCallLog.setTitle(thirdPartyApiCallTitle);
-        apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        try {
-          apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                           .name(URL_STRING)
-                                           .value(request.request().url().toString())
-                                           .type(FieldType.URL)
-                                           .build());
-          if (retryCount != 0) {
-            apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                             .name("RETRY")
-                                             .value(String.valueOf(retryCount))
-                                             .type(FieldType.NUMBER)
-                                             .build());
-          }
-          apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                           .name("METHOD")
-                                           .value(request.request().method())
-                                           .type(FieldType.TEXT)
-                                           .build());
-          if (request.request().body() != null) {
-            String body = bodyToString(request.request());
-            if (isNotEmpty(body)) {
-              apiCallLog.addFieldToRequest(
-                  ThirdPartyApiCallField.builder().name("body").value(body).type(FieldType.JSON).build());
-            }
-          }
-          Response<U> response = request.clone().execute(); // TODO: add retry logic and rate limit exceeded logic here.
-          apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-          if (response.isSuccessful()) {
-            apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-
-          } else if (response.code() == RATE_LIMIT_STATUS) {
-            apiCallLog.addFieldToResponse(response.code(), response.toString(), FieldType.TEXT);
-            throw new RateLimitExceededException(
-                "Response code: " + response.code() + " Error: " + response.errorBody().string());
-          } else {
-            apiCallLog.addFieldToResponse(response.code(), response.toString(), FieldType.TEXT);
-            throw new DataCollectionException(
-                "Response code: " + response.code() + " Error: " + response.errorBody().string());
-          }
-          return response.body();
-        } catch (IOException e) {
-          apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-          apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-          throw new DataCollectionException(e);
-        } finally {
-          saveThirdPartyApiCallLog(apiCallLog);
-        }
+        ThirdPartyApiCallLog thirdPartyApiCallLog = createApiCallLog();
+        thirdPartyApiCallLog.setTitle(thirdPartyApiCallTitle);
+        return requestExecutor.executeRequest(thirdPartyApiCallLog, request);
       }
     };
   }

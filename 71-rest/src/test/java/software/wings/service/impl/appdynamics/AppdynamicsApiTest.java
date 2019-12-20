@@ -50,6 +50,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
 import software.wings.resources.AppdynamicsResource;
@@ -80,6 +81,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   @Inject private AppdynamicsService appdynamicsService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EncryptionService encryptionService;
+  @Mock private RequestExecutor requestExecutor;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private AppdynamicsRestClient appdynamicsRestClient;
   @Mock private DelegateLogService delegateLogService;
@@ -99,6 +101,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     FieldUtils.writeField(appdynamicsResource, "appdynamicsService", appdynamicsService, true);
     FieldUtils.writeField(delegateService, "encryptionService", encryptionService, true);
     FieldUtils.writeField(delegateService, "delegateLogService", delegateLogService, true);
+    FieldUtils.writeField(delegateService, "requestExecutor", requestExecutor, true);
     accountId = UUID.randomUUID().toString();
   }
 
@@ -214,12 +217,10 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetTiers() throws IOException {
-    Call<Set<AppdynamicsTier>> restCall = mock(Call.class);
     Set<AppdynamicsTier> tiers =
         Sets.newHashSet(AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build(),
             AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build());
-    when(restCall.execute()).thenReturn(Response.success(tiers));
-    when(appdynamicsRestClient.listTiers(anyString(), anyLong())).thenReturn(restCall);
+    when(requestExecutor.executeRequest(any(), any())).thenReturn(tiers);
 
     String savedAttributeId = saveAppdynamicsConfig();
 
@@ -274,8 +275,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                               .accountname(UUID.randomUUID().toString())
                                               .build();
 
-    Set<AppdynamicsTier> tierDependencies =
-        delegateService.getTierDependencies(appDynamicsConfig, 100, Collections.emptyList());
+    Set<AppdynamicsTier> tierDependencies = delegateService.getTierDependencies(
+        appDynamicsConfig, 100, Collections.emptyList(), ThirdPartyApiCallLog.builder().build());
   }
 
   @Test

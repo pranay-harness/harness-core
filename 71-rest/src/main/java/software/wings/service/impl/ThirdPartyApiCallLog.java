@@ -104,6 +104,7 @@ public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAwar
         .delegateTaskId(delegateTaskId)
         .request(new ArrayList<>())
         .response(new ArrayList<>())
+        .title(title)
         .build();
   }
 
