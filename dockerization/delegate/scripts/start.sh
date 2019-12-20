@@ -41,7 +41,6 @@ fi
 if [[ $PROXY_MANAGER == "true" || $PROXY_MANAGER == "" ]]; then
   export MANAGER_PROXY_CURL=$PROXY_CURL
 else
-  MANAGER_HOST_AND_PORT=_managerHostAndPort_
   HOST_AND_PORT_ARRAY=(${MANAGER_HOST_AND_PORT//:/ })
   MANAGER_HOST="${HOST_AND_PORT_ARRAY[1]}"
   MANAGER_HOST="${MANAGER_HOST:2}"
@@ -62,7 +61,7 @@ fi
 
 echo $PROXY_SYS_PROPS
 
-ACCOUNT_STATUS=$(curl $MANAGER_PROXY_CURL -ks _managerHostAndPort_/api/account/$ACCOUNT_ID/status | cut -d ":" -f 3 | cut -d "," -f 1 | cut -d "\"" -f 2)
+ACCOUNT_STATUS=$(curl $MANAGER_PROXY_CURL -ks $MANAGER_HOST_AND_PORT/api/account/$ACCOUNT_ID/status | cut -d ":" -f 3 | cut -d "," -f 1 | cut -d "\"" -f 2)
 if [[ $ACCOUNT_STATUS == "DELETED" ]]; then
   rm -rf *
   touch __deleted__
