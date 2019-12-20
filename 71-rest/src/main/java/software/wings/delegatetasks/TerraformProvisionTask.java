@@ -23,6 +23,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.filesystem.FileIo;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -85,6 +86,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final String TERRAFORM_INTERNAL_FOLDER = ".terraform";
   private static final long RESOURCE_READY_WAIT_TIME_SECONDS = 15;
   private static final String VAR_FILE_FORMAT = " -var-file=\"%s\" ";
+  private static final String TF_WORKING_DIR = "./terraform/${ACCOUNT_ID}/${ENTITY_ID}";
 
   @Inject private GitClient gitClient;
   @Inject private GitClientHelper gitClientHelper;
@@ -167,7 +169,18 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
-    String scriptDirectory = resolveScriptDirectory(gitOperationContext, parameters.getScriptPath());
+    String gitConnectorSpecificDirectory =
+        resolveScriptDirectory(gitClientHelper.getRepoDirectory(gitOperationContext), parameters.getScriptPath());
+    String scriptDirectory;
+    try {
+      scriptDirectory = copyFilesToProvisionerSpecificDirectory(gitConnectorSpecificDirectory, parameters);
+    } catch (Exception ex) {
+      logger.error("Exception in processing git copying files to provisioner specific directory", ex);
+      return TerraformExecutionData.builder()
+          .executionStatus(ExecutionStatus.FAILED)
+          .errorMessage(ExceptionUtils.getMessage(ex))
+          .build();
+    }
     logger.info("Script Directory: " + scriptDirectory);
     saveExecutionLog(parameters, format("Script Directory: [%s]", scriptDirectory), CommandExecutionStatus.RUNNING);
 
@@ -260,6 +273,13 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           }
           if (code == 0 && !parameters.isRunPlanOnly()) {
             command = format("terraform output --json > %s", tfOutputsFile.toString());
+            commandToLog = command;
+            saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING);
+            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
+          }
+
+          if (code == 0 && !parameters.isRunPlanOnly()) {
+            command = "terraform output";
             commandToLog = command;
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING);
             code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
@@ -414,6 +434,25 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       FileUtils.deleteQuietly(tfVariablesFile);
       FileUtils.deleteQuietly(tfBackendConfigsFile);
     }
+  }
+
+  /*
+  Copies Files from the directory common to the git connector to a directory specific to the app
+  and provisioner
+   */
+  private String copyFilesToProvisionerSpecificDirectory(
+      String gitConnectorSpecificDirectory, TerraformProvisionParameters parameters) throws IOException {
+    String workingDir = TF_WORKING_DIR.replace("${ACCOUNT_ID}", parameters.getAccountId())
+                            .replace("${ENTITY_ID}", parameters.getEntityId());
+    String provisionerSpecificDirectory = resolveScriptDirectory(workingDir, parameters.getScriptPath());
+    File dest = new File(provisionerSpecificDirectory);
+    File src = new File(gitConnectorSpecificDirectory);
+    if (FileIo.checkIfFileExist(dest.getPath())) {
+      FileUtils.cleanDirectory(dest);
+    }
+    FileUtils.copyDirectory(src, dest);
+    FileIo.waitForDirectoryToBeAccessibleOutOfProcess(dest.getPath(), 10);
+    return dest.getPath();
   }
 
   @VisibleForTesting
@@ -577,10 +616,9 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return null;
   }
 
-  private String resolveScriptDirectory(GitOperationContext gitOperationContext, String scriptPath) {
+  private String resolveScriptDirectory(String repoPath, String scriptPath) {
     return Paths
-        .get(Paths.get(System.getProperty(USER_DIR_KEY)).toString(),
-            gitClientHelper.getRepoDirectory(gitOperationContext), scriptPath == null ? "" : scriptPath)
+        .get(Paths.get(System.getProperty(USER_DIR_KEY)).toString(), repoPath, scriptPath == null ? "" : scriptPath)
         .toString();
   }
 
