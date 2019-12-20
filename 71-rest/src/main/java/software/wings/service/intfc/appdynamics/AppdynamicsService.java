@@ -2,6 +2,7 @@ package software.wings.service.intfc.appdynamics;
 
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.SettingAttribute;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
@@ -19,9 +20,13 @@ public interface AppdynamicsService {
   List<NewRelicApplication> getApplications(@NotNull String settingId) throws IOException;
 
   Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId) throws IOException;
+  Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId, ThirdPartyApiCallLog apiCallLog)
+      throws IOException;
 
   Set<AppdynamicsTier> getDependentTiers(String settingId, long appdynamicsAppId, AppdynamicsTier tier)
       throws IOException;
+  Set<AppdynamicsTier> getDependentTiers(String settingId, long appdynamicsAppId, AppdynamicsTier tier,
+      ThirdPartyApiCallLog apiCallLog) throws IOException;
 
   /**
    * Method to validate the appdynamics config.
@@ -39,10 +44,11 @@ public interface AppdynamicsService {
       AppdynamicsSetupTestNodeData appdynamicsSetupTestNodeData);
 
   NewRelicApplication getAppDynamicsApplication(String connectorId, String appDynamicsApplicationId);
-
   AppdynamicsTier getTier(String connectorId, long appdynamicsAppId, String tierId);
+  AppdynamicsTier getTier(String connectorId, long appdynamicsAppId, String tierId, ThirdPartyApiCallLog apiCallLog);
 
   String getAppDynamicsApplicationByName(String analysisServerConfigId, String applicationName);
 
-  String getTierByName(String analysisServerConfigId, String applicationId, String tierName);
+  String getTierByName(
+      String analysisServerConfigId, String applicationId, String tierName, ThirdPartyApiCallLog apiCallLog);
 }

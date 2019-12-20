@@ -2,7 +2,6 @@ package software.wings.service.impl.appdynamics;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.RETRIES;
@@ -27,6 +26,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
@@ -69,6 +69,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private DelegateLogService delegateLogService;
+  @Inject private RequestExecutor requestExecutor;
 
   @Override
   public List<NewRelicApplication> getAllApplications(
@@ -92,25 +93,23 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Override
   public Set<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      List<EncryptedDataDetail> encryptionDetails) throws IOException {
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog thirdPartyApiCallLog) {
+    Preconditions.checkNotNull(thirdPartyApiCallLog);
+    ThirdPartyApiCallLog apiCallLog = thirdPartyApiCallLog.copy();
     final Call<Set<AppdynamicsTier>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
             .listTiers(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId);
-    final Response<Set<AppdynamicsTier>> response = request.execute();
-    if (response.isSuccessful()) {
-      response.body().forEach(tier -> tier.setExternalTiers(new HashSet<>()));
-      return response.body().stream().sorted(Comparator.comparing(tier -> tier.getName())).collect(Collectors.toSet());
-    } else {
-      logger.info("Request not successful. Reason: {}", response);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, USER)
-          .addParam("reason", "could not fetch Appdynamics tiers " + response.message());
-    }
+    apiCallLog.setTitle("Fetching tiers for application " + appdynamicsAppId);
+    final Set<AppdynamicsTier> response = requestExecutor.executeRequest(apiCallLog, request);
+    response.forEach(tier -> tier.setExternalTiers(new HashSet<>()));
+    return response.stream().sorted(Comparator.comparing(tier -> tier.getName())).collect(Collectors.toSet());
   }
 
   @Override
   public Set<AppdynamicsTier> getTierDependencies(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      List<EncryptedDataDetail> encryptionDetails) throws IOException {
-    Set<AppdynamicsTier> tiers = getTiers(appDynamicsConfig, appdynamicsAppId, encryptionDetails);
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
+    Preconditions.checkNotNull(apiCallLog);
+    Set<AppdynamicsTier> tiers = getTiers(appDynamicsConfig, appdynamicsAppId, encryptionDetails, apiCallLog);
     List<Callable<Void>> callables = new ArrayList<>();
     tiers.forEach(tier -> callables.add(() -> {
       final String tierBTsPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName();
@@ -552,7 +551,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     }
     List<Callable<List<AppdynamicsMetricData>>> callables = new ArrayList<>();
     long endTime = System.currentTimeMillis();
-    long startTime = endTime - TimeUnit.MINUTES.toSeconds(DURATION_TO_ASK_MINUTES);
+    long startTime = endTime - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
     for (AppdynamicsMetric appdynamicsMetric : tierMetrics) {
       callables.add(()
                         -> getTierBTMetricData(appDynamicsConfig, setupTestNodeData.getApplicationId(), tier.getName(),

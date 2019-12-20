@@ -10,6 +10,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -106,7 +107,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     appDynamicsState.setTierId("456");
     appDynamicsState.setTimeDuration("6000");
 
-    when(appdynamicsService.getTiers(anyString(), anyLong()))
+    when(appdynamicsService.getTiers(anyString(), anyLong(), any()))
         .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().id(456).name("tier").build()));
     FieldUtils.writeField(appDynamicsState, "appService", appService, true);
     FieldUtils.writeField(appDynamicsState, "configuration", configuration, true);
@@ -249,7 +250,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .thenReturn(settingAttribute.getUuid());
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_App}")).thenReturn("30444");
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_Tier}")).thenReturn("30889");
-    when(appdynamicsService.getTiers(anyString(), anyLong()))
+    when(appdynamicsService.getTiers(anyString(), anyLong(), any()))
         .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().id(30889).name("tier").build()));
     when(workflowStandardParams.getEnv())
         .thenReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build());
@@ -485,10 +486,10 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     doThrow(new WingsException("Can not find application by name"))
         .when(appdynamicsService)
         .getAppDynamicsApplicationByName(anyString(), anyString());
-    when(appdynamicsService.getTier(anyString(), anyLong(), anyString())).thenReturn(null);
+    when(appdynamicsService.getTier(anyString(), anyLong(), anyString(), any())).thenReturn(null);
     doThrow(new WingsException("Can not find tier by name"))
         .when(appdynamicsService)
-        .getTier(anyString(), anyLong(), anyString());
+        .getTier(anyString(), anyLong(), anyString(), any());
 
     doReturn(asList(TemplateExpression.builder()
                         .fieldName("analysisServerConfigId")
@@ -543,17 +544,17 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     long tierId = 30889;
     doReturn(AppdynamicsTier.builder().name(generateUuid()).id(tierId).build())
         .when(appdynamicsService)
-        .getTier(anyString(), anyLong(), anyString());
+        .getTier(anyString(), anyLong(), anyString(), any());
     doReturn(Sets.newHashSet(AppdynamicsTier.builder().name(generateUuid()).id(tierId).build()))
         .when(appdynamicsService)
-        .getTiers(anyString(), anyLong());
+        .getTiers(anyString(), anyLong(), any());
     executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(RUNNING);
 
-    when(appdynamicsService.getTier(anyString(), anyLong(), anyString())).thenReturn(null);
+    when(appdynamicsService.getTier(anyString(), anyLong(), anyString(), any())).thenReturn(null);
     doThrow(new WingsException("No tier found"))
         .when(appdynamicsService)
-        .getTierByName(anyString(), anyString(), anyString());
+        .getTierByName(anyString(), anyString(), anyString(), any());
 
     executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
