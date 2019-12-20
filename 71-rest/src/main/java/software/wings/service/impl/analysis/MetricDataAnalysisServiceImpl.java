@@ -62,8 +62,10 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.verification.CVConfiguration;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.io.UnsupportedEncodingException;
@@ -96,6 +98,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Inject private WorkflowService workflowService;
   @Inject private AppService appService;
   @Inject private DataStoreService dataStoreService;
+  @Inject private CVConfigurationService cvConfigurationService;
 
   @Override
   public String getLastSuccessfulWorkflowExecutionIdWithData(
@@ -280,6 +283,40 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       }
     }
     return transactionThresholds;
+  }
+
+  @Override
+  public boolean saveCustomThreshold(
+      String serviceId, String cvConfigId, List<TimeSeriesMLTransactionThresholds> thresholds) {
+    if (isNotEmpty(thresholds)) {
+      CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+      if (cvConfiguration == null) {
+        logger.error("cvConfigId {} provided in saveCustomThresholds is invalid", cvConfigId);
+        return false;
+      }
+      Map<String, TimeSeriesMLTransactionThresholds> uniqueKeyMap = new HashMap<>();
+      thresholds.forEach(threshold -> {
+        uniqueKeyMap.put(
+            threshold.getMetricName() + "," + threshold.getTransactionName() + threshold.getGroupName(), threshold);
+      });
+      List<TimeSeriesMLTransactionThresholds> thresholdsInDB =
+          wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class, excludeAuthority)
+              .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
+              .asList();
+
+      if (thresholdsInDB != null) {
+        thresholdsInDB.forEach(thresholdInDB -> {
+          String uniqueKey =
+              thresholdInDB.getMetricName() + "," + thresholdInDB.getTransactionName() + thresholdInDB.getGroupName();
+          if (uniqueKeyMap.containsKey(uniqueKey)) {
+            uniqueKeyMap.get(uniqueKey).setUuid(thresholdInDB.getUuid());
+          }
+        });
+      }
+      logger.info("Saving custom threshold list for cvConfigId {} : {}", cvConfigId, thresholds);
+      wingsPersistence.save(new ArrayList<>(uniqueKeyMap.values()));
+    }
+    return true;
   }
 
   @Override

@@ -398,6 +398,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .service_guard_backoff_count(nextBackoffCount)
             .tag(tag)
             .alertThreshold(getAlertThreshold(cvConfiguration, endMin))
+            .keyTransactionsUrl(getKeyTransactionsUrl(cvConfiguration))
             .build();
     learningEngineAnalysisTask.setAppId(cvConfiguration.getAppId());
     learningEngineAnalysisTask.setUuid(learningTaskId);
@@ -453,6 +454,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .tag(tag)
             .experiment_name(experimentName)
             .alertThreshold(getAlertThreshold(cvConfiguration, endMin))
+            .keyTransactionsUrl(getKeyTransactionsUrl(cvConfiguration))
             .build();
     learningEngineAnalysisTask.setAppId(cvConfiguration.getAppId());
     learningEngineAnalysisTask.setUuid(learningTaskId);
@@ -515,6 +517,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         + "?accountId=" + cvConfiguration.getAccountId() + "&applicationId=" + cvConfiguration.getAppId()
         + "&cvConfigId=" + cvConfiguration.getUuid() + "&analysisMinStart=" + startMin
         + "&analysisMinEnd=" + analysisMinute + (tag != null ? ("&tag=" + tag) : "");
+  }
+
+  private String getKeyTransactionsUrl(CVConfiguration cvConfiguration) {
+    return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/key-transactions-247"
+        + "?cvConfigId=" + cvConfiguration.getUuid();
   }
 
   private long getCollectionStartTimeForLogs(LogsCVConfiguration logsCVConfiguration, long maxCvCollectionMinute) {

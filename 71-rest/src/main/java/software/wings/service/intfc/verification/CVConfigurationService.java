@@ -2,6 +2,7 @@ package software.wings.service.intfc.verification;
 
 import io.harness.beans.PageRequest;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.analysis.TimeSeriesKeyTransactions;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.sm.StateType;
@@ -45,4 +46,8 @@ public interface CVConfigurationService extends OwnedByAccount, OwnedByEnvironme
   void cloneServiceGuardConfigs(String sourceEnvID, String targetEnvID);
 
   Map<String, String> getTxnMetricPairsForAPMCVConfig(String cvConfigId);
+  boolean saveKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransactions);
+  boolean addToKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransaction);
+  boolean removeFromKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransaction);
+  TimeSeriesKeyTransactions getKeyTransactionsForCVConfiguration(String cvConfigId);
 }

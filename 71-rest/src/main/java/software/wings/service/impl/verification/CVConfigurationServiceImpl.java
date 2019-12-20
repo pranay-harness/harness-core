@@ -48,6 +48,8 @@ import software.wings.resources.PrometheusResource;
 import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
+import software.wings.service.impl.analysis.TimeSeriesKeyTransactions;
+import software.wings.service.impl.analysis.TimeSeriesKeyTransactions.TimeSeriesKeyTransactionsKeys;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
@@ -1093,8 +1095,84 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       if (metricCollectionInfo.getResponseMapping().getTxnNameFieldValue() != null) {
         txnName = metricCollectionInfo.getResponseMapping().getTxnNameFieldValue();
       }
-      txnMetricCombination.put(metricCollectionInfo.getMetricName(), txnName);
+      txnMetricCombination.put(
+          metricCollectionInfo.getMetricName() + "," + metricCollectionInfo.getMetricType(), txnName);
     });
     return txnMetricCombination;
+  }
+
+  @Override
+  public boolean saveKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransactions) {
+    if (isEmpty(cvConfigId) || getConfiguration(cvConfigId) == null) {
+      final String errMsg = "CVConfigId is empty in saveKeyTransactionsForCVConfiguration";
+      logger.error(errMsg);
+      throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
+    }
+
+    if (isEmpty(keyTransactions)) {
+      final String errMsg = "keyTransactions is empty in saveKeyTransactionsForCVConfiguration";
+      logger.error(errMsg);
+      throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
+    }
+
+    TimeSeriesKeyTransactions keyTransactionsForConfig =
+        wingsPersistence.createQuery(TimeSeriesKeyTransactions.class)
+            .filter(TimeSeriesKeyTransactionsKeys.cvConfigId, cvConfigId)
+            .get();
+    if (keyTransactionsForConfig == null) {
+      keyTransactionsForConfig =
+          TimeSeriesKeyTransactions.builder().cvConfigId(cvConfigId).keyTransactions(new HashSet<>()).build();
+    }
+    keyTransactionsForConfig.setKeyTransactions(new HashSet<>(keyTransactions));
+    wingsPersistence.save(keyTransactionsForConfig);
+    return true;
+  }
+
+  @Override
+  public boolean addToKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransaction) {
+    if (isEmpty(keyTransaction)) {
+      final String errMsg = "keyTransaction is empty in saveKeyTransactionsForCVConfiguration";
+      logger.error(errMsg);
+      throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
+    }
+
+    TimeSeriesKeyTransactions keyTransactionsForConfig = getKeyTransactionsForCVConfiguration(cvConfigId);
+    if (keyTransactionsForConfig == null) {
+      keyTransactionsForConfig =
+          TimeSeriesKeyTransactions.builder().cvConfigId(cvConfigId).keyTransactions(new HashSet<>()).build();
+    }
+    logger.info("Adding {} to the keytransactions list for cvConfigId: {}", keyTransaction, cvConfigId);
+    keyTransactionsForConfig.getKeyTransactions().addAll(keyTransaction);
+    wingsPersistence.save(keyTransactionsForConfig);
+    return true;
+  }
+
+  @Override
+  public boolean removeFromKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransaction) {
+    if (isEmpty(keyTransaction)) {
+      final String errMsg = "keyTransaction is empty in saveKeyTransactionsForCVConfiguration";
+      logger.error(errMsg);
+      throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
+    }
+
+    TimeSeriesKeyTransactions keyTransactionsForConfig = getKeyTransactionsForCVConfiguration(cvConfigId);
+    if (keyTransactionsForConfig != null) {
+      logger.info("Removing {} from the keytransactions list for cvConfigId: {}", keyTransaction, cvConfigId);
+      keyTransactionsForConfig.getKeyTransactions().removeAll(keyTransaction);
+    }
+    wingsPersistence.save(keyTransactionsForConfig);
+    return true;
+  }
+
+  @Override
+  public TimeSeriesKeyTransactions getKeyTransactionsForCVConfiguration(String cvConfigId) {
+    if (isEmpty(cvConfigId)) {
+      final String errMsg = "CVConfigId is empty in getForCVConfiguration";
+      logger.error(errMsg);
+      throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
+    }
+    return wingsPersistence.createQuery(TimeSeriesKeyTransactions.class)
+        .filter(TimeSeriesKeyTransactionsKeys.cvConfigId, cvConfigId)
+        .get();
   }
 }

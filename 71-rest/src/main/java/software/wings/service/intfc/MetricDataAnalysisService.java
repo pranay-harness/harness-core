@@ -62,6 +62,7 @@ public interface MetricDataAnalysisService {
 
   boolean saveCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
       String transactionName, String groupName, TimeSeriesMetricDefinition metricDefinition);
+  boolean saveCustomThreshold(String serviceId, String cvConfigId, List<TimeSeriesMLTransactionThresholds> thresholds);
 
   boolean deleteCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
       String groupName, String transactionName, String metricName) throws UnsupportedEncodingException;

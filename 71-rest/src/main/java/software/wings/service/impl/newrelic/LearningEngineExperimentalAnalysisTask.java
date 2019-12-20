@@ -108,6 +108,7 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
   private Double alertThreshold;
   @JsonProperty("log_ml_result_url") private String logMLResultUrl;
   @JsonProperty("use_supervised_model") private boolean shouldUseSupervisedModel;
+  @JsonProperty("key_transactions_url") private String keyTransactionsUrl;
 
   @Builder.Default
   private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];

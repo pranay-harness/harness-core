@@ -54,6 +54,8 @@ import software.wings.service.impl.analysis.MetricAnalysisRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
 import software.wings.service.impl.analysis.SupervisedTSThreshold;
 import software.wings.service.impl.analysis.SupervisedTSThreshold.SupervisedTSThresholdKeys;
+import software.wings.service.impl.analysis.TimeSeriesKeyTransactions;
+import software.wings.service.impl.analysis.TimeSeriesKeyTransactions.TimeSeriesKeyTransactionsKeys;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricScores;
@@ -1022,6 +1024,17 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       logger.error(errorMsg);
       throw WingsException.builder().message(errorMsg).build();
     }
+  }
+
+  @Override
+  public Set<String> getKeyTransactions(String cvConfigId) {
+    if (isNotEmpty(cvConfigId)) {
+      TimeSeriesKeyTransactions keyTxns = wingsPersistence.createQuery(TimeSeriesKeyTransactions.class)
+                                              .filter(TimeSeriesKeyTransactionsKeys.cvConfigId, cvConfigId)
+                                              .get();
+      return keyTxns != null ? keyTxns.getKeyTransactions() : null;
+    }
+    return null;
   }
 
   @Override

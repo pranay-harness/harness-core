@@ -12,5 +12,6 @@ public class TimeSeriesMLTxnSummary {
   private String txn_name;
   private String txn_tag;
   private String group_name;
+  private boolean is_key_transaction;
   private Map<String, TimeSeriesMLMetricSummary> metrics;
 }

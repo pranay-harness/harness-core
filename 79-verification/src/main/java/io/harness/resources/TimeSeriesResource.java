@@ -245,6 +245,16 @@ public class TimeSeriesResource {
 
   @Produces({"application/json", "application/v1+json"})
   @POST
+  @Path("/key-transactions-247")
+  @Timed
+  @LearningEngineAuth
+  @ExceptionMetered
+  public RestResponse<Set<String>> getKeyTransactions(@QueryParam("cvConfigId") String cvConfigId) {
+    return new RestResponse<>(timeSeriesAnalysisService.getKeyTransactions(cvConfigId));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
   @Path("/save-dummy-experimental-247")
   @Timed
   @LearningEngineAuth

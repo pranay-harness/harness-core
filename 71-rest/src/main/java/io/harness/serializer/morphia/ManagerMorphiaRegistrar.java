@@ -488,6 +488,7 @@ import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord;
 import software.wings.service.impl.analysis.SupervisedTSThreshold;
 import software.wings.service.impl.analysis.SupervisedTrainingStatus;
+import software.wings.service.impl.analysis.TimeSeriesKeyTransactions;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
@@ -950,6 +951,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(CustomLogCVServiceConfiguration.class);
     set.add(Budget.class);
     set.add(AzureArtifactsArtifactStream.class);
+    set.add(TimeSeriesKeyTransactions.class);
   }
 
   @Override

@@ -57,6 +57,7 @@ import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.metrics.TimeSeriesDataRecord.TimeSeriesMetricRecordKeys;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.MetricAnalysisRecord;
+import software.wings.service.impl.analysis.TimeSeriesKeyTransactions;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
@@ -75,6 +76,7 @@ import software.wings.verification.CVConfiguration;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1359,5 +1361,40 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
     List<NewRelicMetricAnalysisRecord> savedRecord =
         wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).asList();
     assertThat(savedRecord.size()).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetKeyTransactionsHappyCase() {
+    TimeSeriesKeyTransactions keyTransactions = TimeSeriesKeyTransactions.builder()
+                                                    .cvConfigId(cvConfigId)
+                                                    .keyTransactions(Sets.newHashSet("transaction1", "transaction2"))
+                                                    .build();
+    wingsPersistence.save(keyTransactions);
+
+    Set<String> transactions = timeSeriesAnalysisService.getKeyTransactions(cvConfigId);
+
+    assertThat(transactions).isNotNull();
+    assertThat(transactions.size()).isEqualTo(2);
+    assertThat(transactions.containsAll(Arrays.asList("transaction1", "transaction2"))).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetKeyTransactionsNullInput() {
+    Set<String> transactions = timeSeriesAnalysisService.getKeyTransactions(null);
+
+    assertThat(transactions).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetKeyTransactionsNoKeyTransactionsAvailable() {
+    Set<String> transactions = timeSeriesAnalysisService.getKeyTransactions(cvConfigId);
+
+    assertThat(transactions).isNull();
   }
 }
