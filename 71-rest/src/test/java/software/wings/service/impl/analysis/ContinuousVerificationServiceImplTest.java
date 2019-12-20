@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -590,5 +591,30 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     assertThat(continuousVerificationService.getMetricType(cvConfig, "metric2")).isEqualTo(MetricType.ERROR.name());
 
     assertThat(continuousVerificationService.getMetricType(cvConfig, generateUuid())).isNull();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetCVExecutionMetaData_NoEntries() throws IllegalAccessException {
+    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", wingsPersistence, true);
+    ContinuousVerificationExecutionMetaData cvMetaData =
+        continuousVerificationService.getCVExecutionMetaData(stateExecutionId);
+    assertThat(cvMetaData).isNull();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetCVExecutionMetaData_NonNullEntries() throws IllegalAccessException {
+    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", wingsPersistence, true);
+    ContinuousVerificationExecutionMetaData savedData =
+        ContinuousVerificationExecutionMetaData.builder().stateExecutionId(stateExecutionId).build();
+    savedData.setUuid(generateUuid());
+    wingsPersistence.save(savedData);
+    ContinuousVerificationExecutionMetaData cvMetaData =
+        continuousVerificationService.getCVExecutionMetaData(stateExecutionId);
+    assertThat(cvMetaData).isNotNull();
+    assertThat(cvMetaData.getUuid()).isEqualTo(savedData.getUuid());
   }
 }

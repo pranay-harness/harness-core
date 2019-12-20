@@ -247,7 +247,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       // set the CV Metadata status to ERROR as well.
       activityLogger.error("Data collection failed: " + ex.getMessage());
       continuousVerificationService.setMetaDataExecutionStatus(
-          executionContext.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true);
+          executionContext.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true, false);
 
       return ExecutionResponse.builder()
           .async(false)
@@ -291,7 +291,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         if (analysisSummary == null) {
           getLogger().info("No analysis summary. This can happen if there is no data with the given queries");
           continuousVerificationService.setMetaDataExecutionStatus(
-              executionContext.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS, true);
+              executionContext.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS, true, false);
           return isQAVerificationPath(context.getAccountId(), context.getAppId())
               ? generateAnalysisResponse(context, ExecutionStatus.FAILED, "No Analysis result found")
               : generateAnalysisResponse(
@@ -323,7 +323,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         getLogger().info("the final status is {}", executionStatus);
         executionResponse.getStateExecutionData().setStatus(executionStatus);
         continuousVerificationService.setMetaDataExecutionStatus(
-            executionContext.getStateExecutionInstanceId(), executionStatus, false);
+            executionContext.getStateExecutionInstanceId(), executionStatus, false, false);
         return ExecutionResponse.builder()
             .executionStatus(isQAVerificationPath(context.getAccountId(), context.getAppId()) ? ExecutionStatus.SUCCESS
                                                                                               : executionStatus)
@@ -343,7 +343,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   @Override
   public void handleAbortEvent(ExecutionContext executionContext) {
     continuousVerificationService.setMetaDataExecutionStatus(
-        executionContext.getStateExecutionInstanceId(), ExecutionStatus.ABORTED, true);
+        executionContext.getStateExecutionInstanceId(), ExecutionStatus.ABORTED, true, false);
     AnalysisContext analysisContext =
         wingsPersistence.createQuery(AnalysisContext.class)
             .filter("appId", executionContext.getAppId())
@@ -373,7 +373,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       AnalysisContext context, ExecutionStatus status, String message) {
     analysisService.createAndSaveSummary(
         context.getStateType(), context.getAppId(), context.getStateExecutionId(), context.getQuery(), message);
-    return createExecutionResponse(context, status, message);
+    return createExecutionResponse(context, status, message, true);
   }
 
   private AnalysisContext getLogAnalysisContext(ExecutionContext context, String correlationId) {

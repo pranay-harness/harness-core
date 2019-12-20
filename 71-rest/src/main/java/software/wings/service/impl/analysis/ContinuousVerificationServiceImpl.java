@@ -256,7 +256,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   @Override
-  public void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status, boolean noData) {
+  public void setMetaDataExecutionStatus(
+      String stateExecutionId, ExecutionStatus status, boolean noData, boolean manualOverride) {
     Query<ContinuousVerificationExecutionMetaData> query =
         wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
             .filter(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, stateExecutionId);
@@ -264,7 +265,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     wingsPersistence.update(query,
         wingsPersistence.createUpdateOperations(ContinuousVerificationExecutionMetaData.class)
             .set(ContinuousVerificationExecutionMetaDataKeys.executionStatus, status)
-            .set(ContinuousVerificationExecutionMetaDataKeys.noData, noData));
+            .set(ContinuousVerificationExecutionMetaDataKeys.noData, noData)
+            .set(ContinuousVerificationExecutionMetaDataKeys.manualOverride, manualOverride));
+  }
+
+  @Override
+  public ContinuousVerificationExecutionMetaData getCVExecutionMetaData(String stateExecutionId) {
+    return wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
+        .filter(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, stateExecutionId)
+        .get();
   }
 
   @Override
@@ -1702,7 +1711,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     } else {
       throw new IllegalArgumentException("Invalid state type :" + analysisContext.getStateType());
     }
-    continuousVerificationService.setMetaDataExecutionStatus(stateExecutionId, status, true);
+    continuousVerificationService.setMetaDataExecutionStatus(stateExecutionId, status, true, true);
     try {
       final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
           VerificationStateAnalysisExecutionData.builder()

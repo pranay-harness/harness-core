@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -111,29 +112,13 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
-    wingsPersistence.save(AnalysisContext.builder().appId(appId).stateExecutionId(stateExecutionId).build());
+    saveAnalysisContext(dataAnalysisResponse);
     ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
-
-    validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.ERROR);
-    assertThat(executionResponse.getErrorMessage()).isEqualTo("Analysis for minute 5 failed to save in DB");
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testHandleAsyncNoMetricsQA() {
-    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
-    createMetaDataExecutionData(ExecutionStatus.RUNNING);
-    enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
-    wingsPersistence.save(
-        AnalysisContext.builder().appId(appId).stateExecutionId(stateExecutionId).timeDuration(10).build());
-    wingsPersistence.save(NewRelicMetricAnalysisRecord.builder()
-                              .analysisMinute(5)
-                              .appId(appId)
-                              .stateExecutionId(stateExecutionId)
-                              .build());
-    ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
+    ((VerificationDataAnalysisResponse) dataAnalysisResponse.values().iterator().next())
+        .getStateExecutionData()
+        .setAnalysisMinute(0);
     validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.FAILED);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("No Analysis result found");
   }
 
   @Test
@@ -179,28 +164,10 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testHandleAsyncV2NoAnalysisQA() {
+  public void testHandleAsyncNoMetricsQA() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
-    enableFeatureFlag(FeatureName.TIME_SERIES_WORKFLOW_V2);
-    saveAnalysisContext(dataAnalysisResponse);
-    ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
-    ((VerificationDataAnalysisResponse) dataAnalysisResponse.values().iterator().next())
-        .getStateExecutionData()
-        .setAnalysisMinute(0);
-    validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.FAILED);
-    assertThat(executionResponse.getErrorMessage()).isEqualTo("No Analysis result found");
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testHandleAsyncV2NoMetricsQA() {
-    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
-    createMetaDataExecutionData(ExecutionStatus.RUNNING);
-    enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
-    enableFeatureFlag(FeatureName.TIME_SERIES_WORKFLOW_V2);
     saveAnalysisContext(dataAnalysisResponse);
     wingsPersistence.save(NewRelicMetricAnalysisRecord.builder()
                               .analysisMinute(5)
@@ -215,13 +182,36 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testHandleAsyncManualAction() {
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    ContinuousVerificationExecutionMetaData metadata = createMetaDataExecutionData(ExecutionStatus.RUNNING);
+    metadata.setExecutionStatus(ExecutionStatus.SUCCESS);
+    metadata.setManualOverride(true);
+    wingsPersistence.save(metadata);
+
+    enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
+    saveAnalysisContext(dataAnalysisResponse);
+    wingsPersistence.save(NewRelicMetricAnalysisRecord.builder()
+                              .analysisMinute(5)
+                              .appId(appId)
+                              .stateExecutionId(stateExecutionId)
+                              .build());
+    ((VerificationDataAnalysisResponse) dataAnalysisResponse.values().iterator().next())
+        .getStateExecutionData()
+        .setAnalysisMinute(0);
+    ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
+    validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.SUCCESS);
+  }
+
+  @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testHandleAsyncV2QANotFailWithAnomaly() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
-    enableFeatureFlag(FeatureName.TIME_SERIES_WORKFLOW_V2);
     saveAnalysisContext(dataAnalysisResponse);
     saveMetricAnalysisRecord(RiskLevel.HIGH);
 
@@ -235,7 +225,6 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   public void testHandleAsyncV2FailWithAnomaly() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
-    enableFeatureFlag(FeatureName.TIME_SERIES_WORKFLOW_V2);
     saveAnalysisContext(dataAnalysisResponse);
     saveMetricAnalysisRecord(RiskLevel.HIGH);
 
@@ -249,7 +238,6 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   public void testHandleAsyncV2NoFailWithoutAnomaly() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
-    enableFeatureFlag(FeatureName.TIME_SERIES_WORKFLOW_V2);
     saveAnalysisContext(dataAnalysisResponse);
     wingsPersistence.save(
         NewRelicMetricAnalysisRecord.builder()
@@ -271,7 +259,6 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   public void testNotifyStateHandleAsyncNoVerificationData() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.RUNNING, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
-    enableFeatureFlag(FeatureName.TIME_SERIES_WORKFLOW_V2);
     saveAnalysisContext(dataAnalysisResponse);
 
     validateStateNotification(dataAnalysisResponse);
@@ -328,11 +315,12 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
         .isEqualTo(verificationDataAnalysisResponse.getStateExecutionData());
   }
 
-  private void createMetaDataExecutionData(ExecutionStatus executionStatus) {
-    wingsPersistence.save(ContinuousVerificationExecutionMetaData.builder()
-                              .stateExecutionId(stateExecutionId)
-                              .executionStatus(executionStatus)
-                              .build());
+  private ContinuousVerificationExecutionMetaData createMetaDataExecutionData(ExecutionStatus executionStatus) {
+    String uuId = wingsPersistence.save(ContinuousVerificationExecutionMetaData.builder()
+                                            .stateExecutionId(stateExecutionId)
+                                            .executionStatus(executionStatus)
+                                            .build());
+    return wingsPersistence.get(ContinuousVerificationExecutionMetaData.class, uuId);
   }
 
   private Map<String, ResponseData> createDataAnalysisResponse(ExecutionStatus executionStatus, String message) {
