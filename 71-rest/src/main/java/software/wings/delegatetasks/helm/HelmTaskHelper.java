@@ -320,6 +320,10 @@ public class HelmTaskHelper {
       executionLogCallback.saveExecutionLog("Helm repository: " + helmChartConfigParams.getRepoDisplayName());
     }
 
+    if (isNotBlank(helmChartConfigParams.getBasePath())) {
+      executionLogCallback.saveExecutionLog("Base Path: " + helmChartConfigParams.getBasePath());
+    }
+
     if (isNotBlank(helmChartConfigParams.getChartName())) {
       executionLogCallback.saveExecutionLog("Chart name: " + helmChartConfigParams.getChartName());
     }
