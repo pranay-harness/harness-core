@@ -24,8 +24,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.beans.SortOrder;
-import io.harness.beans.SortOrder.OrderType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -68,12 +66,10 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.pagerduty.PagerDutyService;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -145,12 +141,11 @@ public class UserGroupServiceImpl implements UserGroupService {
     notNullCheck("account", account, USER);
     req.addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId);
     PageResponse<UserGroup> res = wingsPersistence.query(UserGroup.class, req);
-    List<UserGroup> userGroupList = res.getResponse();
     // Using a custom comparator since our mongo apis don't support alphabetical sorting with case insensitivity.
     // Currently, it only supports ASC and DSC.
-    Collections.sort(userGroupList, new UserGroupComparator());
+    res.getResponse().sort((ug1, ug2) -> StringUtils.compareIgnoreCase(ug1.getName(), ug2.getName()));
     if (loadUsers) {
-      loadUsersForUserGroups(userGroupList, account);
+      loadUsersForUserGroups(res.getResponse(), account);
     }
     return res;
   }
@@ -209,13 +204,6 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
   }
 
-  private static class UserGroupComparator implements Comparator<UserGroup>, Serializable {
-    @Override
-    public int compare(UserGroup lhs, UserGroup rhs) {
-      return StringUtils.compare(lhs.getName(), rhs.getName());
-    }
-  }
-
   @Override
   public UserGroup get(String accountId, String userGroupId) {
     return get(accountId, userGroupId, true);
@@ -267,18 +255,15 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   private void loadUsers(UserGroup userGroup, Account account) {
     if (userGroup.getMemberIds() != null) {
-      SortOrder sortOrder = new SortOrder();
-      sortOrder.setFieldName(UserGroupKeys.name);
-      sortOrder.setOrderType(OrderType.ASC);
-
       PageRequest<User> req = aPageRequest()
                                   .addFilter(ID_KEY, Operator.IN, userGroup.getMemberIds().toArray())
                                   .addFilter("accounts", Operator.IN, account)
-                                  .addOrder(sortOrder)
                                   .build();
 
       PageResponse<User> res = userService.list(req, false);
-      userGroup.setMembers(res.getResponse());
+      List<User> userList = res.getResponse();
+      userList.sort((u1, u2) -> StringUtils.compareIgnoreCase(u1.getName(), u2.getName()));
+      userGroup.setMembers(userList);
     } else {
       userGroup.setMembers(new ArrayList<>());
     }

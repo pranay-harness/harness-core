@@ -126,9 +126,9 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   private String description = "test description";
   private String name = "userGroup1";
   private String name2 = "userGroup2";
-  private String userName1 = "userName1";
-  private String userName2 = "userName2";
-  private String userName = "userName";
+  private String userName1 = "UserName1";
+  private String userName2 = "auserName2";
+  private String userName = "UserName";
   private String user1Id = generateUuid();
   private String user2Id = generateUuid();
   private String userId = generateUuid();
@@ -190,7 +190,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     User user2 = createUserAndSave(user2Id, userName2, userGroup, account);
 
     UserGroup savedUserGroup = userGroupService.save(userGroup);
-    compareUsersOrder(savedUserGroup, userName1, userName2);
+    compareUsersOrder(savedUserGroup, userName2, userName1);
 
     userGroup = builder()
                     .accountId(accountId)
@@ -209,7 +209,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     createUserAndSave(userId, userName, userGroup, account);
 
     savedUserGroup = userGroupService.save(userGroup);
-    compareUsersOrder(savedUserGroup, userName, userName1);
+    compareUsersOrder(savedUserGroup, userName2, userName);
   }
 
   @Test
