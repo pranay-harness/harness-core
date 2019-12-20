@@ -62,7 +62,7 @@ public class EcsJobIntegrationTest extends CategoryTest implements EcsEventGener
     val batchJobDataDs = hPersistence.getDatastore(BatchJobScheduledData.class);
     batchJobDataDs.delete(batchJobDataDs.createQuery(BatchJobScheduledData.class));
 
-    Instant createdTimestamp = NOW.minus(28, ChronoUnit.HOURS);
+    Instant createdTimestamp = NOW.minus(32, ChronoUnit.HOURS);
     PublishedMessage ec2InstanceInfoMessage =
         getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
     ec2InstanceInfoMessage.setCreatedAt(createdTimestamp.toEpochMilli());

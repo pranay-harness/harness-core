@@ -12,6 +12,12 @@ extend type Query {
     groupBy: [CCMGroupBy]
   ): BillingStatsData @dataFetcher(name: billingTrendStats)
 
+  idleCostTrendStats(
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+  ): IdleCostStatsData @dataFetcher(name: idleCostTrendStats)
+
   billingStatsEntity(
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
@@ -140,6 +146,13 @@ type BillingStatsData {
   totalCost: BillingStatsInfo
   costTrend: BillingStatsInfo
   forecastCost: BillingStatsInfo
+}
+
+type IdleCostStatsData {
+  totalIdleCost: BillingStatsInfo
+  cpuIdleCost: BillingStatsInfo
+  memoryIdleCost: BillingStatsInfo
+  unallocatedCost: BillingStatsInfo
 }
 
 type BillingStackedTimeSeriesData {
