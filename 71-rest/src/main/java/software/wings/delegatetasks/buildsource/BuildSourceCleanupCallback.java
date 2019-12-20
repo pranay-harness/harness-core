@@ -165,8 +165,8 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   }
 
   private List<Artifact> cleanupStaleArtifacts(ArtifactStream artifactStream, List<BuildDetails> buildDetails) {
-    logger.info(
-        "Artifact Stream {} cleanup started with type {}", artifactStreamId, artifactStream.getArtifactStreamType());
+    logger.info("Artifact Stream {} cleanup started with type {} name {}", artifactStreamId,
+        artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
     ArtifactStreamAttributes artifactStreamAttributes =
         artifactCollectionUtils.getArtifactStreamAttributes(artifactStream,
             featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, artifactStream.getAccountId()));
