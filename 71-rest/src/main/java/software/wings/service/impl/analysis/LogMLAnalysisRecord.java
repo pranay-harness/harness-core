@@ -34,6 +34,7 @@ import software.wings.service.impl.splunk.LogAnalysisResult;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
+import software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto;
 import software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisCluster;
 import software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisClusterList;
 import software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisClusterMap;
@@ -142,7 +143,8 @@ public class LogMLAnalysisRecord extends Base {
       Map<String, Map<String, SplunkAnalysisCluster>> control_clusters,
       Map<String, Map<String, SplunkAnalysisCluster>> unknown_clusters,
       Map<String, Map<String, SplunkAnalysisCluster>> test_clusters,
-      Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters, LogMLClusterScores cluster_scores,
+      Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters, Map<String, FrequencyPattern> frequency_patterns,
+      Map<String, LogAnalysisResult> log_analysis_result, LogMLClusterScores cluster_scores,
       byte[] analysisDetailsCompressedJson) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.stateExecutionId = stateExecutionId;
@@ -163,6 +165,8 @@ public class LogMLAnalysisRecord extends Base {
     this.test_clusters = test_clusters;
     this.ignore_clusters = ignore_clusters;
     this.cluster_scores = cluster_scores;
+    this.frequency_patterns = frequency_patterns;
+    this.log_analysis_result = log_analysis_result;
     this.analysisDetailsCompressedJson = analysisDetailsCompressedJson;
     this.validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
   }
@@ -244,6 +248,22 @@ public class LogMLAnalysisRecord extends Base {
                     -> splunkAnalysisClusterMap.put(s, convertToSplunkAnalysisCluster(logAnalysisCluster)));
             this.ignore_clusters.put(key, splunkAnalysisClusterMap);
           });
+        }
+
+        if (analysisRecordDetails.getFrequencyPatternsCount() > 0) {
+          this.frequency_patterns = new HashMap<>();
+
+          analysisRecordDetails.getFrequencyPatternsMap().forEach(
+              (key, frequencyPatternProto)
+                  -> this.frequency_patterns.put(key, convertToFrequencyPattern(frequencyPatternProto)));
+        }
+
+        if (analysisRecordDetails.getLogAnalysisResultCount() > 0) {
+          this.log_analysis_result = new HashMap<>();
+
+          analysisRecordDetails.getLogAnalysisResultMap().forEach(
+              (key, logAnalysisResultProto)
+                  -> this.log_analysis_result.put(key, convertToLogAnalysisResult(logAnalysisResultProto)));
         }
 
         this.setProtoSerializedAnalyisDetails(null);
@@ -340,6 +360,38 @@ public class LogMLAnalysisRecord extends Base {
       });
     }
 
+    if (isNotEmpty(frequency_patterns)) {
+      frequency_patterns.forEach((key, frequencyPattern) -> {
+        LogMLAnalysisRecordProto.FrequencyPattern.Builder frequencyPatternBuilder =
+            LogMLAnalysisRecordProto.FrequencyPattern.newBuilder()
+                .setLabel(frequencyPattern.getLabel())
+                .setText(frequencyPattern.getText());
+
+        LogMLAnalysisRecordProto.Pattern.Builder logPatternBuilder = LogMLAnalysisRecordProto.Pattern.newBuilder();
+
+        frequencyPattern.getPatterns().forEach(pattern -> {
+          logPatternBuilder.addAllSequence(pattern.getSequence());
+          logPatternBuilder.addAllTimestamps(pattern.getTimestamps());
+        });
+
+        frequencyPatternBuilder.addPatterns(logPatternBuilder.build());
+
+        detailsBuilder.putFrequencyPatterns(key, frequencyPatternBuilder.build());
+      });
+    }
+
+    if (isNotEmpty(log_analysis_result)) {
+      log_analysis_result.forEach((key, logAnalysisResult) -> {
+        LogMLAnalysisRecordProto.LogAnalysisResult.Builder logAnalysisResultBuilder =
+            LogMLAnalysisRecordProto.LogAnalysisResult.newBuilder()
+                .setLabel(logAnalysisResult.getLabel())
+                .setTag(logAnalysisResult.getTag())
+                .setText(logAnalysisResult.getText());
+
+        detailsBuilder.putLogAnalysisResult(key, logAnalysisResultBuilder.build());
+      });
+    }
+
     this.setProtoSerializedAnalyisDetails(EncodingUtils.compressBytes(detailsBuilder.build().toByteArray()));
     this.setUnknown_events(null);
     this.setTest_events(null);
@@ -348,6 +400,8 @@ public class LogMLAnalysisRecord extends Base {
     this.setUnknown_clusters(null);
     this.setTest_clusters(null);
     this.setIgnore_clusters(null);
+    this.setFrequency_patterns(null);
+    this.setLog_analysis_result(null);
   }
 
   private LogAnalysisCluster convertToLogAnalysisCluster(SplunkAnalysisCluster splunkAnalysisCluster) {
@@ -427,5 +481,37 @@ public class LogMLAnalysisRecord extends Base {
         isEmpty(logAnalysisCluster.getPriority()) ? null : FeedbackPriority.valueOf(logAnalysisCluster.getPriority()));
 
     return splunkAnalysisCluster;
+  }
+
+  private FrequencyPattern convertToFrequencyPattern(LogMLAnalysisRecordProto.FrequencyPattern frequencyPatternProto) {
+    if (frequencyPatternProto != null) {
+      List<FrequencyPattern.Pattern> patterns = new ArrayList<>();
+      frequencyPatternProto.getPatternsList().forEach(pattern
+          -> patterns.add(FrequencyPattern.Pattern.builder()
+                              .sequence(pattern.getSequenceList())
+                              .timestamps(pattern.getTimestampsList())
+                              .build()));
+
+      return FrequencyPattern.builder()
+          .label(frequencyPatternProto.getLabel())
+          .text(frequencyPatternProto.getText())
+          .patterns(patterns)
+          .build();
+    } else {
+      return null;
+    }
+  }
+
+  private LogAnalysisResult convertToLogAnalysisResult(
+      LogMLAnalysisRecordProto.LogAnalysisResult logAnalysisResultProto) {
+    if (logAnalysisResultProto != null) {
+      return LogAnalysisResult.builder()
+          .label(logAnalysisResultProto.getLabel())
+          .tag(logAnalysisResultProto.getTag())
+          .text(logAnalysisResultProto.getText())
+          .build();
+    } else {
+      return null;
+    }
   }
 }

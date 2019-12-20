@@ -33,11 +33,15 @@ message LogAnalysisCluster {
 
 }
 
+message Pattern {
+  repeated int32 sequence = 1;
+  repeated int64 timestamps = 2;
+}
+
 message FrequencyPattern {
   required int32 label = 1;
   required string text = 2;
-  repeated int32 sequence = 3;
-  repeated int64 timestamps = 4;
+  repeated Pattern patterns = 3;
 }
 
 message LogAnalysisResult {

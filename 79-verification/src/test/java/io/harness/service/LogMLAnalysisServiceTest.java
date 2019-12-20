@@ -7,6 +7,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PARNIAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -87,6 +88,8 @@ import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
+import software.wings.service.impl.splunk.FrequencyPattern;
+import software.wings.service.impl.splunk.LogAnalysisResult;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
 import software.wings.service.impl.verification.CV24x7DashboardServiceImpl;
@@ -1482,6 +1485,54 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(logMLAnalysisRecordToCompare.getControl_clusters()).isEqualTo(logMLAnalysisRecord.getControl_clusters());
     assertThat(logMLAnalysisRecordToCompare.getUnknown_clusters()).isEqualTo(logMLAnalysisRecord.getUnknown_clusters());
     assertThat(logMLAnalysisRecordToCompare.getIgnore_clusters()).isEqualTo(logMLAnalysisRecord.getIgnore_clusters());
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testCompressionLogMLAnalysisRecordFrequencyPattern() throws IOException {
+    File file = new File(getClass().getClassLoader().getResource("./sumo/logml_data_record.json").getFile());
+
+    final Gson gson = new Gson();
+    LogMLAnalysisRecord compressedLogMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      compressedLogMLAnalysisRecord = gson.fromJson(br, type);
+    }
+    assertThat(compressedLogMLAnalysisRecord).isNotNull();
+
+    Map<String, FrequencyPattern> frequencyPatterns = compressedLogMLAnalysisRecord.getFrequency_patterns();
+
+    compressedLogMLAnalysisRecord.compressLogAnalysisRecord();
+    assertThat(compressedLogMLAnalysisRecord.getFrequency_patterns()).isNull();
+
+    compressedLogMLAnalysisRecord.decompressLogAnalysisRecord();
+    assertThat(compressedLogMLAnalysisRecord.getFrequency_patterns()).isNotNull();
+    assertThat(compressedLogMLAnalysisRecord.getFrequency_patterns()).isEqualTo(frequencyPatterns);
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testCompressionLogMLAnalysisRecordLogAnalysisResult() throws IOException {
+    File file = new File(getClass().getClassLoader().getResource("./sumo/logml_data_record.json").getFile());
+
+    final Gson gson = new Gson();
+    LogMLAnalysisRecord compressedLogMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      compressedLogMLAnalysisRecord = gson.fromJson(br, type);
+    }
+    assertThat(compressedLogMLAnalysisRecord).isNotNull();
+
+    Map<String, LogAnalysisResult> logAnalysisResult = compressedLogMLAnalysisRecord.getLog_analysis_result();
+
+    compressedLogMLAnalysisRecord.compressLogAnalysisRecord();
+    assertThat(compressedLogMLAnalysisRecord.getLog_analysis_result()).isNull();
+
+    compressedLogMLAnalysisRecord.decompressLogAnalysisRecord();
+    assertThat(compressedLogMLAnalysisRecord.getLog_analysis_result()).isNotNull();
+    assertThat(compressedLogMLAnalysisRecord.getLog_analysis_result()).isEqualTo(logAnalysisResult);
   }
 
   @Test
