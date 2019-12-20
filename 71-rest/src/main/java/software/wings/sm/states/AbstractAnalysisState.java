@@ -994,7 +994,8 @@ public abstract class AbstractAnalysisState extends State {
     return false;
   }
 
-  protected ExecutionResponse createExecutionResponse(AnalysisContext context, ExecutionStatus status, String message) {
+  protected ExecutionResponse createExecutionResponse(
+      AnalysisContext context, ExecutionStatus status, String message, boolean updateCVMetadataState) {
     final VerificationStateAnalysisExecutionData executionData =
         VerificationStateAnalysisExecutionData.builder()
             .stateExecutionInstanceId(context.getStateExecutionId())
@@ -1009,8 +1010,10 @@ public abstract class AbstractAnalysisState extends State {
             .comparisonStrategy(getComparisonStrategy())
             .build();
     executionData.setStatus(status);
-    continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionId(), status, true);
-    cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionId()).info(message);
+    if (updateCVMetadataState) {
+      continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionId(), status, true, false);
+      cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionId()).info(message);
+    }
     return ExecutionResponse.builder()
         .async(false)
         .executionStatus(status)
@@ -1036,7 +1039,7 @@ public abstract class AbstractAnalysisState extends State {
     getLogger().info(
         "for {} got failed execution response {}", executionContext.getStateExecutionInstanceId(), executionResponse);
     continuousVerificationService.setMetaDataExecutionStatus(
-        executionContext.getStateExecutionInstanceId(), executionResponse.getExecutionStatus(), true);
+        executionContext.getStateExecutionInstanceId(), executionResponse.getExecutionStatus(), true, false);
     return ExecutionResponse.builder()
         .executionStatus(executionResponse.getExecutionStatus())
         .stateExecutionData(executionResponse.getStateExecutionData())

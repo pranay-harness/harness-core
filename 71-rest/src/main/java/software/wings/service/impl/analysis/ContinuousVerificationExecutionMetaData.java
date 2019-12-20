@@ -72,6 +72,7 @@ public class ContinuousVerificationExecutionMetaData extends Base {
   private String pipelineName;
   private ExecutionStatus executionStatus;
   private boolean noData;
+  private boolean manualOverride;
 
   @Default
   @JsonIgnore

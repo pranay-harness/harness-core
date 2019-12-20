@@ -24,6 +24,9 @@ import java.util.SortedSet;
 
 public interface ContinuousVerificationService {
   void saveCVExecutionMetaData(ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData);
+
+  ContinuousVerificationExecutionMetaData getCVExecutionMetaData(String stateExecutionId);
+
   LinkedHashMap<Long,
       LinkedHashMap<String,
           LinkedHashMap<String,
@@ -36,7 +39,8 @@ public interface ContinuousVerificationService {
   List<WorkflowExecution> getDeploymentsForService(
       String accountId, long startTime, long endTime, User user, String serviceId);
 
-  void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status, boolean noData);
+  void setMetaDataExecutionStatus(
+      String stateExecutionId, ExecutionStatus status, boolean noData, boolean manualOverride);
   PageResponse<ContinuousVerificationExecutionMetaData> getAllCVExecutionsForTime(String accountId, long beginEpochTs,
       long endEpochTs, boolean isTimeSeries, PageRequest<ContinuousVerificationExecutionMetaData> pageRequest);
 

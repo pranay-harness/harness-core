@@ -3,14 +3,12 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMillis;
 import static software.wings.common.VerificationConstants.LAMBDA_HOST_NAME;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
-import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -28,13 +26,13 @@ import org.apache.commons.io.IOUtils;
 import org.intellij.lang.annotations.Language;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PcfInstanceElement;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.DataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.DeploymentTimeSeriesAnalysis;
@@ -255,7 +253,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       activityLogger.error("Data collection failed: " + ex.getMessage());
       getLogger().error("metric analysis state {} failed", context.getStateExecutionInstanceId(), ex);
       continuousVerificationService.setMetaDataExecutionStatus(
-          context.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true);
+          context.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true, false);
       final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
           VerificationStateAnalysisExecutionData.builder()
               .stateExecutionInstanceId(context.getStateExecutionInstanceId())
@@ -304,95 +302,31 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     if (ExecutionStatus.isBrokeStatus(executionResponse.getExecutionStatus())) {
       return getErrorExecutionResponse(executionContext, executionResponse);
     }
+
     AnalysisContext context =
         wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
             .filter(AnalysisContextKeys.stateExecutionId, executionContext.getStateExecutionInstanceId())
             .get();
-    // TODO: get rid of the other path once this flag is cleanedup
-    if (featureFlagService.isEnabled(FeatureName.TIME_SERIES_WORKFLOW_V2, context.getAccountId())) {
-      return handleAsyncResponseV2(context, executionResponse);
+
+    ContinuousVerificationExecutionMetaData cvMetaData =
+        continuousVerificationService.getCVExecutionMetaData(context.getStateExecutionId());
+    Preconditions.checkNotNull(cvMetaData);
+
+    if (cvMetaData.isManualOverride()) {
+      NewRelicMetricAnalysisRecord manualActionRecord =
+          metricAnalysisService.getLatestLocalAnalysisRecord(context.getStateExecutionId());
+      Preconditions.checkNotNull(manualActionRecord);
+      return createExecutionResponse(context, cvMetaData.getExecutionStatus(), manualActionRecord.getMessage(), false);
     }
 
-    int analysisMinute = executionResponse.getStateExecutionData().getAnalysisMinute();
-    for (int i = 0; i < NUM_OF_RETRIES; i++) {
-      Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords = metricAnalysisService.getMetricsAnalysis(
-          context.getAppId(), context.getStateExecutionId(), context.getWorkflowExecutionId());
-      boolean analysisFound = false;
-      for (NewRelicMetricAnalysisRecord analysisRecord : metricAnalysisRecords) {
-        if (analysisRecord.getAnalysisMinute() >= analysisMinute) {
-          analysisFound = true;
-          break;
-        }
-      }
-
-      if (!analysisFound) {
-        getLogger().info("for {} analysis for minute {} hasn't been found yet. Analysis found so far {}",
-            context.getStateExecutionId(), analysisMinute, metricAnalysisRecords);
-        sleep(ofMillis(1000));
-        continue;
-      }
-
-      if (isQAVerificationPath(appService.get(context.getAppId()).getAccountId(), context.getAppId())) {
-        boolean isResultPresent = false;
-        for (NewRelicMetricAnalysisRecord metricAnalysisRecord : metricAnalysisRecords) {
-          if (isNotEmpty(metricAnalysisRecord.getMetricAnalyses())) {
-            isResultPresent = true;
-            break;
-          }
-        }
-        if (!isResultPresent) {
-          continuousVerificationService.setMetaDataExecutionStatus(
-              executionResponse.getStateExecutionData().getStateExecutionInstanceId(), ExecutionStatus.FAILED, true);
-          return ExecutionResponse.builder()
-              .executionStatus(ExecutionStatus.FAILED)
-              .stateExecutionData(executionResponse.getStateExecutionData())
-              .build();
-        }
-      }
-      getLogger().info("found analysisSummary with analysis records {}", metricAnalysisRecords.size());
-      for (NewRelicMetricAnalysisRecord metricAnalysisRecord : metricAnalysisRecords) {
-        if (metricAnalysisRecord.getRiskLevel() == RiskLevel.HIGH) {
-          executionStatus = ExecutionStatus.FAILED;
-          break;
-        }
-      }
-      executionStatus = isQAVerificationPath(appService.get(context.getAppId()).getAccountId(), context.getAppId())
-          ? ExecutionStatus.SUCCESS
-          : executionStatus;
-      executionResponse.getStateExecutionData().setStatus(executionStatus);
-      getLogger().info("State done with status {}, id: {}", executionStatus, context.getStateExecutionId());
-      continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionId(), executionStatus, false);
-
-      metricAnalysisService.saveRawDataToGoogleDataStore(
-          context.getAccountId(), context.getStateExecutionId(), executionStatus, context.getServiceId());
-
-      return ExecutionResponse.builder()
-          .executionStatus(executionStatus)
-          .stateExecutionData(executionResponse.getStateExecutionData())
-          .build();
-    }
-
-    executionResponse.getStateExecutionData().setErrorMsg(
-        "Analysis for minute " + analysisMinute + " failed to save in DB");
-    continuousVerificationService.setMetaDataExecutionStatus(
-        context.getStateExecutionId(), ExecutionStatus.ERROR, false);
-    return ExecutionResponse.builder()
-        .executionStatus(ExecutionStatus.ERROR)
-        .errorMessage("Analysis for minute " + analysisMinute + " failed to save in DB")
-        .stateExecutionData(executionResponse.getStateExecutionData())
-        .build();
-  }
-
-  private ExecutionResponse handleAsyncResponseV2(
-      AnalysisContext context, VerificationDataAnalysisResponse executionResponse) {
-    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis =
         metricAnalysisService.getMetricsAnalysis(context.getStateExecutionId(), Optional.empty(), Optional.empty());
     if (deploymentTimeSeriesAnalysis == null || isEmpty(deploymentTimeSeriesAnalysis.getMetricAnalyses())) {
       getLogger().info("for {} No analysis summary.", context.getStateExecutionId());
       executionStatus = isQAVerificationPath(context.getAccountId(), context.getAppId()) ? ExecutionStatus.FAILED
                                                                                          : ExecutionStatus.SUCCESS;
-      continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionId(), executionStatus, true);
+      continuousVerificationService.setMetaDataExecutionStatus(
+          context.getStateExecutionId(), executionStatus, true, false);
       return generateAnalysisResponse(context, executionStatus, "No Analysis result found");
     }
 
@@ -411,7 +345,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     executionResponse.getStateExecutionData().setStatus(executionStatus);
     metricAnalysisService.saveRawDataToGoogleDataStore(
         context.getAccountId(), context.getStateExecutionId(), executionStatus, context.getServiceId());
-    continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionId(), executionStatus, false);
+    continuousVerificationService.setMetaDataExecutionStatus(
+        context.getStateExecutionId(), executionStatus, false, false);
 
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)
@@ -422,7 +357,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   @Override
   public void handleAbortEvent(ExecutionContext context) {
     continuousVerificationService.setMetaDataExecutionStatus(
-        context.getStateExecutionInstanceId(), ExecutionStatus.ABORTED, true);
+        context.getStateExecutionInstanceId(), ExecutionStatus.ABORTED, true, false);
   }
 
   protected ExecutionResponse generateAnalysisResponse(
@@ -435,7 +370,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
                                                             .workflowExecutionId(context.getWorkflowExecutionId())
                                                             .build();
     wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(metricAnalysisRecord));
-    return createExecutionResponse(context, status, message);
+    return createExecutionResponse(context, status, message, true);
   }
 
   private AnalysisContext getAnalysisContext(ExecutionContext context, String correlationId) {

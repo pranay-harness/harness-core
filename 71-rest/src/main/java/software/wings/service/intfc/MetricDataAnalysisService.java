@@ -24,6 +24,8 @@ public interface MetricDataAnalysisService {
   Set<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
       String appId, String stateExecutionId, String workflowExecutionId);
 
+  NewRelicMetricAnalysisRecord getLatestLocalAnalysisRecord(String stateExecutionId);
+
   DeploymentTimeSeriesAnalysis getMetricsAnalysis(
       String stateExecutionId, Optional<Integer> offset, Optional<Integer> pageSize);
 

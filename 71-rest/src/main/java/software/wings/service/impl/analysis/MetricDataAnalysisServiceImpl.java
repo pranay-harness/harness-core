@@ -427,6 +427,14 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
+  public NewRelicMetricAnalysisRecord getLatestLocalAnalysisRecord(String stateExecutionId) {
+    return wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class, excludeAuthority)
+        .filter(NewRelicMetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+        .order(Sort.descending(NewRelicMetricAnalysisRecordKeys.analysisMinute))
+        .get();
+  }
+
+  @Override
   public DeploymentTimeSeriesAnalysis getMetricsAnalysis(
       String stateExecutionId, Optional<Integer> offset, Optional<Integer> pageSize) {
     final TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
