@@ -67,12 +67,15 @@ public class BudgetHandler implements Handler<Budget> {
     if (null == userGroupId) {
       return false;
     }
+    UserGroup userGroup = userGroupService.get(accountId, userGroupId, true);
+    if (null == userGroup) {
+      return false;
+    }
     Notification notification = InformationNotification.builder()
                                     .notificationTemplateId(BUDGET_NOTIFICATION.name())
                                     .notificationTemplateVariables(new HashMap<>())
                                     .accountId(accountId)
                                     .build();
-    UserGroup userGroup = userGroupService.get(accountId, userGroupId, true);
     userGroupBasedDispatcher.dispatch(Arrays.asList(notification), userGroup);
     return true;
   }
