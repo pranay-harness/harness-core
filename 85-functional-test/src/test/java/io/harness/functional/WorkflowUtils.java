@@ -84,18 +84,29 @@ public class WorkflowUtils {
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   public void checkForWorkflowSuccess(WorkflowExecution workflowExecution) {
+    WorkflowExecution finalWorkflowExecution = awaitAndFetchFinalWorkflowExecution(workflowExecution);
+    if (finalWorkflowExecution.getStatus() != ExecutionStatus.SUCCESS) {
+      throw new WingsException(
+          "workflow execution did not succeed. Final status: " + finalWorkflowExecution.getStatus());
+    }
+  }
+
+  public void validateWorkflowStatus(WorkflowExecution workflowExecution, ExecutionStatus expectedStatus) {
+    WorkflowExecution finalWorkflowExecution = awaitAndFetchFinalWorkflowExecution(workflowExecution);
+    if (finalWorkflowExecution.getStatus() != expectedStatus) {
+      throw new WingsException("workflow execution did not complete with expected status. Final status: "
+          + finalWorkflowExecution.getStatus() + " Expected status: " + expectedStatus);
+    }
+  }
+
+  private WorkflowExecution awaitAndFetchFinalWorkflowExecution(WorkflowExecution workflowExecution) {
     Awaitility.await().atMost(TEST_TIMEOUT_IN_MINUTES, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
       ExecutionStatus status =
           workflowExecutionService.getWorkflowExecution(workflowExecution.getAppId(), workflowExecution.getUuid())
               .getStatus();
       return status == ExecutionStatus.SUCCESS || status == ExecutionStatus.FAILED;
     });
-    WorkflowExecution finalWorkflowExecution =
-        workflowExecutionService.getWorkflowExecution(workflowExecution.getAppId(), workflowExecution.getUuid());
-    if (finalWorkflowExecution.getStatus() != ExecutionStatus.SUCCESS) {
-      throw new WingsException(
-          "workflow execution did not succeed. Final status: " + finalWorkflowExecution.getStatus());
-    }
+    return workflowExecutionService.getWorkflowExecution(workflowExecution.getAppId(), workflowExecution.getUuid());
   }
 
   public static Workflow buildCanaryWorkflowPostDeploymentStep(String name, String envId, GraphNode graphNode) {
@@ -541,6 +552,40 @@ public class WorkflowUtils {
               .properties(ImmutableMap.<String, Object>builder().put("artifactStreamId", artifactStreamId).build())
               .build());
     }
+    phaseSteps.add(aPhaseStep(PhaseStepType.PREPARE_STEPS, PREPARE_STEPS.toString()).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.COLLECT_ARTIFACT, PhaseStepType.COLLECT_ARTIFACT.toString())
+                       .addAllSteps(steps)
+                       .build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
+
+    Workflow buildWorkflow =
+        aWorkflow()
+            .name(name + System.currentTimeMillis())
+            .appId(appId)
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aBuildOrchestrationWorkflow()
+                    .withWorkflowPhases(Arrays.asList(aWorkflowPhase().phaseSteps(phaseSteps).build()))
+                    .build())
+            .build();
+    return buildWorkflow;
+  }
+
+  // Unique name of the workflow is ensured here
+  public Workflow createWorkflowWithShellScriptCommand(
+      @NotEmpty String name, String appId, @NotEmpty String scriptType, @NotEmpty String script) {
+    List<PhaseStep> phaseSteps = new ArrayList<>();
+    List<GraphNode> steps = new ArrayList<>();
+    steps.add(GraphNode.builder()
+                  .name("shell-script-" + System.currentTimeMillis())
+                  .type(StateType.SHELL_SCRIPT.toString())
+                  .properties(ImmutableMap.<String, Object>builder()
+                                  .put("scriptType", scriptType)
+                                  .put("scriptString", script)
+                                  .put("executeOnDelegate", "true")
+                                  .build())
+                  .build());
+
     phaseSteps.add(aPhaseStep(PhaseStepType.PREPARE_STEPS, PREPARE_STEPS.toString()).build());
     phaseSteps.add(aPhaseStep(PhaseStepType.COLLECT_ARTIFACT, PhaseStepType.COLLECT_ARTIFACT.toString())
                        .addAllSteps(steps)
