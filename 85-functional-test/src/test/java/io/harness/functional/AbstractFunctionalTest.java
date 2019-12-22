@@ -151,7 +151,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
       String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {
     WorkflowExecution original = WorkflowRestUtils.startWorkflow(bearerToken, appId, envId, executionArgs);
 
-    Awaitility.await().atMost(120, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).until(() -> {
+    Awaitility.await().atMost(8, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
       final WorkflowExecution workflowExecution =
           workflowExecutionService.getWorkflowExecution(appId, original.getUuid());
       return workflowExecution != null && ExecutionStatus.isFinalStatus(workflowExecution.getStatus());
