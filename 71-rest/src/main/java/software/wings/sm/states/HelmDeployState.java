@@ -934,7 +934,7 @@ public class HelmDeployState extends State {
     return helmValueOverridesYamlFilesEvaluated;
   }
 
-  private List<String> getOrderedValuesYamlList(Map<K8sValuesLocation, String> valuesFiles) {
+  List<String> getOrderedValuesYamlList(Map<K8sValuesLocation, String> valuesFiles) {
     List<String> valuesList = new ArrayList<>();
 
     if (valuesFiles.containsKey(K8sValuesLocation.Service)) {

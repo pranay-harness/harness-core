@@ -58,7 +58,7 @@ public class HelmHelper {
         .addParam("args", "Helm value yaml file must contain " + HELM_NAMESPACE_PLACEHOLDER + " placeholder");
   }
 
-  private static boolean checkStringPresentInHelmValueYaml(String helmValueYamlFile, String valueToFind) {
+  static boolean checkStringPresentInHelmValueYaml(String helmValueYamlFile, String valueToFind) {
     if (isBlank(helmValueYamlFile)) {
       return false;
     }
