@@ -136,6 +136,7 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
     ecsServiceDeployResponse.setContainerInfos(executionData.getContainerInfos());
     ecsServiceDeployResponse.setNewInstanceData(executionData.getNewInstanceData());
     ecsServiceDeployResponse.setOldInstanceData(executionData.getOldInstanceData());
+    ecsServiceDeployResponse.setPreviousContainerInfos(executionData.getPreviousContainerInfos());
     executionResponse.setCommandExecutionStatus(ecsServiceDeployResponse.getCommandExecutionStatus());
     executionResponse.setErrorMessage(ecsServiceDeployResponse.getOutput());
   }
@@ -151,6 +152,8 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
       if (isUpsize) {
         executionDataBuilder.containerInfos(
             containerInfos.stream().filter(ContainerInfo::isNewContainer).collect(toList()));
+      } else {
+        executionDataBuilder.previousContainerInfos(containerInfos);
       }
       ecsDeployCommandTaskHelper.logContainerInfos(containerInfos, executionLogCallback);
       logger.info("Successfully completed resize operation");

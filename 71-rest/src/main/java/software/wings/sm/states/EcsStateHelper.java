@@ -98,6 +98,7 @@ import software.wings.sm.states.EcsSetupContextVariableHolder.EcsSetupContextVar
 import software.wings.utils.EcsConvention;
 import software.wings.utils.Misc;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -551,6 +552,14 @@ public class EcsStateHelper {
     containerElement.setPrevAutoscalarsAlreadyRemoved(true);
   }
 
+  private void setNewInstanceFlag(
+      List<InstanceElement> instanceElements, boolean flag, List<InstanceElement> finalInstanceElements) {
+    if (isNotEmpty(instanceElements)) {
+      instanceElements.forEach(instanceElement -> { instanceElement.setNewInstance(flag); });
+      finalInstanceElements.addAll(instanceElements);
+    }
+  }
+
   public ExecutionResponse handleDelegateResponseForEcsDeploy(ExecutionContext context,
       Map<String, ResponseData> response, boolean rollback, ActivityService activityService,
       ServiceTemplateService serviceTemplateService, ContainerDeploymentManagerHelper containerDeploymentHelper) {
@@ -565,16 +574,23 @@ public class EcsStateHelper {
       EcsServiceDeployResponse deployResponse = (EcsServiceDeployResponse) executionResponse.getEcsCommandResponse();
       List<InstanceStatusSummary> instanceStatusSummaries =
           containerDeploymentHelper.getInstanceStatusSummaries(context, deployResponse.getContainerInfos());
+      List<InstanceStatusSummary> prevInstanceStatusSummaries =
+          containerDeploymentHelper.getInstanceStatusSummaries(context, deployResponse.getPreviousContainerInfos());
       executionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
 
       if (!rollback) {
         updateContainerElementAfterSuccessfulResize(context);
       }
 
+      List<InstanceElement> finalInstanceElements = new ArrayList<>();
       List<InstanceElement> instanceElements =
           instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
+      setNewInstanceFlag(instanceElements, true, finalInstanceElements);
+      List<InstanceElement> prevInstanceElements =
+          prevInstanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
+      setNewInstanceFlag(prevInstanceElements, false, finalInstanceElements);
       InstanceElementListParam listParam =
-          InstanceElementListParam.builder().instanceElements(instanceElements).build();
+          InstanceElementListParam.builder().instanceElements(finalInstanceElements).build();
 
       executionData.setOldInstanceData(deployResponse.getOldInstanceData());
       executionData.setNewInstanceData(deployResponse.getNewInstanceData());

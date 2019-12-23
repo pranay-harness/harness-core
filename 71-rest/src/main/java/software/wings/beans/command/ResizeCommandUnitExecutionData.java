@@ -12,6 +12,7 @@ import java.util.List;
 @Builder
 public class ResizeCommandUnitExecutionData implements CommandExecutionData {
   private List<ContainerInfo> containerInfos;
+  private List<ContainerInfo> previousContainerInfos;
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
   private String namespace;
