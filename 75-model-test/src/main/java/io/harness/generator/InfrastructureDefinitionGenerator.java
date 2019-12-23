@@ -51,6 +51,7 @@ import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AzureInstanceInfrastructure;
+import software.wings.infra.AzureKubernetesService;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
@@ -66,6 +67,13 @@ import javax.validation.constraints.NotNull;
 
 @Singleton
 public class InfrastructureDefinitionGenerator {
+  private static final String AZURE_HELM_NAME = "Azure Helm";
+  private static final String SUBSCRIPTION_ID = "12d2db62-5aa9-471d-84bb-faa489b3e319";
+  private static final String PUNEET_AKS_RESOURCE_GROUP = "puneet-aks";
+  private static final String MY_HARNESS_CLUSTER = "myHarnessCluster";
+  private static final String DEFAULT_NAMESPACE = "default";
+  private static final String DEFAULT_RELEASE_NAME = "release-${infra.kubernetes.infraId}";
+
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private SettingGenerator settingGenerator;
@@ -110,7 +118,8 @@ public class InfrastructureDefinitionGenerator {
     K8S_ROLLING_TEST,
     K8S_CANARY_TEST,
     K8S_BLUE_GREEN_TEST,
-    MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST
+    MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST,
+    AZURE_HELM
   }
 
   public InfrastructureDefinition ensurePredefined(
@@ -136,10 +145,39 @@ public class InfrastructureDefinitionGenerator {
         return ensureK8sTest(seed, owners, "fn-test-canary");
       case MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST:
         return ensureMultiArtifactAwsSshFunctionalTest(seed, owners);
+      case AZURE_HELM:
+        return ensureAzureHelmInfraDef(seed, owners);
       default:
         unhandled(infraType);
     }
     return null;
+  }
+
+  private InfrastructureDefinition ensureAzureHelmInfraDef(Seed seed, Owners owners) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.FUNCTIONAL_TEST);
+      owners.add(environment);
+    }
+
+    final SettingAttribute azureCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, AZURE_TEST_CLOUD_PROVIDER);
+
+    return ensureInfrastructureDefinition(InfrastructureDefinition.builder()
+                                              .name(AZURE_HELM_NAME)
+                                              .envId(environment.getUuid())
+                                              .appId(environment.getAppId())
+                                              .infrastructure(AzureKubernetesService.builder()
+                                                                  .cloudProviderId(azureCloudProvider.getUuid())
+                                                                  .subscriptionId(SUBSCRIPTION_ID)
+                                                                  .resourceGroup(PUNEET_AKS_RESOURCE_GROUP)
+                                                                  .clusterName(MY_HARNESS_CLUSTER)
+                                                                  .namespace(DEFAULT_NAMESPACE)
+                                                                  .releaseName(DEFAULT_RELEASE_NAME)
+                                                                  .build())
+                                              .deploymentType(DeploymentType.HELM)
+                                              .cloudProviderType(CloudProviderType.AZURE)
+                                              .build());
   }
 
   private InfrastructureDefinition ensureAzureWinRMTest(Randomizer.Seed seed, Owners owners) {

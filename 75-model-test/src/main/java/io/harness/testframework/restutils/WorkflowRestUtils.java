@@ -73,6 +73,23 @@ public class WorkflowRestUtils {
     return updatedWorkflowResponse.getResource();
   }
 
+  public static WorkflowPhase updateWorkflowPhase(String bearerToken, String accountId, String appId, String workflowId,
+      String phaseId, WorkflowPhase workflowPhase) {
+    GenericType<RestResponse<WorkflowPhase>> returnType = new GenericType<RestResponse<WorkflowPhase>>() {};
+
+    RestResponse<WorkflowPhase> savedWorkflowResponse = Setup.portal()
+                                                            .auth()
+                                                            .oauth2(bearerToken)
+                                                            .queryParam("accountId", accountId)
+                                                            .queryParam("appId", appId)
+                                                            .body(workflowPhase, ObjectMapperType.GSON)
+                                                            .contentType(ContentType.JSON)
+                                                            .put("/workflows/" + workflowId + "/phases/" + phaseId)
+                                                            .as(returnType.getType());
+
+    return savedWorkflowResponse.getResource();
+  }
+
   public static List<Variable> updateUserVariables(
       String bearerToken, String accountId, String appId, String workflowId, List<Variable> userVariables) {
     GenericType<RestResponse<List<Variable>>> returnType = new GenericType<RestResponse<List<Variable>>>() {};

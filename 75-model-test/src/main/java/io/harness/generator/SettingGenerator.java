@@ -21,6 +21,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingCategory.AZURE_ARTIFACTS;
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
+import static software.wings.beans.SettingAttribute.SettingCategory.HELM_REPO;
 import static software.wings.beans.SettingAttribute.SettingCategory.SETTING;
 import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 
@@ -51,6 +52,7 @@ import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
+import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -77,6 +79,9 @@ public class SettingGenerator {
   private static final String HELM_CHART_REPO = "Helm Chart Repo";
   private static final String HELM_SOURCE_REPO_URL = "https://github.com/helm/charts.git";
   private static final String HELM_SOURCE_REPO = "Helm Source Repo";
+  private static final String HELM_S3_BUCKET = "anshul-test-123";
+  private static final String HELM_S3 = "HELM S3";
+  private static final String REGION_AP_SOUTH_1 = "ap-south-1";
 
   @Inject AccountGenerator accountGenerator;
   @Inject ScmSecret scmSecret;
@@ -107,7 +112,8 @@ public class SettingGenerator {
     HELM_SOURCE_REPO_CONNECTOR,
     PCF_CONNECTOR,
     AZURE_ARTIFACTS_CONNECTOR,
-    PCF_FUNCTIONAL_TEST_GIT_REPO
+    PCF_FUNCTIONAL_TEST_GIT_REPO,
+    HELM_S3_CONNECTOR
   }
 
   public void ensureAllPredefined(Randomizer.Seed seed, Owners owners) {
@@ -162,10 +168,33 @@ public class SettingGenerator {
         return ensureAzureArtifactsSetting(seed, owners);
       case PCF_FUNCTIONAL_TEST_GIT_REPO:
         return ensurePCFGitRepo(seed, owners);
+      case HELM_S3_CONNECTOR:
+        return ensureHelmS3Connector(seed, owners);
       default:
         unhandled(predefined);
     }
     return null;
+  }
+
+  private SettingAttribute ensureHelmS3Connector(Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    SettingAttribute awsCloudProvider = ensurePredefined(seed, owners, Settings.AWS_TEST_CLOUD_PROVIDER);
+
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withName(HELM_S3)
+                                            .withAccountId(account.getUuid())
+                                            .withCategory(HELM_REPO)
+                                            .withAccountId(account.getUuid())
+                                            .withValue(AmazonS3HelmRepoConfig.builder()
+                                                           .accountId(account.getUuid())
+                                                           .connectorId(awsCloudProvider.getUuid())
+                                                           .bucketName(HELM_S3_BUCKET)
+                                                           .region(REGION_AP_SOUTH_1)
+                                                           .build())
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                            .build();
+
+    return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensurePcfConnector(Seed seed, Owners owners) {
