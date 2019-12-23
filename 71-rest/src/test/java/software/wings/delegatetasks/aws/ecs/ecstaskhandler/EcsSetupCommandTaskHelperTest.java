@@ -9,7 +9,6 @@ import static java.util.Optional.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -826,8 +825,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     doReturn(newArrayList(ContainerInfo.builder().containerId("id1").build(),
                  ContainerInfo.builder().containerId("id2").build()))
         .when(mockEcsContainerService)
-        .getContainerInfosAfterEcsWait(
-            anyString(), any(), anyList(), anyString(), anyString(), anyList(), any(), anyBoolean());
+        .getContainerInfosAfterEcsWait(anyString(), any(), anyList(), anyString(), anyString(), anyList(), any());
     ecsSetupCommandTaskHelper.handleRollback(params, attribute, builder, emptyList(), mockCallback);
     ContainerSetupCommandUnitExecutionData data = builder.build();
     assertThat(data.getEcsServiceArn()).isEqualTo("svcArn");
@@ -901,8 +899,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     doReturn(singletonList(ContainerInfo.builder().status(FAILURE).build()))
         .doReturn(singletonList(ContainerInfo.builder().status(SUCCESS).build()))
         .when(mockEcsContainerService)
-        .getContainerInfosAfterEcsWait(
-            anyString(), any(), anyList(), anyString(), anyString(), anyList(), any(), anyBoolean());
+        .getContainerInfosAfterEcsWait(anyString(), any(), anyList(), anyString(), anyString(), anyList(), any());
     ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(attribute, params, "foo__3", emptyList(), mockCallback);
     verify(awsClusterService)
         .resizeCluster(anyString(), any(), anyList(), anyString(), eq("foo__1"), anyInt(), eq(0), anyInt(), any());

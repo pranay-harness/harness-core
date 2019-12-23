@@ -102,7 +102,7 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
       // Now get all the container infos
       List<ContainerInfo> containerInfos = ecsContainerService.getContainerInfosAfterEcsWait(params.getRegion(),
           params.getAwsConfig(), params.getEncryptionDetails(), params.getClusterName(), params.getServiceName(),
-          new ArrayList<>(), executionLogCallback, false);
+          new ArrayList<>(), executionLogCallback);
       executionLogCallback.saveExecutionLog("Got all the container infos", LogLevel.INFO);
       return EcsSteadyStateCheckResponse.builder()
           .executionStatus(ExecutionStatus.SUCCESS)

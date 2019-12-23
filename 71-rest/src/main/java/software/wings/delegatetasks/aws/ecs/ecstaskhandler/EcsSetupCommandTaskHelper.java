@@ -943,7 +943,7 @@ public class EcsSetupCommandTaskHelper {
     ecsContainerService.waitForServiceToReachSteadyState(serviceSteadyStateTimeout, updateCountRequestData);
 
     return ecsContainerService.getContainerInfosAfterEcsWait(region, awsConfig, encryptedDataDetails, clusterName,
-        serviceName, Collections.EMPTY_LIST, executionLogCallback, false);
+        serviceName, Collections.EMPTY_LIST, executionLogCallback);
   }
 
   private List<ServiceEvent> getEventsFromService(Service service) {
@@ -974,7 +974,7 @@ public class EcsSetupCommandTaskHelper {
                                             .getTaskArns();
         List<ContainerInfo> containerInfos =
             ecsContainerService.getContainerInfosAfterEcsWait(setupParams.getRegion(), awsConfig, encryptedDataDetails,
-                setupParams.getClusterName(), activeServiceName, originalTaskArns, executionLogCallback, false);
+                setupParams.getClusterName(), activeServiceName, originalTaskArns, executionLogCallback);
         boolean allContainersSuccess =
             containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
         if (allContainersSuccess) {

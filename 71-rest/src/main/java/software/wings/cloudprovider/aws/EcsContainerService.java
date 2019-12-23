@@ -52,7 +52,7 @@ public interface EcsContainerService {
 
   List<ContainerInfo> getContainerInfosAfterEcsWait(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
-      List<String> originalTaskArns, ExecutionLogCallback executionLogCallback, boolean isDownsizeInitiatedByHarness);
+      List<String> originalTaskArns, ExecutionLogCallback executionLogCallback);
 
   /**
    * Create service.

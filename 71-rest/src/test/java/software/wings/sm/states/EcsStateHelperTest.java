@@ -481,6 +481,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
         singletonList(anInstanceStatusSummary()
                           .withInstanceElement(anInstanceElement().dockerId("DockerId").hostName("HostName").build())
                           .build()))
+        .doReturn(emptyList())
         .when(mockHelper)
         .getInstanceStatusSummaries(any(), anyList());
     ActivityService mockService = mock(ActivityService.class);

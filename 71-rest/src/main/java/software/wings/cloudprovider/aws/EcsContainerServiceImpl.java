@@ -1008,7 +1008,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     waitForTasksToBeInRunningStateButDontThrowException(serviceCountRequestData);
     waitForServiceToReachSteadyState(serviceSteadyStateTimeout, serviceCountRequestData);
     return getContainerInfosAfterEcsWait(region, awsConfig, encryptedDataDetails, clusterName, serviceName,
-        Collections.EMPTY_LIST, executionLogCallback, false);
+        Collections.EMPTY_LIST, executionLogCallback);
   }
 
   @Override
@@ -1050,8 +1050,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         }
       }
 
-      return getContainerInfosAfterEcsWait(region, awsConfig, encryptedDataDetails, clusterName, serviceName,
-          originalTaskArns, executionLogCallback, desiredCount <= previousCount);
+      return getContainerInfosAfterEcsWait(
+          region, awsConfig, encryptedDataDetails, clusterName, serviceName, originalTaskArns, executionLogCallback);
     } catch (Exception ex) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(ex), ex);
     }
@@ -1075,10 +1075,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public List<ContainerInfo> getContainerInfosAfterEcsWait(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
-      List<String> originalTaskArns, ExecutionLogCallback executionLogCallback, boolean isDownsizeInitiatedByHarness) {
+      List<String> originalTaskArns, ExecutionLogCallback executionLogCallback) {
     List<String> taskArns =
         getTaskArns(region, encryptedDataDetails, clusterName, serviceName, awsConfig, DesiredStatus.RUNNING);
-    if (isEmpty(taskArns) || isDownsizeInitiatedByHarness) {
+    if (isEmpty(taskArns)) {
       logger.info("Downsize complete for ECS deployment, Service: " + serviceName);
       return emptyList();
     }

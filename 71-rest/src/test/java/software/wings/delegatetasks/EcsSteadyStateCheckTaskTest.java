@@ -65,8 +65,7 @@ public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
     doNothing().when(mockEcsContainerService).waitForServiceToReachSteadyState(eq(0), any());
     doReturn(singletonList(ContainerInfo.builder().containerId("cid").hostName("host").newContainer(true).build()))
         .when(mockEcsContainerService)
-        .getContainerInfosAfterEcsWait(
-            anyString(), any(), anyList(), anyString(), anyString(), anyList(), any(), eq(false));
+        .getContainerInfosAfterEcsWait(anyString(), any(), anyList(), anyString(), anyString(), anyList(), any());
     EcsSteadyStateCheckResponse response = task.run(new Object[] {EcsSteadyStateCheckParams.builder().build()});
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
