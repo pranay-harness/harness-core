@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.lang.String.format;
@@ -17,6 +18,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -39,6 +41,7 @@ import com.amazonaws.services.autoscaling.model.MixedInstancesPolicy;
 import com.amazonaws.services.autoscaling.model.TagDescription;
 import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionRequest;
 import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionResult;
+import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.LaunchTemplateVersion;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -55,6 +58,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAmiResizeData;
+import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse.AwsAmiServiceSetupResponseBuilder;
@@ -65,6 +69,7 @@ import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -599,5 +604,41 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
         .isEqualTo(baseLaunchTemplateVersion.getLaunchTemplateName());
     assertThat(awsAmiServiceSetupResponse.getBaseLaunchTemplateVersion())
         .isEqualTo(String.valueOf(baseLaunchTemplateVersion.getVersionNumber()));
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testFetchExistingInstancesForOlderASG() {
+    Instance instance = new Instance().withInstanceId("1");
+    doReturn(Arrays.asList(instance))
+        .when(mockAwsAsgHelperServiceDelegate)
+        .listAutoScalingGroupInstances(any(), anyList(), any(), any());
+
+    List<AwsAmiResizeData> awsAmiResizeData =
+        Arrays.asList(AwsAmiResizeData.builder().asgName("1").desiredCount(1).build());
+    AwsAmiServiceDeployRequest awsAmiServiceDeployRequest =
+        AwsAmiServiceDeployRequest.builder().asgDesiredCounts(awsAmiResizeData).build();
+    List<Instance> existingInstancesForOlderASG = awsAmiHelperServiceDelegate.fetchExistingInstancesForOlderASG(
+        AwsConfig.builder().build(), emptyList(), awsAmiServiceDeployRequest, mockCallback);
+    assertThat(existingInstancesForOlderASG.size()).isEqualTo(1);
+    assertThat(existingInstancesForOlderASG.get(0).equals(instance)).isTrue();
+
+    awsAmiServiceDeployRequest.setAsgDesiredCounts(null);
+    awsAmiServiceDeployRequest.setOldAutoScalingGroupName("myname");
+    existingInstancesForOlderASG = awsAmiHelperServiceDelegate.fetchExistingInstancesForOlderASG(
+        AwsConfig.builder().build(), emptyList(), awsAmiServiceDeployRequest, mockCallback);
+    assertThat(existingInstancesForOlderASG.size()).isEqualTo(1);
+    assertThat(existingInstancesForOlderASG.get(0).equals(instance)).isTrue();
+
+    // Make sure, it doesnt throw an exception
+    awsAmiServiceDeployRequest.setOldAutoScalingGroupName(null);
+    awsAmiServiceDeployRequest.setAsgDesiredCounts(awsAmiResizeData);
+    doThrow(new InvalidRequestException(""))
+        .when(mockAwsAsgHelperServiceDelegate)
+        .listAutoScalingGroupInstances(any(), anyList(), any(), any());
+    existingInstancesForOlderASG = awsAmiHelperServiceDelegate.fetchExistingInstancesForOlderASG(
+        AwsConfig.builder().build(), emptyList(), awsAmiServiceDeployRequest, mockCallback);
+    assertThat(existingInstancesForOlderASG.size()).isEqualTo(0);
   }
 }

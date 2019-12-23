@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.VerificationElement;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +28,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PcfInstanceElement implements ContextElement {
+public class PcfInstanceElement implements ContextElement, VerificationElement {
   private String uuid;
   private String applicationId;
   private String instanceIndex;
@@ -60,5 +61,10 @@ public class PcfInstanceElement implements ContextElement {
   @Override
   public ContextElement cloneMin() {
     return null;
+  }
+
+  @Override
+  public boolean isNewInstance() {
+    return isUpsize;
   }
 }
