@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -641,5 +642,22 @@ public class HelmDeployStateTest extends WingsBaseTest {
     String renderedValuesFile = "# imageName: IMAGE_NAME\n"
         + "# tag: TAG";
     assertThat(helmInstallCommandRequest.getVariableOverridesYamlFiles().get(0)).isEqualTo(renderedValuesFile);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testPriorityOrderOfValuesYamlFile() {
+    Map<K8sValuesLocation, String> k8sValuesLocationContentMap = new HashMap<>();
+    k8sValuesLocationContentMap.put(K8sValuesLocation.ServiceOverride, "ServiceOverride");
+    k8sValuesLocationContentMap.put(K8sValuesLocation.Service, "Service");
+    k8sValuesLocationContentMap.put(K8sValuesLocation.Environment, "Environment");
+    k8sValuesLocationContentMap.put(K8sValuesLocation.EnvironmentGlobal, "EnvironmentGlobal");
+    List<String> expectedValuesYamlList =
+        Arrays.asList("Service", "ServiceOverride", "EnvironmentGlobal", "Environment");
+
+    List<String> actualValuesYamlList = helmDeployState.getOrderedValuesYamlList(k8sValuesLocationContentMap);
+
+    assertThat(actualValuesYamlList).isEqualTo(expectedValuesYamlList);
   }
 }
