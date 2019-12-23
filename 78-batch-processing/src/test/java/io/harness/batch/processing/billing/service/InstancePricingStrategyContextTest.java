@@ -9,6 +9,7 @@ import io.harness.batch.processing.billing.service.impl.EcsFargateInstancePricin
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.pricing.service.impl.VMPricingServiceImpl;
+import io.harness.batch.processing.pricing.service.intfc.AwsCustomPricingService;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
@@ -20,13 +21,15 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class InstancePricingStrategyContextTest extends CategoryTest {
   @Mock private VMPricingServiceImpl vmPricingService;
+  @Mock private AwsCustomPricingService awsCustomPricingService;
 
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstancePricingStrategy() {
     InstancePricingStrategyContext instancePricingStrategyContext = new InstancePricingStrategyContext(
-        new ComputeInstancePricingStrategy(vmPricingService), new EcsFargateInstancePricingStrategy(vmPricingService));
+        new ComputeInstancePricingStrategy(vmPricingService, awsCustomPricingService),
+        new EcsFargateInstancePricingStrategy(vmPricingService, awsCustomPricingService));
     InstancePricingStrategy computeInstancePricingStrategy =
         instancePricingStrategyContext.getInstancePricingStrategy(InstanceType.EC2_INSTANCE);
     assertThat(computeInstancePricingStrategy.getClass()).isEqualTo(ComputeInstancePricingStrategy.class);

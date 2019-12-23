@@ -6,7 +6,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.pricing.client.BanzaiPricingClient;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
@@ -38,14 +37,6 @@ public class VMPricingServiceImplTest extends CategoryTest {
   private final double DEFAULT_INSTANCE_CPU = 36;
   private final double DEFAULT_INSTANCE_MEMORY = 60;
   private final double DEFAULT_INSTANCE_PRICE = 1.60;
-
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void testGetVMCacheKey() {
-    String vmCacheKey = vmPricingService.getVMCacheKey(InstanceType.ECS_TASK_EC2.name(), REGION, CloudProvider.AWS);
-    assertThat(vmCacheKey).isEqualTo("ECS_TASK_EC2_us-east-1_AWS");
-  }
 
   @Test
   @Owner(developers = HITESH)
