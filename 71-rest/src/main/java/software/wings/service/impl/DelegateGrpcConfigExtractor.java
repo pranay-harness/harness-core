@@ -12,10 +12,10 @@ import java.net.URISyntaxException;
  * processing delegate config templates.
  */
 @UtilityClass
-class DelegateGrpcConfigExtractor {
+public class DelegateGrpcConfigExtractor {
   private static final Joiner JOINER = Joiner.on("-").skipNulls();
 
-  static String extractTarget(String managerUrl) {
+  public static String extractTarget(String managerUrl) {
     try {
       return new URI(managerUrl).getAuthority();
     } catch (URISyntaxException e) {
@@ -23,7 +23,7 @@ class DelegateGrpcConfigExtractor {
     }
   }
 
-  static String extractAuthority(String managerUrl, String svc) {
+  public static String extractAuthority(String managerUrl, String svc) {
     try {
       URI uri = new URI(managerUrl);
       String path = uri.getPath();

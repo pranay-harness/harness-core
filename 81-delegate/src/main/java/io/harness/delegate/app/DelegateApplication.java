@@ -12,6 +12,8 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.app.DeployMode.DEPLOY_MODE;
 import static software.wings.app.DeployMode.isOnPrem;
+import static software.wings.service.impl.DelegateGrpcConfigExtractor.extractAuthority;
+import static software.wings.service.impl.DelegateGrpcConfigExtractor.extractTarget;
 
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -126,12 +128,16 @@ public class DelegateApplication {
     });
     modules.add(new ManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
         configuration.getAccountId(), configuration.getAccountSecret()));
-    modules.add(new ManagerGrpcClientModule(ManagerGrpcClientModule.Config.builder()
-                                                .target(configuration.getManagerTarget())
-                                                .authority(configuration.getManagerAuthority())
-                                                .accountId(configuration.getAccountId())
-                                                .accountSecret(configuration.getAccountSecret())
-                                                .build()));
+    modules.add(new ManagerGrpcClientModule(
+        ManagerGrpcClientModule.Config.builder()
+            .target(configuration.getManagerTarget() != null ? configuration.getManagerTarget()
+                                                             : extractTarget(System.getenv("MANAGER_HOST_AND_PORT")))
+            .authority(configuration.getManagerAuthority() != null
+                    ? configuration.getManagerAuthority()
+                    : extractAuthority(System.getenv("MANAGER_HOST_AND_PORT"), "manager"))
+            .accountId(configuration.getAccountId())
+            .accountSecret(configuration.getAccountSecret())
+            .build()));
     if (!isOnPrem(System.getenv().get(DEPLOY_MODE))) {
       modules.add(new PingPongModule());
     }
