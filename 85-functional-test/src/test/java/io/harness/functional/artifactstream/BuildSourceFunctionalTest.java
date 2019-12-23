@@ -74,8 +74,9 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = AADITI, intermittent = true)
+  @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
+  @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void getJobsForBambooAtConnectorLevel() {
     final SettingAttribute settingAttribute =
         settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.HARNESS_BAMBOO_CONNECTOR);
@@ -116,8 +117,9 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = AADITI, intermittent = true)
+  @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
+  @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void getArtifactPathsForBambooAtConnectorLevel() {
     GenericType<RestResponse<Set<String>>> artifactStreamType = new GenericType<RestResponse<Set<String>>>() {
 
@@ -257,8 +259,9 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = AADITI, intermittent = true)
+  @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
+  @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void getPlansForAmazonS3AtConnectorLevel() {
     GenericType<RestResponse<Map<String, String>>> artifactStreamType =
         new GenericType<RestResponse<Map<String, String>>>() {

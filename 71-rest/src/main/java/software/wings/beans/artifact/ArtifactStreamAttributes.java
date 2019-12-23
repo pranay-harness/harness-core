@@ -66,6 +66,7 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private String feed;
   private String packageId;
   private String packageName;
+  private List<String> artifactPaths;
 
   // These fields are used only during artifact collection and cleanup.
   private boolean isCollection;

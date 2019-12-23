@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -22,6 +23,7 @@ import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
@@ -214,7 +216,8 @@ public class JenkinsTest extends CategoryTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetLastNBuildDetailsForGitJobs() throws IOException {
-    List<BuildDetails> buildDetails = jenkins.getBuildsForJob("scheduler", 5);
+    List<BuildDetails> buildDetails = jenkins.getBuildsForJob(
+        "scheduler", asList("build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar", "todolist.war"), 5);
     assertThat(buildDetails)
         .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
@@ -222,23 +225,39 @@ public class JenkinsTest extends CategoryTest {
             tuple("65", "1bfdd1174d41e1f32cbfc287f18c3cc040ca90e3"),
             tuple("64", "1bfdd1174d41e1f32cbfc287f18c3cc040ca90e3"),
             tuple("63", "1bfdd1174d41e1f32cbfc287f18c3cc040ca90e3"));
+
+    buildDetails.forEach(buildDetails1 -> {
+      String url = "http://localhost:8089/job/scheduler/" + buildDetails1.getNumber()
+          + "/artifact/build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar";
+      assertThat(buildDetails1.getArtifactFileMetadataList()).isNotEmpty();
+      assertThat(buildDetails1.getArtifactFileMetadataList())
+          .extracting(ArtifactFileMetadata::getFileName, ArtifactFileMetadata::getUrl)
+          .containsExactly(tuple("docker-scheduler-1.0-SNAPSHOT-all.jar", url));
+    });
   }
 
   @Test
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void shouldGetLastSuccessfulBuildForGitJob() throws IOException {
-    BuildDetails buildDetails = jenkins.getLastSuccessfulBuildForJob("scheduler");
+    BuildDetails buildDetails =
+        jenkins.getLastSuccessfulBuildForJob("scheduler", asList("build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar"));
     assertThat(buildDetails).isNotNull();
     assertThat(buildDetails.getNumber()).isEqualTo("67");
     assertThat(buildDetails.getRevision()).isEqualTo("1bfdd1174d41e1f32cbfc287f18c3cc040ca90e3");
+    assertThat(buildDetails.getArtifactFileMetadataList().size()).isEqualTo(1);
+    assertThat(buildDetails.getArtifactFileMetadataList().get(0).getFileName())
+        .isEqualTo("docker-scheduler-1.0-SNAPSHOT-all.jar");
+    assertThat(buildDetails.getArtifactFileMetadataList().get(0).getUrl())
+        .isEqualTo("http://localhost:8089/job/scheduler/67/artifact/build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar");
   }
 
   @Test
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void shouldGetNullLastSuccessfulBuildForNonExistingGitJob() throws IOException {
-    BuildDetails buildDetails = jenkins.getLastSuccessfulBuildForJob("scheduler1");
+    BuildDetails buildDetails =
+        jenkins.getLastSuccessfulBuildForJob("scheduler1", asList("build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar"));
     assertThat(buildDetails).isNull();
   }
 
@@ -246,11 +265,20 @@ public class JenkinsTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetLastNBuildDetailsForSvnJobs() throws IOException {
-    List<BuildDetails> buildDetails = jenkins.getBuildsForJob("scheduler-svn", 5);
+    List<BuildDetails> buildDetails =
+        jenkins.getBuildsForJob("scheduler-svn", asList("build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar"), 5);
     assertThat(buildDetails)
         .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
         .containsExactly(tuple("65", "39"), tuple("64", "39"), tuple("63", "39"), tuple("62", "39"));
+    buildDetails.forEach(buildDetails1 -> {
+      String url = "http://localhost:8089/job/scheduler-svn/" + buildDetails1.getNumber()
+          + "/artifact/build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar";
+      assertThat(buildDetails1.getArtifactFileMetadataList()).isNotEmpty();
+      assertThat(buildDetails1.getArtifactFileMetadataList())
+          .extracting(ArtifactFileMetadata::getFileName, ArtifactFileMetadata::getUrl)
+          .containsExactly(tuple("docker-scheduler-1.0-SNAPSHOT-all.jar", url));
+    });
   }
 
   @Test

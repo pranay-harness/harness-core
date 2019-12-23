@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SftpConfig;
 import software.wings.beans.SmbConfig;
@@ -70,6 +71,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   private static final String ALGORITHM = "HmacSHA1";
   private static final Charset ENCODING = Charsets.UTF_8;
+  private static final String NO_ARTIFACTS_ERROR_STRING = "There are no artifacts to download";
 
   @Inject private EncryptionService encryptionService;
   @Inject @Transient private transient DelegateLogService delegateLogService;
@@ -191,6 +193,12 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         return SUCCESS;
       case NEXUS:
         command = constructCommandStringForNexus(context, artifactStreamAttributes, encryptionDetails);
+        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        saveExecutionLog(
+            context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        return context.executeCommandString(command, false);
+      case JENKINS:
+        command = constructCommandStringForJenkins(context, artifactStreamAttributes, encryptionDetails);
         logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
@@ -511,8 +519,8 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     StringBuilder command = new StringBuilder(128);
 
     if (isEmpty(artifactFileMetadata)) {
-      saveExecutionLog(context, ERROR, "There are no artifacts to copy");
-      throw new InvalidRequestException("There are no artifacts to copy", USER);
+      saveExecutionLog(context, ERROR, NO_ARTIFACTS_ERROR_STRING);
+      throw new InvalidRequestException(NO_ARTIFACTS_ERROR_STRING, USER);
     }
 
     switch (this.getScriptType()) {
@@ -557,6 +565,58 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
               .append('\\')
               .append(downloadMetadata.getFileName())
               .append('"');
+        }
+        break;
+      default:
+        throw new InvalidRequestException("Invalid Script type", USER);
+    }
+
+    return command.toString();
+  }
+
+  private String constructCommandStringForJenkins(ShellCommandExecutionContext context,
+      ArtifactStreamAttributes artifactStreamAttributes, List<EncryptedDataDetail> encryptionDetails) {
+    JenkinsConfig jenkinsConfig = (JenkinsConfig) artifactStreamAttributes.getServerSetting().getValue();
+    encryptionService.decrypt(jenkinsConfig, encryptionDetails);
+    String pair = jenkinsConfig.getUsername() + ":" + new String(jenkinsConfig.getPassword());
+    String authHeader = "Basic " + encodeBase64(pair);
+
+    List<ArtifactFileMetadata> artifactFileMetadata = artifactStreamAttributes.getArtifactFileMetadata();
+    StringBuilder command = new StringBuilder(128);
+
+    if (isEmpty(artifactFileMetadata)) {
+      saveExecutionLog(context, ERROR, NO_ARTIFACTS_ERROR_STRING);
+      throw new InvalidRequestException(NO_ARTIFACTS_ERROR_STRING, USER);
+    }
+
+    switch (this.getScriptType()) {
+      case BASH:
+        for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
+          command.append("curl --progress-bar -H \"Authorization: ")
+              .append(authHeader)
+              .append("\" -X GET \"")
+              .append(downloadMetadata.getUrl())
+              .append("\" -o \"")
+              .append(getCommandPath().trim())
+              .append('/')
+              .append(downloadMetadata.getFileName())
+              .append("\"\n");
+        }
+        break;
+      case POWERSHELL:
+        command
+            .append("$webClient = New-Object System.Net.WebClient \n"
+                + "$webClient.Headers[[System.Net.HttpRequestHeader]::Authorization] = \"")
+            .append(authHeader)
+            .append("\";\n");
+        for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
+          command.append("$url = \"")
+              .append(downloadMetadata.getUrl())
+              .append("\" \n$localfilename = \"")
+              .append(getCommandPath().trim())
+              .append('\\')
+              .append(downloadMetadata.getFileName())
+              .append("\" \n$webClient.DownloadFile($url, $localfilename) \n");
         }
         break;
       default:

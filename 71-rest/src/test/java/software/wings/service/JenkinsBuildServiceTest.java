@@ -18,6 +18,7 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import static software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty.builder;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
 import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
@@ -82,6 +83,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
                                                                          .settingId("")
                                                                          .sourceName(ARTIFACT_STREAM_NAME)
                                                                          .jobname("job1")
+                                                                         .artifactPaths(asList(ARTIFACT_PATH))
                                                                          .build();
 
   /**
@@ -92,7 +94,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Before
   public void setupMocks() throws IOException {
     when(jenkinsFactory.create(anyString(), anyString(), any(char[].class))).thenReturn(jenkins);
-    when(jenkins.getBuildsForJob(eq("job1"), anyInt()))
+    when(jenkins.getBuildsForJob(eq("job1"), eq(asList(ARTIFACT_PATH)), anyInt()))
         .thenReturn(Lists.newArrayList(aBuildDetails().withNumber("67").withRevision("1bfdd117").build(),
             aBuildDetails().withNumber("65").withRevision("1bfdd117").build(),
             aBuildDetails().withNumber("64").withRevision("1bfdd117").build(),

@@ -81,7 +81,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
 
       encryptionService.decrypt(jenkinsConfig, encryptionDetails);
       Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
-      return jenkins.getBuildsForJob(artifactStreamAttributes.getJobName(), limit);
+      return jenkins.getBuildsForJob(
+          artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPaths(), limit);
     } catch (WingsException e) {
       throw e;
     } catch (IOException ex) {
@@ -139,8 +140,9 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
     try {
       return wrapLastSuccessfulBuildWithLabels(
-          jenkins.getLastSuccessfulBuildForJob(artifactStreamAttributes.getJobName()), artifactStreamAttributes,
-          jenkinsConfig, encryptionDetails);
+          jenkins.getLastSuccessfulBuildForJob(
+              artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPaths()),
+          artifactStreamAttributes, jenkinsConfig, encryptionDetails);
     } catch (WingsException e) {
       throw e;
     } catch (IOException ex) {
