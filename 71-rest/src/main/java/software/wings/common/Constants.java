@@ -71,7 +71,7 @@ public interface Constants {
   /**
    * The constant WORKFLOW_VALIDATION_MESSAGE.
    */
-  String WORKFLOW_VALIDATION_MESSAGE = "Some phases %s are found to be invalid/incomplete.";
+  String WORKFLOW_VALIDATION_MESSAGE = "Some phases/steps %s are found to be invalid/incomplete.";
 
   /**
    * The constant WORKFLOW_ENV_INFRAMAPPING_VALIDATION_MESSAGE.
