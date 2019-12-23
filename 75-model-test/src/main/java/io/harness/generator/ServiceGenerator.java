@@ -1,5 +1,6 @@
 package io.harness.generator;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.generator.ServiceGenerator.Services.KUBERNETES_GENERIC_TEST;
 import static io.harness.generator.SettingGenerator.Settings.PCF_FUNCTIONAL_TEST_GIT_REPO;
 import static io.harness.govern.Switch.unhandled;
@@ -14,11 +15,13 @@ import io.github.benas.randombeans.api.EnhancedRandom;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
+import io.harness.generator.SettingGenerator.Settings;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmChartConfig;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.DefaultSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
@@ -37,9 +40,14 @@ import software.wings.utils.ArtifactType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 @Singleton
 public class ServiceGenerator {
+  private static final String HELM_S3_SERVICE_NAME = "Helm S3 Functional Test";
+  private static final String CHARTMUSEUM_CHART_NAME = "chartmuseum";
+  private static final String BASE_PATH = "helm/charts";
+
   @Inject private OwnerManager ownerManager;
   @Inject ApplicationGenerator applicationGenerator;
   @Inject ArtifactStreamManager artifactStreamManager;
@@ -58,7 +66,8 @@ public class ServiceGenerator {
     MULTI_ARTIFACT_FUNCTIONAL_TEST,
     MULTI_ARTIFACT_K8S_V2_TEST,
     PCF_V2_TEST,
-    PCF_V2_REMOTE_TEST
+    PCF_V2_REMOTE_TEST,
+    HELM_S3
   }
 
   public Service ensurePredefined(Randomizer.Seed seed, Owners owners, Services predefined) {
@@ -81,11 +90,76 @@ public class ServiceGenerator {
         return ensurePcfTest(seed, owners, "PCF Service");
       case PCF_V2_REMOTE_TEST:
         return ensurePcfTestRemote(seed, owners, "PCF Remote");
+      case HELM_S3:
+        return ensureHelmS3Service(seed, owners);
       default:
         unhandled(predefined);
     }
 
     return null;
+  }
+
+  private Service ensureHelmS3Service(Seed seed, Owners owners) {
+    Application application = owners.obtainApplication(
+        () -> applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST));
+
+    Service service = Service.builder()
+                          .name(HELM_S3_SERVICE_NAME)
+                          .deploymentType(DeploymentType.HELM)
+                          .appId(application.getUuid())
+                          .artifactType(ArtifactType.DOCKER)
+                          .build();
+    ensureService(service);
+    service = ensureService(seed, owners, service);
+    owners.add(service);
+
+    addApplicationManifestToService(seed, owners, service);
+    return service;
+  }
+
+  private void addApplicationManifestToService(Seed seed, Owners owners, Service service) {
+    SettingAttribute helmS3Connector = settingGenerator.ensurePredefined(seed, owners, Settings.HELM_S3_CONNECTOR);
+
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .serviceId(service.getUuid())
+                                                  .storeType(StoreType.HelmChartRepo)
+                                                  .helmChartConfig(HelmChartConfig.builder()
+                                                                       .connectorId(helmS3Connector.getUuid())
+                                                                       .chartName(CHARTMUSEUM_CHART_NAME)
+                                                                       .basePath(BASE_PATH)
+                                                                       .build())
+                                                  .kind(AppManifestKind.K8S_MANIFEST)
+                                                  .build();
+    applicationManifest.setAppId(service.getAppId());
+
+    List<ApplicationManifest> applicationManifests =
+        applicationManifestService.listAppManifests(service.getAppId(), service.getUuid());
+
+    if (isEmpty(applicationManifests)) {
+      applicationManifestService.create(applicationManifest);
+    } else {
+      boolean found = false;
+      for (ApplicationManifest savedApplicationManifest : applicationManifests) {
+        if (savedApplicationManifest.getKind() == AppManifestKind.K8S_MANIFEST
+            && savedApplicationManifest.getStoreType() == StoreType.HelmChartRepo) {
+          applicationManifest.setUuid(savedApplicationManifest.getUuid());
+          applicationManifestService.update(applicationManifest);
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        applicationManifestService.create(applicationManifest);
+      }
+    }
+  }
+
+  private Service ensureService(Service service) {
+    Service existingService = exists(service);
+    if (existingService != null) {
+      return existingService;
+    }
+    return serviceResourceService.save(service);
   }
 
   private Service ensurePcfTest(Seed seed, Owners owners, String name) {
