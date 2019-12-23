@@ -81,7 +81,8 @@ public enum FeatureName {
   TF_USE_VAR_CL,
   GOOGLE_KMS,
   LOGS_V2_247,
-  WEEKLY_WINDOW;
+  WEEKLY_WINDOW,
+  APM_CUSTOM_THRESHOLDS;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
