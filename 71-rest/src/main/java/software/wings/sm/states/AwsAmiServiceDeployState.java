@@ -93,6 +93,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -501,60 +502,67 @@ public class AwsAmiServiceDeployState extends State {
       throw new WingsException(format("Unable to find artifact for service %s", service.getName()));
     }
 
-    ContainerServiceData newContainerServiceData = awsAmiDeployStateExecutionData.getNewInstanceData().get(0);
-
     List<Instance> ec2InstancesAdded = amiServiceDeployResponse.getInstancesAdded();
-    List<InstanceElement> instanceElements = emptyList();
+    List<InstanceElement> instanceElements = new ArrayList<>();
     if (isNotEmpty(ec2InstancesAdded)) {
       String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
 
-      instanceElements =
-          amiServiceDeployResponse.getInstancesAdded()
-              .stream()
-              .map(instance -> {
-                Host host = aHost()
-                                .withHostName(awsUtils.getHostnameFromPrivateDnsName(instance.getPrivateDnsName()))
-                                .withPublicDns(instance.getPublicDnsName())
-                                .withEc2Instance(instance)
-                                .withAppId(infrastructureMapping.getAppId())
-                                .withEnvId(infrastructureMapping.getEnvId())
-                                .withHostConnAttr(infrastructureMapping.getHostConnectionAttrs())
-                                .withInfraMappingId(infrastructureMapping.getUuid())
-                                .withInfraDefinitionId(infrastructureMapping.getInfrastructureDefinitionId())
-                                .withServiceTemplateId(serviceTemplateId)
-                                .build();
-                Host savedHost = hostService.saveHost(host);
-                HostElement hostElement = aHostElement()
-                                              .uuid(savedHost.getUuid())
-                                              .publicDns(instance.getPublicDnsName())
-                                              .ip(instance.getPrivateIpAddress())
-                                              .ec2Instance(instance)
-                                              .instanceId(instance.getInstanceId())
-                                              .build();
+      instanceElements.addAll(generateInstanceElements(amiServiceDeployResponse.getInstancesAdded(), context,
+          phaseElement, infrastructureMapping, serviceTemplateKey, serviceTemplateId, true));
 
-                final Map<String, Object> contextMap = context.asMap();
-                contextMap.put("host", hostElement);
-                String hostName = awsHelperService.getHostnameFromConvention(contextMap, "");
-                hostElement.setHostName(hostName);
-                return anInstanceElement()
-                    .uuid(instance.getInstanceId())
-                    .hostName(hostName)
-                    .displayName(instance.getPublicDnsName())
-                    .host(hostElement)
-                    .serviceTemplateElement(aServiceTemplateElement()
-                                                .withUuid(serviceTemplateKey.getId().toString())
-                                                .withServiceElement(phaseElement.getServiceElement())
-                                                .build())
-                    .build();
-              })
-              .collect(toList());
+      instanceElements.addAll(generateInstanceElements(amiServiceDeployResponse.getInstancesExisting(), context,
+          phaseElement, infrastructureMapping, serviceTemplateKey, serviceTemplateId, false));
     }
 
-    int instancesAdded = newContainerServiceData.getDesiredCount() - newContainerServiceData.getPreviousCount();
-    if (instancesAdded > 0 && instancesAdded < instanceElements.size()) {
-      instanceElements = instanceElements.subList(0, instancesAdded); // Ignore old instances recycled
-    }
     return instanceElements;
+  }
+
+  private List<InstanceElement> generateInstanceElements(List<Instance> instances, ExecutionContext context,
+      PhaseElement phaseElement, AwsAmiInfrastructureMapping infrastructureMapping,
+      Key<ServiceTemplate> serviceTemplateKey, String serviceTemplateId, boolean isUpsize) {
+    if (isEmpty(instances)) {
+      return emptyList();
+    }
+
+    return instances.stream()
+        .map(instance -> {
+          Host host = aHost()
+                          .withHostName(awsUtils.getHostnameFromPrivateDnsName(instance.getPrivateDnsName()))
+                          .withPublicDns(instance.getPublicDnsName())
+                          .withEc2Instance(instance)
+                          .withAppId(infrastructureMapping.getAppId())
+                          .withEnvId(infrastructureMapping.getEnvId())
+                          .withHostConnAttr(infrastructureMapping.getHostConnectionAttrs())
+                          .withInfraMappingId(infrastructureMapping.getUuid())
+                          .withInfraDefinitionId(infrastructureMapping.getInfrastructureDefinitionId())
+                          .withServiceTemplateId(serviceTemplateId)
+                          .build();
+          Host savedHost = hostService.saveHost(host);
+          HostElement hostElement = aHostElement()
+                                        .uuid(savedHost.getUuid())
+                                        .publicDns(instance.getPublicDnsName())
+                                        .ip(instance.getPrivateIpAddress())
+                                        .ec2Instance(instance)
+                                        .instanceId(instance.getInstanceId())
+                                        .build();
+
+          final Map<String, Object> contextMap = context.asMap();
+          contextMap.put("host", hostElement);
+          String hostName = awsHelperService.getHostnameFromConvention(contextMap, "");
+          hostElement.setHostName(hostName);
+          return anInstanceElement()
+              .uuid(instance.getInstanceId())
+              .hostName(hostName)
+              .displayName(instance.getPublicDnsName())
+              .host(hostElement)
+              .serviceTemplateElement(aServiceTemplateElement()
+                                          .withUuid(serviceTemplateKey.getId().toString())
+                                          .withServiceElement(phaseElement.getServiceElement())
+                                          .build())
+              .newInstance(isUpsize)
+              .build();
+        })
+        .collect(toList());
   }
 
   @Override

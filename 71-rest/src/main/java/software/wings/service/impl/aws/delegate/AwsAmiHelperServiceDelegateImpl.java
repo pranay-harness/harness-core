@@ -60,6 +60,7 @@ import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import software.wings.utils.AsgConvention;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -339,16 +340,58 @@ public class AwsAmiHelperServiceDelegateImpl
 
       List<Instance> allInstancesOfNewAsg = awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
           awsConfig, encryptionDetails, request.getRegion(), request.getNewAutoScalingGroupName());
+
       List<Instance> instancesAdded = allInstancesOfNewAsg.stream()
                                           .filter(instance -> !existingInstanceIds.contains(instance.getInstanceId()))
                                           .collect(toList());
-      return AwsAmiServiceDeployResponse.builder().instancesAdded(instancesAdded).executionStatus(SUCCESS).build();
+
+      List<Instance> existingInstancesForOldASGGroup =
+          fetchExistingInstancesForOlderASG(awsConfig, encryptionDetails, request, logCallback);
+
+      return AwsAmiServiceDeployResponse.builder()
+          .instancesAdded(instancesAdded)
+          .instancesExisting(existingInstancesForOldASGGroup)
+          .executionStatus(SUCCESS)
+          .build();
     } catch (Exception ex) {
       String errorMessage = ExceptionUtils.getMessage(ex);
       logCallback.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR);
       logger.error(errorMessage, ex);
       return AwsAmiServiceDeployResponse.builder().errorMessage(errorMessage).executionStatus(FAILED).build();
     }
+  }
+
+  @VisibleForTesting
+  List<Instance> fetchExistingInstancesForOlderASG(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      AwsAmiServiceDeployRequest request, ExecutionLogCallback logCallback) {
+    List<Instance> existingInstancesForOldASG = new ArrayList<>();
+
+    if (request.isRollback()) {
+      return existingInstancesForOldASG;
+    }
+
+    if (isEmpty(request.getAsgDesiredCounts())) {
+      if (isNotEmpty(request.getOldAutoScalingGroupName())) {
+        existingInstancesForOldASG.addAll(awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
+            awsConfig, encryptionDetails, request.getRegion(), request.getOldAutoScalingGroupName()));
+      }
+
+      return existingInstancesForOldASG;
+    }
+
+    for (AwsAmiResizeData awsAmiResizeData : request.getAsgDesiredCounts()) {
+      if (isNotEmpty(awsAmiResizeData.getAsgName()) && awsAmiResizeData.getDesiredCount() > 0) {
+        try {
+          existingInstancesForOldASG.addAll(awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
+              awsConfig, encryptionDetails, request.getRegion(), awsAmiResizeData.getAsgName()));
+        } catch (Exception e) {
+          logCallback.saveExecutionLog("Failed to fetch instances for ASG: " + awsAmiResizeData.getAsgName());
+          logCallback.saveExecutionLog("Verification cant use these instances");
+        }
+      }
+    }
+
+    return existingInstancesForOldASG;
   }
 
   private void resizeNewAsgAndWait(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,

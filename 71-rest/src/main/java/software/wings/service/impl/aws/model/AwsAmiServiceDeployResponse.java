@@ -15,4 +15,5 @@ public class AwsAmiServiceDeployResponse implements AwsResponse {
   private ExecutionStatus executionStatus;
   private String errorMessage;
   private List<Instance> instancesAdded;
+  private List<Instance> instancesExisting;
 }

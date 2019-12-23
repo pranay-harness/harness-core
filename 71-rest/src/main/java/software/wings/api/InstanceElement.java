@@ -13,6 +13,7 @@ import io.harness.context.ContextElementType;
 import software.wings.cloudprovider.aws.EcsContainerDetails;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.VerificationElement;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +24,7 @@ import java.util.Map;
  * @author Rishi
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class InstanceElement implements ContextElement {
+public class InstanceElement implements ContextElement, VerificationElement {
   private String uuid;
   private String displayName;
   private String hostName;
