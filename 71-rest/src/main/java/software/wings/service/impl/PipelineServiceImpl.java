@@ -2,8 +2,10 @@ package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -557,7 +559,7 @@ public class PipelineServiceImpl implements PipelineService {
     return pipeline;
   }
 
-  private void resolveServices(
+  private List<Service> resolveServices(
       List<Service> services, List<String> serviceIds, Map<String, String> pseWorkflowVariables, Workflow workflow) {
     List<Service> resolvedServices = workflowService.getResolvedServices(workflow, pseWorkflowVariables);
     if (resolvedServices != null) {
@@ -568,6 +570,7 @@ public class PipelineServiceImpl implements PipelineService {
         }
       }
     }
+    return resolvedServices;
   }
 
   private void resolveInfraMappings(
@@ -1419,12 +1422,23 @@ public class PipelineServiceImpl implements PipelineService {
           }
           keywords.add(workflow.getName());
           keywords.add(workflow.getDescription());
-          resolveServices(services, serviceIds, stageElement.getWorkflowVariables(), workflow);
+          List<Service> resolvedServiceForWorkflow =
+              resolveServices(services, serviceIds, stageElement.getWorkflowVariables(), workflow);
           if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() != BUILD
               && isNullOrEmpty((String) stageElement.getProperties().get("envId"))) {
             logger.info("It should not happen. If happens printing the properties of appId {} are {}",
                 pipeline.getAppId(), stageElement.getProperties());
             throw new InvalidArgumentsException("Environment can not be null for non-build state", USER);
+          }
+
+          if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == ROLLING) {
+            for (Service service : emptyIfNull(resolvedServiceForWorkflow)) {
+              if (service.getDeploymentType() == DeploymentType.KUBERNETES && !service.isK8sV2()) {
+                throw new InvalidRequestException(format("Rolling Type Workflow does not suport k8s-v1 "
+                        + "service [%s]",
+                    service.getName()));
+              }
+            }
           }
 
           String envId = workflowService.obtainTemplatedEnvironmentId(workflow, stageElement.getWorkflowVariables());

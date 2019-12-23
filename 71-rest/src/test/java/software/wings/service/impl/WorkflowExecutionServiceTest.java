@@ -9,15 +9,18 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
@@ -50,6 +53,7 @@ import com.google.inject.Inject;
 import com.mongodb.DBCursor;
 import com.mongodb.WriteResult;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
@@ -73,6 +77,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.WingsBaseTest;
 import software.wings.api.ApprovalStateExecutionData;
+import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.app.GeneralNotifyEventListener;
 import software.wings.beans.Account;
@@ -87,6 +92,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.RequiredExecutionArgs;
+import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -118,6 +124,8 @@ import java.util.Map;
 @Listeners(GeneralNotifyEventListener.class)
 public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowExecutionService workflowExecutionService;
+  @InjectMocks
+  private WorkflowExecutionServiceImpl workflowExecutionServiceSpy = spy(WorkflowExecutionServiceImpl.class);
 
   @Mock private WingsPersistence wingsPersistence;
   @Mock private WorkflowService workflowService;
@@ -639,6 +647,37 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         WorkflowExecution.builder().pipelineExecution(pipelineExecution).workflowType(WorkflowType.PIPELINE).build();
     int instancesDeployed = workflowExecutionService.getInstancesDeployedFromExecution(parentWorkflowExecution);
     assertThat(instancesDeployed).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = YOGESH_CHAUHAN)
+  @Category(UnitTests.class)
+  public void shouldNotExecuteRollingWorkflowWithK8sV1Service() {
+    Service service = Service.builder()
+                          .uuid(SERVICE_ID)
+                          .appId(APP_ID)
+                          .accountId(ACCOUNT_ID)
+                          .deploymentType(DeploymentType.KUBERNETES)
+                          .isK8sV2(true)
+                          .build();
+    Workflow workflow =
+        aWorkflow()
+            .appId(APP_ID)
+            .accountId(ACCOUNT_ID)
+            .serviceId(SERVICE_ID)
+            .services(asList(service))
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow().withOrchestrationWorkflowType(OrchestrationWorkflowType.ROLLING).build())
+            .build();
+
+    when(workflowService.getResolvedServices(any(), any())).thenReturn(asList(service));
+
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    workflowExecutionServiceSpy.validateWorkflowTypeAndService(workflow, executionArgs);
+
+    service.setK8sV2(false);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> workflowExecutionServiceSpy.validateWorkflowTypeAndService(workflow, executionArgs));
   }
 
   private PipelineExecution createPipelineExecution(ApprovalStateExecutionData approvalStateExecutionData) {
