@@ -1138,12 +1138,30 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         workflow, stateMachine, resolveEnvId, pipelineExecutionId, executionArgs, infraRefactor);
 
     validateExecutionArgsHosts(executionArgs.getHosts(), workflowExecution, workflow);
+    validateWorkflowTypeAndService(workflow, executionArgs);
 
     WorkflowStandardParams stdParams =
         workflowExecutionServiceHelper.obtainWorkflowStandardParams(appId, envId, executionArgs, workflow);
 
     return triggerExecution(workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(),
         workflowExecutionUpdate, stdParams, trigger, null, workflow);
+  }
+
+  /*
+  Rolling type workflow does not support k8s-v1 type of service
+   */
+  void validateWorkflowTypeAndService(Workflow workflow, ExecutionArgs executionArgs) {
+    List<Service> services = workflowService.getResolvedServices(workflow, executionArgs.getWorkflowVariables());
+    if (workflow.getOrchestrationWorkflow() != null
+        && OrchestrationWorkflowType.ROLLING == workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()) {
+      for (Service service : emptyIfNull(services)) {
+        if (service.getDeploymentType() == DeploymentType.KUBERNETES && !service.isK8sV2()) {
+          throw new InvalidRequestException(format("Rolling Type Workflow does not suport k8s-v1 "
+                  + "service [%s]",
+              service.getName()));
+        }
+      }
+    }
   }
 
   void validateExecutionArgsHosts(List<String> hosts, WorkflowExecution workflowExecution, Workflow workflow) {
