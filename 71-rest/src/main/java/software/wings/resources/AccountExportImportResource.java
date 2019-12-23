@@ -3,7 +3,6 @@ package software.wings.resources;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.dl.exportimport.WingsMongoExportImport.getCollectionName;
 
 import com.google.common.io.Files;
@@ -279,7 +278,7 @@ public class AccountExportImportResource {
     // yet).
     String kmsConfigCollectionName = getCollectionName(KmsConfig.class);
     if (isExportable(toBeExported, kmsConfigCollectionName)) {
-      List<String> accountIdList = Arrays.asList(accountId, GLOBAL_ACCOUNT_ID);
+      List<String> accountIdList = Arrays.asList(accountId);
       DBObject exportFilter = new BasicDBObject("accountId", new BasicDBObject("$in", accountIdList));
       List<String> records = mongoExportImport.exportRecords(exportFilter, kmsConfigCollectionName);
       exportToStream(zipOutputStream, fileOutputStream, records, kmsConfigCollectionName);
