@@ -484,6 +484,40 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedBambooArtifactStream.getArtifactPaths()).contains("artifacts/todolist.war");
   }
 
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotAddBambooNonMetadataArtifactStreamWithoutArtifactPaths() {
+    BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .jobname("TOD-TOD")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .build();
+    createBambooArtifactStream(bambooArtifactStream, APP_ID);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldRemoveEmptyPathsInBambooArtifactStreamOnCreate() {
+    BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .jobname("TOD-TOD")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .artifactPaths(asList("", "target/todolist.war"))
+                                                    .build();
+
+    BambooArtifactStream savedArtifactStream = (BambooArtifactStream) createArtifactStream(bambooArtifactStream);
+    assertThat(savedArtifactStream.getArtifactPaths().size()).isEqualTo(1);
+    assertThat(savedArtifactStream.getArtifactPaths()).containsExactly("target/todolist.war");
+  }
+
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
@@ -529,6 +563,46 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
     verify(artifactService).deleteWhenArtifactSourceNameChanged(bambooArtifactStream);
     //    verify(triggerService).updateByApp(APP_ID);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateBambooArtifactStreamNonMetadataWithNullArtifactPaths() {
+    BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .jobname("TOD-TOD")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .artifactPaths(asList("artifacts/todolist.war"))
+                                                    .build();
+    BambooArtifactStream savedArtifactSteam =
+        (BambooArtifactStream) createBambooArtifactStream(bambooArtifactStream, APP_ID);
+    savedArtifactSteam.setArtifactPaths(null);
+    artifactStreamService.update(savedArtifactSteam);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldUpdateBambooArtifactStreamNonMetadataWithEmptyArtifactPaths() {
+    BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .jobname("TOD-TOD")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .artifactPaths(asList("artifacts/todolist.war"))
+                                                    .build();
+    BambooArtifactStream savedArtifactSteam =
+        (BambooArtifactStream) createBambooArtifactStream(bambooArtifactStream, APP_ID);
+    savedArtifactSteam.setArtifactPaths(asList(" "));
+    BambooArtifactStream updatedJenkinsArtifactStream =
+        (BambooArtifactStream) artifactStreamService.update(savedArtifactSteam);
+    assertThat(updatedJenkinsArtifactStream.getArtifactPaths()).isNull();
   }
 
   private void updateAndValidateBambooArtifactStream(BambooArtifactStream savedArtifactSteam, String appId) {

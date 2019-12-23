@@ -28,6 +28,7 @@ import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.WingsException;
@@ -45,6 +46,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.BambooConfig;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.Builder;
 import software.wings.beans.JenkinsConfig;
@@ -66,6 +68,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.WingsTestConstants;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -183,6 +186,15 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                                                                .build())
                                                 .build();
 
+  private SettingAttribute bambooSetting = aSettingAttribute()
+                                               .withUuid(SETTING_ID)
+                                               .withValue(BambooConfig.builder()
+                                                              .bambooUrl("http://localhost:9095/")
+                                                              .username("admin")
+                                                              .password("admin".toCharArray())
+                                                              .build())
+                                               .build();
+
   private ArtifactStreamAttributes nexus2MavenStreamAttributes =
       ArtifactStreamAttributes.builder()
           .artifactStreamType(ArtifactStreamType.NEXUS.name())
@@ -239,6 +251,25 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 
+  private ArtifactStreamAttributes bambooStreamAttributes =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.BAMBOO.name())
+          .jobName("TOD-TOD")
+          .artifactPaths(Arrays.asList("artifacts/todolist.tar"))
+          .artifactFileMetadata(
+              Arrays.asList(ArtifactFileMetadata.builder()
+                                .fileName("todolist.tar")
+                                .url("http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar")
+                                .build(),
+                  ArtifactFileMetadata.builder()
+                      .fileName("todolist.war")
+                      .url("http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war")
+                      .build()))
+          .serverSetting(bambooSetting)
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .artifactStreamId(ARTIFACT_STREAM_ID)
+          .build();
+
   @InjectMocks
   private ShellCommandExecutionContext amazonS3Context =
       new ShellCommandExecutionContext(aCommandExecutionContext()
@@ -287,7 +318,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   ShellCommandExecutionContext nexusContextMaven =
       new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .withArtifactStreamAttributes(nexus2MavenStreamAttributes)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+                                           .withMetadata(mockMetadata(ArtifactStreamType.NEXUS))
                                            .withHostConnectionAttributes(hostConnectionAttributes)
                                            .withAppId(WingsTestConstants.APP_ID)
                                            .withActivityId(ACTIVITY_ID)
@@ -298,7 +329,18 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   ShellCommandExecutionContext nexusContextMavenAnon =
       new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .withArtifactStreamAttributes(nexus2MavenStreamAttributesAnon)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+                                           .withMetadata(mockMetadata(ArtifactStreamType.NEXUS))
+                                           .withHostConnectionAttributes(hostConnectionAttributes)
+                                           .withAppId(WingsTestConstants.APP_ID)
+                                           .withActivityId(ACTIVITY_ID)
+                                           .withHost(host)
+                                           .build());
+
+  @InjectMocks
+  ShellCommandExecutionContext bambooContext =
+      new ShellCommandExecutionContext(aCommandExecutionContext()
+                                           .withArtifactStreamAttributes(bambooStreamAttributes)
+                                           .withMetadata(mockMetadata(ArtifactStreamType.BAMBOO))
                                            .withHostConnectionAttributes(hostConnectionAttributes)
                                            .withAppId(WingsTestConstants.APP_ID)
                                            .withActivityId(ACTIVITY_ID)
@@ -449,6 +491,22 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     assertThat(argument.getValue()).isEqualTo(command);
   }
 
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  @Parameters(method = "getBambooData")
+  public void shouldDownloadFromBamboo(ScriptType scriptType, String command) {
+    bambooContext.setExecutor(executor);
+    downloadArtifactCommandUnit.setScriptType(scriptType);
+    downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+        .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
+    downloadArtifactCommandUnit.executeInternal(bambooContext);
+    ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
+    verify(executor).executeCommandString(argument.capture(), anyBoolean());
+    assertThat(argument.getValue()).isEqualTo(command);
+  }
+
   private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {
     Map<String, String> map = new HashMap<>();
     switch (artifactStreamType) {
@@ -530,5 +588,19 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                 + "$url = \"" + JENKINS_ARTIFACT_URL_2 + "\" \n"
                 + "$localfilename = \"DESTINATION_DIR_PATH\\" + JENKINS_ARTIFACT_FILENAME_2 + "\" \n"
                 + "$webClient.DownloadFile($url, $localfilename) \n"}};
+  }
+
+  private Object[][] getBambooData() {
+    return new Object[][] {
+        {ScriptType.BASH,
+            "curl --progress-bar -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -X GET \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar\" -o \"DESTINATION_DIR_PATH/todolist.tar\"\n"
+                + "curl --progress-bar -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -X GET \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war\" -o \"DESTINATION_DIR_PATH/todolist.war\"\n"},
+        {ScriptType.POWERSHELL,
+            "$Headers = @{\n"
+                + "    Authorization = \"Basic YWRtaW46YWRtaW4=\"\n"
+                + "}\n"
+                + " [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n"
+                + " Invoke-WebRequest -Uri \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar\" -OutFile \"DESTINATION_DIR_PATH\\todolist.tar\"\n"
+                + " Invoke-WebRequest -Uri \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war\" -OutFile \"DESTINATION_DIR_PATH\\todolist.war\""}};
   }
 }

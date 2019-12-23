@@ -1,0 +1,38 @@
+{
+  "results": {
+    "size": 1,
+    "expand": "result",
+    "start-index": 0,
+    "max-result": 1,
+    "result": [
+      {
+        "expand": "plan,vcsRevisions,artifacts,comments,labels,jiraIssues,stages",
+        "link": {
+          "href": "http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/rest/api/latest/result/TP-PLAN-4",
+          "rel": "self"
+        },
+        "planName": "plan-1",
+        "projectName": "Test Project",
+        "buildResultKey": "TP-PLAN-4",
+        "lifeCycleState": "Finished",
+        "vcsRevisionKey": "45d0f90134e3397477ad9a4a500302b6e3756dda",
+        "planResultKey": {
+          "key": "TP-PLAN-4",
+          "entityKey": {
+            "key": "TP-PLAN"
+          },
+          "resultNumber": 4
+        },
+        "state": "Successful",
+        "buildState": "Successful",
+        "number": 4,
+        "buildNumber": 4
+      }
+    ]
+  },
+  "expand": "results",
+  "link": {
+    "href": "http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/rest/api/latest/result/TP-PLAN",
+    "rel": "self"
+  }
+}

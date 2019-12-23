@@ -22,6 +22,12 @@
         <Bug pattern="WOC_WRITE_ONLY_COLLECTION_LOCAL" />
     </Match>
     <Match>
+        <Bug pattern="FCBL_FIELD_COULD_BE_LOCAL" />
+    </Match>
+    <Match>
+        <Bug pattern="CLI_CONSTANT_LIST_INDEX" />
+    </Match>
+    <Match>
         <!-- covert from sonar scan -->
         <Bug pattern="CC_CYCLOMATIC_COMPLEXITY" />
     </Match>

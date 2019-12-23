@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
 import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
@@ -33,6 +34,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.BambooBuildService;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -52,6 +54,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
                                                                        .settingId(SETTING_ID)
                                                                        .sourceName(ARTIFACT_STREAM_NAME)
                                                                        .jobname(BUILD_JOB_NAME)
+                                                                       .artifactPaths(Arrays.asList(ARTIFACT_PATH))
                                                                        .build();
 
   @Before
@@ -61,7 +64,8 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
-    when(bambooService.getBuilds(bambooConfig, null, BUILD_JOB_NAME, ARTIFACT_RETENTION_SIZE))
+    when(bambooService.getBuilds(
+             bambooConfig, null, BUILD_JOB_NAME, Arrays.asList(ARTIFACT_PATH), ARTIFACT_RETENTION_SIZE))
         .thenReturn(
             Lists.newArrayList(aBuildDetails().withNumber("10").build(), aBuildDetails().withNumber("9").build()));
     List<BuildDetails> builds =
@@ -92,7 +96,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldGetLastSuccessfulBuild() {
-    when(bambooService.getLastSuccessfulBuild(bambooConfig, null, BUILD_JOB_NAME))
+    when(bambooService.getLastSuccessfulBuild(bambooConfig, null, BUILD_JOB_NAME, Arrays.asList(ARTIFACT_PATH)))
         .thenReturn(aBuildDetails().withNumber("10").build());
     BuildDetails lastSuccessfulBuild = bambooBuildService.getLastSuccessfulBuild(
         APP_ID, bambooArtifactStream.fetchArtifactStreamAttributes(), bambooConfig, null);

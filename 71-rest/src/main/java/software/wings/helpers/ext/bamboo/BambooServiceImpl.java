@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.bamboo;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
@@ -16,10 +18,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import org.apache.commons.io.IOUtils;
@@ -31,6 +35,8 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.security.EncryptionService;
@@ -41,6 +47,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +65,7 @@ import java.util.regex.Pattern;
 public class BambooServiceImpl implements BambooService {
   @Inject private EncryptionService encryptionService;
   @Inject private TimeLimiter timeLimiter;
+  @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
   private BambooRestClient getBambooClient(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
@@ -105,6 +113,12 @@ public class BambooServiceImpl implements BambooService {
   @Override
   public BuildDetails getLastSuccessfulBuild(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey) {
+    return getLastSuccessfulBuild(bambooConfig, encryptionDetails, planKey, Collections.emptyList());
+  }
+
+  @Override
+  public BuildDetails getLastSuccessfulBuild(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
+      String planKey, List<String> artifactPaths) {
     Call<JsonNode> request =
         getBambooClient(bambooConfig, encryptionDetails)
             .lastSuccessfulBuildForJob(getBasicAuthCredentials(bambooConfig, encryptionDetails), planKey);
@@ -122,11 +136,19 @@ public class BambooServiceImpl implements BambooService {
         if (buildNumber == null) {
           return null;
         }
+        List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
+        if (isNotEmpty(artifactPaths)) {
+          for (String artifactPath : artifactPaths) {
+            artifactFileMetadata.addAll(
+                getArtifactFileMetadata(bambooConfig, encryptionDetails, planKey, buildNumber.asText(), artifactPath));
+          }
+        }
         return aBuildDetails()
             .withNumber(buildNumber.asText())
             .withRevision(next.get("vcsRevisionKey") != null ? next.get("vcsRevisionKey").asText() : null)
             .withBuildUrl(buildUrl)
             .withUiDisplayName("Build# " + buildNumber.asText())
+            .withArtifactDownloadMetadata(artifactFileMetadata)
             .build();
       }
     } catch (ArtifactServerException e) {
@@ -241,8 +263,8 @@ public class BambooServiceImpl implements BambooService {
   }
 
   @Override
-  public List<BuildDetails> getBuilds(
-      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey, int maxNumberOfBuilds) {
+  public List<BuildDetails> getBuilds(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
+      String planKey, List<String> artifactPaths, int maxNumberOfBuilds) {
     try {
       return timeLimiter.callWithTimeout(() -> {
         List<BuildDetails> buildDetailsList = new ArrayList<>();
@@ -256,11 +278,19 @@ public class BambooServiceImpl implements BambooService {
             JsonNode resultNode = response.body().at("/results/result");
             if (resultNode != null) {
               resultNode.elements().forEachRemaining(jsonNode -> {
+                List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
+                if (isNotEmpty(artifactPaths)) {
+                  for (String artifactPath : artifactPaths) {
+                    artifactFileMetadata.addAll(getArtifactFileMetadata(
+                        bambooConfig, encryptionDetails, planKey, jsonNode.get("buildNumber").asText(), artifactPath));
+                  }
+                }
                 buildDetailsList.add(aBuildDetails()
                                          .withNumber(jsonNode.get("buildNumber").asText())
                                          .withRevision(jsonNode.get("vcsRevisionKey").asText())
                                          .withBuildUrl(jsonNode.get("link").get("href").asText())
                                          .withUiDisplayName("Build# " + jsonNode.get("buildNumber").asText())
+                                         .withArtifactDownloadMetadata(artifactFileMetadata)
                                          .build());
               });
             }
@@ -270,16 +300,11 @@ public class BambooServiceImpl implements BambooService {
           if (response != null && !response.isSuccessful()) {
             IOUtils.closeQuietly(response.errorBody());
           }
-          logger.error("BambooService job keys fetch failed with exception", e);
-          throw new WingsException(ARTIFACT_SERVER_ERROR, USER)
-              .addParam("message",
-                  "Error in fetching builds from bamboo server. Reason:" + ExceptionUtils.getRootCauseMessage(e));
+          throw new ArtifactServerException("Error in fetching builds from bamboo server", e, USER);
         }
       }, 20L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
-      logger.warn("Bamboo server request did not succeed within 20 secs");
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Bamboo server took too long to respond");
+      throw new InvalidArtifactServerException("Bamboo server took too long to respond", e);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -305,9 +330,7 @@ public class BambooServiceImpl implements BambooService {
         return artifactPaths;
       }, 20L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
-      logger.warn("Bamboo server request did not succeed within 20 secs");
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Bamboo server took too long to respond");
+      throw new InvalidArtifactServerException("Bamboo server took too long to respond", e);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -427,79 +450,107 @@ public class BambooServiceImpl implements BambooService {
     return null;
   }
 
-  @Override
-  public Pair<String, InputStream> downloadArtifact(BambooConfig bambooConfig,
+  private List<ArtifactFileMetadata> getArtifactFileMetadata(BambooConfig bambooConfig,
       List<EncryptedDataDetail> encryptionDetails, String planKey, String buildNumber, String artifactPathRegex) {
-    logger.info("Downloading artifact for plan {} and build number {} and artifact path {}", planKey, buildNumber,
-        artifactPathRegex);
-    Map<String, Artifact> artifactPathMap =
-        getBuildArtifactsUrlMap(bambooConfig, encryptionDetails, planKey, buildNumber);
-    String artifactSourcePath = artifactPathRegex;
-    Pattern pattern = Pattern.compile(artifactPathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
-    Set<Entry<String, Artifact>> artifactPathSet = artifactPathMap.entrySet();
-    Entry<String, Artifact> artifactPath =
-        artifactPathSet.stream()
-            .filter(entry
-                -> extractRelativePath(entry.getValue().getLink()) != null
-                    && pattern.matcher(extractRelativePath(entry.getValue().getLink())).find())
-            .findFirst()
-            .orElse(null);
-    if (artifactPath != null) {
-      Artifact value = artifactPath.getValue();
-      logger.info("Artifact Path regex {} matching with artifact path {}", artifactPathRegex, value);
-      String link = value.getLink();
-      try {
-        URL url = new URL(link);
-        URLConnection uc = url.openConnection();
-        uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig, encryptionDetails));
-        logger.info("Artifact url {}", link);
-        return ImmutablePair.of(link.substring(link.lastIndexOf('/') + 1), uc.getInputStream());
-      } catch (IOException e) {
-        String msg = "Failed to download the artifact from url [" + link + "]";
-        logger.error(msg, e);
-        throw new WingsException(ARTIFACT_SERVER_ERROR, USER, e)
-            .addParam("message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
-      }
-    } else {
-      // It is not matching  direct url, so just prepare the url
-      String msg =
-          "Artifact path  [" + artifactPathRegex + "] not matching with any values: " + artifactPathMap.values();
-      logger.info(msg);
-      logger.info("Constructing url path to download");
-      Artifact artifactJob = artifactPathMap.values()
-                                 .stream()
-                                 .filter(artifact -> artifact.getProducerJobKey() != null)
-                                 .findFirst()
-                                 .orElse(null);
-      if (artifactJob != null) {
-        String jobName = artifactJob.getProducerJobKey()
-                             .replace(planKey, "")
-                             .replace(buildNumber, "")
-                             .replace("-", ""); // TOD-TOD-JOB1-80;
-        String buildKey = planKey + "-" + buildNumber;
-        String artifactUrl;
-        if (bambooConfig.getBambooUrl().endsWith("/")) {
-          artifactUrl = bambooConfig.getBambooUrl() + "browse/" + buildKey + "/artifact";
-        } else {
-          artifactUrl = bambooConfig.getBambooUrl() + "/browse/" + buildKey + "/artifact";
+    List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
+    if (isNotEmpty(artifactPathRegex.trim())) {
+      Map<String, Artifact> artifactPathMap =
+          getBuildArtifactsUrlMap(bambooConfig, encryptionDetails, planKey, buildNumber);
+      Set<Entry<String, Artifact>> artifactPathSet = artifactPathMap.entrySet();
+
+      String artifactSourcePath = artifactPathRegex;
+      Pattern pattern = Pattern.compile(artifactPathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+      Entry<String, Artifact> artifactPath =
+          artifactPathSet.stream()
+              .filter(entry
+                  -> extractRelativePath(entry.getValue().getLink()) != null
+                      && pattern.matcher(extractRelativePath(entry.getValue().getLink())).find())
+              .findFirst()
+              .orElse(null);
+      if (artifactPath != null) {
+        Artifact value = artifactPath.getValue();
+        logger.info("Artifact Path regex {} matching with artifact path {}", artifactPathRegex, value);
+        String link = value.getLink();
+        String artifactFileName = link.substring(link.lastIndexOf('/') + 1);
+        if (isNotEmpty(artifactFileName)) {
+          artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(artifactFileName).url(link).build());
         }
-        artifactUrl = artifactUrl + "/" + jobName + "/" + artifactSourcePath;
-        logger.info("Constructed url {}", artifactUrl);
-        try {
-          URL url = new URL(artifactUrl);
-          URLConnection uc = url.openConnection();
-          uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig, encryptionDetails));
-          if (artifactSourcePath.contains("/")) {
-            artifactSourcePath = artifactSourcePath.substring(artifactSourcePath.lastIndexOf('/') + 1);
+      } else { // It is not matching  direct url, so just prepare the url
+        String msg =
+            "Artifact path  [" + artifactPathRegex + "] not matching with any values: " + artifactPathMap.values();
+        logger.info(msg);
+        logger.info("Constructing url path to download");
+        Artifact artifactJob = artifactPathMap.values()
+                                   .stream()
+                                   .filter(artifact -> artifact.getProducerJobKey() != null)
+                                   .findFirst()
+                                   .orElse(null);
+        if (artifactJob != null) {
+          String jobName = artifactJob.getProducerJobKey()
+                               .replace(planKey, "")
+                               .replace(buildNumber, "")
+                               .replace("-", ""); // TOD-TOD-JOB1-80;
+          String buildKey = planKey + "-" + buildNumber;
+          String artifactUrl;
+          if (bambooConfig.getBambooUrl().endsWith("/")) {
+            artifactUrl = bambooConfig.getBambooUrl() + "browse/" + buildKey + "/artifact";
+          } else {
+            artifactUrl = bambooConfig.getBambooUrl() + "/browse/" + buildKey + "/artifact";
           }
-          return ImmutablePair.of(artifactSourcePath, uc.getInputStream());
-        } catch (IOException e) {
-          throw new WingsException(ARTIFACT_SERVER_ERROR, USER, e)
-              .addParam("message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
+          artifactUrl = artifactUrl + "/" + jobName + "/" + artifactSourcePath;
+          logger.info("Constructed url {}", artifactUrl);
+          artifactFileMetadata.add(ArtifactFileMetadata.builder()
+                                       .fileName(artifactUrl.substring(artifactUrl.lastIndexOf('/') + 1))
+                                       .url(artifactUrl)
+                                       .build());
+        } else {
+          throw new InvalidArtifactServerException(msg, USER);
         }
-      } else {
-        throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", msg);
       }
+    }
+    return artifactFileMetadata;
+  }
+
+  @Override
+  public Pair<String, InputStream> downloadArtifacts(BambooConfig bambooConfig,
+      List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes,
+      String buildNumber, String delegateId, String taskId, String accountId, ListNotifyResponseData res) {
+    List<ArtifactFileMetadata> artifactFileMetadata = artifactStreamAttributes.getArtifactFileMetadata();
+    if (isEmpty(artifactFileMetadata)) {
+      artifactFileMetadata = new ArrayList<>();
+      // for backward compatibility, get all artifact paths
+      List<String> artifactPaths = artifactStreamAttributes.getArtifactPaths();
+      if (isNotEmpty(artifactPaths)) {
+        for (String artifactPathRegex : artifactPaths) {
+          artifactFileMetadata.addAll(getArtifactFileMetadata(
+              bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(), buildNumber, artifactPathRegex));
+        }
+      }
+    }
+    // use artifact file metadata from artifact stream attributes and download
+    if (isNotEmpty(artifactFileMetadata)) {
+      for (ArtifactFileMetadata fileMetadata : artifactFileMetadata) {
+        downloadAnArtifact(bambooConfig, encryptionDetails, fileMetadata, delegateId, taskId, accountId, res);
+      }
+    }
+    return null;
+  }
+
+  private void downloadAnArtifact(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactFileMetadata artifactFileMetadata, String delegateId, String taskId, String accountId,
+      ListNotifyResponseData notifyResponseData) {
+    String link = artifactFileMetadata.getUrl();
+    try {
+      URL url = new URL(link);
+      URLConnection uc = url.openConnection();
+      uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig, encryptionDetails));
+      logger.info("Downloading artifact from url {}", link);
+      artifactCollectionTaskHelper.addDataToResponse(
+          ImmutablePair.of(artifactFileMetadata.getFileName(), uc.getInputStream()), link, notifyResponseData,
+          delegateId, taskId, accountId);
+    } catch (IOException e) {
+      String msg = "Failed to download the artifact from url [" + link + "]";
+      throw new ArtifactServerException(msg, e);
     }
   }
 
@@ -557,9 +608,8 @@ public class BambooServiceImpl implements BambooService {
       logger.info("Retrieving artifacts from plan {} and build number {} success", planKey, buildNumber);
       return artifactPathMap;
     } catch (IOException e) {
-      throw new WingsException(ARTIFACT_SERVER_ERROR, USER, e)
-          .addParam(
-              "message", format("Retrieving artifacts from plan %s and build number %s failed", planKey, buildNumber));
+      throw new ArtifactServerException(
+          format("Retrieving artifacts from plan %s and build number %s failed", planKey, buildNumber), e, USER);
     }
   }
 

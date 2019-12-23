@@ -1,7 +1,10 @@
 package software.wings.helpers.ext.bamboo;
 
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.waiter.ListNotifyResponseData;
+import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.io.InputStream;
@@ -39,16 +42,19 @@ public interface BambooService {
   BuildDetails getLastSuccessfulBuild(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey);
 
+  BuildDetails getLastSuccessfulBuild(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
+      String planKey, List<String> artifactPaths);
   /**
    * Gets builds for job.
-   *
-   * @param bambooConfig      the bamboo config
-   * @param planKey           the jobname
-   * @param maxNumberOfBuilds the max number of builds
-   * @return the builds for job
+   * @param bambooConfig
+   * @param encryptionDetails
+   * @param planKey
+   * @param artifactPaths
+   * @param maxNumberOfBuilds
+   * @return
    */
-  List<BuildDetails> getBuilds(
-      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey, int maxNumberOfBuilds);
+  List<BuildDetails> getBuilds(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey,
+      List<String> artifactPaths, int maxNumberOfBuilds);
 
   /**
    * Gets artifact path.
@@ -60,16 +66,21 @@ public interface BambooService {
   List<String> getArtifactPath(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey);
 
   /**
-   * Download artifact pair.
-   *
-   * @param bambooConfig      the bamboo config
-   * @param planKey           the jobname
-   * @param buildNumber       the build number
-   * @param artifactPathRegex the artifact path regex
-   * @return the pair
+   * Download artifacts for given buildNumber
+   * @param bambooConfig
+   * @param encryptionDetails
+   * @param artifactStreamAttributes
+   * @param buildNo
+   * @param delegateId
+   * @param taskId
+   * @param accountId
+   * @param res
+   * @return
    */
-  org.apache.commons.lang3.tuple.Pair<String, InputStream> downloadArtifact(BambooConfig bambooConfig,
-      List<EncryptedDataDetail> encryptionDetails, String planKey, String buildNumber, String artifactPathRegex);
+  @SuppressWarnings("squid:S00107")
+  Pair<String, InputStream> downloadArtifacts(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactStreamAttributes artifactStreamAttributes, String buildNo, String delegateId, String taskId,
+      String accountId, ListNotifyResponseData res);
 
   /**
    * Is running boolean.

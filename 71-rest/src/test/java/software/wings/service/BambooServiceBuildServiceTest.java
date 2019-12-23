@@ -11,7 +11,6 @@ import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -22,7 +21,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.service.intfc.SettingsService;
 
-import java.io.InputStream;
+import java.util.Arrays;
 
 @Slf4j
 public class BambooServiceBuildServiceTest extends WingsBaseTest {
@@ -77,16 +76,6 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuilds() {
-    logger.info(bambooService.getBuilds(bambooConfig, null, "TOD-TOD-JOB1", 50).toString());
-  }
-
-  @Test
-  @Owner(developers = ANUBHAW)
-  @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
-  public void shouldGetBuildArtifacts() {
-    Pair<String, InputStream> stringInputStreamPair =
-        bambooService.downloadArtifact(bambooConfig, null, "TOD-TOD-JOB1", "11", "*");
-    logger.info(stringInputStreamPair.getKey());
+    logger.info(bambooService.getBuilds(bambooConfig, null, "TOD-TOD-JOB1", Arrays.asList(), 50).toString());
   }
 }

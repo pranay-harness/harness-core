@@ -10,13 +10,12 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.bamboo.BambooService;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -42,20 +41,16 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask {
 
   @Override
   public ListNotifyResponseData run(Object[] parameters) {
-    return run((BambooConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
-        (List<String>) parameters[3], (Map<String, String>) parameters[4]);
+    return run((BambooConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1],
+        (ArtifactStreamAttributes) parameters[2], (Map<String, String>) parameters[3]);
   }
 
   public ListNotifyResponseData run(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
-      String planKey, List<String> artifactPaths, Map<String, String> arguments) {
+      ArtifactStreamAttributes artifactStreamAttributes, Map<String, String> arguments) {
     ListNotifyResponseData res = new ListNotifyResponseData();
     try {
-      for (String artifactPath : artifactPaths) {
-        Pair<String, InputStream> fileInfo = bambooService.downloadArtifact(
-            bambooConfig, encryptionDetails, planKey, arguments.get(ArtifactMetadataKeys.buildNo), artifactPath);
-        artifactCollectionTaskHelper.addDataToResponse(
-            fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());
-      }
+      bambooService.downloadArtifacts(bambooConfig, encryptionDetails, artifactStreamAttributes,
+          arguments.get(ArtifactMetadataKeys.buildNo), getDelegateId(), getTaskId(), getAccountId(), res);
     } catch (Exception e) {
       logger.warn("Exception: " + ExceptionUtils.getMessage(e), e);
       // TODO: better error handling

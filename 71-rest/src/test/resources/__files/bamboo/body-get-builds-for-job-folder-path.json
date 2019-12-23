@@ -1,0 +1,107 @@
+{
+  "results": {
+    "size": 2,
+    "expand": "result",
+    "start-index": 0,
+    "max-result": 25,
+    "result": [
+      {
+        "expand": "plan,vcsRevisions,artifacts,comments,labels,jiraIssues,stages",
+        "link": {
+          "href": "http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/rest/api/latest/result/TP-PLAN3-4",
+          "rel": "self"
+        },
+        "plan": {
+          "shortName": "plan-1",
+          "shortKey": "PLAN",
+          "type": "chain",
+          "enabled": true,
+          "link": {
+            "href": "http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/rest/api/latest/plan/TP-PLAN3",
+            "rel": "self"
+          },
+          "key": "TP-PLAN3",
+          "name": "Test Project - plan-1",
+          "planKey": {
+            "key": "TP-PLAN3"
+          }
+        },
+        "planName": "plan-1",
+        "projectName": "Test Project",
+        "buildResultKey": "TP-PLAN3-4",
+        "lifeCycleState": "Finished",
+        "id": 5013835,
+        "buildStartedTime": "2019-12-16T02:48:07.391Z",
+        "prettyBuildStartedTime": "Mon, 16 Dec, 02:48 AM",
+        "buildCompletedTime": "2019-12-16T02:48:19.672Z",
+        "buildCompletedDate": "2019-12-16T02:48:19.672Z",
+        "prettyBuildCompletedTime": "Mon, 16 Dec, 02:48 AM",
+        "buildDurationInSeconds": 12,
+        "buildDuration": 12281,
+        "buildDurationDescription": "12 seconds",
+        "buildRelativeTime": "1 hour ago",
+        "vcsRevisionKey": "45d0f90134e3397477ad9a4a500302b6e3756dda",
+        "vcsRevisions": {
+          "size": 1,
+          "start-index": 0,
+          "max-result": 1
+        },
+        "buildTestSummary": "No tests found",
+        "successfulTestCount": 0,
+        "failedTestCount": 0,
+        "quarantinedTestCount": 0,
+        "skippedTestCount": 0,
+        "continuable": false,
+        "onceOff": false,
+        "restartable": false,
+        "notRunYet": false,
+        "finished": true,
+        "successful": true,
+        "buildReason": "Manual run by <a href=\"http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/browse/user/wingsbuild\">Wings Build</a>",
+        "reasonSummary": "Manual run by <a href=\"http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/browse/user/wingsbuild\">Wings Build</a>",
+        "artifacts": {
+          "size": 0,
+          "start-index": 0,
+          "max-result": 0
+        },
+        "comments": {
+          "size": 0,
+          "start-index": 0,
+          "max-result": 0
+        },
+        "labels": {
+          "size": 0,
+          "start-index": 0,
+          "max-result": 0
+        },
+        "jiraIssues": {
+          "size": 0,
+          "start-index": 0,
+          "max-result": 0
+        },
+        "stages": {
+          "size": 1,
+          "start-index": 0,
+          "max-result": 1
+        },
+        "key": "TP-PLAN3-4",
+        "planResultKey": {
+          "key": "TP-PLAN3-4",
+          "entityKey": {
+            "key": "TP-PLAN3"
+          },
+          "resultNumber": 4
+        },
+        "state": "Successful",
+        "buildState": "Successful",
+        "number": 4,
+        "buildNumber": 4
+      }
+    ]
+  },
+  "expand": "results",
+  "link": {
+    "href": "http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/rest/api/latest/result/TP-PLAN3",
+    "rel": "self"
+  }
+}
