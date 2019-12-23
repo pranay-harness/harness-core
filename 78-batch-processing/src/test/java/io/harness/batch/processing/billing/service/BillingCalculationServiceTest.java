@@ -15,6 +15,7 @@ import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.service.impl.VMPricingServiceImpl;
+import io.harness.batch.processing.pricing.service.intfc.AwsCustomPricingService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
@@ -37,6 +38,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @InjectMocks private BillingCalculationService billingCalculationService;
   @Mock private InstancePricingStrategyContext instancePricingStrategyRegistry;
   @Mock private VMPricingServiceImpl vmPricingService;
+  @Mock private AwsCustomPricingService awsCustomPricingService;
 
   private final Instant NOW = Instant.now().truncatedTo(ChronoUnit.DAYS);
   private final Instant INSTANCE_STOP_TIMESTAMP = NOW;
@@ -286,7 +288,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     when(vmPricingService.getComputeVMPricingInfo(DEFAULT_INSTANCE_FAMILY, REGION, CloudProvider.AWS))
         .thenReturn(createVMComputePricingInfo());
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.ECS_TASK_EC2))
-        .thenReturn(new ComputeInstancePricingStrategy(vmPricingService));
+        .thenReturn(new ComputeInstancePricingStrategy(vmPricingService, awsCustomPricingService));
     Resource instanceResource = getInstanceResource(18432, 30720);
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
@@ -313,7 +315,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   public void testGetInstanceBillingAmountForFargate() throws IOException {
     when(vmPricingService.getFargatePricingInfo(REGION)).thenReturn(createEcsFargatePricingInfo());
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.ECS_TASK_FARGATE))
-        .thenReturn(new EcsFargateInstancePricingStrategy(vmPricingService));
+        .thenReturn(new EcsFargateInstancePricingStrategy(vmPricingService, awsCustomPricingService));
     Resource instanceResource = getInstanceResource(320, 2048);
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());

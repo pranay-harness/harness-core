@@ -27,7 +27,8 @@ public class BillingCalculationService {
     double instanceActiveSeconds = getInstanceActiveSeconds(instanceData, startTime, endTime);
     InstancePricingStrategy instancePricingStrategy =
         instancePricingStrategyContext.getInstancePricingStrategy(instanceData.getInstanceType());
-    PricingData pricingData = instancePricingStrategy.getPricePerHour(instanceData);
+
+    PricingData pricingData = instancePricingStrategy.getPricePerHour(instanceData, startTime);
     return getBillingAmount(instanceData, utilizationData, pricingData, instanceActiveSeconds);
   }
 

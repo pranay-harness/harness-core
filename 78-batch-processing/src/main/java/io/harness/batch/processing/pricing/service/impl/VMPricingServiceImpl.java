@@ -1,5 +1,8 @@
 package io.harness.batch.processing.pricing.service.impl;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
+
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.batch.processing.pricing.client.BanzaiPricingClient;
@@ -72,6 +75,6 @@ public class VMPricingServiceImpl implements VMPricingService {
   }
 
   String getVMCacheKey(String instanceType, String region, CloudProvider cloudProvider) {
-    return instanceType + "_" + region + "_" + cloudProvider.toString();
+    return "id_" + md5Hex(("i_" + instanceType + "r_" + region + "c_" + cloudProvider).getBytes(UTF_8));
   }
 }
