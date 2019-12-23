@@ -47,6 +47,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.Builder;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -71,6 +72,12 @@ import java.util.Map;
 
 @RunWith(JUnitParamsRunner.class)
 public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
+  private static final String JENKINS_ARTIFACT_URL_1 =
+      "http://localhost:8089/job/scheduler-svn/75/artifact/build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar";
+  private static final String JENKINS_ARTIFACT_URL_2 =
+      "http://localhost:8089/job/scheduler-svn/75/artifact/build/libs/docker-scheduler-1.0-SNAPSHOT-sources.jar";
+  private static final String JENKINS_ARTIFACT_FILENAME_1 = "docker-scheduler-1.0-SNAPSHOT-all.jar";
+  private static final String JENKINS_ARTIFACT_FILENAME_2 = "docker-scheduler-1.0-SNAPSHOT-sources.jar";
   @InjectMocks private DownloadArtifactCommandUnit downloadArtifactCommandUnit = new DownloadArtifactCommandUnit();
   @Mock private BaseScriptExecutor executor;
   @Mock private EncryptionService encryptionService;
@@ -167,6 +174,15 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
           .withValue(NexusConfig.builder().nexusUrl(WingsTestConstants.HARNESS_NEXUS_THREE).build())
           .build();
 
+  private SettingAttribute jenkinsSetting = aSettingAttribute()
+                                                .withUuid(SETTING_ID)
+                                                .withValue(JenkinsConfig.builder()
+                                                               .jenkinsUrl(WingsTestConstants.HARNESS_JENKINS)
+                                                               .username("admin")
+                                                               .password("dummy123!".toCharArray())
+                                                               .build())
+                                                .build();
+
   private ArtifactStreamAttributes nexus2MavenStreamAttributes =
       ArtifactStreamAttributes.builder()
           .artifactStreamType(ArtifactStreamType.NEXUS.name())
@@ -205,6 +221,21 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
           .jobName("releases")
           .groupId("io.harness.test")
           .artifactName("todolist")
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .build();
+
+  private ArtifactStreamAttributes jenkinsArtifactStreamAttributes =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.JENKINS.name())
+          .metadataOnly(true)
+          .artifactFileMetadata(
+              asList(builder().fileName(JENKINS_ARTIFACT_FILENAME_1).url(JENKINS_ARTIFACT_URL_1).build(),
+                  builder().fileName(JENKINS_ARTIFACT_FILENAME_2).url(JENKINS_ARTIFACT_URL_2).build()))
+          .serverSetting(jenkinsSetting)
+          .artifactStreamId(ARTIFACT_STREAM_ID)
+          .jobName("scheduler")
+          .artifactPaths(asList("build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar",
+              "build/libs/docker-scheduler-1.0-SNAPSHOT-sources.jar"))
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 
@@ -268,6 +299,17 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
       new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .withArtifactStreamAttributes(nexus2MavenStreamAttributesAnon)
                                            .withMetadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+                                           .withHostConnectionAttributes(hostConnectionAttributes)
+                                           .withAppId(WingsTestConstants.APP_ID)
+                                           .withActivityId(ACTIVITY_ID)
+                                           .withHost(host)
+                                           .build());
+
+  @InjectMocks
+  ShellCommandExecutionContext jenkinsContext =
+      new ShellCommandExecutionContext(aCommandExecutionContext()
+                                           .withArtifactStreamAttributes(jenkinsArtifactStreamAttributes)
+                                           .withMetadata(mockMetadata(ArtifactStreamType.JENKINS))
                                            .withHostConnectionAttributes(hostConnectionAttributes)
                                            .withAppId(WingsTestConstants.APP_ID)
                                            .withActivityId(ACTIVITY_ID)
@@ -391,6 +433,22 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     assertThat(argument.getValue()).isEqualTo(command);
   }
 
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  @Parameters(method = "getJenkinsData")
+  public void shouldDownloadFromJenkins(ScriptType scriptType, String command) {
+    jenkinsContext.setExecutor(executor);
+    downloadArtifactCommandUnit.setScriptType(scriptType);
+    downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+        .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
+    downloadArtifactCommandUnit.executeInternal(jenkinsContext);
+    ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
+    verify(executor).executeCommandString(argument.capture(), anyBoolean());
+    assertThat(argument.getValue()).isEqualTo(command);
+  }
+
   private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {
     Map<String, String> map = new HashMap<>();
     switch (artifactStreamType) {
@@ -454,5 +512,23 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
             "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n"
                 + " Invoke-WebRequest -Uri \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -OutFile \"DESTINATION_DIR_PATH\\todolist-7.0.war\"\n"
                 + " Invoke-WebRequest -Uri \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=tar\" -OutFile \"DESTINATION_DIR_PATH\\todolist-7.0.tar\""}};
+  }
+
+  private Object[][] getJenkinsData() {
+    return new Object[][] {
+        {ScriptType.BASH,
+            "curl --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"" + JENKINS_ARTIFACT_URL_1
+                + "\" -o \"DESTINATION_DIR_PATH/" + JENKINS_ARTIFACT_FILENAME_1 + "\"\n"
+                + "curl --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \""
+                + JENKINS_ARTIFACT_URL_2 + "\" -o \"DESTINATION_DIR_PATH/" + JENKINS_ARTIFACT_FILENAME_2 + "\"\n"},
+        {ScriptType.POWERSHELL,
+            "$webClient = New-Object System.Net.WebClient \n"
+                + "$webClient.Headers[[System.Net.HttpRequestHeader]::Authorization] = \"Basic YWRtaW46ZHVtbXkxMjMh\";\n"
+                + "$url = \"" + JENKINS_ARTIFACT_URL_1 + "\" \n"
+                + "$localfilename = \"DESTINATION_DIR_PATH\\" + JENKINS_ARTIFACT_FILENAME_1 + "\" \n"
+                + "$webClient.DownloadFile($url, $localfilename) \n"
+                + "$url = \"" + JENKINS_ARTIFACT_URL_2 + "\" \n"
+                + "$localfilename = \"DESTINATION_DIR_PATH\\" + JENKINS_ARTIFACT_FILENAME_2 + "\" \n"
+                + "$webClient.DownloadFile($url, $localfilename) \n"}};
   }
 }

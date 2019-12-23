@@ -56,7 +56,7 @@ public class WorkflowExecutionWithSecretTextFunctionalTest extends AbstractFunct
   }
 
   @Test
-  @Owner(developers = DINESH)
+  @Owner(developers = DINESH, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldHaveAccessToApplicationScopedSecretTextExpressionInWorkflow() throws Exception {
     String secretName = "test_application_scoped_secret_" + System.currentTimeMillis();

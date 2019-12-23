@@ -339,7 +339,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   public boolean TC10_createBambooConnector() {
-    String BAMBOO_URL = "http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/";
+    String BAMBOO_URL = "http://cdteam-bamboo.harness.io:8085/";
     String USER_NAME = "wingsbuild";
 
     SettingAttribute settingAttribute =
@@ -368,7 +368,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
 
   public void TC11_updateBambooConnector() {
     CONNECTOR_NAME_BAMBOO = CONNECTOR_NAME_BAMBOO + "update";
-    String BAMBOO_URL = "http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/";
+    String BAMBOO_URL = "http://cdteam-bamboo.harness.io:8085/";
     String USER_NAME = "wingsbuild";
 
     SettingAttribute settingAttribute =

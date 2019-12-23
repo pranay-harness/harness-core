@@ -404,7 +404,7 @@ public class SettingGenerator {
             .withAccountId(account.getUuid())
             .withValue(BambooConfig.builder()
                            .accountId(account.getUuid())
-                           .bambooUrl("http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/")
+                           .bambooUrl("http://cdteam-bamboo.harness.io:8085/")
                            .username("wingsbuild")
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_bamboo")))
                            .build())

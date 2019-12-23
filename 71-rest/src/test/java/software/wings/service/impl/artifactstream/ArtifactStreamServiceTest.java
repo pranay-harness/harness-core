@@ -253,6 +253,43 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     validateJenkinsArtifactStreamOnCreate(savedArtifactSteam);
   }
 
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotAddJenkinsNonMetadataArtifactStream() {
+    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                      .sourceName("todolistwar")
+                                                      .settingId(SETTING_ID)
+                                                      .accountId(ACCOUNT_ID)
+                                                      .appId(APP_ID)
+                                                      .jobname("todolistwar")
+                                                      .autoPopulate(true)
+                                                      .serviceId(SERVICE_ID)
+                                                      .metadataOnly(false)
+                                                      .build();
+    createArtifactStream(jenkinsArtifactStream);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldRemoveEmptyPathsInJenkinsArtifactStreamOnCreate() {
+    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                      .sourceName("todolistwar")
+                                                      .settingId(SETTING_ID)
+                                                      .accountId(ACCOUNT_ID)
+                                                      .appId(APP_ID)
+                                                      .jobname("todolistwar")
+                                                      .autoPopulate(true)
+                                                      .serviceId(SERVICE_ID)
+                                                      .metadataOnly(false)
+                                                      .artifactPaths(asList("", "target/todolist.war"))
+                                                      .build();
+    JenkinsArtifactStream jenkinsArtifactStream1 = (JenkinsArtifactStream) createArtifactStream(jenkinsArtifactStream);
+    assertThat(jenkinsArtifactStream1.getArtifactPaths().size()).isEqualTo(1);
+    assertThat(jenkinsArtifactStream1.getArtifactPaths()).containsExactly("target/todolist.war");
+  }
+
   private void validateJenkinsArtifactStreamOnCreate(ArtifactStream savedArtifactSteam) {
     assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
@@ -335,6 +372,30 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(artifactService).deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
     //    verify(triggerService).updateByApp(APP_ID);
     assertThat(updatedJenkinsArtifactStream.getCollectionStatus()).isEqualTo(UNSTABLE.name());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateJenkinsArtifactStreamNonMetadataWithNullArtifactPaths() {
+    JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
+    ArtifactStream savedArtifactSteam = createArtifactStream(jenkinsArtifactStream);
+    JenkinsArtifactStream savedJenkinsArtifactStream = validateJenkinsArtifactStream(savedArtifactSteam, APP_ID);
+    savedJenkinsArtifactStream.setArtifactPaths(null);
+    artifactStreamService.update(savedJenkinsArtifactStream);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldUpdateJenkinsArtifactStreamNonMetadataWithEmptyArtifactPaths() {
+    JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
+    ArtifactStream savedArtifactSteam = createArtifactStream(jenkinsArtifactStream);
+    JenkinsArtifactStream savedJenkinsArtifactStream = validateJenkinsArtifactStream(savedArtifactSteam, APP_ID);
+    savedJenkinsArtifactStream.setArtifactPaths(asList(" "));
+    JenkinsArtifactStream updatedJenkinsArtifactStream =
+        (JenkinsArtifactStream) artifactStreamService.update(savedJenkinsArtifactStream);
+    assertThat(updatedJenkinsArtifactStream.getArtifactPaths()).isNull();
   }
 
   @NotNull

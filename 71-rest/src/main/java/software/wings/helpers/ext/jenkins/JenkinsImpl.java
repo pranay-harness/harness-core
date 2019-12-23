@@ -34,6 +34,7 @@ import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueItem;
 import com.offbytwo.jenkins.model.QueueReference;
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -304,12 +305,13 @@ public class JenkinsImpl implements Jenkins {
    * @see software.wings.helpers.ext.jenkins.Jenkins#getBuilds(java.lang.String, int)
    */
   @Override
-  public List<BuildDetails> getBuildsForJob(String jobname, int lastN) throws IOException {
-    return getBuildsForJob(jobname, lastN, false);
+  public List<BuildDetails> getBuildsForJob(String jobname, List<String> artifactPaths, int lastN) throws IOException {
+    return getBuildsForJob(jobname, artifactPaths, lastN, false);
   }
 
   @Override
-  public List<BuildDetails> getBuildsForJob(String jobname, int lastN, boolean allStatuses) throws IOException {
+  public List<BuildDetails> getBuildsForJob(String jobname, List<String> artifactPaths, int lastN, boolean allStatuses)
+      throws IOException {
     JobWithDetails jobWithDetails = getJob(jobname);
     if (jobWithDetails == null) {
       return Lists.newArrayList();
@@ -333,12 +335,34 @@ public class JenkinsImpl implements Jenkins {
                 -> (build.getResult() == BuildResult.SUCCESS || build.getResult() == BuildResult.UNSTABLE
                        || build.getResult() == BuildResult.FAILURE)
                     && isNotEmpty(build.getArtifacts()))
-            .map(this ::getBuildDetails)
+            .map(buildWithDetails1 -> getBuildDetails(buildWithDetails1, artifactPaths))
             .collect(toList()));
     return buildDetails.stream().sorted(new BuildDetailsComparator()).collect(toList());
   }
 
-  public BuildDetails getBuildDetails(BuildWithDetails buildWithDetails) {
+  public BuildDetails getBuildDetails(BuildWithDetails buildWithDetails, List<String> artifactPaths) {
+    List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
+    if (isNotEmpty(artifactPaths)) {
+      List<Artifact> buildArtifacts = buildWithDetails.getArtifacts();
+      if (isNotEmpty(buildArtifacts)) {
+        for (String artifactPath : artifactPaths) {
+          // only if artifact path is not empty check if there is a match
+          if (isNotEmpty(artifactPath.trim())) {
+            Pattern pattern = Pattern.compile(artifactPath.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+            Optional<Artifact> artifactOpt = buildWithDetails.getArtifacts()
+                                                 .stream()
+                                                 .filter(artifact -> pattern.matcher(artifact.getRelativePath()).find())
+                                                 .findFirst();
+            if (artifactOpt.isPresent()) {
+              Artifact artifact = artifactOpt.get();
+              String fileName = artifact.getFileName();
+              String url = buildWithDetails.getUrl() + "artifact/" + artifact.getRelativePath();
+              artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(fileName).url(url).build());
+            }
+          }
+        }
+      }
+    }
     BuildDetails buildDetails = aBuildDetails()
                                     .withNumber(String.valueOf(buildWithDetails.getNumber()))
                                     .withRevision(extractRevision(buildWithDetails))
@@ -348,6 +372,7 @@ public class JenkinsImpl implements Jenkins {
                                     .withBuildFullDisplayName(buildWithDetails.getFullDisplayName())
                                     .withStatus(BuildStatus.valueOf(buildWithDetails.getResult().name()))
                                     .withUiDisplayName("Build# " + buildWithDetails.getNumber())
+                                    .withArtifactDownloadMetadata(artifactFileMetadata)
                                     .build();
     populateBuildParams(buildWithDetails, buildDetails);
     return buildDetails;
@@ -366,7 +391,7 @@ public class JenkinsImpl implements Jenkins {
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuildForJob(String jobName) throws IOException {
+  public BuildDetails getLastSuccessfulBuildForJob(String jobName, List<String> artifactPaths) throws IOException {
     JobWithDetails jobWithDetails = getJob(jobName);
     if (jobWithDetails == null) {
       logger.info("Job {} does not exist", jobName);
@@ -379,7 +404,7 @@ public class JenkinsImpl implements Jenkins {
       return null;
     }
     BuildWithDetails buildWithDetails = lastSuccessfulBuild.details();
-    return getBuildDetails(buildWithDetails);
+    return getBuildDetails(buildWithDetails, artifactPaths);
   }
 
   /* (non-Javadoc)

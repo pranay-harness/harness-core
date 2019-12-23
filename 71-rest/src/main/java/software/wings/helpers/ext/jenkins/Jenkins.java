@@ -35,22 +35,25 @@ public interface Jenkins {
    * Gets the builds for job.
    *
    * @param jobname the jobname
+   * @param artifactPaths
    * @param lastN   the last n
    * @return the builds for job
    * @throws IOException Signals that an I/O exception has occurred.
    */
-  List<BuildDetails> getBuildsForJob(String jobname, int lastN) throws IOException;
+  List<BuildDetails> getBuildsForJob(String jobname, List<String> artifactPaths, int lastN) throws IOException;
 
   /**
    * Gets the builds for job.
    *
    * @param jobname the jobname
+   * @param artifactPaths
    * @param lastN   the last n
    * @param allStatuses statuses to include
    * @return the builds for job
    * @throws IOException Signals that an I/O exception has occurred.
    */
-  List<BuildDetails> getBuildsForJob(String jobname, int lastN, boolean allStatuses) throws IOException;
+  List<BuildDetails> getBuildsForJob(String jobname, List<String> artifactPaths, int lastN, boolean allStatuses)
+      throws IOException;
 
   /**
    * Gets last successful build for job.
@@ -59,7 +62,7 @@ public interface Jenkins {
    * @return the last successful build for job
    * @throws IOException the io exception
    */
-  BuildDetails getLastSuccessfulBuildForJob(String jobName) throws IOException;
+  BuildDetails getLastSuccessfulBuildForJob(String jobName, List<String> artifactPaths) throws IOException;
 
   /**
    * Trigger queue reference.

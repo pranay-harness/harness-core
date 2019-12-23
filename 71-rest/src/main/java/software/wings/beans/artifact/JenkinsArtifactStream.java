@@ -1,10 +1,13 @@
 package software.wings.beans.artifact;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.EmbeddedUser;
+import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,6 +15,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -21,7 +25,7 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = false)
 public class JenkinsArtifactStream extends ArtifactStream {
   @NotEmpty private String jobname;
-  @NotEmpty private List<String> artifactPaths;
+  private List<String> artifactPaths;
 
   public JenkinsArtifactStream() {
     super(JENKINS.name());
@@ -50,7 +54,28 @@ public class JenkinsArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return ArtifactStreamAttributes.builder().artifactStreamType(getArtifactStreamType()).jobName(jobname).build();
+    return ArtifactStreamAttributes.builder()
+        .artifactStreamType(getArtifactStreamType())
+        .jobName(jobname)
+        .artifactPaths(artifactPaths)
+        .build();
+  }
+
+  @Override
+  public void validateRequiredFields() {
+    if (!isMetadataOnly() && isEmpty(artifactPaths)) {
+      throw new InvalidRequestException("Please provide at least one artifact path for non-metadata only");
+    }
+    // for both metadata and non-metadata remove artifact path containing empty strings
+    List<String> updatedArtifactPaths = new ArrayList<>();
+    if (isNotEmpty(artifactPaths)) {
+      for (String artifactPath : artifactPaths) {
+        if (isNotEmpty(artifactPath.trim())) {
+          updatedArtifactPaths.add(artifactPath);
+        }
+      }
+    }
+    setArtifactPaths(updatedArtifactPaths);
   }
 
   @Data
