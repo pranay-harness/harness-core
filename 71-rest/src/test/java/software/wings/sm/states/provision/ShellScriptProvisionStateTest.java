@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,5 +36,14 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     expectedMap.put("key1", "val1");
     expectedMap.put("key2", "val2");
     assertThat(state.parseOutput(json)).isEqualTo(expectedMap);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testValidation() {
+    assertThat(state.validateFields().size()).isNotEqualTo(0);
+    state.setProvisionerId("test provisioner");
+    assertThat(state.validateFields().size()).isEqualTo(0);
   }
 }

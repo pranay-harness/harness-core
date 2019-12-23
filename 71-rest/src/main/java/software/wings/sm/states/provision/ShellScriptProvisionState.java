@@ -1,6 +1,7 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -56,6 +57,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -94,7 +96,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
             .activityId(activityId)
             .commandUnit(COMMAND_UNIT)
             .entityId(infrastructureProvisionerService.getEntityId(
-                provisionerId, ((ExecutionContextImpl) context).getEnv().getUuid()))
+                provisionerId, Objects.requireNonNull(((ExecutionContextImpl) context).getEnv()).getUuid()))
             .build();
 
     DelegateTask delegateTask = DelegateTask.builder()
@@ -179,7 +181,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
 
     ActivityBuilder activityBuilder =
         Activity.builder()
-            .applicationName(app.getName())
+            .applicationName(Objects.requireNonNull(app).getName())
             .commandName(getName())
             .type(Type.Command)
             .workflowType(executionContext.getWorkflowType())
@@ -205,5 +207,16 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
     Activity activity = activityBuilder.build();
     activity.setAppId(app.getUuid());
     return activityService.save(activity).getUuid();
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> results = new HashMap<>();
+    if (isEmpty(provisionerId)) {
+      results.put("Required Fields missing", "Provision must be provided.");
+      return results;
+    }
+    logger.info("Shell Script Provision State Validated");
+    return results;
   }
 }

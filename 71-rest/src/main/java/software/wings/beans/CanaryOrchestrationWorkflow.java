@@ -745,6 +745,29 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       setValid(false);
       invalid += invalidChildren.toString();
     }
+
+    if (preDeploymentSteps != null && preDeploymentSteps.getSteps() != null) {
+      List<String> invalidChildrenPreDeployment = (preDeploymentSteps.getSteps().stream())
+                                                      .filter(preDeploymentStep -> !preDeploymentStep.validate())
+                                                      .map(GraphNode::getName)
+                                                      .collect(toList());
+      if (isNotEmpty(invalidChildrenPreDeployment)) {
+        setValid(false);
+        invalid += invalidChildrenPreDeployment.toString();
+      }
+    }
+
+    if (postDeploymentSteps != null && postDeploymentSteps.getSteps() != null) {
+      List<String> invalidChildrenPostDeployment = (postDeploymentSteps.getSteps().stream())
+                                                       .filter(postDeploymentStep -> !postDeploymentStep.validate())
+                                                       .map(GraphNode::getName)
+                                                       .collect(toList());
+      if (isNotEmpty(invalidChildrenPostDeployment)) {
+        setValid(false);
+        invalid += invalidChildrenPostDeployment.toString();
+      }
+    }
+
     if (rollbackWorkflowPhaseIdMap != null) {
       List<String> invalidRollbacks = new ArrayList<>();
       for (WorkflowPhase workflowPhase : workflowPhases) {
