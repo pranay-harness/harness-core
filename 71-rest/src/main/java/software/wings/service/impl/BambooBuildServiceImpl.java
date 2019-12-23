@@ -37,8 +37,9 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.BAMBOO.name());
-    return wrapNewBuildsWithLabels(bambooService.getBuilds(bambooConfig, encryptionDetails,
-                                       artifactStreamAttributes.getJobName(), ARTIFACT_RETENTION_SIZE),
+    return wrapNewBuildsWithLabels(
+        bambooService.getBuilds(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(),
+            artifactStreamAttributes.getArtifactPaths(), ARTIFACT_RETENTION_SIZE),
         artifactStreamAttributes, bambooConfig, encryptionDetails);
   }
 
@@ -47,7 +48,8 @@ public class BambooBuildServiceImpl implements BambooBuildService {
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.BAMBOO.name());
     return wrapNewBuildsWithLabels(
-        bambooService.getBuilds(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(), limit),
+        bambooService.getBuilds(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(),
+            artifactStreamAttributes.getArtifactPaths(), limit),
         artifactStreamAttributes, bambooConfig, encryptionDetails);
   }
 
@@ -80,7 +82,8 @@ public class BambooBuildServiceImpl implements BambooBuildService {
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.BAMBOO.name());
     return wrapLastSuccessfulBuildWithLabels(
-        bambooService.getLastSuccessfulBuild(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName()),
+        bambooService.getLastSuccessfulBuild(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(),
+            artifactStreamAttributes.getArtifactPaths()),
         artifactStreamAttributes, bambooConfig, encryptionDetails);
   }
 

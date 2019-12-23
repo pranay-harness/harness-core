@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/rest/api/latest/result/TP-PLAN-4.json?authType=basic&expand=stages.stage.results.result.artifacts.artifact"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/bamboo/body-get-build-artifacts.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

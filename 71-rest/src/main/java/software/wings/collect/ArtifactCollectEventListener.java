@@ -150,14 +150,13 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .accountId(accountId)
             .appId(GLOBAL_APP_ID)
             .waitId(waitId)
-            .data(
-                TaskData.builder()
-                    .taskType(TaskType.BAMBOO_COLLECTION.name())
-                    .parameters(new Object[] {bambooConfig,
-                        secretManager.getEncryptionDetails(bambooConfig, null, null), bambooArtifactStream.getJobname(),
-                        bambooArtifactStream.getArtifactPaths(), artifact.getMetadata()})
-                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                    .build())
+            .data(TaskData.builder()
+                      .taskType(TaskType.BAMBOO_COLLECTION.name())
+                      .parameters(
+                          new Object[] {bambooConfig, secretManager.getEncryptionDetails(bambooConfig, null, null),
+                              bambooArtifactStream.fetchArtifactStreamAttributes(), artifact.getMetadata()})
+                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                      .build())
             .build();
       }
       case NEXUS: {

@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SftpConfig;
@@ -199,6 +200,12 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         return context.executeCommandString(command, false);
       case JENKINS:
         command = constructCommandStringForJenkins(context, artifactStreamAttributes, encryptionDetails);
+        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        saveExecutionLog(
+            context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        return context.executeCommandString(command, false);
+      case BAMBOO:
+        command = constructCommandStringForBamboo(context, artifactStreamAttributes, encryptionDetails);
         logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
@@ -617,6 +624,58 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
               .append('\\')
               .append(downloadMetadata.getFileName())
               .append("\" \n$webClient.DownloadFile($url, $localfilename) \n");
+        }
+        break;
+      default:
+        throw new InvalidRequestException("Invalid Script type", USER);
+    }
+
+    return command.toString();
+  }
+
+  private String constructCommandStringForBamboo(ShellCommandExecutionContext context,
+      ArtifactStreamAttributes artifactStreamAttributes, List<EncryptedDataDetail> encryptionDetails) {
+    BambooConfig bambooConfig = (BambooConfig) artifactStreamAttributes.getServerSetting().getValue();
+    encryptionService.decrypt(bambooConfig, encryptionDetails);
+    String pair = bambooConfig.getUsername() + ":" + new String(bambooConfig.getPassword());
+    String authHeader = "Basic " + encodeBase64(pair);
+
+    List<ArtifactFileMetadata> artifactFileMetadata = artifactStreamAttributes.getArtifactFileMetadata();
+    StringBuilder command = new StringBuilder(128);
+
+    if (isEmpty(artifactFileMetadata)) {
+      saveExecutionLog(context, ERROR, NO_ARTIFACTS_ERROR_STRING);
+      throw new InvalidRequestException(NO_ARTIFACTS_ERROR_STRING, USER);
+    }
+
+    switch (this.getScriptType()) {
+      case BASH:
+        for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
+          command.append("curl --progress-bar -H \"Authorization: ")
+              .append(authHeader)
+              .append("\" -X GET \"")
+              .append(downloadMetadata.getUrl())
+              .append("\" -o \"")
+              .append(getCommandPath().trim())
+              .append('/')
+              .append(downloadMetadata.getFileName())
+              .append("\"\n");
+        }
+        break;
+      case POWERSHELL:
+        command
+            .append("$Headers = @{\n"
+                + "    Authorization = \"")
+            .append(authHeader)
+            .append("\"\n}\n [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12");
+        for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
+          command.append("\n Invoke-WebRequest -Uri \"")
+              .append(downloadMetadata.getUrl())
+              .append("\" -OutFile \"")
+              .append(getCommandPath().trim())
+              .append('\\')
+              .append(downloadMetadata.getFileName())
+              .append('"');
         }
         break;
       default:
