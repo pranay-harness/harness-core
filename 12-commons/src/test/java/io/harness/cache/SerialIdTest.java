@@ -10,6 +10,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.ObjectStreamClass;
+import java.util.List;
 
 class Dummy implements Distributable, Nominal {
   public static final long STRUCTURE_HASH = ObjectStreamClass.lookup(Dummy.class).getSerialVersionUID();
@@ -33,6 +34,11 @@ class Dummy implements Distributable, Nominal {
   public String key() {
     return null;
   }
+
+  @Override
+  public List<String> parameters() {
+    return null;
+  }
 }
 
 public class SerialIdTest extends CategoryTest {
@@ -41,6 +47,6 @@ public class SerialIdTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testSanity() {
     final Dummy dummy = new Dummy();
-    assertThat(dummy.structureHash()).isEqualTo(492977267398168896L);
+    assertThat(dummy.structureHash()).isEqualTo(37626829568819767L);
   }
 }

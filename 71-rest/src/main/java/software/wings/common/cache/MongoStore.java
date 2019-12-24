@@ -13,6 +13,7 @@ import io.harness.cache.Distributable;
 import io.harness.cache.DistributedStore;
 import io.harness.cache.Nominal;
 import io.harness.cache.Ordinal;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Datastore;
@@ -26,6 +27,8 @@ import software.wings.dl.WingsPersistence;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
 @Singleton
 @Slf4j
@@ -34,28 +37,33 @@ public class MongoStore implements DistributedStore {
 
   @Inject WingsPersistence wingsPersistence;
 
-  String canonicalKey(long algorithmId, long structureHash, String key) {
-    return format("%s/%d/%d/%d", key, version, algorithmId, structureHash);
+  String canonicalKey(long algorithmId, long structureHash, String key, List<String> params) {
+    if (EmptyPredicate.isEmpty(params)) {
+      return format("%s/%d/%d/%d", key, version, algorithmId, structureHash);
+    }
+    return format("%s/%d/%d/%d%d", key, version, algorithmId, structureHash, Objects.hash(params.toArray()));
   }
 
   @Override
-  public <T extends Distributable> T get(long algorithmId, long structureHash, String key) {
-    return get(null, algorithmId, structureHash, key);
+  public <T extends Distributable> T get(long algorithmId, long structureHash, String key, List<String> params) {
+    return get(null, algorithmId, structureHash, key, params);
   }
 
   @Override
-  public <T extends Distributable> T get(long contextValue, long algorithmId, long structureHash, String key) {
-    return get(Long.valueOf(contextValue), algorithmId, structureHash, key);
+  public <T extends Distributable> T get(
+      long contextValue, long algorithmId, long structureHash, String key, List<String> params) {
+    return get(Long.valueOf(contextValue), algorithmId, structureHash, key, params);
   }
 
-  private <T extends Distributable> T get(Long contextValue, long algorithmId, long structureHash, String key) {
+  private <T extends Distributable> T get(
+      Long contextValue, long algorithmId, long structureHash, String key, List<String> params) {
     try {
       final Datastore datastore = wingsPersistence.getDatastore(CacheEntity.class);
       final QueryFactory factory = datastore.getQueryFactory();
 
       final Query<CacheEntity> entityQuery =
           factory.createQuery(datastore, wingsPersistence.getCollection(CacheEntity.class), CacheEntity.class)
-              .filter(CacheEntityKeys.canonicalKey, canonicalKey(algorithmId, structureHash, key));
+              .filter(CacheEntityKeys.canonicalKey, canonicalKey(algorithmId, structureHash, key, params));
 
       if (contextValue != null) {
         entityQuery.filter(CacheEntityKeys.contextValue, contextValue);
@@ -76,7 +84,8 @@ public class MongoStore implements DistributedStore {
 
   @Override
   public <T extends Distributable> void upsert(T entity, Duration ttl) {
-    final String canonicalKey = canonicalKey(entity.algorithmId(), entity.structureHash(), entity.key());
+    final String canonicalKey =
+        canonicalKey(entity.algorithmId(), entity.structureHash(), entity.key(), entity.parameters());
     Long contextValue = null;
     if (entity instanceof Nominal) {
       contextValue = ((Nominal) entity).contextHash();
