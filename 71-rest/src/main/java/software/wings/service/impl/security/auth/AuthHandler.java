@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
@@ -45,6 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Base;
@@ -53,6 +56,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.User;
@@ -85,6 +89,7 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.WorkflowFilter;
 import software.wings.service.impl.UserGroupServiceImpl;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
@@ -96,6 +101,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -142,6 +148,7 @@ public class AuthHandler {
   @Inject private DashboardAuthHandler dashboardAuthHandler;
   @Inject private ApiKeyService apiKeyService;
   @Inject private HarnessApiKeyService harnessApiKeyService;
+  @Inject private WorkflowServiceHelper workflowServiceHelper;
 
   public UserPermissionInfo evaluateUserPermissionInfo(String accountId, List<UserGroup> userGroups, User user) {
     UserPermissionInfoBuilder userPermissionInfoBuilder = UserPermissionInfo.builder().accountId(accountId);
@@ -719,11 +726,6 @@ public class AuthHandler {
     }
   }
 
-  public void setAppIdFilter(UserRequestContext userRequestContext, Set<String> appIds) {
-    userRequestContext.setAppIdFilterRequired(true);
-    userRequestContext.setAppIds(appIds);
-  }
-
   public boolean authorize(
       List<PermissionAttribute> requiredPermissionAttributes, List<String> appIds, String entityId) {
     User user = UserThreadLocal.get();
@@ -1112,37 +1114,27 @@ public class AuthHandler {
 
     Set<String> envIdsFromOtherPermissions = envActionMap.keySet();
     pipelines.forEach(p -> {
-      Set<Action> entityActions = new HashSet(entityActionsFromCurrentPermission);
+      Set<Action> entityActions = new HashSet<>(entityActionsFromCurrentPermission);
       boolean match;
       Pipeline pipeline = (Pipeline) p;
       if (pipeline.getPipelineStages() == null) {
         match = true;
       } else {
+        Map<String, Workflow> workflowCache = new HashMap<>();
         match = pipeline.getPipelineStages().stream().allMatch(pipelineStage
             -> pipelineStage != null && pipelineStage.getPipelineStageElements() != null
                 && pipelineStage.getPipelineStageElements().stream().allMatch(pipelineStageElement -> {
-                     if (pipelineStageElement.getType().equals(StateType.APPROVAL.name())) {
-                       return true;
+                     Pair<String, Boolean> pair =
+                         resolveEnvIdForPipelineStageElement(pipeline.getAppId(), pipelineStageElement, workflowCache);
+                     String envId = pair.getLeft();
+                     if (isBlank(envId)) {
+                       return pair.getRight();
                      }
 
-                     if (pipelineStageElement.getProperties() == null) {
-                       return false;
-                     }
-
-                     Object stageEnvIdObj = pipelineStageElement.getProperties().get("envId");
-                     if (stageEnvIdObj == null) {
+                     if (envIds.contains(envId)) {
                        return true;
-                     }
-                     // TODO: For now we are comparing if env has expression then not check for env permissions
-                     // TODO: We should find a better way of handling
-                     String stageEnvId = (String) stageEnvIdObj;
-                     if (ManagerExpressionEvaluator.matchesVariablePattern(stageEnvId)) {
-                       return true;
-                     }
-                     if (envIds.contains(stageEnvId)) {
-                       return true;
-                     } else if (envIdsFromOtherPermissions.contains(stageEnvId)) {
-                       entityActions.retainAll(envActionMap.get(stageEnvId));
+                     } else if (envIdsFromOtherPermissions.contains(envId)) {
+                       entityActions.retainAll(envActionMap.get(envId));
                        return true;
                      }
 
@@ -1162,38 +1154,54 @@ public class AuthHandler {
       return true;
     }
 
+    Map<String, Workflow> workflowCache = new HashMap<>();
     return pipeline.getPipelineStages().stream().allMatch(pipelineStage
         -> pipelineStage != null && pipelineStage.getPipelineStageElements() != null
             && pipelineStage.getPipelineStageElements().stream().allMatch(pipelineStageElement -> {
-                 if (pipelineStageElement.getType().equals(StateType.APPROVAL.name())) {
-                   return true;
+                 Pair<String, Boolean> pair =
+                     resolveEnvIdForPipelineStageElement(pipeline.getAppId(), pipelineStageElement, workflowCache);
+                 String envId = pair.getLeft();
+                 if (isBlank(envId)) {
+                   return pair.getRight();
                  }
 
-                 if (pipelineStageElement.getProperties() == null) {
-                   return false;
-                 }
-
-                 Object stageEnvIdObj = pipelineStageElement.getProperties().get("envId");
-                 if (stageEnvIdObj == null) {
-                   return true;
-                 }
-                 // TODO: For now we are comparing if env has expression then not check for env permissions
-                 // TODO: We should find a better way of handling
-                 String stageEnvId = (String) stageEnvIdObj;
-                 if (ManagerExpressionEvaluator.matchesVariablePattern(stageEnvId)) {
-                   return true;
-                 }
-
-                 if (isEmpty(allowedEnvIds)) {
-                   return false;
-                 }
-
-                 if (allowedEnvIds.contains(stageEnvId)) {
-                   return true;
-                 }
-
-                 return false;
+                 return isNotEmpty(allowedEnvIds) && allowedEnvIds.contains(envId);
                }));
+  }
+
+  private Pair<String, Boolean> resolveEnvIdForPipelineStageElement(
+      String appId, PipelineStageElement pipelineStageElement, Map<String, Workflow> workflowCache) {
+    if (pipelineStageElement.getType().equals(StateType.APPROVAL.name())) {
+      return ImmutablePair.of(null, Boolean.TRUE);
+    }
+
+    final Map<String, Object> pipelineStageElementProperties = pipelineStageElement.getProperties();
+    if (pipelineStageElementProperties == null || pipelineStageElementProperties.get(EnvStateKeys.workflowId) == null) {
+      return ImmutablePair.of(null, Boolean.FALSE);
+    }
+
+    String envId = resolveEnvId(appId, pipelineStageElement, workflowCache);
+    if (envId == null || ManagerExpressionEvaluator.matchesVariablePattern(envId)) {
+      return ImmutablePair.of(null, Boolean.TRUE);
+    }
+
+    return ImmutablePair.of(envId, Boolean.FALSE);
+  }
+
+  private String resolveEnvId(
+      String appId, PipelineStageElement pipelineStageElement, Map<String, Workflow> workflowCache) {
+    String workflowId = (String) pipelineStageElement.getProperties().get(EnvStateKeys.workflowId);
+    Workflow workflow;
+    if (workflowCache.containsKey(workflowId)) {
+      workflow = workflowCache.get(workflowId);
+    } else {
+      workflow = workflowService.readWorkflowWithoutOrchestration(appId, workflowId);
+      if (workflow == null) {
+        return null;
+      }
+      workflowCache.put(workflowId, workflow);
+    }
+    return workflowServiceHelper.obtainEnvIdWithoutOrchestration(workflow, pipelineStageElement.getWorkflowVariables());
   }
 
   public boolean isEnvTemplatized(Workflow workflow) {
