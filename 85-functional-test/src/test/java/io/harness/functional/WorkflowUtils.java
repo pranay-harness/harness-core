@@ -449,7 +449,7 @@ public class WorkflowUtils {
                                                     .put("maxInstances", 1)
                                                     .put("desiredInstances", 1)
                                                     .put("resizeStrategy", "RESIZE_NEW_FIRST")
-                                                    .put("minInstances", 1)
+                                                    .put("minInstances", 0)
                                                     .put("autoScalingSteadyStateTimeout", 10)
                                                     .put("useCurrentRunningCount", false)
                                                     .build())

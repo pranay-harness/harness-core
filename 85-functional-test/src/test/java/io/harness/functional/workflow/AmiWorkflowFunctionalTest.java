@@ -1,10 +1,12 @@
 package io.harness.functional.workflow;
 
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
@@ -27,7 +29,9 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
@@ -43,6 +47,7 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
 
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private WorkflowUtils workflowUtils;
+  @Inject private WingsPersistence wingsPersistence;
 
   private final Seed seed = new Seed(0);
   private Owners owners;
@@ -67,7 +72,7 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
 
     InfrastructureDefinition amiInfrastructureDefinition =
         infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureType.AWS_AMI, bearerToken);
-
+    ensureInfraMapping(service, amiInfrastructureDefinition);
     final String envId = amiInfrastructureDefinition.getEnvId();
 
     Workflow bgWorkflow = workflowUtils.createAwsAmiBGWorkflow("ami-bg-", service, amiInfrastructureDefinition);
@@ -84,7 +89,8 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
 
     Assertions.assertThat(runningCountData).isNotNull();
 
-    runWorkflow(bearerToken, appId, envId, bgWorkflow.getUuid(), ImmutableList.of(artifact));
+    final WorkflowExecution workflowExecution =
+        runWorkflow(bearerToken, appId, envId, bgWorkflow.getUuid(), ImmutableList.of(artifact));
 
     List<InfrastructureMapping> infrastructureMappings =
         infrastructureMappingService.getInfraMappingLinkedToInfraDefinition(
@@ -110,7 +116,50 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
     Assertions.assertThat(amiInfraMapping.getSpotinstElastiGroupJson())
         .isEqualTo(amiInfrastructure.getSpotinstElastiGroupJson());
 
-    //    Assertions.assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    Assertions.assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     // TODO: delete ASG
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(FunctionalTests.class)
+  @Ignore("Enable once feature flag is enabled for infra refactor")
+  public void shouldRunAwsAmiWorkflow_Launchtemplate() {
+    service = serviceGenerator.ensureAmiGenericTest(seed, owners, "aws-ami-lt");
+    final String accountId = service.getAccountId();
+    final String appId = service.getAppId();
+
+    resetCache(accountId);
+
+    InfrastructureDefinition amiInfrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureType.AWS_AMI_LT, bearerToken);
+    ensureInfraMapping(service, amiInfrastructureDefinition);
+
+    final String envId = amiInfrastructureDefinition.getEnvId();
+
+    Workflow bgWorkflow = workflowUtils.createAwsAmiBGWorkflow("ami-bg-lt-", service, amiInfrastructureDefinition);
+
+    bgWorkflow = workflowGenerator.ensureWorkflow(seed, owners, bgWorkflow);
+
+    resetCache(service.getAccountId());
+
+    Artifact artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
+        bearerToken, appId, service.getArtifactStreamIds().get(0));
+
+    final WorkflowExecution workflowExecution =
+        runWorkflow(bearerToken, appId, envId, bgWorkflow.getUuid(), ImmutableList.of(artifact));
+    Assertions.assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    //  todo delete ASG
+  }
+
+  private String ensureInfraMapping(Service service, InfrastructureDefinition amiInfrastructureDefinition) {
+    // ensure inframapping is always created with the same id, as the id is used for tagging resources
+    final InfrastructureMapping infraMapping = amiInfrastructureDefinition.getInfraMapping();
+    infraMapping.setName(amiInfrastructureDefinition.getName() + "_inframapping");
+    infraMapping.setUuid(amiInfrastructureDefinition.getName() + "_inframapping_id");
+    infraMapping.setServiceId(service.getUuid());
+    infraMapping.setInfrastructureDefinitionId(amiInfrastructureDefinition.getUuid());
+    infraMapping.setAccountId(service.getAccountId());
+    return wingsPersistence.save(infraMapping);
   }
 }
