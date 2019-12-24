@@ -37,6 +37,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
+import software.wings.metrics.Threshold;
+import software.wings.metrics.ThresholdComparisonType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
@@ -289,34 +291,54 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public boolean saveCustomThreshold(
       String serviceId, String cvConfigId, List<TimeSeriesMLTransactionThresholds> thresholds) {
     if (isNotEmpty(thresholds)) {
-      CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
-      if (cvConfiguration == null) {
-        logger.error("cvConfigId {} provided in saveCustomThresholds is invalid", cvConfigId);
-        return false;
+      if (isEmpty(serviceId)) {
+        CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+        if (cvConfiguration == null) {
+          logger.error("cvConfigId {} provided in saveCustomThresholds is invalid", cvConfigId);
+          return false;
+        }
       }
       Map<String, TimeSeriesMLTransactionThresholds> uniqueKeyMap = new HashMap<>();
       thresholds.forEach(threshold -> {
+        ThresholdComparisonType thresholdComparisonType = getComparisonTypeFromThreshold(threshold);
+
         uniqueKeyMap.put(
-            threshold.getMetricName() + "," + threshold.getTransactionName() + threshold.getGroupName(), threshold);
+            threshold.getMetricName() + "," + threshold.getTransactionName() + thresholdComparisonType, threshold);
       });
       List<TimeSeriesMLTransactionThresholds> thresholdsInDB =
           wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class, excludeAuthority)
               .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
+              .filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
               .asList();
 
       if (thresholdsInDB != null) {
         thresholdsInDB.forEach(thresholdInDB -> {
+          ThresholdComparisonType thresholdComparisonType = getComparisonTypeFromThreshold(thresholdInDB);
           String uniqueKey =
-              thresholdInDB.getMetricName() + "," + thresholdInDB.getTransactionName() + thresholdInDB.getGroupName();
+              thresholdInDB.getMetricName() + "," + thresholdInDB.getTransactionName() + thresholdComparisonType;
           if (uniqueKeyMap.containsKey(uniqueKey)) {
             uniqueKeyMap.get(uniqueKey).setUuid(thresholdInDB.getUuid());
           }
         });
       }
-      logger.info("Saving custom threshold list for cvConfigId {} : {}", cvConfigId, thresholds);
+      logger.info(
+          "Saving custom threshold list for cvConfigId {} , serviceId {} : {}", cvConfigId, serviceId, thresholds);
       wingsPersistence.save(new ArrayList<>(uniqueKeyMap.values()));
     }
     return true;
+  }
+
+  private ThresholdComparisonType getComparisonTypeFromThreshold(TimeSeriesMLTransactionThresholds threshold) {
+    ThresholdComparisonType thresholdComparisonType = null;
+    if (threshold.getThresholds() != null && isNotEmpty(threshold.getThresholds().getCustomThresholds())) {
+      thresholdComparisonType = threshold.getThresholds().getCustomThresholds().iterator().next().getComparisonType();
+    }
+    if (thresholdComparisonType == null) {
+      final String errMsg = "Comparison type is null in saveCustomThreshold";
+      logger.error(errMsg);
+      throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
+    }
+    return thresholdComparisonType;
   }
 
   @Override
@@ -359,16 +381,36 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public boolean deleteCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
-      String groupName, String transactionName, String metricName) throws UnsupportedEncodingException {
-    return wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
-                                       .filter("appId", appId)
-                                       .filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
-                                       .filter(TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
-                                       .filter(TimeSeriesMLTransactionThresholdKeys.groupName, groupName)
-                                       .filter(TimeSeriesMLTransactionThresholdKeys.transactionName, transactionName)
-                                       .filter(TimeSeriesMLTransactionThresholdKeys.metricName,
-                                           URLDecoder.decode(metricName, StandardCharsets.UTF_8.name()))
-                                       .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId));
+      String groupName, String transactionName, String metricName, ThresholdComparisonType thresholdComparisonType)
+      throws UnsupportedEncodingException {
+    Query<TimeSeriesMLTransactionThresholds> thresholdsQuery =
+        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class, excludeAuthority)
+            .filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
+            .filter(TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
+            .filter(TimeSeriesMLTransactionThresholdKeys.groupName, groupName)
+            .filter(TimeSeriesMLTransactionThresholdKeys.transactionName, transactionName)
+            .filter(TimeSeriesMLTransactionThresholdKeys.metricName,
+                URLDecoder.decode(metricName, StandardCharsets.UTF_8.name()))
+            .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId);
+
+    if (thresholdComparisonType == null) {
+      return wingsPersistence.delete(thresholdsQuery);
+    }
+    List<TimeSeriesMLTransactionThresholds> thresholds = thresholdsQuery.asList();
+    if (isNotEmpty(thresholds)) {
+      thresholds.forEach(threshold -> {
+        if (isNotEmpty(threshold.getThresholds().getCustomThresholds())) {
+          for (Threshold t : threshold.getThresholds().getCustomThresholds()) {
+            if (t.getComparisonType().equals(thresholdComparisonType)) {
+              wingsPersistence.delete(threshold);
+              return;
+            }
+          }
+        }
+      });
+      return true;
+    }
+    return false;
   }
 
   @Override

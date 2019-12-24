@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import io.harness.beans.ExecutionStatus;
+import software.wings.metrics.ThresholdComparisonType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.DeploymentTimeSeriesAnalysis;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
@@ -67,7 +68,8 @@ public interface MetricDataAnalysisService {
   boolean saveCustomThreshold(String serviceId, String cvConfigId, List<TimeSeriesMLTransactionThresholds> thresholds);
 
   boolean deleteCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
-      String groupName, String transactionName, String metricName) throws UnsupportedEncodingException;
+      String groupName, String transactionName, String metricName, ThresholdComparisonType thresholdComparisonType)
+      throws UnsupportedEncodingException;
 
   void saveRawDataToGoogleDataStore(
       String accountId, String stateExecutionId, ExecutionStatus executionStatus, String serviceId);

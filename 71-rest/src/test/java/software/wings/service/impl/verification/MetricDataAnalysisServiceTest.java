@@ -1,6 +1,7 @@
 package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -22,9 +23,11 @@ import software.wings.metrics.ThresholdComparisonType;
 import software.wings.metrics.ThresholdType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
+import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.StateType;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -169,5 +172,116 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
         assertThat(threshold.getThresholds().getCustomThresholds().get(0).getMl()).isEqualTo(i);
       }
     }
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testDeleteCustomThresholdsWithoutComparisonType() throws Exception {
+    TimeSeriesMLTransactionThresholds timeSeriesMLTransactionThresholds =
+        TimeSeriesMLTransactionThresholds.builder()
+            .stateType(StateType.NEW_RELIC)
+            .groupName(null)
+            .serviceId(serviceId)
+            .cvConfigId(cvConfigId)
+            .transactionName("transaction-name")
+            .metricName("metric-name")
+            .thresholds(TimeSeriesMetricDefinition.builder()
+                            .metricName("metric-name")
+                            .metricType(MetricType.THROUGHPUT)
+                            .customThresholds(Arrays.asList(Threshold.builder()
+                                                                .comparisonType(ThresholdComparisonType.DELTA)
+                                                                .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
+                                                                .ml(10)
+                                                                .build()))
+                            .build())
+            .build();
+    timeSeriesMLTransactionThresholds.setAppId(appId);
+    wingsPersistence.save(timeSeriesMLTransactionThresholds);
+    List<TimeSeriesMLTransactionThresholds> thresholds =
+        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+            .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
+            .asList();
+
+    assertThat(thresholds.size()).isEqualTo(1);
+    metricDataAnalysisService.deleteCustomThreshold(
+        appId, StateType.NEW_RELIC, serviceId, cvConfigId, null, "transaction-name", "metric-name", null);
+    thresholds = wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+                     .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
+                     .asList();
+    assertThat(thresholds).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testDeleteCustomThresholds() throws Exception {
+    TimeSeriesMLTransactionThresholds timeSeriesMLTransactionThresholds =
+        TimeSeriesMLTransactionThresholds.builder()
+            .stateType(StateType.NEW_RELIC)
+            .groupName(null)
+            .serviceId(serviceId)
+            .cvConfigId(cvConfigId)
+            .transactionName("transaction-name")
+            .metricName("metric-name")
+            .thresholds(TimeSeriesMetricDefinition.builder()
+                            .metricName("metric-name")
+                            .metricType(MetricType.THROUGHPUT)
+                            .customThresholds(Arrays.asList(Threshold.builder()
+                                                                .comparisonType(ThresholdComparisonType.DELTA)
+                                                                .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
+                                                                .ml(10)
+                                                                .build()))
+                            .build())
+            .build();
+    timeSeriesMLTransactionThresholds.setAppId(appId);
+
+    TimeSeriesMLTransactionThresholds timeSeriesMLTransactionThresholds2 =
+        TimeSeriesMLTransactionThresholds.builder()
+            .stateType(StateType.NEW_RELIC)
+            .groupName(null)
+            .serviceId(serviceId)
+            .cvConfigId(cvConfigId)
+            .transactionName("transaction-name")
+            .metricName("metric-name")
+            .thresholds(TimeSeriesMetricDefinition.builder()
+                            .metricName("metric-name")
+                            .metricType(MetricType.THROUGHPUT)
+                            .customThresholds(Arrays.asList(Threshold.builder()
+                                                                .comparisonType(ThresholdComparisonType.ABSOLUTE)
+                                                                .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
+                                                                .ml(10)
+                                                                .build()))
+                            .build())
+            .build();
+    timeSeriesMLTransactionThresholds2.setAppId(appId);
+    metricDataAnalysisService.saveCustomThreshold(
+        serviceId, cvConfigId, Arrays.asList(timeSeriesMLTransactionThresholds, timeSeriesMLTransactionThresholds2));
+    List<TimeSeriesMLTransactionThresholds> thresholds =
+        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+            .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
+            .asList();
+
+    assertThat(thresholds.size()).isEqualTo(2);
+    assertThat(thresholds.get(0).getTransactionName()).isEqualTo("transaction-name");
+    assertThat(thresholds.get(0).getMetricName()).isEqualTo("metric-name");
+    assertThat(thresholds.get(1).getTransactionName()).isEqualTo("transaction-name");
+    assertThat(thresholds.get(1).getMetricName()).isEqualTo("metric-name");
+    assertThat(thresholds.get(0).getThresholds().getCustomThresholds().get(0).getComparisonType())
+        .isIn(Arrays.asList(ThresholdComparisonType.ABSOLUTE, ThresholdComparisonType.DELTA));
+    assertThat(thresholds.get(1).getThresholds().getCustomThresholds().get(0).getComparisonType())
+        .isIn(Arrays.asList(ThresholdComparisonType.ABSOLUTE, ThresholdComparisonType.DELTA));
+    assertThat(thresholds.get(0).getThresholds().getCustomThresholds().get(0).getComparisonType())
+        .isNotEqualByComparingTo(thresholds.get(1).getThresholds().getCustomThresholds().get(0).getComparisonType());
+    metricDataAnalysisService.deleteCustomThreshold(appId, StateType.NEW_RELIC, serviceId, cvConfigId, null,
+        "transaction-name", "metric-name", ThresholdComparisonType.ABSOLUTE);
+
+    thresholds = wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+                     .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
+                     .asList();
+
+    assertThat(thresholds.size()).isEqualTo(1);
+    assertThat(thresholds.get(0).getThresholds().getCustomThresholds().iterator().next().getComparisonType())
+        .isEqualTo(ThresholdComparisonType.DELTA);
   }
 }
