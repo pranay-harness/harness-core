@@ -30,6 +30,7 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
@@ -44,6 +45,7 @@ import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
@@ -71,6 +73,7 @@ public class PcfDeployState extends State {
   @Inject private transient ActivityService activityService;
   @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject private transient SweepingOutputService sweepingOutputService;
+  @Inject protected transient FeatureFlagService featureFlagService;
 
   @Attributes(title = "Desired Instances(cumulative)", required = true) private Integer instanceCount;
   @Attributes(title = "Instance Unit Type", required = true)
@@ -256,6 +259,7 @@ public class PcfDeployState extends State {
       SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig, Integer updateCount,
       Integer downsizeUpdateCount, PcfDeployStateExecutionData stateExecutionData,
       PcfInfrastructureMapping infrastructureMapping) {
+    boolean useAppAutoscalar = setupSweepingOutputPcf.isUseAppAutoscalar();
     return PcfCommandDeployRequest.builder()
         .activityId(activityId)
         .commandName(PCF_RESIZE_COMMAND)
@@ -281,9 +285,11 @@ public class PcfDeployState extends State {
                 ? null
                 : setupSweepingOutputPcf.getAppDetailsToBeDownsized().get(0))
         .isStandardBlueGreen(setupSweepingOutputPcf.isStandardBlueGreenWorkflow())
-        .useAppAutoscalar(setupSweepingOutputPcf.isUseAppAutoscalar())
+        .useAppAutoscalar(useAppAutoscalar)
         .enforceSslValidation(setupSweepingOutputPcf.isEnforceSslValidation())
         .pcfManifestsPackage(setupSweepingOutputPcf.getPcfManifestsPackage())
+        .useCfCLI(useAppAutoscalar ? useAppAutoscalar
+                                   : featureFlagService.isEnabled(FeatureName.USE_PCF_CLI, application.getAccountId()))
         .build();
   }
 

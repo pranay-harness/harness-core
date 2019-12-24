@@ -291,7 +291,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
-    when(featureFlagService.isEnabled(FeatureName.PCF_CUSTOM_PLUGIN_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
   }
 
   @Test

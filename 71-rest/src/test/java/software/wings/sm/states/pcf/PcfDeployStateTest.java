@@ -11,11 +11,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.FeatureName.USE_PCF_CLI;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -85,6 +87,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -117,6 +120,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private EncryptionService encryptionService;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private FeatureFlagService featureFlagService;
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";
@@ -225,6 +229,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
                                                       .name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + PHASE_NAME)
                                                       .build()))
         .thenReturn(setupSweepingOutputPcf);
+    doReturn(true).when(featureFlagService).isEnabled(eq(USE_PCF_CLI), anyString());
   }
 
   @Test

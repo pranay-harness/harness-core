@@ -2281,7 +2281,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       return;
     }
 
-    if (featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, service.getAccountId())) {
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, service.getAccountId())) {
       createDefaultPcfV2Manifests(service);
     } else {
       createDefaultPcfSpec(service);

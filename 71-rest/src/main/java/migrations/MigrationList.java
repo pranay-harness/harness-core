@@ -88,6 +88,7 @@ import migrations.all.NonWorkflowCVConfigurationMigration;
 import migrations.all.OAuthAllowedProvidersListMigration;
 import migrations.all.OauthEnabledFieldMigration;
 import migrations.all.OverrideDefaultLimits;
+import migrations.all.PcfFeatureFlagMigration;
 import migrations.all.PcfServiceDeploymentMigration;
 import migrations.all.PcfServiceSpecificationToManifestFileMigration;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
@@ -298,6 +299,7 @@ public class MigrationList {
         .add(Pair.of(287, InstanceComputerProviderNameFixMigration.class))
         .add(Pair.of(288, DeleteServiceGuardAlertMigration.class))
         .add(Pair.of(289, HelmConnectorPathMigration.class))
+        .add(Pair.of(290, PcfFeatureFlagMigration.class))
         .build();
   }
 }

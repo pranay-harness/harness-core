@@ -46,11 +46,11 @@ public class PcfCommandDeployRequest extends PcfCommandRequest {
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
       String newReleaseName, Integer maxCount, Integer updateCount, Integer downSizeCount,
       Integer totalPreviousInstanceCount, List<PcfServiceData> instanceData, ResizeStrategy resizeStrategy,
-      List<String> routeMaps, Integer timeoutIntervalInMin, boolean useCLIForPcfAppCreation,
-      PcfAppSetupTimeDetails downsizeAppDetail, boolean isStandardBlueGreen, PcfManifestsPackage pcfManifestsPackage,
-      boolean useAppAutoscalar, boolean enforceSslValidation) {
+      List<String> routeMaps, Integer timeoutIntervalInMin, boolean useCfCLI, PcfAppSetupTimeDetails downsizeAppDetail,
+      boolean isStandardBlueGreen, PcfManifestsPackage pcfManifestsPackage, boolean useAppAutoscalar,
+      boolean enforceSslValidation) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
-        workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, enforceSslValidation, useAppAutoscalar);
+        workflowExecutionId, timeoutIntervalInMin, useCfCLI, enforceSslValidation, useAppAutoscalar);
     this.newReleaseName = newReleaseName;
     this.updateCount = updateCount;
     this.downSizeCount = downSizeCount;

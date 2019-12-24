@@ -52,6 +52,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -123,6 +124,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.ServiceHelper;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ActivityService;
@@ -133,6 +135,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -189,6 +192,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @InjectMocks @Spy private PcfStateHelper pcfStateHelper;
 
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
@@ -322,6 +326,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     on(context).set("infrastructureMappingService", infrastructureMappingService);
     on(context).set("sweepingOutputService", sweepingOutputService);
     on(context).set("settingsService", settingsService);
+    on(context).set("infrastructureDefinitionService", infrastructureDefinitionService);
 
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
@@ -376,7 +381,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(pcfCommandSetupRequest.getMaxCount()).isEqualTo(2);
 
     // With workflowV2 flag = true
-    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.PCF_MANIFEST_REDESIGN), anyString());
+    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), anyString());
     doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
         .when(pcfStateHelper)
         .generateManifestMap(any(), anyMap(), any(), any());
@@ -408,7 +413,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
         .thenReturn(applicationManifestMap);
     when(applicationManifestUtils.createGitFetchFilesTaskParams(any(), any(), any()))
         .thenReturn(GitFetchFilesTaskParams.builder().build());
-    when(featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, app.getAccountId())).thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, app.getAccountId())).thenReturn(true);
 
     ExecutionResponse executionResponse = pcfSetupState.execute(context);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
@@ -423,6 +428,10 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseForGitTask() {
+    doReturn(InfrastructureDefinition.builder().name(INFRA_DEFINITION_ID).build())
+        .when(infrastructureDefinitionService)
+        .get(anyString(), anyString());
+
     GitCommandExecutionResponse gitCommandExecutionResponse =
         GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
 
@@ -439,7 +448,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
     doReturn(MANIFEST_YAML_CONTENT).when(pcfStateHelper).fetchManifestYmlString(any(), any());
     on(context).set("serviceTemplateService", serviceTemplateService);
-    when(featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, app.getAccountId())).thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, app.getAccountId())).thenReturn(true);
 
     doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
         .when(pcfStateHelper)

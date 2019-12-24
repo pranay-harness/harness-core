@@ -95,7 +95,17 @@ public class PcfCommandValidationTest extends CategoryTest {
     request.setUseAppAutoscalar(true);
     assertThat(pcfCommandValidation.pcfCliValidationRequired(request)).isTrue();
 
-    request.setUseCLIForPcfAppCreation(true);
+    request.setUseCfCLI(true);
     assertThat(pcfCommandValidation.pcfCliValidationRequired(request)).isTrue();
+
+    PcfCommandDeployRequest deployRequest = PcfCommandDeployRequest.builder().pcfConfig(pcfConfig).build();
+    assertThat(pcfCommandValidation.pcfCliValidationRequired(deployRequest)).isFalse();
+
+    deployRequest.setUseAppAutoscalar(true);
+    assertThat(pcfCommandValidation.pcfCliValidationRequired(deployRequest)).isTrue();
+
+    deployRequest.setUseAppAutoscalar(false);
+    deployRequest.setUseCfCLI(true);
+    assertThat(pcfCommandValidation.pcfCliValidationRequired(deployRequest)).isTrue();
   }
 }

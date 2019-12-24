@@ -14,6 +14,7 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -21,6 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.FeatureName.USE_PCF_CLI;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -109,6 +111,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -150,6 +153,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private ServiceHelper serviceHelper;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private FeatureFlagService featureFlagService;
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
 
   @InjectMocks private MapRouteState pcfRouteSwapState = new MapRouteState("name");
@@ -317,6 +321,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
         .thenReturn(sweepingOutputInstance);
     when(sweepingOutputService.findSweepingOutput(context.prepareSweepingOutputInquiryBuilder().name(any()).build()))
         .thenReturn(setupSweepingOutputPcf);
+    doReturn(true).when(featureFlagService).isEnabled(eq(USE_PCF_CLI), anyString());
   }
 
   @Test
