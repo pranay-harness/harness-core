@@ -318,7 +318,7 @@ public class PcfClientImpl implements PcfClient {
                     .append(pcfRequestConfig.getApplicationName())
                     .toString());
 
-    if (pcfRequestConfig.isUseCLIForAppCreate()) {
+    if (pcfRequestConfig.isUseCFCLI()) {
       logger.info("Using CLI to create application");
       performCfPushUsingCli(requestData, executionLogCallback);
       return;

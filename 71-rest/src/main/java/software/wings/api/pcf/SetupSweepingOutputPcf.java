@@ -37,6 +37,7 @@ public class SetupSweepingOutputPcf implements SweepingOutput {
   private List<PcfAppSetupTimeDetails> appDetailsToBeDownsized;
   private boolean isStandardBlueGreenWorkflow;
   private boolean isDownsizeOldApps;
+  private boolean isUseCfCli;
   private boolean enforceSslValidation;
   private boolean useAppAutoscalar;
   private Integer desiredActualFinalCount;

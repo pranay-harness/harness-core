@@ -84,7 +84,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       // This value is set to CF_HOME env variable when process executor is created.
       String randomToken = UUIDGenerator.generateUuid();
       workingDirectory = pcfCommandTaskHelper.generateWorkingDirectoryForDeployment(randomToken);
-      if (pcfCommandSetupRequest.isUseCLIForPcfAppCreation() || pcfCommandSetupRequest.isUseAppAutoscalar()) {
+      if (pcfCommandSetupRequest.isUseCfCLI() || pcfCommandSetupRequest.isUseAppAutoscalar()) {
         if (workingDirectory == null) {
           throw new PivotalClientApiException("Failed to generate CF-CLI Working directory");
         }
@@ -97,7 +97,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
                                               .password(String.valueOf(pcfConfig.getPassword()))
                                               .endpointUrl(pcfConfig.getEndpointUrl())
                                               .timeOutIntervalInMins(pcfCommandSetupRequest.getTimeoutIntervalInMin())
-                                              .useCLIForAppCreate(pcfCommandSetupRequest.isUseCLIForPcfAppCreation())
+                                              .useCFCLI(pcfCommandSetupRequest.isUseCfCLI())
                                               .build();
 
       PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
@@ -296,7 +296,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
         filesToBeRemoved.add(artifactFile);
       }
 
-      if (pcfCommandRequest.isUseCLIForPcfAppCreation()) {
+      if (pcfCommandRequest.isUseCfCLI()) {
         File manifestYamlFile = pcfManifestFileData.getManifestFile();
         filesToBeRemoved.add(
             new File(pcfCommandTaskHelper.generateFinalManifestFilePath(manifestYamlFile.getAbsolutePath())));

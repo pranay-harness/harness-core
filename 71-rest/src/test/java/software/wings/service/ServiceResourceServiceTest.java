@@ -49,7 +49,7 @@ import static software.wings.beans.CommandCategory.Type.SCRIPTS;
 import static software.wings.beans.CommandCategory.Type.VERIFICATIONS;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
-import static software.wings.beans.FeatureName.PCF_MANIFEST_REDESIGN;
+import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.Service.ServiceBuilder;
@@ -2256,7 +2256,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(ServiceCommand.class), eq(true));
     doNothing().when(auditServiceHelper).addEntityOperationIdentifierDataToAuditContext(any());
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    when(featureFlagService.isEnabled(PCF_MANIFEST_REDESIGN, ACCOUNT_ID)).thenReturn(true);
+    when(featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     Service savedService = spyServiceResourceService.save(service);
 
     assertThat(savedService.getUuid()).isEqualTo(SERVICE_ID);
@@ -2323,7 +2323,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(ServiceCommand.class), eq(true));
     doNothing().when(auditServiceHelper).addEntityOperationIdentifierDataToAuditContext(any());
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    when(featureFlagService.isEnabled(PCF_MANIFEST_REDESIGN, ACCOUNT_ID)).thenReturn(true);
+    when(featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     when(applicationManifestService.getManifestByServiceId(service.getAppId(), service.getUuid()))
         .thenReturn(ApplicationManifest.builder().storeType(StoreType.Local).build());
     Service savedService = spyServiceResourceService.save(service);

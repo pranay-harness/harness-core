@@ -30,6 +30,7 @@ import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -39,6 +40,7 @@ import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
@@ -61,6 +63,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
   @Inject private transient ActivityService activityService;
   @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject private transient SweepingOutputService sweepingOutputService;
+  @Inject protected transient FeatureFlagService featureFlagService;
 
   public static final String PCF_BG_SWAP_ROUTE_COMMAND = "PCF BG Swap Route";
 
@@ -107,6 +110,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
 
     SetupSweepingOutputPcf setupSweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, isRollback());
     PcfRouteUpdateRequestConfigData requestConfigData = getPcfRouteUpdateRequestConfigData(setupSweepingOutputPcf);
+
     if (isRollback()) {
       SweepingOutputInstance sweepingOutputInstance =
           sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder()
@@ -143,6 +147,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
             .requestConfigData(requestConfigData)
             .encryptedDataDetails(encryptedDataDetails)
             .downsizeOldApps(downsizeOldApps)
+            .useCfCli(featureFlagService.isEnabled(FeatureName.USE_PCF_CLI, app.getAccountId()))
             .build(),
         setupSweepingOutputPcf);
   }

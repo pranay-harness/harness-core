@@ -144,7 +144,7 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
   }
 
   boolean pcfCliValidationRequired(PcfCommandRequest pcfCommandRequest) {
-    return pcfCommandRequest instanceof PcfRunPluginCommandRequest || pcfCommandRequest.isUseCLIForPcfAppCreation()
+    return pcfCommandRequest instanceof PcfRunPluginCommandRequest || pcfCommandRequest.isUseCfCLI()
         || needToCheckAppAutoscalarPluginInstall(pcfCommandRequest);
   }
 }

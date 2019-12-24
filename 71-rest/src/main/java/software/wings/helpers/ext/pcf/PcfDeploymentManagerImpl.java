@@ -188,6 +188,10 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   @VisibleForTesting
   StartedProcess startTailingLogsIfNeeded(
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback, StartedProcess startedProcess) {
+    if (!pcfRequestConfig.isUseCFCLI()) {
+      return null;
+    }
+
     try {
       if (startedProcess == null || startedProcess.getProcess() == null || !startedProcess.getProcess().isAlive()) {
         executionLogCallback.saveExecutionLog("# Printing next Log batch: ");

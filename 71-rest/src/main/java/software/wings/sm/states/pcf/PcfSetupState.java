@@ -188,7 +188,7 @@ public class PcfSetupState extends State {
   }
 
   private boolean isPcfManifestRefactorEnabled(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, accountId);
+    return featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
   }
 
   protected ExecutionResponse executePcfTask(
@@ -255,6 +255,10 @@ public class PcfSetupState extends State {
     }
 
     boolean useCliForSetup = featureFlagService.isEnabled(FeatureName.USE_PCF_CLI, app.getAccountId());
+    if (!useCliForSetup && useAppAutoscalar) {
+      throw new InvalidRequestException(
+          "USE_PCF_CLI flag is needed for using Autoscalar. Please check with Harness Support");
+    }
 
     PcfCommandRequest commandRequest =
         PcfCommandSetupRequest.builder()
@@ -514,7 +518,8 @@ public class PcfSetupState extends State {
             .isStandardBlueGreenWorkflow(stateExecutionData.isStandardBlueGreen())
             .useAppAutoscalar(stateExecutionData.isUseAppAutoscalar())
             .enforceSslValidation(stateExecutionData.isEnforceSslValidation())
-            .pcfManifestsPackage(stateExecutionData.getPcfManifestsPackage());
+            .pcfManifestsPackage(stateExecutionData.getPcfManifestsPackage())
+            .isUseCfCli(featureFlagService.isEnabled(FeatureName.USE_PCF_CLI, context.getAccountId()));
 
     if (!isPcfSetupCommandResponseNull) {
       setupSweepingOutputPcfBuilder.timeoutIntervalInMinutes(timeoutIntervalInMinutes)

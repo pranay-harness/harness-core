@@ -24,7 +24,7 @@ public class PcfCommandRequest implements ExecutionCapabilityDemander {
   private PcfConfig pcfConfig;
   private String workflowExecutionId;
   private Integer timeoutIntervalInMin;
-  private boolean useCLIForPcfAppCreation;
+  private boolean useCfCLI;
   private boolean enforceSslValidation;
   private boolean useAppAutoscalar;
 

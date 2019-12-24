@@ -222,7 +222,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFetchManifestYmlString() throws Exception {
-    when(featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, ACCOUNT_ID))
+    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID))
         .thenReturn(true)
         .thenReturn(false);
 
@@ -701,7 +701,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateManifestMap() {
-    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.PCF_MANIFEST_REDESIGN), anyString());
+    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), anyString());
     Service service = Service.builder().uuid(SERVICE_ID).isPcfV2(true).build();
     doReturn(service).when(serviceResourceService).get(anyString());
 
@@ -730,14 +730,6 @@ public class PcfStateHelperTest extends WingsBaseTest {
     pcfManifestsPackage = pcfStateHelper.generateManifestMap(
         context, map, anApplication().accountId(ACCOUNT_ID).build(), SERVICE_ELEMENT);
     assertThat(pcfManifestsPackage.getManifestYml()).isEqualTo(TEST_APP_MANIFEST);
-
-    // Negative scenario
-    doReturn(false).when(featureFlagService).isEnabled(eq(FeatureName.PCF_MANIFEST_REDESIGN), anyString());
-    try {
-      pcfStateHelper.generateManifestMap(context, map, anApplication().accountId(ACCOUNT_ID).build(), SERVICE_ELEMENT);
-    } catch (Exception e) {
-      assertThat(e instanceof InvalidRequestException).isTrue();
-    }
   }
 
   @Test

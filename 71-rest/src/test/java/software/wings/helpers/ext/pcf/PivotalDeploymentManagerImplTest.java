@@ -252,27 +252,34 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
     StartedProcess startedProcess = mock(StartedProcess.class);
     Process process = mock(Process.class);
 
+    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    pcfRequestConfig.setUseCFCLI(true);
     doReturn(startedProcess).when(client).tailLogsForPcf(any(), any());
     // startedProcess = null
-    deploymentManager.startTailingLogsIfNeeded(PcfRequestConfig.builder().build(), logCallback, null);
+    deploymentManager.startTailingLogsIfNeeded(pcfRequestConfig, logCallback, null);
     verify(client, times(1)).tailLogsForPcf(any(), any());
 
     reset(client);
     doReturn(startedProcess).when(client).tailLogsForPcf(any(), any());
     doReturn(null).when(startedProcess).getProcess();
     // startedProcess.getProcess() = null
-    deploymentManager.startTailingLogsIfNeeded(PcfRequestConfig.builder().build(), logCallback, startedProcess);
+    deploymentManager.startTailingLogsIfNeeded(pcfRequestConfig, logCallback, startedProcess);
     verify(client, times(1)).tailLogsForPcf(any(), any());
 
     reset(client);
     doReturn(process).when(startedProcess).getProcess();
     doReturn(false).when(process).isAlive();
-    deploymentManager.startTailingLogsIfNeeded(PcfRequestConfig.builder().build(), logCallback, startedProcess);
+    deploymentManager.startTailingLogsIfNeeded(pcfRequestConfig, logCallback, startedProcess);
     verify(client, times(1)).tailLogsForPcf(any(), any());
 
     reset(client);
     doReturn(true).when(process).isAlive();
-    deploymentManager.startTailingLogsIfNeeded(PcfRequestConfig.builder().build(), logCallback, startedProcess);
+    deploymentManager.startTailingLogsIfNeeded(pcfRequestConfig, logCallback, startedProcess);
+    verify(client, never()).tailLogsForPcf(any(), any());
+
+    reset(client);
+    pcfRequestConfig.setUseCFCLI(false);
+    deploymentManager.startTailingLogsIfNeeded(pcfRequestConfig, logCallback, null);
     verify(client, never()).tailLogsForPcf(any(), any());
   }
 

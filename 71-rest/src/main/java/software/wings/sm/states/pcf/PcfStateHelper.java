@@ -212,6 +212,7 @@ public class PcfStateHelper {
                                               .timeoutIntervalInMin(timeoutIntervalInMinutes)
                                               .enforceSslValidation(setupSweepingOutputPcf.isEnforceSslValidation())
                                               .useAppAutoscalar(setupSweepingOutputPcf.isUseAppAutoscalar())
+                                              .useCfCLI(queueRequestData.isUseCfCli())
                                               .build();
 
     PcfRouteUpdateStateExecutionData stateExecutionData =
@@ -421,13 +422,7 @@ public class PcfStateHelper {
 
     Service service = serviceResourceService.get(serviceElement.getUuid());
     notNullCheck("Service does not exists", service);
-    boolean pcfManifestRedesign = featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, app.getAccountId());
-    boolean pcfV2Service = service.isPcfV2();
-
-    if (pcfV2Service && !pcfManifestRedesign) {
-      throw new InvalidRequestException(
-          "Service uses New Manifest Design, Please enabled PCF_MANIFEST_REDESIGN feature");
-    }
+    boolean pcfManifestRedesign = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, app.getAccountId());
 
     if (pcfManifestRedesign) {
       PcfSetupStateExecutionData pcfSetupStateExecutionData =

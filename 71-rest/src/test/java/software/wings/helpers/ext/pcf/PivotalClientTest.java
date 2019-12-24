@@ -597,7 +597,7 @@ public class PivotalClientTest extends WingsBaseTest {
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
     doNothing().when(logCallback).saveExecutionLog(anyString());
 
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().useCLIForAppCreate(true).build();
+    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().useCFCLI(true).build();
 
     PcfCreateApplicationRequestData requestData =
         PcfCreateApplicationRequestData.builder().manifestFilePath("path").pcfRequestConfig(pcfRequestConfig).build();
@@ -610,7 +610,7 @@ public class PivotalClientTest extends WingsBaseTest {
     PcfCreateApplicationRequestData captorValue = captor.getValue();
     assertThat(captorValue).isEqualTo(requestData);
 
-    pcfRequestConfig.setUseCLIForAppCreate(false);
+    pcfRequestConfig.setUseCFCLI(false);
     // actual call
     client.pushApplicationUsingManifest(requestData, logCallback);
     ArgumentCaptor<PcfRequestConfig> pcfRequestCaptor = ArgumentCaptor.forClass(PcfRequestConfig.class);
