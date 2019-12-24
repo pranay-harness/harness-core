@@ -18,7 +18,6 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -316,7 +315,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     FieldUtils.writeField(pcfSetupState, "secretManager", secretManager, true);
     FieldUtils.writeField(pcfSetupState, "olderActiveVersionCountToKeep", 3, true);
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);

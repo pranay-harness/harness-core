@@ -59,7 +59,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -131,8 +130,8 @@ public class ServiceNowCrudTest extends AbstractFunctionalTest {
                           .getStatus()
                           .equals(ExecutionStatus.SUCCESS));
 
-    WorkflowExecution completedExecution = workflowExecutionService.getExecutionDetails(
-        application.getUuid(), workflowExecution.getUuid(), false, new HashSet<>());
+    WorkflowExecution completedExecution =
+        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), false);
 
     assertThat(completedExecution).isNotNull();
     Map<String, ExecutionDataValue> executionSummary =

@@ -12,7 +12,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -257,7 +256,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
         .thenReturn(emptyList());
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     FieldUtils.writeField(kubernetesDeploy, "secretManager", secretManager, true);
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
 

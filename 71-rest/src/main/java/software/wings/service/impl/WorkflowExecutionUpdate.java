@@ -7,7 +7,6 @@ package software.wings.service.impl;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.MongoUtils.setUnset;
-import static java.util.Collections.emptySet;
 import static software.wings.sm.StateType.PHASE;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -392,7 +391,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
     try {
       WorkflowExecution workflowExecution =
-          workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, true, emptySet());
+          workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, true);
 
       if (context.getWorkflowType() == WorkflowType.ORCHESTRATION) {
         executionEventQueue.send(ExecutionEvent.builder()

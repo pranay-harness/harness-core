@@ -13,8 +13,11 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.sm.StateType.PHASE;
@@ -28,14 +31,18 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ExecutionDataValue;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.beans.GraphNode.GraphNodeBuilder;
 import software.wings.common.Constants;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.StateExecutionData;
@@ -45,28 +52,31 @@ import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.sm.states.ForkState.ForkStateExecutionData;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
 public class GraphRenderer {
   // TODO: this feature is disabled in the name of the cache
-  private static final int AGGREGATION_LIMIT = 1000000;
+  private static final int AGGREGATION_LIMIT = 10;
 
   public static final long algorithmId = 0;
 
   @Inject private Injector injector;
 
   @Inject private WorkflowExecutionService workflowExecutionService;
+
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private AppService appService;
 
   static boolean isSubWorkflow(StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance == null) {
@@ -180,17 +190,14 @@ public class GraphRenderer {
 
   class Session {
     private boolean provideAggregatedNodes;
-    private Set<String> excludeFromAggregation = new HashSet<>();
     private Map<String, StateExecutionInstance> instanceIdMap;
 
     private Map<String, StateExecutionInstance> prevInstanceIdMap = new HashMap<>();
     private Map<String, Map<String, StateExecutionInstance>> parentIdElementsMap = new HashMap<>();
 
-    Session(boolean provideAggregatedNodes, Map<String, StateExecutionInstance> instanceIdMap,
-        Set<String> excludeFromAggregation) {
+    Session(boolean provideAggregatedNodes, Map<String, StateExecutionInstance> instanceIdMap) {
       this.provideAggregatedNodes = provideAggregatedNodes;
       this.instanceIdMap = instanceIdMap;
-      this.excludeFromAggregation = excludeFromAggregation;
     }
 
     GraphNode generateNodeTree(List<StateExecutionInstance> instances, StateExecutionData elementStateExecutionData) {
@@ -228,6 +235,8 @@ public class GraphRenderer {
         if (sed instanceof ForkStateExecutionData) {
           elements = ((ForkStateExecutionData) sed).getElements();
         } else if (sed instanceof RepeatStateExecutionData) {
+          String accountId = appService.getAccountIdByAppId(instance.getAppId());
+          boolean aggregationEnabled = featureFlagService.isEnabled(FeatureName.NODE_AGGREGATION, accountId);
           group.setExecutionStrategy(((RepeatStateExecutionData) sed).getExecutionStrategy());
 
           Collection<String> repeatedElements = ((RepeatStateExecutionData) sed)
@@ -236,20 +245,17 @@ public class GraphRenderer {
                                                     .map(ContextElement::getName)
                                                     .collect(toList());
 
-          if (isEmpty(excludeFromAggregation) && repeatedElements.size() < AGGREGATION_LIMIT) {
+          if (!aggregationEnabled) {
             elements = repeatedElements;
             aggregateElements = null;
           } else {
-            final Map<Boolean, List<String>> split =
-                repeatedElements.stream().collect(Collectors.partitioningBy(element -> {
-                  final StateExecutionInstance item = parentIdElementsMap.get(instance.getUuid()).get(element);
-                  if (item == null) {
-                    return false;
-                  }
-                  return !excludeFromAggregation.contains(item.getContextElement().getUuid());
-                }));
-            aggregateElements = split.get(true);
-            elements = split.get(false);
+            if (repeatedElements.size() < AGGREGATION_LIMIT) {
+              elements = repeatedElements;
+              aggregateElements = null;
+            } else {
+              elements = Collections.emptyList();
+              aggregateElements = repeatedElements;
+            }
           }
         }
 
@@ -327,6 +333,14 @@ public class GraphRenderer {
       group.getElements().add(elementNode);
 
       if (!provideAggregatedNodes || elements.isEmpty()) {
+        StateExecutionData executionData = instance.fetchStateExecutionData();
+        if (executionData.getStatus() == null) {
+          executionData.setStatus(ExecutionStatus.QUEUED);
+        }
+        elementNode.setStatus(executionData.getStatus().name());
+
+        elementNode.setExecutionDetails(executionData.getExecutionDetails());
+        elementNode.setExecutionSummary(executionData.getExecutionSummary());
         return;
       }
 
@@ -343,9 +357,10 @@ public class GraphRenderer {
       elementNode.setStatus(executionData.getStatus().name());
 
       elementNode.setExecutionDetails(executionData.getExecutionDetails());
+      elementNode.setExecutionSummary(executionData.getExecutionSummary());
     }
 
-    GraphNode generateHierarchyNode() {
+    GraphNode generateHierarchyNode(boolean subGraph) {
       if (isEmpty(instanceIdMap)) {
         return null;
       }
@@ -357,8 +372,14 @@ public class GraphRenderer {
       }
 
       for (StateExecutionInstance instance : instanceIdMap.values()) {
-        if (instance.getPrevInstanceId() == null && instance.getParentInstanceId() == null) {
-          origin = instance;
+        if (subGraph) {
+          if (instance.getPrevInstanceId() == null) {
+            origin = instance;
+          }
+        } else {
+          if (instance.getPrevInstanceId() == null && instance.getParentInstanceId() == null) {
+            origin = instance;
+          }
         }
 
         final String parentInstanceId = instance.getParentInstanceId();
@@ -389,20 +410,72 @@ public class GraphRenderer {
 
       return generateNodeTree(asList(origin), null);
     }
+
+    public GraphNode generateElementNode(StateExecutionInstance repeatInstance, String element) {
+      GraphNode elementNode =
+          GraphNode.builder().id(repeatInstance.getUuid() + "-" + element).name(element).type("ELEMENT").build();
+
+      StateExecutionData executionData = repeatInstance.fetchStateExecutionData();
+      if (executionData.getStatus() == null) {
+        executionData.setStatus(ExecutionStatus.QUEUED);
+      }
+
+      Map<String, ExecutionDataValue> executionDetails = executionData.getExecutionDetails();
+      if (isNotEmpty(executionDetails)) {
+        Map<String, ExecutionDataValue> elementExecutionData = new HashMap<>();
+        elementExecutionData.put("startTs", executionDetails.get("startTs"));
+        elementExecutionData.put("endTs", executionDetails.get("endTs"));
+        elementNode.setExecutionDetails(elementExecutionData);
+      }
+
+      elementNode.setExecutionSummary(executionData.getExecutionSummary());
+      elementNode.setStatus(executionData.getStatus().name());
+
+      return elementNode;
+    }
   }
 
   /**
    * Generate hierarchy node node.
    *
    * @param instanceIdMap    the instance id map
-   * @param initialStateName the initial state name
    * @return the node
    */
-  public GraphNode generateHierarchyNode(
-      Map<String, StateExecutionInstance> instanceIdMap, Set<String> excludeFromAggregation) {
-    final Session session = new Session(false, instanceIdMap, excludeFromAggregation);
+  public GraphNode generateHierarchyNode(Map<String, StateExecutionInstance> instanceIdMap) {
+    final Session session = new Session(false, instanceIdMap);
 
-    return session.generateHierarchyNode();
+    return session.generateHierarchyNode(false);
+  }
+
+  public GraphGroup generateNodeSubGraph(
+      LinkedHashMap<String, Map<String, StateExecutionInstance>> elementIdToInstanceIdMap,
+      StateExecutionInstance repeatInstance) {
+    GraphGroup group = new GraphGroup();
+    List<GraphNode> nodeSubGraph = new ArrayList<>();
+    group.setElements(nodeSubGraph);
+    for (Entry<String, Map<String, StateExecutionInstance>> hostElement : elementIdToInstanceIdMap.entrySet()) {
+      Map<String, StateExecutionInstance> instanceMap = hostElement.getValue();
+      Session session = new Session(false, instanceMap);
+      GraphNode node = session.generateHierarchyNode(true);
+
+      StateExecutionData sed = repeatInstance.fetchStateExecutionData();
+      notNullCheck("stateExecutionData not populated for instance: " + repeatInstance.getUuid(), sed);
+      if (!(sed instanceof RepeatStateExecutionData)) {
+        throw new InvalidRequestException("Request for elements of instance that is not repeated", USER);
+      }
+
+      ContextElement element = ((RepeatStateExecutionData) sed)
+                                   .getRepeatElements()
+                                   .stream()
+                                   .filter(contextElement -> contextElement.getUuid().equals(hostElement.getKey()))
+                                   .findFirst()
+                                   .orElse(null);
+
+      GraphNode instanceElementNode = session.generateElementNode(repeatInstance, element.getName());
+      instanceElementNode.setNext(node);
+      nodeSubGraph.add(instanceElementNode);
+    }
+    return group;
   }
 
   GraphNode convertToNode(StateExecutionInstance instance) {

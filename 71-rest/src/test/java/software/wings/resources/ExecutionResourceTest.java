@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -117,7 +116,7 @@ public class ExecutionResourceTest extends CategoryTest {
                                               .workflowType(WorkflowType.ORCHESTRATION)
                                               .build();
     doNothing().when(authService).authorizeAppAccess(anyString(), anyString(), any(User.class), any());
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean()))
         .thenReturn(workflowExecution);
 
     RestResponse<WorkflowExecution> actual = resources.client()

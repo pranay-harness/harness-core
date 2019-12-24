@@ -141,7 +141,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
                           .equals(ExecutionStatus.FAILED.name()));
 
     WorkflowExecution completedWorkflowExecution =
-        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true, null);
+        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true);
     System.out.println("test");
     assertThat(completedWorkflowExecution.getExecutionNode().getStatus()).isEqualTo("SUCCESS");
     assertThat(completedWorkflowExecution.getExecutionNode().getNext().getStatus()).isEqualTo("SUCCESS");

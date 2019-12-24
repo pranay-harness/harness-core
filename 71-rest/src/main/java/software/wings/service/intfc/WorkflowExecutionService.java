@@ -17,6 +17,7 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
@@ -72,8 +73,7 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate,
       Trigger trigger);
 
-  WorkflowExecution getExecutionDetails(
-      @NotNull String appId, @NotNull String workflowExecutionId, boolean upToDate, Set<String> excludeFromAggregation);
+  WorkflowExecution getExecutionDetails(@NotNull String appId, @NotNull String workflowExecutionId, boolean upToDate);
 
   WorkflowExecution getExecutionWithoutSummary(@NotNull String appId, @NotNull String workflowExecutionId);
 
@@ -115,6 +115,9 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   List<StateExecutionInterrupt> getExecutionInterrupts(String appId, String stateExecutionInstanceId);
 
   List<StateExecutionElement> getExecutionElements(String appId, String stateExecutionInstanceId);
+
+  Map<String, GraphGroup> getNodeSubGraphs(
+      String appId, String workflowExecutionId, Map<String, List<String>> selectedNodes);
 
   int getExecutionInterruptCount(String stateExecutionInstanceId);
 

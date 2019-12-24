@@ -232,7 +232,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     assertThat(status).isEqualTo("SUCCESS");
 
     WorkflowExecution completedExecution =
-        workflowExecutionService.getExecutionDetails(application.getUuid(), pipelineExecutionId, true, null);
+        workflowExecutionService.getExecutionDetails(application.getUuid(), pipelineExecutionId, true);
 
     logger.info("Validation starts");
 

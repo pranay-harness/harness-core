@@ -211,7 +211,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     logger.info("Workflow execution completed");
 
     WorkflowExecution completedWorkflowExecution =
-        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true, null);
+        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true);
 
     logger.info("Validation starts");
 

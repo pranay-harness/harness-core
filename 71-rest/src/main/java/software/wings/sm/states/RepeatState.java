@@ -175,7 +175,10 @@ public class RepeatState extends State {
     } else {
       ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
 
-      int repeatElementIndex = repeatStateExecutionData.getRepeatElementIndex();
+      Integer repeatElementIndex = repeatStateExecutionData.getRepeatElementIndex();
+      if (repeatElementIndex == null) {
+        repeatElementIndex = 0;
+      }
       repeatElementIndex++;
       repeatStateExecutionData.setRepeatElementIndex(repeatElementIndex);
       ContextElement repeatElement = repeatElements.get(repeatElementIndex);

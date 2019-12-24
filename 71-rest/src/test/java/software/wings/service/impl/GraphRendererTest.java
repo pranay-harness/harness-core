@@ -17,7 +17,6 @@ import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,7 +73,7 @@ public class GraphRendererTest extends WingsBaseTest {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
-    final GraphNode node = graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, emptySet());
+    final GraphNode node = graphRenderer.generateHierarchyNode(stateExecutionInstanceMap);
     assertThat(node).isNotNull();
   }
 
@@ -123,7 +122,7 @@ public class GraphRendererTest extends WingsBaseTest {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
-    final GraphNode node = graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, emptySet());
+    final GraphNode node = graphRenderer.generateHierarchyNode(stateExecutionInstanceMap);
     assertThat(node).isNotNull();
     assertThat(node.getName()).isEqualTo(parent.getDisplayName());
 
@@ -168,7 +167,7 @@ public class GraphRendererTest extends WingsBaseTest {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
-    return graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, emptySet());
+    return graphRenderer.generateHierarchyNode(stateExecutionInstanceMap);
   }
 
   @Test
