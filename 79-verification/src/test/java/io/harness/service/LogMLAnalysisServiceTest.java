@@ -1501,7 +1501,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     }
     assertThat(compressedLogMLAnalysisRecord).isNotNull();
 
-    Map<String, FrequencyPattern> frequencyPatterns = compressedLogMLAnalysisRecord.getFrequency_patterns();
+    Map<Integer, FrequencyPattern> frequencyPatterns = compressedLogMLAnalysisRecord.getFrequency_patterns();
 
     compressedLogMLAnalysisRecord.compressLogAnalysisRecord();
     assertThat(compressedLogMLAnalysisRecord.getFrequency_patterns()).isNull();
@@ -1525,7 +1525,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     }
     assertThat(compressedLogMLAnalysisRecord).isNotNull();
 
-    Map<String, LogAnalysisResult> logAnalysisResult = compressedLogMLAnalysisRecord.getLog_analysis_result();
+    Map<Integer, LogAnalysisResult> logAnalysisResult = compressedLogMLAnalysisRecord.getLog_analysis_result();
 
     compressedLogMLAnalysisRecord.compressLogAnalysisRecord();
     assertThat(compressedLogMLAnalysisRecord.getLog_analysis_result()).isNull();

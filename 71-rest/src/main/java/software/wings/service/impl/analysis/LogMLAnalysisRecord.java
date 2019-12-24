@@ -122,8 +122,8 @@ public class LogMLAnalysisRecord extends Base {
   private Map<String, Map<String, SplunkAnalysisCluster>> unknown_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> test_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters;
-  private Map<String, FrequencyPattern> frequency_patterns;
-  private Map<String, LogAnalysisResult> log_analysis_result;
+  private Map<Integer, FrequencyPattern> frequency_patterns;
+  private Map<Integer, LogAnalysisResult> log_analysis_result;
   private double overallScore = -1.0;
   private int timesLabeled;
   private boolean deprecated;
@@ -143,9 +143,9 @@ public class LogMLAnalysisRecord extends Base {
       Map<String, Map<String, SplunkAnalysisCluster>> control_clusters,
       Map<String, Map<String, SplunkAnalysisCluster>> unknown_clusters,
       Map<String, Map<String, SplunkAnalysisCluster>> test_clusters,
-      Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters, Map<String, FrequencyPattern> frequency_patterns,
-      Map<String, LogAnalysisResult> log_analysis_result, LogMLClusterScores cluster_scores,
-      byte[] analysisDetailsCompressedJson) {
+      Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters,
+      Map<Integer, FrequencyPattern> frequency_patterns, Map<Integer, LogAnalysisResult> log_analysis_result,
+      LogMLClusterScores cluster_scores, byte[] analysisDetailsCompressedJson) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.stateExecutionId = stateExecutionId;
     this.cvConfigId = cvConfigId;

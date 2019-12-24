@@ -8126,74 +8126,74 @@ public final class LogMLAnalysisRecordProto {
     getIgnoreClustersOrThrow(java.lang.String key);
 
     /**
-     * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+     * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
      */
     int getFrequencyPatternsCount();
     /**
-     * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+     * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
      */
-    boolean containsFrequencyPatterns(java.lang.String key);
+    boolean containsFrequencyPatterns(int key);
     /**
      * Use {@link #getFrequencyPatternsMap()} instead.
      */
     @java.lang.Deprecated
-    java.util.Map<java.lang.String,
+    java.util.Map<java.lang.Integer,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
     getFrequencyPatterns();
     /**
-     * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+     * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
      */
-    java.util.Map<java.lang.String,
+    java.util.Map<java.lang.Integer,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
     getFrequencyPatternsMap();
     /**
-     * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+     * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
      */
 
     software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern
-    getFrequencyPatternsOrDefault(java.lang.String key,
+    getFrequencyPatternsOrDefault(int key,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern defaultValue);
     /**
-     * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+     * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
      */
 
     software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern
-    getFrequencyPatternsOrThrow(java.lang.String key);
+    getFrequencyPatternsOrThrow(int key);
 
     /**
-     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
      */
     int getLogAnalysisResultCount();
     /**
-     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
      */
-    boolean containsLogAnalysisResult(java.lang.String key);
+    boolean containsLogAnalysisResult(int key);
     /**
      * Use {@link #getLogAnalysisResultMap()} instead.
      */
     @java.lang.Deprecated
-    java.util.Map<java.lang.String,
+    java.util.Map<java.lang.Integer,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
     getLogAnalysisResult();
     /**
-     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
      */
-    java.util.Map<java.lang.String,
+    java.util.Map<java.lang.Integer,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
     getLogAnalysisResultMap();
     /**
-     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
      */
 
     software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
-    getLogAnalysisResultOrDefault(java.lang.String key,
+    getLogAnalysisResultOrDefault(int key,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult defaultValue);
     /**
-     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
      */
 
     software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
-    getLogAnalysisResultOrThrow(java.lang.String key);
+    getLogAnalysisResultOrThrow(int key);
   }
   /**
    * Protobuf type {@code log.verification.LogMLAnalysisRecordDetails}
@@ -8324,7 +8324,7 @@ public final class LogMLAnalysisRecordProto {
                     com.google.protobuf.MapField.newMapField(FrequencyPatternsDefaultEntryHolder.defaultEntry);
                 mutable_bitField0_ |= 0x00000080;
               }
-              com.google.protobuf.MapEntry<java.lang.String,
+              com.google.protobuf.MapEntry<java.lang.Integer,
                   software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
                   frequencyPatterns__ = input.readMessage(
                   FrequencyPatternsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
@@ -8337,7 +8337,7 @@ public final class LogMLAnalysisRecordProto {
                     com.google.protobuf.MapField.newMapField(LogAnalysisResultDefaultEntryHolder.defaultEntry);
                 mutable_bitField0_ |= 0x00000100;
               }
-              com.google.protobuf.MapEntry<java.lang.String,
+              com.google.protobuf.MapEntry<java.lang.Integer,
                   software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
                   logAnalysisResult__ = input.readMessage(
                   LogAnalysisResultDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
@@ -8993,21 +8993,21 @@ public final class LogMLAnalysisRecordProto {
 
     public static final int FREQUENCY_PATTERNS_FIELD_NUMBER = 8;
     private static final class FrequencyPatternsDefaultEntryHolder {
-      static final com.google.protobuf.MapEntry<java.lang.String,
+      static final com.google.protobuf.MapEntry<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
-          defaultEntry = com.google.protobuf.MapEntry.<java.lang.String,
+          defaultEntry = com.google.protobuf.MapEntry.<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
               .FrequencyPattern>newDefaultInstance(software.wings.service.impl.verification.generated
                                                        .LogMLAnalysisRecordProto
                                                        .internal_static_log_verification_LogMLAnalysisRecordDetails_FrequencyPatternsEntry_descriptor,
-          com.google.protobuf.WireFormat.FieldType.STRING, "", com.google.protobuf.WireFormat.FieldType.MESSAGE,
+          com.google.protobuf.WireFormat.FieldType.INT32, 0, com.google.protobuf.WireFormat.FieldType.MESSAGE,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern
               .getDefaultInstance());
     }
-    private com.google.protobuf.MapField<java.lang.String,
+    private com.google.protobuf.MapField<java.lang.Integer,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
         frequencyPatterns_;
-    private com.google.protobuf.MapField<java.lang.String,
+    private com.google.protobuf.MapField<java.lang.Integer,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
     internalGetFrequencyPatterns() {
       if (frequencyPatterns_ == null) {
@@ -9020,13 +9020,10 @@ public final class LogMLAnalysisRecordProto {
       return internalGetFrequencyPatterns().getMap().size();
     }
     /**
-     * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+     * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
      */
 
-    public boolean containsFrequencyPatterns(java.lang.String key) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
+    public boolean containsFrequencyPatterns(int key) {
       return internalGetFrequencyPatterns().getMap().containsKey(key);
     }
     /**
@@ -9034,45 +9031,39 @@ public final class LogMLAnalysisRecordProto {
      */
     @java.
     lang.Deprecated
-    public java.util.Map<java.lang.String,
+    public java.util.Map<java.lang.Integer,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
     getFrequencyPatterns() {
       return getFrequencyPatternsMap();
     }
     /**
-     * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+     * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
      */
 
-    public java.util.Map<java.lang.String,
+    public java.util.Map<java.lang.Integer,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
     getFrequencyPatternsMap() {
       return internalGetFrequencyPatterns().getMap();
     }
     /**
-     * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+     * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
      */
 
     public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern
-    getFrequencyPatternsOrDefault(java.lang.String key,
+    getFrequencyPatternsOrDefault(int key,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern defaultValue) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
-      java.util.Map<java.lang.String,
+      java.util.Map<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern> map =
           internalGetFrequencyPatterns().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+     * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
      */
 
     public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern
-    getFrequencyPatternsOrThrow(java.lang.String key) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
-      java.util.Map<java.lang.String,
+    getFrequencyPatternsOrThrow(int key) {
+      java.util.Map<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern> map =
           internalGetFrequencyPatterns().getMap();
       if (!map.containsKey(key)) {
@@ -9083,21 +9074,21 @@ public final class LogMLAnalysisRecordProto {
 
     public static final int LOG_ANALYSIS_RESULT_FIELD_NUMBER = 9;
     private static final class LogAnalysisResultDefaultEntryHolder {
-      static final com.google.protobuf.MapEntry<java.lang.String,
+      static final com.google.protobuf.MapEntry<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
-          defaultEntry = com.google.protobuf.MapEntry.<java.lang.String,
+          defaultEntry = com.google.protobuf.MapEntry.<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto
               .LogAnalysisResult>newDefaultInstance(software.wings.service.impl.verification.generated
                                                         .LogMLAnalysisRecordProto
                                                         .internal_static_log_verification_LogMLAnalysisRecordDetails_LogAnalysisResultEntry_descriptor,
-          com.google.protobuf.WireFormat.FieldType.STRING, "", com.google.protobuf.WireFormat.FieldType.MESSAGE,
+          com.google.protobuf.WireFormat.FieldType.INT32, 0, com.google.protobuf.WireFormat.FieldType.MESSAGE,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
               .getDefaultInstance());
     }
-    private com.google.protobuf.MapField<java.lang.String,
+    private com.google.protobuf.MapField<java.lang.Integer,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
         logAnalysisResult_;
-    private com.google.protobuf.MapField<java.lang.String,
+    private com.google.protobuf.MapField<java.lang.Integer,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
     internalGetLogAnalysisResult() {
       if (logAnalysisResult_ == null) {
@@ -9110,13 +9101,10 @@ public final class LogMLAnalysisRecordProto {
       return internalGetLogAnalysisResult().getMap().size();
     }
     /**
-     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
      */
 
-    public boolean containsLogAnalysisResult(java.lang.String key) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
+    public boolean containsLogAnalysisResult(int key) {
       return internalGetLogAnalysisResult().getMap().containsKey(key);
     }
     /**
@@ -9124,45 +9112,39 @@ public final class LogMLAnalysisRecordProto {
      */
     @java.
     lang.Deprecated
-    public java.util.Map<java.lang.String,
+    public java.util.Map<java.lang.Integer,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
     getLogAnalysisResult() {
       return getLogAnalysisResultMap();
     }
     /**
-     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
      */
 
-    public java.util.Map<java.lang.String,
+    public java.util.Map<java.lang.Integer,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
     getLogAnalysisResultMap() {
       return internalGetLogAnalysisResult().getMap();
     }
     /**
-     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
      */
 
     public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
-    getLogAnalysisResultOrDefault(java.lang.String key,
+    getLogAnalysisResultOrDefault(int key,
         software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult defaultValue) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
-      java.util.Map<java.lang.String,
+      java.util.Map<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult> map =
           internalGetLogAnalysisResult().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+     * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
      */
 
     public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
-    getLogAnalysisResultOrThrow(java.lang.String key) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
-      java.util.Map<java.lang.String,
+    getLogAnalysisResultOrThrow(int key) {
+      java.util.Map<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult> map =
           internalGetLogAnalysisResult().getMap();
       if (!map.containsKey(key)) {
@@ -9263,9 +9245,9 @@ public final class LogMLAnalysisRecordProto {
           output, internalGetTestClusters(), TestClustersDefaultEntryHolder.defaultEntry, 6);
       com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
           output, internalGetIgnoreClusters(), IgnoreClustersDefaultEntryHolder.defaultEntry, 7);
-      com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
+      com.google.protobuf.GeneratedMessageV3.serializeIntegerMapTo(
           output, internalGetFrequencyPatterns(), FrequencyPatternsDefaultEntryHolder.defaultEntry, 8);
-      com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
+      com.google.protobuf.GeneratedMessageV3.serializeIntegerMapTo(
           output, internalGetLogAnalysisResult(), LogAnalysisResultDefaultEntryHolder.defaultEntry, 9);
       unknownFields.writeTo(output);
     }
@@ -9346,10 +9328,10 @@ public final class LogMLAnalysisRecordProto {
                                    .build();
         size += com.google.protobuf.CodedOutputStream.computeMessageSize(7, ignoreClusters__);
       }
-      for (java.util.Map.Entry<java.lang.String,
+      for (java.util.Map.Entry<java.lang.Integer,
                software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern> entry :
           internalGetFrequencyPatterns().getMap().entrySet()) {
-        com.google.protobuf.MapEntry<java.lang.String,
+        com.google.protobuf.MapEntry<java.lang.Integer,
             software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
             frequencyPatterns__ = FrequencyPatternsDefaultEntryHolder.defaultEntry.newBuilderForType()
                                       .setKey(entry.getKey())
@@ -9357,10 +9339,10 @@ public final class LogMLAnalysisRecordProto {
                                       .build();
         size += com.google.protobuf.CodedOutputStream.computeMessageSize(8, frequencyPatterns__);
       }
-      for (java.util.Map.Entry<java.lang.String,
+      for (java.util.Map.Entry<java.lang.Integer,
                software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult> entry :
           internalGetLogAnalysisResult().getMap().entrySet()) {
-        com.google.protobuf.MapEntry<java.lang.String,
+        com.google.protobuf.MapEntry<java.lang.Integer,
             software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
             logAnalysisResult__ = LogAnalysisResultDefaultEntryHolder.defaultEntry.newBuilderForType()
                                       .setKey(entry.getKey())
@@ -10976,10 +10958,10 @@ public final class LogMLAnalysisRecordProto {
         return this;
       }
 
-      private com.google.protobuf.MapField<java.lang.String,
+      private com.google.protobuf.MapField<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
           frequencyPatterns_;
-      private com.google.protobuf.MapField<java.lang.String,
+      private com.google.protobuf.MapField<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
       internalGetFrequencyPatterns() {
         if (frequencyPatterns_ == null) {
@@ -10987,7 +10969,7 @@ public final class LogMLAnalysisRecordProto {
         }
         return frequencyPatterns_;
       }
-      private com.google.protobuf.MapField<java.lang.String,
+      private com.google.protobuf.MapField<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
       internalGetMutableFrequencyPatterns() {
         onChanged();
@@ -11006,13 +10988,10 @@ public final class LogMLAnalysisRecordProto {
         return internalGetFrequencyPatterns().getMap().size();
       }
       /**
-       * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+       * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
        */
 
-      public boolean containsFrequencyPatterns(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
+      public boolean containsFrequencyPatterns(int key) {
         return internalGetFrequencyPatterns().getMap().containsKey(key);
       }
       /**
@@ -11020,45 +10999,39 @@ public final class LogMLAnalysisRecordProto {
        */
       @java.
       lang.Deprecated
-      public java.util.Map<java.lang.String,
+      public java.util.Map<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
       getFrequencyPatterns() {
         return getFrequencyPatternsMap();
       }
       /**
-       * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+       * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
        */
 
-      public java.util.Map<java.lang.String,
+      public java.util.Map<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
       getFrequencyPatternsMap() {
         return internalGetFrequencyPatterns().getMap();
       }
       /**
-       * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+       * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
        */
 
       public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern
-      getFrequencyPatternsOrDefault(java.lang.String key,
+      getFrequencyPatternsOrDefault(int key,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern defaultValue) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        java.util.Map<java.lang.String,
+        java.util.Map<java.lang.Integer,
             software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern> map =
             internalGetFrequencyPatterns().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
       /**
-       * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+       * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
        */
 
       public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern
-      getFrequencyPatternsOrThrow(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        java.util.Map<java.lang.String,
+      getFrequencyPatternsOrThrow(int key) {
+        java.util.Map<java.lang.Integer,
             software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern> map =
             internalGetFrequencyPatterns().getMap();
         if (!map.containsKey(key)) {
@@ -11072,13 +11045,10 @@ public final class LogMLAnalysisRecordProto {
         return this;
       }
       /**
-       * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+       * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
        */
 
-      public Builder removeFrequencyPatterns(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
+      public Builder removeFrequencyPatterns(int key) {
         internalGetMutableFrequencyPatterns().getMutableMap().remove(key);
         return this;
       }
@@ -11087,19 +11057,16 @@ public final class LogMLAnalysisRecordProto {
        */
       @java.
       lang.Deprecated
-      public java.util.Map<java.lang.String,
+      public java.util.Map<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern>
       getMutableFrequencyPatterns() {
         return internalGetMutableFrequencyPatterns().getMutableMap();
       }
       /**
-       * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+       * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
        */
-      public Builder putFrequencyPatterns(java.lang.String key,
-          software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern value) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
+      public Builder putFrequencyPatterns(
+          int key, software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern value) {
         if (value == null) {
           throw new java.lang.NullPointerException();
         }
@@ -11107,20 +11074,20 @@ public final class LogMLAnalysisRecordProto {
         return this;
       }
       /**
-       * <code>map&lt;string, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
+       * <code>map&lt;int32, .log.verification.FrequencyPattern&gt; frequency_patterns = 8;</code>
        */
 
       public Builder putAllFrequencyPatterns(
-          java.util.Map<java.lang.String,
+          java.util.Map<java.lang.Integer,
               software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.FrequencyPattern> values) {
         internalGetMutableFrequencyPatterns().getMutableMap().putAll(values);
         return this;
       }
 
-      private com.google.protobuf.MapField<java.lang.String,
+      private com.google.protobuf.MapField<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
           logAnalysisResult_;
-      private com.google.protobuf.MapField<java.lang.String,
+      private com.google.protobuf.MapField<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
       internalGetLogAnalysisResult() {
         if (logAnalysisResult_ == null) {
@@ -11128,7 +11095,7 @@ public final class LogMLAnalysisRecordProto {
         }
         return logAnalysisResult_;
       }
-      private com.google.protobuf.MapField<java.lang.String,
+      private com.google.protobuf.MapField<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
       internalGetMutableLogAnalysisResult() {
         onChanged();
@@ -11147,13 +11114,10 @@ public final class LogMLAnalysisRecordProto {
         return internalGetLogAnalysisResult().getMap().size();
       }
       /**
-       * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+       * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
        */
 
-      public boolean containsLogAnalysisResult(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
+      public boolean containsLogAnalysisResult(int key) {
         return internalGetLogAnalysisResult().getMap().containsKey(key);
       }
       /**
@@ -11161,45 +11125,39 @@ public final class LogMLAnalysisRecordProto {
        */
       @java.
       lang.Deprecated
-      public java.util.Map<java.lang.String,
+      public java.util.Map<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
       getLogAnalysisResult() {
         return getLogAnalysisResultMap();
       }
       /**
-       * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+       * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
        */
 
-      public java.util.Map<java.lang.String,
+      public java.util.Map<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
       getLogAnalysisResultMap() {
         return internalGetLogAnalysisResult().getMap();
       }
       /**
-       * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+       * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
        */
 
       public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
-      getLogAnalysisResultOrDefault(java.lang.String key,
+      getLogAnalysisResultOrDefault(int key,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult defaultValue) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        java.util.Map<java.lang.String,
+        java.util.Map<java.lang.Integer,
             software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult> map =
             internalGetLogAnalysisResult().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
       /**
-       * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+       * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
        */
 
       public software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult
-      getLogAnalysisResultOrThrow(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        java.util.Map<java.lang.String,
+      getLogAnalysisResultOrThrow(int key) {
+        java.util.Map<java.lang.Integer,
             software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult> map =
             internalGetLogAnalysisResult().getMap();
         if (!map.containsKey(key)) {
@@ -11213,13 +11171,10 @@ public final class LogMLAnalysisRecordProto {
         return this;
       }
       /**
-       * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+       * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
        */
 
-      public Builder removeLogAnalysisResult(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
+      public Builder removeLogAnalysisResult(int key) {
         internalGetMutableLogAnalysisResult().getMutableMap().remove(key);
         return this;
       }
@@ -11228,19 +11183,16 @@ public final class LogMLAnalysisRecordProto {
        */
       @java.
       lang.Deprecated
-      public java.util.Map<java.lang.String,
+      public java.util.Map<java.lang.Integer,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult>
       getMutableLogAnalysisResult() {
         return internalGetMutableLogAnalysisResult().getMutableMap();
       }
       /**
-       * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+       * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
        */
-      public Builder putLogAnalysisResult(java.lang.String key,
+      public Builder putLogAnalysisResult(int key,
           software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult value) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
         if (value == null) {
           throw new java.lang.NullPointerException();
         }
@@ -11248,11 +11200,11 @@ public final class LogMLAnalysisRecordProto {
         return this;
       }
       /**
-       * <code>map&lt;string, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
+       * <code>map&lt;int32, .log.verification.LogAnalysisResult&gt; log_analysis_result = 9;</code>
        */
 
       public Builder putAllLogAnalysisResult(
-          java.util.Map<java.lang.String,
+          java.util.Map<java.lang.Integer,
               software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisResult> values) {
         internalGetMutableLogAnalysisResult().getMutableMap().putAll(values);
         return this;
@@ -11447,10 +11399,10 @@ public final class LogMLAnalysisRecordProto {
         + "lusterMap:\0028\001\032^\n\023IgnoreClustersEntry\022\013\n\003"
         + "key\030\001 \001(\t\0226\n\005value\030\002 \001(\0132\'.log.verificat"
         + "ion.LogAnalysisClusterMap:\0028\001\032\\\n\026Frequen"
-        + "cyPatternsEntry\022\013\n\003key\030\001 \001(\t\0221\n\005value\030\002 "
+        + "cyPatternsEntry\022\013\n\003key\030\001 \001(\005\0221\n\005value\030\002 "
         + "\001(\0132\".log.verification.FrequencyPattern:"
         + "\0028\001\032]\n\026LogAnalysisResultEntry\022\013\n\003key\030\001 \001"
-        + "(\t\0222\n\005value\030\002 \001(\0132#.log.verification.Log"
+        + "(\005\0222\n\005value\030\002 \001(\0132#.log.verification.Log"
         + "AnalysisResult:\0028\001BN\n2software.wings.ser"
         + "vice.impl.verification.generatedB\030LogMLA"
         + "nalysisRecordProto"};

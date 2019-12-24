@@ -66,6 +66,6 @@ message LogMLAnalysisRecordDetails {
   map<string, LogAnalysisClusterMap> unknown_clusters = 5;
   map<string, LogAnalysisClusterMap> test_clusters = 6;
   map<string, LogAnalysisClusterMap> ignore_clusters = 7;
-  map<string, FrequencyPattern> frequency_patterns = 8;
-  map<string, LogAnalysisResult> log_analysis_result = 9;
+  map<int32, FrequencyPattern> frequency_patterns = 8;
+  map<int32, LogAnalysisResult> log_analysis_result = 9;
 }
