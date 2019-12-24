@@ -18,8 +18,8 @@ import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
 import software.wings.graphql.datafetcher.budget.BudgetDefaultKeys;
-import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData.QLBudgetTableDataBuilder;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableListData;
@@ -98,7 +98,7 @@ public class BudgetServiceImpl implements BudgetService {
     }
 
     QLCCMAggregationFunction aggregationFunction = BudgetUtils.makeBillingAmtAggregation();
-    QLTimeSeriesAggregation groupBy = BudgetUtils.makeStartTimeEntityGroupBy();
+    QLCCMTimeSeriesAggregation groupBy = BudgetUtils.makeStartTimeEntityGroupBy();
 
     BillingDataQueryMetadata queryData = billingDataQueryBuilder.formBudgetInsightQuery(
         budget.getAccountId(), filters, aggregationFunction, groupBy, Collections.EMPTY_LIST);

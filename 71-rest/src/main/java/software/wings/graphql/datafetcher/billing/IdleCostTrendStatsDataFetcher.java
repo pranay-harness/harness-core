@@ -31,6 +31,7 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
     QLBillingDataFilter, QLCCMGroupBy, QLBillingSortCriteria> {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
+  @Inject BillingDataHelper billingDataHelper;
 
   private static final String TOTAL_IDLE_COST_DESCRIPTION = "%s of total cost";
   private static final String TOTAL_IDLE_COST_LABEL = "Total Idle Cost of %s - %s";
@@ -149,8 +150,8 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
       totalCostValue = String.format(
           TOTAL_IDLE_COST_VALUE, billingDataQueryBuilder.getRoundedDoubleValue(idleCostData.getIdleCost()));
       if (idleCostData.getTotalCost() != null) {
-        double percentageOfTotalCost = billingDataQueryBuilder.getRoundedDoubleValue(BigDecimal.valueOf(
-            100 * idleCostData.getIdleCost().doubleValue() / idleCostData.getTotalCost().doubleValue()));
+        double percentageOfTotalCost = billingDataQueryBuilder.getRoundedDoublePercentageValue(
+            BigDecimal.valueOf(idleCostData.getIdleCost().doubleValue() / idleCostData.getTotalCost().doubleValue()));
         totalCostDescription = String.format(TOTAL_IDLE_COST_DESCRIPTION, percentageOfTotalCost + "%");
       }
     }
@@ -166,7 +167,7 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
     String cpuIdleCostValue = EMPTY_VALUE;
     if (idleCostData.getAvgCpuUtilization() != null) {
       cpuIdleCostDescription = String.format(CPU_IDLE_COST_DESCRIPTION,
-          100 * billingDataQueryBuilder.getRoundedDoubleValue(idleCostData.getAvgCpuUtilization()) + "%");
+          billingDataQueryBuilder.getRoundedDoublePercentageValue(idleCostData.getAvgCpuUtilization()) + "%");
     }
     if (idleCostData.getCpuIdleCost() != null) {
       cpuIdleCostValue = String.format(
@@ -184,7 +185,7 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
     String memoryIdleCostValue = EMPTY_VALUE;
     if (idleCostData.getAvgMemoryUtilization() != null) {
       memoryIdleCostDescription = String.format(MEMORY_IDLE_COST_DESCRIPTION,
-          100 * billingDataQueryBuilder.getRoundedDoubleValue(idleCostData.getAvgMemoryUtilization()) + "%");
+          billingDataQueryBuilder.getRoundedDoublePercentageValue(idleCostData.getAvgMemoryUtilization()) + "%");
     }
     if (idleCostData.getMemoryIdleCost() != null) {
       memoryIdleCostValue = String.format(
@@ -204,8 +205,8 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
       unallocatedCostValue =
           String.format(UNALLOCATED_COST_VALUE, billingDataQueryBuilder.getRoundedDoubleValue(unallocatedCost));
       if (idleCostData.getTotalCost() != null) {
-        double percentageOfTotalCost = billingDataQueryBuilder.getRoundedDoubleValue(
-            BigDecimal.valueOf(100 * unallocatedCost.doubleValue() / idleCostData.getTotalCost().doubleValue()));
+        double percentageOfTotalCost = billingDataQueryBuilder.getRoundedDoublePercentageValue(
+            BigDecimal.valueOf(unallocatedCost.doubleValue() / idleCostData.getTotalCost().doubleValue()));
         unallocatedCostDescription = String.format(UNALLOCATED_COST_DESCRIPTION, percentageOfTotalCost + "%");
       }
     }

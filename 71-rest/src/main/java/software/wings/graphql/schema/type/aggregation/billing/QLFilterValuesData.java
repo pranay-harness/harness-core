@@ -16,12 +16,12 @@ import java.util.List;
 @Scope(ResourceType.USER)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLFilterValuesData implements QLData {
-  String[] cloudServiceNames;
-  String[] launchTypes;
-  String[] instanceIds;
-  String[] namespaces;
-  String[] workloadNames;
-  String[] cloudProviders;
+  List<QLEntityData> cloudServiceNames;
+  List<QLEntityData> launchTypes;
+  List<QLEntityData> instanceIds;
+  List<QLEntityData> namespaces;
+  List<QLEntityData> workloadNames;
+  List<QLEntityData> cloudProviders;
   List<QLEntityData> applications;
   List<QLEntityData> environments;
   List<QLEntityData> services;

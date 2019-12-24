@@ -128,16 +128,16 @@ public class BillingStatsFilterValuesDataFetcher
       }
     }
 
-    filterValuesDataBuilder.cloudServiceNames(cloudServiceNames.toArray(new String[0]))
-        .instanceIds(instanceIds.toArray(new String[0]))
-        .launchTypes(launchTypes.toArray(new String[0]))
+    filterValuesDataBuilder.cloudServiceNames(getEntity(BillingDataMetaDataFields.CLOUDSERVICENAME, cloudServiceNames))
+        .instanceIds(getEntity(BillingDataMetaDataFields.INSTANCEID, instanceIds))
+        .launchTypes(getEntity(BillingDataMetaDataFields.LAUNCHTYPE, launchTypes))
         .clusters(clusters)
-        .namespaces(namespaces.toArray(new String[0]))
-        .workloadNames(workloadNames.toArray(new String[0]))
+        .namespaces(getEntity(BillingDataMetaDataFields.NAMESPACE, namespaces))
+        .workloadNames(getEntity(BillingDataMetaDataFields.WORKLOADNAME, workloadNames))
         .applications(getEntity(BillingDataMetaDataFields.APPID, applicationIds))
         .environments(getEntity(BillingDataMetaDataFields.ENVID, environmentIds))
         .services(getEntity(BillingDataMetaDataFields.SERVICEID, serviceIds))
-        .cloudProviders(cloudProviders.toArray(new String[0]));
+        .cloudProviders(getEntity(BillingDataMetaDataFields.CLOUDPROVIDER, cloudProviders));
 
     List<QLFilterValuesData> filterValuesDataList = new ArrayList<>();
     filterValuesDataList.add(filterValuesDataBuilder.build());

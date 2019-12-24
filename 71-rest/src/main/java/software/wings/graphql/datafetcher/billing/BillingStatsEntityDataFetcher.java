@@ -13,6 +13,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilte
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
+import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableData;
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableData.QLEntityTableDataBuilder;
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableListData;
@@ -32,6 +33,7 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
     QLBillingDataFilter, QLCCMGroupBy, QLBillingSortCriteria> {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
+  @Inject BillingDataHelper billingDataHelper;
   @Inject QLBillingStatsHelper statsHelper;
 
   @Override
@@ -55,9 +57,10 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
+    QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupByList);
 
-    queryData =
-        billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, sortCriteria);
+    queryData = billingDataQueryBuilder.formQuery(
+        accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria);
     logger.info("BillingStatsEntityDataFetcher query!! {}", queryData.getQuery());
     logger.info(queryData.getQuery());
 
@@ -118,7 +121,7 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
             region = resultSet.getString(field.getFieldName());
             break;
           case SUM:
-            totalCost = Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
+            totalCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
             break;
           case CLOUDSERVICENAME:
             cloudServiceName = resultSet.getString(field.getFieldName());
@@ -137,13 +140,13 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
             = resultSet.getString(field.getFieldName());
             break;
           case IDLECOST:
-            idleCost = Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
+            idleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
             break;
           case CPUIDLECOST:
-            cpuIdleCost = Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
+            cpuIdleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
             break;
           case MEMORYIDLECOST:
-            memoryIdleCost = Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
+            memoryIdleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
             break;
           case CLUSTERTYPE:
             clusterType = resultSet.getString(field.getFieldName());
@@ -152,16 +155,16 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
             clusterId = resultSet.getString(field.getFieldName());
             break;
           case MAXCPUUTILIZATION:
-            maxCpuUtilization = resultSet.getDouble(field.getFieldName());
+            maxCpuUtilization = billingDataHelper.roundingDoubleFieldPercentageValue(field, resultSet);
             break;
           case MAXMEMORYUTILIZATION:
-            maxMemoryUtilization = resultSet.getDouble(field.getFieldName());
+            maxMemoryUtilization = billingDataHelper.roundingDoubleFieldPercentageValue(field, resultSet);
             break;
           case AVGCPUUTILIZATION:
-            avgCpuUtilization = resultSet.getDouble(field.getFieldName());
+            avgCpuUtilization = billingDataHelper.roundingDoubleFieldPercentageValue(field, resultSet);
             break;
           case AVGMEMORYUTILIZATION:
-            avgMemoryUtilization = resultSet.getDouble(field.getFieldName());
+            avgMemoryUtilization = billingDataHelper.roundingDoubleFieldPercentageValue(field, resultSet);
             break;
           case TOTALNAMESPACES:
             // Todo: query db to get total namespace count

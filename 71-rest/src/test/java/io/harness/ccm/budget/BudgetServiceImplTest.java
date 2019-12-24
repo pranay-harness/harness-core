@@ -38,7 +38,7 @@ import software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
-import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
+import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableListData;
 
 import java.sql.Connection;
@@ -94,7 +94,7 @@ public class BudgetServiceImplTest extends CategoryTest {
                  .alertThresholds(new AlertThreshold[] {alertThreshold})
                  .build();
     when(billingDataQueryBuilder.formBudgetInsightQuery(anyString(), anyList(), any(QLCCMAggregationFunction.class),
-             any(QLTimeSeriesAggregation.class), anyList()))
+             any(QLCCMTimeSeriesAggregation.class), anyList()))
         .thenReturn(queryData);
     when(timeScaleDBService.getDBConnection()).thenReturn(connection);
     when(connection.createStatement()).thenReturn(statement);

@@ -289,10 +289,10 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getCpuIdleCost()).isEqualTo(BillingStatsDefaultKeys.CPUIDLECOST);
     assertThat(data.getData().get(0).getMemoryIdleCost()).isEqualTo(BillingStatsDefaultKeys.MEMORYIDLECOST);
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
-    assertThat(data.getData().get(0).getMaxCpuUtilization()).isEqualTo(0.5);
-    assertThat(data.getData().get(0).getMaxMemoryUtilization()).isEqualTo(0.5);
-    assertThat(data.getData().get(0).getAvgCpuUtilization()).isEqualTo(0.4);
-    assertThat(data.getData().get(0).getAvgMemoryUtilization()).isEqualTo(0.4);
+    assertThat(data.getData().get(0).getMaxCpuUtilization()).isEqualTo(50.0);
+    assertThat(data.getData().get(0).getMaxMemoryUtilization()).isEqualTo(50.0);
+    assertThat(data.getData().get(0).getAvgCpuUtilization()).isEqualTo(40.0);
+    assertThat(data.getData().get(0).getAvgMemoryUtilization()).isEqualTo(40.0);
   }
 
   public QLBillingSortCriteria makeDescByTimeSortingCriteria() {

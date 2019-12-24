@@ -12,6 +12,4 @@ import lombok.NoArgsConstructor;
 public class QLBillingDataPoint {
   QLReference key;
   Number value;
-  Number avg;
-  Number max;
 }

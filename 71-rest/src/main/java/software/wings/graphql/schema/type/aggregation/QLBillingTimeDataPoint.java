@@ -8,11 +8,9 @@ import lombok.Value;
 public class QLBillingTimeDataPoint {
   QLReference key;
   Number value;
-  Number max;
-  Number avg;
   long time;
 
   public QLBillingDataPoint getQLBillingDataPoint() {
-    return QLBillingDataPoint.builder().value(value).max(max).avg(avg).key(key).build();
+    return QLBillingDataPoint.builder().value(value).key(key).build();
   }
 }

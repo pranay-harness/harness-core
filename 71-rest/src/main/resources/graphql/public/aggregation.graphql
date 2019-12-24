@@ -76,6 +76,7 @@ type TimeSeriesData {
 enum TimeAggregationType {
   HOUR
   DAY
+  MONTH
 }
 
 enum DataType {
