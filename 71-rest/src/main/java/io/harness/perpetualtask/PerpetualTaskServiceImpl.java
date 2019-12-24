@@ -77,8 +77,13 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   }
 
   @Override
+  public PerpetualTaskRecord getTaskRecord(String taskId) {
+    return perpetualTaskRecordDao.getTask(taskId);
+  }
+
+  @Override
   public PerpetualTaskType getPerpetualTaskType(String taskId) {
-    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecordDao.getTask(taskId);
+    PerpetualTaskRecord perpetualTaskRecord = getTaskRecord(taskId);
     return perpetualTaskRecord.getPerpetualTaskType();
   }
 

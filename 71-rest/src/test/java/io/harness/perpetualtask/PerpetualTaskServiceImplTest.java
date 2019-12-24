@@ -23,7 +23,6 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private PerpetualTaskServiceImpl perpetualTaskService;
 
   private final String ACCOUNT_ID = "test-account-id";
-  private final String PERPETUAL_TASK_ID = "perpetual-task-id";
   private final String REGION = "region";
   private final String SETTING_ID = "settingId";
   private final String CLUSTER_NAME = "clusterName";

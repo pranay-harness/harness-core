@@ -17,6 +17,8 @@ import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.BudgetServiceImpl;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
+import io.harness.ccm.health.HealthStatusService;
+import io.harness.ccm.health.HealthStatusServiceImpl;
 import io.harness.dashboard.DashboardSettingsService;
 import io.harness.dashboard.DashboardSettingsServiceImpl;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
@@ -757,6 +759,7 @@ public class WingsModule extends DependencyModule {
     bind(CCMSettingService.class).to(CCMSettingServiceImpl.class);
     bind(ClusterRecordService.class).to(ClusterRecordServiceImpl.class);
     bind(BudgetService.class).to(BudgetServiceImpl.class);
+    bind(HealthStatusService.class).to(HealthStatusServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
 
