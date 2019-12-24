@@ -44,6 +44,7 @@ import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
+import static software.wings.beans.FeatureName.NODE_AGGREGATION;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER;
@@ -817,6 +818,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     private long contextOrder;
     private String key;
+    private List<String> params;
 
     private ExecutionStatus overrideStatus;
     private GraphNode graph;
@@ -841,6 +843,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     public String key() {
       return key;
     }
+
+    @Override
+    public List<String> parameters() {
+      return params;
+    }
   }
 
   private Tree calculateTree(String appId, String workflowExecutionId) {
@@ -853,12 +860,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                           .max(Long::compare)
                           .orElseGet(() -> Long.valueOf(0));
 
-    Tree tree = mongoStore.get(GraphRenderer.algorithmId, Tree.STRUCTURE_HASH, workflowExecutionId);
+    String accountId = appService.getAccountIdByAppId(appId);
+    List<String> params = null;
+    params = getParamsForTree(accountId);
+    Tree tree = mongoStore.get(GraphRenderer.algorithmId, Tree.STRUCTURE_HASH, workflowExecutionId, params);
     if (tree != null && tree.getContextOrder() >= lastUpdate) {
       return tree;
     }
 
-    TreeBuilder treeBuilder = Tree.builder().key(workflowExecutionId).contextOrder(lastUpdate);
+    TreeBuilder treeBuilder = Tree.builder().key(workflowExecutionId).params(params).contextOrder(lastUpdate);
     if (allInstancesIdMap.values().stream().anyMatch(
             i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
       treeBuilder.overrideStatus(ExecutionStatus.PAUSED);
@@ -881,6 +891,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return cacheTree;
   }
 
+  private List<String> getParamsForTree(String accountId) {
+    List<String> params = null;
+    if (featureFlagService.isEnabled(NODE_AGGREGATION, accountId)) {
+      params = Collections.singletonList(String.valueOf(GraphRenderer.AGGREGATION_LIMIT));
+    }
+    return params;
+  }
+
   @Override
   public WorkflowExecution getWorkflowExecution(String appId, String workflowExecutionId) {
     logger.debug("Retrieving workflow execution details for id {} of App Id {} ", workflowExecutionId, appId);
@@ -898,8 +916,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     Tree tree = null;
+    List<String> params = null;
+    String accountId = appService.getAccountIdByAppId(workflowExecution.getAppId());
+    params = getParamsForTree(accountId);
     if (!upToDate) {
-      tree = mongoStore.<Tree>get(GraphRenderer.algorithmId, Tree.STRUCTURE_HASH, workflowExecution.getUuid());
+      tree = mongoStore.<Tree>get(GraphRenderer.algorithmId, Tree.STRUCTURE_HASH, workflowExecution.getUuid(), params);
     }
 
     if (upToDate || tree == null || tree.lastUpdatedAt < (System.currentTimeMillis() - 5000)) {
@@ -2365,7 +2386,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       List<String> selectedInstances = entry.getValue();
       StateExecutionInstance repeatInstance =
           wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, repeaterId);
-      notNullCheck("Couldnt find Instance for Id:" + repeaterId, repeatInstance);
+      notNullCheck("Couldn't find Instance for Id:" + repeaterId, repeatInstance);
       // Instance Id to its stateExecutionInstanceIds.
       LinkedHashMap<String, Map<String, StateExecutionInstance>> nodesInstancesIdMap = new LinkedHashMap<>();
 

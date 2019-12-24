@@ -27,6 +27,8 @@ import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
 
 import java.io.ObjectStreamClass;
+import java.util.Collections;
+import java.util.List;
 
 public class MongoStoreTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
@@ -62,6 +64,11 @@ public class MongoStoreTest extends WingsBaseTest {
     public String key() {
       return key;
     }
+
+    @Override
+    public List<String> parameters() {
+      return null;
+    }
   }
 
   @Value
@@ -94,20 +101,26 @@ public class MongoStoreTest extends WingsBaseTest {
     public String key() {
       return key;
     }
+
+    @Override
+    public List<String> parameters() {
+      return null;
+    }
   }
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testNominalUpdateGet() {
-    TestNominalEntity foo =
-        mongoStore.<TestNominalEntity>get(0, TestNominalEntity.algorithmId, TestNominalEntity.STRUCTURE_HASH, "key");
+    TestNominalEntity foo = mongoStore.<TestNominalEntity>get(
+        0, TestNominalEntity.algorithmId, TestNominalEntity.STRUCTURE_HASH, "key", Collections.emptyList());
     assertThat(foo).isNull();
 
     TestNominalEntity bar = TestNominalEntity.builder().contextHash(0).key("key").value("value").build();
     mongoStore.upsert(bar, ofSeconds(10));
 
-    foo = mongoStore.<TestNominalEntity>get(0, TestNominalEntity.algorithmId, TestNominalEntity.STRUCTURE_HASH, "key");
+    foo = mongoStore.<TestNominalEntity>get(
+        0, TestNominalEntity.algorithmId, TestNominalEntity.STRUCTURE_HASH, "key", Collections.emptyList());
     assertThat(foo).isNotNull();
   }
 
@@ -125,26 +138,29 @@ public class MongoStoreTest extends WingsBaseTest {
       }
     });
 
-    TestOrdinalEntity foo =
-        mongoStore.<TestOrdinalEntity>get(0, TestOrdinalEntity.algorithmId, TestOrdinalEntity.STRUCTURE_HASH, "key");
+    TestOrdinalEntity foo = mongoStore.<TestOrdinalEntity>get(
+        0, TestOrdinalEntity.algorithmId, TestOrdinalEntity.STRUCTURE_HASH, "key", Collections.emptyList());
     assertThat(foo).isNull();
 
     TestOrdinalEntity bar = TestOrdinalEntity.builder().contextOrder(0).key("key").value("value").build();
     mongoStore.upsert(bar, ofSeconds(10));
 
-    foo = mongoStore.<TestOrdinalEntity>get(0, TestOrdinalEntity.algorithmId, TestOrdinalEntity.STRUCTURE_HASH, "key");
+    foo = mongoStore.<TestOrdinalEntity>get(
+        0, TestOrdinalEntity.algorithmId, TestOrdinalEntity.STRUCTURE_HASH, "key", Collections.emptyList());
     assertThat(foo).isNotNull();
 
     TestOrdinalEntity baz = TestOrdinalEntity.builder().contextOrder(1).key("key").value("value").build();
     mongoStore.upsert(baz, ofSeconds(10));
 
-    foo = mongoStore.<TestOrdinalEntity>get(TestOrdinalEntity.algorithmId, TestOrdinalEntity.STRUCTURE_HASH, "key");
+    foo = mongoStore.<TestOrdinalEntity>get(
+        TestOrdinalEntity.algorithmId, TestOrdinalEntity.STRUCTURE_HASH, "key", Collections.emptyList());
     assertThat(foo).isNotNull();
     assertThat(foo.contextOrder).isEqualTo(1);
 
     mongoStore.upsert(bar, ofSeconds(10));
 
-    foo = mongoStore.<TestOrdinalEntity>get(TestOrdinalEntity.algorithmId, TestOrdinalEntity.STRUCTURE_HASH, "key");
+    foo = mongoStore.<TestOrdinalEntity>get(
+        TestOrdinalEntity.algorithmId, TestOrdinalEntity.STRUCTURE_HASH, "key", Collections.emptyList());
     assertThat(foo).isNotNull();
     assertThat(foo.contextOrder).isEqualTo(1);
   }

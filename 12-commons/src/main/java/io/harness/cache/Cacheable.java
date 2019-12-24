@@ -9,7 +9,11 @@ package io.harness.cache; // Cacheable in the key value sense object.
 // To avoid neglecting this aspect of the cache we introducing the context hash. It has to incorporate all the
 // context values involved in the generation of the object.
 
+import java.util.List;
+
 public interface Cacheable {
   // Returns a key that represents the object
   String key();
+
+  List<String> parameters();
 }
