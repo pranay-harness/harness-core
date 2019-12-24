@@ -53,19 +53,9 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
   }
 
   @Override
-  public ClusterRecord attachPerpetualTaskId(ClusterRecord clusterRecord, String taskId) {
-    return clusterRecordDao.insertTask(clusterRecord, taskId);
-  }
-
-  @Override
-  public ClusterRecord removePerpetualTaskId(ClusterRecord clusterRecord, String taskId) {
-    return clusterRecordDao.removeTask(clusterRecord, taskId);
-  }
-
-  @Override
   public boolean delete(String accountId, String cloudProviderId) {
     // get the list of Clusters associated with the cloudProvider
-    List<ClusterRecord> clusterRecords = list(accountId, cloudProviderId, 0, 0); // TODO: check if this works
+    List<ClusterRecord> clusterRecords = list(accountId, cloudProviderId);
     if (isNull(clusterRecords)) {
       logger.warn("Cloud Provider with id={} has no Clusters to be deleted.", cloudProviderId);
     } else {
@@ -78,5 +68,15 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
       }
     }
     return clusterRecordDao.delete(accountId, cloudProviderId);
+  }
+
+  @Override
+  public ClusterRecord attachPerpetualTaskId(ClusterRecord clusterRecord, String taskId) {
+    return clusterRecordDao.insertTask(clusterRecord, taskId);
+  }
+
+  @Override
+  public ClusterRecord removePerpetualTaskId(ClusterRecord clusterRecord, String taskId) {
+    return clusterRecordDao.removeTask(clusterRecord, taskId);
   }
 }

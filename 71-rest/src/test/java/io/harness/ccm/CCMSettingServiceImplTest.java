@@ -7,19 +7,20 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
-import com.google.inject.Inject;
-
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 import software.wings.beans.Account;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
@@ -27,9 +28,8 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SettingsService;
 
-public class CCMSettingServiceTest extends WingsBaseTest {
-  String accountIdWithCCM;
-
+public class CCMSettingServiceImplTest extends CategoryTest {
+  private String accountIdWithCCM;
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
   private static final String COMPANY_NAME = "Harness";
   private static final String ACCOUNT_NAME = "Harness";
@@ -44,7 +44,8 @@ public class CCMSettingServiceTest extends WingsBaseTest {
 
   @Mock AccountService accountService;
   @Mock SettingsService settingsService;
-  @InjectMocks @Inject CCMSettingService ccmSettingService;
+  @InjectMocks CCMSettingServiceImpl ccmSettingService;
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Before
   public void setUp() {

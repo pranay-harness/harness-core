@@ -1,5 +1,7 @@
 package io.harness.perpetualtask;
 
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
+
 import java.util.List;
 
 public interface PerpetualTaskService {
@@ -11,6 +13,8 @@ public interface PerpetualTaskService {
   boolean deleteTask(String accountId, String taskId);
 
   List<String> listAssignedTaskIds(String delegateId);
+
+  PerpetualTaskRecord getTaskRecord(String taskId);
 
   PerpetualTaskType getPerpetualTaskType(String taskId);
 

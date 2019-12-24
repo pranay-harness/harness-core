@@ -80,7 +80,7 @@ public class ServiceInstanceUsageCheckerJob implements Job {
       String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(InstanceKeys.accountId);
       Objects.requireNonNull(accountId, "[ServiceInstanceUsageCheckerJob] accountId must be passed in job context");
 
-      // Skip for non-CE accounts
+      // Skip for non-CEError accounts
       if (!accountService.isCommunityAccount(accountId)) {
         return;
       }
