@@ -72,7 +72,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   private static String MAXCPUUTILIZATION = "maxcpuutilization";
   private static String MAXMEMORYUTILIZATION = "maxmemoryutilization";
   private static String AVGCPUUTILIZATION = "avgcpuutilization";
-  private static String AVGMEMORYTILIZATION = "avgmemoryutilization";
+  private static String AVGMEMORYUTILIZATION = "avgmemoryutilization";
 
   private static double IDLECOST_VALUE = 2.0;
   private static double CPUIDLECOST_VALUE = 2.0;
@@ -515,7 +515,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   private QLCCMAggregationFunction makeAvgMemoryUtilizationAggregation() {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.SUM)
-        .columnName(AVGMEMORYTILIZATION)
+        .columnName(AVGMEMORYUTILIZATION)
         .build();
   }
 
