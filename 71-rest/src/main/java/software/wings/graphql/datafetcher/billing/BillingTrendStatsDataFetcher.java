@@ -52,6 +52,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
   private static final String TOTAL_COST_DATE_PATTERN = "dd MMMM, yyyy";
   private static final String DEFAULT_TIME_ZONE = "America/Los_Angeles";
   private static final String EMPTY_VALUE = "-";
+  private static final String NA_VALUE = "NA";
   private static final long ONE_DAY_MILLIS = 86400000;
 
   @Override
@@ -195,7 +196,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
     Instant endInstant = Instant.ofEpochMilli(getEndTimeFilter(trendFilters).getValue().longValue());
     String trendCostDescription = String.format(TREND_COST_DESCRIPTION, getRoundedDoubleValue(totalBillingAmount),
         getTotalCostFormattedDate(filterStartTime), getTotalCostFormattedDate(endInstant));
-    String trendCostValue = EMPTY_VALUE;
+    String trendCostValue = NA_VALUE;
     if (prevBillingAmountData != null && prevBillingAmountData.getCost().compareTo(BigDecimal.ZERO) > 0) {
       BigDecimal prevTotalBillingAmount = prevBillingAmountData.getCost();
       Instant startInstant = Instant.ofEpochMilli(prevBillingAmountData.getMinStartTime());

@@ -7,9 +7,9 @@ import software.wings.graphql.datafetcher.billing.QLCCMAggregateOperation;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
-import software.wings.graphql.schema.type.aggregation.QLTimeAggregationType;
-import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
+import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -27,11 +27,8 @@ public class BudgetUtils {
   }
 
   // Todo: add month aggregation
-  public static QLTimeSeriesAggregation makeStartTimeEntityGroupBy() {
-    return QLTimeSeriesAggregation.builder()
-        .timeAggregationType(QLTimeAggregationType.DAY)
-        .timeAggregationValue(1)
-        .build();
+  public static QLCCMTimeSeriesAggregation makeStartTimeEntityGroupBy() {
+    return QLCCMTimeSeriesAggregation.builder().timeGroupType(QLTimeGroupType.MONTH).build();
   }
 
   public static QLBillingDataFilter makeClusterFilter(String[] values) {

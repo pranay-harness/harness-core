@@ -8,4 +8,5 @@ import software.wings.graphql.schema.type.aggregation.Aggregation;
 @Builder
 public class QLCCMGroupBy implements Aggregation {
   private QLCCMEntityGroupBy entityGroupBy;
+  private QLCCMTimeSeriesAggregation timeAggregation;
 }

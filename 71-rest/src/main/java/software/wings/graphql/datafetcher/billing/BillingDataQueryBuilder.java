@@ -26,13 +26,13 @@ import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
-import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilterType;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortType;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
+import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -48,10 +48,11 @@ import java.util.stream.Collectors;
 public class BillingDataQueryBuilder {
   private BillingDataTableSchema schema = new BillingDataTableSchema();
   private static final String DEFAULT_TIME_ZONE = "America/Los_Angeles";
+  private static final String STANDARD_TIME_ZONE = "GMT";
 
   protected BillingDataQueryMetadata formQuery(String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
-      List<QLBillingSortCriteria> sortCriteria) {
+      QLCCMTimeSeriesAggregation groupByTime, List<QLBillingSortCriteria> sortCriteria) {
     BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
     SelectQuery selectQuery = new SelectQuery();
 
@@ -72,6 +73,10 @@ public class BillingDataQueryBuilder {
 
     if (!Lists.isNullOrEmpty(filters)) {
       decorateQueryWithFilters(selectQuery, filters);
+    }
+
+    if (isValidGroupByTime(groupByTime)) {
+      decorateQueryWithGroupByTime(fieldNames, selectQuery, groupByTime);
     }
 
     if (isValidGroupBy(groupBy)) {
@@ -111,7 +116,7 @@ public class BillingDataQueryBuilder {
 
     selectQuery.addCustomFromTable(schema.getBillingDataTable());
 
-    if (isClusterFilterPresent(filters)) {
+    if (isClusterFilterPresent(filters) && !checkForAdditionalFilterInClusterDrillDown(filters)) {
       addInstanceTypeFilter(filters);
     }
 
@@ -173,7 +178,7 @@ public class BillingDataQueryBuilder {
   }
 
   public BillingDataQueryMetadata formBudgetInsightQuery(String accountId, List<QLBillingDataFilter> filters,
-      QLCCMAggregationFunction aggregateFunction, QLTimeSeriesAggregation groupBy,
+      QLCCMAggregationFunction aggregateFunction, QLCCMTimeSeriesAggregation groupBy,
       List<QLBillingSortCriteria> sortCriteria) {
     BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
     SelectQuery selectQuery = new SelectQuery();
@@ -497,6 +502,9 @@ public class BillingDataQueryBuilder {
       case Amount:
         selectQuery.addCustomOrdering(BillingDataMetaDataFields.SUM.getFieldName(), dir);
         break;
+      case IdleCost:
+        selectQuery.addCustomOrdering(BillingDataMetaDataFields.IDLECOST.getFieldName(), dir);
+        break;
       default:
         throw new InvalidRequestException("Order type not supported " + sortType);
     }
@@ -548,8 +556,11 @@ public class BillingDataQueryBuilder {
 
   private boolean checkForAdditionalFilterInClusterDrillDown(List<QLBillingDataFilter> filters) {
     for (QLBillingDataFilter filter : filters) {
-      if (!(filter.getCluster() != null || filter.getStartTime() != null || filter.getEndTime() != null)) {
-        return true;
+      Set<QLBillingDataFilterType> filterTypes = QLBillingDataFilter.getFilterTypes(filter);
+      if (!filterTypes.isEmpty()) {
+        if (!(filter.getCluster() != null || filter.getStartTime() != null || filter.getEndTime() != null)) {
+          return true;
+        }
       }
     }
     return false;
@@ -580,8 +591,19 @@ public class BillingDataQueryBuilder {
     return filters.stream().anyMatch(filter -> filter.getInstanceType() != null);
   }
 
+  protected QLCCMTimeSeriesAggregation getGroupByTime(List<QLCCMGroupBy> groupBy) {
+    if (groupBy != null) {
+      Optional<QLCCMTimeSeriesAggregation> first = groupBy.stream()
+                                                       .filter(g -> g.getTimeAggregation() != null)
+                                                       .map(QLCCMGroupBy::getTimeAggregation)
+                                                       .findFirst();
+      return first.orElse(null);
+    }
+    return null;
+  }
+
   private void decorateQueryWithGroupByTime(
-      List<BillingDataMetaDataFields> fieldNames, SelectQuery selectQuery, QLTimeSeriesAggregation groupByTime) {
+      List<BillingDataMetaDataFields> fieldNames, SelectQuery selectQuery, QLCCMTimeSeriesAggregation groupByTime) {
     String timeBucket = getGroupByTimeQueryWithDateTrunc(groupByTime, "starttime");
 
     selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
@@ -591,26 +613,32 @@ public class BillingDataQueryBuilder {
     fieldNames.add(BillingDataMetaDataFields.TIME_SERIES);
   }
 
-  private boolean isValidGroupByTime(QLTimeSeriesAggregation groupByTime) {
-    return groupByTime != null && groupByTime.getTimeAggregationType() != null
-        && groupByTime.getTimeAggregationValue() != null;
+  private boolean isValidGroupByTime(QLCCMTimeSeriesAggregation groupByTime) {
+    return groupByTime != null && groupByTime.getTimeGroupType() != null;
   }
 
-  public String getGroupByTimeQueryWithDateTrunc(QLTimeSeriesAggregation groupByTime, String dbFieldName) {
+  public String getGroupByTimeQueryWithDateTrunc(QLCCMTimeSeriesAggregation groupByTime, String dbFieldName) {
     String unit;
-    switch (groupByTime.getTimeAggregationType()) {
+    switch (groupByTime.getTimeGroupType()) {
       case DAY:
         unit = "day";
         break;
-      case HOUR:
-        unit = "hour";
+      case MONTH:
+        unit = "month";
         break;
       default:
-        logger.warn("Unsupported timeAggregationType " + groupByTime.getTimeAggregationType());
+        logger.warn("Unsupported timeGroupType " + groupByTime.getTimeGroupType());
         throw new InvalidRequestException("Cant apply time group by");
     }
 
-    return new StringBuilder("date_trunc('").append(unit).append("',").append(dbFieldName).append(")").toString();
+    return new StringBuilder("date_trunc('")
+        .append(unit)
+        .append("',")
+        .append(dbFieldName)
+        .append(" at time zone '")
+        .append(STANDARD_TIME_ZONE)
+        .append("')")
+        .toString();
   }
 
   protected QLTimeFilter getStartTimeFilter(List<QLBillingDataFilter> filters) {
@@ -629,5 +657,9 @@ public class BillingDataQueryBuilder {
 
   protected double getRoundedDoubleValue(BigDecimal value) {
     return Math.round(value.doubleValue() * 100D) / 100D;
+  }
+
+  protected double getRoundedDoublePercentageValue(BigDecimal value) {
+    return 100 * getRoundedDoubleValue(value);
   }
 }

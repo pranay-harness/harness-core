@@ -46,6 +46,7 @@ enum CCMAggregateOperation {
 
 input CCMGroupBy {
   entityGroupBy: CCMEntityGroupBy
+  timeAggregation: CCMTimeSeriesAggregation
 }
 
 enum CCMEntityGroupBy {
@@ -66,14 +67,13 @@ enum CCMEntityGroupBy {
   CloudProvider
 }
 
-input TimeSeriesGroupBy {
-  timeAggregationType: TimeGroupType
-  timeAggregationValue: Int
+input CCMTimeSeriesAggregation {
+  timeGroupType: TimeGroupType
 }
 
 enum TimeGroupType {
-  HOUR
   DAY
+  MONTH
 }
 
 input BillingSortCriteria {
@@ -84,6 +84,7 @@ input BillingSortCriteria {
 enum BillingSortType {
   Time
   Amount
+  IdleCost
 }
 
 type BillingEntityDataPoint {
@@ -120,12 +121,12 @@ type BillingEntityData {
 }
 
 type BillingFilterDataPoint {
-  cloudServiceNames: [String]
-  instanceIds: [String]
-  launchTypes: [String]
-  workloadNames: [String]
-  namespaces: [String]
-  cloudProviders: [String]
+  cloudServiceNames: [EntityData]
+  instanceIds: [EntityData]
+  launchTypes: [EntityData]
+  workloadNames: [EntityData]
+  namespaces: [EntityData]
+  cloudProviders: [EntityData]
   applications: [EntityData]
   environments: [EntityData]
   services: [EntityData]

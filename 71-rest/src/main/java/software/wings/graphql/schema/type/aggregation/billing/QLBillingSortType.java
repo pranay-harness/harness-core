@@ -4,7 +4,8 @@ import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.Billi
 
 public enum QLBillingSortType {
   Time(BillingDataMetaDataFields.STARTTIME),
-  Amount(BillingDataMetaDataFields.SUM);
+  Amount(BillingDataMetaDataFields.SUM),
+  IdleCost(BillingDataMetaDataFields.IDLECOST);
 
   private BillingDataMetaDataFields billingMetaData;
 
