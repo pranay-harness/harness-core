@@ -20,8 +20,8 @@ import software.wings.sm.StateType;
   @Index(fields = {
     @Field("appId")
     , @Field("serviceId"), @Field("stateType"), @Field("groupName"), @Field("transactionName"), @Field("metricName"),
-        @Field("cvConfigId")
-  }, options = @IndexOptions(unique = true, name = "timeseriesThresholdsUniqueNewIdx"))
+        @Field("cvConfigId"), @Field("thresholdType")
+  }, options = @IndexOptions(unique = false, name = "timeseriesThresholdsQueryIndex"))
 })
 @Data
 @Builder

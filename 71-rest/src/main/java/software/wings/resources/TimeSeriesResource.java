@@ -8,6 +8,7 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.APMFetchConfig;
 import software.wings.beans.FeatureName;
+import software.wings.metrics.ThresholdComparisonType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
@@ -169,9 +170,11 @@ public class TimeSeriesResource {
       @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
       @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("transactionName") String transactionName,
-      @QueryParam("metricName") String metricName) throws UnsupportedEncodingException {
+      @QueryParam("metricName") String metricName,
+      @QueryParam("comparisonType") ThresholdComparisonType thresholdComparisonType)
+      throws UnsupportedEncodingException {
     return new RestResponse<>(metricDataAnalysisService.deleteCustomThreshold(
-        appId, stateType, serviceId, cvConfigId, groupName, transactionName, metricName));
+        appId, stateType, serviceId, cvConfigId, groupName, transactionName, metricName, thresholdComparisonType));
   }
 
   @GET
