@@ -14,6 +14,7 @@ public class InfrastructureType {
   public static final String DIRECT_KUBERNETES = "DIRECT_KUBERNETES";
   public static final String CODE_DEPLOY = "AWS_AWS_CODEDEPLOY";
   public static final String AWS_AMI = "AWS_AMI";
+  public static final String AWS_AMI_LT = "AWS_AMI_LT";
   public static final String AWS_ECS = "AWS_ECS";
   public static final String AWS_INSTANCE = "AWS_SSH";
   public static final String AWS_LAMBDA = "AWS_AWS_LAMBDA";

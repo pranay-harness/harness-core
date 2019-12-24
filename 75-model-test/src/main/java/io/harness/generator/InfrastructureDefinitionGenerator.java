@@ -9,6 +9,7 @@ import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTO
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.beans.InfrastructureType.AWS_AMI;
+import static software.wings.beans.InfrastructureType.AWS_AMI_LT;
 import static software.wings.beans.InfrastructureType.AWS_ECS;
 import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
 import static software.wings.beans.InfrastructureType.AWS_LAMBDA;
@@ -92,6 +93,8 @@ public class InfrastructureDefinitionGenerator {
         return ensureGcpK8s(seed, owners, "gcp-k8s", bearerToken);
       case AWS_AMI:
         return ensureAwsAmi(seed, owners, bearerToken);
+      case AWS_AMI_LT:
+        return ensureAwsAmiWithLaunchTemplate(seed, owners, bearerToken);
       case AWS_INSTANCE:
         return ensureAwsSsh(seed, owners);
       case AWS_ECS:
@@ -572,15 +575,27 @@ public class InfrastructureDefinitionGenerator {
 
     Assertions.assertThat(autoScalingGroups).isNotEmpty();
 
+    return ensureAwsAmi(seed, owners, autoScalingGroups.get(0), "aws-ami-infradef");
+  }
+  private InfrastructureDefinition ensureAwsAmiWithLaunchTemplate(
+      Randomizer.Seed seed, Owners owners, String bearerToken) {
+    return ensureAwsAmi(seed, owners, "asg-ami-functional-test", "aws-ami-lt-infradef");
+  }
+
+  private InfrastructureDefinition ensureAwsAmi(
+      Randomizer.Seed seed, Owners owners, String asgName, String infradefName) {
+    Environment environment = ensureEnv(seed, owners);
+    final String region = "us-east-1";
+
+    final SettingAttribute awsCloudProvider = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
     AwsAmiInfrastructure awsAmiInfrastructure = AwsAmiInfrastructure.builder()
                                                     .cloudProviderId(awsCloudProvider.getUuid())
                                                     .region(region)
-                                                    .autoScalingGroupName(autoScalingGroups.get(0))
+                                                    .autoScalingGroupName(asgName)
                                                     .build();
 
-    String name = HarnessStringUtils.join(StringUtils.EMPTY, "aws-ami-", Long.toString(System.currentTimeMillis()));
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
-                                                            .name(name)
+                                                            .name(infradefName)
                                                             .cloudProviderType(CloudProviderType.AWS)
                                                             .deploymentType(DeploymentType.AMI)
                                                             .appId(environment.getAppId())
@@ -589,7 +604,7 @@ public class InfrastructureDefinitionGenerator {
                                                             .build();
     return GeneratorUtils.suppressDuplicateException(
         ()
-            -> InfrastructureDefinitionRestUtils.save(bearerToken, infrastructureDefinition),
+            -> infrastructureDefinitionService.save(infrastructureDefinition, false),
         () -> exists(infrastructureDefinition));
   }
 
