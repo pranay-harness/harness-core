@@ -11,7 +11,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.lang.String.join;
-import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
@@ -327,7 +326,7 @@ public class WorkflowNotificationHelper {
   private Map<String, String> getPlaceholderValues(ExecutionContext context, Application app, Environment env,
       ExecutionStatus status, @Nullable PhaseSubWorkflow phaseSubWorkflow) {
     WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId(), true, emptySet());
+        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId(), true);
     String triggeredBy = workflowExecution.getTriggeredBy().getName();
     if (triggeredBy.equalsIgnoreCase("Deployment trigger")) {
       triggeredBy = triggeredBy.toLowerCase();

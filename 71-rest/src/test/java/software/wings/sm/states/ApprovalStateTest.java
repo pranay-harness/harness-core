@@ -115,10 +115,8 @@ import software.wings.sm.states.EnvState.EnvStateKeys;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -190,9 +188,7 @@ public class ApprovalStateTest extends WingsBaseTest {
                                               .serviceExecutionSummaries(elementExecutionSummaries)
                                               .build();
 
-    Set<String> excludeFromAggregation = new HashSet<>();
-    when(workflowExecutionService.getExecutionDetails(
-             context.getAppId(), context.getWorkflowExecutionId(), true, excludeFromAggregation))
+    when(workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId(), true))
         .thenReturn(workflowExecution);
 
     String approvalId = generateUuid();

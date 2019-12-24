@@ -31,7 +31,6 @@ import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -704,7 +703,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private Map<String, String> getManualInterventionPlaceholderValues(ExecutionContextImpl context) {
     notNullCheck("context.getApp()", context.getApp());
     WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
-        context.getApp().getUuid(), context.getWorkflowExecutionId(), false, emptySet());
+        context.getApp().getUuid(), context.getWorkflowExecutionId(), false);
     String artifactsMessage =
         workflowNotificationHelper.getArtifactsMessage(context, workflowExecution, WORKFLOW, null);
 

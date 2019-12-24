@@ -34,6 +34,7 @@ import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.StateExecutionElement;
@@ -63,6 +64,7 @@ import software.wings.sm.RollbackConfirmation;
 import software.wings.sm.StateExecutionData;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.ws.rs.BeanParam;
@@ -161,10 +163,9 @@ public class ExecutionResource {
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
-      @QueryParam("excludeFromAggregation") Set<String> excludeFromAggregation) {
+      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId) {
     final WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, false, excludeFromAggregation);
+        workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, false);
     workflowExecution.setStateMachine(null);
     authService.authorizeAppAccess(
         workflowExecution.getAccountId(), workflowExecution.getAppId(), UserThreadLocal.get(), Action.READ);
@@ -581,5 +582,26 @@ public class ExecutionResource {
     }
     return new RestResponse<>(
         workflowExecutionService.fetchConcurrentExecutions(appId, workflowExecutionId, resourceConstraintName, unit));
+  }
+
+  /**
+   * Gets SubGraphs for selected nodes
+   *
+   * @param appId                    the app id
+   * @param workflowExecutionId      the workflow execution id*
+   * @param selectedNodes            Map of parent Id (RepeaterId) to list of selected hosts.
+   * @return the execution history list
+   */
+  @POST
+  @Path("nodeSubGraphs/{workflowExecutionId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<Map<String, GraphGroup>> getNodeSubGraphs(@QueryParam("appId") String appId,
+      @PathParam("workflowExecutionId") String workflowExecutionId, Map<String, List<String>> selectedNodes) {
+    if (isEmpty(selectedNodes)) {
+      return new RestResponse<>();
+    }
+    return new RestResponse<>(workflowExecutionService.getNodeSubGraphs(appId, workflowExecutionId, selectedNodes));
   }
 }

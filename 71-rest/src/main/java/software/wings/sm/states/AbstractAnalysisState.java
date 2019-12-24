@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.govern.Switch.noop;
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
@@ -263,7 +262,7 @@ public abstract class AbstractAnalysisState extends State {
 
       if (workflowExecution.getPipelineExecutionId() != null) {
         WorkflowExecution pipelineExecutionDetails = workflowExecutionService.getExecutionDetails(
-            executionContext.getAppId(), workflowExecution.getPipelineExecutionId(), false, emptySet());
+            executionContext.getAppId(), workflowExecution.getPipelineExecutionId(), false);
         cvExecutionMetaDataBuilder.pipelineName(pipelineExecutionDetails.normalizedName())
             .pipelineStartTs(pipelineExecutionDetails.getStartTs())
             .pipelineExecutionId(workflowExecution.getPipelineExecutionId())

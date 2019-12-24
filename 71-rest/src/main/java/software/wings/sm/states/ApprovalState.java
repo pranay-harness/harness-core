@@ -577,9 +577,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       pausedStageName = context.getStateExecutionInstanceName();
     }
 
-    Set<String> excludeFromAggregation = new HashSet<>();
-    WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
-        context.getAppId(), context.getWorkflowExecutionId(), true, excludeFromAggregation);
+    WorkflowExecution workflowExecution =
+        workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId(), true);
     if (EmptyPredicate.isNotEmpty(workflowExecution.getExecutionArgs().getArtifacts())) {
       for (Artifact artifact : workflowExecution.getExecutionArgs().getArtifacts()) {
         artifacts.add(

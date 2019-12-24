@@ -302,8 +302,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
                           .<String>getJsonObject("resource.status")
                           .equals(status));
 
-    WorkflowExecution runningWorkflowExecution =
-        workflowExecutionService.getExecutionDetails(appId, executionId, true, null);
+    WorkflowExecution runningWorkflowExecution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
     logger.info("Execution Status : " + runningWorkflowExecution.getStatus());
     assertThat(ExecutionStatus.RUNNING).isEqualTo(runningWorkflowExecution.getStatus());
 

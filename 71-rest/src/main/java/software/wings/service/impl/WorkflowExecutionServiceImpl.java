@@ -33,7 +33,6 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.time.Duration.ofDays;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
@@ -106,6 +105,7 @@ import lombok.NoArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.query.CriteriaContainerImpl;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -149,6 +149,7 @@ import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
@@ -269,6 +270,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -399,7 +401,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (!runningOnly || ExecutionStatus.isRunningStatus(workflowExecution.getStatus())
           || ExecutionStatus.isHaltedStatus(workflowExecution.getStatus())) {
         try {
-          populateNodeHierarchy(workflowExecution, includeGraph, includeStatus, false, emptySet());
+          populateNodeHierarchy(workflowExecution, includeGraph, includeStatus, false);
         } catch (Exception e) {
           logger.error("Failed to populate node hierarchy for the workflow execution {}", res.toString(), e);
         }
@@ -748,14 +750,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * {@inheritDoc}
    */
   @Override
-  public WorkflowExecution getExecutionDetails(
-      String appId, String workflowExecutionId, boolean upToDate, Set<String> excludeFromAggregation) {
+  public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId, boolean upToDate) {
     WorkflowExecution workflowExecution = getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
 
     if (workflowExecution.getWorkflowType() == PIPELINE) {
-      populateNodeHierarchy(workflowExecution, false, true, upToDate, excludeFromAggregation);
+      populateNodeHierarchy(workflowExecution, false, true, upToDate);
     } else {
-      populateNodeHierarchy(workflowExecution, true, false, upToDate, excludeFromAggregation);
+      populateNodeHierarchy(workflowExecution, true, false, upToDate);
     }
     return workflowExecution;
   }
@@ -873,7 +874,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     }
 
-    treeBuilder.graph(graphRenderer.generateHierarchyNode(allInstancesIdMap, emptySet()));
+    treeBuilder.graph(graphRenderer.generateHierarchyNode(allInstancesIdMap));
 
     Tree cacheTree = treeBuilder.build();
     executorService.submit(() -> { mongoStore.upsert(cacheTree, ofDays(30)); });
@@ -886,8 +887,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
   }
 
-  private void populateNodeHierarchy(WorkflowExecution workflowExecution, boolean includeGraph, boolean includeStatus,
-      boolean upToDate, Set<String> excludeFromAggregation) {
+  private void populateNodeHierarchy(
+      WorkflowExecution workflowExecution, boolean includeGraph, boolean includeStatus, boolean upToDate) {
     if (includeGraph) {
       includeStatus = true;
     }
@@ -2353,6 +2354,103 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return elementMap.values().stream().collect(toList());
+  }
+
+  @Override
+  public Map<String, GraphGroup> getNodeSubGraphs(
+      String appId, String workflowExecutionId, Map<String, List<String>> selectedNodes) {
+    Map<String, GraphGroup> nodeSubGraphs = new HashMap<>();
+    for (Entry<String, List<String>> entry : selectedNodes.entrySet()) {
+      String repeaterId = entry.getKey();
+      List<String> selectedInstances = entry.getValue();
+      StateExecutionInstance repeatInstance =
+          wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, repeaterId);
+      notNullCheck("Couldnt find Instance for Id:" + repeaterId, repeatInstance);
+      // Instance Id to its stateExecutionInstanceIds.
+      LinkedHashMap<String, Map<String, StateExecutionInstance>> nodesInstancesIdMap = new LinkedHashMap<>();
+
+      // initializing map
+      for (String instance : selectedInstances) {
+        nodesInstancesIdMap.put(instance, new HashMap<>());
+      }
+
+      Query<StateExecutionInstance> query =
+          getQueryForNodeSubgraphs(appId, workflowExecutionId, selectedInstances, repeaterId);
+      try (HIterator<StateExecutionInstance> stateExecutionInstances = new HIterator<>(query.fetch())) {
+        for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
+          // for older executions stored in DB
+          if (isEmpty(stateExecutionInstance.getSubGraphFilterId())) {
+            populateNodeInstanceIdMapOlderExecutions(
+                selectedNodes, repeaterId, nodesInstancesIdMap, stateExecutionInstance);
+          } else {
+            populateNodeInstanceIdMap(nodesInstancesIdMap, stateExecutionInstance);
+          }
+        }
+      }
+
+      nodeSubGraphs.put(repeaterId, graphRenderer.generateNodeSubGraph(nodesInstancesIdMap, repeatInstance));
+    }
+    return nodeSubGraphs;
+  }
+
+  private void populateNodeInstanceIdMap(Map<String, Map<String, StateExecutionInstance>> nodesInstancesIdMap,
+      StateExecutionInstance stateExecutionInstance) {
+    if (nodesInstancesIdMap.get(stateExecutionInstance.getSubGraphFilterId()) != null) {
+      stateExecutionInstance.getStateExecutionMap().entrySet().removeIf(
+          entry -> !entry.getKey().equals(stateExecutionInstance.getDisplayName()));
+      nodesInstancesIdMap.get(stateExecutionInstance.getSubGraphFilterId())
+          .put(stateExecutionInstance.getUuid(), stateExecutionInstance);
+    }
+  }
+
+  private Query<StateExecutionInstance> getQueryForNodeSubgraphs(
+      String appId, String workflowExecutionId, List<String> selectedInstances, String repeaterId) {
+    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                              .filter(StateExecutionInstanceKeys.appId, appId)
+                                              .filter(StateExecutionInstanceKeys.executionUuid, workflowExecutionId)
+                                              .filter(StateExecutionInstanceKeys.parentInstanceId, repeaterId)
+                                              .project(StateExecutionInstanceKeys.contextElement, true)
+                                              .project(StateExecutionInstanceKeys.subGraphFilterId, true)
+                                              .project(StateExecutionInstanceKeys.contextTransition, true)
+                                              .project(StateExecutionInstanceKeys.dedicatedInterruptCount, true)
+                                              .project(StateExecutionInstanceKeys.displayName, true)
+                                              .project(StateExecutionInstanceKeys.executionType, true)
+                                              .project(StateExecutionInstanceKeys.uuid, true)
+                                              .project(StateExecutionInstanceKeys.interruptHistory, true)
+                                              .project(StateExecutionInstanceKeys.lastUpdatedAt, true)
+                                              .project(StateExecutionInstanceKeys.parentInstanceId, true)
+                                              .project(StateExecutionInstanceKeys.prevInstanceId, true)
+                                              .project(StateExecutionInstanceKeys.stateExecutionDataHistory, true)
+                                              .project(StateExecutionInstanceKeys.stateExecutionMap, true)
+                                              .project(StateExecutionInstanceKeys.stateName, true)
+                                              .project(StateExecutionInstanceKeys.stateType, true)
+                                              .project(StateExecutionInstanceKeys.status, true)
+                                              .project(StateExecutionInstanceKeys.hasInspection, true)
+                                              .project(StateExecutionInstanceKeys.appId, true);
+
+    // SubGraphFilterId is the instance (host element) Id.
+    // For older execution this will be null.
+    CriteriaContainerImpl nullCriteria = query.criteria(StateExecutionInstanceKeys.subGraphFilterId).doesNotExist();
+    CriteriaContainerImpl existsCriteria =
+        query.criteria(StateExecutionInstanceKeys.subGraphFilterId).in(selectedInstances);
+    query.or(nullCriteria, existsCriteria);
+    return query;
+  }
+
+  private void populateNodeInstanceIdMapOlderExecutions(Map<String, List<String>> selectedNodes, String repeaterId,
+      Map<String, Map<String, StateExecutionInstance>> nodesInstancesIdMap,
+      StateExecutionInstance stateExecutionInstance) {
+    if (stateExecutionInstance.getContextElement() instanceof InstanceElement) {
+      InstanceElement contextInstanceElement = (InstanceElement) stateExecutionInstance.getContextElement();
+      if (selectedNodes.get(repeaterId).contains(contextInstanceElement.getUuid())) {
+        stateExecutionInstance.getStateExecutionMap().entrySet().removeIf(
+            entry -> !entry.getKey().equals(stateExecutionInstance.getDisplayName()));
+        if (nodesInstancesIdMap.get(contextInstanceElement.getUuid()) != null) {
+          nodesInstancesIdMap.get(contextInstanceElement.getUuid())
+              .put(stateExecutionInstance.getUuid(), stateExecutionInstance);
+        }
+      }
+    }
   }
 
   @Override

@@ -12,7 +12,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -292,7 +291,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     FieldUtils.writeField(pcfRouteSwapState, "secretManager", secretManager, true);
     FieldUtils.writeField(pcfRouteSwapState, "pcfStateHelper", pcfStateHelper, true);
     FieldUtils.writeField(pcfSwitchBlueGreenRoutes, "pcfStateHelper", pcfStateHelper, true);
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);
