@@ -1,12 +1,14 @@
 package io.harness.generator;
 
 import static io.harness.generator.PipelineGenerator.Pipelines.BARRIER;
+import static io.harness.generator.PipelineGenerator.Pipelines.BASIC;
 import static io.harness.generator.PipelineGenerator.Pipelines.BUILD;
 import static io.harness.generator.PipelineGenerator.Pipelines.RESOURCE_CONSTRAINT_WORKFLOW;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
@@ -49,8 +51,6 @@ public class PipelineGenerator {
   @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
   @Inject private ServiceGenerator serviceGenerator;
 
-  public enum Pipelines { BARRIER, RESOURCE_CONSTRAINT_WORKFLOW, BUILD }
-
   public Pipeline ensurePredefined(Randomizer.Seed seed, Owners owners, Pipelines predefined) {
     switch (predefined) {
       case BARRIER:
@@ -59,11 +59,42 @@ public class PipelineGenerator {
         return ensureResourceConstraintWorkflow(seed, owners);
       case BUILD:
         return ensureBuildPipeline(seed, owners);
+      case BASIC:
+        return ensureBasicPipeline(seed, owners);
       default:
         unhandled(predefined);
     }
 
     return null;
+  }
+
+  public Pipeline ensureBasicPipeline(Randomizer.Seed seed, Owners owners) {
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.AWS_SSH_TEST);
+    Workflow workflow = aWorkflow()
+                            .name("Test workflow")
+                            .infraDefinitionId(infrastructureDefinition.getUuid())
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                                       .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                                       .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                                       .build())
+                            .build();
+    Workflow buildWorkflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
+
+    return ensurePipeline(seed, owners,
+        Pipeline.builder()
+            .name(BASIC.name())
+            .pipelineStages(asList(
+                PipelineStage.builder()
+                    .pipelineStageElements(asList(PipelineStageElement.builder()
+                                                      .name("Build")
+                                                      .type(ENV_STATE.name())
+                                                      .properties(ImmutableMap.of("workflowId", buildWorkflow.getUuid(),
+                                                          "envId", buildWorkflow.getEnvId()))
+                                                      .build()))
+                    .build()))
+            .build());
   }
 
   public Pipeline ensureBarrier(Randomizer.Seed seed, Owners owners) {
@@ -211,6 +242,7 @@ public class PipelineGenerator {
                     .build()))
             .build());
   }
+
   public Pipeline ensureBuildPipeline(Randomizer.Seed seed, Owners owners) {
     Workflow buildWorkflow = workflowGenerator.ensurePredefined(seed, owners, Workflows.BUILD_JENKINS);
 
@@ -227,6 +259,8 @@ public class PipelineGenerator {
                                        .build()))
             .build());
   }
+
+  public enum Pipelines { BARRIER, RESOURCE_CONSTRAINT_WORKFLOW, BUILD, BASIC }
 
   public Pipeline ensurePipeline(Randomizer.Seed seed, Owners owners, Pipeline pipeline) {
     final PipelineBuilder builder = builder();
@@ -250,7 +284,8 @@ public class PipelineGenerator {
 
     builder.pipelineStages(pipeline.getPipelineStages());
 
-    // TODO: add ensure logic
-    return pipelineService.save(builder.build());
+    return GeneratorUtils.suppressDuplicateException(()
+                                                         -> pipelineService.save(builder.build()),
+        () -> pipelineService.getPipelineByName(builder.build().getAppId(), pipeline.getName()));
   }
 }
