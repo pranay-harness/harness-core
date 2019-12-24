@@ -8,7 +8,8 @@ public enum BatchJobType {
   K8S_EVENT(300),
   ECS_UTILIZATION(400),
   K8S_UTILIZATION(500),
-  INSTANCE_BILLING(600);
+  INSTANCE_BILLING(600),
+  UNALLOCATED_BILLING(700);
 
   // Specifies order in which the jobs are to be run
   private final int order;
