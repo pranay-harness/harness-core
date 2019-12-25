@@ -37,8 +37,8 @@ public class EcsCluster implements Cluster {
   }
 
   @Override
-  public Query addRequiredQueryFilters(Query<ClusterRecord> query) {
-    return query.field(cloudProviderField)
+  public void addRequiredQueryFilters(Query<ClusterRecord> query) {
+    query.field(cloudProviderField)
         .equal(this.getCloudProviderId())
         .field(regionField)
         .equal(this.getRegion())
