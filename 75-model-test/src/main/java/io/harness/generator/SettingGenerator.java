@@ -1,5 +1,6 @@
 package io.harness.generator;
 
+import static io.harness.generator.SettingGenerator.Settings.AWS_SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECTOR;
@@ -39,6 +40,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.JenkinsConfig;
@@ -47,6 +49,7 @@ import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.beans.SpotInstConfig;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.config.ArtifactoryConfig;
@@ -56,6 +59,8 @@ import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.service.impl.analysis.ElkConnector;
+import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -74,6 +79,7 @@ public class SettingGenerator {
   private static final String GCP_PLAYGROUND = "playground-gke-gcs-gcr";
   private static final String PCF_CONNECTOR = "Harness PCF";
   private static final String HARNESS_AZURE_ARTIFACTS = "Harness Azure Artifacts";
+  private static final String ELK_CONNECTOR = "Elk Connector";
 
   private static final String HELM_CHART_REPO_URL = "http://storage.googleapis.com/kubernetes-charts/";
   private static final String HELM_CHART_REPO = "Helm Chart Repo";
@@ -92,6 +98,8 @@ public class SettingGenerator {
   public enum Settings {
     AWS_TEST_CLOUD_PROVIDER,
     AZURE_TEST_CLOUD_PROVIDER,
+    AWS_SPOTINST_TEST_CLOUD_PROVIDER,
+    SPOTINST_TEST_CLOUD_PROVIDER,
     DEV_TEST_CONNECTOR,
     HARNESS_JENKINS_CONNECTOR,
     GITHUB_TEST_CONNECTOR,
@@ -113,7 +121,8 @@ public class SettingGenerator {
     PCF_CONNECTOR,
     AZURE_ARTIFACTS_CONNECTOR,
     PCF_FUNCTIONAL_TEST_GIT_REPO,
-    HELM_S3_CONNECTOR
+    HELM_S3_CONNECTOR,
+    ELK
   }
 
   public void ensureAllPredefined(Randomizer.Seed seed, Owners owners) {
@@ -126,6 +135,10 @@ public class SettingGenerator {
         return ensureAwsTest(seed, owners);
       case AZURE_TEST_CLOUD_PROVIDER:
         return ensureAzureTestCloudProvider(seed, owners);
+      case AWS_SPOTINST_TEST_CLOUD_PROVIDER:
+        return ensureAwsSpotinstTest(seed, owners);
+      case SPOTINST_TEST_CLOUD_PROVIDER:
+        return ensureSpotinstTestCloudProvider(seed, owners);
       case DEV_TEST_CONNECTOR:
         return ensureDevTest(seed, owners);
       case HARNESS_JENKINS_CONNECTOR:
@@ -170,6 +183,8 @@ public class SettingGenerator {
         return ensurePCFGitRepo(seed, owners);
       case HELM_S3_CONNECTOR:
         return ensureHelmS3Connector(seed, owners);
+      case ELK:
+        return ensureElkConnector(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -194,6 +209,26 @@ public class SettingGenerator {
                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                             .build();
 
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  private SettingAttribute ensureElkConnector(Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withName(ELK_CONNECTOR)
+            .withCategory(CONNECTOR)
+            .withAccountId(account.getUuid())
+            .withValue(ElkConfig.builder()
+                           .accountId(account.getUuid())
+                           .elkConnector(ElkConnector.ELASTIC_SEARCH_SERVER)
+                           .elkUrl("http://ec2-34-227-84-170.compute-1.amazonaws.com:9200/")
+                           .username("admin@harness.io")
+                           .encryptedPassword("uCgt5xOJRT2HuyQkXQgOaA")
+                           .validationType(ElkValidationType.PASSWORD)
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
@@ -262,6 +297,24 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
+  private SettingAttribute ensureSpotinstTestCloudProvider(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(CLOUD_PROVIDER)
+                                            .withName("Test Spotinst Cloud Provider")
+                                            .withAppId(GLOBAL_APP_ID)
+                                            .withEnvId(GLOBAL_ENV_ID)
+                                            .withAccountId(account.getUuid())
+                                            .withValue(SpotInstConfig.builder()
+                                                           .accountId(account.getUuid())
+                                                           .spotInstAccountId("act-d48a11cf")
+                                                           .encryptedSpotInstToken("o3j27am9QlygpJqDaKvkYQ")
+                                                           .build())
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                            .build();
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
   public SettingAttribute ensureWinRmTestConnector(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
     SettingAttribute settingAttribute = aSettingAttribute()
@@ -314,6 +367,27 @@ public class SettingGenerator {
                                "AKIAWQ5IKSASXD4MZRDS")
                            .secretKey(/*scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")*/
                                "oEK0x07A078PeCFGZlQKOzp8eL+qhpkG+uYooD6T".toCharArray())
+                           .accountId(account.getUuid())
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  private SettingAttribute ensureAwsSpotinstTest(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(CLOUD_PROVIDER)
+            .withName(AWS_SPOTINST_TEST_CLOUD_PROVIDER.name())
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withAccountId(account.getUuid())
+            .withValue(AwsConfig.builder()
+                           .accessKey(/*scmSecret.decryptToString(new SecretName("aws_playground_access_key")*/
+                               "AKIA4GYQC5QTQPI2UHMY")
+                           .secretKey(/*scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")*/
+                               "bw/H3t2Sm079NnnX/Xs2BhNJkKa3PJAME8PDlCEK".toCharArray())
                            .accountId(account.getUuid())
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())

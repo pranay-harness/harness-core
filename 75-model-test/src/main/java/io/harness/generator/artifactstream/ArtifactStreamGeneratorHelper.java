@@ -54,7 +54,8 @@ public class ArtifactStreamGeneratorHelper {
       }
       if (!artifactStreamIds.contains(savedArtifactStream.getUuid())) {
         artifactStreamIds.add(savedArtifactStream.getUuid());
-        serviceResourceService.updateArtifactStreamIds(service, artifactStreamIds);
+        Service updatedService = serviceResourceService.updateArtifactStreamIds(service, artifactStreamIds);
+        owners.obtainService().setArtifactStreamIds(updatedService.getArtifactStreamIds());
       }
     }
     return savedArtifactStream;

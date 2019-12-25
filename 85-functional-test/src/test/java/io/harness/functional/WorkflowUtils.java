@@ -432,6 +432,107 @@ public class WorkflowUtils {
     return workflow;
   }
 
+  public Workflow createSpotinstCanaryWorkflowWithVerifyStep(
+      String name, Service service, InfrastructureDefinition infrastructureDefinition, String elkConfigId) {
+    List<PhaseStep> canaryPhaseSteps = new ArrayList<>();
+
+    canaryPhaseSteps.add(
+        aPhaseStep(PhaseStepType.SPOTINST_SETUP, "Elastigroup Setup")
+            .addStep(GraphNode.builder()
+                         .id(generateUuid())
+                         .type(StateType.SPOTINST_SETUP.name())
+                         .name("Elastigroup Setup")
+                         .properties(ImmutableMap.<String, Object>builder()
+                                         .put("minInstances", 0)
+                                         .put("maxInstances", 2)
+                                         .put("targetInstances", 2)
+                                         .put("elastiGroupNamePrefix", "${app.name}_${service.name}_${env.name}")
+                                         .put("timeoutIntervalInMin", 20)
+                                         .put("blueGreen", false)
+                                         .put("useCurrentRunningCount", false)
+                                         .put("resizeStrategy", "RESIZE_NEW_FIRST")
+                                         .put("useLoadBalancer", false)
+                                         .build())
+                         .build())
+            .build());
+
+    canaryPhaseSteps.add(aPhaseStep(PhaseStepType.SPOTINST_DEPLOY, "Elastigroup Deploy")
+                             .addStep(GraphNode.builder()
+                                          .id(generateUuid())
+                                          .type(StateType.SPOTINST_DEPLOY.name())
+                                          .name("Elastigroup deploy")
+                                          .properties(ImmutableMap.<String, Object>builder()
+                                                          .put("instanceCount", 1)
+                                                          .put("instanceUnitType", "COUNT")
+                                                          .put("downsizeInstanceUnitType", "PERCENTAGE")
+                                                          .build())
+                                          .build())
+                             .build());
+
+    canaryPhaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, "Verify Canary")
+                             .addStep(GraphNode.builder()
+                                          .id(generateUuid())
+                                          .type(StateType.ELK.name())
+                                          .name("ELK")
+                                          .properties(ImmutableMap.<String, Object>builder()
+                                                          .put("analysisServerConfigId", elkConfigId)
+                                                          .put("indices", "qa-integration-test-*")
+                                                          .put("timestampField", "@timestamp")
+                                                          .put("messageField", "message")
+                                                          .put("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+                                                          .put("queryType", "MATCH")
+                                                          .put("query", "*exception*")
+                                                          .put("timeDuration", 2)
+                                                          .put("comparisonStrategy", "COMPARE_WITH_CURRENT")
+                                                          .put("initialAnalysisDelay", "2m")
+                                                          .put("hostnameField", "hostname")
+                                                          .build())
+                                          .build())
+                             .build());
+
+    List<PhaseStep> primaryPhaseSteps = new ArrayList<>();
+
+    primaryPhaseSteps.add(aPhaseStep(PhaseStepType.SPOTINST_DEPLOY, "Elastigroup Deploy")
+                              .addStep(GraphNode.builder()
+                                           .id(generateUuid())
+                                           .type(StateType.SPOTINST_DEPLOY.name())
+                                           .name("Elastigroup deploy")
+                                           .properties(ImmutableMap.<String, Object>builder()
+                                                           .put("instanceCount", 100)
+                                                           .put("instanceUnitType", "PERCENTAGE")
+                                                           .put("downsizeInstanceUnitType", "PERCENTAGE")
+                                                           .build())
+                                           .build())
+                              .build());
+
+    return aWorkflow()
+        .name(name + System.currentTimeMillis())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .appId(service.getAppId())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .serviceId(service.getUuid())
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .serviceId(service.getUuid())
+                                                         .deploymentType(DeploymentType.SPOTINST)
+                                                         .daemonSet(false)
+                                                         .infraDefinitionId(infrastructureDefinition.getUuid())
+                                                         .infraDefinitionName(infrastructureDefinition.getName())
+                                                         .phaseSteps(canaryPhaseSteps)
+                                                         .build())
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .serviceId(service.getUuid())
+                                                         .deploymentType(DeploymentType.SPOTINST)
+                                                         .daemonSet(false)
+                                                         .infraDefinitionId(infrastructureDefinition.getUuid())
+                                                         .infraDefinitionName(infrastructureDefinition.getName())
+                                                         .phaseSteps(primaryPhaseSteps)
+                                                         .build())
+                                   .build())
+        .build();
+  }
+
   public Workflow createAwsAmiBGWorkflow(
       String name, Service service, InfrastructureDefinition infrastructureDefinition) {
     List<PhaseStep> phaseSteps = new ArrayList<>();

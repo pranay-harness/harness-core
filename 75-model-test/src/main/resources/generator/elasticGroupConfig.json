@@ -1,0 +1,102 @@
+{
+  "group": {
+    "id": "sig-6a3d9571",
+    "name": "cdteam_qa_canary__36",
+    "capacity": {
+      "minimum": 0,
+      "maximum": 0,
+      "target": 0,
+      "unit": "instance"
+    },
+    "strategy": {
+      "risk": 100,
+      "availabilityVsCost": "balanced",
+      "drainingTimeout": 120,
+      "lifetimePeriod": "days",
+      "fallbackToOd": true,
+      "scalingStrategy": {},
+      "persistence": {},
+      "revertToSpot": {
+        "performAt": "always"
+      }
+    },
+    "compute": {
+      "instanceTypes": {
+        "ondemand": "t2.small",
+        "spot": [
+          "m3.medium",
+          "t2.small",
+          "t3.small",
+          "t3a.small",
+          "t2.medium",
+          "t3.medium",
+          "t3a.medium",
+          "a1.medium"
+        ]
+      },
+      "availabilityZones": [
+        {
+          "name": "us-east-1a",
+          "subnetIds": [
+            "subnet-1f703d78"
+          ]
+        },
+        {
+          "name": "us-east-1b",
+          "subnetIds": [
+            "subnet-01bdf52f"
+          ]
+        },
+        {
+          "name": "us-east-1c",
+          "subnetIds": [
+            "subnet-33eaf779"
+          ]
+        },
+        {
+          "name": "us-east-1d",
+          "subnetIds": [
+            "subnet-c1ce809d"
+          ]
+        },
+        {
+          "name": "us-east-1e",
+          "subnetIds": [
+            "subnet-7427b64a"
+          ]
+        },
+        {
+          "name": "us-east-1f",
+          "subnetIds": [
+            "subnet-11efe81e"
+          ]
+        }
+      ],
+      "product": "Linux/UNIX",
+      "launchSpecification": {
+        "loadBalancersConfig": {
+          "loadBalancers": [
+            {
+              "name": "satyam-tg-2",
+              "arn": "arn:aws:elasticloadbalancing:us-east-1:839162981415:targetgroup/satyam-tg-2/a4354927191bb993",
+              "type": "TARGET_GROUP"
+            }
+          ]
+        },
+        "securityGroupIds": [
+          "sg-d748f48f"
+        ],
+        "monitoring": false,
+        "ebsOptimized": false,
+        "imageId": "ami-0ff62736444c74a47",
+        "keyPair": "satyam-aws-cross",
+        "tenancy": "default"
+      }
+    },
+    "scaling": {},
+    "scheduling": {},
+    "thirdPartiesIntegration": {},
+    "createdAt": "2019-12-06T12:21:38.000Z",
+    "updatedAt": "2019-12-09T04:31:10.000Z"
+  }
+}

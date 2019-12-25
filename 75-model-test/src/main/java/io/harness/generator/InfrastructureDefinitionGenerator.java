@@ -1,10 +1,12 @@
 package io.harness.generator;
 
+import static io.harness.generator.SettingGenerator.Settings.AWS_SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GCP_PLAYGROUND;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
+import static io.harness.generator.SettingGenerator.Settings.SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTOR;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
@@ -17,6 +19,7 @@ import static software.wings.beans.InfrastructureType.AZURE_SSH;
 import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -31,10 +34,12 @@ import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.generator.constants.InfraDefinitionGeneratorConstants;
 import io.harness.testframework.restutils.InfrastructureDefinitionRestUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.AwsInstanceFilter.Tag;
@@ -62,6 +67,9 @@ import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -626,6 +634,47 @@ public class InfrastructureDefinitionGenerator {
     return GeneratorUtils.suppressDuplicateException(
         ()
             -> infrastructureDefinitionService.save(infrastructureDefinition, false),
+        () -> exists(infrastructureDefinition));
+  }
+
+  public InfrastructureDefinition ensureSpotinstAmiDeployment(Randomizer.Seed seed, Owners owners, String bearerToken)
+      throws IOException {
+    Environment environment = ensureEnv(seed, owners);
+    final String region = "us-east-1";
+
+    final SettingAttribute awsCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, AWS_SPOTINST_TEST_CLOUD_PROVIDER);
+    final SettingAttribute spotinstProvider =
+        settingGenerator.ensurePredefined(seed, owners, SPOTINST_TEST_CLOUD_PROVIDER);
+
+    InputStream in = getClass().getClassLoader().getResourceAsStream("generator/elasticGroupConfig.json");
+
+    Preconditions.checkNotNull(in);
+
+    AwsAmiInfrastructure awsAmiInfrastructure =
+        AwsAmiInfrastructure.builder()
+            .cloudProviderId(awsCloudProvider.getUuid())
+            .region(region)
+            .hostNameConvention("${host.ec2Instance.privateDnsName.split('\\.')[0]}")
+            .amiDeploymentType(AmiDeploymentType.SPOTINST)
+            .spotinstElastiGroupJson(IOUtils.toString(in, StandardCharsets.UTF_8))
+            .spotinstCloudProvider(spotinstProvider.getUuid())
+            .build();
+
+    String name =
+        HarnessStringUtils.join(StringUtils.EMPTY, "aws-ami-spotinst-", Long.toString(System.currentTimeMillis()));
+    InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
+                                                            .name(name)
+                                                            .cloudProviderType(CloudProviderType.AWS)
+                                                            .deploymentType(DeploymentType.AMI)
+                                                            .appId(environment.getAppId())
+                                                            .envId(environment.getUuid())
+                                                            .infrastructure(awsAmiInfrastructure)
+                                                            .build();
+
+    return GeneratorUtils.suppressDuplicateException(
+        ()
+            -> InfrastructureDefinitionRestUtils.save(bearerToken, infrastructureDefinition),
         () -> exists(infrastructureDefinition));
   }
 
