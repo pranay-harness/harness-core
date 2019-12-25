@@ -25,7 +25,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
@@ -61,13 +63,21 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
 
     queryData = billingDataQueryBuilder.formQuery(
         accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria);
+
     logger.info("BillingStatsEntityDataFetcher query!! {}", queryData.getQuery());
     logger.info(queryData.getQuery());
+
+    // Calculate Unallocated Cost for Clusters
+    Map<String, Double> unallocatedCostForClusters = new HashMap<>();
+    if (billingDataQueryBuilder.isUnallocatedCostAggregationPresent(aggregateFunction)) {
+      unallocatedCostForClusters = getUnallocatedCostDataForClusters(
+          accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sortCriteria);
+    }
 
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(queryData.getQuery());
-      return generateEntityData(queryData, resultSet);
+      return generateEntityData(queryData, resultSet, unallocatedCostForClusters);
     } catch (SQLException e) {
       logger.error("BillingStatsTimeSeriesDataFetcher Error exception {}", e);
     } finally {
@@ -76,8 +86,8 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
     return null;
   }
 
-  private QLEntityTableListData generateEntityData(BillingDataQueryMetadata queryData, ResultSet resultSet)
-      throws SQLException {
+  private QLEntityTableListData generateEntityData(BillingDataQueryMetadata queryData, ResultSet resultSet,
+      Map<String, Double> unallocatedCostForCluster) throws SQLException {
     List<QLEntityTableData> entityTableListData = new ArrayList<>();
     while (resultSet != null && resultSet.next()) {
       String entityId = BillingStatsDefaultKeys.ENTITYID;
@@ -178,12 +188,13 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
           case ENVID:
             environment = resultSet.getString(field.getFieldName());
             break;
-          case UNALLOCATEDCOST:
-            // Todo: get unallocated resource cost here
-            break;
           default:
             break;
         }
+      }
+
+      if (unallocatedCostForCluster.containsKey(clusterId)) {
+        unallocatedCost = unallocatedCostForCluster.get(clusterId);
       }
 
       final QLEntityTableDataBuilder entityTableDataBuilder = QLEntityTableData.builder();
@@ -218,6 +229,50 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
     }
 
     return QLEntityTableListData.builder().data(entityTableListData).build();
+  }
+
+  protected Map<String, Double> getUnallocatedCostDataForClusters(String accountId,
+      List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters,
+      List<QLCCMEntityGroupBy> groupBy, QLCCMTimeSeriesAggregation groupByTime,
+      List<QLBillingSortCriteria> sortCriteria) {
+    BillingDataQueryMetadata queryData = billingDataQueryBuilder.formQuery(accountId,
+        billingDataQueryBuilder.prepareFiltersForUnallocatedCostData(filters), aggregateFunction, groupBy, groupByTime,
+        sortCriteria);
+    String query = queryData.getQuery();
+    logger.info("Unallocated cost data query {}", query);
+    ResultSet resultSet = null;
+    try (Connection connection = timeScaleDBService.getDBConnection();
+         Statement statement = connection.createStatement()) {
+      resultSet = statement.executeQuery(query);
+      return fetchUnallocatedCostForClusters(queryData, resultSet);
+    } catch (SQLException e) {
+      throw new InvalidRequestException("UnallocatedCost - IdleCostDataFetcher Exception ", e);
+    } finally {
+      DBUtils.close(resultSet);
+    }
+  }
+
+  private Map<String, Double> fetchUnallocatedCostForClusters(BillingDataQueryMetadata queryData, ResultSet resultSet)
+      throws SQLException {
+    Map<String, Double> unallocatedCostForClusters = new HashMap<>();
+    Double unallocatedCost = BillingStatsDefaultKeys.UNALLOCATEDCOST;
+    String clusterId = BillingStatsDefaultKeys.CLUSTERID;
+    while (null != resultSet && resultSet.next()) {
+      for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
+        switch (field) {
+          case SUM:
+            unallocatedCost = Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
+            break;
+          case CLUSTERID:
+            clusterId = resultSet.getString(field.getFieldName());
+            break;
+          default:
+            break;
+        }
+      }
+      unallocatedCostForClusters.put(clusterId, unallocatedCost);
+    }
+    return unallocatedCostForClusters;
   }
 
   @Override

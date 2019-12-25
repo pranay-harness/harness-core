@@ -570,6 +570,10 @@ public class BillingDataQueryBuilder {
     return filters.stream().anyMatch(filter -> filter.getCluster() != null);
   }
 
+  protected boolean isUnallocatedCostAggregationPresent(List<QLCCMAggregationFunction> aggregationFunctions) {
+    return aggregationFunctions.stream().anyMatch(agg -> agg.getColumnName().equals("unallocatedcost"));
+  }
+
   private void addInstanceTypeFilter(List<QLBillingDataFilter> filters) {
     if (!isInstanceTypeFilterPresent(filters)) {
       List<String> instanceTypeValues = new ArrayList<>();
@@ -651,12 +655,29 @@ public class BillingDataQueryBuilder {
     }
   }
 
+  protected QLBillingDataFilter getInstanceTypeFilter() {
+    String[] instanceTypeIdFilterValues = new String[] {"CLUSTER_UNALLOCATED"};
+    QLIdFilter instanceTypeFilter =
+        QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(instanceTypeIdFilterValues).build();
+    return QLBillingDataFilter.builder().instanceType(instanceTypeFilter).build();
+  }
+
   protected String getFormattedDate(Instant instant, String datePattern) {
     return instant.atZone(ZoneId.of(DEFAULT_TIME_ZONE)).format(DateTimeFormatter.ofPattern(datePattern));
   }
 
   protected double getRoundedDoubleValue(BigDecimal value) {
     return Math.round(value.doubleValue() * 100D) / 100D;
+  }
+
+  protected List<QLBillingDataFilter> prepareFiltersForUnallocatedCostData(List<QLBillingDataFilter> filters) {
+    List<QLBillingDataFilter> modifiedFilterList =
+        filters.stream()
+            .filter(qlBillingDataFilter -> qlBillingDataFilter.getInstanceType() == null)
+            .collect(Collectors.toList());
+
+    modifiedFilterList.add(getInstanceTypeFilter());
+    return modifiedFilterList;
   }
 
   protected double getRoundedDoublePercentageValue(BigDecimal value) {
