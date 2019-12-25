@@ -1,6 +1,6 @@
 package io.harness.ccm.cluster.entities;
 
-import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
+import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
@@ -12,32 +12,32 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.query.Query;
 
 @Data
-@JsonTypeName("DIRECT_KUBERNETES")
+@JsonTypeName("AZURE_KUBERNETES")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@FieldNameConstants(innerTypeName = "DirectKubernetesClusterKeys")
-public class DirectKubernetesCluster implements Cluster {
+@FieldNameConstants(innerTypeName = "AzureKubernetesClusterKeys")
+public class AzureKubernetesCluster implements Cluster {
   final String cloudProviderId;
   final String clusterName;
 
-  public static final String cloudProviderIdField =
-      ClusterRecordKeys.cluster + "." + DirectKubernetesClusterKeys.cloudProviderId;
+  public static final String cloudProviderField =
+      ClusterRecordKeys.cluster + "." + AzureKubernetesClusterKeys.cloudProviderId;
   public static final String clusterNameField =
-      ClusterRecordKeys.cluster + "." + DirectKubernetesClusterKeys.clusterName;
+      ClusterRecordKeys.cluster + "." + AzureKubernetesClusterKeys.clusterName;
 
   @Builder
-  public DirectKubernetesCluster(String cloudProviderId, String clusterName) {
+  public AzureKubernetesCluster(String cloudProviderId, String clusterName) {
     this.cloudProviderId = cloudProviderId;
     this.clusterName = clusterName;
   }
 
   @Override
   public String getClusterType() {
-    return DIRECT_KUBERNETES;
+    return AZURE_KUBERNETES;
   }
 
   @Override
   public void addRequiredQueryFilters(Query<ClusterRecord> query) {
-    query.field(cloudProviderIdField)
+    query.field(cloudProviderField)
         .equal(this.getCloudProviderId())
         .field(clusterNameField)
         .equal(this.getClusterName());

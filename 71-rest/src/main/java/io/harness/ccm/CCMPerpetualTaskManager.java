@@ -1,17 +1,21 @@
 package io.harness.ccm;
 
 import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
+import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
+import static io.harness.ccm.cluster.entities.ClusterType.GCP_KUBERNETES;
 import static java.util.Objects.isNull;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.ccm.cluster.ClusterRecordService;
+import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
+import io.harness.ccm.cluster.entities.GcpKubernetesCluster;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
@@ -79,10 +83,10 @@ public class CCMPerpetualTaskManager {
     switch (cluster.getClusterType()) {
       case DIRECT_KUBERNETES:
         client = clientRegistry.getClient(PerpetualTaskType.K8S_WATCH);
-        String podWatcherTaskId = client.create(clusterRecord.getAccountId(),
+        String watcherTaskId = client.create(clusterRecord.getAccountId(),
             K8sWatchPerpetualTaskServiceClient.from(
                 cluster, clusterRecord.getUuid(), ((DirectKubernetesCluster) cluster).getClusterName()));
-        clusterRecordService.attachPerpetualTaskId(clusterRecord, podWatcherTaskId);
+        clusterRecordService.attachPerpetualTaskId(clusterRecord, watcherTaskId);
         break;
       case AWS_ECS:
         EcsCluster ecsCluster = (EcsCluster) cluster;
@@ -92,6 +96,22 @@ public class CCMPerpetualTaskManager {
                 ecsCluster.getClusterName(), clusterRecord.getUuid());
         String ecsTaskId = client.create(clusterRecord.getAccountId(), ecsPerpetualTaskClientParams);
         clusterRecordService.attachPerpetualTaskId(clusterRecord, ecsTaskId);
+        break;
+      case GCP_KUBERNETES:
+        GcpKubernetesCluster gcpKubernetesCluster = (GcpKubernetesCluster) cluster;
+        client = clientRegistry.getClient(PerpetualTaskType.K8S_WATCH);
+        String gcpK8STaskId = client.create(clusterRecord.getAccountId(),
+            K8sWatchPerpetualTaskServiceClient.from(
+                cluster, clusterRecord.getUuid(), gcpKubernetesCluster.getClusterName()));
+        clusterRecordService.attachPerpetualTaskId(clusterRecord, gcpK8STaskId);
+        break;
+      case AZURE_KUBERNETES:
+        AzureKubernetesCluster azureKubernetesCluster = (AzureKubernetesCluster) cluster;
+        client = clientRegistry.getClient(PerpetualTaskType.K8S_WATCH);
+        String azureK8STaskId = client.create(clusterRecord.getAccountId(),
+            K8sWatchPerpetualTaskServiceClient.from(
+                cluster, clusterRecord.getUuid(), azureKubernetesCluster.getClusterName()));
+        clusterRecordService.attachPerpetualTaskId(clusterRecord, azureK8STaskId);
         break;
       default:
         break;

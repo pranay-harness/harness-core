@@ -1,6 +1,6 @@
 package io.harness.ccm.cluster.entities;
 
-import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
+import static io.harness.ccm.cluster.entities.ClusterType.GCP_KUBERNETES;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
@@ -12,32 +12,31 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.query.Query;
 
 @Data
-@JsonTypeName("DIRECT_KUBERNETES")
+@JsonTypeName("GCP_KUBERNETES")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@FieldNameConstants(innerTypeName = "DirectKubernetesClusterKeys")
-public class DirectKubernetesCluster implements Cluster {
+@FieldNameConstants(innerTypeName = "GcpKubernetesClusterKeys")
+public class GcpKubernetesCluster implements Cluster {
   final String cloudProviderId;
   final String clusterName;
 
-  public static final String cloudProviderIdField =
-      ClusterRecordKeys.cluster + "." + DirectKubernetesClusterKeys.cloudProviderId;
-  public static final String clusterNameField =
-      ClusterRecordKeys.cluster + "." + DirectKubernetesClusterKeys.clusterName;
+  public static final String cloudProviderField =
+      ClusterRecordKeys.cluster + "." + GcpKubernetesClusterKeys.cloudProviderId;
+  public static final String clusterNameField = ClusterRecordKeys.cluster + "." + GcpKubernetesClusterKeys.clusterName;
 
   @Builder
-  public DirectKubernetesCluster(String cloudProviderId, String clusterName) {
+  public GcpKubernetesCluster(String cloudProviderId, String clusterName) {
     this.cloudProviderId = cloudProviderId;
     this.clusterName = clusterName;
   }
 
   @Override
   public String getClusterType() {
-    return DIRECT_KUBERNETES;
+    return GCP_KUBERNETES;
   }
 
   @Override
   public void addRequiredQueryFilters(Query<ClusterRecord> query) {
-    query.field(cloudProviderIdField)
+    query.field(cloudProviderField)
         .equal(this.getCloudProviderId())
         .field(clusterNameField)
         .equal(this.getClusterName());
