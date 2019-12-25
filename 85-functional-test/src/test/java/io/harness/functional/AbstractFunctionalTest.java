@@ -1,5 +1,7 @@
 package io.harness.functional;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import com.google.inject.Inject;
 
 import graphql.ExecutionInput;
@@ -36,8 +38,11 @@ import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.security.UserGroup;
+import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.security.UserPermissionInfo;
+import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -59,6 +64,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Rule public FunctionalTestRule rule = new FunctionalTestRule(lifecycleRule.getClosingFactory());
   @Inject DataLoaderRegistryHelper dataLoaderRegistryHelper;
   @Inject AuthHandler authHandler;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public DataLoaderRegistry getDataLoaderRegistry() {
@@ -147,17 +153,44 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     return getWorkflowExecution(bearerToken, appId, envId, executionArgs);
   }
 
+  public AnalysisContext runWorkflowWithVerification(
+      String bearerToken, String appId, String envId, String orchestrationId, List<Artifact> artifactList) {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
+    executionArgs.setExecutionCredential(
+        SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
+    executionArgs.setOrchestrationId(orchestrationId);
+    executionArgs.setArtifacts(artifactList);
+
+    return getWorkflowExecutionWithVerification(bearerToken, appId, envId, executionArgs);
+  }
+
   private WorkflowExecution getWorkflowExecution(
       String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {
     WorkflowExecution original = WorkflowRestUtils.startWorkflow(bearerToken, appId, envId, executionArgs);
 
-    Awaitility.await().atMost(8, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
+    Awaitility.await().atMost(15, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
       final WorkflowExecution workflowExecution =
           workflowExecutionService.getWorkflowExecution(appId, original.getUuid());
       return workflowExecution != null && ExecutionStatus.isFinalStatus(workflowExecution.getStatus());
     });
 
     return workflowExecutionService.getWorkflowExecution(appId, original.getUuid());
+  }
+
+  private AnalysisContext getWorkflowExecutionWithVerification(
+      String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {
+    WorkflowExecution original = WorkflowRestUtils.startWorkflow(bearerToken, appId, envId, executionArgs);
+
+    final AnalysisContext[] analysisContext = new AnalysisContext[1];
+    Awaitility.await().atMost(15, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
+      analysisContext[0] = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+                               .filter(AnalysisContextKeys.workflowExecutionId, original.getUuid())
+                               .get();
+      return analysisContext[0] != null;
+    });
+
+    return analysisContext[0];
   }
 
   public WorkflowExecution runWorkflow(String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {

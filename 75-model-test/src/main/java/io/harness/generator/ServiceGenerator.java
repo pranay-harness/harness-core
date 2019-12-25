@@ -281,6 +281,13 @@ public class ServiceGenerator {
     return owners.obtainService();
   }
 
+  public Service ensureSpotinstAmiGenericTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.AMI).build()));
+    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.SPOTINST_AMI);
+    return owners.obtainService();
+  }
+
   private Service ensureKubernetesGenericTest(Randomizer.Seed seed, Owners owners) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     return ensureService(
