@@ -57,7 +57,6 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   private final BigDecimal MEMORY_IDLE_COST = new BigDecimal("30.0");
   private final BigDecimal AVG_CPU_UTILIZATION = new BigDecimal("0.6");
   private final BigDecimal AVG_MEMORY_UTILIZATION = new BigDecimal("0.4");
-  private final BigDecimal UNALLOCATED_COST = new BigDecimal("10.0");
   private Instant END_TIME = Instant.ofEpochMilli(1571509800000l);
   private Instant START_TIME = Instant.ofEpochMilli(1570645800000l);
   final int[] count = {0};

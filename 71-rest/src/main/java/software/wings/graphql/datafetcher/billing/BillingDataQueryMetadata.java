@@ -48,8 +48,7 @@ public class BillingDataQueryMetadata {
     MAXMEMORYUTILIZATION("MAXMEMORYUTILIZATION", DataType.DOUBLE, QLFilterKind.SIMPLE),
     AVGCPUUTILIZATION("AVGCPUUTILIZATION", DataType.DOUBLE, QLFilterKind.SIMPLE),
     AVGMEMORYUTILIZATION("AVGMEMORYUTILIZATION", DataType.DOUBLE, QLFilterKind.SIMPLE),
-    CLOUDPROVIDER("CLOUDPROVIDER", DataType.STRING, QLFilterKind.SIMPLE),
-    UNALLOCATEDCOST("UNALLOCATEDCOST", DataType.DOUBLE, QLFilterKind.SIMPLE);
+    CLOUDPROVIDER("CLOUDPROVIDER", DataType.STRING, QLFilterKind.SIMPLE);
     private DataType dataType;
     private String fieldName;
     private QLFilterKind filterKind;

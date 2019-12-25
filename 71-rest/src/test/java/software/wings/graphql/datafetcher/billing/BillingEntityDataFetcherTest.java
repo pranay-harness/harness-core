@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.ROHIT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,6 +38,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableListData;
 import software.wings.security.UserThreadLocal;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -145,6 +147,23 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
     assertThat(data.getData().get(0).getIdleCost()).isEqualTo(5.0);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testGroupByNoneWithFiltersInClusterDrillDownWithUnallocatedCostTableView() {
+    Long filterTime = 0L;
+    String[] clusterValues = new String[] {CLUSTER1_ID};
+    List<QLCCMAggregationFunction> aggregationFunction =
+        Arrays.asList(makeBillingAmtAggregation(), makeIdleCostAggregation(), makeUnallocatedCostAggregation());
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeTimeFilter(filterTime));
+    filters.add(makeClusterFilter(clusterValues));
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeClusterEntityGroupBy());
+    QLEntityTableListData data = (QLEntityTableListData) billingStatsEntityDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, Collections.EMPTY_LIST);
+    assertThat(data.getData().size()).isEqualTo(0);
   }
 
   @Test
@@ -324,6 +343,13 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
         .build();
   }
 
+  public QLCCMAggregationFunction makeUnallocatedCostAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.SUM)
+        .columnName("unallocatedcost")
+        .build();
+  }
+
   public QLCCMAggregationFunction makeMaxCpuUtilizationAggregation() {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.MAX)
@@ -416,6 +442,8 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     when(statement.executeQuery(anyString())).thenReturn(resultSet);
 
     when(resultSet.getDouble("COST")).thenAnswer((Answer<Double>) invocation -> 10.0 + doubleVal[0]++);
+    when(resultSet.getBigDecimal("COST"))
+        .thenAnswer((Answer<BigDecimal>) invocation -> BigDecimal.TEN.add(BigDecimal.valueOf(doubleVal[0]++)));
     when(resultSet.getDouble("IDLECOST")).thenAnswer((Answer<Double>) invocation -> 5.0);
     when(resultSet.getDouble("CPUIDLECOST")).thenAnswer((Answer<Double>) invocation -> 2.5);
     when(resultSet.getDouble("MEMORYIDLECOST")).thenAnswer((Answer<Double>) invocation -> 2.5);
@@ -432,6 +460,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getString("CLUSTERID")).thenAnswer((Answer<String>) invocation -> CLUSTER1_ID);
     when(resultSet.getString("CLUSTERNAME")).thenAnswer((Answer<String>) invocation -> CLUSTER1_NAME);
     when(resultSet.getString("REGION")).thenAnswer((Answer<String>) invocation -> REGION1);
+
     when(resultSet.getTimestamp(BillingDataMetaDataFields.STARTTIME.getFieldName(), utils.getDefaultCalendar()))
         .thenAnswer((Answer<Timestamp>) invocation -> {
           calendar[0] = calendar[0] + 3600000;

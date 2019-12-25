@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields.SUM;
+
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -7,6 +9,7 @@ import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
+import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.billing.QLIdleCostData.QLIdleCostDataBuilder;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
@@ -66,16 +69,34 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
   protected QLIdleCostTrendStats getData(
       @NotNull String accountId, List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
     QLIdleCostData idleCostData = getIdleCostData(accountId, aggregateFunction, filters);
-    // Todo: get unallocated resource cost here
     return QLIdleCostTrendStats.builder()
         .totalIdleCost(getTotalIdleCostStats(idleCostData, filters))
         .cpuIdleCost(getCpuIdleCostStats(idleCostData))
         .memoryIdleCost(getMemoryIdleCostStats(idleCostData))
-        .unallocatedCost(getUnallocatedCostStats(BigDecimal.TEN, idleCostData))
+        .unallocatedCost(
+            getUnallocatedCostStats(getUnallocatedCostData(accountId, aggregateFunction, filters), idleCostData))
         .build();
   }
 
-  protected QLIdleCostData getIdleCostData(
+  private BigDecimal getUnallocatedCostData(
+      String accountId, List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
+    BillingDataQueryMetadata queryData = billingDataQueryBuilder.formTrendStatsQuery(
+        accountId, aggregateFunction, billingDataQueryBuilder.prepareFiltersForUnallocatedCostData(filters));
+    String query = queryData.getQuery();
+    logger.info("Unallocated cost data query {}", query);
+    ResultSet resultSet = null;
+    try (Connection connection = timeScaleDBService.getDBConnection();
+         Statement statement = connection.createStatement()) {
+      resultSet = statement.executeQuery(query);
+      return fetchUnallocatedCostStats(queryData, resultSet);
+    } catch (SQLException e) {
+      throw new InvalidRequestException("UnallocatedCost - IdleCostDataFetcher Exception ", e);
+    } finally {
+      DBUtils.close(resultSet);
+    }
+  }
+
+  private QLIdleCostData getIdleCostData(
       String accountId, List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
     BillingDataQueryMetadata queryData =
         billingDataQueryBuilder.formTrendStatsQuery(accountId, aggregateFunction, filters);
@@ -91,6 +112,19 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
     } finally {
       DBUtils.close(resultSet);
     }
+  }
+
+  private BigDecimal fetchUnallocatedCostStats(BillingDataQueryMetadata queryData, ResultSet resultSet)
+      throws SQLException {
+    BigDecimal totalCost = BigDecimal.ZERO;
+    while (null != resultSet && resultSet.next()) {
+      for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
+        if (field == SUM) {
+          totalCost = resultSet.getBigDecimal(field.getFieldName());
+        }
+      }
+    }
+    return totalCost;
   }
 
   private QLIdleCostData fetchIdleCostStats(BillingDataQueryMetadata queryData, ResultSet resultSet)
