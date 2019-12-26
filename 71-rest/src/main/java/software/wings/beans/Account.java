@@ -41,7 +41,7 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@Indexes(@Index(options = @IndexOptions(name = "next_iteration_license_info", unique = true),
+@Indexes(@Index(options = @IndexOptions(name = "next_iteration_license_info2"),
     fields = { @Field("licenseExpiryCheckIteration")
                , @Field("encryptedLicenseInfo") }))
 
