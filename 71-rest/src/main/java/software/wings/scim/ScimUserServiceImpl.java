@@ -196,6 +196,12 @@ public class ScimUserServiceImpl implements ScimUserService {
       UpdateOperations<User> updateOperation = wingsPersistence.createUpdateOperations(User.class);
       updateOperation.set(UserKeys.name, patchOperation.getValue(String.class));
       wingsPersistence.update(user, updateOperation);
+    } else if ("active".equals(patchOperation.getPath())) {
+      UpdateOperations<User> updateOperation = wingsPersistence.createUpdateOperations(User.class);
+      if (patchOperation.getValue(Boolean.class) != null) {
+        updateOperation.set(UserKeys.disabled, !(patchOperation.getValue(Boolean.class)));
+      }
+      wingsPersistence.update(user, updateOperation);
     } else {
       // Not supporting any other updates as of now.
       logger.error("SCIM: Unexpected patch operation received: accountId: {}, userId: {}, patchOperation: {}",
