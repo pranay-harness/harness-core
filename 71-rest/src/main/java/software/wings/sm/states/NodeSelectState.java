@@ -235,7 +235,7 @@ public abstract class NodeSelectState extends State {
       List<ServiceInstance> hostExclusionList, InfrastructureMapping infraMapping, int totalAvailableInstances,
       ExecutionContext context) {
     if (totalAvailableInstances == 0) {
-      return "The service infrastructure [" + infraMapping.getName() + "] has no instances available.";
+      return "The service infrastructure [" + infraMapping.getDisplayName() + "] has no instances available.";
     }
 
     String errorMessage = null;
