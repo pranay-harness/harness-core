@@ -94,6 +94,7 @@ import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
+import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
@@ -150,6 +151,7 @@ public class HelmDeployState extends State {
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Inject private GitConfigHelperService gitConfigHelperService;
+  @Inject private GitFileConfigHelperService gitFileConfigHelperService;
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
   @Inject private HelmChartConfigHelperService helmChartConfigHelperService;
@@ -652,9 +654,11 @@ public class HelmDeployState extends State {
     if (appManifest != null) {
       switch (appManifest.getStoreType()) {
         case HelmSourceRepo:
-          GitFileConfig sourceRepoGitFileConfig = appManifest.getGitFileConfig();
+          GitFileConfig sourceRepoGitFileConfig =
+              gitFileConfigHelperService.renderGitFileConfig(context, appManifest.getGitFileConfig());
           GitConfig sourceRepoGitConfig =
               settingsService.fetchGitConfigFromConnectorId(sourceRepoGitFileConfig.getConnectorId());
+          gitConfigHelperService.renderGitConfig(context, sourceRepoGitConfig);
           repoConfig = K8sDelegateManifestConfig.builder()
                            .gitFileConfig(sourceRepoGitFileConfig)
                            .gitConfig(sourceRepoGitConfig)
