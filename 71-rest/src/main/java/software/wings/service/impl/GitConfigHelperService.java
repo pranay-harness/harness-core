@@ -29,6 +29,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.ExecutionContext;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -121,6 +122,24 @@ public class GitConfigHelperService {
         managerDecryptionService.decrypt(attributeValue, encryptionDetails);
         gitConfig.setSshSettingAttribute(settingAttribute);
       }
+    }
+  }
+
+  public void renderGitConfig(ExecutionContext context, GitConfig gitConfig) {
+    if (context == null) {
+      return;
+    }
+
+    if (gitConfig.getBranch() != null) {
+      gitConfig.setBranch(context.renderExpression(gitConfig.getBranch()).trim());
+    }
+
+    if (gitConfig.getReference() != null) {
+      gitConfig.setReference(context.renderExpression(gitConfig.getReference().trim()));
+    }
+
+    if (gitConfig.getRepoUrl() != null) {
+      gitConfig.setRepoUrl(context.renderExpression(gitConfig.getRepoUrl().trim()));
     }
   }
 }

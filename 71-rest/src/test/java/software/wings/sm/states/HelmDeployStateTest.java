@@ -87,6 +87,9 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.TaskType;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
@@ -108,6 +111,7 @@ import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
+import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
@@ -176,6 +180,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private HelmHelper helmHelper;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private GitFileConfigHelperService gitFileConfigHelperService;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("helmRollbackState");
@@ -300,6 +305,11 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecute() throws InterruptedException {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder()
+            .storeType(StoreType.HelmSourceRepo)
+            .gitFileConfig(GitFileConfig.builder().connectorId(GIT_CONNECTOR_ID).build())
+            .build();
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
         .thenReturn(HelmChartSpecification.builder()
                         .chartName(CHART_NAME)
@@ -307,6 +317,11 @@ public class HelmDeployStateTest extends WingsBaseTest {
                         .chartVersion(CHART_VERSION)
                         .build());
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
+    when(applicationManifestService.getAppManifest(APP_ID, null, SERVICE_ID, AppManifestKind.K8S_MANIFEST))
+        .thenReturn(applicationManifest);
+    when(gitFileConfigHelperService.renderGitFileConfig(any(), any()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(1, GitFileConfig.class));
+    when(settingsService.fetchGitConfigFromConnectorId(GIT_CONNECTOR_ID)).thenReturn(GitConfig.builder().build());
     ExecutionResponse executionResponse = helmDeployState.execute(context);
     assertThat(executionResponse.isAsync()).isEqualTo(true);
     assertThat(executionResponse.getCorrelationIds()).contains(ACTIVITY_ID);
@@ -332,6 +347,8 @@ public class HelmDeployStateTest extends WingsBaseTest {
     assertThat(helmInstallCommandRequest.getCommandFlags()).isNull();
 
     verify(delegateService).executeTask(any());
+    verify(gitConfigHelperService, times(1)).renderGitConfig(any(), any());
+    verify(gitFileConfigHelperService, times(1)).renderGitFileConfig(any(), any());
   }
 
   @Test(expected = InvalidRequestException.class)
