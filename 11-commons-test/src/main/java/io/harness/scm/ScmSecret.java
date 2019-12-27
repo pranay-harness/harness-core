@@ -7,6 +7,7 @@ import com.bettercloud.vault.response.AuthResponse;
 import com.bettercloud.vault.response.LogicalResponse;
 import io.harness.exception.ScmSecretException;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
 
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.util.Properties;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
+@Slf4j
 public class ScmSecret {
   public static final String passphrase = System.getenv("HARNESS_GENERATION_PASSPHRASE");
 
@@ -43,8 +45,9 @@ public class ScmSecret {
 
       return new Vault(config);
     } catch (VaultException e) {
-      throw new ScmSecretException(e);
+      logger.error("Unable to connect to Vault", e);
     }
+    return null;
   }
 
   public ScmSecret() {
