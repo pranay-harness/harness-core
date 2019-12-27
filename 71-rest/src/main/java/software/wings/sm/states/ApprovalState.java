@@ -970,6 +970,14 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     }
   }
 
+  public static String fetchAndTrimSweepingOutputName(Map<String, Object> propertyMap) {
+    String publishedVarName = propertyMap.getOrDefault(ApprovalStateKeys.sweepingOutputName, "").toString().trim();
+    if (isNotEmpty(publishedVarName)) {
+      propertyMap.put(ApprovalStateKeys.sweepingOutputName, publishedVarName);
+    }
+    return publishedVarName;
+  }
+
   private static String getStatusMessage(ExecutionStatus status) {
     switch (status) {
       case SUCCESS:
