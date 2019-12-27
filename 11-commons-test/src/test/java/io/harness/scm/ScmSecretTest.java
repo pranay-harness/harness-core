@@ -6,6 +6,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
 import com.google.inject.Inject;
 
@@ -39,9 +40,9 @@ public class ScmSecretTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testVault() throws VaultException {
-    if (!scmSecret.isInitialized()) {
-      return;
-    }
+    assumeThat(scmSecret.isInitialized()).isTrue();
+    assumeThat(scmSecret.getVault()).isNotNull();
+
     assertThat(scmSecret.obtain("/datagen/!!!test", "do-not-delete")).isEqualTo("hello");
   }
 
@@ -49,9 +50,8 @@ public class ScmSecretTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testDecrypt() {
-    if (!scmSecret.isInitialized()) {
-      return;
-    }
+    assumeThat(scmSecret.isInitialized()).isTrue();
+
     assertThat(scmSecret.decryptToString(new SecretName("aws_playground_access_key"))).isNotEmpty();
   }
 
@@ -59,9 +59,7 @@ public class ScmSecretTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testEncoding() {
-    if (!scmSecret.isInitialized()) {
-      return;
-    }
+    assumeThat(scmSecret.isInitialized()).isTrue();
 
     String text = "udo6OkOATXXGFZR/J0RCUDrtib6njyGbZtCv2c+v";
 
@@ -85,11 +83,9 @@ public class ScmSecretTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(StressTests.class)
   public void rebuildSecretProperties() throws URISyntaxException, IOException {
-    assertThatCode(() -> {
-      if (!scmSecret.isInitialized()) {
-        return;
-      }
+    assumeThat(scmSecret.isInitialized()).isTrue();
 
+    assertThatCode(() -> {
       final Integer length = scmSecret.getSecrets()
                                  .keySet()
                                  .stream()
