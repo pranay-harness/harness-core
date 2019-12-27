@@ -104,23 +104,28 @@ public class WebhookParameters {
     if (webhookSource == null || eventType == null) {
       return new ArrayList<>();
     }
-    if (WebhookSource.BITBUCKET.equals(webhookSource)) {
-      if (WebhookEventType.PULL_REQUEST.equals(eventType)) {
-        return bitBucketPullRequestExpressions();
-      }
-    } else if (WebhookSource.GITHUB.equals(webhookSource)) {
-      if (WebhookEventType.PULL_REQUEST.equals(eventType)) {
-        return gitHubPullRequestExpressions();
-      } else if (WebhookEventType.PUSH.equals(eventType)) {
-        return gitHubPushEventExpressions();
-      }
-    } else if (WebhookSource.GITLAB.equals(webhookSource)) {
-      if (WebhookEventType.PUSH.equals(eventType)) {
-        return gitLabPushEventExpressions();
-      } else if (WebhookEventType.PULL_REQUEST.equals(eventType)) {
+    switch (webhookSource) {
+      case BITBUCKET:
+        if (eventType == WebhookEventType.PULL_REQUEST) {
+          return bitBucketPullRequestExpressions();
+        }
         return new ArrayList<>();
-      }
+      case GITHUB:
+        switch (eventType) {
+          case PULL_REQUEST:
+            return gitHubPullRequestExpressions();
+          case PUSH:
+            return gitHubPushEventExpressions();
+          default:
+            return new ArrayList<>();
+        }
+      case GITLAB:
+        if (eventType == WebhookEventType.PUSH) {
+          return gitLabPushEventExpressions();
+        }
+        return new ArrayList<>();
+      default:
+        return new ArrayList<>();
     }
-    return new ArrayList<>();
   }
 }
