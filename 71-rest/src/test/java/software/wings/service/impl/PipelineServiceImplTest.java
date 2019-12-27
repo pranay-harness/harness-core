@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.POOJA;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,6 +59,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
+import software.wings.sm.states.ApprovalState.ApprovalStateKeys;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -304,15 +306,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                     .build()))
             .build();
 
-    PowerMockito.doReturn(ACCOUNT_ID).when(mockAppService).getAccountIdByAppId(APP_ID);
-    Query mockQuery = PowerMockito.mock(Query.class);
-    PowerMockito.doReturn(mockChecker()).when(mockLimitCheckerFactory).getInstance(Mockito.any());
-    PowerMockito.doReturn(null).when(mockWingsPersistence).save(any(Pipeline.class));
-    PowerMockito.doReturn(mockQuery).when(mockWingsPersistence).createQuery(Pipeline.class);
-    PowerMockito.doReturn(mockQuery).when(mockQuery).filter(anyString(), any());
-    PowerMockito.doReturn(mockQuery).when(mockQuery).filter(anyString(), any());
-    PowerMockito.doReturn(Collections.emptyMap()).when(mockWorkflowService).stencilMap(anyString());
-    PowerMockito.whenNew(StateMachine.class).withAnyArguments().thenReturn(null);
+    setupQueryMocks();
     pipelineServiceImpl.save(pipeline);
 
     pipeline.getPipelineStages().get(0).getPipelineStageElements().get(0).setProperties(
@@ -362,5 +356,51 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     Pipeline pipeline1 = Pipeline.builder().pipelineStages(Arrays.asList(pipelineStage1, pipelineStage)).build();
 
     pipelineServiceImpl.checkUniquePipelineStepName(pipeline1);
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldNotAllowSamePublishedVariable() throws Exception {
+    Map<String, Object> approvalProperties = new HashMap<>();
+    approvalProperties.put(ApprovalStateKeys.sweepingOutputName, "Info");
+    Pipeline pipeline =
+        Pipeline.builder()
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .name("test")
+            .pipelineStages(asList(PipelineStage.builder()
+                                       .pipelineStageElements(asList(PipelineStageElement.builder()
+                                                                         .name("approval_state_1")
+                                                                         .type(StateType.APPROVAL.name())
+                                                                         .properties(approvalProperties)
+                                                                         .build()))
+                                       .build(),
+                PipelineStage.builder()
+                    .pipelineStageElements(asList(PipelineStageElement.builder()
+                                                      .name("approval_state_2")
+                                                      .type(StateType.APPROVAL.name())
+                                                      .properties(approvalProperties)
+                                                      .build()))
+                    .build()))
+            .build();
+
+    setupQueryMocks();
+
+    assertThatThrownBy(() -> pipelineServiceImpl.save(pipeline))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("You cannot use the same Publish Variable Name");
+  }
+
+  private void setupQueryMocks() throws Exception {
+    PowerMockito.doReturn(ACCOUNT_ID).when(mockAppService).getAccountIdByAppId(APP_ID);
+    Query mockQuery = PowerMockito.mock(Query.class);
+    PowerMockito.doReturn(mockChecker()).when(mockLimitCheckerFactory).getInstance(Mockito.any());
+    PowerMockito.doReturn(null).when(mockWingsPersistence).save(any(Pipeline.class));
+    PowerMockito.doReturn(mockQuery).when(mockWingsPersistence).createQuery(Pipeline.class);
+    PowerMockito.doReturn(mockQuery).when(mockQuery).filter(anyString(), any());
+    PowerMockito.doReturn(mockQuery).when(mockQuery).filter(anyString(), any());
+    PowerMockito.doReturn(Collections.emptyMap()).when(mockWorkflowService).stencilMap(anyString());
+    PowerMockito.whenNew(StateMachine.class).withAnyArguments().thenReturn(null);
   }
 }

@@ -17,6 +17,7 @@ import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.lang.String.join;
+import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -34,6 +35,7 @@ import static software.wings.beans.EntityType.SPLUNK_CONFIGID;
 import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.expression.ManagerExpressionEvaluator.getName;
 import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
+import static software.wings.service.impl.pipeline.PipelineServiceValidator.checkUniqueApprovalPublishedVariable;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
 
@@ -107,12 +109,12 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.states.ApprovalState;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -205,10 +207,11 @@ public class PipelineServiceImpl implements PipelineService {
     notNullCheck("Pipeline not saved", savedPipeline, USER);
 
     Set<String> keywords = pipeline.generateKeywords();
+    checkUniquePipelineStepName(pipeline);
+    checkUniqueApprovalPublishedVariable(pipeline);
     ensurePipelineStageUuidAndParallelIndex(pipeline);
 
     validatePipeline(pipeline, keywords);
-    checkUniquePipelineStepName(pipeline);
 
     // TODO: remove this when all the needed verification is done from validatePipeline
     new StateMachine(pipeline, workflowService.stencilMap(pipeline.getAppId()));
@@ -996,7 +999,7 @@ public class PipelineServiceImpl implements PipelineService {
         }
         String relatedFields = String.valueOf(var.getMetadata().get(Variable.RELATED_FIELD));
         Optional<String> relatedField =
-            Arrays.stream(relatedFields.split(",")).filter(t -> t.equals(originalVarName)).findFirst();
+            stream(relatedFields.split(",")).filter(t -> t.equals(originalVarName)).findFirst();
         if (relatedField.isPresent()) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
           if (!matchesVariablePattern(relatedVarValue)) {
@@ -1149,6 +1152,7 @@ public class PipelineServiceImpl implements PipelineService {
     validatePipelineNameForDuplicates(pipeline);
     ensurePipelineStageUuidAndParallelIndex(pipeline);
     checkUniquePipelineStepName(pipeline);
+    checkUniqueApprovalPublishedVariable(pipeline);
 
     String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
     pipeline.setAccountId(accountId);
@@ -1286,8 +1290,7 @@ public class PipelineServiceImpl implements PipelineService {
           finalDeploymentMetadata.setArtifactVariables(new ArrayList<>());
 
           // Remove ARTIFACT_SERVICE from includeList.
-          Stream<Include> includeStream =
-              isEmpty(includeList) ? Arrays.stream(Include.values()) : Arrays.stream(includeList);
+          Stream<Include> includeStream = isEmpty(includeList) ? stream(Include.values()) : stream(includeList);
           includeList =
               includeStream.filter(include -> !Include.ARTIFACT_SERVICE.equals(include)).toArray(Include[] ::new);
         }
@@ -1375,19 +1378,15 @@ public class PipelineServiceImpl implements PipelineService {
       return;
     }
     Set<String> pipelineStageNameSet = new HashSet<>();
-    for (PipelineStage pipelineStage : pipelineStages) {
-      if (pipelineStage == null) {
-        continue;
-      }
-      PipelineStageElement stageElement = pipelineStage.getPipelineStageElements().get(0);
-      if (stageElement == null) {
-        continue;
-      }
-      if (pipelineStageNameSet.contains(stageElement.getName())) {
-        throw new InvalidRequestException(String.format("Duplicate step name %s.", stageElement.getName()), USER);
-      }
-      pipelineStageNameSet.add(stageElement.getName());
-    }
+    pipelineStages.stream()
+        .map(pipelineStage -> pipelineStage.getPipelineStageElements().get(0))
+        .filter(Objects::nonNull)
+        .forEach(stageElement -> {
+          if (pipelineStageNameSet.contains(stageElement.getName())) {
+            throw new InvalidRequestException(format("Duplicate step name %s.", stageElement.getName()), USER);
+          }
+          pipelineStageNameSet.add(stageElement.getName());
+        });
   }
 
   private void validatePipeline(Pipeline pipeline, Set<String> keywords) {
@@ -1400,7 +1399,7 @@ public class PipelineServiceImpl implements PipelineService {
         PipelineStage pipelineStage = pipelineStages.get(i);
         for (PipelineStageElement stageElement : pipelineStage.getPipelineStageElements()) {
           if (!isValidPipelineStageName(stageElement.getName())) {
-            throw new InvalidArgumentsException("Pipeline stage name can only have a-z, A-Z, 0-9, -, (, ) and _", USER);
+            throw new InvalidArgumentsException("Pipeline step name can only have a-z, A-Z, 0-9, -, (, ) and _", USER);
           }
           if (APPROVAL.name().equals(stageElement.getType())) {
             ApprovalState.preValidatePropertyMap(stageElement.getProperties());
