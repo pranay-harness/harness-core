@@ -10,5 +10,5 @@ public interface FeatureFlagService {
 
   boolean isEnabledReloadCache(FeatureName featureName, String accountId);
 
-  void enableAccount(FeatureName infraMappingRefactor, String accountId);
+  void enableAccount(FeatureName featureName, String accountId);
 }

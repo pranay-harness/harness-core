@@ -8,6 +8,7 @@ import static io.harness.generator.SettingGenerator.Settings.GCP_PLAYGROUND;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
 import static io.harness.generator.SettingGenerator.Settings.SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTOR;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.SSH_DEPLOY_HOST;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.beans.InfrastructureType.AWS_AMI;
@@ -62,6 +63,7 @@ import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
 import software.wings.infra.PcfInfraStructure;
+import software.wings.infra.PhysicalInfra;
 import software.wings.infra.PhysicalInfraWinrm;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.EnvironmentService;
@@ -123,6 +125,7 @@ public class InfrastructureDefinitionGenerator {
     TERRAFORM_AWS_SSH_TEST,
     AWS_SSH_FUNCTIONAL_TEST,
     PHYSICAL_WINRM_TEST,
+    PHYSICAL_SSH_TEST,
     AZURE_WINRM_TEST,
     ECS_EC2_TEST,
     ECS_FARGATE_TEST,
@@ -146,6 +149,8 @@ public class InfrastructureDefinitionGenerator {
         return ensureTerraformAwsSshTest(seed, owners);
       case PHYSICAL_WINRM_TEST:
         return ensurePhysicalWinRMTest(seed, owners);
+      case PHYSICAL_SSH_TEST:
+        return ensurePhysicalSSHTest(seed, owners);
       case AZURE_WINRM_TEST:
         return ensureAzureWinRMTest(seed, owners);
       case ECS_EC2_TEST:
@@ -347,6 +352,41 @@ public class InfrastructureDefinitionGenerator {
             .deploymentType(DeploymentType.WINRM)
             .cloudProviderType(CloudProviderType.PHYSICAL_DATA_CENTER)
             .scopedToServices(Collections.singletonList(service.getUuid()))
+            .envId(environment.getUuid())
+            .appId(owners.obtainApplication().getUuid())
+            .build();
+
+    return ensureInfrastructureDefinition(infrastructureDefinition);
+  }
+
+  private InfrastructureDefinition ensurePhysicalSSHTest(Randomizer.Seed seed, Owners owners) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
+      owners.add(environment);
+    }
+
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
+      owners.add(service);
+    }
+
+    final SettingAttribute physicalInfraSettingAttr =
+        settingGenerator.ensurePredefined(seed, owners, PHYSICAL_DATA_CENTER);
+    final SettingAttribute hostConnectionAttribute =
+        settingGenerator.ensurePredefined(seed, owners, DEV_TEST_CONNECTOR);
+
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .name("SSH - physical-infra workflow test")
+            .infrastructure(PhysicalInfra.builder()
+                                .cloudProviderId(physicalInfraSettingAttr.getUuid())
+                                .hostConnectionAttrs(hostConnectionAttribute.getUuid())
+                                .hostNames(SSH_DEPLOY_HOST)
+                                .build())
+            .deploymentType(DeploymentType.SSH)
+            .cloudProviderType(CloudProviderType.PHYSICAL_DATA_CENTER)
             .envId(environment.getUuid())
             .appId(owners.obtainApplication().getUuid())
             .build();
