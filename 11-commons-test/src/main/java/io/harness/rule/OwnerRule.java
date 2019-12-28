@@ -7,11 +7,10 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.NoopStatement;
 import io.harness.exception.CategoryConfigException;
+import io.harness.rule.DevInfo.DevInfoBuilder;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.Issue;
@@ -90,7 +89,6 @@ public class OwnerRule implements TestRule {
   public static final String SOWMYA = "sowmya.k";
   public static final String SRINIVAS = "srinivas";
   public static final String SRIRAM = "sriram";
-  public static final String SUNIL = "sunil";
   public static final String SATYAM = "satyam";
   public static final String UJJAWAL = "ujjawal.prasad";
   public static final String UTKARSH = "utkarsh.gupta";
@@ -103,13 +101,8 @@ public class OwnerRule implements TestRule {
   public static final String NANDAN = "nandan.chandrashekar";
   @Deprecated public static final String UNKNOWN = "unknown";
 
-  @Value
-  @Builder
-  public static class DevInfo {
-    private String email;
-    private String slack;
-    private String jira;
-    private String team;
+  private static DevInfoBuilder defaultDevInfo(String user) {
+    return DevInfo.builder().email(user + "@harness.io").jira(user);
   }
 
   private static final Map<String, DevInfo> active =
@@ -119,28 +112,21 @@ public class OwnerRule implements TestRule {
           .put(ADWAIT, DevInfo.builder().email("adwait.bhandare@harness.io").slack("U8PL7JRMG").build())
           .put(AMAN, DevInfo.builder().email("aman.singh@harness.io").slack("UDJG47CHF").build())
           .put(ANKIT, DevInfo.builder().email("ankit.singhal@harness.io").slack("UF76W0NN5").build())
-          .put(ANSHUL,
-              DevInfo.builder()
-                  .email("anshul@harness.io")
-                  .slack("UASUA3E65")
-                  .jira("anshul")
-                  .team(CONTINUOUS_DEPLOYMENT_PLATFORM)
-                  .build())
+          .put(ANSHUL, defaultDevInfo(ANSHUL).slack("UASUA3E65").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(ANUBHAW, DevInfo.builder().email("anubhaw@harness.io").slack("U0Z1U0HNW").build())
           .put(AVMOHAN, DevInfo.builder().email("abhijith.mohan@harness.io").slack("UK72UTBJR").build())
           .put(BRETT, DevInfo.builder().email("brett@harness.io").slack("U40VBHCGH").build())
           .put(DEEPAK, DevInfo.builder().email("deepak.patankar@harness.io").slack("UK9EKBKQS").build())
           .put(DINESH, DevInfo.builder().email("dinesh.garg@harness.io").slack("UQ0DMQG11").build())
           .put(GARVIT, DevInfo.builder().email("garvit.pahal@harness.io").slack("UHH98EXDK").build())
-          .put(GEORGE,
-              DevInfo.builder().email("george@harness.io").slack("U88CA877V").jira("george").team(PLATFORM).build())
+          .put(GEORGE, defaultDevInfo(GEORGE).slack("U88CA877V").team(PLATFORM).build())
           .put(HANTANG, DevInfo.builder().email("hannah.tang@harness.io").slack("UK8AQJSCS").build())
           .put(HARSH, DevInfo.builder().email("harsh.jain@harness.io").slack("UJ1CDM3FY").build())
           .put(HITESH, DevInfo.builder().email("hitesh.aringa@harness.io").slack("UK41C9QJH").build())
           .put(JUHI, DevInfo.builder().email("juhi.agrawal@harness.io").slack("UL1KX4K1S").build())
           .put(KAMAL, DevInfo.builder().email("kamal.joshi@harness.io").slack("UKFQ1PQBH").build())
           .put(MEENAKSHI, DevInfo.builder().email("meenakshi.raikwar@harness.io").slack("UKP2AEUNA").build())
-          .put(NATARAJA, DevInfo.builder().email("nataraja@harness.io").slack("UDQAS9J5C").build())
+          .put(NATARAJA, defaultDevInfo(NATARAJA).slack("UDQAS9J5C").team(PLATFORM).build())
           .put(PARNIAN, DevInfo.builder().email("parnian@harness.io").slack("U89A5MLQK").build())
           .put(POOJA, DevInfo.builder().email("pooja@harness.io").slack("UDDA9L0D6").build())
           .put(PRANJAL, DevInfo.builder().email("pranjal@harness.io").slack("UBV049Q5B").build())
@@ -159,7 +145,6 @@ public class OwnerRule implements TestRule {
           .put(SOWMYA, DevInfo.builder().email("sowmya.k@harness.io").slack("UHM19HBKM").build())
           .put(SRINIVAS, DevInfo.builder().email("srinivas@harness.io").slack("U4QC23961").build())
           .put(SRIRAM, DevInfo.builder().email("sriram@harness.io").slack("U5L475PK5").build())
-          .put(SUNIL, DevInfo.builder().email("sunil@harness.io").build())
           .put(UJJAWAL, DevInfo.builder().email("ujjawal.prasad@harness.io").slack("UKLSV01DW").build())
           .put(UTKARSH, DevInfo.builder().email("utkarsh.gupta@harness.io").slack("UKGF0UL58").build())
           .put(VAIBHAV_SI, DevInfo.builder().email("vaibhav.si@harness.io").slack("UCK76T36U").build())
@@ -241,27 +226,31 @@ public class OwnerRule implements TestRule {
     }
 
     final DevInfo devInfo = active.get(developer);
-    if (devInfo == null || devInfo.jira == null || devInfo.team == null) {
+    if (devInfo == null || devInfo.getJira() == null || devInfo.getTeam() == null) {
       return;
     }
 
     try {
       JiraClient jira = getJira();
 
-      String jql = format(
-          "type = Bug AND assignee = \"%s\" AND summary ~ \"%s\" AND summary ~ \"needs fixing\"", devInfo.jira, test);
+      String jql = format("type = Bug"
+              + " AND statusCategory != Done"
+              + " AND assignee = \"%s\""
+              + " AND summary ~ \"%s\""
+              + " AND summary ~ \"needs fixing\"",
+          devInfo.getJira(), test);
       Issue.SearchResult searchResult = jira.searchIssues(jql, 1);
       if (searchResult.total == 0) {
-        String[] split = devInfo.team.split(" ");
+        String[] split = devInfo.getTeam().split(" ");
 
         Issue.FluentCreate create = jira.createIssue(split[0], "Bug")
-                                        .field("assignee", devInfo.jira)
+                                        .field("assignee", devInfo.getJira())
                                         .field("summary", test + " needs fixing")
                                         .field("priority", "P1");
 
         if (split.length > 1) {
           List<String> list = new ArrayList();
-          list.add(devInfo.team);
+          list.add(devInfo.getTeam());
           create.field("components", list);
         }
 

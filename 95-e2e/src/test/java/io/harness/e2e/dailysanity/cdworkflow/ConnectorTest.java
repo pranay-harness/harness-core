@@ -1,6 +1,6 @@
 package io.harness.e2e.dailysanity.cdworkflow;
 
-import static io.harness.rule.OwnerRule.SUNIL;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
@@ -31,7 +31,7 @@ public class ConnectorTest extends AbstractE2ETest {
   private static String connectorId;
 
   @Test
-  @Owner(developers = SUNIL)
+  @Owner(developers = NATARAJA)
   @Category(E2ETests.class)
   public void TC0_listAllConnectors() {
     JsonPath connectors = SettingsUtils.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
@@ -39,7 +39,7 @@ public class ConnectorTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(developers = SUNIL)
+  @Owner(developers = NATARAJA)
   @Category(E2ETests.class)
   public void TC1_createNexusConnector() {
     String NEXUS_URL = "https://nexus2.harness.io";
@@ -71,7 +71,7 @@ public class ConnectorTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(developers = SUNIL)
+  @Owner(developers = NATARAJA)
   @Category(E2ETests.class)
   public void TC2_deleteConnector() {
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);

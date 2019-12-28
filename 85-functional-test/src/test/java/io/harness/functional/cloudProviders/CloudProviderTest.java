@@ -1,7 +1,7 @@
 package io.harness.functional.cloudProviders;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static io.harness.rule.OwnerRule.SUNIL;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -47,7 +47,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   private static final BooleanMatcher booleanMatcher = new BooleanMatcher();
 
   @Test
-  @Owner(developers = SUNIL)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void listCloudProviders() {
     JsonPath cloudProviders = SettingsUtils.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
@@ -55,7 +55,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = SUNIL, intermittent = true)
+  @Owner(developers = NATARAJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void runAWSCloudProviderCRUDTests() {
     retry.executeWithRetry(this ::createAWSCloudProvider, booleanMatcher, true);
