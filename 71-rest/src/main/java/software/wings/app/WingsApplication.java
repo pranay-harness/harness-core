@@ -158,6 +158,7 @@ import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.event.DeploymentTimeSeriesEventListener;
+import software.wings.service.impl.infrastructuredefinition.InfrastructureDefinitionServiceImpl;
 import software.wings.service.impl.instance.DeploymentEventListener;
 import software.wings.service.impl.instance.InstanceEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
@@ -166,6 +167,7 @@ import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.YamlPushServiceImpl;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MigrationService;
@@ -618,11 +620,15 @@ public class WingsApplication extends Application<MainConfiguration> {
     auditServiceHelper.getEntityCrudSubject().register(auditService);
 
     ClusterRecordHandler clusterRecordHandler = injector.getInstance(Key.get(ClusterRecordHandler.class));
+    SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
+    settingsService.getSubject().register(clusterRecordHandler);
+    InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
+        (InfrastructureDefinitionServiceImpl) injector.getInstance(Key.get(InfrastructureDefinitionService.class));
+    infrastructureDefinitionService.getSubject().register(clusterRecordHandler);
+
     InfrastructureMappingServiceImpl infrastructureMappingService =
         (InfrastructureMappingServiceImpl) injector.getInstance(Key.get(InfrastructureMappingService.class));
     infrastructureMappingService.getSubject().register(clusterRecordHandler);
-    SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
-    settingsService.getSubject().register(clusterRecordHandler);
 
     CCMPerpetualTaskHandler ccmPerpetualTaskHandler = injector.getInstance(Key.get(CCMPerpetualTaskHandler.class));
     ClusterRecordServiceImpl clusterRecordService =

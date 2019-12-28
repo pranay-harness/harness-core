@@ -61,6 +61,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     Map<String, List<CEError>> taskErrorMap = new HashMap<>();
     for (String taskId : perpetualTaskIds) {
       PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
+      taskErrorMap.put(perpetualTaskRecord.getUuid(), new ArrayList<>());
       if (!hasRecentHeartbeat(perpetualTaskRecord.getLastHeartbeat())) {
         List<CEError> errors = taskErrorMap.get(perpetualTaskRecord.getUuid());
         errors.add(CEError.PERPETUAL_TASK_MISSING_HEARTBEAT);

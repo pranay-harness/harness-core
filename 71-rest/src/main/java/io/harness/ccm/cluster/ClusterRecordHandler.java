@@ -1,6 +1,6 @@
 package io.harness.ccm.cluster;
 
-import static java.util.Objects.isNull;
+import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -11,12 +11,15 @@ import io.harness.ccm.cluster.entities.ClusterRecord;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
-import software.wings.service.impl.InfrastructureMappingServiceObserver;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.SettingAttributeObserver;
+import software.wings.service.intfc.InfrastructureDefinitionServiceObserver;
+import software.wings.service.intfc.InfrastructureMappingServiceObserver;
 
 @Slf4j
 @Singleton
-public class ClusterRecordHandler implements SettingAttributeObserver, InfrastructureMappingServiceObserver {
+public class ClusterRecordHandler
+    implements SettingAttributeObserver, InfrastructureDefinitionServiceObserver, InfrastructureMappingServiceObserver {
   private CCMSettingService ccmSettingService;
   private ClusterRecordService clusterRecordService;
   private CCMPerpetualTaskManager ccmPerpetualTaskManager;
@@ -30,42 +33,35 @@ public class ClusterRecordHandler implements SettingAttributeObserver, Infrastru
   }
 
   @Override
-  public void onSaved(InfrastructureMapping infrastructureMapping) {
-    upsertClusterRecord(infrastructureMapping);
-  }
-
-  @Override
-  public void onUpdated(InfrastructureMapping infrastructureMapping) {
-    upsertClusterRecord(infrastructureMapping);
-  }
-
-  private ClusterRecord upsertClusterRecord(InfrastructureMapping infrastructureMapping) {
-    ClusterRecord clusterRecord = ClusterRecordUtils.from(infrastructureMapping);
-    if (isNull(clusterRecord)) {
-      logger.info("No Cluster can be derived from Infrastructure Mapping with id={}", infrastructureMapping.getUuid());
-    } else {
-      clusterRecordService.upsert(clusterRecord);
+  public void onSaved(SettingAttribute cloudProvider) {
+    if (KUBERNETES_CLUSTER.name().equals(cloudProvider.getValue().getType())) {
+      upsertClusterRecord(cloudProvider);
     }
-    return clusterRecord;
   }
 
   @Override
-  public void onUpdated(SettingAttribute prevSettingAttribute, SettingAttribute currSettingAttribute) {
+  public void onUpdated(SettingAttribute prevCloudProvider, SettingAttribute currCloudProvider) {
+    upsertClusterRecord(currCloudProvider);
     // compare previous and current Cloud Providers
-    boolean prevCCMEnabled = ccmSettingService.isCloudCostEnabled(prevSettingAttribute);
-    boolean currCCMEnabled = ccmSettingService.isCloudCostEnabled(currSettingAttribute);
+    boolean prevCCMEnabled = ccmSettingService.isCloudCostEnabled(prevCloudProvider);
+    boolean currCCMEnabled = ccmSettingService.isCloudCostEnabled(currCloudProvider);
     // if the Cloud Provider has ccm enabled
-    if (prevCCMEnabled == false && currCCMEnabled == true) {
-      ccmPerpetualTaskManager.createPerpetualTasks(currSettingAttribute);
+    if (!prevCCMEnabled && currCCMEnabled) {
+      ccmPerpetualTaskManager.createPerpetualTasks(currCloudProvider);
     }
     // if the Cloud Provider setting changed
-    if (prevCCMEnabled == true && currCCMEnabled == true) {
-      ccmPerpetualTaskManager.resetPerpetualTasks(currSettingAttribute);
+    if (prevCCMEnabled && currCCMEnabled) {
+      ccmPerpetualTaskManager.resetPerpetualTasks(currCloudProvider);
     }
     // if the Cloud provider has ccm disabled
-    if (prevCCMEnabled == true && currCCMEnabled == false) {
-      ccmPerpetualTaskManager.deletePerpetualTasks(currSettingAttribute);
+    if (prevCCMEnabled && !currCCMEnabled) {
+      ccmPerpetualTaskManager.deletePerpetualTasks(currCloudProvider);
     }
+  }
+
+  private void upsertClusterRecord(SettingAttribute cloudProvider) {
+    ClusterRecord clusterRecord = clusterRecordService.from(cloudProvider);
+    clusterRecordService.upsert(clusterRecord);
   }
 
   @Override
@@ -75,5 +71,44 @@ public class ClusterRecordHandler implements SettingAttributeObserver, Infrastru
 
   private boolean deleteClusterRecords(SettingAttribute settingAttribute) {
     return clusterRecordService.delete(settingAttribute.getAccountId(), settingAttribute.getUuid());
+  }
+
+  @Override
+  public void onSaved(InfrastructureDefinition infrastructureDefinition) {
+    upsertClusterRecord(infrastructureDefinition);
+  }
+
+  @Override
+  public void onUpdated(InfrastructureDefinition infrastructureDefinition) {
+    upsertClusterRecord(infrastructureDefinition);
+  }
+
+  private void upsertClusterRecord(InfrastructureDefinition infrastructureDefinition) {
+    ClusterRecord clusterRecord = clusterRecordService.from(infrastructureDefinition);
+    if (clusterRecord == null) {
+      logger.info("No Cluster can be derived from the Infrastructure Definition with id={}",
+          infrastructureDefinition.getUuid());
+    } else {
+      clusterRecordService.upsert(clusterRecord);
+    }
+  }
+
+  @Override
+  public void onSaved(InfrastructureMapping infrastructureMapping) {
+    upsertClusterRecord(infrastructureMapping);
+  }
+
+  @Override
+  public void onUpdated(InfrastructureMapping infrastructureMapping) {
+    upsertClusterRecord(infrastructureMapping);
+  }
+
+  private void upsertClusterRecord(InfrastructureMapping infrastructureMapping) {
+    ClusterRecord clusterRecord = clusterRecordService.from(infrastructureMapping);
+    if (clusterRecord == null) {
+      logger.info("No Cluster can be derived from Infrastructure Mapping with id={}", infrastructureMapping.getUuid());
+    } else {
+      clusterRecordService.upsert(clusterRecord);
+    }
   }
 }

@@ -568,6 +568,14 @@ public class SettingsServiceImpl implements SettingsService {
           settingAttribute.getAccountId(), null, newSettingAttribute, Type.CREATE);
     }
 
+    try {
+      if (CLOUD_PROVIDER == settingAttribute.getCategory()) {
+        subject.fireInform(SettingAttributeObxxxxxxxx:onSaved, newSettingAttribute);
+      }
+    } catch (Exception e) {
+      logger.error("Encountered exception while informing the observers of Cloud Providers.", e);
+    }
+
     return newSettingAttribute;
   }
 

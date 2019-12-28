@@ -75,11 +75,13 @@ import io.harness.exception.ReflectionException;
 import io.harness.exception.WingsException;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.observer.Subject;
 import io.harness.queue.QueuePublisher;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.lang3.StringUtils;
@@ -146,6 +148,7 @@ import software.wings.service.impl.spotinst.SpotinstHelperServiceManager;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.InfrastructureDefinitionServiceObserver;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -214,6 +217,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private InfrastructureDefinitionHelper infrastructureDefinitionHelper;
   @Inject private EventPublishHelper eventPublishHelper;
+
+  @Inject @Getter private Subject<InfrastructureDefinitionServiceObserver> subject = new Subject<>();
 
   private static Map<CloudProviderType, EnumSet<DeploymentType>> supportedCloudProviderDeploymentTypes =
       new EnumMap<>(CloudProviderType.class);
@@ -347,6 +352,12 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     if (!infrastructureDefinition.isSample()) {
       eventPublishHelper.publishAccountEvent(accountId,
           AccountEvent.builder().accountEventType(AccountEventType.INFRA_DEFINITION_ADDED).build(), true, true);
+    }
+
+    try {
+      subject.fireInform(InfrastructureDefinitionServiceObxxxxxxxx:onSaved, infrastructureDefinition);
+    } catch (Exception e) {
+      logger.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }
     return infrastructureDefinition;
   }
@@ -534,6 +545,12 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     boolean rename = !infrastructureDefinition.getName().equals(savedInfraDefinition.getName());
     yamlPushService.pushYamlChangeSet(
         accountId, savedInfraDefinition, infrastructureDefinition, Type.UPDATE, false, rename);
+
+    try {
+      subject.fireInform(InfrastructureDefinitionServiceObxxxxxxxx:onUpdated, infrastructureDefinition);
+    } catch (Exception e) {
+      logger.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
+    }
     return infrastructureDefinition;
   }
 
