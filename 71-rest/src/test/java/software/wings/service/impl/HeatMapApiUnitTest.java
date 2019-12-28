@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -119,7 +118,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testNoAnalysisRecords() {
     NewRelicCVServiceConfiguration cvServiceConfiguration =
@@ -153,7 +152,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testNoMergingWithoutGap() {
     NewRelicCVServiceConfiguration cvServiceConfiguration =
@@ -283,7 +282,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
   // Test to be un-ignored as per https://harness.atlassian.net/browse/LE-1150
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN, intermittent = true)
+  @Owner(developers = RAGHU, intermittent = true)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testTimeSeries() {
@@ -809,7 +808,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testTrafficLight() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
@@ -942,7 +941,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
   // Test to be un-ignored as per https://harness.atlassian.net/browse/LE-1150
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN, intermittent = true)
+  @Owner(developers = RAGHU, intermittent = true)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testRiskArrayEndpointContainment() throws Exception {

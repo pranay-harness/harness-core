@@ -6,7 +6,6 @@ import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
-import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -291,7 +290,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testHeatMapResolutionEnum() {
     long endTime = System.currentTimeMillis();
