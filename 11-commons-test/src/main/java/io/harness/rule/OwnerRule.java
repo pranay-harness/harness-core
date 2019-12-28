@@ -52,6 +52,7 @@ public class OwnerRule implements TestRule {
   public static final String PLATFORM = "PL";
   public static final String CONTINUOUS_DEPLOYMENT_PLATFORM = "CD Platform";
   public static final String CONTINUOUS_VERIFICATION = "CV";
+  public static final String CONTINUOUS_EFFICIENCY = "CE";
 
   public static final String AADITI = "aaditi.joag";
   public static final String ABHINAV = "abhinav.singh";
@@ -114,7 +115,7 @@ public class OwnerRule implements TestRule {
           .put(ANKIT, DevInfo.builder().email("ankit.singhal@harness.io").slack("UF76W0NN5").build())
           .put(ANSHUL, defaultDevInfo(ANSHUL).slack("UASUA3E65").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(ANUBHAW, DevInfo.builder().email("anubhaw@harness.io").slack("U0Z1U0HNW").build())
-          .put(AVMOHAN, DevInfo.builder().email("abhijith.mohan@harness.io").slack("UK72UTBJR").build())
+          .put(AVMOHAN, defaultDevInfo(AVMOHAN).slack("UK72UTBJR").team(CONTINUOUS_EFFICIENCY).build())
           .put(BRETT, DevInfo.builder().email("brett@harness.io").slack("U40VBHCGH").build())
           .put(DEEPAK, DevInfo.builder().email("deepak.patankar@harness.io").slack("UK9EKBKQS").build())
           .put(DINESH, DevInfo.builder().email("dinesh.garg@harness.io").slack("UQ0DMQG11").build())
@@ -131,7 +132,7 @@ public class OwnerRule implements TestRule {
           .put(POOJA, DevInfo.builder().email("pooja@harness.io").slack("UDDA9L0D6").build())
           .put(PRANJAL, DevInfo.builder().email("pranjal@harness.io").slack("UBV049Q5B").build())
           .put(PRASHANT, DevInfo.builder().email("prashant.pal@harness.io").slack("UJLBB7ULT").build())
-          .put(PRAVEEN, DevInfo.builder().email("praveen.sugavanam@harness.io").slack("UJLBB7ULT").build())
+          .put(PRAVEEN, DevInfo.builder().email("praveen.sugavanam@harness.io").slack("UAQH9QHSB").build())
           .put(PUNEET, DevInfo.builder().email("puneet.saraswat@harness.io").slack("U8PMB1XKM").build())
           .put(RAGHU, defaultDevInfo(RAGHU).slack("U4Z2PG2TD").team(CONTINUOUS_VERIFICATION).build())
           .put(RAMA, DevInfo.builder().email("rama@harness.io").slack("U69BLRG72").build())
