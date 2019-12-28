@@ -1,14 +1,22 @@
 package io.harness.rule;
 
+import static ch.qos.logback.core.util.OptionHelper.getEnv;
 import static java.lang.String.format;
 
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.NoopStatement;
 import io.harness.exception.CategoryConfigException;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import net.rcarz.jiraclient.BasicCredentials;
+import net.rcarz.jiraclient.Issue;
+import net.rcarz.jiraclient.JiraClient;
+import net.rcarz.jiraclient.JiraException;
 import org.junit.Ignore;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -18,12 +26,33 @@ import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 @Slf4j
 public class OwnerRule implements TestRule {
+  @Getter(lazy = true) private static final JiraClient jira = connect();
+
+  private static JiraClient connect() {
+    ScmSecret scmSecret = new ScmSecret();
+    String jiraTestUser = scmSecret.decryptToString(SecretName.builder().value("jira_test_user").build());
+    String jiraTestPassword = scmSecret.decryptToString(SecretName.builder().value("jira_test_password").build());
+    BasicCredentials credentials = new BasicCredentials(jiraTestUser, jiraTestPassword);
+    try {
+      return new JiraClient("https://harness.atlassian.net", credentials);
+    } catch (JiraException e) {
+      logger.error("Failed to connect to jira", e);
+    }
+
+    return null;
+  }
+
+  public static final String PLATFORM = "PL";
+  public static final String CONTINUOUS_DEPLOYMENT_PLATFORM = "CD Platform";
+
   public static final String AADITI = "aaditi.joag";
   public static final String ABHINAV = "abhinav.singh";
   public static final String ADWAIT = "adwait.bhandare";
@@ -79,6 +108,8 @@ public class OwnerRule implements TestRule {
   public static class DevInfo {
     private String email;
     private String slack;
+    private String jira;
+    private String team;
   }
 
   private static final Map<String, DevInfo> active =
@@ -88,14 +119,21 @@ public class OwnerRule implements TestRule {
           .put(ADWAIT, DevInfo.builder().email("adwait.bhandare@harness.io").slack("U8PL7JRMG").build())
           .put(AMAN, DevInfo.builder().email("aman.singh@harness.io").slack("UDJG47CHF").build())
           .put(ANKIT, DevInfo.builder().email("ankit.singhal@harness.io").slack("UF76W0NN5").build())
-          .put(ANSHUL, DevInfo.builder().email("anshul@harness.io").slack("UASUA3E65").build())
+          .put(ANSHUL,
+              DevInfo.builder()
+                  .email("anshul@harness.io")
+                  .slack("UASUA3E65")
+                  .jira("anshul")
+                  .team(CONTINUOUS_DEPLOYMENT_PLATFORM)
+                  .build())
           .put(ANUBHAW, DevInfo.builder().email("anubhaw@harness.io").slack("U0Z1U0HNW").build())
           .put(AVMOHAN, DevInfo.builder().email("abhijith.mohan@harness.io").slack("UK72UTBJR").build())
           .put(BRETT, DevInfo.builder().email("brett@harness.io").slack("U40VBHCGH").build())
           .put(DEEPAK, DevInfo.builder().email("deepak.patankar@harness.io").slack("UK9EKBKQS").build())
           .put(DINESH, DevInfo.builder().email("dinesh.garg@harness.io").slack("UQ0DMQG11").build())
           .put(GARVIT, DevInfo.builder().email("garvit.pahal@harness.io").slack("UHH98EXDK").build())
-          .put(GEORGE, DevInfo.builder().email("george@harness.io").slack("U88CA877V").build())
+          .put(GEORGE,
+              DevInfo.builder().email("george@harness.io").slack("U88CA877V").jira("george").team(PLATFORM).build())
           .put(HANTANG, DevInfo.builder().email("hannah.tang@harness.io").slack("UK8AQJSCS").build())
           .put(HARSH, DevInfo.builder().email("harsh.jain@harness.io").slack("UJ1CDM3FY").build())
           .put(HITESH, DevInfo.builder().email("hitesh.aringa@harness.io").slack("UK41C9QJH").build())
@@ -152,6 +190,14 @@ public class OwnerRule implements TestRule {
     }
 
     Ignore ignore = description.getAnnotation(Ignore.class);
+    if (owner.intermittent()) {
+      checkForJira(description.getDisplayName(), owner.developers()[0]);
+    }
+
+    if (ignore != null) {
+      checkForJira(description.getDisplayName(), owner.developers()[0]);
+    }
+
     for (String developer : owner.developers()) {
       if (!active.containsKey(developer)) {
         throw new CategoryConfigException(format("Developer %s is not active.", developer));
@@ -187,6 +233,45 @@ public class OwnerRule implements TestRule {
     }
 
     return null;
+  }
+
+  public static void checkForJira(String test, String developer) {
+    if (getEnv("SONAR_TOKEN") == null) {
+      return;
+    }
+
+    final DevInfo devInfo = active.get(developer);
+    if (devInfo == null || devInfo.jira == null || devInfo.team == null) {
+      return;
+    }
+
+    try {
+      JiraClient jira = getJira();
+
+      String jql = format(
+          "type = Bug AND assignee = \"%s\" AND summary ~ \"%s\" AND summary ~ \"needs fixing\"", devInfo.jira, test);
+      Issue.SearchResult searchResult = jira.searchIssues(jql, 1);
+      if (searchResult.total == 0) {
+        String[] split = devInfo.team.split(" ");
+
+        Issue.FluentCreate create = jira.createIssue(split[0], "Bug")
+                                        .field("assignee", devInfo.jira)
+                                        .field("summary", test + " needs fixing")
+                                        .field("priority", "P1");
+
+        if (split.length > 1) {
+          List<String> list = new ArrayList();
+          list.add(devInfo.team);
+          create.field("components", list);
+        }
+
+        Issue issue = create.execute();
+
+        logger.info("New jira issue was created {}", issue.getKey());
+      }
+    } catch (JiraException e) {
+      logger.error("Failed to check the jira issue", e);
+    }
   }
 
   public static void fileOwnerAs(String developer, String type) {

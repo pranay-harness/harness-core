@@ -15,6 +15,8 @@ public class OwnerTestListener extends RunListener {
       return;
     }
 
+    OwnerRule.checkForJira(description.getDisplayName(), owner.developers()[0]);
+
     for (String developer : owner.developers()) {
       OwnerRule.fileOwnerAs(developer, "ignore");
     }
