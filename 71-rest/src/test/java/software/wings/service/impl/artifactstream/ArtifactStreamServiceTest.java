@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -70,6 +71,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.Variable;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;
@@ -124,6 +126,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   private static final String PACKAGE_ID = "PACKAGE_ID";
   private static final String PACKAGE_NAME_MAVEN = "GROUP_ID:ARTIFACT_ID";
   private static final String PACKAGE_NAME_NUGET = "PACKAGE_NAME";
+  private static final String SCRIPT_STRING = "echo Hello World!! and echo ${secrets.getValue(My Secret)}";
+  private static final String SCRIPT_STRING_UPDATED = "echo updated script";
 
   @Mock private BackgroundJobScheduler backgroundJobScheduler;
   @Mock private YamlPushService yamlPushService;
@@ -2885,17 +2889,16 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldCRUDCustomArtifactStream() {
-    ArtifactStream customArtifactStream =
-        CustomArtifactStream.builder()
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .serviceId(SERVICE_ID)
-            .name("Custom Artifact Stream" + System.currentTimeMillis())
-            .scripts(Arrays.asList(CustomArtifactStream.Script.builder()
-                                       .action(Action.FETCH_VERSIONS)
-                                       .scriptString("echo Hello World!! and echo ${secrets.getValue(My Secret)}")
-                                       .build()))
-            .build();
+    ArtifactStream customArtifactStream = CustomArtifactStream.builder()
+                                              .accountId(ACCOUNT_ID)
+                                              .appId(APP_ID)
+                                              .serviceId(SERVICE_ID)
+                                              .name("Custom Artifact Stream" + System.currentTimeMillis())
+                                              .scripts(Arrays.asList(CustomArtifactStream.Script.builder()
+                                                                         .action(Action.FETCH_VERSIONS)
+                                                                         .scriptString(SCRIPT_STRING)
+                                                                         .build()))
+                                              .build();
 
     ArtifactStream savedArtifactSteam = createArtifactStream(customArtifactStream);
 
@@ -2906,7 +2909,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedCustomArtifactStream.getScripts()).isNotEmpty();
     Script script = savedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
     assertThat(script.getAction()).isEqualTo(Action.FETCH_VERSIONS);
-    assertThat(script.getScriptString()).isEqualTo("echo Hello World!! and echo ${secrets.getValue(My Secret)}");
+    assertThat(script.getScriptString()).isEqualTo(SCRIPT_STRING);
 
     assertThat(artifactStreamService.fetchArtifactStreamsForService(APP_ID, SERVICE_ID))
         .isNotEmpty()
@@ -2946,18 +2949,17 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                           .buildNoPath("version")
                                           .artifactAttributes(attributeMapping)
                                           .build();
-    ArtifactStream customArtifactStream =
-        CustomArtifactStream.builder()
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .serviceId(SERVICE_ID)
-            .name("Custom Artifact Stream" + System.currentTimeMillis())
-            .scripts(Arrays.asList(CustomArtifactStream.Script.builder()
-                                       .action(Action.FETCH_VERSIONS)
-                                       .scriptString("echo Hello World!! and echo ${secrets.getValue(My Secret)}")
-                                       .customRepositoryMapping(mapping)
-                                       .build()))
-            .build();
+    ArtifactStream customArtifactStream = CustomArtifactStream.builder()
+                                              .accountId(ACCOUNT_ID)
+                                              .appId(APP_ID)
+                                              .serviceId(SERVICE_ID)
+                                              .name("Custom Artifact Stream" + System.currentTimeMillis())
+                                              .scripts(Arrays.asList(CustomArtifactStream.Script.builder()
+                                                                         .action(Action.FETCH_VERSIONS)
+                                                                         .scriptString(SCRIPT_STRING)
+                                                                         .customRepositoryMapping(mapping)
+                                                                         .build()))
+                                              .build();
 
     ArtifactStream savedArtifactSteam = createArtifactStream(customArtifactStream);
 
@@ -2968,7 +2970,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedCustomArtifactStream.getScripts()).isNotEmpty();
     Script script = savedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
     assertThat(script.getAction()).isEqualTo(Action.FETCH_VERSIONS);
-    assertThat(script.getScriptString()).isEqualTo("echo Hello World!! and echo ${secrets.getValue(My Secret)}");
+    assertThat(script.getScriptString()).isEqualTo(SCRIPT_STRING);
     assertThat(script.getCustomRepositoryMapping()).isNotNull();
     assertThat(script.getCustomRepositoryMapping().getBuildNoPath()).isEqualTo("version");
     assertThat(script.getCustomRepositoryMapping().getArtifactAttributes().size()).isEqualTo(1);
@@ -3022,7 +3024,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  public void shouldCRUDCustomArtifactStreamWithCustomMappingFromTemplateLibrary() {
+  public void shouldUpdateLinkedCustomArtifactStreamByUpdatingOnlyVariables() {
     // create Custom artifact stream by linking from template library
     List<CustomRepositoryMapping.AttributeMapping> attributeMapping = new ArrayList<>();
     attributeMapping.add(builder().relativePath("assets.downloadUrl").mappedAttribute("metadata.downloadUrl").build());
@@ -3036,7 +3038,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     // mock get template call
     CustomArtifactStream customArtifactStreamFromTemplate = CustomArtifactStream.builder()
                                                                 .scripts(asList(CustomArtifactStream.Script.builder()
-                                                                                    .scriptString("echo ${var1}")
+                                                                                    .scriptString(SCRIPT_STRING)
                                                                                     .customRepositoryMapping(mapping)
                                                                                     .build()))
                                                                 .build();
@@ -3058,7 +3060,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedCustomArtifactStream.getScripts()).isNotEmpty();
     Script script = savedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
     assertThat(script.getAction()).isEqualTo(Action.FETCH_VERSIONS);
-    assertThat(script.getScriptString()).isEqualTo("echo ${var1}");
+    assertThat(script.getScriptString()).isEqualTo(SCRIPT_STRING);
     assertThat(script.getCustomRepositoryMapping()).isNotNull();
     assertThat(script.getCustomRepositoryMapping().getBuildNoPath()).isEqualTo("name");
     assertThat(script.getCustomRepositoryMapping().getArtifactAttributes().size()).isEqualTo(1);
@@ -3072,7 +3074,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .isNotNull()
         .contains(savedArtifactSteam.getUuid());
 
-    // update custom artifact stream by updating the template variable values.
+    // update custom artifact stream by updating the template variable values in custom artifact stream.
     savedArtifactSteam.setTemplateVariables(
         asList(aVariable().name("var1").value("another overridden value").type(TEXT).build()));
     ArtifactStream updatedArtifactStream = artifactStreamService.update(savedArtifactSteam);
@@ -3082,7 +3084,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(ArtifactStreamType.CUSTOM.name());
     CustomArtifactStream updatedCustomArtifactStream = (CustomArtifactStream) savedArtifactSteam;
     Script updatedScript = updatedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
-    assertThat(updatedScript.getScriptString()).isEqualTo("echo ${var1}");
+    assertThat(updatedScript.getScriptString()).isEqualTo(SCRIPT_STRING);
     assertThat(script.getCustomRepositoryMapping()).isNotNull();
     assertThat(script.getCustomRepositoryMapping().getArtifactAttributes().size()).isEqualTo(1);
     assertThat(script.getCustomRepositoryMapping().getArtifactAttributes())
@@ -3098,20 +3100,191 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
   }
 
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldUpdateLinkedCustomArtifactStreamByUpdatingScript() {
+    // create Custom artifact stream by linking from template library
+    List<CustomRepositoryMapping.AttributeMapping> attributeMapping = new ArrayList<>();
+    attributeMapping.add(builder().relativePath("assets.downloadUrl").mappedAttribute("metadata.downloadUrl").build());
+    CustomRepositoryMapping mapping = CustomRepositoryMapping.builder()
+                                          .artifactRoot("$.results")
+                                          .buildNoPath("name")
+                                          .artifactAttributes(attributeMapping)
+                                          .build();
+    ArtifactStream customArtifactStream = createCustomArtifactStreamFromTemplate(mapping);
+
+    // mock get template call - to simulate template update (script update)
+    CustomArtifactStream customArtifactStreamFromTemplate = CustomArtifactStream.builder()
+                                                                .scripts(asList(CustomArtifactStream.Script.builder()
+                                                                                    .scriptString(SCRIPT_STRING)
+                                                                                    .customRepositoryMapping(mapping)
+                                                                                    .build()))
+                                                                .build();
+    customArtifactStreamFromTemplate.setTemplateUuid(TEMPLATE_ID);
+    customArtifactStreamFromTemplate.setTemplateVersion(TEMPLATE_VERSION);
+    customArtifactStreamFromTemplate.setTemplateVariables(
+        asList(aVariable().name("var1").value("default value").type(TEXT).build()));
+
+    when(templateService.constructEntityFromTemplate(eq(TEMPLATE_ID), anyString(), any()))
+        .thenReturn(customArtifactStreamFromTemplate);
+
+    ArtifactStream savedArtifactSteam = createArtifactStream(customArtifactStream);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    assertThat(savedArtifactSteam.getSourceName()).isEqualTo(savedArtifactSteam.getName());
+    assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ArtifactStreamType.CUSTOM.name());
+    assertThat(savedArtifactSteam.getTemplateUuid()).isEqualTo(TEMPLATE_ID);
+    assertThat(savedArtifactSteam.getTemplateVariables().get(0).getValue()).isEqualTo("overridden value");
+    CustomArtifactStream savedCustomArtifactStream = (CustomArtifactStream) savedArtifactSteam;
+    assertThat(savedCustomArtifactStream.getScripts()).isNotEmpty();
+    Script script = savedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
+    assertThat(script.getAction()).isEqualTo(Action.FETCH_VERSIONS);
+    assertThat(script.getScriptString()).isEqualTo(SCRIPT_STRING);
+    assertThat(script.getCustomRepositoryMapping()).isNotNull();
+    assertThat(script.getCustomRepositoryMapping().getBuildNoPath()).isEqualTo("name");
+    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes().size()).isEqualTo(1);
+    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes())
+        .extracting("mappedAttribute")
+        .contains("metadata.downloadUrl");
+
+    assertThat(artifactStreamService.fetchArtifactStreamsForService(APP_ID, SERVICE_ID))
+        .isNotEmpty()
+        .extracting(ArtifactStream::getUuid)
+        .isNotNull()
+        .contains(savedArtifactSteam.getUuid());
+
+    // update custom artifact stream by updating the template variable values and script string.
+    savedCustomArtifactStream.getScripts().get(0).setScriptString(SCRIPT_STRING_UPDATED);
+    savedArtifactSteam.setTemplateVariables(
+        asList(aVariable().name("var1").value("another overridden value").type(TEXT).build()));
+    ArtifactStream updatedArtifactStream = artifactStreamService.update(savedArtifactSteam, true, true);
+
+    assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
+    assertThat(updatedArtifactStream.getSourceName()).isEqualTo(updatedArtifactStream.getName());
+    assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(ArtifactStreamType.CUSTOM.name());
+    CustomArtifactStream updatedCustomArtifactStream = (CustomArtifactStream) savedArtifactSteam;
+    Script updatedScript = updatedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
+    assertThat(updatedScript.getScriptString()).isEqualTo(SCRIPT_STRING_UPDATED);
+    assertThat(script.getCustomRepositoryMapping()).isNotNull();
+    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes().size()).isEqualTo(1);
+    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes())
+        .extracting("mappedAttribute")
+        .contains("metadata.downloadUrl");
+    assertThat(savedArtifactSteam.getTemplateUuid()).isEqualTo(TEMPLATE_ID);
+    assertThat(savedArtifactSteam.getTemplateVariables().get(0).getValue()).isEqualTo("another overridden value");
+    verify(triggerService, times(0)).updateByArtifactStream(updatedArtifactStream.getUuid());
+
+    artifactStreamService.delete(APP_ID, updatedArtifactStream.getUuid());
+    assertThat(artifactStreamService.get(updatedArtifactStream.getUuid())).isNull();
+
+    verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testLinkedCustomArtifactStreamWhenVersionAndVariablesUpdated() {
+    // existing artifact stream
+    List<CustomRepositoryMapping.AttributeMapping> attributeMapping = new ArrayList<>();
+    attributeMapping.add(builder().relativePath("path").mappedAttribute("${path}").build());
+    attributeMapping.add(builder().relativePath("size").mappedAttribute("${size}").build());
+    CustomRepositoryMapping mapping = CustomRepositoryMapping.builder()
+                                          .artifactRoot("$.results")
+                                          .buildNoPath("path")
+                                          .artifactAttributes(attributeMapping)
+                                          .build();
+    CustomArtifactStream existingArtifactStream = CustomArtifactStream.builder()
+                                                      .scripts(asList(CustomArtifactStream.Script.builder()
+                                                                          .scriptString("some script")
+                                                                          .customRepositoryMapping(mapping)
+                                                                          .build()))
+                                                      .name("test")
+                                                      .serviceId(SERVICE_ID)
+                                                      .uuid(ARTIFACT_STREAM_ID)
+                                                      .appId(APP_ID)
+                                                      .build();
+    existingArtifactStream.setTemplateUuid(TEMPLATE_ID);
+    existingArtifactStream.setTemplateVersion("latest");
+    existingArtifactStream.setTemplateVariables(asList(aVariable().name("path").value("p11").type(TEXT).build(),
+        aVariable().name("size").value("s11").type(TEXT).build()));
+
+    when(templateService.constructEntityFromTemplate(anyString(), anyString(), any()))
+        .thenReturn(existingArtifactStream);
+
+    createArtifactStream(existingArtifactStream);
+
+    // Incoming artifact stream
+    attributeMapping = new ArrayList<>();
+    attributeMapping.add(builder().relativePath("path").mappedAttribute("${path}").build());
+    attributeMapping.add(builder().relativePath("size").mappedAttribute("size").build());
+    mapping = CustomRepositoryMapping.builder()
+                  .artifactRoot("$.results")
+                  .buildNoPath("path")
+                  .artifactAttributes(attributeMapping)
+                  .build();
+    CustomArtifactStream artifactStream = CustomArtifactStream.builder()
+                                              .scripts(asList(CustomArtifactStream.Script.builder()
+                                                                  .scriptString(SCRIPT_STRING)
+                                                                  .customRepositoryMapping(mapping)
+                                                                  .build()))
+                                              .name("test")
+                                              .serviceId(SERVICE_ID)
+                                              .uuid(ARTIFACT_STREAM_ID)
+                                              .appId(APP_ID)
+                                              .build();
+    artifactStream.setTemplateUuid(TEMPLATE_ID);
+    artifactStream.setTemplateVersion("2");
+    artifactStream.setTemplateVariables(asList(aVariable().name("path").value("pp11").type(TEXT).build()));
+
+    // from template
+    attributeMapping = new ArrayList<>();
+    attributeMapping.add(builder().relativePath("path").mappedAttribute("${path}").build());
+    attributeMapping.add(builder().relativePath("size").mappedAttribute("size").build());
+    mapping = CustomRepositoryMapping.builder()
+                  .artifactRoot("$.results")
+                  .buildNoPath("path")
+                  .artifactAttributes(attributeMapping)
+                  .build();
+    CustomArtifactStream artifactStreamFromTemplate = CustomArtifactStream.builder()
+                                                          .scripts(asList(CustomArtifactStream.Script.builder()
+                                                                              .scriptString("some script")
+                                                                              .customRepositoryMapping(mapping)
+                                                                              .build()))
+                                                          .name("test")
+                                                          .serviceId(SERVICE_ID)
+                                                          .uuid(ARTIFACT_STREAM_ID)
+                                                          .appId(APP_ID)
+                                                          .build();
+    artifactStreamFromTemplate.setTemplateUuid(TEMPLATE_ID);
+    artifactStreamFromTemplate.setTemplateVersion("2");
+    artifactStreamFromTemplate.setTemplateVariables(asList(aVariable().name("path").value("").type(TEXT).build()));
+
+    when(templateService.constructEntityFromTemplate(anyString(), anyString(), any()))
+        .thenReturn(artifactStreamFromTemplate);
+
+    CustomArtifactStream updatedStream =
+        (CustomArtifactStream) artifactStreamService.update(artifactStream, true, false);
+    assertThat(updatedStream).isNotNull();
+    assertThat(updatedStream.getTemplateVersion()).isEqualTo("2");
+    assertThat(updatedStream.getTemplateVariables().size()).isEqualTo(1);
+    assertThat(updatedStream.getTemplateVariables())
+        .extracting(Variable::getName, Variable::getValue)
+        .contains(tuple("path", "pp11"));
+  }
+
   @NotNull
   private ArtifactStream createCustomArtifactStreamFromTemplate(CustomRepositoryMapping mapping) {
-    ArtifactStream customArtifactStream =
-        CustomArtifactStream.builder()
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .serviceId(SERVICE_ID)
-            .name("Custom Artifact Stream" + System.currentTimeMillis())
-            .scripts(Arrays.asList(Script.builder()
-                                       .action(Action.FETCH_VERSIONS)
-                                       .scriptString("echo Hello World!! and echo ${secrets.getValue(My Secret)}")
-                                       .customRepositoryMapping(mapping)
-                                       .build()))
-            .build();
+    ArtifactStream customArtifactStream = CustomArtifactStream.builder()
+                                              .accountId(ACCOUNT_ID)
+                                              .appId(APP_ID)
+                                              .serviceId(SERVICE_ID)
+                                              .name("Custom Artifact Stream" + System.currentTimeMillis())
+                                              .scripts(Arrays.asList(Script.builder()
+                                                                         .action(Action.FETCH_VERSIONS)
+                                                                         .scriptString(SCRIPT_STRING)
+                                                                         .customRepositoryMapping(mapping)
+                                                                         .build()))
+                                              .build();
     customArtifactStream.setTemplateUuid(TEMPLATE_ID);
     customArtifactStream.setTemplateVersion(TEMPLATE_VERSION);
     customArtifactStream.setTemplateVariables(

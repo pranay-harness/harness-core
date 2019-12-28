@@ -509,6 +509,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   public ArtifactStream update(ArtifactStream artifactStream, boolean validate) {
+    return update(artifactStream, validate, false);
+  }
+
+  public ArtifactStream update(ArtifactStream artifactStream, boolean validate, boolean fromTemplate) {
     ArtifactStream existingArtifactStream = wingsPersistence.get(ArtifactStream.class, artifactStream.getUuid());
     if (existingArtifactStream == null) {
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
@@ -552,33 +556,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     // For azure artifacts.
     validateProtocolType(artifactStream, existingArtifactStream);
 
-    boolean versionChanged = false;
-    List<Variable> oldTemplateVariables = existingArtifactStream.getTemplateVariables();
-    if (artifactStream.getTemplateVersion() != null && existingArtifactStream.getTemplateVersion() != null
-        && !artifactStream.getTemplateVersion().equals(existingArtifactStream.getTemplateVersion())) {
-      versionChanged = true;
-    }
-
-    if (versionChanged || existingArtifactStream.getTemplateUuid() == null) {
-      if (artifactStream.getTemplateUuid() != null) {
-        String version = artifactStream.getTemplateVersion() != null ? artifactStream.getTemplateVersion() : LATEST_TAG;
-        ArtifactStream artifactStreamFromTemplate = (ArtifactStream) templateService.constructEntityFromTemplate(
-            artifactStream.getTemplateUuid(), version, EntityType.ARTIFACT_STREAM);
-        notNullCheck("Template does not exist", artifactStreamFromTemplate, USER);
-        artifactStream.setTemplateVariables(templateHelper.overrideVariables(
-            artifactStreamFromTemplate.getTemplateVariables(), oldTemplateVariables, false));
-        if (artifactStream.getArtifactStreamType().equals(CUSTOM.name())) {
-          ((CustomArtifactStream) artifactStream)
-              .setScripts(((CustomArtifactStream) artifactStreamFromTemplate).getScripts());
-        }
-      }
-    } else if (existingArtifactStream.getTemplateUuid() != null) {
-      artifactStream.setTemplateVariables(
-          templateHelper.overrideVariables(artifactStream.getTemplateVariables(), oldTemplateVariables, false));
-      if (artifactStream.getArtifactStreamType().equals(CUSTOM.name())) {
-        ((CustomArtifactStream) artifactStream)
-            .setScripts(((CustomArtifactStream) existingArtifactStream).getScripts());
-      }
+    // for CUSTOM, update scripts and variables only if its not coming from template.
+    // If coming from template, the update has already been handled in
+    // software.wings.service.impl.template.ArtifactSourceTemplateProcessor.updateLinkedEntities()
+    if (!fromTemplate) {
+      populateCustomArtifactStreamFields(artifactStream, existingArtifactStream);
     }
 
     if (validate) {
@@ -621,6 +603,52 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         Type.UPDATE, artifactStream.isSyncFromGit(), isRename);
 
     return finalArtifactStream;
+  }
+
+  private void populateCustomArtifactStreamFields(
+      ArtifactStream artifactStream, ArtifactStream existingArtifactStream) {
+    boolean versionChanged = false;
+    List<Variable> oldTemplateVariables = existingArtifactStream.getTemplateVariables();
+    if (artifactStream.getTemplateVersion() != null && existingArtifactStream.getTemplateVersion() != null
+        && !artifactStream.getTemplateVersion().equals(existingArtifactStream.getTemplateVersion())) {
+      versionChanged = true;
+    }
+
+    if (versionChanged || existingArtifactStream.getTemplateUuid() == null) {
+      if (artifactStream.getTemplateUuid() != null) {
+        String version = artifactStream.getTemplateVersion() != null ? artifactStream.getTemplateVersion() : LATEST_TAG;
+        ArtifactStream artifactStreamFromTemplate = (ArtifactStream) templateService.constructEntityFromTemplate(
+            artifactStream.getTemplateUuid(), version, EntityType.ARTIFACT_STREAM);
+        notNullCheck("Template does not exist", artifactStreamFromTemplate, USER);
+        // merge template variables and existing artifact stream values
+        List<Variable> templateVariables = templateHelper.overrideVariables(
+            artifactStreamFromTemplate.getTemplateVariables(), oldTemplateVariables, false);
+        // Merge incoming template variables from payload with the template variables computed above
+        // incoming template variable values get precedence over the computed values
+        if (isNotEmpty(artifactStream.getTemplateVariables()) && isNotEmpty(templateVariables)) {
+          for (Variable templateVariable : templateVariables) {
+            for (Variable artifactStreamVariable : artifactStream.getTemplateVariables()) {
+              if (templateVariable.getName().equals(artifactStreamVariable.getName())) {
+                templateVariable.setValue(artifactStreamVariable.getValue());
+              }
+            }
+          }
+        }
+        artifactStream.setTemplateVariables(templateVariables);
+        if (artifactStream.getArtifactStreamType().equals(CUSTOM.name())) {
+          ((CustomArtifactStream) artifactStream)
+              .setScripts(((CustomArtifactStream) artifactStreamFromTemplate).getScripts());
+        }
+      }
+    } else if (existingArtifactStream.getTemplateUuid() != null) {
+      // through yaml flow: when only template variables are changed we update those but preserve the existing script
+      artifactStream.setTemplateVariables(
+          templateHelper.overrideVariables(artifactStream.getTemplateVariables(), oldTemplateVariables, false));
+      if (artifactStream.getArtifactStreamType().equals(CUSTOM.name())) {
+        ((CustomArtifactStream) artifactStream)
+            .setScripts(((CustomArtifactStream) existingArtifactStream).getScripts());
+      }
+    }
   }
 
   private String getAccountIdForArtifactStream(ArtifactStream artifactStream) {
