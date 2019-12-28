@@ -1,7 +1,7 @@
 package io.harness.functional.pipelines;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
-import static io.harness.rule.OwnerRule.SUNIL;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -140,7 +140,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = SUNIL, intermittent = true)
+  @Owner(developers = NATARAJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void pipelineTest() throws Exception {
     pipelineName = "Pipeline Test - " + System.currentTimeMillis();

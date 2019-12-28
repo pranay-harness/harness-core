@@ -2,7 +2,7 @@ package io.harness.functional.Connectors;
 
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MEENAKSHI;
-import static io.harness.rule.OwnerRule.SUNIL;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
@@ -54,7 +54,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   private static String AzureArtifactsConnectorId;
 
   @Test
-  @Owner(developers = SUNIL)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void TC0_listAllConnectors() {
     JsonPath connectors = SettingsUtils.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
