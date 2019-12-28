@@ -51,6 +51,7 @@ public class OwnerRule implements TestRule {
 
   public static final String PLATFORM = "PL";
   public static final String CONTINUOUS_DEPLOYMENT_PLATFORM = "CD Platform";
+  public static final String CONTINUOUS_VERIFICATION = "CV";
 
   public static final String AADITI = "aaditi.joag";
   public static final String ABHINAV = "abhinav.singh";
@@ -93,7 +94,6 @@ public class OwnerRule implements TestRule {
   public static final String UJJAWAL = "ujjawal.prasad";
   public static final String UTKARSH = "utkarsh.gupta";
   public static final String VAIBHAV_SI = "vaibhav.si";
-  public static final String VAIBHAV_TULSYAN = "vaibhav.tulsyan";
   public static final String VENKATESH = "venkatesh.kotrike";
   public static final String VIKAS = "vikas.naiyar";
   public static final String YOGESH_CHAUHAN = "yogesh.chauhan";
@@ -133,7 +133,7 @@ public class OwnerRule implements TestRule {
           .put(PRASHANT, DevInfo.builder().email("prashant.pal@harness.io").slack("UJLBB7ULT").build())
           .put(PRAVEEN, DevInfo.builder().email("praveen.sugavanam@harness.io").slack("UJLBB7ULT").build())
           .put(PUNEET, DevInfo.builder().email("puneet.saraswat@harness.io").slack("U8PMB1XKM").build())
-          .put(RAGHU, DevInfo.builder().email("raghu@harness.io").slack("U4Z2PG2TD").build())
+          .put(RAGHU, defaultDevInfo(RAGHU).slack("U4Z2PG2TD").team(CONTINUOUS_VERIFICATION).build())
           .put(RAMA, DevInfo.builder().email("rama@harness.io").slack("U69BLRG72").build())
           .put(ROHIT, DevInfo.builder().email("rohit.reddy@harness.io").slack("UKLSUUCAC").build())
           .put(ROHIT_KUMAR, DevInfo.builder().email("rohit.kumar@harness.io").slack("UL92UJN4S").build())
@@ -148,7 +148,6 @@ public class OwnerRule implements TestRule {
           .put(UJJAWAL, DevInfo.builder().email("ujjawal.prasad@harness.io").slack("UKLSV01DW").build())
           .put(UTKARSH, DevInfo.builder().email("utkarsh.gupta@harness.io").slack("UKGF0UL58").build())
           .put(VAIBHAV_SI, DevInfo.builder().email("vaibhav.si@harness.io").slack("UCK76T36U").build())
-          .put(VAIBHAV_TULSYAN, DevInfo.builder().email("vaibhav.tulsyan@harness.io").build())
           .put(VENKATESH, DevInfo.builder().email("venkatesh.kotrike@harness.io").slack("UGF55UEHF").build())
           .put(VIKAS, DevInfo.builder().email("vikas.naiyar@harness.io").slack("UE7M4CNMA").build())
           .put(YOGESH_CHAUHAN, DevInfo.builder().email("yogesh.chauhan@harness.io").slack("UJVLUUXAT").build())

@@ -5,7 +5,6 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -196,7 +195,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testMetricsCorrespondingToMetricNames() {
     /*
@@ -248,7 +247,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void metricNames() {
     List<NewRelicState.Metric> actualMetrics = newRelicService.getListOfMetrics();
@@ -264,7 +263,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void metricDefinitions() {
     Map<String, TimeSeriesMetricDefinition> expectedMetricDefinitions = new HashMap<>();

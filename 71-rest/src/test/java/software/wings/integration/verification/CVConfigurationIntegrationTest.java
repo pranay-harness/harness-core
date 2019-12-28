@@ -6,7 +6,6 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UNKNOWN;
-import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static javax.ws.rs.client.Entity.entity;
@@ -407,7 +406,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = RAGHU)
   @Category(IntegrationTests.class)
   public void testSaveConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -418,7 +417,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testNewRelicConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -573,7 +572,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN, intermittent = true)
+  @Owner(developers = RAGHU, intermittent = true)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testDatadogConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
