@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.service.intfc;
 
 import software.wings.beans.InfrastructureMapping;
 

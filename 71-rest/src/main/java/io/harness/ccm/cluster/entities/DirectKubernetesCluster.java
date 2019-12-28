@@ -37,9 +37,6 @@ public class DirectKubernetesCluster implements Cluster {
 
   @Override
   public void addRequiredQueryFilters(Query<ClusterRecord> query) {
-    query.field(cloudProviderIdField)
-        .equal(this.getCloudProviderId())
-        .field(clusterNameField)
-        .equal(this.getClusterName());
+    query.field(cloudProviderIdField).equal(this.getCloudProviderId());
   }
 }

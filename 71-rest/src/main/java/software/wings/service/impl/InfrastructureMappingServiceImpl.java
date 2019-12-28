@@ -136,6 +136,7 @@ import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureMappingServiceObserver;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;

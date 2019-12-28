@@ -90,8 +90,17 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void getCCMHealthStatus() {
+  public void shouldReturnHealthyForCloudProvidersWithHeatbeat() {
     CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
     assertThat(status.isHealthy()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldReturnUnHealthyForCloudProvidersWithHeatbeat() {
+    taskRecord.setLastHeartbeat(0);
+    CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
+    assertThat(status.isHealthy()).isFalse();
   }
 }

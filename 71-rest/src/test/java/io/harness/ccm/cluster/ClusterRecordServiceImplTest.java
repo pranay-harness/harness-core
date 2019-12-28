@@ -1,12 +1,14 @@
 package io.harness.ccm.cluster;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
+import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -23,16 +25,25 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.Application;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
+import software.wings.infra.DirectKubernetesInfrastructure;
+import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.intfc.AppService;
 
 public class ClusterRecordServiceImplTest extends CategoryTest {
   @Mock private Subject<ClusterRecordObserver> subject;
   @Mock private ClusterRecordDao clusterRecordDao;
+  @Mock private AppService appService;
   @InjectMocks private ClusterRecordServiceImpl clusterRecordService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   private String accountId = "ACCOUNT_ID";
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
+  private String appId = "APP_ID";
   private String clusterId = "CLUSTER_ID";
+  private String clusterName = "CLUSTER_NAME";
+  private String computeProvider = "clusterName";
   private Cluster k8sCluster;
   private ClusterRecord clusterRecord;
   private ClusterRecord clusterRecordWithId;
@@ -80,5 +91,51 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
     clusterRecordService.upsert(clusterRecord);
     Boolean pass2 = clusterRecordService.delete(accountId, cloudProviderId);
     verify(clusterRecordDao).delete(eq(accountId), eq(cloudProviderId));
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void testFromInfrastructureDefinition() {
+    InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
+                                                            .appId(appId)
+                                                            .infrastructure(DirectKubernetesInfrastructure.builder()
+                                                                                .cloudProviderId(cloudProviderId)
+                                                                                .clusterName(clusterName)
+                                                                                .build())
+                                                            .build();
+
+    ClusterRecord expectedClusterRecord =
+        ClusterRecord.builder()
+            .accountId(accountId)
+            .cluster(
+                DirectKubernetesCluster.builder().cloudProviderId(cloudProviderId).clusterName(clusterName).build())
+            .build();
+
+    Application application = Application.Builder.anApplication().accountId(accountId).build();
+    when(appService.get(eq(appId))).thenReturn(application);
+    ClusterRecord actualClusterRecord = clusterRecordService.from(infrastructureDefinition);
+    assertThat(actualClusterRecord).isEqualTo(expectedClusterRecord);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void testFrom() {
+    DirectKubernetesInfrastructureMapping k8sInfraMapping = DirectKubernetesInfrastructureMapping.builder()
+                                                                .accountId(accountId)
+                                                                .infraMappingType(DIRECT_KUBERNETES)
+                                                                .cloudProviderId(cloudProviderId)
+                                                                .build();
+    k8sInfraMapping.setComputeProviderName(computeProvider);
+
+    ClusterRecord expectedClusterRecord =
+        ClusterRecord.builder()
+            .accountId(accountId)
+            .cluster(
+                DirectKubernetesCluster.builder().cloudProviderId(cloudProviderId).clusterName(computeProvider).build())
+            .build();
+    ClusterRecord actualClusterRecord = clusterRecordService.from(k8sInfraMapping);
+    assertThat(actualClusterRecord).isEqualTo(expectedClusterRecord);
   }
 }
