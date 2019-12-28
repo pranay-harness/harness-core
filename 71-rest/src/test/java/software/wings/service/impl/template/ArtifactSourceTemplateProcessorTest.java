@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.AADITI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -24,6 +25,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -68,6 +70,11 @@ public class ArtifactSourceTemplateProcessorTest extends TemplateBaseTestHelper 
     savedTemplate.setVariables(asList(aVariable().name("MyVar").value("MyValue").build(),
         aVariable().name("MySecondVar").value("MySecondValue").build()));
 
+    ArtifactSourceTemplate savedTemplateObject = (ArtifactSourceTemplate) savedTemplate.getTemplateObject();
+    CustomArtifactSourceTemplate savedCustomArtifactSourceTemplate =
+        (CustomArtifactSourceTemplate) savedTemplateObject.getArtifactSource();
+    savedCustomArtifactSourceTemplate.setScript("updated script");
+
     on(artifactSourceTemplateProcessor).set("wingsPersistence", wingsPersistence);
     on(artifactSourceTemplateProcessor).set("artifactStreamService", artifactStreamService);
 
@@ -85,8 +92,10 @@ public class ArtifactSourceTemplateProcessorTest extends TemplateBaseTestHelper 
     when(artifactStreamIterator.hasNext()).thenReturn(true).thenReturn(false);
     when(artifactStreamIterator.next()).thenReturn(artifactStream);
     templateService.updateLinkedEntities(savedTemplate);
-
-    verify(artifactStreamService).update(artifactStream);
+    ArgumentCaptor<ArtifactStream> argument = ArgumentCaptor.forClass(ArtifactStream.class);
+    verify(artifactStreamService).update(argument.capture(), anyBoolean(), anyBoolean());
+    CustomArtifactStream updatedStream = (CustomArtifactStream) argument.getValue();
+    assertThat(updatedStream.getScripts().get(0).getScriptString()).isEqualTo("updated script");
   }
 
   private Template constructCustomArtifactTemplateEntity() {

@@ -42,6 +42,9 @@ public interface ArtifactStreamService extends OwnedByService {
 
   @ValidationGroups(Update.class) ArtifactStream update(@Valid ArtifactStream artifactStream, boolean validate);
 
+  @ValidationGroups(Update.class)
+  ArtifactStream update(@Valid ArtifactStream artifactStream, boolean validate, boolean fromTemplate);
+
   boolean delete(@NotEmpty String appId, @NotEmpty String artifactStreamId);
 
   boolean delete(@NotEmpty String artifactStreamId, boolean syncFromGit);

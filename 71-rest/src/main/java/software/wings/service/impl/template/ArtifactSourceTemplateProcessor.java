@@ -96,9 +96,13 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
           if (templateVersion == null || templateVersion.equalsIgnoreCase(LATEST_TAG)) {
             logger.info("Updating the linked artifact stream with id {}", artifactStream.getUuid());
             ArtifactStream entityFromTemplate = constructEntityFromTemplate(template, EntityType.ARTIFACT_STREAM);
-            updateEntity(entityFromTemplate, artifactStream);
-            artifactStreamService.update(artifactStream);
-            logger.info("Linked artifact stream with id {} updated", artifactStream.getUuid());
+            if (entityFromTemplate != null) {
+              updateEntity(entityFromTemplate, artifactStream);
+              artifactStreamService.update(artifactStream, true, true);
+              logger.info("Linked artifact stream with id {} updated", artifactStream.getUuid());
+            } else {
+              logger.warn("Failed to update the linked Artifact Stream {}", artifactStream.getUuid());
+            }
           } else {
             logger.info("The linked template is not the latest. So, not updating it");
           }
