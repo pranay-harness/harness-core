@@ -171,11 +171,11 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
                            .putAllLabels(label)
                            .setTotalResource(resource)
                            .setCreationTimestamp(timestamp)
-                           .addOwner(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
-                                         .setName(WORKLOAD_NAME)
-                                         .setKind(WORKLOAD_TYPE)
-                                         .setUid(WORKLOAD_ID)
-                                         .build())
+                           .setTopLevelOwner(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
+                                                 .setName(WORKLOAD_NAME)
+                                                 .setKind(WORKLOAD_TYPE)
+                                                 .setUid(WORKLOAD_ID)
+                                                 .build())
                            .build();
     return getPublishedMessage(accountId, nodeInfo, HTimestamps.toMillis(timestamp));
   }
