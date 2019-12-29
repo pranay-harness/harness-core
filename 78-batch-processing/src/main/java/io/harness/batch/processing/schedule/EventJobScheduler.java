@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import javax.annotation.PostConstruct;
@@ -32,7 +31,7 @@ public class EventJobScheduler {
 
   private void runJob(Job job) {
     try {
-      batchJobRunner.runJob(job, 1, ChronoUnit.HOURS);
+      batchJobRunner.runJob(job);
     } catch (Exception ex) {
       logger.error("Exception while running job {}", job);
     }

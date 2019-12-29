@@ -82,8 +82,6 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
               .workloadType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_TYPE, instanceData))
               .cloudServiceName(
                   getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ECS_SERVICE_NAME, instanceData))
-              // todo : insert kubernetes namespace here
-              .namespace("NAMESPACE")
               .maxCpuUtilization(utilizationData.getMaxCpuUtilization())
               .maxMemoryUtilization(utilizationData.getMaxMemoryUtilization())
               .avgCpuUtilization(utilizationData.getAvgCpuUtilization())
