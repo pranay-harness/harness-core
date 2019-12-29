@@ -35,8 +35,8 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
   public InstanceInfo process(PublishedMessage publishedMessage) {
     String accountId = publishedMessage.getAccountId();
     PodInfo podInfo = (PodInfo) publishedMessage.getMessage();
-    String workloadName = podInfo.getOwner(0).getName();
-    String workloadType = podInfo.getOwner(0).getKind();
+    String workloadName = podInfo.getTopLevelOwner().getName();
+    String workloadType = podInfo.getTopLevelOwner().getKind();
 
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.GCP.name());

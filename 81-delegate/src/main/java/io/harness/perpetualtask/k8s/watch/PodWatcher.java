@@ -19,6 +19,7 @@ import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.k8s.watch.functions.K8sWorkloadUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -74,6 +75,7 @@ public class PodWatcher implements Watcher<Pod> {
                             .setCreationTimestamp(creationTimestamp)
                             .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
                             .putAllLabels(pod.getMetadata().getLabels())
+                            .setTopLevelOwner(K8sWorkloadUtils.getTopLevelOwner(client, pod))
                             .addOwner(podOwnerHelper.getOwner(pod, client))
                             .build();
 
