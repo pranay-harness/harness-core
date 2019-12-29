@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -28,14 +29,14 @@ public class BatchJobRunner {
   /**
    * Runs the batch job from previous end time and save the job logs
    * @param job - Job
-   * @param duration - event duration for job (endTime - startTime)
-   * @param chronoUnit - duration unit
    * @throws Exception
    */
-  public void runJob(Job job, long duration, ChronoUnit chronoUnit)
-      throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException,
-             JobInstanceAlreadyCompleteException {
+  public void runJob(Job job) throws JobParametersInvalidException, JobExecutionAlreadyRunningException,
+                                     JobRestartException, JobInstanceAlreadyCompleteException {
     BatchJobType batchJobType = BatchJobType.fromJob(job);
+    long duration = batchJobType.getInterval();
+    ChronoUnit chronoUnit = batchJobType.getIntervalUnit();
+    List<BatchJobType> dependentBatchJobs = batchJobType.getDependentBatchJobs();
     Instant startAt = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(batchJobType);
     Instant endAt = Instant.now().minus(4, ChronoUnit.HOURS);
     BatchJobScheduleTimeProvider batchJobScheduleTimeProvider =
@@ -43,7 +44,7 @@ public class BatchJobRunner {
     Instant startInstant = startAt;
     while (batchJobScheduleTimeProvider.hasNext()) {
       Instant endInstant = batchJobScheduleTimeProvider.next();
-      if (null != endInstant) {
+      if (null != endInstant && checkDependentJobFinished(startInstant, dependentBatchJobs)) {
         JobParameters params =
             new JobParametersBuilder()
                 .addString(CCMJobConstants.JOB_ID, String.valueOf(System.currentTimeMillis()))
@@ -58,5 +59,15 @@ public class BatchJobRunner {
         break;
       }
     }
+  }
+
+  boolean checkDependentJobFinished(Instant startAt, List<BatchJobType> dependentBatchJobs) {
+    for (BatchJobType dependentBatchJob : dependentBatchJobs) {
+      Instant instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(dependentBatchJob);
+      if (!instant.isAfter(startAt)) {
+        return false;
+      }
+    }
+    return true;
   }
 }
