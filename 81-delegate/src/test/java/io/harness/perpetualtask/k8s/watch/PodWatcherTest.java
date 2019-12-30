@@ -11,7 +11,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
@@ -49,7 +48,6 @@ public class PodWatcherTest extends CategoryTest {
   private PodWatcher podWatcher;
   private EventPublisher eventPublisher;
   private Watch watch;
-  private PodOwnerHelper podOwnerHelper;
   public static final String POD_OWNER_ID = "948bcfca-d300-11e9-b63d-4201ac100a04";
   public static final String POD_OWNER_KIND = "Job";
   public static final String POD_OWNER_NAME = "PepetualTaskJob";
@@ -59,7 +57,6 @@ public class PodWatcherTest extends CategoryTest {
     KubernetesClient kubernetesClient = mock(KubernetesClient.class);
     eventPublisher = mock(EventPublisher.class);
     watch = mock(Watch.class);
-    podOwnerHelper = mock(PodOwnerHelper.class);
     @SuppressWarnings("unchecked")
     MixedOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> podeOps = mock(MixedOperation.class);
     @SuppressWarnings("unchecked")
@@ -68,19 +65,13 @@ public class PodWatcherTest extends CategoryTest {
     when(kubernetesClient.pods()).thenReturn(podeOps);
     when(podeOps.inAnyNamespace()).thenReturn(ks);
     when(ks.watch(any())).thenReturn(watch);
-    when(podOwnerHelper.getOwner(any(Pod.class), any(KubernetesClient.class)))
-        .thenReturn(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
-                        .setUid(POD_OWNER_ID)
-                        .setKind(POD_OWNER_KIND)
-                        .setName(POD_OWNER_NAME)
-                        .build());
     podWatcher = new PodWatcher(kubernetesClient,
         K8sWatchTaskParams.newBuilder()
             .setClusterName("clusterName")
             .setClusterId("clusterId")
             .setCloudProviderId("cloud-provider-id")
             .build(),
-        eventPublisher, podOwnerHelper);
+        eventPublisher);
   }
 
   @Test
@@ -217,12 +208,5 @@ public class PodWatcherTest extends CategoryTest {
     assertThat(podInfo.getLabelsMap())
         .isEqualTo(
             ImmutableMap.of("app", "manager", "harness.io/release-name", "2cb07f52-ee19-3ab3-a3e7-8b8de3e2d0d1"));
-
-    assertThat(podInfo.getOwnerList())
-        .isEqualTo(ImmutableList.of(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
-                                        .setName(POD_OWNER_NAME)
-                                        .setUid(POD_OWNER_ID)
-                                        .setKind(POD_OWNER_KIND)
-                                        .build()));
   }
 }
