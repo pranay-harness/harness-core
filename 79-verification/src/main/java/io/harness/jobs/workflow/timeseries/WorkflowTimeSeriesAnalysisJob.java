@@ -93,6 +93,11 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
         }
       } else {
         logger.info("{} flag is enabled, it will be handled by iterators", WORKFLOW_VERIFICATION_REMOVE_CRON);
+        if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+          logger.info(
+              "The state {} is no longer valid, so we will delete the backup cron now.", context.getStateExecutionId());
+          jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
+        }
       }
     } catch (Exception ex) {
       logger.warn("Metric analysis cron failed with error", ex);
