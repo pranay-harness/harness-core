@@ -19,7 +19,6 @@ import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
-import io.harness.perpetualtask.k8s.watch.functions.K8sWorkloadUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -39,11 +38,10 @@ public class PodWatcher implements Watcher<Pod> {
   private final EventPublisher eventPublisher;
   private final Set<String> publishedPods;
   private final KubernetesClient client;
-  private final PodOwnerHelper podOwnerHelper;
 
   @Inject
-  public PodWatcher(@Assisted KubernetesClient client, @Assisted K8sWatchTaskParams params,
-      EventPublisher eventPublisher, PodOwnerHelper podOwnerHelper) {
+  public PodWatcher(
+      @Assisted KubernetesClient client, @Assisted K8sWatchTaskParams params, EventPublisher eventPublisher) {
     this.client = client;
     this.watch = client.pods().inAnyNamespace().watch(this);
     this.cloudProviderId = params.getCloudProviderId();
@@ -51,7 +49,6 @@ public class PodWatcher implements Watcher<Pod> {
     this.clusterName = params.getClusterName();
     this.publishedPods = new HashSet<>();
     this.eventPublisher = eventPublisher;
-    this.podOwnerHelper = podOwnerHelper;
   }
 
   @Override
@@ -76,7 +73,6 @@ public class PodWatcher implements Watcher<Pod> {
                             .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
                             .putAllLabels(pod.getMetadata().getLabels())
                             .setTopLevelOwner(K8sWorkloadUtils.getTopLevelOwner(client, pod))
-                            .addOwner(podOwnerHelper.getOwner(pod, client))
                             .build();
 
       logMessage(podInfo);
