@@ -355,42 +355,14 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   public AppdynamicsTier getAppdynamicsTier(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) {
     Preconditions.checkNotNull(apiCallLog);
-    try {
-      apiCallLog.setTitle("Fetching tiers from " + appDynamicsConfig.getControllerUrl());
-      apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      final Call<List<AppdynamicsTier>> tierDetail =
-          getAppdynamicsRestClient(appDynamicsConfig)
-              .getTierDetails(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierId);
-      apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                       .name("url")
-                                       .value(tierDetail.request().url().toString())
-                                       .type(FieldType.URL)
-                                       .build());
-      final Response<List<AppdynamicsTier>> tierResponse = tierDetail.execute();
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToResponse(tierResponse.code(), tierResponse.body(), FieldType.JSON);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      if (!tierResponse.isSuccessful()) {
-        logger.info("Request not successful. Reason: {}", tierResponse);
-        throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-            .addParam("reason",
-                "Unsuccessful response while fetching data from AppDynamics. Error code: " + tierResponse.code()
-                    + ". Error message: " + tierResponse.errorBody());
-      }
-      return tierResponse.body().get(0);
-    } catch (Exception e) {
-      logger.info("Error while getting tier", e);
-      if (!(e instanceof WingsException)) {
-        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-        delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      }
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason",
-              "Unsuccessful response while fetching tiers from AppDynamics. Error message: " + e.getMessage());
-    }
+    apiCallLog.setTitle("Fetching tiers from " + appDynamicsConfig.getControllerUrl());
+    final Call<List<AppdynamicsTier>> tierDetail =
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .getTierDetails(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierId);
+    List<AppdynamicsTier> tiers = requestExecutor.executeRequest(apiCallLog, tierDetail);
+    return tiers.get(0);
   }
 
   private List<AppdynamicsMetric> getChildMetrics(AppDynamicsConfig appDynamicsConfig, long applicationId,

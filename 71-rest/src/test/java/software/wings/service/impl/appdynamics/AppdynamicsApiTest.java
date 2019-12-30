@@ -287,8 +287,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     AppdynamicsTier tier =
         AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build();
     List<AppdynamicsTier> tiers = Lists.newArrayList(tier);
-    when(tierRestCall.execute()).thenReturn(Response.success(tiers));
-    when(tierRestCall.request()).thenReturn(new Request.Builder().url("https://google.com").build());
+    when(requestExecutor.executeRequest(any(), eq(tierRestCall))).thenReturn(tiers);
     when(appdynamicsRestClient.getTierDetails(anyString(), anyLong(), anyLong())).thenReturn(tierRestCall);
 
     Call<List<AppdynamicsMetric>> btsCall = mock(Call.class);
