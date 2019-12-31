@@ -2,6 +2,7 @@ package io.harness.batch.processing.writer;
 
 import com.google.inject.Singleton;
 
+import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
@@ -39,6 +40,7 @@ public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<Pub
             metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, instanceFamily);
             metaData.put(InstanceMetaDataConstants.REGION, ec2InstanceInfo.getRegion());
             metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
+            metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, getInstanceCategory(ec2InstanceInfo).name());
             instanceData = InstanceData.builder()
                                .accountId(accountId)
                                .instanceId(instanceId)
@@ -51,5 +53,14 @@ public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<Pub
             instanceDataService.create(instanceData);
           }
         });
+  }
+
+  private InstanceCategory getInstanceCategory(Ec2InstanceInfo ec2InstanceInfo) {
+    if (!ec2InstanceInfo.getSpotInstanceRequestId().isEmpty()) {
+      return InstanceCategory.SPOT;
+    } else if (!ec2InstanceInfo.getCapacityReservationId().isEmpty()) {
+      return InstanceCategory.RESERVED;
+    }
+    return InstanceCategory.ON_DEMAND;
   }
 }

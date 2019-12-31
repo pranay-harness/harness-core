@@ -52,8 +52,11 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
     if (null != instanceData) {
       Map<String, String> nodeMetaData = instanceData.getMetaData();
       metaData.put(InstanceMetaDataConstants.REGION, nodeMetaData.get(InstanceMetaDataConstants.REGION));
+      metaData.put(InstanceMetaDataConstants.ZONE, nodeMetaData.get(InstanceMetaDataConstants.ZONE));
       metaData.put(
           InstanceMetaDataConstants.INSTANCE_FAMILY, nodeMetaData.get(InstanceMetaDataConstants.INSTANCE_FAMILY));
+      metaData.put(
+          InstanceMetaDataConstants.INSTANCE_CATEGORY, nodeMetaData.get(InstanceMetaDataConstants.INSTANCE_CATEGORY));
       metaData.put(
           InstanceMetaDataConstants.CLOUD_PROVIDER, nodeMetaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER));
       metaData.put(

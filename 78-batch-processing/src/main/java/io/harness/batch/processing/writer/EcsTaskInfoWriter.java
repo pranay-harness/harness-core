@@ -59,6 +59,8 @@ public class EcsTaskInfoWriter extends EventWriter implements ItemWriter<Publish
               InstanceData containerInstantData = fetchInstanceData(accountId, containerInstanceId);
               metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY,
                   containerInstantData.getMetaData().get(InstanceMetaDataConstants.INSTANCE_FAMILY));
+              metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY,
+                  containerInstantData.getMetaData().get(InstanceMetaDataConstants.INSTANCE_CATEGORY));
               metaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM,
                   containerInstantData.getMetaData().get(InstanceMetaDataConstants.OPERATING_SYSTEM));
               metaData.put(InstanceMetaDataConstants.CONTAINER_INSTANCE_ARN, containerInstanceId);

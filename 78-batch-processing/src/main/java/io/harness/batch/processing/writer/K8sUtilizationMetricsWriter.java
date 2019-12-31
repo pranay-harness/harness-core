@@ -45,6 +45,7 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
         String accountId = instanceUtilizationData.getAccountId();
         String instanceId = entry.getKey();
 
+        // TODO(Rohit) cache data
         InstanceData instanceData = instanceDataService.fetchInstanceDataWithName(accountId, instanceId, startDate);
         // Initialisation to 100% Utilisation
         double cpuAvgPercentage = 1;
@@ -73,6 +74,7 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
         instanceUtilizationData.setStartTimestamp(startDate);
         instanceUtilizationData.setEndTimestamp(endDate);
 
+        // TODO(Rohit) batch this
         utilizationDataService.create(instanceUtilizationData);
       }
     }));

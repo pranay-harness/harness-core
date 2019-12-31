@@ -1,6 +1,7 @@
 package io.harness.batch.processing.writer.constants;
 
 public class InstanceMetaDataConstants {
+  public static final String ZONE = "zone";
   public static final String REGION = "region";
   public static final String POD_NAME = "pod_name";
   public static final String NODE_UID = "node_uid";
@@ -16,6 +17,7 @@ public class InstanceMetaDataConstants {
   public static final String ECS_SERVICE_NAME = "ecs_service_name";
   public static final String ECS_SERVICE_ARN = "ecs_service_arn";
   public static final String OPERATING_SYSTEM = "operating_system";
+  public static final String INSTANCE_CATEGORY = "instance_category";
   public static final String PARENT_RESOURCE_ID = "parent_resource_id";
   public static final String PARENT_RESOURCE_CPU = "parent_resource_cpu";
   public static final String PARENT_RESOURCE_MEMORY = "parent_resource_memory";

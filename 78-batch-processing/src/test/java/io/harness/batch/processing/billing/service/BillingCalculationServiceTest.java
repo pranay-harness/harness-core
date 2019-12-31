@@ -8,12 +8,14 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.service.impl.ComputeInstancePricingStrategy;
 import io.harness.batch.processing.billing.service.impl.EcsFargateInstancePricingStrategy;
+import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
+import io.harness.batch.processing.pricing.data.ZonePrice;
 import io.harness.batch.processing.pricing.service.impl.VMPricingServiceImpl;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomPricingService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
@@ -30,7 +32,9 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -47,7 +51,11 @@ public class BillingCalculationServiceTest extends CategoryTest {
   private final Long HALF_DAY_SECONDS = 43200l;
 
   private final String REGION = "us-east-1";
+  private final String GCP_REGION = "us-central1";
+  private final String GCP_ZONE_1 = "us-central1-a";
+  private final String GCP_ZONE_2 = "us-central1-b";
   private final String DEFAULT_INSTANCE_FAMILY = "c4.8xlarge";
+  private final String GCP_INSTANCE_FAMILY = "n1-standard-4";
   private final double DEFAULT_INSTANCE_CPU = 36;
   private final double DEFAULT_INSTANCE_MEMORY = 60;
   private final double DEFAULT_INSTANCE_PRICE = 1.60;
@@ -294,6 +302,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
     metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, DEFAULT_INSTANCE_FAMILY);
     metaData.put(InstanceMetaDataConstants.REGION, REGION);
+    metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceCategory.ON_DEMAND.name());
     addParentResource(metaData, DEFAULT_INSTANCE_CPU * 1024, DEFAULT_INSTANCE_MEMORY * 1024);
     InstanceData instanceData = getInstance(instanceResource, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.ECS_TASK_EC2);
@@ -307,6 +316,35 @@ public class BillingCalculationServiceTest extends CategoryTest {
     assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
     assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(18432 * HALF_DAY_SECONDS);
     assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(30720 * HALF_DAY_SECONDS);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetInstanceBillingAmountForSpotComputeInstance() throws IOException {
+    when(vmPricingService.getComputeVMPricingInfo(GCP_INSTANCE_FAMILY, GCP_REGION, CloudProvider.GCP))
+        .thenReturn(createVMComputePricingInfo());
+    when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_NODE))
+        .thenReturn(new ComputeInstancePricingStrategy(vmPricingService, awsCustomPricingService));
+    Resource instanceResource = getInstanceResource(4096, 15360);
+    Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.GCP.name());
+    metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, GCP_INSTANCE_FAMILY);
+    metaData.put(InstanceMetaDataConstants.REGION, GCP_REGION);
+    metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceCategory.SPOT.name());
+    metaData.put(InstanceMetaDataConstants.ZONE, GCP_ZONE_1);
+    InstanceData instanceData = getInstance(instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+        INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_NODE);
+    UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
+    BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
+        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+    assertThat(billingAmount.getBillingAmount()).isEqualTo(new BigDecimal("4.8"));
+    assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("2.4"));
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("1.2"));
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("1.2"));
+    assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
+    assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(4096 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(15360 * HALF_DAY_SECONDS);
   }
 
   @Test
@@ -364,7 +402,15 @@ public class BillingCalculationServiceTest extends CategoryTest {
         .memPerVm(DEFAULT_INSTANCE_MEMORY)
         .onDemandPrice(DEFAULT_INSTANCE_PRICE)
         .type(DEFAULT_INSTANCE_FAMILY)
+        .spotPrice(createZonePrice())
         .build();
+  }
+
+  private List<ZonePrice> createZonePrice() {
+    List<ZonePrice> zonePrices = new ArrayList<>();
+    zonePrices.add(new ZonePrice(GCP_ZONE_1, 0.4));
+    zonePrices.add(new ZonePrice(GCP_ZONE_2, 0.5));
+    return zonePrices;
   }
 
   private EcsFargatePricingInfo createEcsFargatePricingInfo() {

@@ -1,6 +1,7 @@
 package io.harness.batch.processing.processor;
 
 import io.harness.batch.processing.ccm.ClusterType;
+import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
@@ -32,11 +33,13 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
         cloudProviderService.getK8SCloudProvider(nodeInfo.getCloudProviderId(), nodeInfo.getProviderId());
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, k8SCloudProvider.name());
     metaData.put(InstanceMetaDataConstants.REGION, labelsMap.get(K8sCCMConstants.REGION));
+    metaData.put(InstanceMetaDataConstants.ZONE, labelsMap.get(K8sCCMConstants.ZONE));
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
     metaData.put(InstanceMetaDataConstants.NODE_NAME, nodeInfo.getNodeName());
     metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, labelsMap.get(K8sCCMConstants.INSTANCE_FAMILY));
     metaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM, labelsMap.get(K8sCCMConstants.OPERATING_SYSTEM));
     metaData.put(InstanceMetaDataConstants.NODE_UID, nodeInfo.getNodeUid());
+    metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, getInstanceCategory(k8SCloudProvider, labelsMap).name());
 
     return InstanceInfo.builder()
         .accountId(publishedMessage.getAccountId())
@@ -51,5 +54,15 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
         .labels(nodeInfo.getLabelsMap())
         .metaData(metaData)
         .build();
+  }
+
+  private InstanceCategory getInstanceCategory(CloudProvider k8SCloudProvider, Map<String, String> labelsMap) {
+    InstanceCategory instanceCategory = InstanceCategory.ON_DEMAND;
+    boolean preemptible = labelsMap.keySet().stream().anyMatch(key -> key.contains(K8sCCMConstants.PREEMPTIBLE_KEY));
+    if (k8SCloudProvider == CloudProvider.GCP && preemptible) {
+      return InstanceCategory.SPOT;
+    }
+    // TODO(Hitesh) Check for Azure and AWS
+    return instanceCategory;
   }
 }

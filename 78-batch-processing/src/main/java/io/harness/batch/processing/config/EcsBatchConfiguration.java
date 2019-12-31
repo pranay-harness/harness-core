@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class EcsBatchConfiguration {
-  private static final int BATCH_SIZE = 10;
+  private static final int BATCH_SIZE = 500;
   private static final int SKIP_BATCH_SIZE = 5;
   private static final int RETRY_LIMIT = 1;
 
