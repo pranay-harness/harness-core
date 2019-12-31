@@ -2,51 +2,33 @@ package software.wings.scheduler;
 
 import com.google.inject.Inject;
 
-import io.harness.scheduler.PersistentScheduler;
+import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
-import software.wings.service.intfc.security.SecretManager;
-
-import java.util.concurrent.ExecutorService;
+import software.wings.beans.Account;
+import software.wings.service.intfc.security.VaultService;
 
 @Slf4j
-public class AdministrativeJob implements Job {
-  private static final String ADMINISTRATIVE_CRON_NAME = "ADMINISTRATIVE_CRON_NAME";
-  private static final String ADMINISTRATIVE_CRON_GROUP = "ADMINISTRATIVE_CRON_GROUP";
+public class AdministrativeJob implements Job, Handler<Account> {
+  public static final String ADMINISTRATIVE_CRON_NAME = "ADMINISTRATIVE_CRON_NAME";
+  public static final String ADMINISTRATIVE_CRON_GROUP = "ADMINISTRATIVE_CRON_GROUP";
 
-  @Inject private SecretManager secretManager;
-  @Inject private ExecutorService executorService;
+  @Inject private VaultService vaultService;
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    logger.info("Running Administrative Job asynchronously and returning");
-    executorService.submit(this ::executeInternal);
+    // this method will be deleted once the iterator goes in
   }
 
-  private void executeInternal() {
-    logger.info("Running Administrative Job");
-    secretManager.renewVaultTokensAndValidateGlobalSecretManager();
-    logger.info("Administrative Job complete");
-  }
-
-  public static void addJob(PersistentScheduler jobScheduler) {
-    JobDetail job = JobBuilder.newJob(AdministrativeJob.class)
-                        .withIdentity(ADMINISTRATIVE_CRON_NAME, ADMINISTRATIVE_CRON_GROUP)
-                        .withDescription("Administrative job ")
-                        .build();
-
-    Trigger trigger =
-        TriggerBuilder.newTrigger()
-            .withIdentity(ADMINISTRATIVE_CRON_NAME, ADMINISTRATIVE_CRON_GROUP)
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(10).repeatForever())
-            .build();
-
-    jobScheduler.ensureJob__UnderConstruction(job, trigger);
+  @Override
+  public void handle(Account account) {
+    logger.info("renewing tokens for {}", account.getUuid());
+    try {
+      vaultService.renewTokens(account.getUuid());
+      vaultService.appRoleLogin(account.getUuid());
+    } catch (Exception e) {
+      logger.info("Failed to renew vault token for account id {}", account.getUuid(), e);
+    }
   }
 }

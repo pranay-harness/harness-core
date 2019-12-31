@@ -3,12 +3,6 @@ package io.harness.scheduler;
 import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.jobs.housekeeping.UsageMetricsJob.VERIFICATION_METRIC_CRON_GROUP;
-import static io.harness.jobs.housekeeping.UsageMetricsJob.VERIFICATION_METRIC_CRON_NAME;
-import static io.harness.jobs.sg247.collection.ServiceGuardDataCollectionJob.SERVICE_GUARD_DATA_COLLECTION_CRON;
-import static io.harness.jobs.sg247.logs.ServiceGuardLogAnalysisJob.SERVICE_GUARD_LOG_ANALYSIS_CRON;
-import static io.harness.jobs.sg247.timeseries.ServiceGuardTimeSeriesAnalysisJob.SERVICE_GUARD_TIME_SERIES_ANALYSIS_CRON;
-import static io.harness.jobs.workflow.collection.CVDataCollectionJob.CV_TASK_CRON;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_COUNT;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS;
@@ -25,6 +19,10 @@ import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_Q
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_COUNT;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS;
+import static software.wings.scheduler.AdministrativeJob.ADMINISTRATIVE_CRON_GROUP;
+import static software.wings.scheduler.AdministrativeJob.ADMINISTRATIVE_CRON_NAME;
+import static software.wings.scheduler.ExecutionLogsPruneJob.EXECUTION_LOGS_PRUNE_CRON_GROUP;
+import static software.wings.scheduler.ExecutionLogsPruneJob.EXECUTION_LOGS_PRUNE_CRON_NAME;
 import static software.wings.service.impl.analysis.MLAnalysisType.LOG_CLUSTER;
 import static software.wings.service.impl.analysis.MLAnalysisType.LOG_ML;
 import static software.wings.service.impl.analysis.MLAnalysisType.TIME_SERIES;
@@ -38,7 +36,6 @@ import com.google.inject.name.Named;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.metrics.HarnessMetricRegistry;
-import io.harness.persistence.HIterator;
 import io.harness.service.intfc.ContinuousVerificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -49,8 +46,10 @@ import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -67,13 +66,16 @@ public class ServiceGuardAccountPoller {
   @Inject private VerificationManagerClientHelper verificationManagerClientHelper;
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private ContinuousVerificationService continuousVerificationService;
+  @Inject private DataStoreService dataStoreService;
   private List<Account> lastAvailableAccounts = new ArrayList<>();
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HarnessMetricRegistry metricRegistry;
 
   public void scheduleUsageMetricsCollection() {
+    long initialDelay = new SecureRandom().nextInt(60);
     executorService.scheduleAtFixedRate(
-        () -> recordQueuedTaskMetric(), POLL_INTIAL_DELAY_SEOONDS, POLL_INTIAL_DELAY_SEOONDS, TimeUnit.SECONDS);
+        () -> recordQueuedTaskMetric(), initialDelay, POLL_INTIAL_DELAY_SEOONDS, TimeUnit.SECONDS);
+    executorService.scheduleAtFixedRate(() -> dataStoreService.purgeOlderRecords(), initialDelay, 60, TimeUnit.MINUTES);
   }
 
   @VisibleForTesting
@@ -267,35 +269,14 @@ public class ServiceGuardAccountPoller {
   }
 
   public void deleteServiceGuardCrons() {
-    logger.info("Deleting crons for all accounts");
-    try (HIterator<Account> accounts =
-             new HIterator<>(wingsPersistence.createQuery(Account.class, excludeAuthority).fetch())) {
-      while (accounts.hasNext()) {
-        final Account account = accounts.next();
-        if (jobScheduler.checkExists(account.getUuid(), SERVICE_GUARD_DATA_COLLECTION_CRON)) {
-          jobScheduler.deleteJob(account.getUuid(), SERVICE_GUARD_DATA_COLLECTION_CRON);
-          logger.info("Deleting crons for account {} ", account.getUuid());
-        }
-
-        if (jobScheduler.checkExists(account.getUuid(), SERVICE_GUARD_TIME_SERIES_ANALYSIS_CRON)) {
-          jobScheduler.deleteJob(account.getUuid(), SERVICE_GUARD_TIME_SERIES_ANALYSIS_CRON);
-          logger.info("Deleting crons for account {} ", account.getUuid());
-        }
-
-        if (jobScheduler.checkExists(account.getUuid(), SERVICE_GUARD_LOG_ANALYSIS_CRON)) {
-          jobScheduler.deleteJob(account.getUuid(), SERVICE_GUARD_LOG_ANALYSIS_CRON);
-          logger.info("Deleting crons for account {} ", account.getUuid());
-        }
-        if (jobScheduler.checkExists(account.getUuid(), CV_TASK_CRON)) {
-          jobScheduler.deleteJob(account.getUuid(), CV_TASK_CRON);
-          logger.info("Deleting crons for account {} ", account.getUuid());
-        }
-      }
+    logger.info("Delete administrative job");
+    if (jobScheduler.checkExists(ADMINISTRATIVE_CRON_NAME, ADMINISTRATIVE_CRON_GROUP)) {
+      jobScheduler.deleteJob(ADMINISTRATIVE_CRON_NAME, ADMINISTRATIVE_CRON_GROUP);
     }
 
-    logger.info("Delete usage metric job");
-    if (jobScheduler.checkExists(VERIFICATION_METRIC_CRON_NAME, VERIFICATION_METRIC_CRON_GROUP)) {
-      jobScheduler.deleteJob(VERIFICATION_METRIC_CRON_NAME, VERIFICATION_METRIC_CRON_GROUP);
+    logger.info("Delete date prune job");
+    if (jobScheduler.checkExists(EXECUTION_LOGS_PRUNE_CRON_NAME, EXECUTION_LOGS_PRUNE_CRON_GROUP)) {
+      jobScheduler.deleteJob(EXECUTION_LOGS_PRUNE_CRON_NAME, EXECUTION_LOGS_PRUNE_CRON_GROUP);
     }
   }
 

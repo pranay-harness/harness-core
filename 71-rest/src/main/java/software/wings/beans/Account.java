@@ -100,6 +100,7 @@ public class Account extends Base implements PersistentRegularIterable {
   @Indexed private Long workflowDataCollectionIteration;
   @Indexed private Long usageMetricsTaskIteration;
   @Indexed private Long licenseExpiryCheckIteration;
+  @Indexed private Long secretManagerValidationIterator;
   private boolean cloudCostEnabled;
 
   private transient Map<String, String> defaults = new HashMap<>();
@@ -371,6 +372,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return;
     }
 
+    else if (AccountKeys.secretManagerValidationIterator.equals(fieldName)) {
+      this.secretManagerValidationIterator = nextIteration;
+      return;
+    }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -394,6 +400,10 @@ public class Account extends Base implements PersistentRegularIterable {
 
     else if (AccountKeys.licenseExpiryCheckIteration.equals(fieldName)) {
       return this.licenseExpiryCheckIteration;
+    }
+
+    else if (AccountKeys.secretManagerValidationIterator.equals(fieldName)) {
+      return this.secretManagerValidationIterator;
     }
 
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);

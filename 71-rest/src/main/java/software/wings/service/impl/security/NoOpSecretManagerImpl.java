@@ -124,11 +124,6 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public void renewVaultTokensAndValidateGlobalSecretManager() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public EncryptedData getSecretMappedToAccountByName(String accountId, String name) {
     throw new UnsupportedOperationException();
   }
