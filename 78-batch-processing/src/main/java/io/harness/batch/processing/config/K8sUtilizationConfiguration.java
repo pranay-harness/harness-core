@@ -28,7 +28,8 @@ import java.util.List;
 @Slf4j
 @Configuration
 public class K8sUtilizationConfiguration {
-  private static final int BATCH_SIZE = 10;
+  private static final int BATCH_SIZE = 50;
+  private static final int GRANULAR_BATCH_SIZE = 1000;
 
   @Autowired @Qualifier("mongoEventReader") private EventReaderFactory eventReaderFactory;
   @Autowired private StepBuilderFactory stepBuilderFactory;
@@ -70,7 +71,7 @@ public class K8sUtilizationConfiguration {
   @Bean
   public Step k8sPodUtilizationEventStep() {
     return stepBuilderFactory.get("k8sPodUtilizationEventStep")
-        .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
+        .<PublishedMessage, PublishedMessage>chunk(GRANULAR_BATCH_SIZE)
         .reader(k8sPodUtilizationEventMessageReader(null, null))
         .writer(podUtilizationMetricsWriter())
         .build();
@@ -79,7 +80,7 @@ public class K8sUtilizationConfiguration {
   @Bean
   public Step k8sNodeUtilizationEventStep() {
     return stepBuilderFactory.get("k8sNodeUtilizationEventStep")
-        .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
+        .<PublishedMessage, PublishedMessage>chunk(GRANULAR_BATCH_SIZE)
         .reader(k8sNodeUtilizationEventMessageReader(null, null))
         .writer(nodeUtilizationMetricsWriter())
         .build();

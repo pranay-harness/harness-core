@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class K8sBatchConfiguration {
-  private static final int BATCH_SIZE = 10;
+  private static final int BATCH_SIZE = 500;
 
   @Autowired @Qualifier("mongoEventReader") private EventReaderFactory eventReaderFactory;
   @Autowired @Qualifier("instanceInfoWriter") private ItemWriter instanceInfoWriter;

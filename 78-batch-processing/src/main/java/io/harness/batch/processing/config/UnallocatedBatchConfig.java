@@ -21,7 +21,7 @@ import java.util.List;
 @Slf4j
 @Configuration
 public class UnallocatedBatchConfig {
-  private static final int BATCH_SIZE = 10;
+  private static final int BATCH_SIZE = 100;
 
   @Bean
   public ItemReader<List<UnallocatedCostData>> unallocatedAggregatedCostReader() {

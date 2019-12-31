@@ -49,6 +49,8 @@ public class EcsContainerInstanceInfoWriter extends EventWriter implements ItemW
             Map<String, String> metaData = new HashMap<>();
             metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY,
                 ec2InstanceData.getMetaData().get(InstanceMetaDataConstants.INSTANCE_FAMILY));
+            metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY,
+                ec2InstanceData.getMetaData().get(InstanceMetaDataConstants.INSTANCE_CATEGORY));
             metaData.put(InstanceMetaDataConstants.EC2_INSTANCE_ID, ec2InstanceId);
             metaData.put(
                 InstanceMetaDataConstants.OPERATING_SYSTEM, ecsContainerInstanceDescription.getOperatingSystem());

@@ -2,9 +2,11 @@ package io.harness.batch.processing.billing.service.impl;
 
 import io.harness.batch.processing.billing.service.PricingData;
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
+import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
+import io.harness.batch.processing.pricing.data.ZonePrice;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomPricingService;
 import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
@@ -32,6 +34,9 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
   public PricingData getPricePerHour(InstanceData instanceData, Instant startTime) {
     Map<String, String> instanceMetaData = instanceData.getMetaData();
     CloudProvider cloudProvider = CloudProvider.valueOf(instanceMetaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER));
+    String zone = instanceMetaData.get(InstanceMetaDataConstants.ZONE);
+    InstanceCategory instanceCategory =
+        InstanceCategory.valueOf(instanceMetaData.get(InstanceMetaDataConstants.INSTANCE_CATEGORY));
 
     // TODO(Hitesh) check if cloud provider has s3 billing enabled
     VMComputePricingInfo vmComputePricingInfo = getCustomVMPricing(instanceData, startTime, cloudProvider);
@@ -42,10 +47,24 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
     }
 
     return PricingData.builder()
-        .pricePerHour(vmComputePricingInfo.getOnDemandPrice())
+        .pricePerHour(getPricePerHour(zone, instanceCategory, vmComputePricingInfo))
         .cpuUnit(vmComputePricingInfo.getCpusPerVm() * 1024)
         .memoryMb(vmComputePricingInfo.getMemPerVm() * 1024)
         .build();
+  }
+
+  private double getPricePerHour(
+      String zone, InstanceCategory instanceCategory, VMComputePricingInfo vmComputePricingInfo) {
+    double pricePerHour = vmComputePricingInfo.getOnDemandPrice();
+    if (instanceCategory == InstanceCategory.SPOT) {
+      return vmComputePricingInfo.getSpotPrice()
+          .stream()
+          .filter(zonePrice -> zonePrice.getZone().equals(zone))
+          .findFirst()
+          .map(ZonePrice::getPrice)
+          .orElse(pricePerHour);
+    }
+    return pricePerHour;
   }
 
   private VMComputePricingInfo getCustomVMPricing(
