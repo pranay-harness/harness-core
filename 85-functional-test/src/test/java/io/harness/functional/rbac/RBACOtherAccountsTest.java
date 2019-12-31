@@ -97,7 +97,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = NATARAJA)
+  @Owner(developers = NATARAJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void createApplicationFail() {
     logger.info("Check if create application test fails");
