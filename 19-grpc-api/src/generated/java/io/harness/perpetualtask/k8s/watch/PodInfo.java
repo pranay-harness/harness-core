@@ -22,7 +22,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     podName_ = "";
     namespace_ = "";
     nodeName_ = "";
-    owner_ = java.util.Collections.emptyList();
     containers_ = java.util.Collections.emptyList();
     clusterId_ = "";
     clusterName_ = "";
@@ -122,14 +121,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             labels_.getMutableMap().put(labels__.getKey(), labels__.getValue());
             break;
           }
-          case 82: {
-            if (!((mutable_bitField0_ & 0x00000200) != 0)) {
-              owner_ = new java.util.ArrayList<io.harness.perpetualtask.k8s.watch.Owner>();
-              mutable_bitField0_ |= 0x00000200;
-            }
-            owner_.add(input.readMessage(io.harness.perpetualtask.k8s.watch.Owner.parser(), extensionRegistry));
-            break;
-          }
           case 90: {
             io.harness.perpetualtask.k8s.watch.Owner.Builder subBuilder = null;
             if (topLevelOwner_ != null) {
@@ -144,9 +135,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             break;
           }
           case 98: {
-            if (!((mutable_bitField0_ & 0x00000800) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000400) != 0)) {
               containers_ = new java.util.ArrayList<io.harness.perpetualtask.k8s.watch.Container>();
-              mutable_bitField0_ |= 0x00000800;
+              mutable_bitField0_ |= 0x00000400;
             }
             containers_.add(
                 input.readMessage(io.harness.perpetualtask.k8s.watch.Container.parser(), extensionRegistry));
@@ -177,10 +168,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     } catch (java.io.IOException e) {
       throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
     } finally {
-      if (((mutable_bitField0_ & 0x00000200) != 0)) {
-        owner_ = java.util.Collections.unmodifiableList(owner_);
-      }
-      if (((mutable_bitField0_ & 0x00000800) != 0)) {
+      if (((mutable_bitField0_ & 0x00000400) != 0)) {
         containers_ = java.util.Collections.unmodifiableList(containers_);
       }
       this.unknownFields = unknownFields.build();
@@ -520,39 +508,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     return map.get(key);
   }
 
-  public static final int OWNER_FIELD_NUMBER = 10;
-  private java.util.List<io.harness.perpetualtask.k8s.watch.Owner> owner_;
-  /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-   */
-  public java.util.List<io.harness.perpetualtask.k8s.watch.Owner> getOwnerList() {
-    return owner_;
-  }
-  /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-   */
-  public java.util.List<? extends io.harness.perpetualtask.k8s.watch.OwnerOrBuilder> getOwnerOrBuilderList() {
-    return owner_;
-  }
-  /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-   */
-  public int getOwnerCount() {
-    return owner_.size();
-  }
-  /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-   */
-  public io.harness.perpetualtask.k8s.watch.Owner getOwner(int index) {
-    return owner_.get(index);
-  }
-  /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-   */
-  public io.harness.perpetualtask.k8s.watch.OwnerOrBuilder getOwnerOrBuilder(int index) {
-    return owner_.get(index);
-  }
-
   public static final int TOP_LEVEL_OWNER_FIELD_NUMBER = 11;
   private io.harness.perpetualtask.k8s.watch.Owner topLevelOwner_;
   /**
@@ -708,9 +663,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
     com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
         output, internalGetLabels(), LabelsDefaultEntryHolder.defaultEntry, 9);
-    for (int i = 0; i < owner_.size(); i++) {
-      output.writeMessage(10, owner_.get(i));
-    }
     if (topLevelOwner_ != null) {
       output.writeMessage(11, getTopLevelOwner());
     }
@@ -765,9 +717,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
               .build();
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(9, labels__);
     }
-    for (int i = 0; i < owner_.size(); i++) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(10, owner_.get(i));
-    }
     if (topLevelOwner_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(11, getTopLevelOwner());
     }
@@ -821,8 +770,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
     if (!internalGetLabels().equals(other.internalGetLabels()))
       return false;
-    if (!getOwnerList().equals(other.getOwnerList()))
-      return false;
     if (hasTopLevelOwner() != other.hasTopLevelOwner())
       return false;
     if (hasTopLevelOwner()) {
@@ -870,10 +817,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     if (!internalGetLabels().getMap().isEmpty()) {
       hash = (37 * hash) + LABELS_FIELD_NUMBER;
       hash = (53 * hash) + internalGetLabels().hashCode();
-    }
-    if (getOwnerCount() > 0) {
-      hash = (37 * hash) + OWNER_FIELD_NUMBER;
-      hash = (53 * hash) + getOwnerList().hashCode();
     }
     if (hasTopLevelOwner()) {
       hash = (37 * hash) + TOP_LEVEL_OWNER_FIELD_NUMBER;
@@ -1013,7 +956,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
     private void maybeForceBuilderInitialization() {
       if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
-        getOwnerFieldBuilder();
         getContainersFieldBuilder();
       }
     }
@@ -1045,12 +987,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
         creationTimestampBuilder_ = null;
       }
       internalGetMutableLabels().clear();
-      if (ownerBuilder_ == null) {
-        owner_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000200);
-      } else {
-        ownerBuilder_.clear();
-      }
       if (topLevelOwnerBuilder_ == null) {
         topLevelOwner_ = null;
       } else {
@@ -1059,7 +995,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
       if (containersBuilder_ == null) {
         containers_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000800);
+        bitField0_ = (bitField0_ & ~0x00000400);
       } else {
         containersBuilder_.clear();
       }
@@ -1117,24 +1053,15 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
       result.labels_ = internalGetLabels();
       result.labels_.makeImmutable();
-      if (ownerBuilder_ == null) {
-        if (((bitField0_ & 0x00000200) != 0)) {
-          owner_ = java.util.Collections.unmodifiableList(owner_);
-          bitField0_ = (bitField0_ & ~0x00000200);
-        }
-        result.owner_ = owner_;
-      } else {
-        result.owner_ = ownerBuilder_.build();
-      }
       if (topLevelOwnerBuilder_ == null) {
         result.topLevelOwner_ = topLevelOwner_;
       } else {
         result.topLevelOwner_ = topLevelOwnerBuilder_.build();
       }
       if (containersBuilder_ == null) {
-        if (((bitField0_ & 0x00000800) != 0)) {
+        if (((bitField0_ & 0x00000400) != 0)) {
           containers_ = java.util.Collections.unmodifiableList(containers_);
-          bitField0_ = (bitField0_ & ~0x00000800);
+          bitField0_ = (bitField0_ & ~0x00000400);
         }
         result.containers_ = containers_;
       } else {
@@ -1216,31 +1143,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
         mergeCreationTimestamp(other.getCreationTimestamp());
       }
       internalGetMutableLabels().mergeFrom(other.internalGetLabels());
-      if (ownerBuilder_ == null) {
-        if (!other.owner_.isEmpty()) {
-          if (owner_.isEmpty()) {
-            owner_ = other.owner_;
-            bitField0_ = (bitField0_ & ~0x00000200);
-          } else {
-            ensureOwnerIsMutable();
-            owner_.addAll(other.owner_);
-          }
-          onChanged();
-        }
-      } else {
-        if (!other.owner_.isEmpty()) {
-          if (ownerBuilder_.isEmpty()) {
-            ownerBuilder_.dispose();
-            ownerBuilder_ = null;
-            owner_ = other.owner_;
-            bitField0_ = (bitField0_ & ~0x00000200);
-            ownerBuilder_ =
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ? getOwnerFieldBuilder() : null;
-          } else {
-            ownerBuilder_.addAllMessages(other.owner_);
-          }
-        }
-      }
       if (other.hasTopLevelOwner()) {
         mergeTopLevelOwner(other.getTopLevelOwner());
       }
@@ -1248,7 +1150,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
         if (!other.containers_.isEmpty()) {
           if (containers_.isEmpty()) {
             containers_ = other.containers_;
-            bitField0_ = (bitField0_ & ~0x00000800);
+            bitField0_ = (bitField0_ & ~0x00000400);
           } else {
             ensureContainersIsMutable();
             containers_.addAll(other.containers_);
@@ -1261,7 +1163,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             containersBuilder_.dispose();
             containersBuilder_ = null;
             containers_ = other.containers_;
-            bitField0_ = (bitField0_ & ~0x00000800);
+            bitField0_ = (bitField0_ & ~0x00000400);
             containersBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ? getContainersFieldBuilder() : null;
           } else {
@@ -2052,230 +1954,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
 
-    private java.util.List<io.harness.perpetualtask.k8s.watch.Owner> owner_ = java.util.Collections.emptyList();
-    private void ensureOwnerIsMutable() {
-      if (!((bitField0_ & 0x00000200) != 0)) {
-        owner_ = new java.util.ArrayList<io.harness.perpetualtask.k8s.watch.Owner>(owner_);
-        bitField0_ |= 0x00000200;
-      }
-    }
-
-    private com.google.protobuf.RepeatedFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Owner,
-        io.harness.perpetualtask.k8s.watch.Owner.Builder, io.harness.perpetualtask.k8s.watch.OwnerOrBuilder>
-        ownerBuilder_;
-
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public java.util.List<io.harness.perpetualtask.k8s.watch.Owner> getOwnerList() {
-      if (ownerBuilder_ == null) {
-        return java.util.Collections.unmodifiableList(owner_);
-      } else {
-        return ownerBuilder_.getMessageList();
-      }
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public int getOwnerCount() {
-      if (ownerBuilder_ == null) {
-        return owner_.size();
-      } else {
-        return ownerBuilder_.getCount();
-      }
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public io.harness.perpetualtask.k8s.watch.Owner getOwner(int index) {
-      if (ownerBuilder_ == null) {
-        return owner_.get(index);
-      } else {
-        return ownerBuilder_.getMessage(index);
-      }
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public Builder setOwner(int index, io.harness.perpetualtask.k8s.watch.Owner value) {
-      if (ownerBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureOwnerIsMutable();
-        owner_.set(index, value);
-        onChanged();
-      } else {
-        ownerBuilder_.setMessage(index, value);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public Builder setOwner(int index, io.harness.perpetualtask.k8s.watch.Owner.Builder builderForValue) {
-      if (ownerBuilder_ == null) {
-        ensureOwnerIsMutable();
-        owner_.set(index, builderForValue.build());
-        onChanged();
-      } else {
-        ownerBuilder_.setMessage(index, builderForValue.build());
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public Builder addOwner(io.harness.perpetualtask.k8s.watch.Owner value) {
-      if (ownerBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureOwnerIsMutable();
-        owner_.add(value);
-        onChanged();
-      } else {
-        ownerBuilder_.addMessage(value);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public Builder addOwner(int index, io.harness.perpetualtask.k8s.watch.Owner value) {
-      if (ownerBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureOwnerIsMutable();
-        owner_.add(index, value);
-        onChanged();
-      } else {
-        ownerBuilder_.addMessage(index, value);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public Builder addOwner(io.harness.perpetualtask.k8s.watch.Owner.Builder builderForValue) {
-      if (ownerBuilder_ == null) {
-        ensureOwnerIsMutable();
-        owner_.add(builderForValue.build());
-        onChanged();
-      } else {
-        ownerBuilder_.addMessage(builderForValue.build());
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public Builder addOwner(int index, io.harness.perpetualtask.k8s.watch.Owner.Builder builderForValue) {
-      if (ownerBuilder_ == null) {
-        ensureOwnerIsMutable();
-        owner_.add(index, builderForValue.build());
-        onChanged();
-      } else {
-        ownerBuilder_.addMessage(index, builderForValue.build());
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public Builder addAllOwner(java.lang.Iterable<? extends io.harness.perpetualtask.k8s.watch.Owner> values) {
-      if (ownerBuilder_ == null) {
-        ensureOwnerIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, owner_);
-        onChanged();
-      } else {
-        ownerBuilder_.addAllMessages(values);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public Builder clearOwner() {
-      if (ownerBuilder_ == null) {
-        owner_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000200);
-        onChanged();
-      } else {
-        ownerBuilder_.clear();
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public Builder removeOwner(int index) {
-      if (ownerBuilder_ == null) {
-        ensureOwnerIsMutable();
-        owner_.remove(index);
-        onChanged();
-      } else {
-        ownerBuilder_.remove(index);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public io.harness.perpetualtask.k8s.watch.Owner.Builder getOwnerBuilder(int index) {
-      return getOwnerFieldBuilder().getBuilder(index);
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public io.harness.perpetualtask.k8s.watch.OwnerOrBuilder getOwnerOrBuilder(int index) {
-      if (ownerBuilder_ == null) {
-        return owner_.get(index);
-      } else {
-        return ownerBuilder_.getMessageOrBuilder(index);
-      }
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public java.util.List<? extends io.harness.perpetualtask.k8s.watch.OwnerOrBuilder> getOwnerOrBuilderList() {
-      if (ownerBuilder_ != null) {
-        return ownerBuilder_.getMessageOrBuilderList();
-      } else {
-        return java.util.Collections.unmodifiableList(owner_);
-      }
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public io.harness.perpetualtask.k8s.watch.Owner.Builder addOwnerBuilder() {
-      return getOwnerFieldBuilder().addBuilder(io.harness.perpetualtask.k8s.watch.Owner.getDefaultInstance());
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public io.harness.perpetualtask.k8s.watch.Owner.Builder addOwnerBuilder(int index) {
-      return getOwnerFieldBuilder().addBuilder(index, io.harness.perpetualtask.k8s.watch.Owner.getDefaultInstance());
-    }
-    /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-     */
-    public java.util.List<io.harness.perpetualtask.k8s.watch.Owner.Builder> getOwnerBuilderList() {
-      return getOwnerFieldBuilder().getBuilderList();
-    }
-    private com.google.protobuf.RepeatedFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Owner,
-        io.harness.perpetualtask.k8s.watch.Owner.Builder, io.harness.perpetualtask.k8s.watch.OwnerOrBuilder>
-    getOwnerFieldBuilder() {
-      if (ownerBuilder_ == null) {
-        ownerBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Owner,
-            io.harness.perpetualtask.k8s.watch.Owner.Builder, io.harness.perpetualtask.k8s.watch.OwnerOrBuilder>(
-            owner_, ((bitField0_ & 0x00000200) != 0), getParentForChildren(), isClean());
-        owner_ = null;
-      }
-      return ownerBuilder_;
-    }
-
     private io.harness.perpetualtask.k8s.watch.Owner topLevelOwner_;
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Owner,
         io.harness.perpetualtask.k8s.watch.Owner.Builder, io.harness.perpetualtask.k8s.watch.OwnerOrBuilder>
@@ -2392,9 +2070,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     private java.util.List<io.harness.perpetualtask.k8s.watch.Container> containers_ =
         java.util.Collections.emptyList();
     private void ensureContainersIsMutable() {
-      if (!((bitField0_ & 0x00000800) != 0)) {
+      if (!((bitField0_ & 0x00000400) != 0)) {
         containers_ = new java.util.ArrayList<io.harness.perpetualtask.k8s.watch.Container>(containers_);
-        bitField0_ |= 0x00000800;
+        bitField0_ |= 0x00000400;
       }
     }
 
@@ -2538,7 +2216,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     public Builder clearContainers() {
       if (containersBuilder_ == null) {
         containers_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000800);
+        bitField0_ = (bitField0_ & ~0x00000400);
         onChanged();
       } else {
         containersBuilder_.clear();
@@ -2612,7 +2290,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             new com.google.protobuf.RepeatedFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Container,
                 io.harness.perpetualtask.k8s.watch.Container.Builder,
                 io.harness.perpetualtask.k8s.watch.ContainerOrBuilder>(
-                containers_, ((bitField0_ & 0x00000800) != 0), getParentForChildren(), isClean());
+                containers_, ((bitField0_ & 0x00000400) != 0), getParentForChildren(), isClean());
         containers_ = null;
       }
       return containersBuilder_;

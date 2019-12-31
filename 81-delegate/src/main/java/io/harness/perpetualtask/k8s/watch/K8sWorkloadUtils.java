@@ -1,6 +1,8 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -91,6 +93,7 @@ public class K8sWorkloadUtils {
         .setKind(topLevelOwner.getKind())
         .setName(topLevelOwner.getMetadata().getName())
         .setUid(topLevelOwner.getMetadata().getUid())
+        .putAllLabels(ofNullable(topLevelOwner.getMetadata().getLabels()).orElse(emptyMap()))
         .build();
   }
 }

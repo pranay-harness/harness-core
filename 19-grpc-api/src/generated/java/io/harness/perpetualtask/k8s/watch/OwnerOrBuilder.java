@@ -33,4 +33,31 @@ public interface OwnerOrBuilder extends
    * <code>string name = 3;</code>
    */
   com.google.protobuf.ByteString getNameBytes();
+
+  /**
+   * <code>map&lt;string, string&gt; labels = 4;</code>
+   */
+  int getLabelsCount();
+  /**
+   * <code>map&lt;string, string&gt; labels = 4;</code>
+   */
+  boolean containsLabels(java.lang.String key);
+  /**
+   * Use {@link #getLabelsMap()} instead.
+   */
+  @java.lang.Deprecated java.util.Map<java.lang.String, java.lang.String> getLabels();
+  /**
+   * <code>map&lt;string, string&gt; labels = 4;</code>
+   */
+  java.util.Map<java.lang.String, java.lang.String> getLabelsMap();
+  /**
+   * <code>map&lt;string, string&gt; labels = 4;</code>
+   */
+
+  java.lang.String getLabelsOrDefault(java.lang.String key, java.lang.String defaultValue);
+  /**
+   * <code>map&lt;string, string&gt; labels = 4;</code>
+   */
+
+  java.lang.String getLabelsOrThrow(java.lang.String key);
 }
