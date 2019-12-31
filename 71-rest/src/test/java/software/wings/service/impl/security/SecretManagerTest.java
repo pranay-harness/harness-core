@@ -17,7 +17,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTED_FIELD_MASK;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -43,9 +42,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.QueryImpl;
-import software.wings.beans.Account;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.FeatureName;
@@ -426,21 +423,5 @@ public class SecretManagerTest extends CategoryTest {
     } catch (Exception e) {
       fail(e.getMessage());
     }
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void testValidateGlobalSecretManager() {
-    QueryImpl<Account> query = mock(QueryImpl.class);
-    MorphiaIterator<Account, Account> result = mock(MorphiaIterator.class);
-    when(wingsPersistence.createQuery(eq(Account.class), any())).thenReturn(query);
-    when(query.fetch()).thenReturn(result);
-
-    KmsConfig kmsConfig = mock(KmsConfig.class);
-    when(kmsService.getGlobalKmsConfig()).thenReturn(kmsConfig);
-    secretManager.renewVaultTokensAndValidateGlobalSecretManager();
-    when(kmsService.encrypt(any(), eq(GLOBAL_ACCOUNT_ID), eq(kmsConfig))).thenReturn(null);
-    verify(kmsService, times(1)).encrypt(any(), eq(GLOBAL_ACCOUNT_ID), eq(kmsConfig));
   }
 }

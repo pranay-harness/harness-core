@@ -7,8 +7,6 @@ import com.google.inject.Inject;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.service.intfc.ContinuousVerificationService;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
 import software.wings.beans.Account;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
@@ -17,13 +15,9 @@ import software.wings.verification.log.LogsCVConfiguration;
 import java.util.List;
 
 @Slf4j
-public class ServiceGuardLogAnalysisJob implements Job, Handler<Account> {
-  public static final String SERVICE_GUARD_LOG_ANALYSIS_CRON = "SERVICE_GUARD_LOG_ANALYSIS_CRON";
+public class ServiceGuardLogAnalysisJob implements Handler<Account> {
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private CVConfigurationService cvConfigurationService;
-
-  @Override
-  public void execute(JobExecutionContext jobExecutionContext) {}
 
   @Override
   public void handle(Account account) {

@@ -17,7 +17,6 @@ import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRI
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeCount;
 import static io.harness.security.encryption.EncryptionType.AWS_SECRETS_MANAGER;
 import static io.harness.security.encryption.EncryptionType.AZURE_VAULT;
@@ -82,7 +81,6 @@ import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.query.Query;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
-import software.wings.beans.Account;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.Base;
@@ -1139,22 +1137,6 @@ public class SecretManagerImpl implements SecretManager {
     encryptedData.setBase64Encoded(true);
     String recordId = wingsPersistence.save(encryptedData);
     generateAuditForEncryptedRecord(accountId, existingEncryptedRecord, recordId);
-  }
-
-  @Override
-  public void renewVaultTokensAndValidateGlobalSecretManager() {
-    Query<Account> query = wingsPersistence.createQuery(Account.class, excludeAuthority);
-    try (HIterator<Account> records = new HIterator<>(query.fetch())) {
-      for (Account account : records) {
-        try {
-          vaultService.renewTokens(account.getUuid());
-          vaultService.appRoleLogin(account.getUuid());
-        } catch (Exception e) {
-          logger.info("Failed to renew vault token for account id {}", account.getUuid(), e);
-        }
-      }
-    }
-    validateGlobalSecretManager();
   }
 
   @Override
@@ -2403,20 +2385,6 @@ public class SecretManagerImpl implements SecretManager {
     } else {
       logger.warn("Secret manager with id {} and type {} can't be resolved.", kmsId, encryptionType);
       return null;
-    }
-  }
-
-  private void validateGlobalSecretManager() {
-    KmsConfig kmsConfig = kmsService.getGlobalKmsConfig();
-    if (kmsConfig != null) {
-      try {
-        kmsService.encrypt(UUID.randomUUID().toString().toCharArray(), GLOBAL_ACCOUNT_ID, kmsConfig);
-        logger.info("Successfully validated global secret manager {} of type {}", kmsConfig.getUuid(),
-            kmsConfig.getEncryptionType());
-      } catch (Exception e) {
-        logger.error("Could not validate global secret manager with id {} of type {}", kmsConfig.getUuid(),
-            kmsConfig.getEncryptionType(), e);
-      }
     }
   }
 
