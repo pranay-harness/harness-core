@@ -6,6 +6,7 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 
 import com.google.inject.Inject;
 
+import com.hazelcast.util.Preconditions;
 import io.harness.ccm.budget.entities.AlertThreshold;
 import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.budget.entities.Budget.BudgetKeys;
@@ -20,6 +21,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.service.impl.notifications.UserGroupBasedDispatcher;
 import software.wings.service.intfc.UserGroupService;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -53,24 +55,28 @@ public class BudgetHandler implements Handler<Budget> {
 
     String accountId = budget.getAccountId();
     String userGroupId = budget.getUserGroupId();
+    UserGroup userGroup = userGroupService.get(accountId, userGroupId, true);
+    if (null == userGroupId || null == userGroup) {
+      logger.warn("This budget has no associated UserGroup.");
+      return;
+    }
     for (int i = 0; i < alertThresholds.length; i++) {
       double currentCost = 0;
+      try {
+        currentCost = budgetService.getActualCost(budget);
+      } catch (SQLException e) {
+        logger.error(e.getMessage());
+      }
       if (alertThresholds[i].getAlertsSent() <= 0
           && exceedsThreshold(currentCost, getThresholdAmount(budget, alertThresholds[i]))) {
-        sendBudgetAlerts(accountId, userGroupId);
+        sendBudgetAlerts(accountId, userGroup);
         budgetService.incAlertCount(budget, i);
       }
     }
   }
 
-  private boolean sendBudgetAlerts(String accountId, String userGroupId) {
-    if (null == userGroupId) {
-      return false;
-    }
-    UserGroup userGroup = userGroupService.get(accountId, userGroupId, true);
-    if (null == userGroup) {
-      return false;
-    }
+  private boolean sendBudgetAlerts(String accountId, UserGroup userGroup) {
+    Preconditions.checkNotNull(userGroup);
     Notification notification = InformationNotification.builder()
                                     .notificationTemplateId(BUDGET_NOTIFICATION.name())
                                     .notificationTemplateVariables(new HashMap<>())
