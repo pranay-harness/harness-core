@@ -220,47 +220,87 @@ public class OwnerRule implements TestRule {
     return null;
   }
 
+  private static String generateJQL(String test) {
+    return format("type = Bug"
+            + " AND statusCategory != Done"
+            + " AND summary ~ \"%s\""
+            + " AND summary ~ \"needs fixing\"",
+        test);
+  }
+
   public static void checkForJira(String test, String developer) {
     if (getEnv("SONAR_TOKEN") == null) {
       return;
     }
 
     final DevInfo devInfo = active.get(developer);
-    if (devInfo == null || devInfo.getJira() == null || devInfo.getTeam() == null) {
+    if (devInfo == null) {
       return;
     }
 
     try {
       JiraClient jira = getJira();
-
-      String jql = format("type = Bug"
-              + " AND statusCategory != Done"
-              + " AND assignee = \"%s\""
-              + " AND summary ~ \"%s\""
-              + " AND summary ~ \"needs fixing\"",
-          devInfo.getJira(), test);
+      String jql = generateJQL(test);
       Issue.SearchResult searchResult = jira.searchIssues(jql, 1);
       if (searchResult.total == 0) {
-        String[] split = devInfo.getTeam().split(" ");
-
-        Issue.FluentCreate create = jira.createIssue(split[0], "Bug")
-                                        .field("assignee", devInfo.getJira())
-                                        .field("summary", test + " needs fixing")
-                                        .field("priority", "P1");
-
-        if (split.length > 1) {
-          List<String> list = new ArrayList();
-          list.add(devInfo.getTeam());
-          create.field("components", list);
+        if (devInfo.getJira() == null || devInfo.getTeam() == null) {
+          return;
         }
 
-        Issue issue = create.execute();
-
+        Issue issue = generateJiraCreate(test, devInfo).execute();
         logger.info("New jira issue was created {}", issue.getKey());
+        return;
+      }
+
+      Issue issue = searchResult.issues.get(0);
+
+      if (!issue.getProject().getKey().equals(jiraProject(devInfo))) {
+        // We cannot automatically move an issue from one project to another.
+        // Instead we are going to mark the current one as rejected.
+        // Next time we would not find it and we will create a new one.
+
+        // First lets set Bug Resolution to Ownership changed
+        issue.update().field("customfield_10687", "Ownership changed").execute();
+
+        issue.transition().execute("Rejected");
+        return;
       }
     } catch (JiraException e) {
       logger.error("Failed to check the jira issue", e);
     }
+  }
+
+  private static String jiraProject(DevInfo devInfo) {
+    if (devInfo.getTeam() == null) {
+      return null;
+    }
+    return devInfo.getTeam().split(" ")[0];
+  }
+
+  private static String jiraComponent(DevInfo devInfo) {
+    if (devInfo.getTeam() == null) {
+      return null;
+    }
+    if (devInfo.getTeam().split(" ").length == 1) {
+      return null;
+    }
+    return devInfo.getTeam();
+  }
+
+  private static Issue.FluentCreate generateJiraCreate(String test, DevInfo devInfo) throws JiraException {
+    Issue.FluentCreate create = getJira()
+                                    .createIssue(jiraProject(devInfo), "Bug")
+                                    .field("assignee", devInfo.getJira())
+                                    .field("summary", test + " needs fixing")
+                                    .field("priority", "P1");
+
+    String jiraComponent = jiraComponent(devInfo);
+    if (jiraComponent != null) {
+      List<String> list = new ArrayList();
+      list.add(jiraComponent);
+      create.field("components", list);
+    }
+    return create;
   }
 
   public static void fileOwnerAs(String developer, String type) {

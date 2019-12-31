@@ -823,7 +823,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should invite existing user.
    */
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldInviteExistingUser() {
