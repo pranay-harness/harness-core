@@ -10,6 +10,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.harness.perpetualtask.k8s.cronjobs.client.K8sCronJobClient;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -72,8 +73,9 @@ public class K8sWorkloadUtils {
           ownerMapper = key -> client.extensions().jobs().inNamespace(key.namespace).withName(key.name).get();
           break;
         case "CronJob":
-          // supporting CronJob requires fabric8 client version upgrade
-          // fallthrough
+          ownerMapper = key
+              -> client.adapt(K8sCronJobClient.class).cronJobs().inNamespace(key.namespace).withName(key.name).get();
+          break;
         default:
           logger.warn("Unsupported owner: {}", ownerReference);
           break;

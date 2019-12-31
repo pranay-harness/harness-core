@@ -1,1 +1,2 @@
 io.harness.perpetualtask.k8s.metrics.client.K8sMetricsExtensionAdapter
+io.harness.perpetualtask.k8s.cronjobs.client.K8sCronJobExtensionAdapter
