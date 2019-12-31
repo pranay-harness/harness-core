@@ -34,6 +34,11 @@ import java.util.Map.Entry;
 @Slf4j
 public class OwnerRule implements TestRule {
   @Getter(lazy = true) private static final JiraClient jira = connect();
+  public static final String ASSIGNEE = "assignee";
+  public static final String SUMMARY = "summary";
+  public static final String NEEDS_FIXING = "needs fixing";
+  public static final String COMPONENTS = "components";
+  public static final String PRIORITY = "priority";
 
   private static JiraClient connect() {
     ScmSecret scmSecret = new ScmSecret();
@@ -51,6 +56,7 @@ public class OwnerRule implements TestRule {
 
   public static final String PLATFORM = "PL";
   public static final String CONTINUOUS_DEPLOYMENT_PLATFORM = "CD Platform";
+  public static final String CONTINUOUS_DEPLOYMENT_CORE = "CD Core";
   public static final String CONTINUOUS_VERIFICATION = "CV";
   public static final String CONTINUOUS_EFFICIENCY = "CE";
 
@@ -144,7 +150,7 @@ public class OwnerRule implements TestRule {
           .put(SHASWAT, DevInfo.builder().email("shaswat.deep@harness.io").slack("UL9J5EH7A").build())
           .put(SHUBHANSHU, DevInfo.builder().email("shubhanshu.verma@harness.io").slack("UKLTRSAN9").build())
           .put(SOWMYA, DevInfo.builder().email("sowmya.k@harness.io").slack("UHM19HBKM").build())
-          .put(SRINIVAS, DevInfo.builder().email("srinivas@harness.io").slack("U4QC23961").build())
+          .put(SRINIVAS, defaultDevInfo(SRINIVAS).slack("U4QC23961").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(SRIRAM, DevInfo.builder().email("sriram@harness.io").slack("U5L475PK5").build())
           .put(UJJAWAL, DevInfo.builder().email("ujjawal.prasad@harness.io").slack("UKLSV01DW").build())
           .put(UTKARSH, DevInfo.builder().email("utkarsh.gupta@harness.io").slack("UKGF0UL58").build())
@@ -223,9 +229,9 @@ public class OwnerRule implements TestRule {
   private static String generateJQL(String test) {
     return format("type = Bug"
             + " AND statusCategory != Done"
-            + " AND summary ~ \"%s\""
-            + " AND summary ~ \"needs fixing\"",
-        test);
+            + " AND %s ~ \"%s\""
+            + " AND %s ~ \"%s\"",
+        SUMMARY, test, SUMMARY, NEEDS_FIXING);
   }
 
   public static void checkForJira(String test, String developer) {
@@ -265,6 +271,19 @@ public class OwnerRule implements TestRule {
         issue.transition().execute("Rejected");
         return;
       }
+
+      String jiraComponent = jiraComponent(devInfo);
+      if (jiraComponent != null
+          && (issue.getComponents().size() != 1 || !jiraComponent.equals(issue.getComponents().get(0).getName()))) {
+        List<String> list = new ArrayList();
+        list.add(jiraComponent);
+        issue.update().field(COMPONENTS, list).execute();
+      }
+
+      if (devInfo.getJira() != null && !issue.getAssignee().getEmail().equals(devInfo.getEmail())) {
+        issue.update().field(ASSIGNEE, devInfo.getJira()).execute();
+      }
+
     } catch (JiraException e) {
       logger.error("Failed to check the jira issue", e);
     }
@@ -290,15 +309,15 @@ public class OwnerRule implements TestRule {
   private static Issue.FluentCreate generateJiraCreate(String test, DevInfo devInfo) throws JiraException {
     Issue.FluentCreate create = getJira()
                                     .createIssue(jiraProject(devInfo), "Bug")
-                                    .field("assignee", devInfo.getJira())
-                                    .field("summary", test + " needs fixing")
-                                    .field("priority", "P1");
+                                    .field(ASSIGNEE, devInfo.getJira())
+                                    .field(SUMMARY, test + " " + NEEDS_FIXING)
+                                    .field(PRIORITY, "P1");
 
     String jiraComponent = jiraComponent(devInfo);
     if (jiraComponent != null) {
       List<String> list = new ArrayList();
       list.add(jiraComponent);
-      create.field("components", list);
+      create.field(COMPONENTS, list);
     }
     return create;
   }
