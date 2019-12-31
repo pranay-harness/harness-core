@@ -25,6 +25,7 @@ message Owner {
   string uid = 1;
   string kind = 2;
   string name = 3;
+  map<string, string> labels = 4;
 }
 
 message PodInfo {
@@ -38,7 +39,6 @@ message PodInfo {
   google.protobuf.Timestamp creation_timestamp = 8;
   // label without value is invalid
   map<string, string> labels = 9;
-  repeated Owner owner = 10;
   Owner top_level_owner = 11;
   repeated Container containers = 12;
   string cluster_id = 13;

@@ -135,27 +135,6 @@ public interface PodInfoOrBuilder extends
   java.lang.String getLabelsOrThrow(java.lang.String key);
 
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-   */
-  java.util.List<io.harness.perpetualtask.k8s.watch.Owner> getOwnerList();
-  /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-   */
-  io.harness.perpetualtask.k8s.watch.Owner getOwner(int index);
-  /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-   */
-  int getOwnerCount();
-  /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-   */
-  java.util.List<? extends io.harness.perpetualtask.k8s.watch.OwnerOrBuilder> getOwnerOrBuilderList();
-  /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Owner owner = 10;</code>
-   */
-  io.harness.perpetualtask.k8s.watch.OwnerOrBuilder getOwnerOrBuilder(int index);
-
-  /**
    * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
    */
   boolean hasTopLevelOwner();
