@@ -2,7 +2,6 @@ package io.harness.generator;
 
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 
 import com.google.inject.Inject;
@@ -25,7 +24,7 @@ public class EnvironmentGenerator {
   @Inject EnvironmentService environmentService;
   @Inject WingsPersistence wingsPersistence;
 
-  public enum Environments { GENERIC_TEST, FUNCTIONAL_TEST, PIPELINE_RBAC_QA_TEST, PIPELINE_RBAC_PROD_TEST }
+  public enum Environments { GENERIC_TEST, FUNCTIONAL_TEST }
 
   public Environment ensurePredefined(Randomizer.Seed seed, Owners owners, Environments predefined) {
     switch (predefined) {
@@ -33,10 +32,6 @@ public class EnvironmentGenerator {
         return ensureGenericTest(seed, owners);
       case FUNCTIONAL_TEST:
         return ensureFunctionalTest(seed, owners);
-      case PIPELINE_RBAC_QA_TEST:
-        return ensurePipelineRBACQATest(seed, owners);
-      case PIPELINE_RBAC_PROD_TEST:
-        return ensurePipelineRBACProdTest(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -56,20 +51,6 @@ public class EnvironmentGenerator {
         () -> applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST));
     return ensureEnvironment(seed, owners,
         anEnvironment().appId(application.getUuid()).name("FunctionalTest Environment").environmentType(PROD).build());
-  }
-
-  private Environment ensurePipelineRBACQATest(Randomizer.Seed seed, Owners owners) {
-    final Application application =
-        owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
-    return ensureEnvironment(seed, owners,
-        anEnvironment().appId(application.getUuid()).name("Pipeline RBAC QA Env").environmentType(NON_PROD).build());
-  }
-
-  private Environment ensurePipelineRBACProdTest(Randomizer.Seed seed, Owners owners) {
-    final Application application =
-        owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
-    return ensureEnvironment(seed, owners,
-        anEnvironment().appId(application.getUuid()).name("Pipeline RBAC Prod Env").environmentType(PROD).build());
   }
 
   public Environment ensureRandom(Randomizer.Seed seed, Owners owners) {
