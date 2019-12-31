@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.cv;
 
+import static software.wings.common.VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD;
+
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
@@ -12,16 +14,20 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.intfc.analysis.ClusterLevel;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends AbstractDataCollectionTask<T> {
   private LogDataCollector<T> logDataCollector;
+  private LogDataCollectionInfoV2 dataCollectionInfo;
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
 
   public LogDataCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
@@ -32,6 +38,7 @@ public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends Ab
   @Override
   protected void collectAndSaveData(LogDataCollectionInfoV2 dataCollectionInfo) throws DataCollectionException {
     this.logDataCollector = (LogDataCollector<T>) getDataCollector();
+    this.dataCollectionInfo = dataCollectionInfo;
     final List<LogElement> logElements = new ArrayList<>();
     final List<Callable<List<LogElement>>> callables = new ArrayList<>();
     if (dataCollectionInfo.getHosts().isEmpty()) {
@@ -43,14 +50,35 @@ public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends Ab
       dataCollectionInfo.getHosts().forEach(host -> addHeartbeats(Optional.of(host), dataCollectionInfo, logElements));
     }
     List<Optional<List<LogElement>>> results = execute(callables);
+    List<LogElement> allLogs = new ArrayList<>();
+
     results.forEach(result -> {
       if (result.isPresent()) {
-        logElements.addAll(result.get());
+        allLogs.addAll(result.get());
       }
     });
+    validateLogCounts(allLogs);
+    logElements.addAll(allLogs);
     save(dataCollectionInfo, logElements);
   }
+  private void validateLogCounts(List<LogElement> allLogs) {
+    long limitPerMinute = TOTAL_HITS_PER_MIN_THRESHOLD;
+    long limitForTheDuration = limitPerMinute * getDuration().toMinutes();
+    Map<String, Long> hostsCount =
+        allLogs.stream().collect(Collectors.groupingBy(log -> log.getHost(), Collectors.counting()));
+    hostsCount.forEach((host, count) -> {
+      if (count > limitForTheDuration) {
+        String errorMsg = "Too many logs(" + count + ") for host " + host
+            + ", Please refine your query. The threshold per minute is " + TOTAL_HITS_PER_MIN_THRESHOLD;
+        getActivityLogger().error(errorMsg);
+        throw new DataCollectionException(errorMsg);
+      }
+    });
+  }
 
+  private Duration getDuration() {
+    return Duration.between(dataCollectionInfo.getStartTime(), dataCollectionInfo.getEndTime());
+  }
   private void save(LogDataCollectionInfoV2 dataCollectionInfo, List<LogElement> logElements)
       throws DataCollectionException {
     try {
