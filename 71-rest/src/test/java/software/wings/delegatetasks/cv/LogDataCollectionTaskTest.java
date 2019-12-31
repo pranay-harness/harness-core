@@ -2,13 +2,16 @@ package software.wings.delegatetasks.cv;
 
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static software.wings.common.VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -25,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.DataCollectionExecutorService;
+import software.wings.delegatetasks.DelegateCVActivityLogService.Logger;
 import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.service.impl.analysis.LogDataCollectionInfoV2;
 import software.wings.service.impl.analysis.LogElement;
@@ -34,13 +38,16 @@ import software.wings.sm.StateType;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class LogDataCollectionTaskTest extends WingsBaseTest {
   private LogDataCollectionTask<LogDataCollectionInfoV2> logDataCollectionTask;
   @Mock private LogDataCollector<LogDataCollectionInfoV2> logDataCollector;
   @Mock private LogAnalysisStoreService logAnalysisStoreService;
   @Inject private DataCollectionExecutorService dataCollectionService;
+  @Mock private Logger activityLogger;
   @Before
   public void setupTests() throws IllegalAccessException, IOException {
     initMocks(this);
@@ -50,6 +57,7 @@ public class LogDataCollectionTaskTest extends WingsBaseTest {
     dataCollectionService = spy(dataCollectionService);
     FieldUtils.writeField(logDataCollectionTask, "dataCollectionService", dataCollectionService, true);
     FieldUtils.writeField(logDataCollectionTask, "logAnalysisStoreService", logAnalysisStoreService, true);
+    when(logDataCollectionTask.getActivityLogger()).thenReturn(activityLogger);
     when(logAnalysisStoreService.save(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(true);
   }
@@ -87,6 +95,86 @@ public class LogDataCollectionTaskTest extends WingsBaseTest {
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
     verify(dataCollectionService).executeParrallel(captor.capture());
     assertThat(captor.getValue().size()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCollectAndSave_IfNumberOfLogsPerHostsAreLessThanTheThreshold()
+      throws DataCollectionException, IOException {
+    LogDataCollectionInfoV2 logDataCollectionInfo = createLogDataCollectionInfo();
+    when(logDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1"));
+    Instant now = Instant.ofEpochMilli(Timestamp.currentMinuteBoundary());
+    when(logDataCollectionInfo.getStartTime()).thenReturn(now.minus(1, ChronoUnit.MINUTES));
+    when(logDataCollectionInfo.getEndTime()).thenReturn(now);
+    int numberOfLogs = (int) TOTAL_HITS_PER_MIN_THRESHOLD;
+    List<LogElement> logElements = getLogElements(numberOfLogs);
+    logElements.forEach(logElement -> logElement.setHost("host1"));
+    when(logDataCollector.fetchLogs(any())).thenReturn(logElements);
+    logDataCollectionTask.collectAndSaveData(logDataCollectionInfo);
+    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+    verify(logAnalysisStoreService)
+        .save(eq(logDataCollectionInfo.getStateType()), any(), any(), any(), any(), any(), any(), any(), any(),
+            captor.capture());
+    List<LogElement> capturedList = captor.getValue();
+    assertThat(capturedList.size()).isEqualTo(TOTAL_HITS_PER_MIN_THRESHOLD + 1);
+    verifyZeroInteractions(activityLogger);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCollectAndSave_IfNumberOfLogsPerHostsAreMoreThanTheThreshold()
+      throws DataCollectionException, IOException {
+    LogDataCollectionInfoV2 logDataCollectionInfo = createLogDataCollectionInfo();
+    when(logDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1"));
+    Instant now = Instant.ofEpochMilli(Timestamp.currentMinuteBoundary());
+    when(logDataCollectionInfo.getStartTime()).thenReturn(now.minus(1, ChronoUnit.MINUTES));
+    when(logDataCollectionInfo.getEndTime()).thenReturn(now);
+    int numberOfLogs = (int) TOTAL_HITS_PER_MIN_THRESHOLD + 1;
+    List<LogElement> logElements = getLogElements(numberOfLogs);
+    logElements.forEach(logElement -> logElement.setHost("host1"));
+    when(logDataCollector.fetchLogs(any())).thenReturn(logElements);
+    assertThatThrownBy(() -> logDataCollectionTask.collectAndSaveData(logDataCollectionInfo))
+        .isInstanceOf(DataCollectionException.class);
+    verify(activityLogger)
+        .error(eq("Too many logs(" + numberOfLogs
+            + ") for host host1, Please refine your query. The threshold per minute is "
+            + TOTAL_HITS_PER_MIN_THRESHOLD));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCollectAndSave_IfNumberOfLogsPerHostsAreMoreThanTheThresholdForMultipleMinutes()
+      throws DataCollectionException {
+    LogDataCollectionInfoV2 logDataCollectionInfo = createLogDataCollectionInfo();
+    when(logDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1"));
+    Instant now = Instant.ofEpochMilli(Timestamp.currentMinuteBoundary());
+    when(logDataCollectionInfo.getStartTime()).thenReturn(now.minus(15, ChronoUnit.MINUTES));
+    when(logDataCollectionInfo.getEndTime()).thenReturn(now);
+    int numberOfLogs = (int) TOTAL_HITS_PER_MIN_THRESHOLD * 15 + 1;
+    List<LogElement> logElements = getLogElements(numberOfLogs);
+    logElements.forEach(logElement -> logElement.setHost("host1"));
+    when(logDataCollector.fetchLogs(any())).thenReturn(logElements);
+    assertThatThrownBy(() -> logDataCollectionTask.collectAndSaveData(logDataCollectionInfo))
+        .isInstanceOf(DataCollectionException.class);
+    verify(activityLogger)
+        .error(eq("Too many logs(" + numberOfLogs
+            + ") for host host1, Please refine your query. The threshold per minute is "
+            + TOTAL_HITS_PER_MIN_THRESHOLD));
+  }
+
+  private List<LogElement> getLogElements(int size) {
+    List<LogElement> logElements = new ArrayList<>();
+    for (int i = 0; i < size; i++) {
+      logElements.add(getLogElement());
+    }
+    return logElements;
+  }
+
+  private LogElement getLogElement() {
+    return LogElement.builder().host(UUID.randomUUID().toString()).build();
   }
 
   public LogDataCollectionInfoV2 createLogDataCollectionInfo() {

@@ -188,4 +188,8 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
   protected DataCollector<T> getDataCollector() {
     return dataCollector;
   }
+
+  protected Logger getActivityLogger() {
+    return activityLogger;
+  }
 }
