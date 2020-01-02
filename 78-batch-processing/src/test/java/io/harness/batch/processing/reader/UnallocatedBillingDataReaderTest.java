@@ -50,6 +50,8 @@ public class UnallocatedBillingDataReaderTest extends WingsBaseTest {
                                                   .clusterId(CLUSTER_ID)
                                                   .instanceType(INSTANCE_TYPE)
                                                   .cost(COST)
+                                                  .cpuCost(COST / 2)
+                                                  .memoryCost(COST / 2)
                                                   .startTime(START_TIME_MILLIS)
                                                   .endTime(END_TIME_MILLIS)
                                                   .build()));
@@ -66,6 +68,8 @@ public class UnallocatedBillingDataReaderTest extends WingsBaseTest {
     assertThat(list.get(0).getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(list.get(0).getInstanceType()).isEqualTo(INSTANCE_TYPE);
     assertThat(list.get(0).getCost()).isEqualTo(COST);
+    assertThat(list.get(0).getCpuCost()).isEqualTo(COST / 2);
+    assertThat(list.get(0).getMemoryCost()).isEqualTo(COST / 2);
     assertThat(list.get(0).getStartTime()).isEqualTo(START_TIME_MILLIS);
     assertThat(list.get(0).getEndTime()).isEqualTo(END_TIME_MILLIS);
     assertThat(unallocatedBillingDataReader.read()).isNull();

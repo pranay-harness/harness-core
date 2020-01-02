@@ -47,7 +47,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
       UtilizationData utilizationData = utilizationDataForInstances.get(instanceData.getInstanceId());
       BillingData billingData =
           billingCalculationService.getInstanceBillingAmount(instanceData, utilizationData, startTime, endTime);
-      logger.info("Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmount());
+      logger.info("Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmountBreakup());
       HarnessServiceInfo harnessServiceInfo = getHarnessServiceInfo(instanceData);
       InstanceBillingData instanceBillingData =
           InstanceBillingData.builder()
@@ -58,7 +58,9 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
               .billingAccountId("BILLING_ACCOUNT_ID")
               .startTimestamp(startTime.toEpochMilli())
               .endTimestamp(endTime.toEpochMilli())
-              .billingAmount(billingData.getBillingAmount())
+              .billingAmount(billingData.getBillingAmountBreakup().getBillingAmount())
+              .cpuBillingAmount(billingData.getBillingAmountBreakup().getCpuBillingAmount())
+              .memoryBillingAmount(billingData.getBillingAmountBreakup().getMemoryBillingAmount())
               .idleCost(billingData.getIdleCostData().getIdleCost())
               .cpuIdleCost(billingData.getIdleCostData().getCpuIdleCost())
               .memoryIdleCost(billingData.getIdleCostData().getMemoryIdleCost())

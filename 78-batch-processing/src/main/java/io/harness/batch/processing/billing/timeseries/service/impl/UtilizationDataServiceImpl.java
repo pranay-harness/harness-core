@@ -66,7 +66,7 @@ public class UtilizationDataServiceImpl {
     return successfulInsert;
   }
 
-  void updateInsertStatement(PreparedStatement statement, InstanceUtilizationData instanceUtilizationData)
+  private void updateInsertStatement(PreparedStatement statement, InstanceUtilizationData instanceUtilizationData)
       throws SQLException {
     statement.setTimestamp(1, new Timestamp(instanceUtilizationData.getStartTimestamp()), utils.getDefaultCalendar());
     statement.setTimestamp(2, new Timestamp(instanceUtilizationData.getEndTimestamp()), utils.getDefaultCalendar());
@@ -113,20 +113,20 @@ public class UtilizationDataServiceImpl {
       resultSet = statement.executeQuery(query);
       while (resultSet.next()) {
         String instanceId = resultSet.getString("INSTANCEID");
-        Double maxCpuUtilization = resultSet.getDouble("MAXCPUUTILIZATION");
-        Double maxMemoryUtilization = resultSet.getDouble("MAXMEMORYUTILIZATION");
-        Double avgCpuUtilization = resultSet.getDouble("MAXCPUUTILIZATION");
-        Double avgMemoryUtilization = resultSet.getDouble("MAXMEMORYUTILIZATION");
+        double maxCpuUtilization = resultSet.getDouble("MAXCPUUTILIZATION");
+        double maxMemoryUtilization = resultSet.getDouble("MAXMEMORYUTILIZATION");
+        double avgCpuUtilization = resultSet.getDouble("MAXCPUUTILIZATION");
+        double avgMemoryUtilization = resultSet.getDouble("MAXMEMORYUTILIZATION");
         if (serviceArnToInstanceIds.get(instanceId) != null) {
-          serviceArnToInstanceIds.get(instanceId).forEach(instance -> {
-            utilizationDataForInstances.put(instance,
-                UtilizationData.builder()
-                    .maxCpuUtilization(maxCpuUtilization)
-                    .maxMemoryUtilization(maxMemoryUtilization)
-                    .avgCpuUtilization(avgCpuUtilization)
-                    .avgMemoryUtilization(avgMemoryUtilization)
-                    .build());
-          });
+          serviceArnToInstanceIds.get(instanceId)
+              .forEach(instance
+                  -> utilizationDataForInstances.put(instance,
+                      UtilizationData.builder()
+                          .maxCpuUtilization(maxCpuUtilization)
+                          .maxMemoryUtilization(maxMemoryUtilization)
+                          .avgCpuUtilization(avgCpuUtilization)
+                          .avgMemoryUtilization(avgMemoryUtilization)
+                          .build()));
         }
       }
       return utilizationDataForInstances;
@@ -175,15 +175,14 @@ public class UtilizationDataServiceImpl {
     if (serviceArnToInstanceIds != null) {
       for (Entry<String, List<String>> entry : serviceArnToInstanceIds.entrySet()) {
         if (entry.getValue() != null) {
-          entry.getValue().forEach(instance -> {
-            utilizationDataForInstances.put(instance,
-                UtilizationData.builder()
-                    .maxCpuUtilization(1)
-                    .maxMemoryUtilization(1)
-                    .avgCpuUtilization(1)
-                    .avgMemoryUtilization(1)
-                    .build());
-          });
+          entry.getValue().forEach(instance
+              -> utilizationDataForInstances.put(instance,
+                  UtilizationData.builder()
+                      .maxCpuUtilization(1)
+                      .maxMemoryUtilization(1)
+                      .avgCpuUtilization(1)
+                      .avgMemoryUtilization(1)
+                      .build()));
         }
       }
     }
