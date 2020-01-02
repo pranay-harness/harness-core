@@ -1,5 +1,7 @@
 package software.wings.beans.alert.cv;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -15,6 +17,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -31,6 +34,7 @@ public class ContinuousVerificationAlertData implements AlertData {
   private Set<String> hosts;
   private String portalUrl;
   private String accountId;
+  private List<AlertRiskDetail> highRiskTxns;
 
   @Default private double riskScore = -1;
   private long analysisStartTime;
@@ -84,6 +88,14 @@ public class ContinuousVerificationAlertData implements AlertData {
     switch (mlAnalysisType) {
       case TIME_SERIES:
         sb.append("\nRisk Score: ").append(riskScore);
+        if (isNotEmpty(highRiskTxns)) {
+          sb.append("\nBelow are the top concerning metrics");
+          highRiskTxns.forEach(highRiskTxn
+              -> sb.append("\nMetric: ")
+                     .append(highRiskTxn.getMetricName())
+                     .append(" Group: ")
+                     .append(highRiskTxn.getTxnName()));
+        }
         break;
       case LOG_ML:
         sb.append("\nHosts: ").append(hosts);
@@ -122,5 +134,12 @@ public class ContinuousVerificationAlertData implements AlertData {
                            .append("\nIncident Time: ")
                            .append(new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(analysisEndTime)));
     return sb.toString();
+  }
+
+  @Data
+  @Builder
+  public static class AlertRiskDetail {
+    private String metricName;
+    private String txnName;
   }
 }

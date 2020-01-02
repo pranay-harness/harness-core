@@ -51,6 +51,7 @@ import software.wings.sm.StateType;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -456,7 +457,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testNotification() {
+  public void testNotification() throws IOException {
     final NewRelicCVServiceConfiguration cvConfig = createCvConfig();
     final String cvConfigId = wingsPersistence.save(cvConfig);
 
@@ -466,7 +467,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
         ContinuousVerificationAlertData.builder()
             .cvConfiguration(cvConfig)
             .analysisStartTime(10)
-            .analysisStartTime(25)
+            .analysisEndTime(25)
             .riskScore(0.6)
             .mlAnalysisType(MLAnalysisType.TIME_SERIES)
             .accountId(accountId)
@@ -486,7 +487,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
         ContinuousVerificationAlertData.builder()
             .cvConfiguration(cvConfig)
             .analysisStartTime(35)
-            .analysisStartTime(50)
+            .analysisEndTime(50)
             .riskScore(0.2)
             .mlAnalysisType(MLAnalysisType.TIME_SERIES)
             .accountId(accountId)

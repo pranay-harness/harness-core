@@ -92,6 +92,7 @@ import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
+import software.wings.beans.alert.cv.ContinuousVerificationAlertData.AlertRiskDetail;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -244,11 +245,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private CVActivityLogService cvActivityLogService;
   @Inject private StateExecutionService stateExecutionService;
 
-  private static final int PAGE_LIMIT = 999;
-  private static final int START_OFFSET = 0;
   private static final String DATE_PATTERN = "yyyy-MM-dd HH:MM";
   public static final String HARNESS_DEFAULT_TAG = "_HARNESS_DEFAULT_TAG_";
   private static final String DUMMY_METRIC_NAME = "DummyMetricName";
+  private static final int MAX_NUMBER_OF_TXNS_DETAILS_IN_ALERTS = 5;
 
   @Override
   public void saveCVExecutionMetaData(ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData) {
@@ -2560,7 +2560,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     alertData.setPortalUrl(isNotEmpty(mainConfiguration.getApiUrl()) ? mainConfiguration.getApiUrl()
                                                                      : mainConfiguration.getPortal().getUrl());
     alertData.setAccountId(cvConfiguration.getAccountId());
-
+    addHighRiskTxnsIfNecessary(alertData);
     logger.info("Opening alert with riskscore {} for {}", alertData.getRiskScore(), cvConfiguration);
     alertService.openAlert(
         cvConfiguration.getAccountId(), cvConfiguration.getAppId(), CONTINUOUS_VERIFICATION_ALERT, alertData);
@@ -2578,6 +2578,33 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     alertService.closeAllAlerts(
         cvConfiguration.getAccountId(), cvConfiguration.getAppId(), CONTINUOUS_VERIFICATION_ALERT, alertData);
     return true;
+  }
+
+  private void addHighRiskTxnsIfNecessary(ContinuousVerificationAlertData alertData) {
+    if (alertData.getMlAnalysisType() != MLAnalysisType.TIME_SERIES) {
+      return;
+    }
+
+    final SortedSet<TransactionTimeSeries> timeSeriesOfHeatMapUnit =
+        getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
+                                       .cvConfigId(alertData.getCvConfiguration().getUuid())
+                                       .startTime(alertData.getAnalysisStartTime())
+                                       .endTime(alertData.getAnalysisEndTime())
+                                       .historyStartTime(alertData.getAnalysisEndTime() - TimeUnit.HOURS.toMillis(2)
+                                           - TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES))
+                                       .build());
+
+    List<AlertRiskDetail> highRiskTxns = new ArrayList<>();
+    for (TransactionTimeSeries transactionTimeSeries : timeSeriesOfHeatMapUnit) {
+      highRiskTxns.add(AlertRiskDetail.builder()
+                           .metricName(transactionTimeSeries.getMetricTimeSeries().first().getMetricName())
+                           .txnName(transactionTimeSeries.getTransactionName())
+                           .build());
+      if (highRiskTxns.size() >= MAX_NUMBER_OF_TXNS_DETAILS_IN_ALERTS) {
+        break;
+      }
+    }
+    alertData.setHighRiskTxns(highRiskTxns);
   }
 
   @Override

@@ -40,6 +40,8 @@ import static software.wings.service.intfc.analysis.LogAnalysisResource.LOG_ANAL
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -84,6 +86,7 @@ import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
+import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.AlertServiceImpl;
@@ -114,6 +117,7 @@ import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -131,7 +135,11 @@ import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.SplunkCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -167,6 +175,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private Injector injector;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
+  @Inject private DataCollectionExecutorService dataCollectionService;
+  @Inject private DataStoreService dataStoreService;
 
   @Mock private CVConfigurationService cvConfigurationService;
   @Mock private CVTaskService cvTaskService;
@@ -268,6 +278,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     writeField(managerVerificationService, "appService", appService, true);
     writeField(managerVerificationService, "cvConfigurationService", cvConfigurationService, true);
     writeField(managerVerificationService, "cvActivityLogService", cvActivityLogService, true);
+    writeField(managerVerificationService, "dataCollectionService", dataCollectionService, true);
+    writeField(managerVerificationService, "dataStoreService", dataStoreService, true);
+
     AlertService alertService = new AlertServiceImpl();
     writeField(alertService, "wingsPersistence", wingsPersistence, true);
     writeField(alertService, "executorService", Executors.newSingleThreadScheduledExecutor(), true);
@@ -1137,7 +1150,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testTriggerTimeSeriesAlertIfNecessary() {
+  public void testTriggerTimeSeriesAlertIfNecessary() throws IOException {
     final NewRelicCVServiceConfiguration cvConfiguration = new NewRelicCVServiceConfiguration();
     cvConfiguration.setAppId(appId);
     cvConfiguration.setEnvId(envId);
@@ -1146,7 +1159,30 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     cvConfiguration.setAlertThreshold(0.5);
     cvConfiguration.setName(generateUuid());
     cvConfiguration.setAccountId(accountId);
+    cvConfiguration.setStateType(StateType.NEW_RELIC);
     final String configId = wingsPersistence.save(cvConfiguration);
+
+    File file = new File(getClass()
+                             .getClassLoader()
+                             .getResource("./verification/24x7_ts_transactionMetricRisk_MetricRecords")
+                             .getFile());
+    final Gson gson1 = new Gson();
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
+      List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
+      metricDataRecords.forEach(metricDataRecord -> {
+        metricDataRecord.setAppId(appId);
+        metricDataRecord.setCvConfigId(configId);
+        metricDataRecord.setStateType(StateType.NEW_RELIC);
+        metricDataRecord.setDataCollectionMinute(10);
+      });
+
+      final List<TimeSeriesDataRecord> dataRecords =
+          TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(metricDataRecords);
+      dataRecords.forEach(dataRecord -> dataRecord.compress());
+
+      wingsPersistence.save(dataRecords);
+    }
 
     when(cvConfigurationService.getConfiguration(anyString())).thenReturn(cvConfiguration);
 
@@ -1179,6 +1215,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(alertData.getRiskScore()).isEqualTo(0.6);
     assertThat(alertData.getCvConfiguration().getUuid()).isEqualTo(configId);
     assertThat(alertData.getLogAnomaly()).isNull();
+    assertThat(alertData.getHighRiskTxns().size()).isEqualTo(5);
 
     // same minute should not throw another alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 10);
