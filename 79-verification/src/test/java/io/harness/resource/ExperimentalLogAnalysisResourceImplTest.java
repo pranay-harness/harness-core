@@ -1,7 +1,6 @@
 package io.harness.resource;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
-import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -72,7 +71,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testSaveLogAnalysisMLRecords_shouldSuccess() throws IOException {
     Call<RestResponse<WorkflowExecution>> restCall = mock(Call.class);
@@ -88,7 +87,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testSaveLogAnalysisMLRecordsNoWorkflow() throws IOException {
     Call<RestResponse<WorkflowExecution>> restCall = mock(Call.class);

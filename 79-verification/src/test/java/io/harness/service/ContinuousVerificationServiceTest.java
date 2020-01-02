@@ -315,7 +315,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testDefaultBaseline() {
     LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
@@ -466,7 +466,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testLogsCollectionNoBaselineSetDatadogLog() {
     LogsCVConfiguration logsCVConfiguration =
@@ -676,7 +676,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = PRANJAL)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testTriggerLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -703,7 +703,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testTriggerDatadogLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -743,7 +743,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testTriggerDatadogLogsCollectionInvalidState() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -775,7 +775,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testTriggerDatadogLogsCollectionCompletedCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -794,7 +794,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testTriggerLogsCollectionNextMinuteDataCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -844,7 +844,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testLogsL1ClusteringNothingNewPast2hours() {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -1700,7 +1700,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testLogsL1ClusteringHalfBefore2hoursAndHalfAfter() {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -1925,7 +1925,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testLockCleanup() {
     DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "quartz_verification_locks");

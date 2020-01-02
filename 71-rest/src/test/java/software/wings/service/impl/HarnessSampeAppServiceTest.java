@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.UNKNOWN;
-import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.seeddata.SampleDataProviderConstants.ARTIFACT_VARIABLE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME;
@@ -274,7 +273,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UTKARSH)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureSampleAppRestore() {
     // Create a sample app

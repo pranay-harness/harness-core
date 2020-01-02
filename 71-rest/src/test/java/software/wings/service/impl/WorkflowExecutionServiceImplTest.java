@@ -6,6 +6,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -635,7 +636,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetNodeDetails() throws InterruptedException {
     String appId = app.getUuid();
@@ -889,7 +890,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldPauseAndResumeState() throws InterruptedException {
     Graph graph = getAbortedGraph();
@@ -1110,7 +1111,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * Should throw invalid argument for invalid workflow id.
    */
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowInvalidArgumentForInvalidWorkflowId() {
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
@@ -1139,7 +1140,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   // TODO: fix this. It seems there is production issues
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldAbortState() throws InterruptedException {
     Graph graph = getAbortedGraph();

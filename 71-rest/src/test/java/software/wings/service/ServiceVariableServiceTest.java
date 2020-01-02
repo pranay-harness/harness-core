@@ -7,7 +7,6 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Arrays.asList;
@@ -271,7 +270,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should override service variable.
    */
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldUpdateServiceVariable() {
     ServiceVariable variable = ServiceVariable.builder()
@@ -431,7 +430,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should delete.
    */
   @Test
-  @Owner(developers = RAMA)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldDelete() {
     ServiceVariable variable = ServiceVariable.builder().entityType(EntityType.SERVICE_TEMPLATE).build();

@@ -2,7 +2,6 @@ package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -129,7 +128,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   public void shouldUpdateServiceConfigFile() throws IOException {
     ConfigFile appConfigFile = getConfigFile();
@@ -245,7 +244,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   public void shouldOverrideEncryptedConfigFile() throws IOException {
     ConfigFile configFile = getConfigFile();

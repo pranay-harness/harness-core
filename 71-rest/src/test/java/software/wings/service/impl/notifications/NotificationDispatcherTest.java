@@ -1,5 +1,6 @@
 package software.wings.service.impl.notifications;
 
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,7 +53,7 @@ public class NotificationDispatcherTest extends WingsBaseTest {
   @Mock private SlackMessageDispatcher slackDispatcher;
 
   @Test
-  @Owner(developers = UJJAWAL)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void testNotificationGroupBasedDispatcher() {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");

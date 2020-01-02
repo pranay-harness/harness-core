@@ -1,8 +1,8 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -76,7 +76,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldOverrideServiceConfigVariable() {
     // Config variable - Entity type as Service

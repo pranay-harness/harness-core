@@ -9,7 +9,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -700,7 +699,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = POOJA)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void noKmsEncryptionUpdateObject() throws IllegalAccessException {
     String password = UUID.randomUUID().toString();

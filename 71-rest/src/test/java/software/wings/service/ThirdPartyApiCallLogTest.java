@@ -1,6 +1,6 @@
 package software.wings.service;
 
-import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
@@ -78,7 +78,7 @@ public class ThirdPartyApiCallLogTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testStatusTag() throws IOException {
     String failedCallLogJson = JsonUtils.asJson(failedCallLog);

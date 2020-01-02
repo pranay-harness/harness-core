@@ -1,7 +1,6 @@
 package io.harness.seeddata;
 
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_SAMPLE_APP;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_BASIC_WORKFLOW_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_CANARY_WORKFLOW_NAME;
@@ -104,7 +103,7 @@ public class SampleDataProviderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_SI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldCreateSampleAppWithInfraDefinitions() {
     Account account =

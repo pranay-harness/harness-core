@@ -3,6 +3,7 @@ package software.wings.helpers.ext.jenkins;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
@@ -213,7 +214,7 @@ public class JenkinsTest extends CategoryTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetLastNBuildDetailsForGitJobs() throws IOException {
     List<BuildDetails> buildDetails = jenkins.getBuildsForJob(
@@ -237,7 +238,7 @@ public class JenkinsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = RUSHABH)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetLastSuccessfulBuildForGitJob() throws IOException {
     BuildDetails buildDetails =
@@ -262,7 +263,7 @@ public class JenkinsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetLastNBuildDetailsForSvnJobs() throws IOException {
     List<BuildDetails> buildDetails =

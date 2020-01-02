@@ -635,7 +635,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAMA)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_Helm_Kubernetes() {
     endsAtTime = System.currentTimeMillis();

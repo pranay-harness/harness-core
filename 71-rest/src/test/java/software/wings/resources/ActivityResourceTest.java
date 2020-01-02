@@ -1,7 +1,6 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -119,7 +118,7 @@ public class ActivityResourceTest extends CategoryTest {
    * Should list activities.
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListActivities() {
     RestResponse<PageResponse<Activity>> restResponse =

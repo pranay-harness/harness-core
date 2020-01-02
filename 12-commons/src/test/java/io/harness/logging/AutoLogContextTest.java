@@ -30,7 +30,7 @@ public class AutoLogContextTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldPreserveSameValueOnOverride() {
     String key = "foo";

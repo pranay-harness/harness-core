@@ -606,7 +606,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetDockerRepositoriesNexus2xError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories"))

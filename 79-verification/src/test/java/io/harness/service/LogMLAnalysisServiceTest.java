@@ -8,7 +8,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NANDAN;
-import static io.harness.rule.OwnerRule.PARNIAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRIRAM;
@@ -550,7 +549,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = PARNIAN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldSaveLogCollectionMinuteMinusOne() throws Exception {
     int numOfUnknownClusters = 2 + r.nextInt(10);
@@ -583,7 +582,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = PARNIAN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldNotSaveEmptyControlAndTestEvents() throws Exception {
     int numOfUnknownClusters = 2 + r.nextInt(10);
@@ -781,7 +780,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = SRIRAM)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAnalysisSummaryControlClusters() throws Exception {
     int numOfControlClusters = 1 + r.nextInt(10);

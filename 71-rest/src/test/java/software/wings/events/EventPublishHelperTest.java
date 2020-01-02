@@ -3,7 +3,6 @@ package software.wings.events;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SOWMYA;
-import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -344,7 +343,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = SRIRAM)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testFirstRollbackEvent() {
     UserThreadLocal.set(user);
@@ -384,7 +383,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = SRIRAM)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testFirstVerifiedEvent() {
     UserThreadLocal.set(user);

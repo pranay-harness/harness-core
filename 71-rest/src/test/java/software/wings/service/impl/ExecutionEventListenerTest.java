@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
@@ -101,7 +100,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = PRASHANT)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldQueueWorkflowInfraRefactor() throws Exception {
     when(appService.getAccountIdByAppId(any())).thenReturn(ACCOUNT_ID);

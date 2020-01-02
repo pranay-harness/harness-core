@@ -397,7 +397,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldListSortByBuildNo() {
     constructArtifacts();
@@ -925,7 +925,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldDeleteArtifact() {
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
@@ -1027,7 +1027,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldNotDeleteFailedArtifacts() {
     createArtifactWithArtifactFile(ContentStatus.FAILED);
@@ -1132,7 +1132,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testFetchArtifactFiles() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
@@ -1344,7 +1344,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetCustomArtifactByBuildNumberSource() {
     CustomArtifactStream customArtifactStream =

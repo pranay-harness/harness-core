@@ -1,8 +1,8 @@
 package software.wings.stencils;
 
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.joor.Reflect.on;
@@ -90,7 +90,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAMA)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotExpandForStencilEnumOnPostProcess() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
@@ -106,7 +106,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSetDefaultValueForTheField() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(

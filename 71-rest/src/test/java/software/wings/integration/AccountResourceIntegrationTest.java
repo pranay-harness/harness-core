@@ -1,6 +1,5 @@
 package software.wings.integration;
 
-import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static javax.ws.rs.client.Entity.entity;
@@ -115,7 +114,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = HANTANG)
+  @Owner(developers = RAMA)
   @Category(IntegrationTests.class)
   public void shouldEnableAndDisableCloudCost() {
     Account account = new Account();

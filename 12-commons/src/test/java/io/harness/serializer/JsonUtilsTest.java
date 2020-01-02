@@ -134,7 +134,7 @@ public class JsonUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUseClassNameWhenUsingMapperForCloning() {
     BaseA baseA = new BaseA();

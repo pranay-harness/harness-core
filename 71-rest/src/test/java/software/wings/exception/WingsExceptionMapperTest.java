@@ -5,7 +5,6 @@ import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SOURCE;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.PUNEET;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -107,7 +106,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
   }
 
   @Test
-  @Owner(developers = PUNEET)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void recursiveParamTest() throws IllegalAccessException {
     assertThatCode(() -> {

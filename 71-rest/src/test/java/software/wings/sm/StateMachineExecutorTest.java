@@ -5,6 +5,7 @@ import static io.harness.beans.ExecutionStatus.NEW;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
@@ -276,7 +277,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTriggerAsync() throws InterruptedException {
     String appId = generateUuid();

@@ -1,7 +1,6 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -155,7 +154,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = KAMAL)
+  @Owner(developers = PRANJAL)
   @Category(IntegrationTests.class)
   public void testDatadogLogsForWorkflow() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(true, StateType.DATA_DOG_LOG);
@@ -174,7 +173,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = KAMAL)
+  @Owner(developers = PRANJAL)
   @Category(IntegrationTests.class)
   public void testDatadogLogsForServiceGuard() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(false, StateType.DATA_DOG_LOG);

@@ -1,5 +1,6 @@
 package io.harness.queue;
 
+import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ZERO;
@@ -260,7 +261,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldThrowNpeWhenRequeuingWithNullEarliestGet() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue(QueuableKeys.id, 0, null));

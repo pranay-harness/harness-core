@@ -1,6 +1,5 @@
 package software.wings.service.impl.sumo;
 
-import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doThrow;
@@ -49,7 +48,7 @@ public class SumoDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void testValidateConfigBadUrl() throws IOException, IllegalAccessException {
     when(sumoConfig.getSumoUrl()).thenReturn("htt//localhost:9000/");

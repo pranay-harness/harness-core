@@ -330,7 +330,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = HARSH)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestJsonBitBucketPull() throws IOException {
     webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
@@ -417,7 +417,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = HARSH)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestJsonBitBucketRefChange() throws IOException {
     webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.REPO));
@@ -439,7 +439,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = HARSH)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestJsonBitBucketFork() throws IOException {
     webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.REPO));
@@ -460,7 +460,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = HARSH)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestJsonBitBucketForkWithPullRequest() throws IOException {
     webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
@@ -482,7 +482,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = HARSH)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldThrowErrorJsonBitBucketFork() throws IOException {
     webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.REPO));

@@ -53,7 +53,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = UJJAWAL)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientLoginUser() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -66,7 +66,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = UJJAWAL)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientListUsers() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -79,7 +79,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = UJJAWAL)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientListAccounts() {
     String identityServiceToken = generateIdentityServiceToken();

@@ -185,7 +185,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   public void getAllCVDeploymentRecords() {
     // Setup

@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -132,7 +132,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowNullPhaseType() {
     try {
@@ -272,7 +272,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldHandleAsyncKubernetesSetup() {
     when(workflowExecutionService.getElementsSummary(anyString(), anyString(), anyString()))
@@ -309,7 +309,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowInvalidKubernetesSetup() {
     when(workflowExecutionService.getElementsSummary(anyString(), anyString(), anyString()))

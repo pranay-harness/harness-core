@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.rule.OwnerRule.RUSHABH;
-import static io.harness.rule.OwnerRule.VIKAS;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -193,7 +192,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(developers = VIKAS)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void shouldSendCustomerEmailWithBody() {
     emailDataNotificationService.send(customerEmailBodyData);

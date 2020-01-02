@@ -380,7 +380,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldUpdateInfraComputerProviderId() {
     PhysicalInfrastructureMapping savedInfra = aPhysicalInfrastructureMapping()
@@ -800,7 +800,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldListAwsComputeProviderHosts() {
     AwsInfrastructureMapping awsInfrastructureMapping =

@@ -212,7 +212,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = SATYAM)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void testCreateNewAutoScalingGroupRequest() {
     AutoScalingGroup baseAutoScalingGroup = getAutoScalingGroup();

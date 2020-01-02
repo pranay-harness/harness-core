@@ -1,6 +1,6 @@
 package software.wings.scheduler;
 
-import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -32,7 +32,7 @@ public class ResourceConstraintBackupJobTest extends WingsBaseTest {
   @Inject ResourceConstraintBackupJob job;
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void jobExecute() throws Exception {
     ArgumentCaptor<JobKey> captor = ArgumentCaptor.forClass(JobKey.class);

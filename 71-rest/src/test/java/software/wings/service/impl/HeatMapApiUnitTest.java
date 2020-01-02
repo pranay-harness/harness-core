@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -118,7 +119,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testNoAnalysisRecords() {
     NewRelicCVServiceConfiguration cvServiceConfiguration =
@@ -152,7 +153,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testNoMergingWithoutGap() {
     NewRelicCVServiceConfiguration cvServiceConfiguration =
@@ -808,7 +809,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testTrafficLight() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
@@ -1013,7 +1014,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testRiskSortLevel() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()

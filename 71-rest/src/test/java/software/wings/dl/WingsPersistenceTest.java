@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -195,7 +196,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should take query params.
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTakeQueryParams() {
     UriInfo uriInfo = mock(UriInfo.class);
@@ -224,7 +225,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should take query params in simplified form.
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTakeQueryParamsInSimplifiedForm() {
     UriInfo uriInfo = mock(UriInfo.class);
@@ -250,7 +251,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    */
   // Query will look like search[0][value]=fieldA1&search[0][value]=fieldA2
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTakeQueryParamsWithInOp() {
     UriInfo uriInfo = mock(UriInfo.class);
@@ -281,7 +282,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should work with query with number values.
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWorkWithQueryWithNumberValues() {
     UriInfo uriInfo = mock(UriInfo.class);
@@ -311,7 +312,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should take query params in simplified form.
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTakeQueryParamsForReferenceArrays() {
     TestEntityB testEntityB1 = new TestEntityB();
@@ -359,7 +360,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should update map
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateMap() {
     TestEntity entity = new TestEntity();
@@ -558,7 +559,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should save referenced object.
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveReferencedObject() {
     TestEntityB entityB = new TestEntityB();

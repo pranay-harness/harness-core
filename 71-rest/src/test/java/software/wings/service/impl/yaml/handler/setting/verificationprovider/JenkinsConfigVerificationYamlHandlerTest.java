@@ -1,7 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
-import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -68,7 +67,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   }
 
   @Test
-  @Owner(developers = RUSHABH)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testToBeanForNullValues() {
     ChangeContext<VerificationYaml> changeContext =

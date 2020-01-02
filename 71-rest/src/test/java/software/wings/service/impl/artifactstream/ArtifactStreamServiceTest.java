@@ -237,7 +237,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldAddJenkinsArtifactStream() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
@@ -342,7 +342,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldUpdateJenkinsArtifactStream() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
@@ -471,7 +471,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldAddBambooArtifactStreamAtConnectorLevel() {
     BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
@@ -652,7 +652,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldAddNexusArtifactStream() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStream("nexus1");
@@ -1271,7 +1271,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldAddArtifactoryMavenArtifactStreamAtConnectorLevel() {
     ArtifactoryArtifactStream artifactoryArtifactStream =
@@ -1524,7 +1524,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldAddAmiArtifactStreamAtCloudProviderLevel() {
     AmiArtifactStream.Tag tag = new AmiArtifactStream.Tag();
@@ -1584,7 +1584,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldUpdateAmiArtifactStreamAtCloudProviderLevel() {
     AmiArtifactStream.Tag tag = new AmiArtifactStream.Tag();
@@ -1668,7 +1668,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldAddS3ArtifactStreamAtConnectorLevel() {
     AmazonS3ArtifactStream amazonS3ArtifactStream = AmazonS3ArtifactStream.builder()
@@ -1717,7 +1717,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldUpdateS3ArtifactStreamAtConnectorLevel() {
     AmazonS3ArtifactStream amazonS3ArtifactStream = AmazonS3ArtifactStream.builder()

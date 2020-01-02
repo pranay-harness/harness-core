@@ -353,7 +353,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    * Should clone environment.
    */
   @Test
-  @Owner(developers = RAMA)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldCloneEnvironmentAcrossApp() {
     shouldCloneEnvironment(true);
@@ -841,7 +841,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ANSHUL)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testCloneEnvironmentWithoutValidateInfraMappings() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()

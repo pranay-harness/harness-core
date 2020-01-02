@@ -82,7 +82,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetDockerRepositoriesWithArtifactType() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, ArtifactType.DOCKER);
@@ -102,7 +102,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testGetRepositoriesForMavenWithPackageType() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, "maven");
@@ -285,7 +285,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testGetRepositoriesWithRepositoryType() {
     Map<String, String> repositories =
@@ -296,7 +296,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testGetMavenRepositoriesWithRepositoryType() {
     Map<String, String> repositories =
@@ -307,7 +307,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testGetAnyRepositoriesWithRepositoryType() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, RepositoryType.any);

@@ -34,7 +34,7 @@ import java.util.Optional;
 
 public class APMParserTest extends WingsBaseTest {
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testJsonParser() throws IOException {
     String textLoad =

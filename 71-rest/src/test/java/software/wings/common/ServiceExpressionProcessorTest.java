@@ -6,7 +6,7 @@ package software.wings.common;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -91,7 +91,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
    * Should return list all.
    */
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnListAll() {
     List<Service> services = Lists.newArrayList(Service.builder().name("A1234").build(),
@@ -148,7 +148,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
    * Should return list some by name.
    */
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnListSomeByName() {
     List<Service> services = Lists.newArrayList(Service.builder().name("A1234").build(),

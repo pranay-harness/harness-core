@@ -1,7 +1,6 @@
 package software.wings.delegatetasks;
 
 import static io.harness.rule.OwnerRule.SATYAM;
-import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -150,7 +149,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testCreateStackGit() {
     String accessKey = "abcd";

@@ -1,7 +1,6 @@
 package software.wings.collect;
 
 import static io.harness.rule.OwnerRule.GARVIT;
-import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -110,7 +109,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldSendBambooTask() {
     SettingAttribute SETTING_ATTRIBUTE =
@@ -180,7 +179,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = HARSH)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFailToCollectArtifactWhenSourceIsMissing() throws Exception {
     artifactCollectEventListener.onMessage(aCollectEvent()

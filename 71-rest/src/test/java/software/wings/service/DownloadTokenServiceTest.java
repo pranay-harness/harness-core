@@ -46,7 +46,7 @@ public class DownloadTokenServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ANUBHAW)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenResourceDoesntMatchOnValiation() {
     String token = downloadTokenService.createDownloadToken("resource");

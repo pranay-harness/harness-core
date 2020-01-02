@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.UJJAWAL;
@@ -296,7 +295,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UJJAWAL)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testListByName() {
     UserGroup userGroup1 = builder()
@@ -465,7 +464,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testUpdateMembers() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(null)) {

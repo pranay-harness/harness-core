@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
-import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
@@ -78,7 +77,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private PipelineServiceImpl pipelineServiceImpl;
 
   @Test
-  @Owner(developers = HARSH)
+  @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void testPopulateParentFields() {
     List<Variable> workflowVariables = asList(

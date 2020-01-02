@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static java.util.Arrays.asList;
@@ -268,7 +267,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldSucceedForPartialPercentageInstances() {
     nodeSelectState.setInstanceCount(1);
@@ -299,7 +298,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFailForZeroTotalInstances() {
     nodeSelectState.setInstanceCount(100);
