@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -27,6 +28,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PhaseElement;
 import software.wings.api.SelectedNodeExecutionData;
 import software.wings.api.ServiceInstanceArtifactParam;
+import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.AwsInfrastructureMapping;
@@ -47,6 +49,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ContextElement;
@@ -87,6 +90,7 @@ public abstract class NodeSelectState extends State {
   @Inject @Transient private FeatureFlagService featureFlagService;
   @Inject @Transient private AppService appService;
   @Inject @Transient private WorkflowExecutionService workflowExecutionService;
+  @Inject @Transient private SweepingOutputService sweepingOutputService;
 
   NodeSelectState(String name, String stateType) {
     super(name, stateType);
@@ -179,8 +183,18 @@ public abstract class NodeSelectState extends State {
                                                          .collect(toList()));
     selectedNodeExecutionData.setExcludeSelectedHostsFromFuturePhases(excludeSelectedHostsFromFuturePhases);
     List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
-    ContextElement serviceIdParamElement =
+    ServiceInstanceIdsParam serviceIdParamElement =
         aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
+
+    if (featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, context.getAccountId())) {
+      // Save this to the sweeping output here.......
+      sweepingOutputService.save(
+          context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+              .name(ServiceInstanceIdsParam.SERVICE_INSTANCE_IDS_PARAMS + phaseElement.getPhaseName())
+              .value(serviceIdParamElement)
+              .build());
+    }
+
     ExecutionResponseBuilder executionResponse = ExecutionResponse.builder()
                                                      .contextElement(serviceIdParamElement)
                                                      .notifyElement(serviceIdParamElement)

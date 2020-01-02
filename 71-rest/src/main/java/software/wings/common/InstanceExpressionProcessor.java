@@ -24,20 +24,25 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.context.ContextElementType;
 import io.harness.serializer.MapperUtils;
+import org.jetbrains.annotations.Nullable;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PartitionElement;
+import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.Host;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExpressionProcessor;
@@ -67,6 +72,8 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private HostService hostService;
+  @Inject private SweepingOutputService sweepingOutputService;
+  @Inject private FeatureFlagService featureFlagService;
 
   private ExecutionContext context;
 
@@ -401,7 +408,16 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     return null;
   }
 
+  @Nullable
   private ServiceInstanceIdsParam getServiceInstanceIdsParam() {
+    if (featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, context.getAccountId())) {
+      return getServiceInstanceIdsParamFromSweepingOutput();
+    }
+    return getServiceInstanceIdsParamFromSweepingOutputContextElement();
+  }
+
+  @Nullable
+  private ServiceInstanceIdsParam getServiceInstanceIdsParamFromSweepingOutputContextElement() {
     List<ContextElement> params = context.getContextElementList(ContextElementType.PARAM);
     if (params == null) {
       return null;
@@ -412,6 +428,19 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       }
     }
     return null;
+  }
+
+  @Nullable
+  private ServiceInstanceIdsParam getServiceInstanceIdsParamFromSweepingOutput() {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    if (phaseElement == null) {
+      return null;
+    }
+    String suffix = phaseElement.isRollback() ? phaseElement.getPhaseNameForRollback() : phaseElement.getPhaseName();
+    return (ServiceInstanceIdsParam) sweepingOutputService.findSweepingOutput(
+        context.prepareSweepingOutputInquiryBuilder()
+            .name(ServiceInstanceIdsParam.SERVICE_INSTANCE_IDS_PARAMS + suffix)
+            .build());
   }
 
   private List<Service> getServices(String appId) {
@@ -461,5 +490,13 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    */
   public void setServiceTemplateService(ServiceTemplateService serviceTemplateService) {
     this.serviceTemplateService = serviceTemplateService;
+  }
+
+  public void setSweepingOutputService(SweepingOutputService sweepingOutputService) {
+    this.sweepingOutputService = sweepingOutputService;
+  }
+
+  public void setFeatureFlagService(FeatureFlagService featureFlagService) {
+    this.featureFlagService = featureFlagService;
   }
 }

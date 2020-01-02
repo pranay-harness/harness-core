@@ -3,6 +3,7 @@ package software.wings.common;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -22,6 +23,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.mockChecker;
@@ -47,9 +49,11 @@ import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElement;
 import software.wings.api.PartitionElement;
+import software.wings.api.PhaseElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -57,11 +61,13 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
@@ -122,6 +128,10 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Mock private LimitCheckerFactory limitCheckerFactory;
+
+  @Mock private SweepingOutputService sweepingOutputService;
+
+  @Mock private FeatureFlagService featureFlagService;
 
   /**
    * Sets .
@@ -208,6 +218,63 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should return instances from param.
    */
   @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldReturnInstancesFromParamFFOn() {
+    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
+    String appId = app.getUuid();
+    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .build();
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    when(context.getApp()).thenReturn(app);
+    when(context.getEnv()).thenReturn(env);
+    when(context.getAccountId()).thenReturn(ACCOUNT_ID);
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(context.prepareSweepingOutputInquiryBuilder())
+        .thenReturn(SweepingOutputService.SweepingOutputInquiry.builder());
+
+    String instance1 = generateUuid();
+    String instance2 = generateUuid();
+
+    ServiceInstanceIdsParam element = new ServiceInstanceIdsParam();
+    element.setInstanceIds(Lists.newArrayList(instance1, instance2));
+    InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
+    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
+        .thenReturn(new PageResponse<>());
+    when(sweepingOutputService.findSweepingOutput(any())).thenReturn(element);
+    when(featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, ACCOUNT_ID)).thenReturn(true);
+    processor.setServiceTemplateService(serviceTemplateServiceMock);
+    processor.setSweepingOutputService(sweepingOutputService);
+    processor.setFeatureFlagService(featureFlagService);
+    PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
+
+    assertThat(pageRequest).isNotNull();
+    assertThat(pageRequest.getFilters()).isNotNull();
+
+    boolean appIdFound = false;
+    boolean instanceIdsMatched = false;
+    for (SearchFilter filter : pageRequest.getFilters()) {
+      assertThat(filter.getFieldValues()).isNotEmpty();
+      if (filter.getFieldName().equals("appId")) {
+        assertThat(filter.getFieldValues()[0]).isEqualTo(appId);
+        appIdFound = true;
+      } else if (filter.getFieldName().equals(ID_KEY)) {
+        assertThat(filter.getFieldValues().length).isEqualTo(2);
+        assertThat(filter.getFieldValues()[0]).isEqualTo(instance1);
+        assertThat(filter.getFieldValues()[1]).isEqualTo(instance2);
+        instanceIdsMatched = true;
+      }
+    }
+    assertThat(appIdFound).isTrue();
+    assertThat(instanceIdsMatched).isTrue();
+  }
+
+  @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnInstancesFromParam() {
@@ -218,6 +285,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
+    when(context.getAccountId()).thenReturn(ACCOUNT_ID);
 
     String instance1 = generateUuid();
     String instance2 = generateUuid();
@@ -231,7 +299,9 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
     when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
         .thenReturn(new PageResponse<>());
+    when(featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, ACCOUNT_ID)).thenReturn(false);
     processor.setServiceTemplateService(serviceTemplateServiceMock);
+    processor.setFeatureFlagService(featureFlagService);
     PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
 
     assertThat(pageRequest).isNotNull();
@@ -259,6 +329,70 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should return common instances from param.
    */
   @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldReturnCommonInstancesFromParamFFOn() {
+    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
+    String appId = app.getUuid();
+    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .build();
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    when(context.getApp()).thenReturn(app);
+    when(context.getEnv()).thenReturn(env);
+    when(context.getAccountId()).thenReturn(ACCOUNT_ID);
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(context.prepareSweepingOutputInquiryBuilder())
+        .thenReturn(SweepingOutputService.SweepingOutputInquiry.builder());
+
+    String instance1 = generateUuid();
+    String instance2 = generateUuid();
+    String instance3 = generateUuid();
+
+    ServiceInstanceIdsParam element = new ServiceInstanceIdsParam();
+    element.setInstanceIds(Lists.newArrayList(instance1, instance2));
+
+    when(sweepingOutputService.findSweepingOutput(any())).thenReturn(element);
+    when(featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, ACCOUNT_ID)).thenReturn(true);
+
+    InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
+    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
+        .thenReturn(new PageResponse<>());
+    processor.setServiceTemplateService(serviceTemplateServiceMock);
+    processor.setSweepingOutputService(sweepingOutputService);
+    processor.setFeatureFlagService(featureFlagService);
+    processor.withInstanceIds(instance1, instance2, instance3);
+    PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
+
+    assertThat(pageRequest).isNotNull();
+    assertThat(pageRequest.getFilters()).isNotNull();
+
+    boolean appIdFound = false;
+    boolean instanceIdsMatched = false;
+    for (SearchFilter filter : pageRequest.getFilters()) {
+      assertThat(filter.getFieldValues()).isNotEmpty();
+      if (filter.getFieldName().equals("appId")) {
+        assertThat(filter.getFieldValues()[0]).isEqualTo(appId);
+        appIdFound = true;
+      } else if (filter.getFieldName().equals(ID_KEY)) {
+        assertThat(filter.getFieldValues().length).isEqualTo(2);
+        assertThat(filter.getFieldValues()[0]).isIn(instance1, instance2);
+        assertThat(filter.getFieldValues()[1]).isIn(instance1, instance2);
+        instanceIdsMatched = true;
+      }
+    }
+    assertThat(appIdFound).isTrue();
+    assertThat(instanceIdsMatched).isTrue();
+  }
+
+  /**
+   * Should return common instances from param.
+   */
+  @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnCommonInstancesFromParam() {
@@ -269,6 +403,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
+    when(context.getAccountId()).thenReturn(ACCOUNT_ID);
 
     String instance1 = generateUuid();
     String instance2 = generateUuid();
@@ -283,7 +418,9 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
     when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
         .thenReturn(new PageResponse<>());
+    when(featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, ACCOUNT_ID)).thenReturn(false);
     processor.setServiceTemplateService(serviceTemplateServiceMock);
+    processor.setFeatureFlagService(featureFlagService);
 
     processor.withInstanceIds(instance1, instance2, instance3);
     PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
@@ -323,6 +460,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
+    when(context.getAccountId()).thenReturn(ACCOUNT_ID);
 
     String instance1 = generateUuid();
     String instance2 = generateUuid();
@@ -336,7 +474,9 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
     when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
         .thenReturn(new PageResponse<>());
+    when(featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, ACCOUNT_ID)).thenReturn(false);
     processor.setServiceTemplateService(serviceTemplateServiceMock);
+    processor.setFeatureFlagService(featureFlagService);
 
     processor.withInstanceIds(instance1);
     PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
@@ -371,14 +511,20 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setDisplayName("abc");
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .build();
     injector.injectMembers(context);
-
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).name("DEV").build());
+
     Service service = wingsPersistence.saveAndGet(Service.class, Service.builder().name("svc1").build());
 
     ServiceTemplate serviceTemplate = serviceTemplateService.save(aServiceTemplate()
@@ -396,6 +542,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     injector.injectMembers(std);
     context.pushContextElement(std);
+    context.pushContextElement(phaseElement);
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
     ServiceInstance instance1 = aServiceInstance()
@@ -405,6 +552,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
                                     .withHost(aHost().withHostName("host1").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();
+
     List<ServiceInstance> instances = Lists.newArrayList(instance1);
     res.setResponse(instances);
 
@@ -413,13 +561,16 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     context.pushContextElement(element);
 
     when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
-
+    when(sweepingOutputService.findSweepingOutput(any())).thenReturn(element);
+    when(featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, ACCOUNT_ID)).thenReturn(true);
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
     when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
         .thenReturn(new PageResponse<>());
     processor.setServiceTemplateService(serviceTemplateServiceMock);
     processor.setServiceInstanceService(serviceInstanceServiceMock);
     processor.setServiceResourceService(serviceResourceServiceMock);
+    processor.setSweepingOutputService(sweepingOutputService);
+    processor.setFeatureFlagService(featureFlagService);
     on(processor).set("hostService", hostService);
 
     when(serviceTemplateServiceMock.get(app.getAppId(), env.getUuid(), serviceTemplate.getUuid(), false, OBTAIN_VALUE))
