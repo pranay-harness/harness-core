@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,7 +85,7 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ANSHUL)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldUpdateHostConnAttrs() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =

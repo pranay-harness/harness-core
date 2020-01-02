@@ -8,8 +8,6 @@ import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static io.harness.rule.OwnerRule.POOJA;
-import static io.harness.rule.OwnerRule.ROHIT;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
@@ -219,7 +217,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ROHIT)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldExecutePipeline() {
     PageResponse pageResponse = new PageResponse();
@@ -242,7 +240,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ROHIT)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldExecuteWorkflow() {
     PageResponse pageResponse = new PageResponse();
@@ -321,7 +319,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = POOJA)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldHandleWorkflowAbortWithTimeoutMsg() {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
@@ -345,7 +343,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ANSHUL)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldHandlePipelineAbortWithAbortMsg() {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
@@ -369,7 +367,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = POOJA)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldHandleWorkflowAbortWithAbortMsg() {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
@@ -480,7 +478,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ROHIT_KUMAR)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testParseProperties() {
     final Map<String, Object> properties = new HashMap<>();

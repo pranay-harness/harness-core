@@ -308,7 +308,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should get config files for entity.
    */
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldGetConfigFilesForEntity() {
     ConfigFile configFile = ConfigFile.builder()

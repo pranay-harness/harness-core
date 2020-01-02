@@ -3,9 +3,8 @@ package software.wings.service.impl.security.auth;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAMA;
-import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -629,7 +628,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldFetchPermissionsForNoEnv() {
     setupForNoEnvs();
@@ -928,7 +927,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ADWAIT)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testBuildNonProdSupportUserGroup() {
     UserGroup userGroup = authHandler.buildNonProdSupportUserGroup(ACCOUNT_ID);
@@ -942,7 +941,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ADWAIT)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testBuildProdSupportUserGroup() {
     UserGroup userGroup = authHandler.buildProdSupportUserGroup(ACCOUNT_ID);

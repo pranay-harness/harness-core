@@ -7,7 +7,6 @@ import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PRASHANT;
-import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -733,7 +732,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ROHIT_KUMAR)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testIsManifestInGit() throws Exception {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();

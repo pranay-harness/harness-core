@@ -1,7 +1,6 @@
 package software.wings.scheduler;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
-import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -118,7 +117,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RUSHABH)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSMTPAlert() {
     when(mainConfiguration.getSmtpConfig()).thenReturn(null);

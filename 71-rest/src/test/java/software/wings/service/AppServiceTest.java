@@ -205,7 +205,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should list.
    */
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldListApplication() {
     Application application = anApplication().build();

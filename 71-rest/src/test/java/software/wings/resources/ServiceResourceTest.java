@@ -2,7 +2,6 @@ package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
@@ -193,7 +192,7 @@ public class ServiceResourceTest extends CategoryTest {
    * Should update command.
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldUpdateCommand() {
     when(RESOURCE_SERVICE.updateCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class))).thenReturn(aSERVICE);

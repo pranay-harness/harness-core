@@ -644,7 +644,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldSaveTemplateAtAppLevel() {
     Template template = getSshCommandTemplate(MY_START_COMMAND, APP_ID);

@@ -1,5 +1,6 @@
 package io.harness.reflection;
 
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -98,7 +99,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = PUNEET)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void getFieldByNameTest() {
     assertThat(ReflectionUtils.getFieldByName(Field.class, "dummy")).isNull();
@@ -110,7 +111,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = PUNEET)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void getAllDeclaredAndInheritedFields() {
     assertThat(ReflectionUtils.getAllDeclaredAndInheritedFields(Field.class)
@@ -121,7 +122,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = PUNEET)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void getDeclaredAndInheritedFields() {
     assertThat(ReflectionUtils.getDeclaredAndInheritedFields(Field.class, f -> f.getName().endsWith("Field")))
@@ -129,7 +130,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = PUNEET)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void updateField() {
     Field dummy = Field.builder().build();

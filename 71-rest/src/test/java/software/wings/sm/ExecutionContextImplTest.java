@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -268,7 +269,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldRenderExpression() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());

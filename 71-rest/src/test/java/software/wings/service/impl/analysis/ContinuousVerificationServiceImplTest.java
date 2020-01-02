@@ -6,6 +6,8 @@ import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
+import static io.harness.rule.OwnerRule.SRIRAM;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -182,7 +184,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
         .build();
   }
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void testNullUser() throws ParseException, IllegalAccessException {
     setupMocks();
@@ -198,7 +200,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void testAllValidPermissions() throws ParseException {
     LinkedHashMap<Long,
@@ -290,7 +292,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testHeatMapResolutionEnum() {
     long endTime = System.currentTimeMillis();

@@ -328,7 +328,7 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = HARSH)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void shouldNotifyOnSuccessWithAMIDeleteArtifacts() {
     buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_3);

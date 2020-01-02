@@ -217,7 +217,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldNotAssignTaskWithPartialMatchingTags() {
     DelegateTask delegateTask =
@@ -240,7 +240,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldNotAssignTaskWithNoMatchingTags() {
     DelegateTask delegateTask =
@@ -562,7 +562,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ANSHUL)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testAssignDelegateWithNullIncludeScope() {
     DelegateTask delegateTask = DelegateTask.builder()
@@ -583,7 +583,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ANSHUL)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testAssignDelegateWithNullExcludeScope() {
     DelegateTask delegateTask = DelegateTask.builder()

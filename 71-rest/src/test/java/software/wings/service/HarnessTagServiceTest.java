@@ -345,7 +345,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ANSHUL)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testAttachTagWithEmptyValue() {
     HarnessTagLink tagLink = HarnessTagLink.builder()
@@ -375,7 +375,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ANSHUL)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testAttachTagWithNullValue() {
     HarnessTagLink tagLink = HarnessTagLink.builder()

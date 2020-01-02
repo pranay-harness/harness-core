@@ -7,7 +7,6 @@ import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.AADITI;
-import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
@@ -457,7 +456,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ADWAIT)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldDeleteService() {
     Query mockQuery = mock(Query.class);
@@ -801,7 +800,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should add command state.
    */
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldAddCommandWithCommandUnits() {
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
@@ -1051,7 +1050,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should not update command nothing changed.
    */
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldUpdateCommandWhenCommandUnitsOrderChanged() {
     Graph oldCommandGraph = aGraph()
@@ -1204,7 +1203,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should not update command nothing changed.
    */
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotUpdateCommandWhenCommandUnitsOrderNotChanged() {
     Graph oldCommandGraph = aGraph()
@@ -1540,7 +1539,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should delete command state.
    */
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldDeleteCommand() {
     when(workflowService.listWorkflows(any(PageRequest.class)))
@@ -1559,7 +1558,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnReferencedServiceCommandDelete() {
     ServiceCommand serviceCommand = serviceCommandBuilder.but().build();
@@ -1574,7 +1573,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotThrowExceptionOnReferencedServiceCommandDelete() {
     ServiceCommand serviceCommand = serviceCommandBuilder.but().build();

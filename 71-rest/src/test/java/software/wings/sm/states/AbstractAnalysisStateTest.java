@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
+import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -390,7 +391,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void testGetCanaryNewNodes() throws IllegalAccessException {
     List<InstanceElement> instanceElements = new ArrayList<>();
@@ -427,7 +428,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void testGetCanaryNewNodesHelm() throws IllegalAccessException {
     when(infraMappingService.get(anyString(), anyString()))

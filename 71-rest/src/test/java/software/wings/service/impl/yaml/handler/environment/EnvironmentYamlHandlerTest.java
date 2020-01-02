@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.environment;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
@@ -184,7 +185,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testFailures() throws IOException {
     // Invalid yaml path

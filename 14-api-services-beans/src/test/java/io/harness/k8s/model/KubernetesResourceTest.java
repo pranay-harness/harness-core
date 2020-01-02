@@ -117,7 +117,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = PUNEET)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void nameUpdateTests() throws Exception {
     nameUpdateTestsUtil("deploy.yaml", true);

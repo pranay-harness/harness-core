@@ -143,7 +143,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestNonTemplatized() {
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
@@ -433,7 +433,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testAllTemplatized() {
     AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");

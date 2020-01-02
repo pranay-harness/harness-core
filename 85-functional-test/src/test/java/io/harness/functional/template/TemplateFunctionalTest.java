@@ -5,7 +5,6 @@ import static io.harness.generator.AccountGenerator.readOnlyEmail;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.APP_FOLDER_SHELL_SCRIPTS;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_SHELL_SCRIPTS;
 import static io.harness.rule.OwnerRule.AADITI;
-import static io.harness.rule.OwnerRule.RAMA;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -218,7 +217,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = RAMA)
+  @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
   public void testCRUDTemplateRBAC() {
     String readOnlyPassword = "readonlyuser";

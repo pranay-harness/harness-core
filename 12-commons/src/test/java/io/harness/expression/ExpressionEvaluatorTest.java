@@ -3,6 +3,7 @@ package io.harness.expression;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -121,7 +122,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEvaluateWithNameValue() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();

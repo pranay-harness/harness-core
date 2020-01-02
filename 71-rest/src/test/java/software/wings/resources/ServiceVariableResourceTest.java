@@ -122,7 +122,7 @@ public class ServiceVariableResourceTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldSaveServiceVariable() throws Exception {
     when(VARIABLE_SERVICE.saveWithChecks(anyString(), any(ServiceVariable.class))).thenReturn(SERVICE_VARIABLE);
@@ -141,7 +141,7 @@ public class ServiceVariableResourceTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldGetVariable() throws Exception {
     when(VARIABLE_SERVICE.get(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID, MASKED)).thenReturn(SERVICE_VARIABLE);

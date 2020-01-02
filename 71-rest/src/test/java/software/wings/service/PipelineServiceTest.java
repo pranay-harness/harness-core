@@ -291,7 +291,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = PRASHANT)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldUpdatePipeline() {
     FailureStrategy failureStrategy =

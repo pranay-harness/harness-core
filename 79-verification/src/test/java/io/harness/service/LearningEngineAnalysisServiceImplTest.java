@@ -1,6 +1,8 @@
 package io.harness.service;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PARNIAN;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -153,7 +155,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = PARNIAN)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_AlreadyQueued() {
     int numOfTasks = 5;
@@ -178,7 +180,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = PARNIAN)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_QueueWithTimeOut() throws InterruptedException {
     LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.SECONDS.toMillis(5);
@@ -219,7 +221,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = PARNIAN)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_AlreadyQueuedForMinute() {
     LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
@@ -241,7 +243,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = PARNIAN)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_QueueWithStatus() {
     int numOfTasks = 100;
@@ -277,7 +279,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = PARNIAN)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_QueueWithStatus24x7Task() {
     int numOfTasks = 100;
@@ -308,7 +310,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_QueueWithAnalysisType() {
     int numOfTasks = 100;
@@ -424,7 +426,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = PARNIAN)
   @Category(UnitTests.class)
   public void testRetryExceeded() {
     LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
@@ -719,7 +721,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testNotifyFailure_WithMultipleTasks() {
     LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()

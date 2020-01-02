@@ -2,6 +2,7 @@ package software.wings.cloudprovider.aws;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -185,7 +186,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = SATYAM)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testGetIdFromArn() {
     EcsContainerServiceImpl ecsContainerServiceImpl = (EcsContainerServiceImpl) ecsContainerService;

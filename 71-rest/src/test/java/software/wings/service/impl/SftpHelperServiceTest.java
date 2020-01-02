@@ -59,7 +59,7 @@ public class SftpHelperServiceTest extends WingsBaseTest {
                                                    .build();
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSftpPaths() throws IOException {
     List<String> artifactPaths = new ArrayList<>();

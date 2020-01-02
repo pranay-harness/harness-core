@@ -3,7 +3,6 @@ package software.wings.service;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.AMAN;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -461,7 +460,7 @@ public class UserServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(developers = UTKARSH)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldRegisterExistingUser() {
     User existingUser = userBuilder.withUuid(generateUuid()).build();
@@ -790,7 +789,7 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UTKARSH)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void testInviteNewUser_invalidEmail_shouldFail() {
     UserInvite userInvite = anUserInvite()
@@ -867,7 +866,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should complete invite.
    */
   @Test
-  @Owner(developers = AMAN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldCompleteInvite() {
     when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
@@ -891,7 +890,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should get account role.
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAccountRole() {
     List<Role> roles =
@@ -917,7 +916,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should get account for all aps admin role.
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAccountForAllApsAdminRole() {
     List<Role> roles = asList(aRole()

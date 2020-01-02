@@ -745,7 +745,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void deleteSecret() {
     String secretName = generateUuid();
@@ -1432,7 +1432,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void updateLocalToKms() {
     if (encryptionType != EncryptionType.LOCAL) {

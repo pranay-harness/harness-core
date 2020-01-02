@@ -2,6 +2,7 @@ package io.harness.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SOWMYA;
+import static io.harness.rule.OwnerRule.SRIRAM;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -80,7 +81,7 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   public void fetch() {
     APMVerificationConfig config = new APMVerificationConfig();

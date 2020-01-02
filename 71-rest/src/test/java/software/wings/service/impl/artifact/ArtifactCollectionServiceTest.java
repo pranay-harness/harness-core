@@ -157,7 +157,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldCollectJenkinsArtifactConnectorLevel() {
     BuildDetails jenkinsBuildDetails = getJenkinsBuildDetails();

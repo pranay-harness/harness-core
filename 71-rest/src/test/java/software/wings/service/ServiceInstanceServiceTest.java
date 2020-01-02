@@ -3,7 +3,6 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static io.harness.rule.OwnerRule.BRETT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -248,7 +247,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    * Should update host instance mapping.
    */
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldUpdateHostInstanceMapping() {
     List<Host> newHostList = singletonList(aHost()

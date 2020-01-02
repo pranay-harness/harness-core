@@ -147,7 +147,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VIKAS)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void populateGroupSize() throws LdapException {
     LdapEntry group = new LdapEntry("groupDN");

@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -381,7 +382,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and evaluate response.
    */
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateResponseWithInstance() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -429,7 +430,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and get summary/details.
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetExecutionDataSummaryDetails() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -581,7 +582,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on connect timeout.
    */
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailOnConnectTimeout() {
     context.pushContextElement(aHostElement().hostName("www.google.com").build());

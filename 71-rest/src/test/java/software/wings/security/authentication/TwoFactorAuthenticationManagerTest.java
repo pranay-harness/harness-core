@@ -4,7 +4,7 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UNKNOWN;
-import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -213,7 +213,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UTKARSH)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForNoAdminEnforce() {
     Account account = accountService.save(getAccount(AccountType.PAID, false), false);
@@ -232,7 +232,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UTKARSH)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForAdminEnforce() {
     Account account = accountService.save(getAccount(AccountType.PAID, true), false);
@@ -246,7 +246,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UTKARSH)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForMultiAccounts() {
     Account account1 = accountService.save(getAccount(AccountType.PAID, false), false);

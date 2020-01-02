@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.mockito.Matchers.any;
@@ -100,7 +99,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testHostConnectionValidationForUsernameField() {
     HostConnectionAttributes.Builder hostConnectionAttributes =

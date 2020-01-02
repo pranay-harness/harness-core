@@ -1,7 +1,7 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static io.harness.rule.OwnerRule.PRANJAL;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -394,7 +394,7 @@ public class PluginServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = PRANJAL)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))

@@ -202,7 +202,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RUSHABH)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void searchGroupsByName() {
     EncryptedDataDetail encryptedDataDetail = mock(EncryptedDataDetail.class);
