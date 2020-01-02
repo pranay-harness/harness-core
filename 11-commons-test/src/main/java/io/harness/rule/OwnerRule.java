@@ -39,6 +39,11 @@ public class OwnerRule implements TestRule {
   public static final String NEEDS_FIXING = "needs fixing";
   public static final String COMPONENTS = "components";
   public static final String PRIORITY = "priority";
+  public static final String PRIORITY_VALUE0 = "P0";
+  public static final String PRIORITY_VALUE1 = "P1";
+  public static final String DESCRIPTION = "description";
+  public static final String DESCRIPTION_VALUE =
+      "This is auto generated jira issue for tracking the fix of the test in the title.";
 
   private static JiraClient connect() {
     ScmSecret scmSecret = new ScmSecret();
@@ -181,12 +186,14 @@ public class OwnerRule implements TestRule {
     }
 
     Ignore ignore = description.getAnnotation(Ignore.class);
-    if (owner.intermittent()) {
-      checkForJira(description.getDisplayName(), owner.developers()[0]);
-    }
+    if (getEnv("SONAR_TOKEN") != null) {
+      if (owner.intermittent()) {
+        checkForJira(description.getDisplayName(), owner.developers()[0], PRIORITY_VALUE1);
+      }
 
-    if (ignore != null) {
-      checkForJira(description.getDisplayName(), owner.developers()[0]);
+      if (ignore != null) {
+        checkForJira(description.getDisplayName(), owner.developers()[0], PRIORITY_VALUE1);
+      }
     }
 
     for (String developer : owner.developers()) {
@@ -234,11 +241,7 @@ public class OwnerRule implements TestRule {
         SUMMARY, test, SUMMARY, NEEDS_FIXING);
   }
 
-  public static void checkForJira(String test, String developer) {
-    if (getEnv("SONAR_TOKEN") == null) {
-      return;
-    }
-
+  public static void checkForJira(String test, String developer, String priority) {
     final DevInfo devInfo = active.get(developer);
     if (devInfo == null) {
       return;
@@ -253,7 +256,7 @@ public class OwnerRule implements TestRule {
           return;
         }
 
-        Issue issue = generateJiraCreate(test, devInfo).execute();
+        Issue issue = generateJiraCreate(test, devInfo, priority).execute();
         logger.info("New jira issue was created {}", issue.getKey());
         return;
       }
@@ -284,8 +287,12 @@ public class OwnerRule implements TestRule {
         issue.update().field(ASSIGNEE, devInfo.getJira()).execute();
       }
 
+      if (priority.compareTo(issue.getPriority().getName()) > 0) {
+        issue.update().field(PRIORITY, priority).execute();
+      }
+
     } catch (JiraException e) {
-      logger.error("Failed to check the jira issue", e);
+      logger.error("Failed when checking the jira issue", e);
     }
   }
 
@@ -306,12 +313,14 @@ public class OwnerRule implements TestRule {
     return devInfo.getTeam();
   }
 
-  private static Issue.FluentCreate generateJiraCreate(String test, DevInfo devInfo) throws JiraException {
+  private static Issue.FluentCreate generateJiraCreate(String test, DevInfo devInfo, String priority)
+      throws JiraException {
     Issue.FluentCreate create = getJira()
                                     .createIssue(jiraProject(devInfo), "Bug")
                                     .field(ASSIGNEE, devInfo.getJira())
                                     .field(SUMMARY, test + " " + NEEDS_FIXING)
-                                    .field(PRIORITY, "P1");
+                                    .field(PRIORITY, priority)
+                                    .field(DESCRIPTION, DESCRIPTION_VALUE);
 
     String jiraComponent = jiraComponent(devInfo);
     if (jiraComponent != null) {
