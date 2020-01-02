@@ -36,15 +36,13 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
           EcsUtilization ecsUtilization = (EcsUtilization) publishedMessage.getMessage();
           logger.info("Ecs Utilization {} ", ecsUtilization);
 
-          String clusterArn = ecsUtilization.getClusterArn();
-          String clusterName = ecsUtilization.getClusterName();
           String serviceArn = ecsUtilization.getServiceArn();
           String serviceName = ecsUtilization.getServiceName();
           String settingId = ecsUtilization.getSettingId();
           String instanceId;
           String instanceType;
           if (serviceArn.equals("") && serviceName.equals("")) {
-            instanceId = clusterArn;
+            instanceId = ecsUtilization.getClusterArn();
             instanceType = ECS_CLUSTER;
           } else {
             instanceId = serviceArn;
@@ -105,10 +103,6 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
             InstanceUtilizationData utilizationData =
                 InstanceUtilizationData.builder()
                     .accountId(accountId)
-                    .clusterArn(clusterArn)
-                    .clusterName(clusterName)
-                    .serviceArn(serviceArn)
-                    .serviceName(serviceName)
                     .instanceId(instanceId)
                     .instanceType(instanceType)
                     .settingId(settingId)

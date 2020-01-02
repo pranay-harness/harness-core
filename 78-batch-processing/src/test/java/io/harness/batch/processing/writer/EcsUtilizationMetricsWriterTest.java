@@ -62,10 +62,6 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
     verify(utilizationDataService, times(2)).create(instanceUtilizationDataArgumentCaptor.capture());
     List<InstanceUtilizationData> instanceUtilizationDataList = instanceUtilizationDataArgumentCaptor.getAllValues();
     InstanceUtilizationData instanceUtilizationDataPoint0 = instanceUtilizationDataList.get(0);
-    assertThat(instanceUtilizationDataPoint0.getClusterArn()).isEqualTo(TEST_CLUSTER_ARN);
-    assertThat(instanceUtilizationDataPoint0.getClusterName()).isEqualTo(TEST_CLUSTER_NAME);
-    assertThat(instanceUtilizationDataPoint0.getServiceArn()).isEqualTo(TEST_SERVICE_ARN);
-    assertThat(instanceUtilizationDataPoint0.getServiceName()).isEqualTo(TEST_SERVICE_NAME);
     assertThat(instanceUtilizationDataPoint0.getInstanceId()).isEqualTo(INSTANCEID);
     assertThat(instanceUtilizationDataPoint0.getInstanceType()).isEqualTo(INSTANCETYPE);
     assertThat(instanceUtilizationDataPoint0.getSettingId()).isEqualTo(SETTING_ID);
@@ -77,10 +73,6 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
     assertThat(instanceUtilizationDataPoint0.getStartTimestamp()).isEqualTo(12000000000L);
 
     InstanceUtilizationData instanceUtilizationDataPoint1 = instanceUtilizationDataList.get(1);
-    assertThat(instanceUtilizationDataPoint1.getClusterArn()).isEqualTo(TEST_CLUSTER_ARN);
-    assertThat(instanceUtilizationDataPoint1.getClusterName()).isEqualTo(TEST_CLUSTER_NAME);
-    assertThat(instanceUtilizationDataPoint1.getServiceArn()).isEqualTo(TEST_SERVICE_ARN);
-    assertThat(instanceUtilizationDataPoint1.getServiceName()).isEqualTo(TEST_SERVICE_NAME);
     assertThat(instanceUtilizationDataPoint1.getInstanceId()).isEqualTo(INSTANCEID);
     assertThat(instanceUtilizationDataPoint1.getInstanceType()).isEqualTo(INSTANCETYPE);
     assertThat(instanceUtilizationDataPoint1.getSettingId()).isEqualTo(SETTING_ID);

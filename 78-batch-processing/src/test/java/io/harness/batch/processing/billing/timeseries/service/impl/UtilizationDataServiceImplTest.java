@@ -51,8 +51,6 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
   @Mock ResultSet resultSet;
 
   public static final String SERVICE_ARN = "service_arn";
-  public static final String CLUSTER_ARN = "cluster_arn";
-  public static final String SERVICE_NAME = "service_name";
   public static final String CLUSTER_NAME = "cluster_name";
   private static final String ACCOUNT_ID = "account_id";
   private static final String INSTANCE_ID = "instance_id";
@@ -143,10 +141,6 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
         .instanceId(SERVICE_ARN)
         .settingId(SETTING_ID)
         .instanceType(UtilizationInstanceType.ECS_SERVICE)
-        .clusterName(CLUSTER_NAME)
-        .clusterArn(CLUSTER_ARN)
-        .serviceName(SERVICE_NAME)
-        .serviceArn(SERVICE_ARN)
         .startTimestamp(1546281000000l)
         .endTimestamp(1546367400000l)
         .cpuUtilizationAvg(40.0)
