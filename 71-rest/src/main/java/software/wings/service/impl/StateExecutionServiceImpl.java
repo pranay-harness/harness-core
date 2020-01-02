@@ -250,7 +250,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
     return (PhaseExecutionSummary) sweepingOutputService.findSweepingOutput(
         SweepingOutputService.SweepingOutputInquiry.builder()
             .appId(stateExecutionInstance.getAppId())
-            .name(PhaseExecutionSummary.SWEEPING_OUTPUT_NAME + stateExecutionInstance.getDisplayName())
+            .name(PhaseExecutionSummary.SWEEPING_OUTPUT_NAME + stateExecutionInstance.getDisplayName().trim())
             .workflowExecutionId(stateExecutionInstance.getExecutionUuid())
             .stateExecutionId(stateExecutionInstance.getUuid())
             .phaseExecutionId(getPhaseExecutionId(stateExecutionInstance))
@@ -262,7 +262,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
     return (PhaseExecutionData) sweepingOutputService.findSweepingOutput(
         SweepingOutputService.SweepingOutputInquiry.builder()
             .appId(stateExecutionInstance.getAppId())
-            .name(PhaseExecutionData.SWEEPING_OUTPUT_NAME + stateExecutionInstance.getDisplayName())
+            .name(PhaseExecutionData.SWEEPING_OUTPUT_NAME + stateExecutionInstance.getDisplayName().trim())
             .workflowExecutionId(stateExecutionInstance.getExecutionUuid())
             .stateExecutionId(stateExecutionInstance.getUuid())
             .phaseExecutionId(getPhaseExecutionId(stateExecutionInstance))

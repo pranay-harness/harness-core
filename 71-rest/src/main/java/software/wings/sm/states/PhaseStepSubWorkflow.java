@@ -210,7 +210,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
     PhaseExecutionData stateExecutionData = (PhaseExecutionData) sweepingOutputService.findSweepingOutput(
         context.prepareSweepingOutputInquiryBuilder()
-            .name(PhaseExecutionData.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback())
+            .name(PhaseExecutionData.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback().trim())
             .build());
 
     if (stateExecutionData == null) {
@@ -218,7 +218,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     }
     PhaseExecutionSummary phaseExecutionSummary = (PhaseExecutionSummary) sweepingOutputService.findSweepingOutput(
         context.prepareSweepingOutputInquiryBuilder()
-            .name(PhaseExecutionSummary.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback())
+            .name(PhaseExecutionSummary.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback().trim())
             .build());
     if (phaseExecutionSummary == null || phaseExecutionSummary.getPhaseStepExecutionSummaryMap() == null
         || phaseExecutionSummary.getPhaseStepExecutionSummaryMap().get(phaseStepNameForRollback) == null) {

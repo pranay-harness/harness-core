@@ -203,7 +203,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
     sweepingOutputService.save(
         context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
-            .name(PhaseExecutionData.SWEEPING_OUTPUT_NAME + stateExecutionInstance.getDisplayName())
+            .name(PhaseExecutionData.SWEEPING_OUTPUT_NAME + stateExecutionInstance.getDisplayName().trim())
             .value(phaseExecutionData)
             .build());
     return phaseExecutionData;
@@ -628,7 +628,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
     sweepingOutputService.save(
         context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
-            .name(PhaseExecutionSummary.SWEEPING_OUTPUT_NAME + stateExecutionInstance.getDisplayName())
+            .name(PhaseExecutionSummary.SWEEPING_OUTPUT_NAME + stateExecutionInstance.getDisplayName().trim())
             .value(phaseExecutionSummary)
             .build());
     executionResponseBuilder.stateExecutionData(context.getStateExecutionData());
