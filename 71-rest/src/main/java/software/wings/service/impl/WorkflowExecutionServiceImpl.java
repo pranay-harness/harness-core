@@ -2311,9 +2311,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     StateMachine stateMachine = stateExecutionService.obtainStateMachine(stateExecutionInstance);
 
-    int subStates =
-        stateMachine.getChildStateMachines().get(stateExecutionInstance.getChildStateMachineId()).getStates().size()
-        - 1;
+    int subStates = (int) stateMachine.getChildStateMachines()
+                        .get(stateExecutionInstance.getChildStateMachineId())
+                        .getStates()
+                        .stream()
+                        .filter(t -> !t.getStateType().equals("REPEAT") && !t.getStateType().equals("FORK"))
+                        .count();
 
     @Data
     @NoArgsConstructor
