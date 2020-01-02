@@ -1619,6 +1619,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
         oldServiceId = oldWorkflowPhase.getServiceId();
         orchestrationWorkflow.getWorkflowPhases().remove(i);
+        workflowPhase.setName(workflowPhase.getName().trim());
         orchestrationWorkflow.getWorkflowPhases().add(i, workflowPhase);
         orchestrationWorkflow.getWorkflowPhaseIdMap().put(workflowPhase.getUuid(), workflowPhase);
         found = true;

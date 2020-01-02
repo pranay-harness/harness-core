@@ -914,6 +914,18 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
+  public void testObtainDeploySweepingOutputNameWithWhiteSpaces() {
+    PhaseElement phaseElement =
+        PhaseElement.builder().phaseNameForRollback("Rollback Phase 1").phaseName(" Phase 1 ").build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    String outputName = pcfStateHelper.obtainDeploySweepingOutputName(context, false);
+    assertThat(outputName).isNotNull();
+    assertThat(outputName).isEqualTo(DeploySweepingOutputPcf.SWEEPING_OUTPUT_NAME + "Phase 1");
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
   public void testObtainSetupSweepingOutputName() {
     PhaseElement phaseElement =
         PhaseElement.builder().phaseNameForRollback("Rollback Phase 1").phaseName("Phase 1").build();
@@ -926,9 +938,33 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
+  public void testObtainSetupSweepingOutputNameWithWhiteSpaces() {
+    PhaseElement phaseElement =
+        PhaseElement.builder().phaseNameForRollback("Rollback Phase 1").phaseName(" Phase 1 ").build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    String outputName = pcfStateHelper.obtainSetupSweepingOutputName(context, false);
+    assertThat(outputName).isNotNull();
+    assertThat(outputName).isEqualTo(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + "Phase 1");
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
   public void testObtainSwapRouteRollbackSweepingOutputName() {
     PhaseElement phaseElement =
         PhaseElement.builder().phaseNameForRollback("Rollback Phase 1").phaseName("Phase 1").build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    String outputName = pcfStateHelper.obtainSwapRouteSweepingOutputName(context, false);
+    assertThat(outputName).isNotNull();
+    assertThat(outputName).isEqualTo(SwapRouteRollbackSweepingOutputPcf.SWEEPING_OUTPUT_NAME + "Phase 1");
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testObtainSwapRouteRollbackSweepingOutputNameWithWhiteSpaces() {
+    PhaseElement phaseElement =
+        PhaseElement.builder().phaseNameForRollback("Rollback Phase 1").phaseName(" Phase 1 ").build();
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     String outputName = pcfStateHelper.obtainSwapRouteSweepingOutputName(context, false);
     assertThat(outputName).isNotNull();
