@@ -36,9 +36,9 @@ public class UtilizationDataServiceImpl {
   private static final int MAX_RETRY_COUNT = 5;
 
   static final String INSERT_STATEMENT =
-      "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, ACCOUNTID, CLUSTERARN, CLUTERNAME, SERVICEARN, SERVICENAME, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTANCEID, INSTANCETYPE, SETTINGID ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, ACCOUNTID, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTANCEID, INSTANCETYPE, SETTINGID ) VALUES (?,?,?,?,?,?,?,?,?,?)";
   private static final String UTILIZATION_DATA_QUERY =
-      "SELECT MAX(MAXCPU) as MAXCPUUTILIZATION, MAX(MAXMEMORY) as MAXMEMORYUTILIZATION, AVG(AVGCPU) as AVGCPUUTILIZATION, AVG(AVGMEMORY) as AVGMEMORYUTILIZATION, INSTANCEID FROM UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND ENDTIME <= '%s' GROUP BY INSTANCEID;";
+      "SELECT MAX(MAXCPU) as MAXCPUUTILIZATION, MAX(MAXMEMORY) as MAXMEMORYUTILIZATION, AVG(AVGCPU) as AVGCPUUTILIZATION, AVG(AVGMEMORY) as AVGMEMORYUTILIZATION, INSTANCEID FROM UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY INSTANCEID;";
 
   public boolean create(InstanceUtilizationData instanceUtilizationData) {
     boolean successfulInsert = false;
@@ -71,24 +71,19 @@ public class UtilizationDataServiceImpl {
     statement.setTimestamp(1, new Timestamp(instanceUtilizationData.getStartTimestamp()), utils.getDefaultCalendar());
     statement.setTimestamp(2, new Timestamp(instanceUtilizationData.getEndTimestamp()), utils.getDefaultCalendar());
     statement.setString(3, instanceUtilizationData.getAccountId());
-    statement.setString(4, instanceUtilizationData.getClusterArn());
-    statement.setString(5, instanceUtilizationData.getClusterName());
-    statement.setString(6, instanceUtilizationData.getServiceArn());
-    statement.setString(7, instanceUtilizationData.getServiceName());
-    statement.setDouble(8, instanceUtilizationData.getCpuUtilizationMax());
-    statement.setDouble(9, instanceUtilizationData.getMemoryUtilizationMax());
-    statement.setDouble(10, instanceUtilizationData.getCpuUtilizationAvg());
-    statement.setDouble(11, instanceUtilizationData.getMemoryUtilizationAvg());
-    statement.setString(12, instanceUtilizationData.getInstanceId());
-    statement.setString(13, instanceUtilizationData.getInstanceType());
-    statement.setString(14, instanceUtilizationData.getSettingId());
+    statement.setDouble(4, instanceUtilizationData.getCpuUtilizationMax());
+    statement.setDouble(5, instanceUtilizationData.getMemoryUtilizationMax());
+    statement.setDouble(6, instanceUtilizationData.getCpuUtilizationAvg());
+    statement.setDouble(7, instanceUtilizationData.getMemoryUtilizationAvg());
+    statement.setString(8, instanceUtilizationData.getInstanceId());
+    statement.setString(9, instanceUtilizationData.getInstanceType());
+    statement.setString(10, instanceUtilizationData.getSettingId());
   }
 
   public Map<String, UtilizationData> getUtilizationDataForInstances(
       List<? extends InstanceData> instanceDataList, String startTime, String endTime) {
     try {
       if (timeScaleDBService.isValid()) {
-        logger.info("TimescaleDb is valid");
         Map<String, List<String>> serviceArnToInstanceIds = getServiceArnToInstanceIdMapping(instanceDataList);
         String query = String.format(
             UTILIZATION_DATA_QUERY, String.join("','", serviceArnToInstanceIds.keySet()), startTime, endTime);
