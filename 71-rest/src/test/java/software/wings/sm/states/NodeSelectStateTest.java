@@ -33,6 +33,8 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.OwnerRule.Owner;
@@ -63,6 +65,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ContextElement;
@@ -89,6 +92,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   @InjectMocks private NodeSelectState nodeSelectState = new DcNodeSelectState("DC_NODE_SELECT");
 
@@ -162,6 +166,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
@@ -190,6 +195,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
     when(context.getOrchestrationWorkflowType()).thenReturn(OrchestrationWorkflowType.ROLLING);
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
@@ -219,6 +225,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
@@ -251,6 +258,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
@@ -277,6 +285,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
         .thenReturn(emptyList());
     when(context.getAppId()).thenReturn(APP_ID);
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));

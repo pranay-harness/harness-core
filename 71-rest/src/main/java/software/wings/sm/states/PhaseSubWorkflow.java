@@ -236,6 +236,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                                                   .phaseName(stateExecutionInstance.getDisplayName())
                                                   .appId(stateExecutionInstance.getAppId())
                                                   .workflowExecutionId(context.getWorkflowExecutionId())
+                                                  .rollback(isRollback())
                                                   .phaseNameForRollback(phaseNameForRollback);
 
     if (service != null) {

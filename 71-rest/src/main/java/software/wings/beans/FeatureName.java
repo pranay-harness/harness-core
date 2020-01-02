@@ -83,6 +83,7 @@ public enum FeatureName {
   GOOGLE_KMS,
   LOGS_V2_247,
   WEEKLY_WINDOW,
+  SSH_WINRM_SO,
   APM_CUSTOM_THRESHOLDS;
 
   FeatureName() {

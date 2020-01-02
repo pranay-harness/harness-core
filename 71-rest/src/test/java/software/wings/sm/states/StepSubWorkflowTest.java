@@ -196,10 +196,6 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     ExecutionResponse response = phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
     assertThat(response).isNotNull().hasFieldOrProperty("stateExecutionData");
     assertThat(response.getStateExecutionData()).isNotNull().isExactlyInstanceOf(PhaseStepExecutionData.class);
-    PhaseStepExecutionData phaseStepExecutionData = (PhaseStepExecutionData) response.getStateExecutionData();
-
-    assertThat(response.getContextElements()).isNotNull().hasSize(1);
-    assertThat(response.getContextElements().get(0)).isNotNull().isEqualTo(serviceInstanceIdsParam);
   }
 
   @Test

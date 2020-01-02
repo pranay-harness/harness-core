@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 
 import java.util.Map;
@@ -7,7 +8,7 @@ import java.util.Map;
 /**
  * Interface for all RepeatElements.
  */
-public interface ContextElement {
+public interface ContextElement extends SweepingOutput {
   String WORKFLOW = "workflow";
   String DEPLOYMENT_URL = "deploymentUrl";
   String APP = "app";
