@@ -39,8 +39,10 @@ import java.util.Map;
         @Field(InstanceDataKeys.accountId), @Field(InstanceDataKeys.instanceId), @Field(InstanceDataKeys.instanceState)
       })
   ,
-      @Index(options = @IndexOptions(name = "accountId_clusterName_instanceState"), fields = {
-        @Field(InstanceDataKeys.accountId), @Field(InstanceDataKeys.clusterName), @Field(InstanceDataKeys.instanceState)
+      @Index(options = @IndexOptions(name = "accountId_settingId_instanceId"), fields = {
+        @Field(InstanceDataKeys.accountId), @Field(InstanceDataKeys.settingId), @Field(InstanceDataKeys.instanceId)
+      }), @Index(options = @IndexOptions(name = "accountId_settingId"), fields = {
+        @Field(InstanceDataKeys.accountId), @Field(InstanceDataKeys.settingId)
       })
 })
 @FieldNameConstants(innerTypeName = "InstanceDataKeys")

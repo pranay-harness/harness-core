@@ -117,8 +117,8 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
     Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
                                     .filter(InstanceDataKeys.accountId, instanceData.getAccountId())
-                                    .filter(InstanceDataKeys.instanceId, instanceData.getInstanceId())
-                                    .filter(InstanceDataKeys.settingId, instanceData.getSettingId());
+                                    .filter(InstanceDataKeys.settingId, instanceData.getSettingId())
+                                    .filter(InstanceDataKeys.instanceId, instanceData.getInstanceId());
 
     FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(false);
     return hPersistence.upsert(query, instanceDataUpdateOperations, findAndModifyOptions) != null;
@@ -143,9 +143,11 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   }
 
   @Override
-  public InstanceData fetchInstanceDataWithName(String accountId, String instanceName, Long occurredAt) {
+  public InstanceData fetchInstanceDataWithName(
+      String accountId, String settingId, String instanceName, Long occurredAt) {
     return hPersistence.createQuery(InstanceData.class)
         .filter(InstanceDataKeys.accountId, accountId)
+        .filter(InstanceDataKeys.settingId, settingId)
         .filter(InstanceDataKeys.instanceName, instanceName)
         .order(Sort.descending(InstanceDataKeys.usageStartTime))
         .get();

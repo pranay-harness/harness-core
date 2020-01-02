@@ -43,10 +43,12 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
       for (Map.Entry<String, InstanceUtilizationData> entry : aggregatedUtilizationData.entrySet()) {
         InstanceUtilizationData instanceUtilizationData = entry.getValue();
         String accountId = instanceUtilizationData.getAccountId();
+        String settingId = instanceUtilizationData.getSettingId();
         String instanceId = entry.getKey();
 
         // TODO(Rohit) cache data
-        InstanceData instanceData = instanceDataService.fetchInstanceDataWithName(accountId, instanceId, startDate);
+        InstanceData instanceData =
+            instanceDataService.fetchInstanceDataWithName(accountId, settingId, instanceId, startDate);
         // Initialisation to 100% Utilisation
         double cpuAvgPercentage = 1;
         double cpuMaxPercentage = 1;

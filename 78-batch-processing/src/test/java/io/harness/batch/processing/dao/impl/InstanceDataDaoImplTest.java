@@ -53,8 +53,8 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReturnInstanceDataWithName() {
     instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
-    InstanceData instanceData =
-        instanceDataDao.fetchInstanceDataWithName(ACCOUNT_ID, INSTANCE_NAME, START_INSTANT.toEpochMilli());
+    InstanceData instanceData = instanceDataDao.fetchInstanceDataWithName(
+        ACCOUNT_ID, CLOUD_PROVIDER_ID, INSTANCE_NAME, START_INSTANT.toEpochMilli());
     assertThat(instanceData).isNotNull();
   }
 

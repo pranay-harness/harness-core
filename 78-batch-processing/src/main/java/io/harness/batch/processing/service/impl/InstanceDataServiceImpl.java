@@ -50,8 +50,9 @@ public class InstanceDataServiceImpl implements InstanceDataService {
   }
 
   @Override
-  public InstanceData fetchInstanceDataWithName(String accountId, String instanceId, Long occurredAt) {
-    return instanceDataDao.fetchInstanceDataWithName(accountId, instanceId, occurredAt);
+  public InstanceData fetchInstanceDataWithName(
+      String accountId, String settingId, String instanceId, Long occurredAt) {
+    return instanceDataDao.fetchInstanceDataWithName(accountId, settingId, instanceId, occurredAt);
   }
 
   @Override
