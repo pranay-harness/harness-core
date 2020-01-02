@@ -36,8 +36,8 @@ public class BillingCalculationService {
       double instanceActiveSeconds) {
     double pricePerHour = pricingData.getPricePerHour();
     BigDecimal billingAmount = BigDecimal.valueOf((pricePerHour * instanceActiveSeconds) / 3600);
-    double cpuUnit = 0;
-    double memoryMb = 0;
+    double cpuUnit;
+    double memoryMb;
     if (null != instanceData.getTotalResource()) {
       cpuUnit = instanceData.getTotalResource().getCpuUnits();
       memoryMb = instanceData.getTotalResource().getMemoryMb();
@@ -46,13 +46,13 @@ public class BillingCalculationService {
       memoryMb = pricingData.getMemoryMb();
     }
     logger.info("Billing amount {} {} {}", billingAmount, pricePerHour, instanceActiveSeconds);
-    BigDecimal billingAmountForResource = getBillingAmountForResource(instanceData, billingAmount);
+    BillingAmountBreakup billingAmountForResource = getBillingAmountForResource(instanceData, billingAmount);
     return new BillingData(billingAmountForResource,
-        getIdleCostForResource(billingAmountForResource, utilizationData, instanceData), instanceActiveSeconds,
-        cpuUnit * instanceActiveSeconds, memoryMb * instanceActiveSeconds);
+        getIdleCostForResource(billingAmountForResource.getBillingAmount(), utilizationData, instanceData),
+        instanceActiveSeconds, cpuUnit * instanceActiveSeconds, memoryMb * instanceActiveSeconds);
   }
 
-  BigDecimal getBillingAmountForResource(InstanceData instanceData, BigDecimal billingAmount) {
+  BillingAmountBreakup getBillingAmountForResource(InstanceData instanceData, BigDecimal billingAmount) {
     if (instanceData.getInstanceType().getCostAttribution() == CostAttribution.PARTIAL) {
       Double instanceCpu = instanceData.getTotalResource().getCpuUnits();
       Double instanceMemory = instanceData.getTotalResource().getMemoryMb();
@@ -63,9 +63,18 @@ public class BillingCalculationService {
 
       BigDecimal instanceUsage =
           BigDecimal.valueOf(((instanceCpu / parentInstanceCpu) + (instanceMemory / parentInstanceMemory)) * 0.5);
-      return instanceUsage.multiply(billingAmount);
+      return BillingAmountBreakup.builder()
+          .billingAmount(instanceUsage.multiply(billingAmount))
+          .cpuBillingAmount(billingAmount.multiply(BigDecimal.valueOf((instanceCpu / parentInstanceCpu) * 0.5)))
+          .memoryBillingAmount(
+              billingAmount.multiply(BigDecimal.valueOf((instanceMemory / parentInstanceMemory) * 0.5)))
+          .build();
     }
-    return billingAmount;
+    return BillingAmountBreakup.builder()
+        .billingAmount(billingAmount)
+        .cpuBillingAmount(billingAmount.multiply(BigDecimal.valueOf(0.5)))
+        .memoryBillingAmount(billingAmount.multiply(BigDecimal.valueOf(0.5)))
+        .build();
   }
 
   IdleCostData getIdleCostForResource(
@@ -73,7 +82,7 @@ public class BillingCalculationService {
     if (instanceData.getInstanceType().toString().equals("ECS_TASK_FARGATE") || utilizationData == null) {
       return new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
     }
-    Double billingAmount = billingDataForResource.doubleValue();
+    double billingAmount = billingDataForResource.doubleValue();
     BigDecimal cpuIdleCost = BigDecimal.valueOf(billingAmount * ((1 - utilizationData.getMaxCpuUtilization()) / 2));
     BigDecimal memoryIdleCost =
         BigDecimal.valueOf(billingAmount * ((1 - utilizationData.getMaxMemoryUtilization()) / 2));

@@ -11,6 +11,10 @@ import lombok.experimental.FieldDefaults;
 public class ClusterCostData {
   double totalCost;
   double utilizedCost;
+  double cpuTotalCost;
+  double cpuUtilizedCost;
+  double memoryTotalCost;
+  double memoryUtilizedCost;
   long startTime;
   long endTime;
   String accountId;

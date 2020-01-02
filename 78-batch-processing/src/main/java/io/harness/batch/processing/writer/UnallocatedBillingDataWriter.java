@@ -36,9 +36,17 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
           ClusterCostData clusterCostData = unallocatedCostMap.get(dataPoint.getClusterId());
           if (dataPoint.getInstanceType().equals(InstanceType.K8S_POD.name())
               || dataPoint.getInstanceType().equals(InstanceType.ECS_TASK_EC2.name())) {
-            clusterCostData = clusterCostData.toBuilder().utilizedCost(dataPoint.getCost()).build();
+            clusterCostData = clusterCostData.toBuilder()
+                                  .utilizedCost(dataPoint.getCost())
+                                  .cpuUtilizedCost(dataPoint.getCpuCost())
+                                  .memoryUtilizedCost(dataPoint.getMemoryCost())
+                                  .build();
           } else {
-            clusterCostData = clusterCostData.toBuilder().totalCost(dataPoint.getCost()).build();
+            clusterCostData = clusterCostData.toBuilder()
+                                  .totalCost(dataPoint.getCost())
+                                  .cpuTotalCost(dataPoint.getCpuCost())
+                                  .memoryTotalCost(dataPoint.getMemoryCost())
+                                  .build();
           }
           unallocatedCostMap.replace(dataPoint.getClusterId(), clusterCostData);
         } else {
@@ -47,11 +55,15 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
                       || dataPoint.getInstanceType().equals(InstanceType.ECS_TASK_EC2.name())
                   ? ClusterCostData.builder()
                         .utilizedCost(dataPoint.getCost())
+                        .cpuUtilizedCost(dataPoint.getCpuCost())
+                        .memoryUtilizedCost(dataPoint.getMemoryCost())
                         .startTime(dataPoint.getStartTime())
                         .endTime(dataPoint.getEndTime())
                         .build()
                   : ClusterCostData.builder()
                         .totalCost(dataPoint.getCost())
+                        .cpuTotalCost(dataPoint.getCpuCost())
+                        .memoryTotalCost(dataPoint.getMemoryCost())
                         .startTime(dataPoint.getStartTime())
                         .endTime(dataPoint.getEndTime())
                         .build());
@@ -70,6 +82,10 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
                 .startTimestamp(clusterCostData.getStartTime())
                 .endTimestamp(clusterCostData.getEndTime())
                 .billingAmount(BigDecimal.valueOf(clusterCostData.getTotalCost() - clusterCostData.getUtilizedCost()))
+                .cpuBillingAmount(
+                    BigDecimal.valueOf(clusterCostData.getCpuTotalCost() - clusterCostData.getCpuUtilizedCost()))
+                .memoryBillingAmount(
+                    BigDecimal.valueOf(clusterCostData.getMemoryTotalCost() - clusterCostData.getMemoryUtilizedCost()))
                 .idleCost(BigDecimal.ZERO)
                 .cpuIdleCost(BigDecimal.ZERO)
                 .memoryIdleCost(BigDecimal.ZERO)

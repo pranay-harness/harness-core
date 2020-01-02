@@ -73,6 +73,8 @@ public class UnallocatedBillingDataServiceImplTest {
     when(resultSet.getString("CLUSTERID")).thenAnswer((Answer<String>) invocation -> CLUSTER_ID);
     when(resultSet.getString("INSTANCETYPE")).thenAnswer((Answer<String>) invocation -> INSTANCE_TYPE);
     when(resultSet.getDouble("COST")).thenAnswer((Answer<Double>) invocation -> COST);
+    when(resultSet.getDouble("CPUCOST")).thenAnswer((Answer<Double>) invocation -> COST / 2);
+    when(resultSet.getDouble("MEMORYCOST")).thenAnswer((Answer<Double>) invocation -> COST / 2);
     when(resultSet.getString("BILLINGACCOUNTID")).thenAnswer((Answer<String>) invocation -> BILLING_ACCOUNT_ID);
     when(resultSet.getString("ACCOUNTID")).thenAnswer((Answer<String>) invocation -> ACCOUNT_ID);
     when(resultSet.getString("CLUSTERNAME")).thenAnswer((Answer<String>) invocation -> CLUSTER_NAME);
@@ -96,6 +98,8 @@ public class UnallocatedBillingDataServiceImplTest {
     assertThat(unallocatedCostDataList.get(0).getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(unallocatedCostDataList.get(0).getInstanceType()).isEqualTo(INSTANCE_TYPE);
     assertThat(unallocatedCostDataList.get(0).getCost()).isEqualTo(COST);
+    assertThat(unallocatedCostDataList.get(0).getCpuCost()).isEqualTo(COST / 2);
+    assertThat(unallocatedCostDataList.get(0).getMemoryCost()).isEqualTo(COST / 2);
   }
 
   @Test

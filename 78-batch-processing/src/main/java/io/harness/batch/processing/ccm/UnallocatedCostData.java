@@ -12,6 +12,8 @@ public class UnallocatedCostData {
   String clusterId;
   String instanceType;
   double cost;
+  double cpuCost;
+  double memoryCost;
   long startTime;
   long endTime;
 }

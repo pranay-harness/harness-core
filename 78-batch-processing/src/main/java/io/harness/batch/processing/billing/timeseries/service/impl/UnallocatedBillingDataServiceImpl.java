@@ -23,7 +23,7 @@ public class UnallocatedBillingDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
 
   static final String GET_UNALLOCATED_COST_DATA =
-      "SELECT SUM(BILLINGAMOUNT) AS COST, CLUSTERID, INSTANCETYPE FROM BILLING_DATA WHERE CLUSTERID IS NOT NULL AND INSTANCETYPE IN ('K8S_POD', 'K8S_NODE', 'ECS_CONTAINER_INSTANCE', 'ECS_TASK_EC2') AND STARTTIME >= '%s' AND ENDTIME <= '%s' GROUP BY CLUSTERID, INSTANCETYPE";
+      "SELECT SUM(BILLINGAMOUNT) AS COST, SUM(CPUBILLINGAMOUNT) AS CPUCOST, SUM(MEMORYBILLINGAMOUNT) AS MEMORYCOST, CLUSTERID, INSTANCETYPE FROM BILLING_DATA WHERE CLUSTERID IS NOT NULL AND INSTANCETYPE IN ('K8S_POD', 'K8S_NODE', 'ECS_CONTAINER_INSTANCE', 'ECS_TASK_EC2') AND STARTTIME >= '%s' AND ENDTIME <= '%s' GROUP BY CLUSTERID, INSTANCETYPE";
 
   static final String GET_COMMON_FIELDS =
       "SELECT BILLINGACCOUNTID, ACCOUNTID, CLUSTERNAME, SETTINGID, REGION, CLOUDPROVIDER, CLUSTERTYPE, WORKLOADTYPE FROM BILLING_DATA WHERE CLUSTERID = '%s' AND INSTANCETYPE IN ('K8S_POD', 'K8S_NODE', 'ECS_CONTAINER_INSTANCE', 'ECS_TASK_EC2') AND STARTTIME >= '%s' AND ENDTIME <= '%s' LIMIT 1";
@@ -42,6 +42,8 @@ public class UnallocatedBillingDataServiceImpl {
                                         .clusterId(resultSet.getString("CLUSTERID"))
                                         .instanceType(resultSet.getString("INSTANCETYPE"))
                                         .cost(resultSet.getDouble("COST"))
+                                        .cpuCost(resultSet.getDouble("CPUCOST"))
+                                        .memoryCost(resultSet.getDouble("MEMORYCOST"))
                                         .startTime(startDate)
                                         .endTime(endDate)
                                         .build());
