@@ -100,7 +100,8 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldCreateInstancePodInfo() throws Exception {
     InstanceData instanceData = getNodeInstantData();
-    when(instanceDataService.fetchInstanceDataWithName(ACCOUNT_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
+    when(instanceDataService.fetchInstanceDataWithName(
+             ACCOUNT_ID, CLOUD_PROVIDER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
         .thenReturn(instanceData);
     when(cloudToHarnessMappingService.getHarnessServiceInfo(any())).thenReturn(harnessServiceInfo());
     Map<String, String> label = new HashMap<>();

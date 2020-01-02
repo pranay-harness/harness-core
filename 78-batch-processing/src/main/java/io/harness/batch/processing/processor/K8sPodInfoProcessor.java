@@ -48,7 +48,7 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
     metaData.put(InstanceMetaDataConstants.WORKLOAD_TYPE, workloadType.equals("") ? POD : workloadType);
 
     InstanceData instanceData = instanceDataService.fetchInstanceDataWithName(
-        accountId, podInfo.getNodeName(), publishedMessage.getOccurredAt());
+        accountId, podInfo.getCloudProviderId(), podInfo.getNodeName(), publishedMessage.getOccurredAt());
     if (null != instanceData) {
       Map<String, String> nodeMetaData = instanceData.getMetaData();
       metaData.put(InstanceMetaDataConstants.REGION, nodeMetaData.get(InstanceMetaDataConstants.REGION));
