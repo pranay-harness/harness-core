@@ -1,5 +1,7 @@
 package io.harness;
 
+import static ch.qos.logback.core.util.OptionHelper.getEnv;
+
 import io.harness.rule.OwnerRule;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +17,9 @@ public class OwnerTestListener extends RunListener {
       return;
     }
 
-    OwnerRule.checkForJira(description.getDisplayName(), owner.developers()[0]);
+    if (getEnv("SONAR_TOKEN") != null) {
+      OwnerRule.checkForJira(description.getDisplayName(), owner.developers()[0], OwnerRule.PRIORITY_VALUE1);
+    }
 
     for (String developer : owner.developers()) {
       OwnerRule.fileOwnerAs(developer, "ignore");
