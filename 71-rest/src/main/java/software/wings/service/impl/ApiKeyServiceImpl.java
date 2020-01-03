@@ -34,6 +34,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.ApiKeyEntry.ApiKeyEntryKeys;
+import software.wings.beans.Event.Type;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.ApiKeysFeature;
@@ -72,6 +73,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Inject private AuthHandler authHandler;
   @Inject private AuthService authService;
   @Inject private ExecutorService executorService;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   private static String DELIMITER = "::";
 
@@ -98,6 +100,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
             .accountId(accountId)
             .build();
     String id = wingsPersistence.save(apiKeyEntryToBeSaved);
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, apiKeyEntry, Type.CREATE);
     return get(id, accountId);
   }
 
@@ -124,6 +127,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     if (!same) {
       evictApiKeyAndRebuildCache(apiKeyEntryAfterUpdate.getDecryptedKey(), accountId, true);
     }
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, apiKeyEntry, Type.UPDATE);
     return apiKeyEntryAfterUpdate;
   }
 
@@ -262,6 +266,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   public void delete(String accountId, String uuid) {
     ApiKeyEntry apiKeyEntry = get(uuid, accountId);
     evictApiKeyAndRebuildCache(apiKeyEntry.getDecryptedKey(), accountId, false);
+    auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, apiKeyEntry);
     wingsPersistence.delete(ApiKeyEntry.class, uuid);
   }
 

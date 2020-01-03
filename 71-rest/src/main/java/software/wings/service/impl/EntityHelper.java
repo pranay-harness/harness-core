@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.audit.ResourceType;
+import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.ConfigFile;
@@ -116,6 +117,14 @@ public class EntityHelper {
       affectedResourceId = environment.getUuid();
       affectedResourceName = environment.getName();
       affectedResourceType = EntityType.ENVIRONMENT.name();
+      affectedResourceOperation = type.name();
+    } else if (entity instanceof ApiKeyEntry) {
+      ApiKeyEntry apiKeyEntry = (ApiKeyEntry) entity;
+      entityType = EntityType.API_KEY.name();
+      entityName = apiKeyEntry.getName();
+      affectedResourceId = apiKeyEntry.getUuid();
+      affectedResourceName = apiKeyEntry.getName();
+      affectedResourceType = entityType;
       affectedResourceOperation = type.name();
     } else if (entity instanceof UserGroup) {
       UserGroup userGroup = (UserGroup) entity;
