@@ -98,6 +98,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
   private final Map<FeatureName, Boolean> featureFlags = new HashMap<>();
   @Indexed private Long timeSeriesAnalysisIteration;
   @Indexed private Long logAnalysisIteration;
+  @Indexed private Long logClusterIteration;
   @Indexed private Long cvTaskCreationIteration;
 
   @JsonIgnore
@@ -186,6 +187,10 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
       this.logAnalysisIteration = nextIteration;
       return;
     }
+    if (AnalysisContextKeys.logClusterIteration.equals(fieldName)) {
+      this.logClusterIteration = nextIteration;
+      return;
+    }
     if (AnalysisContextKeys.cvTaskCreationIteration.equals(fieldName)) {
       this.cvTaskCreationIteration = nextIteration;
       return;
@@ -200,6 +205,9 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
     }
     if (AnalysisContextKeys.logAnalysisIteration.equals(fieldName)) {
       return this.logAnalysisIteration;
+    }
+    if (AnalysisContextKeys.logClusterIteration.equals(fieldName)) {
+      return this.logClusterIteration;
     }
     if (AnalysisContextKeys.cvTaskCreationIteration.equals(fieldName)) {
       return this.cvTaskCreationIteration;

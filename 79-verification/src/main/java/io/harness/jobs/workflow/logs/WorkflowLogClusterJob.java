@@ -1,5 +1,6 @@
 package io.harness.jobs.workflow.logs;
 
+import static software.wings.beans.FeatureName.REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 
@@ -10,6 +11,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.jobs.LogMLClusterGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -28,11 +30,12 @@ import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 
 @DisallowConcurrentExecution
 @Slf4j
-public class WorkflowLogClusterJob implements Job {
+public class WorkflowLogClusterJob implements Job, MongoPersistenceIterator.Handler<AnalysisContext> {
   @Inject private VerificationManagerClientHelper managerClientHelper;
   @Inject private VerificationManagerClient managerClient;
 
@@ -47,11 +50,25 @@ public class WorkflowLogClusterJob implements Job {
     try {
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      logger.info("Executing workflow Log Cluster job with context : {} and params : {}", context, params);
-      new WorkflowLogClusterJob
-          .LogClusterTask(analysisService, managerClientHelper, jobExecutionContext, context, learningEngineService,
-              managerClient, dataStoreService)
-          .run();
+      if (managerClientHelper
+              .callManagerWithRetry(
+                  managerClient.isFeatureEnabled(REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON, context.getAccountId()))
+              .getResource()) {
+        logger.info(
+            "The feature REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON is enabled for {}, it will be handled by the iterators",
+            context.getAccountId());
+      } else {
+        logger.info("Executing workflow Log Cluster cron job with context : {} and params : {}", context, params);
+        new WorkflowLogClusterJob
+            .LogClusterTask(analysisService, managerClientHelper, Optional.of(jobExecutionContext), context,
+                learningEngineService, managerClient, dataStoreService)
+            .run();
+      }
+      if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+        logger.info("The state {} is no longer valid, so we are deleting the cron now.", context.getStateExecutionId());
+        jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
+      }
+
     } catch (Exception ex) {
       logger.warn("Log cluster cron failed with error", ex);
       try {
@@ -62,11 +79,34 @@ public class WorkflowLogClusterJob implements Job {
     }
   }
 
+  @Override
+  public void handle(AnalysisContext analysisContext) {
+    if (!managerClientHelper
+             .callManagerWithRetry(managerClient.isFeatureEnabled(
+                 REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON, analysisContext.getAccountId()))
+             .getResource()) {
+      logger.info(
+          "The feature REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON is not enabled for {}, it will be handled by the cron",
+          analysisContext.getAccountId());
+      return;
+    }
+    if (ExecutionStatus.QUEUED.equals(analysisContext.getExecutionStatus())) {
+      learningEngineService.markJobStatus(analysisContext, ExecutionStatus.RUNNING);
+      analysisContext.replaceUnicodeInControlNodesAndTestNodes();
+    }
+    logger.info(
+        "Handling the clustering for stateExecutionId {} using the iterators", analysisContext.getStateExecutionId());
+    new WorkflowLogClusterJob
+        .LogClusterTask(analysisService, managerClientHelper, Optional.empty(), analysisContext, learningEngineService,
+            managerClient, dataStoreService)
+        .run();
+  }
+
   @AllArgsConstructor
   public static class LogClusterTask implements Runnable {
     private LogAnalysisService analysisService;
     private VerificationManagerClientHelper managerClientHelper;
-    private JobExecutionContext jobExecutionContext;
+    private Optional<JobExecutionContext> jobExecutionContext;
     private AnalysisContext context;
     private LearningEngineService learningEngineService;
     private VerificationManagerClient managerClient;
@@ -148,8 +188,9 @@ public class WorkflowLogClusterJob implements Job {
       } finally {
         // Delete cron.
         try {
-          if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-            jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
+          if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())
+              && jobExecutionContext.isPresent()) {
+            jobExecutionContext.get().getScheduler().deleteJob(jobExecutionContext.get().getJobDetail().getKey());
           }
         } catch (SchedulerException e) {
           logger.error("", e);
@@ -171,11 +212,15 @@ public class WorkflowLogClusterJob implements Job {
             cluster();
             break;
           case SPLUNKV2:
-            jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
+            if (jobExecutionContext.isPresent()) {
+              jobExecutionContext.get().getScheduler().deleteJob(jobExecutionContext.get().getJobDetail().getKey());
+            }
             break;
           default:
-            jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
-            logger.error("Verification invalid state: " + context.getStateType());
+            if (jobExecutionContext.isPresent()) {
+              jobExecutionContext.get().getScheduler().deleteJob(jobExecutionContext.get().getJobDetail().getKey());
+              logger.error("Verification invalid state: " + context.getStateType());
+            }
         }
       } catch (Exception ex) {
         try {

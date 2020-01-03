@@ -3,6 +3,7 @@ package io.harness.jobs;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -23,6 +24,7 @@ import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob;
+import io.harness.jobs.workflow.logs.WorkflowLogClusterJob;
 import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -81,6 +83,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   private AnalysisContext logAnalysisContext;
   private WorkflowTimeSeriesAnalysisJob workflowTimeSeriesAnalysisJob;
   private WorkflowLogAnalysisJob workflowLogAnalysisJob;
+  private WorkflowLogClusterJob workflowLogClusterJob;
   private long logAnalysisClusteringTestMinute = 5;
   private long logAnalysisMinute = 4;
 
@@ -131,10 +134,14 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
 
     workflowTimeSeriesAnalysisJob = new WorkflowTimeSeriesAnalysisJob();
     workflowLogAnalysisJob = new WorkflowLogAnalysisJob();
+    workflowLogClusterJob = new WorkflowLogClusterJob();
 
     final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
     when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON, accountId))
+        .thenReturn(featureFlagRestMock);
+    when(
+        verificationManagerClient.isFeatureEnabled(FeatureName.REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON, accountId))
         .thenReturn(featureFlagRestMock);
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
         .thenReturn(featureFlagRestMock);
@@ -156,6 +163,13 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
     FieldUtils.writeField(workflowLogAnalysisJob, "managerClientHelper", managerClientHelper, true);
     FieldUtils.writeField(workflowLogAnalysisJob, "verificationManagerClient", verificationManagerClient, true);
     FieldUtils.writeField(workflowLogAnalysisJob, "dataStoreService", dataStoreService, true);
+
+    FieldUtils.writeField(workflowLogClusterJob, "managerClient", verificationManagerClient, true);
+    FieldUtils.writeField(workflowLogClusterJob, "analysisService", logAnalysisService, true);
+    FieldUtils.writeField(workflowLogClusterJob, "learningEngineService", learningEngineService, true);
+    FieldUtils.writeField(workflowLogClusterJob, "managerClientHelper", managerClientHelper, true);
+    FieldUtils.writeField(workflowLogClusterJob, "managerClient", verificationManagerClient, true);
+    FieldUtils.writeField(workflowLogClusterJob, "dataStoreService", dataStoreService, true);
 
     metricGroups = new HashMap<>();
     metricGroups.put("tier3",
@@ -384,6 +398,27 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
                                                 .filter(AnalysisContextKeys.stateType, StateType.SUMO)
                                                 .get();
     assertThat(analysisContext.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testLogClusteringCronDisabled() throws IOException {
+    final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
+    when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(
+        verificationManagerClient.isFeatureEnabled(FeatureName.REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON, accountId))
+        .thenReturn(featureFlagRestMock);
+    workflowLogClusterJob.execute(logAnalysisExecutionContext);
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).asList()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testLogClusterCronEnabled() {
+    workflowLogClusterJob.handle(logAnalysisContext);
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).asList()).isEmpty();
   }
 
   private void verifyTimeSeriesQueuedTasks() {
