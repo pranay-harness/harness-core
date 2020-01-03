@@ -5,8 +5,10 @@ import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -37,7 +39,10 @@ import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
+import software.wings.graphql.datafetcher.billing.BillingTrendStatsDataFetcher;
+import software.wings.graphql.datafetcher.billing.QLBillingAmountData;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableListData;
 
@@ -46,12 +51,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.Instant;
 
 public class BudgetServiceImplTest extends CategoryTest {
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private BudgetDao budgetDao;
   @Mock private BillingDataQueryBuilder billingDataQueryBuilder;
   @Mock private DataFetcherUtils utils;
+  @Mock private BillingTrendStatsDataFetcher billingTrendStatsDataFetcher;
   @InjectMocks BudgetServiceImpl budgetService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -168,8 +175,21 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldGetActualCost() throws SQLException {
+  public void shouldGetActualCost() {
     budgetService.getActualCost(budget);
     verify(timeScaleDBService).getDBConnection();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldGetForecastCost() {
+    when(billingTrendStatsDataFetcher.getBillingAmountData(
+             eq(accountId), isA(QLCCMAggregationFunction.class), anyListOf(QLBillingDataFilter.class)))
+        .thenReturn(QLBillingAmountData.builder().build());
+    when(billingTrendStatsDataFetcher.getEndInstant(anyListOf(QLBillingDataFilter.class))).thenReturn(Instant.now());
+    budgetService.getForecastCost(budget);
+    verify(billingTrendStatsDataFetcher)
+        .getBillingAmountData(eq(accountId), isA(QLCCMAggregationFunction.class), anyListOf(QLBillingDataFilter.class));
   }
 }

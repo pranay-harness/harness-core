@@ -95,7 +95,7 @@ public class BudgetHandler implements Handler<Budget> {
       case ACTUAL_COST:
         return budget.getBudgetAmount() * alertThreshold.getPercentage();
       case FORECASTED_COST:
-        return 0 * alertThreshold.getPercentage();
+        return budgetService.getForecastCost(budget) * alertThreshold.getPercentage();
       default:
         return 0;
     }
