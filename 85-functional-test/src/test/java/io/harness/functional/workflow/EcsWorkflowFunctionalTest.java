@@ -39,7 +39,7 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;

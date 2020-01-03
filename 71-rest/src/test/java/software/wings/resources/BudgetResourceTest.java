@@ -13,7 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.entities.Budget;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;

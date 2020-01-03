@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.FunctionalTests;
 import io.harness.exception.WingsException;
 import io.harness.functional.AbstractFunctionalTest;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.restutils.LoginSettingsUtils;
 import org.junit.FixMethodOrder;
 import org.junit.Test;

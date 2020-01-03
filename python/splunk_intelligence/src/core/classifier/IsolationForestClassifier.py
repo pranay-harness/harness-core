@@ -1,7 +1,6 @@
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import IsolationForest
-
 import numpy as np
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import StandardScaler
 
 """
 Wrapper class to encapsulate random forest classifiers to detect anomalies

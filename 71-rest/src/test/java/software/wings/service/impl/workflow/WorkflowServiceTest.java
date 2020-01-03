@@ -247,7 +247,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;

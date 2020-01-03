@@ -1,12 +1,12 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -21,7 +21,7 @@ public class GitConfigHelperServiceTest extends WingsBaseTest {
   @Inject private GitConfigHelperService gitConfigHelperService;
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testRenderGitConfig() {
     String branchExpression = "${branch}";

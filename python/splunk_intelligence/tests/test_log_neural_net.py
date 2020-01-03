@@ -1,10 +1,8 @@
-import argparse
 import json
 import sys
-
 from LogNeuralNet import LogNeuralNet
-from sources.LogCorpus import LogCorpus
 from sources.FileLoader import FileLoader
+from sources.LogCorpus import LogCorpus
 
 options = LogNeuralNet.parse(['--sim_threshold=0.96'])
 

@@ -24,7 +24,7 @@ import io.harness.event.model.EventType;
 import io.harness.event.model.GenericEvent;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

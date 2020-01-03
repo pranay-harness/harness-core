@@ -1,6 +1,7 @@
 import logging
-from logging.handlers import RotatingFileHandler
 import os
+from logging.handlers import RotatingFileHandler
+
 key = '4ac03b05674fc5c488e3b9b235078d5d'
 
 log_format = "%(asctime)-15s %(levelname)s %(message)s"

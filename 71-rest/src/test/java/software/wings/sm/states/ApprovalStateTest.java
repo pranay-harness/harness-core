@@ -10,7 +10,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,7 +55,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.UnexpectedException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.KryoUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -478,7 +478,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testParseProperties() {
     final Map<String, Object> properties = new HashMap<>();
@@ -518,7 +518,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testFillSweepingOutput() {
     when(context.renderExpression(anyString(), any(StateExecutionContext.class)))
@@ -533,7 +533,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testExecuteJiraApprovalFailure() {
     when(context.renderExpression(anyString()))
@@ -562,7 +562,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testExecuteJiraApprovalIfAlreadyApproved() {
     String approvalValue = "DONE";
@@ -586,7 +586,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testExecuteJiraApprovalIfAlreadyRejected() {
     String rejectionValue = "REJECTED";
@@ -610,7 +610,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testExecuteJiraApprovalWithPollingService() {
     when(context.renderExpression(anyString()))
@@ -638,7 +638,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testExecuteSnowApprovalFailure() {
     when(context.renderExpression(anyString()))
@@ -659,7 +659,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testExecuteSnowApprovalIfAlreadyApproved() {
     String approvalValue = "DONE";
@@ -683,7 +683,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testExecuteSnowApprovalIfAlreadyRejected() {
     String rejectionValue = "REJECTED";
@@ -707,7 +707,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testExecuteSnowApprovalWithPollingService() {
     when(context.renderExpression(anyString()))

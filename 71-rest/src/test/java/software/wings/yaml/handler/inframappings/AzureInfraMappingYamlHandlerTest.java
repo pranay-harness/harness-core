@@ -20,7 +20,7 @@ import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
 import org.junit.Test;

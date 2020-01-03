@@ -17,7 +17,7 @@ import com.amazonaws.services.ec2.model.Tag;
 import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.KryoUtils;
 import lombok.Builder;
 import lombok.Value;

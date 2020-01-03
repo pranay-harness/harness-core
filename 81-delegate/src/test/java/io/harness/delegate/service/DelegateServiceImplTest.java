@@ -15,7 +15,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.managerclient.ManagerClientV2;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.security.encryption.EncryptionConfig;
 import org.junit.Before;

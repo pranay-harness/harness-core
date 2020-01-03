@@ -14,7 +14,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.environment.SystemEnvironment;
 import io.harness.logging.AccessTokenBean;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;

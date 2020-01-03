@@ -27,7 +27,7 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.model.GenericEvent;
 import io.harness.event.usagemetrics.UsageMetricsService;
 import io.harness.metrics.HarnessMetricRegistry;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;

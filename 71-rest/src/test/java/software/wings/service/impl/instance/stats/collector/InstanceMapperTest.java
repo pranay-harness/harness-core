@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.base.Suppliers;
 
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.apache.commons.lang3.RandomStringUtils;

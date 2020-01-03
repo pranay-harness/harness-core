@@ -14,7 +14,7 @@ import io.harness.governance.pipeline.service.model.Restriction;
 import io.harness.governance.pipeline.service.model.Restriction.RestrictionType;
 import io.harness.governance.pipeline.service.model.Tag;
 import io.harness.persistence.UuidAccess;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;

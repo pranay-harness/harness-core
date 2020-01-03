@@ -18,7 +18,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.After;

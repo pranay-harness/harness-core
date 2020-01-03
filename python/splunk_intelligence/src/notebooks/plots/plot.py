@@ -1,8 +1,7 @@
-from random import randint
-
 import pandas as pd
 import plotly as py
 from plotly.graph_objs import Scatter, Scatter3d, Layout, Figure, Marker
+from random import randint
 
 
 def split(input, length, size):

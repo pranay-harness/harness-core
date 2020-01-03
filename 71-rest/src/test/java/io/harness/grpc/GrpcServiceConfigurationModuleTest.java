@@ -16,7 +16,7 @@ import io.dropwizard.jersey.validation.Validators;
 import io.harness.category.element.E2ETests;
 import io.harness.govern.ProviderModule;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.Test;

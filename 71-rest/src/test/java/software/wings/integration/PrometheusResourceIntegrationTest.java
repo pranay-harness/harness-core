@@ -13,7 +13,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;

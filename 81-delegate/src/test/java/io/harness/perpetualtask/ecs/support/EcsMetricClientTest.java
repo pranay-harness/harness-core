@@ -17,7 +17,7 @@ import io.harness.event.payloads.EcsUtilization;
 import io.harness.event.payloads.EcsUtilization.MetricValue;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskParams;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Before;
 import org.junit.Test;

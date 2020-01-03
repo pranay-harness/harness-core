@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.AzureKeyVaultOperationException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import org.junit.Before;

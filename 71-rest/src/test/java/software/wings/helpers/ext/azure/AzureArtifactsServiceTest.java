@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.waiter.ListNotifyResponseData;
 import okhttp3.Protocol;
 import okhttp3.Request;

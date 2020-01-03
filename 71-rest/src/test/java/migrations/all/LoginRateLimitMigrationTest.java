@@ -11,7 +11,7 @@ import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.lib.LimitType;
 import io.harness.limits.lib.RateBasedLimit;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;

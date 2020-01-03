@@ -25,7 +25,7 @@ import io.harness.generator.PipelineGenerator;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.persistence.HPersistence;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

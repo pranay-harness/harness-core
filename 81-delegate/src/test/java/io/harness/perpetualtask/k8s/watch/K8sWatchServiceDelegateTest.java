@@ -14,7 +14,7 @@ import com.google.protobuf.ByteString;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;

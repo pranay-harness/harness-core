@@ -6,7 +6,7 @@ import static software.wings.infra.InfraDefinitionTestConstants.RELEASE_NAME;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

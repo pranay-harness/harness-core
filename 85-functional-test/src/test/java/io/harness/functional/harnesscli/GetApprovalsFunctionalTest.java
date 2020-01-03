@@ -12,7 +12,7 @@ import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.framework.utils.PipelineUtils;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import lombok.extern.slf4j.Slf4j;

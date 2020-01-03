@@ -1,7 +1,6 @@
 import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-
 from core.distance.JaccardDistance import jaccard_similarity, pairwise_jaccard_similarity
+from sklearn.metrics.pairwise import cosine_similarity
 
 """
 Detect anomalies based on kmeans clusters

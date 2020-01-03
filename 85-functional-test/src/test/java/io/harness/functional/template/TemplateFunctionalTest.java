@@ -23,7 +23,7 @@ import io.harness.generator.Randomizer;
 import io.harness.generator.TemplateFolderGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.utils.TestUtils;
 import io.restassured.http.ContentType;

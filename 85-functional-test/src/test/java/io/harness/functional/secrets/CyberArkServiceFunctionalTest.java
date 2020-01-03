@@ -9,7 +9,7 @@ import io.harness.category.element.FunctionalTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.SecretsRestUtils;
 import io.restassured.mapper.ObjectMapperType;

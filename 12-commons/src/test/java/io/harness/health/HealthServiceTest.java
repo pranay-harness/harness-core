@@ -10,7 +10,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.threading.Morpheus;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

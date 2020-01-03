@@ -16,7 +16,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.EncryptionUtils;
 import io.harness.time.Timestamp;
 import org.junit.Before;

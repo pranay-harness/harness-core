@@ -12,7 +12,7 @@ import io.harness.event.PublishMessage;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.impl.appender.AppenderModule.Config;
 import io.harness.event.client.impl.appender.AppenderModule.NoopEventPublisher;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

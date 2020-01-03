@@ -9,7 +9,7 @@ import static org.mockito.Mockito.mock;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.threading.Concurrent;
 import okhttp3.OkHttpClient;
 import org.junit.Test;

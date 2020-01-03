@@ -29,7 +29,7 @@ import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.event.reconciliation.deployment.DetectionStatus;
 import io.harness.event.reconciliation.deployment.ReconcilationAction;
 import io.harness.event.reconciliation.deployment.ReconciliationStatus;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Before;
 import org.junit.Test;

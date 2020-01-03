@@ -15,7 +15,7 @@ import io.harness.cache.Distributable;
 import io.harness.cache.Nominal;
 import io.harness.cache.Ordinal;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;

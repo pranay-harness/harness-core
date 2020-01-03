@@ -21,7 +21,7 @@ import io.harness.event.PingPongServiceGrpc;
 import io.harness.event.PingPongServiceGrpc.PingPongServiceBlockingStub;
 import io.harness.grpc.auth.DelegateAuthCallCredentials;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.TokenAuthenticator;
 import io.harness.security.TokenGenerator;
 import lombok.val;

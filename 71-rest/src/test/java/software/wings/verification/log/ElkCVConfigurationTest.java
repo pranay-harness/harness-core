@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

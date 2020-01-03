@@ -13,7 +13,7 @@ import com.splunk.Job;
 import com.splunk.Service;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.apache.commons.io.IOUtils;
 import org.intellij.lang.annotations.Language;
 import org.junit.Before;

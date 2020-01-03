@@ -11,7 +11,7 @@ import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.ConfiguredLimit.ConfiguredLimitKeys;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

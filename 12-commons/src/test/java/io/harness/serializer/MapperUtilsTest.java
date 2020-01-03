@@ -8,7 +8,7 @@ import com.google.common.collect.Maps;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.junit.Test;

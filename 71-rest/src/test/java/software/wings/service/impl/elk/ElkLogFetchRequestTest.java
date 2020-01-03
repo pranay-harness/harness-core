@@ -9,7 +9,7 @@ import com.google.common.collect.Sets;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.json.JSONObject;
 import org.junit.Test;

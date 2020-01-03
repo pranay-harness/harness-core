@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.service;
 
-import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -17,7 +17,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -96,7 +96,7 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void toYaml() {
     final Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
@@ -106,7 +106,7 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void upsertFromYaml() {
     final Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
@@ -120,7 +120,7 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testUpdateServiceVariables() {
     when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(service);
@@ -137,14 +137,14 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void getYamlClass() {
     assertThat(serviceYamlHandler.getYamlClass()).isEqualTo(Yaml.class);
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void get() {
     when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(service);

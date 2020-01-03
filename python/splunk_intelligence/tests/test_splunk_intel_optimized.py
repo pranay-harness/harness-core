@@ -1,10 +1,8 @@
-import argparse
 import json
 import sys
-
 from SplunkIntelOptimized import SplunkIntelOptimized
-from sources.LogCorpus import LogCorpus
 from sources.FileLoader import FileLoader
+from sources.LogCorpus import LogCorpus
 
 options = SplunkIntelOptimized.parse(['--sim_threshold=0.9'])
 

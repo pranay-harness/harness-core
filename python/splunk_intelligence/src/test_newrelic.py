@@ -1,13 +1,12 @@
+import TimeSeriesML
 import argparse
 import json
-import time
-import TimeSeriesML
 import threading
-
-from sources.FileLoader import FileLoader
-from sources.HarnessLoader import HarnessLoader
+import time
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 from SplunkIntelOptimized import SplunkIntelOptimized
+from sources.FileLoader import FileLoader
+from sources.HarnessLoader import HarnessLoader
 from sources.LogCorpus import LogCorpus
 
 

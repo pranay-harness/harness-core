@@ -1,10 +1,7 @@
 import threading
-
-import sys
-
 import time
-from sources.HarnessLoader import HarnessLoader
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+from sources.HarnessLoader import HarnessLoader
 
 
 class PostHandler(BaseHTTPRequestHandler):

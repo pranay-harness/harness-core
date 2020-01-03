@@ -11,7 +11,7 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.pricing.data.AccountComputePricingData;
 import io.harness.batch.processing.pricing.data.AccountFargatePricingData;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;

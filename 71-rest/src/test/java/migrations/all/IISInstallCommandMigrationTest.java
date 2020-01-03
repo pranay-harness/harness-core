@@ -8,7 +8,7 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import migrations.seedata.IISInstallCommandMigration;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

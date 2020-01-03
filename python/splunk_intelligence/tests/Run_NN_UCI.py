@@ -1,7 +1,7 @@
 from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
 from core.util.TimeSeriesUtils import MetricType
-from sources.MetricTemplate import MetricTemplate
 from random import randint
+from sources.MetricTemplate import MetricTemplate
 
 metric_template = MetricTemplate(
 {

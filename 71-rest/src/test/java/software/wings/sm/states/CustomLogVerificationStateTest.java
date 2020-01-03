@@ -22,7 +22,7 @@ import com.google.inject.Injector;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.YamlUtils;
 import org.junit.Before;
 import org.junit.Test;

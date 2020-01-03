@@ -12,7 +12,7 @@ import static org.powermock.api.mockito.PowerMockito.spy;
 
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;

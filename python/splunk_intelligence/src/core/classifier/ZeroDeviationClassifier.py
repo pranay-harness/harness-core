@@ -1,5 +1,5 @@
-import numpy as np
 import math
+import numpy as np
 
 """
 Handles sequences where all values are the same.

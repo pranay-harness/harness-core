@@ -12,7 +12,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.Request;

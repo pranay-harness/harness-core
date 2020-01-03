@@ -32,7 +32,7 @@ import com.offbytwo.jenkins.model.JobWithDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

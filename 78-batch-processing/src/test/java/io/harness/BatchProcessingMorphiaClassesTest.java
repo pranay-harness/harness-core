@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableSet;
 
 import io.harness.category.element.UnitTests;
 import io.harness.morphia.MorphiaModule;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.morphia.BatchProcessingMorphiaRegistrar;
 import org.junit.Ignore;
 import org.junit.Test;

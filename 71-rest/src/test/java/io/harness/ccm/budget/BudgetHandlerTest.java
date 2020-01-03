@@ -19,7 +19,7 @@ import io.harness.ccm.budget.entities.AlertThreshold;
 import io.harness.ccm.budget.entities.AlertThresholdBase;
 import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

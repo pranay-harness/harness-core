@@ -1,21 +1,20 @@
 from __future__ import division
+
 import argparse
 import json
-import sys
-import time
-from collections import OrderedDict
-from Queue import Empty
-
 import multiprocessing
 import numpy as np
-
+import sys
+import time
+from Queue import Empty
+from collections import OrderedDict
 from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
-#from core.ts_neural_nets.auto_encoder import AutoEncoder
+# from core.ts_neural_nets.auto_encoder import AutoEncoder
 from core.util.TimeSeriesUtils import MetricType, simple_average, RiskLevel, MetricToDeviationType, \
     ThresholdComparisonType
+from core.util.lelogging import get_log
 from sources.HarnessLoader import HarnessLoader
 from sources.MetricTemplate import MetricTemplate
-from core.util.lelogging import get_log
 
 logger = get_log(__name__)
 

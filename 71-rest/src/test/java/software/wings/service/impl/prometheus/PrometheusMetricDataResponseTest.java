@@ -10,7 +10,7 @@ import com.google.common.collect.TreeBasedTable;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule;
+import io.harness.rule.Owner;
 import io.harness.time.Timestamp;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -24,7 +24,7 @@ import java.util.UUID;
 
 public class PrometheusMetricDataResponseTest extends CategoryTest {
   @Test
-  @OwnerRule.Owner(developers = KAMAL)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void getMetricRecords_withOneMetricValue() {
     PrometheusMetricDataResponse.PrometheusMetric prometheusMetric =
@@ -48,7 +48,7 @@ public class PrometheusMetricDataResponseTest extends CategoryTest {
   }
 
   @Test
-  @OwnerRule.Owner(developers = KAMAL)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void getMetricRecords_withMoreThanOneMetricValueLogExceptionAsAnActivityLog() {
     PrometheusMetricDataResponse.PrometheusMetricData result =

@@ -22,7 +22,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.entities.CVTask;
 import io.harness.entities.CVTask.CVTaskKeys;
 import io.harness.managerclient.VerificationManagerClientHelper;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;

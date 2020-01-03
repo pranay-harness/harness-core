@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.LogKeyUtils;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

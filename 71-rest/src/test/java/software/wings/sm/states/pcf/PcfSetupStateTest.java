@@ -72,7 +72,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;

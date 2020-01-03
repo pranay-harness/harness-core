@@ -20,7 +20,7 @@ import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupInstanc
 import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupNamesResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.spotinst.SpotInstHelperServiceDelegate;
 import io.harness.spotinst.model.ElastiGroup;
 import org.junit.Test;

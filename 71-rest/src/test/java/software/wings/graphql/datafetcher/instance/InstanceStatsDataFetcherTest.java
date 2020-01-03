@@ -13,7 +13,7 @@ import static software.wings.graphql.schema.type.instance.QLInstanceType.PHYSICA
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.experimental.FieldNameConstants;
 import org.junit.Before;

@@ -13,7 +13,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.KubernetesResourceId;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableList;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;

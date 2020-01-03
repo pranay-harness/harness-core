@@ -19,7 +19,7 @@ import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.resources.DelegateDataCollectionResource;
 import io.harness.resources.TimeSeriesResource;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.apache.commons.lang3.reflect.FieldUtils;

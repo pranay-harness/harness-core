@@ -21,7 +21,7 @@ import com.google.inject.Injector;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;

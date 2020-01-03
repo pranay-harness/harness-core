@@ -6,7 +6,7 @@ import static software.wings.service.intfc.FileService.FileBucket.AUDITS;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.IntegrationTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

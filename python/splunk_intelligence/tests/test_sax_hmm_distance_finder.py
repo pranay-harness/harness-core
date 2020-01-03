@@ -1,12 +1,8 @@
-import json
-import sys
-
 import numpy as np
-
+import sys
 from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
 from sources.FileLoader import FileLoader
 from sources.MetricTemplate import MetricTemplate
-
 
 metric_template = MetricTemplate(FileLoader.load_data('resources/ts/metric_template.json'))
 

@@ -10,7 +10,7 @@ import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import lombok.extern.slf4j.Slf4j;

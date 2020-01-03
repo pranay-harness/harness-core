@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.UNKNOWN;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

@@ -15,7 +15,7 @@ import static software.wings.beans.trigger.WebhookSource.GITHUB;
 import static software.wings.beans.trigger.WebhookSource.GITLAB;
 
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

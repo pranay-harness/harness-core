@@ -29,7 +29,7 @@ import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.event.listener.EventListener;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;

@@ -1,13 +1,11 @@
 import argparse
 import json
 import sys
-
-from datetime import timedelta, datetime
 from TimeSeriesML import TSAnomlyDetector, parallelize_processing
+from core.util.lelogging import get_log
+from datetime import timedelta, datetime
 from sources.FileLoader import FileLoader
 from sources.NewRelicSource import NewRelicSource
-
-from core.util.lelogging import get_log
 
 logger = get_log(__name__)
 

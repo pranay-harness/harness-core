@@ -12,7 +12,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint.Spec;
 import io.harness.distribution.constraint.Constraint.Strategy;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.threading.Concurrent;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

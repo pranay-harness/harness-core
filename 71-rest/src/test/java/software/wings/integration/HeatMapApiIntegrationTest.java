@@ -11,7 +11,7 @@ import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
 import io.fabric8.utils.Lists;
 import io.harness.category.element.IntegrationTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;

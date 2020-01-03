@@ -10,7 +10,7 @@ import com.google.inject.Inject;
 import io.harness.OrchestrationTest;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

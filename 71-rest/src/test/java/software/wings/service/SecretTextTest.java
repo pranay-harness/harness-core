@@ -37,7 +37,7 @@ import io.harness.data.structure.CollectionUtils;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
 import io.harness.persistence.UuidAware;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;

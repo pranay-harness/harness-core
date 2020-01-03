@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule;
+import io.harness.rule.Owner;
 import lombok.val;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Test;
@@ -14,7 +14,7 @@ import org.junit.experimental.categories.Category;
 
 public class K8sResourceStandardizerTest extends CategoryTest {
   @Test
-  @OwnerRule.Owner(developers = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testCpuNano() throws Exception {
     final ImmutableMap<String, Long> map = ImmutableMap.<String, Long>builder()
@@ -37,7 +37,7 @@ public class K8sResourceStandardizerTest extends CategoryTest {
   }
 
   @Test
-  @OwnerRule.Owner(developers = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testMemByte() throws Exception {
     final ImmutableMap<String, Long> map = ImmutableMap.<String, Long>builder()

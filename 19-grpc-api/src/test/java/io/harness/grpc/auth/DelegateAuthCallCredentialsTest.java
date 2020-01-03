@@ -17,7 +17,7 @@ import io.grpc.Metadata;
 import io.grpc.SecurityLevel;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.TokenGenerator;
 import lombok.val;
 import org.junit.Before;

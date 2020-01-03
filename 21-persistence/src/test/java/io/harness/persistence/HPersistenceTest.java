@@ -12,7 +12,7 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.TestEntity.TestEntityKeys;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -1,6 +1,5 @@
-import numpy as np
 import difflib
-
+import numpy as np
 from core.feature.Tokenizer import Tokenizer
 
 """

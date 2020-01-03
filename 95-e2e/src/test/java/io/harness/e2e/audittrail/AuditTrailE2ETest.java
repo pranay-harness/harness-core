@@ -10,7 +10,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.E2ETests;
 import io.harness.e2e.AbstractE2ETest;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ApplicationRestUtils;
 import org.json.JSONObject;
 import org.junit.Assert;

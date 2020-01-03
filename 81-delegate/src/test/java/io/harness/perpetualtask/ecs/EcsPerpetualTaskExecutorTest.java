@@ -28,7 +28,7 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
 import io.harness.perpetualtask.ecs.support.EcsMetricClient;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import org.joor.Reflect;

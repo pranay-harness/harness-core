@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.framework.Retry;
 import io.harness.testframework.framework.matchers.BooleanMatcher;
 import io.harness.testframework.restutils.ApplicationRestUtils;

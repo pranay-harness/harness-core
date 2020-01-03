@@ -14,7 +14,7 @@ import static software.wings.sm.StateType.SUMO;
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;

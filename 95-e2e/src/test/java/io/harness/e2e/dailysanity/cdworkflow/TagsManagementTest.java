@@ -11,7 +11,7 @@ import io.harness.e2e.AbstractE2ETest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.ServiceGenerator;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ApplicationRestUtils;
 import io.harness.testframework.restutils.ServiceRestUtils;
 import io.harness.testframework.restutils.TagsManagementUtils;

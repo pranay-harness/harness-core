@@ -14,7 +14,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.E2ETests;
 import io.harness.e2e.AbstractE2ETest;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ApplicationRestUtils;
 import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.CloudProviderUtils;

@@ -19,7 +19,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueConsumer.Filter;
 import io.harness.queue.QueueListenerController;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Poller;
 import org.junit.Before;

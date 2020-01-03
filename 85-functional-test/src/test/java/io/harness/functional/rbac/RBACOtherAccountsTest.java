@@ -6,7 +6,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.constants.AccountManagementConstants.PermissionTypes;
 import io.harness.testframework.framework.utils.AccessManagementUtils;

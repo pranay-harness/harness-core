@@ -1,19 +1,18 @@
 import argparse
 import json
-import sys
-import time
 import numpy as np
 import os
-
-from sklearn.metrics.pairwise import euclidean_distances
+import sys
+import time
 from core.anomaly.FrequencyAnomalyDetector import FrequencyAnomalyDetector
 from core.cluster.WordToVecCluster import WordToVecCluster
 from core.distance.JaccardDistance import jaccard_difference, jaccard_text_similarity
 from core.feature.TFIDFVectorizer import TFIDFVectorizer
 from core.feature.Tokenizer import Tokenizer
-from sources.LogCorpus import LogCorpus
-from core.util.lelogging import get_log
 from core.feature.WordToVec import WordToVec
+from core.util.lelogging import get_log
+from sklearn.metrics.pairwise import euclidean_distances
+from sources.LogCorpus import LogCorpus
 
 logger = get_log(__name__)
 

@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 
 import io.harness.category.element.E2ETests;
 import io.harness.e2e.AbstractE2ETest;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.framework.utils.UserGroupUtils;
 import io.harness.testframework.restutils.ApiKeysRestUtils;
 import io.harness.testframework.restutils.UserGroupRestUtils;

@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.FastUnitTests;
 import io.harness.data.structure.EmptyPredicate.IsEmpty;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.Builder;
 import lombok.Getter;
 import org.junit.Test;

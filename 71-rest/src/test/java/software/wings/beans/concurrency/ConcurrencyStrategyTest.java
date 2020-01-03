@@ -7,7 +7,7 @@ import static software.wings.common.InfrastructureConstants.INFRA_ID_EXPRESSION;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;

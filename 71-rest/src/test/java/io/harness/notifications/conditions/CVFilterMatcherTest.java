@@ -9,7 +9,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.notifications.beans.CVAlertFilters;
 import io.harness.notifications.beans.Conditions;
 import io.harness.notifications.beans.Conditions.Operator;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;

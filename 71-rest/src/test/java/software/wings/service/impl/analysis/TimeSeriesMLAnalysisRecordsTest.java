@@ -3,7 +3,7 @@ package software.wings.service.impl.analysis;
 import static io.harness.rule.OwnerRule.GEORGE;
 
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
