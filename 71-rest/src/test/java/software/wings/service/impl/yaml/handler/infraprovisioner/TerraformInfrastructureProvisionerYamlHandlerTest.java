@@ -16,7 +16,6 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -90,7 +89,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws IOException {
     ChangeContext<Yaml> changeContext = getChangeContext();
     Yaml yaml = (Yaml) getYaml(validYamlContent, Yaml.class);
     changeContext.setYaml(yaml);
