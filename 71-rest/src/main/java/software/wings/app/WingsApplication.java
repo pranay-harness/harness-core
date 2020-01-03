@@ -127,9 +127,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.notification.EmailNotificationListener;
 import software.wings.prune.PruneEntityListener;
 import software.wings.resources.AppResource;
-import software.wings.scheduler.AccountIdAdditionJob;
 import software.wings.scheduler.InstancesPurgeJob;
-import software.wings.scheduler.LicenseCheckJob;
 import software.wings.scheduler.UsageMetricsHandler;
 import software.wings.scheduler.YamlChangeSetPruneJob;
 import software.wings.scheduler.account.LicenseCheckHandler;
@@ -692,10 +690,8 @@ public class WingsApplication extends Application<MainConfiguration> {
       // If we do not get the lock, that's not critical - that's most likely because other managers took it
       // and they will initialize the jobs.
       if (acquiredLock != null) {
-        LicenseCheckJob.addJob(jobScheduler);
         YamlChangeSetPruneJob.add(jobScheduler);
         InstancesPurgeJob.add(jobScheduler);
-        AccountIdAdditionJob.delete(jobScheduler);
       }
     }
   }
