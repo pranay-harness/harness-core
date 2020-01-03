@@ -641,7 +641,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
           executionContext.secretManager.getEncryptionDetails(
               serviceVariable, executionContext.getAppId(), executionContext.getWorkflowExecutionId()));
       final SecretString value = SecretString.builder().value(new String(serviceVariable.getValue())).build();
-      ((Map<String, Object>) executionContext.contextMap.get(SERVICE_VARIABLE)).put(serviceVariable.getName(), value);
+
+      // Cache the secret as service variable if they are available.
+      if (executionContext.contextMap.containsKey(SERVICE_VARIABLE)) {
+        ((Map<String, Object>) executionContext.contextMap.get(SERVICE_VARIABLE)).put(serviceVariable.getName(), value);
+      }
       return value;
     }
   }
