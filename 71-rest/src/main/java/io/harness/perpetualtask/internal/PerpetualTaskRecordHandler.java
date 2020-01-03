@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.internal;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
@@ -17,11 +18,9 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecord
 import lombok.extern.slf4j.Slf4j;
 import software.wings.service.intfc.DelegateService;
 
-import java.util.concurrent.TimeUnit;
-
 @Slf4j
 public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> {
-  public static final Long PERPETUAL_TASK_TIMEOUT = TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES);
+  private static final int PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE = 1;
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject DelegateService delegateService;
@@ -35,7 +34,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
         MongoPersistenceIterator.<PerpetualTaskRecord>builder()
             .clazz(PerpetualTaskRecord.class)
             .fieldName(PerpetualTaskRecordKeys.assignerIteration)
-            .targetInterval(ofSeconds(5))
+            .targetInterval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
             .acceptableNoAlertDelay(ofSeconds(45))
             .handler(this)
             .filterExpander(query -> query.field(PerpetualTaskRecordKeys.delegateId).equal(""))

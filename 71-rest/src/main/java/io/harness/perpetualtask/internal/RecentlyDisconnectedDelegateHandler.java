@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.internal;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -24,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class RecentlyDisconnectedDelegateHandler implements Handler<Delegate> {
   private static final int POOL_SIZE = 3;
-  private static final long ITERATOR_PERIOD_SECOND = 60; // this config can be lowered for testing purpose
+  private static final long ITERATOR_INTERVAL_MINUTE = 5;
   private static final long DELEGATE_TIMEOUT = TimeUnit.HOURS.toMillis(2);
 
   @Inject PerpetualTaskRecordDao perpetualTaskRecordDao;
@@ -36,10 +37,11 @@ public class RecentlyDisconnectedDelegateHandler implements Handler<Delegate> {
         new ScheduledThreadPoolExecutor(POOL_SIZE, new ThreadFactoryBuilder().setNameFormat(name).build());
     InstrumentedExecutorService instrumentedExecutorService =
         new InstrumentedExecutorService(executor, harnessMetricRegistry.getThreadPoolMetricRegistry(), name);
+
     PersistenceIterator iterator = MongoPersistenceIterator.<Delegate>builder()
                                        .clazz(Delegate.class)
                                        .fieldName(DelegateKeys.nextRecentlyDisconnectedIteration)
-                                       .targetInterval(ofSeconds(ITERATOR_PERIOD_SECOND))
+                                       .targetInterval(ofMinutes(ITERATOR_INTERVAL_MINUTE))
                                        .acceptableNoAlertDelay(ofSeconds(45))
                                        .executorService(instrumentedExecutorService)
                                        .semaphore(new Semaphore(POOL_SIZE))
@@ -52,7 +54,8 @@ public class RecentlyDisconnectedDelegateHandler implements Handler<Delegate> {
                                        .redistribute(true)
                                        .build();
 
-    executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, ITERATOR_PERIOD_SECOND, TimeUnit.SECONDS);
+    executor.scheduleAtFixedRate(
+        () -> iterator.process(ProcessMode.PUMP), 0, ITERATOR_INTERVAL_MINUTE, TimeUnit.MINUTES);
   }
 
   @Override
