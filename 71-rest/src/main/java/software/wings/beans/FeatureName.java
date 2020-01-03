@@ -84,7 +84,8 @@ public enum FeatureName {
   LOGS_V2_247,
   WEEKLY_WINDOW,
   SSH_WINRM_SO,
-  APM_CUSTOM_THRESHOLDS;
+  APM_CUSTOM_THRESHOLDS,
+  SALESFORCE_INTEGRATION;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

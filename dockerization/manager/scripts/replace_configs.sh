@@ -199,6 +199,34 @@ if [[ "" != "$SEGMENT_APIKEY" ]]; then
   yq write -i $CONFIG_FILE segmentConfig.apiKey "$SEGMENT_APIKEY"
 fi
 
+if [[ "" != "SALESFORCE_USERNAME" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.userName "SALESFORCE_USERNAME"
+fi
+
+if [[ "" != "SALESFORCE_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.password "SALESFORCE_PASSWORD"
+fi
+
+if [[ "" != "SALESFORCE_CONSUMERKEY" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.consumerKey "SALESFORCE_CONSUMERKEY"
+fi
+
+if [[ "" != "SALESFORCE_CONSUMERSECRET" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.consumerSecret "SALESFORCE_CONSUMERSECRET"
+fi
+
+if [[ "" != "SALESFORCE_GRANTTYPE" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.grantType "SALESFORCE_GRANTTYPE"
+fi
+
+if [[ "" != "SALESFORCE_LOGININSTANCEDOMAIN" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.loginInstanceDomain "SALESFORCE_LOGININSTANCEDOMAIN"
+fi
+
+if [[ "" != "SALESFORCE_APIVERSION" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.apiVersion "SALESFORCE_APIVERSION"
+fi
+
 if [[ "" != "$DATADOG_ENABLED" ]]; then
   yq write -i $CONFIG_FILE datadogConfig.enabled "$DATADOG_ENABLED"
 fi

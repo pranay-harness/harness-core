@@ -66,6 +66,15 @@ segmentConfig:
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
 
+salesforceConfig:
+  userName: "user_name"
+  password: "password"
+  consumerKey: "consumer_key"
+  consumerSecret: "consumer_secret"
+  grantType: "grant_type"
+  loginInstanceDomain: "login_instance_domain"
+  apiVersion: "api_version" #Example : 47.0
+
 datadogConfig:
   enabled: false #datadogConfigEnable
   apiKey: "datadog_api_key"

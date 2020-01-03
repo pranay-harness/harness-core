@@ -13,6 +13,7 @@ import com.google.inject.Singleton;
 import com.segment.analytics.messages.GroupMessage;
 import com.segment.analytics.messages.IdentifyMessage;
 import io.harness.event.handler.EventHandler;
+import io.harness.event.handler.impl.segment.SalesforceAccountCheck;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.event.listener.EventListener;
@@ -26,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
+import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.Service;
@@ -35,6 +37,7 @@ import software.wings.beans.instance.dashboard.InstanceStatsUtils;
 import software.wings.service.impl.AuthServiceImpl.Keys;
 import software.wings.service.impl.event.AccountEntityEvent;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
@@ -55,6 +58,8 @@ public class AccountChangeHandler implements EventHandler {
   @Inject private UserService userService;
   @Inject private HPersistence hPersistence;
   @Inject private AccountService accountService;
+  @Inject private SalesforceAccountCheck salesforceAccountCheck;
+  @Inject private FeatureFlagService featureFlagService;
 
   private Map<String, Boolean> integrations = new HashMap<>();
 
@@ -171,7 +176,13 @@ public class AccountChangeHandler implements EventHandler {
             .build();
     logger.info("Enqueuing group event. accountId={} traits={}", accountId, groupTraits);
 
-    // group
-    segmentHelper.enqueue(GroupMessage.builder(accountId).userId(user.getId()).traits(groupTraits));
+    GroupMessage.Builder groupMessageBuilder = GroupMessage.builder(accountId)
+                                                   .userId(user.getId())
+                                                   .traits(groupTraits)
+                                                   .enableIntegration(SegmentHandler.Keys.NATERO, true);
+
+    segmentHelper.enqueue(groupMessageBuilder.enableIntegration(SegmentHandler.Keys.SALESFORCE,
+        featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, accountId)
+            && salesforceAccountCheck.isAccountPresentInSalesforce(account)));
   }
 }

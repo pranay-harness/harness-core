@@ -25,6 +25,7 @@ import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.event.handler.marketo.MarketoConfig;
+import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.grpc.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
@@ -99,6 +100,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("clusterName") private String clusterName;
   @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
+  @JsonProperty("salesforceConfig") private SalesforceConfig salesforceConfig = SalesforceConfig.builder().build();
   @JsonProperty("datadogConfig") private DatadogConfig datadogConfig;
   @JsonProperty("defaultSalesContacts") private DefaultSalesContacts defaultSalesContacts;
   @JsonProperty("githubConfig") private GithubConfig githubConfig;
