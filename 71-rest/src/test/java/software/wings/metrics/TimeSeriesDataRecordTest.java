@@ -9,7 +9,7 @@ import com.google.common.collect.TreeBasedTable;
 import io.fabric8.utils.Lists;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

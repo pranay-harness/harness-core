@@ -34,7 +34,7 @@ import io.harness.event.PublishMessage;
 import io.harness.event.PublishRequest;
 import io.harness.event.client.FakeService;
 import io.harness.exception.AccessDeniedException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.TokenAuthenticator;
 import lombok.val;
 import org.junit.Before;

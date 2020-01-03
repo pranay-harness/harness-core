@@ -11,7 +11,7 @@ import com.google.common.collect.ImmutableList;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.Builder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

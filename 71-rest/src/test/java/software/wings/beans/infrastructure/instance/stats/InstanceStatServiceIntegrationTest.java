@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.offset;
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;

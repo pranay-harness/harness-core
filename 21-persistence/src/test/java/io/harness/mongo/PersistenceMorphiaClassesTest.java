@@ -15,7 +15,7 @@ import io.harness.persistence.TestHolderEntity;
 import io.harness.queue.TestInternalEntity;
 import io.harness.queue.TestNoTopicQueuableObject;
 import io.harness.queue.TestTopicQueuableObject;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.morphia.PersistenceMorphiaRegistrar;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

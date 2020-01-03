@@ -1,6 +1,5 @@
 package io.harness.rule;
 
-import static ch.qos.logback.core.util.OptionHelper.getEnv;
 import static java.lang.String.format;
 
 import com.google.common.collect.ImmutableMap;
@@ -22,9 +21,6 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import java.io.File;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,6 +55,8 @@ public class OwnerRule implements TestRule {
     return null;
   }
 
+  public static final String GHPRB_PULL_AUTHOR_EMAIL = "ghprbPullAuthorEmail";
+
   public static final String PLATFORM = "PL";
   public static final String CONTINUOUS_DEPLOYMENT_PLATFORM = "CD Platform";
   public static final String CONTINUOUS_DEPLOYMENT_CORE = "CD Core";
@@ -88,7 +86,7 @@ public class OwnerRule implements TestRule {
   public static final String PARNIAN = "parnian";
   public static final String POOJA = "pooja";
   public static final String PRANJAL = "pranjal";
-  public static final String PRASHANT = "prashant";
+  public static final String PRASHANT = "prashant.pal";
   public static final String PRAVEEN = "praveen.sugavanam";
   public static final String PUNEET = "puneet.saraswat";
   public static final String RAGHU = "raghu";
@@ -108,7 +106,7 @@ public class OwnerRule implements TestRule {
   public static final String VAIBHAV_SI = "vaibhav.si";
   public static final String VENKATESH = "venkatesh.kotrike";
   public static final String VIKAS = "vikas.naiyar";
-  public static final String YOGESH_CHAUHAN = "yogesh.chauhan";
+  public static final String YOGESH = "yogesh.chauhan";
   public static final String VARDAN_BANSAL = "vardan.bansal";
   public static final String NANDAN = "nandan.chandrashekar";
   @Deprecated public static final String UNKNOWN = "unknown";
@@ -119,18 +117,18 @@ public class OwnerRule implements TestRule {
 
   private static final Map<String, DevInfo> active =
       ImmutableMap.<String, DevInfo>builder()
-          .put(AADITI, DevInfo.builder().email("aaditi.joag@harness.io").slack("UCFPUNRAQ").build())
+          .put(AADITI, defaultDevInfo(AADITI).slack("UCFPUNRAQ").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(ABHINAV, DevInfo.builder().email("abhinav.singh@harness.io").slack("UQQPR8M6Y").build())
           .put(ADWAIT, DevInfo.builder().email("adwait.bhandare@harness.io").slack("U8PL7JRMG").build())
           .put(AMAN, DevInfo.builder().email("aman.singh@harness.io").slack("UDJG47CHF").build())
-          .put(ANKIT, DevInfo.builder().email("ankit.singhal@harness.io").slack("UF76W0NN5").build())
+          .put(ANKIT, defaultDevInfo(ANKIT).slack("UF76W0NN5").team(PLATFORM).build())
           .put(ANSHUL, defaultDevInfo(ANSHUL).slack("UASUA3E65").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(ANUBHAW, DevInfo.builder().email("anubhaw@harness.io").slack("U0Z1U0HNW").build())
+          .put(ANUBHAW, defaultDevInfo(ANUBHAW).slack("U0Z1U0HNW").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(AVMOHAN, defaultDevInfo(AVMOHAN).slack("UK72UTBJR").team(CONTINUOUS_EFFICIENCY).build())
           .put(BRETT, DevInfo.builder().email("brett@harness.io").slack("U40VBHCGH").build())
           .put(DEEPAK, DevInfo.builder().email("deepak.patankar@harness.io").slack("UK9EKBKQS").build())
           .put(DINESH, DevInfo.builder().email("dinesh.garg@harness.io").slack("UQ0DMQG11").build())
-          .put(GARVIT, DevInfo.builder().email("garvit.pahal@harness.io").slack("UHH98EXDK").build())
+          .put(GARVIT, defaultDevInfo(GARVIT).slack("UHH98EXDK").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(GEORGE, defaultDevInfo(GEORGE).slack("U88CA877V").team(PLATFORM).build())
           .put(HANTANG, DevInfo.builder().email("hannah.tang@harness.io").slack("UK8AQJSCS").build())
           .put(HARSH, DevInfo.builder().email("harsh.jain@harness.io").slack("UJ1CDM3FY").build())
@@ -142,9 +140,9 @@ public class OwnerRule implements TestRule {
           .put(PARNIAN, DevInfo.builder().email("parnian@harness.io").slack("U89A5MLQK").build())
           .put(POOJA, DevInfo.builder().email("pooja@harness.io").slack("UDDA9L0D6").build())
           .put(PRANJAL, DevInfo.builder().email("pranjal@harness.io").slack("UBV049Q5B").build())
-          .put(PRASHANT, DevInfo.builder().email("prashant.pal@harness.io").slack("UJLBB7ULT").build())
+          .put(PRASHANT, defaultDevInfo(PRASHANT).slack("UJLBB7ULT").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(PRAVEEN, DevInfo.builder().email("praveen.sugavanam@harness.io").slack("UAQH9QHSB").build())
-          .put(PUNEET, DevInfo.builder().email("puneet.saraswat@harness.io").slack("U8PMB1XKM").build())
+          .put(PUNEET, defaultDevInfo(PUNEET).slack("U8PMB1XKM").team(CONTINUOUS_EFFICIENCY).build())
           .put(RAGHU, defaultDevInfo(RAGHU).slack("U4Z2PG2TD").team(CONTINUOUS_VERIFICATION).build())
           .put(RAMA, DevInfo.builder().email("rama@harness.io").slack("U69BLRG72").build())
           .put(ROHIT, DevInfo.builder().email("rohit.reddy@harness.io").slack("UKLSUUCAC").build())
@@ -162,21 +160,13 @@ public class OwnerRule implements TestRule {
           .put(VAIBHAV_SI, DevInfo.builder().email("vaibhav.si@harness.io").slack("UCK76T36U").build())
           .put(VENKATESH, DevInfo.builder().email("venkatesh.kotrike@harness.io").slack("UGF55UEHF").build())
           .put(VIKAS, DevInfo.builder().email("vikas.naiyar@harness.io").slack("UE7M4CNMA").build())
-          .put(YOGESH_CHAUHAN, DevInfo.builder().email("yogesh.chauhan@harness.io").slack("UJVLUUXAT").build())
+          .put(YOGESH, defaultDevInfo(YOGESH).slack("UJVLUUXAT").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(VARDAN_BANSAL, DevInfo.builder().email("vardan.bansal@harness.io").slack("UH8NYAAUU").build())
           .put(NANDAN, DevInfo.builder().email("nandan.chandrashekar@harness.io").slack("UKMS5KCBS").build())
           .put(UNKNOWN, DevInfo.builder().email("n/a").slack("channel").build())
           .build();
 
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target({java.lang.annotation.ElementType.METHOD})
-  public @interface Owner {
-    String[] developers();
-
-    boolean intermittent() default false;
-  }
-
-  private static String prDeveloperId = findDeveloperId(System.getenv("ghprbPullAuthorEmail"));
+  private static String prDeveloperId = findDeveloperId(System.getenv(GHPRB_PULL_AUTHOR_EMAIL));
 
   @Override
   public Statement apply(Statement statement, Description description) {
@@ -186,7 +176,7 @@ public class OwnerRule implements TestRule {
     }
 
     Ignore ignore = description.getAnnotation(Ignore.class);
-    if (getEnv("SONAR_TOKEN") != null) {
+    if (System.getenv("SONAR_TOKEN") != null) {
       if (owner.intermittent()) {
         checkForJira(description.getDisplayName(), owner.developers()[0], PRIORITY_VALUE1);
       }
@@ -219,7 +209,11 @@ public class OwnerRule implements TestRule {
     return statement;
   }
 
-  private static String findDeveloperId(String email) {
+  public static DevInfo findDeveloper(String developerId) {
+    return active.get(developerId);
+  }
+
+  public static String findDeveloperId(String email) {
     if (email == null) {
       return null;
     }
@@ -352,4 +346,4 @@ public class OwnerRule implements TestRule {
       // Ignore the exceptions
     }
   }
-  }
+}

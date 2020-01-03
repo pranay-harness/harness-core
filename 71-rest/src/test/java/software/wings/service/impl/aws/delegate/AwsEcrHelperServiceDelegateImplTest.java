@@ -16,7 +16,7 @@ import com.amazonaws.services.ecr.model.GetAuthorizationTokenResult;
 import com.amazonaws.services.ecr.model.Repository;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;

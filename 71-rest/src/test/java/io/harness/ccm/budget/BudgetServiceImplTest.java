@@ -22,7 +22,7 @@ import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.budget.entities.Budget.BudgetBuilder;
 import io.harness.ccm.budget.entities.BudgetType;
 import io.harness.ccm.budget.entities.ClusterBudgetScope;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Before;
 import org.junit.Rule;

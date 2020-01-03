@@ -11,7 +11,7 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.template.Template;

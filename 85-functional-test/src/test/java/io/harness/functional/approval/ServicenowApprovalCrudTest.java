@@ -18,7 +18,7 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;

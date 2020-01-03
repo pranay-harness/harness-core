@@ -20,7 +20,7 @@ import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.persistence.HPersistence;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;

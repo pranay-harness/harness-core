@@ -1,6 +1,6 @@
 package io.harness.workers.background.critical.iterator;
 
-import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -18,7 +18,7 @@ import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -49,7 +49,7 @@ public class ResourceConstraintBackupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testRegisterIterators() {
     resourceConstraintBackupHandler.registerIterators();
@@ -59,7 +59,7 @@ public class ResourceConstraintBackupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testHandleBlockedInstance() {
     resourceConstraintInstance.setState(State.BLOCKED.name());
@@ -70,7 +70,7 @@ public class ResourceConstraintBackupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testHandleActiveInstance() {
     resourceConstraintInstance.setState(State.ACTIVE.name());
@@ -81,7 +81,7 @@ public class ResourceConstraintBackupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testCatchExceptionInUpdateResourceConstraint() {
     resourceConstraintInstance.setState(State.ACTIVE.name());

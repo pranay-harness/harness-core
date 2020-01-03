@@ -7,7 +7,7 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
-import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -47,7 +47,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -571,7 +571,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testValidateInfraDefinition() {
     InfrastructureDefinition valid = null;
@@ -757,7 +757,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testCloudProviderNameForDefinition() {
     SettingAttribute cloudProvider =

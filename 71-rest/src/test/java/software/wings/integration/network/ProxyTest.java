@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.fail;
 import io.harness.CategoryTest;
 import io.harness.category.element.IntegrationTests;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;

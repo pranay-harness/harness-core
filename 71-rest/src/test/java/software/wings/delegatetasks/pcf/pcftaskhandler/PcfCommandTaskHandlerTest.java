@@ -27,7 +27,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.filesystem.FileIo;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;

@@ -38,7 +38,7 @@ import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;

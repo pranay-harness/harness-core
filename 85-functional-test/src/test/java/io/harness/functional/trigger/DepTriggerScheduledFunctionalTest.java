@@ -6,7 +6,7 @@ import static software.wings.beans.trigger.Action.ActionType.WORKFLOW;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.trigger.DeploymentTrigger;

@@ -21,7 +21,7 @@ import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import lombok.Value;
 import org.junit.Before;

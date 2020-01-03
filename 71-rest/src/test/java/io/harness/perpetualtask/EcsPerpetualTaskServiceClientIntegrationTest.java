@@ -11,7 +11,7 @@ import io.harness.perpetualtask.ecs.EcsPerpetualTaskServiceClient;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Test;

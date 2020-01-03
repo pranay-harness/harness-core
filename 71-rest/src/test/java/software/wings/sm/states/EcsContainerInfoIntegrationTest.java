@@ -20,7 +20,7 @@ import com.amazonaws.regions.Regions;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
 import io.harness.context.ContextElementType;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import lombok.extern.slf4j.Slf4j;

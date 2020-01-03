@@ -11,7 +11,7 @@ import io.harness.category.element.IntegrationTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

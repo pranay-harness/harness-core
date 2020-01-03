@@ -14,7 +14,7 @@ import com.icegreen.greenmail.util.GreenMailUtil;
 import com.icegreen.greenmail.util.ServerSetupTest;
 import freemarker.template.TemplateException;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.apache.commons.mail.EmailException;
 import org.junit.Before;
 import org.junit.Rule;

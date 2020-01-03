@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 
 import io.harness.category.element.E2ETests;
 import io.harness.e2e.AbstractE2ETest;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Retry;

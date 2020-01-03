@@ -11,7 +11,7 @@ import static org.mockito.Mockito.verify;
 import allbegray.slack.type.Payload;
 import allbegray.slack.webhook.SlackWebhookClient;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import okhttp3.ResponseBody;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

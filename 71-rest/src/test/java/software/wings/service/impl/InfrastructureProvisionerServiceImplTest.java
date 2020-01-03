@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
-import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -31,7 +31,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
 import org.joor.Reflect;
@@ -183,7 +183,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testGetCFTemplateParamKeys() {
     String defaultString = "default";
@@ -216,7 +216,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void shouldValidateInfrastructureProvisioner() {
     TerraformInfrastructureProvisioner terraformProvisioner = TerraformInfrastructureProvisioner.builder()

@@ -1,7 +1,6 @@
-import sys
-import scipy.spatial.distance as dist
 import numpy as np
-
+import scipy.spatial.distance as dist
+import sys
 from core.util.lelogging import get_log
 
 logger = get_log(__name__)

@@ -1,7 +1,6 @@
+import collections
 import json
 import numpy as np
-import collections
-
 from FileLoader import FileLoader
 from HarnessLoader import HarnessLoader
 from core.util.lelogging import get_log

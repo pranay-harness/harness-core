@@ -7,7 +7,7 @@ import io.harness.CategoryTest;
 import io.harness.annotation.HarnessEntity;
 import io.harness.category.element.UnitTests;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.junit.Test;

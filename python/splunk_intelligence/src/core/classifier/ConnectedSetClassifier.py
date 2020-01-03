@@ -1,10 +1,9 @@
 import numpy as np
 import scipy.spatial.distance as ssd
+from core.anomaly.FrequencyAnomalyDetector import FrequencyAnomalyDetector
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
-
-from core.anomaly.FrequencyAnomalyDetector import FrequencyAnomalyDetector
 
 
 class ConnectedSetClassifier(object):

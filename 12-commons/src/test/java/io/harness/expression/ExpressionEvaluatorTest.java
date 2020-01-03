@@ -17,7 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;

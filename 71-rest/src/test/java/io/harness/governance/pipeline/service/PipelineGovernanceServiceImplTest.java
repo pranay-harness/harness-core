@@ -14,7 +14,7 @@ import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceRule;
 import io.harness.governance.pipeline.service.model.Restriction;
 import io.harness.governance.pipeline.service.model.Restriction.RestrictionType;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

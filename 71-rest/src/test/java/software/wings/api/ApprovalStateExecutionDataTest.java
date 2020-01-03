@@ -1,13 +1,13 @@
 package software.wings.api;
 
-import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -46,7 +46,7 @@ public class ApprovalStateExecutionDataTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void getExecutionSummary() {
     final Map<String, ExecutionDataValue> executionSummary = approvalStateExecutionData.getExecutionSummary();
@@ -56,7 +56,7 @@ public class ApprovalStateExecutionDataTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void getExecutionDetails() {
     final Map<String, ExecutionDataValue> executionDetails = approvalStateExecutionData.getExecutionDetails();

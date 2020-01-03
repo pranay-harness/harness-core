@@ -7,7 +7,7 @@ import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.notifications.beans.Conditions;
 import io.harness.notifications.beans.Conditions.Operator;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.framework.utils.AlertsUtils;
 import io.harness.testframework.framework.utils.UserGroupUtils;
 import io.harness.testframework.restutils.AlertsRestUtils;

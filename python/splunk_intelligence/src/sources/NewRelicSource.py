@@ -1,9 +1,7 @@
 import json
-
-import sys
 import requests
+import sys
 import time
-
 from core.util.lelogging import get_log
 from datetime import datetime, timedelta
 

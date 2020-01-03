@@ -23,7 +23,7 @@ import io.harness.mongo.queue.MongoQueueConsumer;
 import io.harness.mongo.queue.MongoQueuePublisher;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer.Filter;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

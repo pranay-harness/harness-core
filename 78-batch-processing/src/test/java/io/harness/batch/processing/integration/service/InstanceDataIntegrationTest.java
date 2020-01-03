@@ -11,7 +11,7 @@ import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Test;

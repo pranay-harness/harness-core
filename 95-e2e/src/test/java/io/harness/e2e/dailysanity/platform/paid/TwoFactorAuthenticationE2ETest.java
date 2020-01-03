@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.E2ETests;
 import io.harness.e2e.AbstractE2ETest;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.utils.TestUtils;

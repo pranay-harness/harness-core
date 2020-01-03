@@ -4,7 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
 import static io.harness.rule.OwnerRule.ABHINAV;
-import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
@@ -33,7 +33,7 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.WorkflowGenerator;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.restutils.InfraProvisionerRestUtils;
@@ -126,7 +126,7 @@ public class ShellScriptProvisionerTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN, intermittent = true)
+  @Owner(developers = YOGESH, intermittent = true)
   @Category({FunctionalTests.class})
   public void shouldRunShellScriptWorkflow() throws Exception {
     shellScriptInfrastructureProvisioner = buildProvisionerObject();

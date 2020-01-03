@@ -18,7 +18,7 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.utils.SecretsUtils;
 import io.harness.testframework.restutils.SecretsRestUtils;

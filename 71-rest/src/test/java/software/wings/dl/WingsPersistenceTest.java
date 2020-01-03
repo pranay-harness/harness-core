@@ -26,7 +26,7 @@ import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

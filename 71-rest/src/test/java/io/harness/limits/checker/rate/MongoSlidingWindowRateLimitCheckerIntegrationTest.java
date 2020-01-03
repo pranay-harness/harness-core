@@ -12,7 +12,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.checker.rate.UsageBucket.UsageBucketKeys;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.lib.LimitChecker;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.apache.commons.lang3.RandomStringUtils;

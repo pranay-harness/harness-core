@@ -1,11 +1,11 @@
+import DataHandler as dh
+import logging
 import numpy as np
 import pandas as pd
-import DataHandler as dh
 import time
-import logging
-from keras.models import Sequential
-from keras.layers import LSTM, Dense, TimeDistributed, Dropout
 from collections import OrderedDict
+from keras.layers import LSTM, Dense, TimeDistributed, Dropout
+from keras.models import Sequential
 from sources.MetricTemplate import MetricTemplate
 
 log_format = "%(asctime)-15s %(levelname)s %(message)s"

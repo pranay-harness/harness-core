@@ -20,7 +20,7 @@ import io.harness.CategoryTest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;

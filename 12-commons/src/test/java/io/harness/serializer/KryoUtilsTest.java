@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.threading.Concurrent;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

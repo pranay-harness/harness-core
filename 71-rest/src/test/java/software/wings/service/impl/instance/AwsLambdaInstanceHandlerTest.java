@@ -22,7 +22,7 @@ import com.amazonaws.services.cloudwatch.model.Datapoint;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Before;
 import org.junit.Test;

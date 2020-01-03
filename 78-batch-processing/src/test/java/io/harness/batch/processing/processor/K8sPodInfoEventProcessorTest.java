@@ -25,7 +25,7 @@ import io.harness.perpetualtask.k8s.watch.PodEvent.EventType;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
 import io.harness.perpetualtask.k8s.watch.Resource;
 import io.harness.perpetualtask.k8s.watch.Resource.Quantity;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;

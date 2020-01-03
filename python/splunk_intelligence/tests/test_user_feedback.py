@@ -1,9 +1,8 @@
 import sys
-
-from SplunkIntelOptimized import SplunkIntelOptimized
 from LogNeuralNet import LogNeuralNet
-from sources.LogCorpus import LogCorpus
+from SplunkIntelOptimized import SplunkIntelOptimized
 from sources.FileLoader import FileLoader
+from sources.LogCorpus import LogCorpus
 
 
 def get_data(mode):

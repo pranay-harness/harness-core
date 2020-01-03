@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.EncryptionUtils;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;

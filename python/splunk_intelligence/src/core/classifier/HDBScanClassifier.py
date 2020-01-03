@@ -1,10 +1,7 @@
 import hdbscan
 import numpy as np
-from scipy.spatial.distance import canberra
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.neighbors.ball_tree import BallTree
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics.pairwise import pairwise_distances
+
 """
 Uses Hierarchical density based clustering for n dimensional vectors as a means for classification
 """

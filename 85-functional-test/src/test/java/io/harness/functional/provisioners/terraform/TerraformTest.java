@@ -1,7 +1,7 @@
 package io.harness.functional.provisioners.terraform;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -30,7 +30,7 @@ import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.generator.WorkflowGenerator;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.restutils.InfraProvisionerRestUtils;
@@ -99,7 +99,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN, intermittent = true)
+  @Owner(developers = YOGESH, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldRunTerraformWorkflow() {
     ExecutionArgs executionArgs = prepareExecutionArgs(workflow);
@@ -109,7 +109,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
   public void shouldFetchTerraformTargets() throws Exception {
     final String accountId = terraformInfrastructureProvisioner.getAccountId();
@@ -121,7 +121,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
   public void shouldFetchTerraformVariables() throws Exception {
     final String accountId = terraformInfrastructureProvisioner.getAccountId();

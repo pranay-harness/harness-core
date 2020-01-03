@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

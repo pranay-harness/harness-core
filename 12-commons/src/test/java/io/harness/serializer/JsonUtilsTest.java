@@ -14,7 +14,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import com.jayway.jsonpath.DocumentContext;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtilsTest.Base.BaseType;
 import io.harness.serializer.JsonUtilsTest.CustomResponse.Result;
 import lombok.extern.slf4j.Slf4j;

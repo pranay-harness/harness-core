@@ -42,7 +42,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.Builder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

@@ -9,7 +9,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import io.harness.CategoryTest;
 import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;

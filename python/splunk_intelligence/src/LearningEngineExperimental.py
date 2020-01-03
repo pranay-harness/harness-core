@@ -1,14 +1,12 @@
+import TimeSeriesML
+import argparse
+import json
+import os
+import subprocess
 import sys
 import time
-import argparse
-import subprocess
-import TimeSeriesML
-import os
-import json
-
 from core.util.lelogging import get_log
 from sources.HarnessLoader import HarnessLoader
-
 
 logger = get_log(__name__)
 VERSIONFILEPATH = 'service_version.properties'

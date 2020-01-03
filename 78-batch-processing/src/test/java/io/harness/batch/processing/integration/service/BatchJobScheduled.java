@@ -9,7 +9,7 @@ import io.harness.batch.processing.entities.BatchJobScheduledData.BatchJobSchedu
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Ignore;

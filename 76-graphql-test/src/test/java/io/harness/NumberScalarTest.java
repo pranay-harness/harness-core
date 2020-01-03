@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.RUSHABH;
 
 import graphql.schema.CoercingParseLiteralException;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;

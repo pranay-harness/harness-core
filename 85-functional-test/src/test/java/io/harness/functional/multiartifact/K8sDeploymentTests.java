@@ -24,7 +24,7 @@ import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.junit.Before;
 import org.junit.Ignore;

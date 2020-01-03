@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

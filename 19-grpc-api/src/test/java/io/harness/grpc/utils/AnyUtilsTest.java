@@ -12,7 +12,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.exception.DataFormatException;
 import io.harness.perpetualtask.example.SamplePerpetualTaskParams;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

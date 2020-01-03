@@ -17,7 +17,7 @@ import static software.wings.service.impl.expression.ExpressionBuilder.PCF_PLUGI
 import static software.wings.service.impl.expression.ExpressionBuilder.PCF_PLUGIN_SERVICE_MANIFEST_REPO_ROOT;
 
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;

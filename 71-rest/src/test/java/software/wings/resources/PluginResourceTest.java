@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;

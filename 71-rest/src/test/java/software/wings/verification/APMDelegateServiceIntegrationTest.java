@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.IntegrationTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.scm.SecretName;
 import org.junit.Before;
 import org.junit.Test;

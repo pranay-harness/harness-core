@@ -17,7 +17,7 @@ import io.harness.ccm.budget.entities.Budget.BudgetBuilder;
 import io.harness.ccm.budget.entities.BudgetType;
 import io.harness.ccm.budget.entities.ClusterBudgetScope;
 import io.harness.exception.InvalidRequestException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

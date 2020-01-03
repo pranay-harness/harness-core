@@ -14,7 +14,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.FunctorException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Test;

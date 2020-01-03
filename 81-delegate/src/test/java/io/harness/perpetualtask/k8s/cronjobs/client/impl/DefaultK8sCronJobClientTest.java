@@ -8,7 +8,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.k8s.cronjobs.client.K8sCronJobClient;
 import io.harness.perpetualtask.k8s.cronjobs.client.model.CronJob;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

@@ -9,7 +9,7 @@ import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfigur
 
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HQuery;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import org.junit.After;

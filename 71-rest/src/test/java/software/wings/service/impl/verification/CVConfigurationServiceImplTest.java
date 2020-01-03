@@ -25,7 +25,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.fabric8.utils.Lists;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.VerificationOperationException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.YamlUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;

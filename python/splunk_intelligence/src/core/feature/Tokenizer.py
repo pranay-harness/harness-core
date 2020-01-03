@@ -1,6 +1,5 @@
-import re
-
 import nltk
+import re
 
 nltk.download('punkt')
 

@@ -36,7 +36,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;

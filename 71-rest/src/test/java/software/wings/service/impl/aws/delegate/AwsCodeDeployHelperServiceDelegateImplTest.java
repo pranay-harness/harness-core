@@ -24,7 +24,7 @@ import com.amazonaws.services.codedeploy.model.S3Location;
 import com.amazonaws.services.ec2.model.Instance;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;

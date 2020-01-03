@@ -24,7 +24,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.exception.ArtifactServerException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.waiter.ListNotifyResponseData;
 import org.junit.Before;
 import org.junit.Ignore;

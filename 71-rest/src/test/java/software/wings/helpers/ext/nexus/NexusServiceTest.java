@@ -22,7 +22,7 @@ import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.waiter.ListNotifyResponseData;
 import org.junit.Ignore;
 import org.junit.Rule;

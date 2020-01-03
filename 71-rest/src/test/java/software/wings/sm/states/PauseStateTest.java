@@ -19,7 +19,7 @@ import com.google.inject.Injector;
 import freemarker.template.TemplateException;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.apache.commons.mail.EmailException;
 import org.junit.Before;
 import org.junit.Test;

@@ -15,7 +15,7 @@ import static org.mockito.internal.verification.VerificationModeFactory.times;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.barrier.Barrier.State;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

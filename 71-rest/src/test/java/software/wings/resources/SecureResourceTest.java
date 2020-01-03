@@ -50,7 +50,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;

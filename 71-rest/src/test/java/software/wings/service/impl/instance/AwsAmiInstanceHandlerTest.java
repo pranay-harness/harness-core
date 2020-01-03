@@ -48,7 +48,7 @@ import com.google.inject.Inject;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Before;
 import org.junit.Test;

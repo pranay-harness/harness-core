@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.utils.AccessManagementUtils;
 import io.harness.testframework.framework.utils.UserGroupUtils;

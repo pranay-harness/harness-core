@@ -35,7 +35,7 @@ import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetrics;
 import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetricsList;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetrics;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetricsList;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.KryoUtils;
 import org.junit.Before;
 import org.junit.Rule;

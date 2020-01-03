@@ -21,7 +21,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPool;
 import lombok.extern.slf4j.Slf4j;

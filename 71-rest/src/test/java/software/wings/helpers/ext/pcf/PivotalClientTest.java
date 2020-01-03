@@ -34,7 +34,7 @@ import static software.wings.helpers.ext.pcf.PcfClientImpl.BIN_SH;
 
 import io.harness.category.element.UnitTests;
 import io.harness.filesystem.FileIo;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.cloudfoundry.doppler.LogMessage;
 import org.cloudfoundry.doppler.MessageType;
 import org.cloudfoundry.operations.CloudFoundryOperations;

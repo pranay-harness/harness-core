@@ -18,7 +18,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

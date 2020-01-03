@@ -11,7 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.Store;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.AdvancedDatastore;

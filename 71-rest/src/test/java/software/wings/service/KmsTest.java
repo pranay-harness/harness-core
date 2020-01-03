@@ -42,7 +42,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.TimerScheduledExecutorService;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.rule.Repeat;
 import io.harness.security.encryption.EncryptedRecord;

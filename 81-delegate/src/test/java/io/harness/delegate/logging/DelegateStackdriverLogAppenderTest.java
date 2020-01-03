@@ -23,7 +23,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.logging.AccessTokenBean;
 import io.harness.managerclient.ManagerClientV2;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response.Builder;

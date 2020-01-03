@@ -1,8 +1,5 @@
 package io.harness.rule;
 
-import static ch.qos.logback.core.util.OptionHelper.getEnv;
-
-import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestWatcher;
@@ -17,7 +14,8 @@ public class OwnerWatcherRule extends TestWatcher {
       return;
     }
 
-    if ("portal".equals(getEnv("JOB_BASE_NAME")) || "portal-functional-tests".equals(getEnv("JOB_BASE_NAME"))) {
+    String jobBaseName = System.getenv("JOB_BASE_NAME");
+    if ("portal".equals(jobBaseName) || "portal-functional-tests".equals(jobBaseName)) {
       OwnerRule.checkForJira(description.getDisplayName(), owner.developers()[0], OwnerRule.PRIORITY_VALUE0);
     }
 

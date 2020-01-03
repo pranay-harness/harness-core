@@ -23,7 +23,7 @@ import com.amazonaws.regions.Regions;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.scm.SecretName;
 import org.apache.http.HttpStatus;

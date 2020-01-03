@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.expression.SecretString;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
 import org.junit.Test;

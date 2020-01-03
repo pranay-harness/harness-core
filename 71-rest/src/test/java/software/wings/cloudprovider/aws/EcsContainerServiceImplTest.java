@@ -43,7 +43,7 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.junit.Before;
 import org.junit.Ignore;

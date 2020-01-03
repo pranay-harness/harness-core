@@ -29,7 +29,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;

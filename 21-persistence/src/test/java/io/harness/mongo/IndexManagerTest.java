@@ -9,7 +9,7 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.IndexManager.Accesses;
 import io.harness.mongo.IndexManager.IndexCreator;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.rule.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

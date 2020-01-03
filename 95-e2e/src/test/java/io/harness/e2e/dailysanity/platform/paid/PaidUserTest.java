@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.E2ETests;
 import io.harness.e2e.AbstractE2ETest;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.framework.utils.TestUtils;
 import io.harness.testframework.framework.utils.UserUtils;
 import io.harness.testframework.restutils.UserRestUtils;

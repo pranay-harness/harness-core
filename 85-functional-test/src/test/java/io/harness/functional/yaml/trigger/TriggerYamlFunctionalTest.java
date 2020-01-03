@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.yaml.YamlFunctionalTestHelper;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;

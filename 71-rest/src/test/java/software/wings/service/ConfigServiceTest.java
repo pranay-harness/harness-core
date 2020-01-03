@@ -28,7 +28,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;

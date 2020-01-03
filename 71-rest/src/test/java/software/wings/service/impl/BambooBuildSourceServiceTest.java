@@ -8,7 +8,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.apache.commons.lang3.reflect.FieldUtils;

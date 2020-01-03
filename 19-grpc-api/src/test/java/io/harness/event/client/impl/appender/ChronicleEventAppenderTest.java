@@ -32,7 +32,7 @@ import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.utils.HTimestamps;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.threading.Concurrent;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;

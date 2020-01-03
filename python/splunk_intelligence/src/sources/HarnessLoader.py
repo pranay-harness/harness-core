@@ -1,12 +1,12 @@
-import json
-import time
-from datetime import timedelta, datetime
-import jwt
 import ConfigParser
-from StringIO import StringIO
-
+import json
+import jwt
+import time
 import urllib3
 import urllib3.contrib.pyopenssl
+from StringIO import StringIO
+from datetime import timedelta, datetime
+
 urllib3.contrib.pyopenssl.inject_into_urllib3()
 from core.util.lelogging import get_log
 

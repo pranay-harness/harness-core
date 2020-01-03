@@ -1,6 +1,6 @@
 package software.wings.scheduler.artifact;
 
-import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,7 +36,7 @@ public class ArtifactCleanupHandlerTest extends WingsBaseTest {
   @Mock PersistenceIteratorFactory persistenceIteratorFactory;
   @InjectMocks @Inject ArtifactCleanupHandler artifactCleanupHandler;
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testRegisterIterators() {
     // setup mock

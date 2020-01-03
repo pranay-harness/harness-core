@@ -21,7 +21,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;

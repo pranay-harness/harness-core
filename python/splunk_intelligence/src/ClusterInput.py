@@ -1,20 +1,18 @@
 import argparse
 import json
 import multiprocessing
-import sys
-import time
-
 import numpy as np
 import scipy.sparse as sps
-from sklearn.feature_extraction.text import HashingVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
-
+import sys
+import time
 from core.distance.JaccardDistance import pairwise_jaccard_similarity
 from core.feature.TFIDFVectorizer import TFIDFVectorizer
 from core.feature.Tokenizer import Tokenizer
+from core.util.lelogging import get_log
+from sklearn.feature_extraction.text import HashingVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
 from sources.FileLoader import FileLoader
 from sources.HarnessLoader import HarnessLoader
-from core.util.lelogging import get_log
 
 logger = get_log(__name__)
 

@@ -19,7 +19,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.IntegrationTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
 import org.junit.Before;
 import org.junit.Ignore;

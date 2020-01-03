@@ -1,6 +1,6 @@
 package io.harness.functional.workflow;
 
-import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+import static io.harness.rule.OwnerRule.YOGESH;
 
 import com.google.inject.Inject;
 
@@ -13,7 +13,7 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.WorkflowGenerator;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +43,7 @@ public class BuildWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN, intermittent = true)
+  @Owner(developers = YOGESH, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldRunBuildWorkflow() {
     final String appId = service.getAppId();

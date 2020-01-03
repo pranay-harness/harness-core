@@ -1,14 +1,8 @@
 import argparse
-import json
-
-import numpy as np
-
 import sys
-
 from TimeSeriesML import TSAnomlyDetector
-from sources.FileLoader import FileLoader
 from mock import patch
-from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
+from sources.FileLoader import FileLoader
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--analysis_minute", type=int, required=True)

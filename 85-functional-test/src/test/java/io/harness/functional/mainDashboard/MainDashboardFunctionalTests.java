@@ -16,7 +16,7 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.restutils.MainDashboardRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.junit.Before;

@@ -68,7 +68,7 @@ import io.harness.ccm.CCMSettingService;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

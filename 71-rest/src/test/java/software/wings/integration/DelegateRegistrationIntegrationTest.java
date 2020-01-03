@@ -6,7 +6,7 @@ import static io.harness.rule.OwnerRule.PUNEET;
 import static org.awaitility.Awaitility.await;
 
 import io.harness.category.element.IntegrationTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Duration;

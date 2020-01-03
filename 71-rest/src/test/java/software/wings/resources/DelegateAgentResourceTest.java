@@ -16,7 +16,7 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.junit.Before;

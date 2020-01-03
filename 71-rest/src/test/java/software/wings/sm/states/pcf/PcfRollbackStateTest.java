@@ -28,7 +28,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;

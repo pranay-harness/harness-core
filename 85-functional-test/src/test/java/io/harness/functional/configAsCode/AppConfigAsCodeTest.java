@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.framework.git.GitData;
 import io.harness.testframework.restutils.ConnectorUtils;
 import io.harness.testframework.restutils.GitRestUtils;

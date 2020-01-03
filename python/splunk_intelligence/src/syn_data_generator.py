@@ -1,8 +1,7 @@
-from scipy.stats import truncnorm
 import numpy as np
-
 from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
 from core.util.TimeSeriesUtils import MetricType
+from scipy.stats import truncnorm
 from sources.MetricTemplate import MetricTemplate
 
 

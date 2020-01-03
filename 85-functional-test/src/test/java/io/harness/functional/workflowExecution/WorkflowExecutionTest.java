@@ -19,7 +19,7 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.persistence.HIterator;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

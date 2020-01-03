@@ -16,7 +16,7 @@ import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClientHelper;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.service.intfc.LearningEngineService;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;

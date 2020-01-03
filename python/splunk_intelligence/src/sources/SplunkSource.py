@@ -1,9 +1,8 @@
+import datetime
 import logging
-from time import sleep
-
 import splunklib.client as client
 import splunklib.results as results
-import datetime
+from time import sleep
 
 """
 Wraps the Splunk python sdk to read from Splunk

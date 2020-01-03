@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.IntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Before;

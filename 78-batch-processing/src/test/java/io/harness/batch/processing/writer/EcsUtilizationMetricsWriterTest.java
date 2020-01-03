@@ -17,7 +17,7 @@ import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.EcsUtilization;
 import io.harness.event.payloads.EcsUtilization.MetricValue;
 import io.harness.exception.InvalidRequestException;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;

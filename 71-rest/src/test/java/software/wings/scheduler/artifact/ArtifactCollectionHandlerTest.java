@@ -1,7 +1,7 @@
 package software.wings.scheduler.artifact;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -23,7 +23,7 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.logging.ExceptionLogger;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.workers.background.critical.iterator.ArtifactCollectionHandler;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -111,7 +111,7 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testRegisterIterators() {
     // setup mock

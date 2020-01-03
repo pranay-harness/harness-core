@@ -39,7 +39,7 @@ import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;

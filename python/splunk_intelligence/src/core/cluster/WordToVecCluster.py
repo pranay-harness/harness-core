@@ -1,10 +1,9 @@
-import numpy as np
 import multiprocessing
-
-from core.util.lelogging import get_log
-from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 from core.distance.JaccardDistance import jaccard_pairwise_difference
 from core.feature.CustomizedTokenizer import CustomizedTokenizer
+from core.util.lelogging import get_log
+from sklearn.metrics.pairwise import cosine_similarity
 
 """
 Wrapper class for wordtovec clustering

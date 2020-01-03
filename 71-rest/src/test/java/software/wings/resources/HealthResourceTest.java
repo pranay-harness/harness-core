@@ -11,7 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.configuration.ConfigurationType;
 import io.harness.mongo.MongoConfig;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.security.AsymmetricEncryptor;
 import org.junit.ClassRule;
 import org.junit.Test;

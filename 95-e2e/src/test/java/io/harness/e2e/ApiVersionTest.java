@@ -3,7 +3,7 @@ package io.harness.e2e;
 import static io.harness.rule.OwnerRule.NATARAJA;
 
 import io.harness.category.element.E2ETests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

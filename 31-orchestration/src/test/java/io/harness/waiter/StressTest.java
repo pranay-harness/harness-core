@@ -10,7 +10,7 @@ import io.harness.OrchestrationTest;
 import io.harness.category.element.StressTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Morpheus;

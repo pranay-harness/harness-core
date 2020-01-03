@@ -1,5 +1,4 @@
 import gensim
-import multiprocessing
 import time
 from core.feature.CustomizedTokenizer import CustomizedTokenizer
 from core.util.lelogging import get_log

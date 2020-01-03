@@ -8,7 +8,7 @@ import static org.awaitility.Awaitility.await;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.network.Http;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.awaitility.Duration;
