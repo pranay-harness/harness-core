@@ -36,7 +36,7 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject BillingDataHelper billingDataHelper;
 
-  private static final String TOTAL_IDLE_COST_DESCRIPTION = "%s of total cost";
+  private static final String TOTAL_IDLE_COST_DESCRIPTION = "%s of total cost $%s";
   private static final String TOTAL_IDLE_COST_LABEL = "Total Idle Cost of %s - %s";
   private static final String TOTAL_IDLE_COST_VALUE = "$%s";
   private static final String CPU_IDLE_COST_DESCRIPTION = "%s avg. utilization";
@@ -47,7 +47,7 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
   private static final String MEMORY_IDLE_COST_VALUE = "$%s";
   private static final String UNALLOCATED_COST_LABEL = "Unallocated Cost";
   private static final String UNALLOCATED_COST_VALUE = "$%s";
-  private static final String UNALLOCATED_COST_DESCRIPTION = "%s of total cost";
+  private static final String UNALLOCATED_COST_DESCRIPTION = "%s of total cost $%s";
   private static final String TOTAL_IDLE_COST_DATE_PATTERN = "dd MMMM, yyyy";
   private static final String EMPTY_VALUE = "-";
 
@@ -186,7 +186,8 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
       if (idleCostData.getTotalCost() != null) {
         double percentageOfTotalCost = billingDataQueryBuilder.getRoundedDoublePercentageValue(
             BigDecimal.valueOf(idleCostData.getIdleCost().doubleValue() / idleCostData.getTotalCost().doubleValue()));
-        totalCostDescription = String.format(TOTAL_IDLE_COST_DESCRIPTION, percentageOfTotalCost + "%");
+        totalCostDescription = String.format(TOTAL_IDLE_COST_DESCRIPTION, percentageOfTotalCost + "%",
+            billingDataQueryBuilder.getRoundedDoubleValue(idleCostData.getTotalCost()));
       }
     }
     return QLBillingStatsInfo.builder()
@@ -241,7 +242,8 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
       if (idleCostData.getTotalCost() != null) {
         double percentageOfTotalCost = billingDataQueryBuilder.getRoundedDoublePercentageValue(
             BigDecimal.valueOf(unallocatedCost.doubleValue() / idleCostData.getTotalCost().doubleValue()));
-        unallocatedCostDescription = String.format(UNALLOCATED_COST_DESCRIPTION, percentageOfTotalCost + "%");
+        unallocatedCostDescription = String.format(UNALLOCATED_COST_DESCRIPTION, percentageOfTotalCost + "%",
+            billingDataQueryBuilder.getRoundedDoubleValue(idleCostData.getTotalCost()));
       }
     }
     return QLBillingStatsInfo.builder()

@@ -111,8 +111,6 @@ type BillingEntityDataPoint {
   maxMemoryUtilization: Number
   avgCpuUtilization: Number
   avgMemoryUtilization: Number
-  environment: String
-  cloudProvider: String
   unallocatedCost: Number
 }
 

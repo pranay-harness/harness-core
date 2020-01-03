@@ -689,7 +689,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
       calendar[0] = calendar[0] + 3600000;
       return new Timestamp(calendar[0]);
     });
-    when(resultSet.getTimestamp("TIME_BUCKET", utils.getDefaultCalendar()))
+    when(resultSet.getTimestamp("STARTTIMEBUCKET", utils.getDefaultCalendar()))
         .thenAnswer((Answer<Timestamp>) invocation -> {
           calendar[0] = calendar[0] + 3600000;
           return new Timestamp(calendar[0]);

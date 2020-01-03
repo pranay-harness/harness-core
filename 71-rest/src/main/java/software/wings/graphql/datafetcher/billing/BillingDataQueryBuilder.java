@@ -76,7 +76,7 @@ public class BillingDataQueryBuilder {
     }
 
     if (isValidGroupByTime(groupByTime)) {
-      decorateQueryWithGroupByTime(fieldNames, selectQuery, groupByTime);
+      decorateQueryWithGroupByTime(fieldNames, selectQuery, groupByTime, groupByFields);
     }
 
     if (isValidGroupBy(groupBy)) {
@@ -145,10 +145,6 @@ public class BillingDataQueryBuilder {
     List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
 
     if (isGroupByClusterPresent(groupBy)) {
-      addInstanceTypeFilter(filters);
-    }
-
-    if (isGroupByClusterPresent(groupBy)) {
       if (!isGroupByClusterTypePresent(groupBy)) {
         addClusterTypeGroupBy(groupBy);
       }
@@ -196,7 +192,8 @@ public class BillingDataQueryBuilder {
     }
 
     if (isValidGroupByTime(groupBy)) {
-      decorateQueryWithGroupByTime(fieldNames, selectQuery, groupBy);
+      List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
+      decorateQueryWithGroupByTime(fieldNames, selectQuery, groupBy, groupByFields);
     }
 
     List<QLBillingSortCriteria> finalSortCriteria = validateAndAddSortCriteria(selectQuery, sortCriteria, fieldNames);
@@ -304,7 +301,7 @@ public class BillingDataQueryBuilder {
         addSimpleTimeFilter(selectQuery, f, type);
       }
     } else {
-      logger.error("Not adding filter since it is not valid " + f);
+      logger.info("Not adding filter since it is not valid " + f);
     }
   }
 
@@ -346,7 +343,11 @@ public class BillingDataQueryBuilder {
       case NOT_NULL:
         selectQuery.addCondition(UnaryCondition.isNotNull(key));
         break;
-
+      case NOT_IN:
+        InCondition inCondition = new InCondition(key, (Object[]) filter.getValues());
+        inCondition.setNegate(true);
+        selectQuery.addCondition(inCondition);
+        break;
       default:
         throw new InvalidRequestException("String simple operator not supported" + operator);
     }
@@ -390,7 +391,7 @@ public class BillingDataQueryBuilder {
       case Namespace:
         return schema.getNamespace();
       case CloudProvider:
-        return schema.getCloudProvider();
+        return schema.getCloudProviderId();
       default:
         throw new InvalidRequestException("Filter type not supported " + type);
     }
@@ -452,7 +453,7 @@ public class BillingDataQueryBuilder {
         groupBy = schema.getClusterType();
         break;
       case CloudProvider:
-        groupBy = schema.getCloudProvider();
+        groupBy = schema.getCloudProviderId();
         break;
       default:
         throw new InvalidRequestException("Invalid groupBy clause");
@@ -540,27 +541,20 @@ public class BillingDataQueryBuilder {
 
   private boolean isNoneGroupBySelectedWithoutFilterInClusterView(
       List<QLCCMEntityGroupBy> groupByList, List<QLBillingDataFilter> filters) {
-    if (isClusterFilterPresent(filters) && !checkForAdditionalFilterInClusterDrillDown(filters)
-        && isGroupByNonePresent(groupByList)) {
-      return true;
-    }
-    return false;
+    return isClusterFilterPresent(filters) && !checkForAdditionalFilterInClusterDrillDown(filters)
+        && isGroupByNonePresent(groupByList);
   }
 
   private boolean isGroupByNonePresent(List<QLCCMEntityGroupBy> groupByList) {
-    if (isEmpty(groupByList) || (groupByList.size() == 1 && isGroupByStartTimePresent(groupByList))) {
-      return true;
-    }
-    return false;
+    return isEmpty(groupByList) || (groupByList.size() == 1 && isGroupByStartTimePresent(groupByList));
   }
 
   private boolean checkForAdditionalFilterInClusterDrillDown(List<QLBillingDataFilter> filters) {
     for (QLBillingDataFilter filter : filters) {
       Set<QLBillingDataFilterType> filterTypes = QLBillingDataFilter.getFilterTypes(filter);
-      if (!filterTypes.isEmpty()) {
-        if (!(filter.getCluster() != null || filter.getStartTime() != null || filter.getEndTime() != null)) {
-          return true;
-        }
+      if (!filterTypes.isEmpty()
+          && (!(filter.getCluster() != null || filter.getStartTime() != null || filter.getEndTime() != null))) {
+        return true;
       }
     }
     return false;
@@ -606,8 +600,8 @@ public class BillingDataQueryBuilder {
     return null;
   }
 
-  private void decorateQueryWithGroupByTime(
-      List<BillingDataMetaDataFields> fieldNames, SelectQuery selectQuery, QLCCMTimeSeriesAggregation groupByTime) {
+  private void decorateQueryWithGroupByTime(List<BillingDataMetaDataFields> fieldNames, SelectQuery selectQuery,
+      QLCCMTimeSeriesAggregation groupByTime, List<BillingDataMetaDataFields> groupByFields) {
     String timeBucket = getGroupByTimeQueryWithDateTrunc(groupByTime, "starttime");
 
     selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
@@ -615,6 +609,7 @@ public class BillingDataQueryBuilder {
     selectQuery.addCustomGroupings(BillingDataMetaDataFields.TIME_SERIES.getFieldName());
     selectQuery.addCustomOrdering(BillingDataMetaDataFields.TIME_SERIES.getFieldName(), Dir.ASCENDING);
     fieldNames.add(BillingDataMetaDataFields.TIME_SERIES);
+    groupByFields.add(BillingDataMetaDataFields.TIME_SERIES);
   }
 
   private boolean isValidGroupByTime(QLCCMTimeSeriesAggregation groupByTime) {
@@ -681,6 +676,6 @@ public class BillingDataQueryBuilder {
   }
 
   protected double getRoundedDoublePercentageValue(BigDecimal value) {
-    return 100 * getRoundedDoubleValue(value);
+    return Math.round(value.doubleValue() * 10000D) / 100D;
   }
 }

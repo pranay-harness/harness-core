@@ -44,7 +44,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
   private static final String TOTAL_COST_LABEL = "Total Cost";
   private static final String TREND_COST_LABEL = "Cost Trend";
   private static final String FORECAST_COST_LABEL = "Forecasted total cost";
-  private static final String TREND_COST_DESCRIPTION = "($%s over %s - %s)";
+  private static final String TREND_COST_DESCRIPTION = "$%s over %s - %s";
   private static final String FORECAST_COST_DESCRIPTION = "of %s - %s";
   private static final String TOTAL_COST_VALUE = "$%s";
   private static final String TREND_COST_VALUE = "%s";

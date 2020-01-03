@@ -12,6 +12,6 @@ public class BillingDataHelper {
 
   protected double roundingDoubleFieldPercentageValue(BillingDataMetaDataFields field, ResultSet resultSet)
       throws SQLException {
-    return 100 * roundingDoubleFieldValue(field, resultSet);
+    return Math.round(resultSet.getDouble(field.getFieldName()) * 10000D) / 100D;
   }
 }

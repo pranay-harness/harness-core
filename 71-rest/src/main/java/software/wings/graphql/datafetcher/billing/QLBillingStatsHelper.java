@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 
@@ -34,6 +35,8 @@ public class QLBillingStatsHelper {
         return getServiceName(entityId);
       case CLUSTERID:
         return getClusterName(entityId);
+      case CLOUDPROVIDERID:
+        return getCloudProviderName(entityId);
       case REGION:
       case CLOUDSERVICENAME:
       case INSTANCEID:
@@ -42,7 +45,6 @@ public class QLBillingStatsHelper {
       case WORKLOADTYPE:
       case NAMESPACE:
       case CLUSTERNAME:
-      case CLOUDPROVIDER:
         return entityId;
       default:
         throw new InvalidRequestException("Invalid EntityType " + field);
@@ -101,6 +103,19 @@ public class QLBillingStatsHelper {
         } else {
           return entityId;
         }
+      } else {
+        return entityId;
+      }
+    } catch (Exception e) {
+      return entityId;
+    }
+  }
+
+  public String getCloudProviderName(String entityId) {
+    try {
+      SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, entityId);
+      if (settingAttribute != null) {
+        return settingAttribute.getName();
       } else {
         return entityId;
       }

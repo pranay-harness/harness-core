@@ -9,6 +9,7 @@ import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
+import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.DataType;
 import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLBillingStackedTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLBillingStackedTimeSeriesData.QLBillingStackedTimeSeriesDataBuilder;
@@ -225,15 +226,17 @@ public class BillingStatsTimeSeriesDataFetcher
       long startTimeFromFilters, Map<Long, List<QLBillingTimeDataPoint>> qlTimeDataPointMap) throws SQLException {
     if (resultSet != null && resultSet.next()) {
       String id = "";
+      String timeFieldName = BillingDataMetaDataFields.STARTTIME.getFieldName();
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         if (field.getFieldName().contains("ID")) {
           id = resultSet.getString(field.getFieldName());
         }
+        if (field.getDataType() == DataType.TIMESTAMP) {
+          timeFieldName = field.getFieldName();
+        }
       }
       if (checkStartTimeFilterIsValid(startTimeFromFilters)) {
-        long timeOfFirstEntry =
-            resultSet.getTimestamp(BillingDataMetaDataFields.STARTTIME.getFieldName(), utils.getDefaultCalendar())
-                .getTime();
+        long timeOfFirstEntry = resultSet.getTimestamp(timeFieldName, utils.getDefaultCalendar()).getTime();
         AddPrecedingZeroValuedData(queryData, qlTimeDataPointMap, id, timeOfFirstEntry, startTimeFromFilters);
       }
     }

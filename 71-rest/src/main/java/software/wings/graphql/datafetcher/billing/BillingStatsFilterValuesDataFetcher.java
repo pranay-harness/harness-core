@@ -113,7 +113,7 @@ public class BillingStatsFilterValuesDataFetcher
           case APPID:
             applicationIds.add(resultSet.getString(field.getFieldName()));
             break;
-          case CLOUDPROVIDER:
+          case CLOUDPROVIDERID:
             cloudProviders.add(resultSet.getString(field.getFieldName()));
             break;
           case ENVID:
@@ -137,7 +137,7 @@ public class BillingStatsFilterValuesDataFetcher
         .applications(getEntity(BillingDataMetaDataFields.APPID, applicationIds))
         .environments(getEntity(BillingDataMetaDataFields.ENVID, environmentIds))
         .services(getEntity(BillingDataMetaDataFields.SERVICEID, serviceIds))
-        .cloudProviders(getEntity(BillingDataMetaDataFields.CLOUDPROVIDER, cloudProviders));
+        .cloudProviders(getEntity(BillingDataMetaDataFields.CLOUDPROVIDERID, cloudProviders));
 
     List<QLFilterValuesData> filterValuesDataList = new ArrayList<>();
     filterValuesDataList.add(filterValuesDataBuilder.build());

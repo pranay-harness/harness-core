@@ -12,7 +12,7 @@ public class BillingStatsDefaultKeys {
   public static final Double MEMORYIDLECOST = 0.0;
   public static final Double COSTTREND = 0.0;
   public static final String TRENDTYPE = "Increasing";
-  public static final String REGION = "Default_Region";
+  public static final String REGION = "-";
   public static final String LAUNCHTYPE = "Default_LaunchType";
   public static final String CLOUDSERVICENAME = "Default_Service";
   public static final String WORKLOADNAME = "Total";
