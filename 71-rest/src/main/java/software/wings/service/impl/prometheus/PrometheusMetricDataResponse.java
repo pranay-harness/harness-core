@@ -4,8 +4,10 @@ import com.google.common.collect.TreeBasedTable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.exception.WingsException;
+import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.delegatetasks.DelegateCVActivityLogService.Logger;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.MetricCollectionResponse;
 import software.wings.sm.StateType;
@@ -19,6 +21,7 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 3/16/18.
  */
 @Data
+@Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
 public class PrometheusMetricDataResponse implements MetricCollectionResponse {
@@ -26,6 +29,7 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
   private PrometheusMetricData data;
 
   @Data
+  @Builder
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class PrometheusMetricData {
     private String resultType;
@@ -33,6 +37,7 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
   }
 
   @Data
+  @Builder
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class PrometheusMetricDataResult {
     private PrometheusMetric metric;
@@ -41,6 +46,7 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
   }
 
   @Data
+  @Builder
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class PrometheusMetric {
     private String __name__;
@@ -52,7 +58,7 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
   public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricRecords(String transactionName,
       String metricName, String appId, String workflowId, String workflowExecutionId, String stateExecutionId,
       String serviceId, String host, String groupName, long collectionStartTime, String cvConfigId, boolean is247Task,
-      String url) {
+      String url, Logger activityLogger) {
     TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv = TreeBasedTable.create();
     if (!status.equals("success")) {
       return rv;
@@ -65,7 +71,14 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
     if (data.getResult() == null) {
       return rv;
     }
-
+    if (data.getResult().size() > 1) {
+      String msg = "Multiple time series values are returned for metric name " + metricName + " and group name "
+          + transactionName + ". Please add more filters to your query to return only one time series.";
+      logger.error("Validation failed for state {} appId: {} error message: {}", stateExecutionId, appId, msg);
+      activityLogger.error(msg);
+      // TODO: Once all the customers with this problem are identified and notified by CS team we need to throw the
+      // exception.
+    }
     for (PrometheusMetricDataResult dataResult : data.getResult()) {
       if (dataResult.getMetric() == null) {
         continue;
