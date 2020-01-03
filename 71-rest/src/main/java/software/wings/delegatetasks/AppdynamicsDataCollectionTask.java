@@ -375,6 +375,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             break;
           } else {
             if (retry == 1) {
+              logger.info("For {} setting the error message to {}", dataCollectionInfo.getStateExecutionId(),
+                  ExceptionUtils.getMessage(ex));
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
             logger.info(

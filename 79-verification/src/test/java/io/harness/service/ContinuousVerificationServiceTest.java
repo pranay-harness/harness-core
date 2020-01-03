@@ -1162,10 +1162,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     cvConfiguration.setStateType(StateType.NEW_RELIC);
     final String configId = wingsPersistence.save(cvConfiguration);
 
-    File file = new File(getClass()
-                             .getClassLoader()
-                             .getResource("./verification/24x7_ts_transactionMetricRisk_MetricRecords")
-                             .getFile());
+    File file = new File(getClass().getClassLoader().getResource("./metric_records.json").getFile());
     final Gson gson1 = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
