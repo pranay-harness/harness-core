@@ -10,4 +10,8 @@ public class UtilizationData {
   private double maxMemoryUtilization;
   private double avgCpuUtilization;
   private double avgMemoryUtilization;
+  private double maxCpuUtilizationValue;
+  private double maxMemoryUtilizationValue;
+  private double avgCpuUtilizationValue;
+  private double avgMemoryUtilizationValue;
 }

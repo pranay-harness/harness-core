@@ -70,6 +70,7 @@ public class EcsTaskInfoWriter extends EventWriter implements ItemWriter<Publish
                   String.valueOf(containerInstantData.getTotalResource().getMemoryMb()));
               metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_ID, containerInstanceId);
             }
+            metaData.put(InstanceMetaDataConstants.TASK_ID, taskId);
             metaData.put(InstanceMetaDataConstants.REGION, ecsTaskDescription.getRegion());
             metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
             metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());

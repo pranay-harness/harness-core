@@ -1,14 +1,18 @@
 package io.harness.batch.processing.writer;
 
+import static io.harness.batch.processing.ccm.ClusterType.INVALID;
 import static io.harness.batch.processing.ccm.InstanceType.CLUSTER_UNALLOCATED;
 import static io.harness.batch.processing.writer.constants.K8sCCMConstants.UNALLOCATED;
 
+import com.google.common.base.Enums;
 import com.google.inject.Singleton;
 
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
+import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData.InstanceBillingDataBuilder;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.UnallocatedBillingDataServiceImpl;
 import io.harness.batch.processing.ccm.ClusterCostData;
+import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.UnallocatedCostData;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +76,7 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
       unallocatedCostMap.forEach((clusterId, clusterCostData) -> {
         ClusterCostData commonFields = unallocatedBillingDataService.getCommonFields(
             clusterId, clusterCostData.getStartTime(), clusterCostData.getEndTime());
-        billingDataService.create(
+        InstanceBillingDataBuilder instanceBillingDataBuilder =
             InstanceBillingData.builder()
                 .accountId(commonFields.getAccountId())
                 .settingId(commonFields.getSettingId())
@@ -94,17 +98,28 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
                 .clusterName(commonFields.getClusterName())
                 .cpuUnitSeconds(clusterCostData.getEndTime() - clusterCostData.getStartTime())
                 .memoryMbSeconds(clusterCostData.getEndTime() - clusterCostData.getStartTime())
-                .namespace(UNALLOCATED)
                 .region(commonFields.getRegion())
                 .clusterType(commonFields.getClusterType())
                 .cloudProvider(commonFields.getCloudProvider())
-                .workloadName(UNALLOCATED)
-                .workloadType(commonFields.getWorkloadType())
                 .maxCpuUtilization(1)
                 .maxMemoryUtilization(1)
                 .avgCpuUtilization(1)
-                .avgMemoryUtilization(1)
-                .build());
+                .avgMemoryUtilization(1);
+
+        switch (Enums.getIfPresent(ClusterType.class, commonFields.getClusterType()).or(INVALID)) {
+          case ECS:
+            instanceBillingDataBuilder.launchType(UNALLOCATED).cloudServiceName(UNALLOCATED).taskId(UNALLOCATED);
+            break;
+          case K8S:
+            instanceBillingDataBuilder.namespace(UNALLOCATED)
+                .workloadName(UNALLOCATED)
+                .workloadType(commonFields.getWorkloadType());
+            break;
+          default:
+            throw new IllegalStateException("Unexpected value: " + commonFields.getCloudProvider());
+        }
+
+        billingDataService.create(instanceBillingDataBuilder.build());
       });
     });
   }

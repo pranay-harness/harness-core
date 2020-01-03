@@ -1,6 +1,7 @@
 package io.harness.batch.processing.billing.service;
 
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.ROHIT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -8,6 +9,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.service.impl.ComputeInstancePricingStrategy;
 import io.harness.batch.processing.billing.service.impl.EcsFargateInstancePricingStrategy;
+import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
@@ -224,8 +226,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
     addParentResource(metaData, 1024, 1024);
     InstanceData instanceData = getInstance(
         instanceResource, metaData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP, InstanceType.ECS_TASK_EC2);
-    BillingAmountBreakup billingAmountForResource =
-        billingCalculationService.getBillingAmountForResource(instanceData, new BigDecimal(200));
+    BillingAmountBreakup billingAmountForResource = billingCalculationService.getBillingAmountForResource(
+        instanceData, new BigDecimal(200), instanceResource.getCpuUnits(), instanceResource.getMemoryMb());
     assertThat(billingAmountForResource.getBillingAmount()).isEqualTo(new BigDecimal("75.000"));
   }
 
@@ -254,10 +256,36 @@ public class BillingCalculationServiceTest extends CategoryTest {
     PricingData pricingData = new PricingData(10, 256.0, 512.0);
     Resource instanceResource = getInstanceResource(256, 512);
     Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
     addParentResource(metaData, 1024, 1024);
     InstanceData instanceData = getInstance(
         instanceResource, metaData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP, InstanceType.ECS_TASK_EC2);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
+    BillingData billingAmount =
+        billingCalculationService.getBillingAmount(instanceData, utilizationData, pricingData, ONE_DAY_SECONDS);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("90.0000"));
+    assertThat(billingAmount.getBillingAmountBreakup().getCpuBillingAmount()).isEqualTo(new BigDecimal("30.0000"));
+    assertThat(billingAmount.getBillingAmountBreakup().getMemoryBillingAmount()).isEqualTo(new BigDecimal("60.000"));
+    assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("45.0"));
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("22.5"));
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("22.5"));
+    assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(ONE_DAY_SECONDS.doubleValue());
+    assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(256.0 * ONE_DAY_SECONDS);
+    assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(512.0 * ONE_DAY_SECONDS);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testGetBillingAmountWithZeroResourceInInstance() {
+    PricingData pricingData = new PricingData(10, 256.0, 512.0);
+    Resource instanceResource = getInstanceResource(0, 0);
+    Map<String, String> metaData = new HashMap<>();
+    addParentResource(metaData, 1024, 1024);
+    metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
+    InstanceData instanceData = getInstance(
+        instanceResource, metaData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP, InstanceType.K8S_POD);
+    UtilizationData utilizationData = getUtilizationWithValues(CPU_UTILIZATION, MEMORY_UTILIZATION, 256, 512);
     BillingData billingAmount =
         billingCalculationService.getBillingAmount(instanceData, utilizationData, pricingData, ONE_DAY_SECONDS);
     assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("90.0000"));
@@ -307,6 +335,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, DEFAULT_INSTANCE_FAMILY);
     metaData.put(InstanceMetaDataConstants.REGION, REGION);
     metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceCategory.ON_DEMAND.name());
+    metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
     addParentResource(metaData, DEFAULT_INSTANCE_CPU * 1024, DEFAULT_INSTANCE_MEMORY * 1024);
     InstanceData instanceData = getInstance(instanceResource, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.ECS_TASK_EC2);
@@ -337,6 +366,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     metaData.put(InstanceMetaDataConstants.REGION, GCP_REGION);
     metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceCategory.SPOT.name());
     metaData.put(InstanceMetaDataConstants.ZONE, GCP_ZONE_1);
+    metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
     InstanceData instanceData = getInstance(instanceResource, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_NODE);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
@@ -362,6 +392,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
     metaData.put(InstanceMetaDataConstants.REGION, REGION);
+    metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
     InstanceData instanceData = getInstance(instanceResource, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.ECS_TASK_FARGATE);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
@@ -395,8 +426,22 @@ public class BillingCalculationServiceTest extends CategoryTest {
     return UtilizationData.builder()
         .maxCpuUtilization(cpuUtilization)
         .maxMemoryUtilization(memoryUtilization)
-        .avgMemoryUtilization(cpuUtilization)
+        .avgCpuUtilization(cpuUtilization)
         .avgMemoryUtilization(memoryUtilization)
+        .build();
+  }
+
+  private UtilizationData getUtilizationWithValues(
+      double cpuUtilization, double memoryUtilization, double cpuUtilizationValue, double memoryUtilizationValue) {
+    return UtilizationData.builder()
+        .maxCpuUtilization(cpuUtilization)
+        .maxMemoryUtilization(memoryUtilization)
+        .avgCpuUtilization(cpuUtilization)
+        .avgMemoryUtilization(memoryUtilization)
+        .maxCpuUtilizationValue(cpuUtilizationValue)
+        .maxMemoryUtilizationValue(memoryUtilizationValue)
+        .avgCpuUtilizationValue(cpuUtilizationValue)
+        .avgMemoryUtilizationValue(memoryUtilizationValue)
         .build();
   }
 
