@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Singleton
 public class PerpetualTaskWorker extends AbstractScheduledService {
-  private static final long POLL_INTERVAL_SECONDS = 3;
+  private static final int PERPETUAL_TASK_POLL_INTERVAL_MINUTES = 1;
 
   @Getter private Set<PerpetualTaskId> assignedTasks;
   @Getter private final Map<PerpetualTaskId, PerpetualTaskHandle> runningTaskMap = new ConcurrentHashMap<>();
@@ -124,6 +124,6 @@ public class PerpetualTaskWorker extends AbstractScheduledService {
 
   @Override
   protected Scheduler scheduler() {
-    return Scheduler.newFixedDelaySchedule(0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
+    return Scheduler.newFixedDelaySchedule(0, PERPETUAL_TASK_POLL_INTERVAL_MINUTES, TimeUnit.MINUTES);
   }
 }
