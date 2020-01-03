@@ -113,8 +113,6 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
       Double maxMemoryUtilization = BillingStatsDefaultKeys.MAXMEMORYUTILIZATION;
       Double avgCpuUtilization = BillingStatsDefaultKeys.AVGCPUUTILIZATION;
       Double avgMemoryUtilization = BillingStatsDefaultKeys.AVGMEMORYUTILIZATION;
-      String environment = BillingStatsDefaultKeys.ENVIRONMENT;
-      String cloudProvider = BillingStatsDefaultKeys.CLOUDPROVIDER;
       Double unallocatedCost = BillingStatsDefaultKeys.UNALLOCATEDCOST;
 
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
@@ -123,6 +121,8 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
           case SERVICEID:
           case CLUSTERNAME:
           case INSTANCEID:
+          case CLOUDPROVIDERID:
+          case ENVID:
             type = field.getFieldName();
             entityId = resultSet.getString(field.getFieldName());
             name = statsHelper.getEntityName(field, entityId);
@@ -162,7 +162,10 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
             clusterType = resultSet.getString(field.getFieldName());
             break;
           case CLUSTERID:
-            clusterId = resultSet.getString(field.getFieldName());
+            type = field.getFieldName();
+            entityId = resultSet.getString(field.getFieldName());
+            name = statsHelper.getEntityName(field, entityId);
+            clusterId = entityId;
             break;
           case MAXCPUUTILIZATION:
             maxCpuUtilization = billingDataHelper.roundingDoubleFieldPercentageValue(field, resultSet);
@@ -181,12 +184,6 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
             break;
           case TOTALWORKLOADS:
             // Todo: query db to get total workloads in a given namespace
-            break;
-          case CLOUDPROVIDER:
-            cloudProvider = resultSet.getString(field.getFieldName());
-            break;
-          case ENVID:
-            environment = resultSet.getString(field.getFieldName());
             break;
           default:
             break;
@@ -221,8 +218,6 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
           .maxMemoryUtilization(maxMemoryUtilization)
           .avgCpuUtilization(avgCpuUtilization)
           .avgMemoryUtilization(avgMemoryUtilization)
-          .environment(environment)
-          .cloudProvider(cloudProvider)
           .unallocatedCost(unallocatedCost);
 
       entityTableListData.add(entityTableDataBuilder.build());

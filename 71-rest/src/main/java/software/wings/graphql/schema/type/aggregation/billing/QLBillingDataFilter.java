@@ -26,6 +26,7 @@ public class QLBillingDataFilter implements EntityFilter {
   private QLIdFilter instanceType;
   private QLIdFilter namespace;
   private QLIdFilter workloadName;
+  private QLIdFilter cloudProvider;
   private QLTimeFilter endTime;
   private QLTimeFilter startTime;
 
@@ -67,6 +68,9 @@ public class QLBillingDataFilter implements EntityFilter {
     if (filter.getWorkloadName() != null) {
       filterTypes.add(QLBillingDataFilterType.WorkloadName);
     }
+    if (filter.getCloudProvider() != null) {
+      filterTypes.add(QLBillingDataFilterType.CloudProvider);
+    }
     return filterTypes;
   }
 
@@ -96,6 +100,8 @@ public class QLBillingDataFilter implements EntityFilter {
         return filter.getNamespace();
       case WorkloadName:
         return filter.getWorkloadName();
+      case CloudProvider:
+        return filter.getCloudProvider();
       default:
         throw new InvalidRequestException("Unsupported type " + type);
     }

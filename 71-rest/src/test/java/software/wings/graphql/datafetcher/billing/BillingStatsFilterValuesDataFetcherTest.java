@@ -315,7 +315,7 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     when(resultSet.getString("CLUSTERTYPE")).thenAnswer((Answer<String>) invocation -> CLUSTER_TYPE1);
     when(resultSet.getString("APPID")).thenAnswer((Answer<String>) invocation -> APP1_ID_ACCOUNT1);
     when(resultSet.getString("ENVID")).thenAnswer((Answer<String>) invocation -> ENV1_ID_APP1_ACCOUNT1);
-    when(resultSet.getString("CLOUDPROVIDER")).thenAnswer((Answer<String>) invocation -> CLOUD_PROVIDER1_ID_ACCOUNT1);
+    when(resultSet.getString("CLOUDPROVIDERID")).thenAnswer((Answer<String>) invocation -> CLOUD_PROVIDER1_ID_ACCOUNT1);
     when(resultSet.getString("SERVICEID")).thenAnswer((Answer<String>) invocation -> SERVICE1_ID_APP1_ACCOUNT1);
     when(resultSet.getString("WORKLOADNAME")).thenAnswer((Answer<String>) invocation -> WORKLOAD_NAME_ACCOUNT1);
     when(resultSet.getString("NAMESPACE")).thenAnswer((Answer<String>) invocation -> NAMESPACE1);

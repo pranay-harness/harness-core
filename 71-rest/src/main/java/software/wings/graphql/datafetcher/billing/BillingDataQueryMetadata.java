@@ -20,7 +20,7 @@ public class BillingDataQueryMetadata {
   enum DataType { STRING, INTEGER, TIMESTAMP, DOUBLE }
 
   public enum BillingDataMetaDataFields {
-    TIME_SERIES("TIME_BUCKET", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
+    TIME_SERIES("STARTTIMEBUCKET", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
     STARTTIME("STARTTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
     MIN_STARTTIME("MINSTARTTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
     MAX_STARTTIME("MAXSTARTTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
@@ -48,7 +48,7 @@ public class BillingDataQueryMetadata {
     MAXMEMORYUTILIZATION("MAXMEMORYUTILIZATION", DataType.DOUBLE, QLFilterKind.SIMPLE),
     AVGCPUUTILIZATION("AVGCPUUTILIZATION", DataType.DOUBLE, QLFilterKind.SIMPLE),
     AVGMEMORYUTILIZATION("AVGMEMORYUTILIZATION", DataType.DOUBLE, QLFilterKind.SIMPLE),
-    CLOUDPROVIDER("CLOUDPROVIDER", DataType.STRING, QLFilterKind.SIMPLE);
+    CLOUDPROVIDERID("CLOUDPROVIDERID", DataType.STRING, QLFilterKind.SIMPLE);
     private DataType dataType;
     private String fieldName;
     private QLFilterKind filterKind;

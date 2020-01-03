@@ -16,7 +16,7 @@ public enum QLBillingDataFilterType {
   InstanceType(BillingDataMetaDataFields.INSTANCETYPE),
   WorkloadName(BillingDataMetaDataFields.WORKLOADNAME),
   Namespace(BillingDataMetaDataFields.NAMESPACE),
-  CloudProvider(BillingDataMetaDataFields.CLOUDPROVIDER);
+  CloudProvider(BillingDataMetaDataFields.CLOUDPROVIDERID);
 
   private QLDataType dataType;
   private BillingDataMetaDataFields metaDataFields;
