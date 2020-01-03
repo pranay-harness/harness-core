@@ -16,6 +16,8 @@ import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
+import software.wings.graphql.datafetcher.billing.BillingTrendStatsDataFetcher;
+import software.wings.graphql.datafetcher.billing.QLBillingAmountData;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
 import software.wings.graphql.datafetcher.budget.BudgetDefaultKeys;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
@@ -24,20 +26,23 @@ import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData.QLBudgetTableDataBuilder;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableListData;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 @Slf4j
 public class BudgetServiceImpl implements BudgetService {
-  @Inject DataFetcherUtils dataFetcherUtils;
+  @Inject private DataFetcherUtils dataFetcherUtils;
+  @Inject private BillingTrendStatsDataFetcher billingTrendStatsDataFetcher;
   @Inject private BudgetDao budgetDao;
   @Inject private TimeScaleDBService timeScaleDBService;
-  @Inject BillingDataQueryBuilder billingDataQueryBuilder;
+  @Inject private BillingDataQueryBuilder billingDataQueryBuilder;
 
   @Override
   public String create(Budget budget) {
@@ -79,15 +84,26 @@ public class BudgetServiceImpl implements BudgetService {
   }
 
   @Override
-  public Double getActualCost(Budget budget) {
+  public double getActualCost(Budget budget) {
     QLBudgetTableListData data = getBudgetData(budget);
     return data.getData().get(0).getActualCost();
   }
 
   @Override
-  public QLBudgetTableListData getBudgetData(Budget budget) {
-    Preconditions.checkNotNull(budget.getAccountId());
+  public double getForecastCost(Budget budget) {
+    List<QLBillingDataFilter> filters = getFilters(budget);
+    QLCCMAggregationFunction aggregationFunction = BudgetUtils.makeBillingAmtAggregation();
+    QLBillingAmountData billingAmountData =
+        billingTrendStatsDataFetcher.getBillingAmountData(budget.getAccountId(), aggregationFunction, filters);
+    Instant endInstant = billingTrendStatsDataFetcher.getEndInstant(filters);
+    BigDecimal forecastCost = billingTrendStatsDataFetcher.getForecastCost(billingAmountData, endInstant);
+    if (forecastCost == null) {
+      return 0L;
+    }
+    return forecastCost.doubleValue();
+  }
 
+  private List<QLBillingDataFilter> getFilters(Budget budget) {
     List<QLBillingDataFilter> filters = new ArrayList<>();
     if (budget.getScope().getClass().equals(ClusterBudgetScope.class)) {
       ClusterBudgetScope clusterBudgetScope = (ClusterBudgetScope) budget.getScope();
@@ -96,8 +112,16 @@ public class BudgetServiceImpl implements BudgetService {
       ApplicationBudgetScope applicationBudgetScope = (ApplicationBudgetScope) budget.getScope();
       filters.add(BudgetUtils.makeApplicationFilter(applicationBudgetScope.getApplicationIds()));
     }
+    return filters;
+  }
 
+  @Override
+  public QLBudgetTableListData getBudgetData(Budget budget) {
+    Preconditions.checkNotNull(budget.getAccountId());
+
+    List<QLBillingDataFilter> filters = getFilters(budget);
     QLCCMAggregationFunction aggregationFunction = BudgetUtils.makeBillingAmtAggregation();
+
     QLCCMTimeSeriesAggregation groupBy = BudgetUtils.makeStartTimeEntityGroupBy();
 
     BillingDataQueryMetadata queryData = billingDataQueryBuilder.formBudgetInsightQuery(

@@ -19,7 +19,9 @@ public interface BudgetService {
 
   boolean delete(String budgetId);
 
-  Double getActualCost(Budget budget) throws SQLException;
+  double getActualCost(Budget budget) throws SQLException;
+
+  double getForecastCost(Budget budget);
 
   QLBudgetTableListData getBudgetData(Budget budget);
 }
