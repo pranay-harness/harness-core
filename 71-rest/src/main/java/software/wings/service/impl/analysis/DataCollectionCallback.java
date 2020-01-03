@@ -64,7 +64,7 @@ public class DataCollectionCallback implements NotifyCallback {
   @Override
   public void notify(Map<String, ResponseData> response) {
     final DataCollectionTaskResult result = (DataCollectionTaskResult) response.values().iterator().next();
-    logger.info("data collection result for app " + appId + " is: " + result);
+    logger.info("data collection result for state {} is: {}", stateExecutionId, result);
     activityLog(result);
     if (result.getStatus() == DataCollectionTaskStatus.FAILURE) {
       sendErrorNotification(result.getErrorMessage());
@@ -80,7 +80,8 @@ public class DataCollectionCallback implements NotifyCallback {
           "Data collection successful for time range %t to %t", dataCollectionStartTime, dataCollectionEndTime);
     } else {
       activityLogger.error(
-          "Data collection failed for time range %t to %t", dataCollectionStartTime, dataCollectionEndTime);
+          "Data collection failed with error \"" + result.getErrorMessage() + "\" for time range %t to %t",
+          dataCollectionStartTime, dataCollectionEndTime);
     }
   }
 

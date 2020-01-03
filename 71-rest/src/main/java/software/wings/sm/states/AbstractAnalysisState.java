@@ -32,7 +32,8 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
-import io.harness.exception.WingsException;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sPod;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -678,14 +679,16 @@ public abstract class AbstractAnalysisState extends State {
     final String providerSettingId = infrastructureMapping.getComputeProviderSettingId();
     final SettingAttribute settingAttribute = settingsService.get(providerSettingId);
     if (settingAttribute == null) {
-      throw new WingsException("Could not find cloud provider setting with id " + providerSettingId + " for infra "
-          + infrastructureMapping.getUuid());
+      throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
+          "Could not find cloud provider setting with id " + providerSettingId + " for infra "
+              + infrastructureMapping.getUuid());
     }
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     Preconditions.checkNotNull(awsConfig, "No aws config set for " + providerSettingId);
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
     if (serviceSetupElement == null) {
-      throw new WingsException("Could not find service element for  " + context.getStateExecutionInstanceId());
+      throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
+          "Could not find service element for  " + context.getStateExecutionInstanceId());
     }
     if (serviceSetupElement.getPreDeploymentData() == null) {
       return hosts;
@@ -1074,7 +1077,8 @@ public abstract class AbstractAnalysisState extends State {
         return (int) TimeUnit.MINUTES.toSeconds(1)
             * Integer.parseInt(initialDelay.substring(0, initialDelay.length() - 1));
       default:
-        throw new WingsException("Specify delay in seconds (1s) or minutes (1m) ");
+        throw new VerificationOperationException(
+            ErrorCode.APM_CONFIGURATION_ERROR, "Specify delay in seconds (1s) or minutes (1m) ");
     }
   }
 
