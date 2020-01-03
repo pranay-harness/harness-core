@@ -18,6 +18,7 @@ public class InstanceBillingData {
   private String clusterId;
   private String settingId;
   private String launchType;
+  private String taskId;
   private String namespace;
   private String clusterName;
   private String clusterType;

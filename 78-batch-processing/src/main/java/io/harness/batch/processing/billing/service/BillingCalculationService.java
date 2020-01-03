@@ -1,6 +1,7 @@
 package io.harness.batch.processing.billing.service;
 
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
+import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.CostAttribution;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
@@ -36,26 +37,34 @@ public class BillingCalculationService {
       double instanceActiveSeconds) {
     double pricePerHour = pricingData.getPricePerHour();
     BigDecimal billingAmount = BigDecimal.valueOf((pricePerHour * instanceActiveSeconds) / 3600);
-    double cpuUnit;
-    double memoryMb;
+    Double cpuUnit;
+    Double memoryMb;
     if (null != instanceData.getTotalResource()) {
       cpuUnit = instanceData.getTotalResource().getCpuUnits();
       memoryMb = instanceData.getTotalResource().getMemoryMb();
+      if (instanceData.getMetaData().get(InstanceMetaDataConstants.CLUSTER_TYPE).equals(ClusterType.K8S.name())) {
+        if (cpuUnit == 0) {
+          cpuUnit = utilizationData.getAvgCpuUtilizationValue();
+        }
+        if (memoryMb == 0) {
+          memoryMb = utilizationData.getAvgMemoryUtilizationValue();
+        }
+      }
     } else {
       cpuUnit = pricingData.getCpuUnit();
       memoryMb = pricingData.getMemoryMb();
     }
     logger.info("Billing amount {} {} {}", billingAmount, pricePerHour, instanceActiveSeconds);
-    BillingAmountBreakup billingAmountForResource = getBillingAmountForResource(instanceData, billingAmount);
+    BillingAmountBreakup billingAmountForResource =
+        getBillingAmountForResource(instanceData, billingAmount, cpuUnit, memoryMb);
     return new BillingData(billingAmountForResource,
         getIdleCostForResource(billingAmountForResource.getBillingAmount(), utilizationData, instanceData),
         instanceActiveSeconds, cpuUnit * instanceActiveSeconds, memoryMb * instanceActiveSeconds);
   }
 
-  BillingAmountBreakup getBillingAmountForResource(InstanceData instanceData, BigDecimal billingAmount) {
+  BillingAmountBreakup getBillingAmountForResource(
+      InstanceData instanceData, BigDecimal billingAmount, double instanceCpu, double instanceMemory) {
     if (instanceData.getInstanceType().getCostAttribution() == CostAttribution.PARTIAL) {
-      Double instanceCpu = instanceData.getTotalResource().getCpuUnits();
-      Double instanceMemory = instanceData.getTotalResource().getMemoryMb();
       Map<String, String> instanceMetaData = instanceData.getMetaData();
       Double parentInstanceCpu = Double.valueOf(instanceMetaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_CPU));
       Double parentInstanceMemory =

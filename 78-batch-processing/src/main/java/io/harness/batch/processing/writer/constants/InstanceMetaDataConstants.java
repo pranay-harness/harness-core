@@ -6,6 +6,7 @@ public class InstanceMetaDataConstants {
   public static final String POD_NAME = "pod_name";
   public static final String NODE_UID = "node_uid";
   public static final String NODE_NAME = "node_name";
+  public static final String TASK_ID = "task_id";
   public static final String LAUNCH_TYPE = "launch_type";
   public static final String NAMESPACE = "namespace";
   public static final String CLUSTER_TYPE = "cluster_type";

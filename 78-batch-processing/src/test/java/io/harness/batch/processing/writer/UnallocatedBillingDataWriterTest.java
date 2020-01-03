@@ -1,10 +1,12 @@
 package io.harness.batch.processing.writer;
 
+import static io.harness.batch.processing.ccm.ClusterCostData.ClusterCostDataBuilder;
+import static io.harness.batch.processing.ccm.ClusterCostData.builder;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,7 +15,7 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.UnallocatedBillingDataServiceImpl;
-import io.harness.batch.processing.ccm.ClusterCostData;
+import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.UnallocatedCostData;
 import io.harness.category.element.UnitTests;
@@ -60,7 +62,8 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
   private static final String SETTING_ID = "settingId";
   private static final String REGION = "region";
   private static final String CLOUD_PROVIDER = "cloudProvider";
-  private static final String CLUSTER_TYPE = "clusterType";
+  private static final String K8S_CLUSTER_TYPE = ClusterType.K8S.name();
+  private static final String ECS_CLUSTER_TYPE = ClusterType.ECS.name();
   private static final String WORKLOAD_TYPE = "workloadType";
 
   List<UnallocatedCostData> unallocatedCostDataList;
@@ -92,17 +95,23 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
         unallocatedCostDataNodeCluster2, unallocatedCostDataPodCluster2, unallocatedCostDataContainerCluster3,
         unallocatedCostDataTaskCluster3, unallocatedCostDataTaskCluster4, unallocatedCostDataContainerCluster4);
 
-    when(unallocatedBillingDataService.getCommonFields(anyString(), anyLong(), anyLong()))
-        .thenReturn(ClusterCostData.builder()
-                        .billingAccountId(BILLING_ACCOUNT_ID)
-                        .accountId(ACCOUNT_ID)
-                        .clusterName(CLUSTER_NAME)
-                        .settingId(SETTING_ID)
-                        .region(REGION)
-                        .cloudProvider(CLOUD_PROVIDER)
-                        .clusterType(CLUSTER_TYPE)
-                        .workloadType(WORKLOAD_TYPE)
-                        .build());
+    ClusterCostDataBuilder clusterCostDataBuilder = builder()
+                                                        .billingAccountId(BILLING_ACCOUNT_ID)
+                                                        .accountId(ACCOUNT_ID)
+                                                        .clusterName(CLUSTER_NAME)
+                                                        .settingId(SETTING_ID)
+                                                        .region(REGION)
+                                                        .cloudProvider(CLOUD_PROVIDER)
+                                                        .workloadType(WORKLOAD_TYPE);
+
+    when(unallocatedBillingDataService.getCommonFields(eq(CLUSTER_ID_1), anyLong(), anyLong()))
+        .thenReturn(clusterCostDataBuilder.clusterType(K8S_CLUSTER_TYPE).build());
+    when(unallocatedBillingDataService.getCommonFields(eq(CLUSTER_ID_2), anyLong(), anyLong()))
+        .thenReturn(clusterCostDataBuilder.clusterType(K8S_CLUSTER_TYPE).build());
+    when(unallocatedBillingDataService.getCommonFields(eq(CLUSTER_ID_3), anyLong(), anyLong()))
+        .thenReturn(clusterCostDataBuilder.clusterType(ECS_CLUSTER_TYPE).build());
+    when(unallocatedBillingDataService.getCommonFields(eq(CLUSTER_ID_4), anyLong(), anyLong()))
+        .thenReturn(clusterCostDataBuilder.clusterType(ECS_CLUSTER_TYPE).build());
   }
 
   @Test
@@ -116,15 +125,19 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
     verify(billingDataService, atMost(4)).create(instanceBillingDataArgumentCaptor.capture());
     List<InstanceBillingData> instanceUtilizationData = instanceBillingDataArgumentCaptor.getAllValues();
     assertThat(instanceUtilizationData.get(0).getClusterId()).isEqualTo(CLUSTER_ID_1);
+    assertThat(instanceUtilizationData.get(0).getClusterType()).isEqualTo(K8S_CLUSTER_TYPE);
     assertThat(instanceUtilizationData.get(0).getBillingAmount()).isEqualTo(BigDecimal.valueOf(COST_NODE - COST_POD));
     assertThat(instanceUtilizationData.get(1).getClusterId()).isEqualTo(CLUSTER_ID_2);
+    assertThat(instanceUtilizationData.get(1).getClusterType()).isEqualTo(K8S_CLUSTER_TYPE);
     assertThat(instanceUtilizationData.get(1).getBillingAmount()).isEqualTo(BigDecimal.valueOf(COST_NODE - COST_POD));
     assertThat(instanceUtilizationData.get(2).getClusterId()).isEqualTo(CLUSTER_ID_3);
+    assertThat(instanceUtilizationData.get(2).getClusterType()).isEqualTo(ECS_CLUSTER_TYPE);
     assertThat(instanceUtilizationData.get(2).getBillingAmount())
         .isEqualTo(BigDecimal.valueOf(COST_CONTAINER - COST_TASK));
     assertThat(instanceUtilizationData.get(3).getClusterId()).isEqualTo(CLUSTER_ID_4);
     assertThat(instanceUtilizationData.get(3).getBillingAmount())
         .isEqualTo(BigDecimal.valueOf(COST_CONTAINER - COST_TASK));
+    assertThat(instanceUtilizationData.get(3).getClusterType()).isEqualTo(ECS_CLUSTER_TYPE);
   }
 
   UnallocatedCostData getMockUnallocatedCostData(String clusterId, String instanceType, double cost) {

@@ -23,7 +23,7 @@ public class BillingDataServiceImpl {
 
   private static final int MAX_RETRY_COUNT = 5;
   static final String INSERT_STATEMENT =
-      "INSERT INTO BILLING_DATA (STARTTIME, ENDTIME, ACCOUNTID, INSTANCETYPE, BILLINGACCOUNTID, BILLINGAMOUNT, CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, USAGEDURATIONSECONDS, INSTANCEID, CLUSTERNAME, CLUSTERID, SETTINGID,  SERVICEID, APPID, CLOUDPROVIDERID, ENVID, CPUUNITSECONDS, MEMORYMBSECONDS, PARENTINSTANCEID, REGION, LAUNCHTYPE, CLUSTERTYPE, CLOUDPROVIDER, WORKLOADNAME, WORKLOADTYPE, NAMESPACE, CLOUDSERVICENAME, IDLECOST, CPUIDLECOST, MEMORYIDLECOST, MAXCPUUTILIZATION, MAXMEMORYUTILIZATION, AVGCPUUTILIZATION, AVGMEMORYUTILIZATION ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO BILLING_DATA (STARTTIME, ENDTIME, ACCOUNTID, INSTANCETYPE, BILLINGACCOUNTID, BILLINGAMOUNT, CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, USAGEDURATIONSECONDS, INSTANCEID, CLUSTERNAME, CLUSTERID, SETTINGID,  SERVICEID, APPID, CLOUDPROVIDERID, ENVID, CPUUNITSECONDS, MEMORYMBSECONDS, PARENTINSTANCEID, REGION, LAUNCHTYPE, CLUSTERTYPE, CLOUDPROVIDER, WORKLOADNAME, WORKLOADTYPE, NAMESPACE, CLOUDSERVICENAME, TASKID, IDLECOST, CPUIDLECOST, MEMORYIDLECOST, MAXCPUUTILIZATION, MAXMEMORYUTILIZATION, AVGCPUUTILIZATION, AVGMEMORYUTILIZATION ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
   public boolean create(InstanceBillingData instanceBillingData) {
     boolean successfulInsert = false;
@@ -79,12 +79,13 @@ public class BillingDataServiceImpl {
     statement.setString(26, instanceBillingData.getWorkloadType());
     statement.setString(27, instanceBillingData.getNamespace());
     statement.setString(28, instanceBillingData.getCloudServiceName());
-    statement.setBigDecimal(29, instanceBillingData.getIdleCost());
-    statement.setBigDecimal(30, instanceBillingData.getCpuIdleCost());
-    statement.setBigDecimal(31, instanceBillingData.getMemoryIdleCost());
-    statement.setDouble(32, instanceBillingData.getMaxCpuUtilization());
-    statement.setDouble(33, instanceBillingData.getMaxMemoryUtilization());
-    statement.setDouble(34, instanceBillingData.getAvgCpuUtilization());
-    statement.setDouble(35, instanceBillingData.getAvgMemoryUtilization());
+    statement.setString(29, instanceBillingData.getTaskId());
+    statement.setBigDecimal(30, instanceBillingData.getIdleCost());
+    statement.setBigDecimal(31, instanceBillingData.getCpuIdleCost());
+    statement.setBigDecimal(32, instanceBillingData.getMemoryIdleCost());
+    statement.setDouble(33, instanceBillingData.getMaxCpuUtilization());
+    statement.setDouble(34, instanceBillingData.getMaxMemoryUtilization());
+    statement.setDouble(35, instanceBillingData.getAvgCpuUtilization());
+    statement.setDouble(36, instanceBillingData.getAvgMemoryUtilization());
   }
 }

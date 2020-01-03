@@ -47,8 +47,8 @@ public class EcsJobIntegrationTest extends CategoryTest implements EcsEventGener
   private final String TEST_CLUSTER_ARN = "EC2_INSTANCE_INFO_CLUSTER_ARN_" + this.getClass().getSimpleName();
 
   private final Instant NOW = Instant.now();
-  private final Timestamp INSTANCE_START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
-  private final Timestamp INSTANCE_STOP_TIMESTAMP = HTimestamps.fromInstant(NOW);
+  private final Timestamp INSTANCE_START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(4, ChronoUnit.DAYS));
+  private final Timestamp INSTANCE_STOP_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(3, ChronoUnit.DAYS));
 
   @Autowired private InstanceDataService instanceDataService;
 
@@ -62,7 +62,7 @@ public class EcsJobIntegrationTest extends CategoryTest implements EcsEventGener
     val batchJobDataDs = hPersistence.getDatastore(BatchJobScheduledData.class);
     batchJobDataDs.delete(batchJobDataDs.createQuery(BatchJobScheduledData.class));
 
-    Instant createdTimestamp = NOW.minus(32, ChronoUnit.HOURS);
+    Instant createdTimestamp = NOW.minus(3, ChronoUnit.DAYS);
     PublishedMessage ec2InstanceInfoMessage =
         getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
     ec2InstanceInfoMessage.setCreatedAt(createdTimestamp.toEpochMilli());
