@@ -8,7 +8,6 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.NameValuePair;
@@ -66,7 +65,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
 
   @Override
   public TerraformInfrastructureProvisioner upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -92,7 +91,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
   }
 
   private void toBean(TerraformInfrastructureProvisioner bean,
-      ChangeContext<TerraformInfrastructureProvisioner.Yaml> changeContext, String appId) throws HarnessException {
+      ChangeContext<TerraformInfrastructureProvisioner.Yaml> changeContext, String appId) {
     TerraformInfrastructureProvisioner.Yaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     super.toBean(changeContext, bean, appId, yamlFilePath);
