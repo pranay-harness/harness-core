@@ -3,6 +3,7 @@ package software.wings.service.prometheus;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.VerificationOperationException;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,6 +88,18 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  public void testGetNodeData_withMultipleMetricValuesAreReturned() throws Exception {
+    PrometheusSetupTestNodeData nodeData = buildInput();
+
+    when(prometheusDelegateService.fetchMetricData(any(), anyString(), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(createResponseWithMultipleMetricsResponses());
+    assertThatThrownBy(() -> prometheusAnalysisService.getMetricsWithDataForNode(nodeData))
+        .isInstanceOf(VerificationOperationException.class);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
   public void testGetNodeDataBadHostCall() throws Exception {
     PrometheusSetupTestNodeData nodeData = buildInput();
 
@@ -115,12 +129,24 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   }
 
   private PrometheusMetricDataResponse createResponse() {
-    PrometheusMetricDataResult result = new PrometheusMetricDataResult();
+    PrometheusMetricDataResult result = PrometheusMetricDataResult.builder().build();
 
-    PrometheusMetricData data = new PrometheusMetricData();
+    PrometheusMetricData data = PrometheusMetricData.builder().build();
     data.setResult(Arrays.asList(result));
 
-    PrometheusMetricDataResponse response = new PrometheusMetricDataResponse();
+    PrometheusMetricDataResponse response = PrometheusMetricDataResponse.builder().build();
+    response.setStatus("success");
+    response.setData(data);
+    return response;
+  }
+
+  private PrometheusMetricDataResponse createResponseWithMultipleMetricsResponses() {
+    PrometheusMetricDataResult result = PrometheusMetricDataResult.builder().build();
+
+    PrometheusMetricData data = PrometheusMetricData.builder().build();
+    data.setResult(Arrays.asList(result, result));
+
+    PrometheusMetricDataResponse response = PrometheusMetricDataResponse.builder().build();
     response.setStatus("success");
     response.setData(data);
     return response;

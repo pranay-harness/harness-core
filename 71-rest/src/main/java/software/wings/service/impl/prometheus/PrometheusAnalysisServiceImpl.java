@@ -14,6 +14,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
@@ -89,6 +91,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
           .dataForNode(null)
           .build();
     }
+    validateMetricDataResponseByTimeSeriesWithHost(metricDataResponseByTimeSeriesWithHost);
     PrometheusMetricDataResponse responseDataFromDelegateForHost =
         metricDataResponseByTimeSeriesWithHost.values().iterator().next();
     Object responseDataForHost;
@@ -105,6 +108,20 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
                           .build())
         .dataForNode(responseDataForHost)
         .build();
+  }
+
+  private void validateMetricDataResponseByTimeSeriesWithHost(
+      Map<TimeSeries, PrometheusMetricDataResponse> metricDataResponseByTimeSeriesWithHost) {
+    metricDataResponseByTimeSeriesWithHost.forEach((timeSeries, prometheusMetricDataResponse) -> {
+      if (prometheusMetricDataResponse != null && prometheusMetricDataResponse.getData() != null
+          && prometheusMetricDataResponse.getData().getResult() != null
+          && prometheusMetricDataResponse.getData().getResult().size() > 1) {
+        throw new VerificationOperationException(ErrorCode.PROMETHEUS_CONFIGURATION_ERROR,
+            "Multiple time series values are returned for metric name " + timeSeries.getMetricName()
+                + " and group name " + timeSeries.getTxnName()
+                + ". Please add more filters to your query to return only one time series.");
+      }
+    });
   }
 
   /**

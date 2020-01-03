@@ -49,7 +49,7 @@ import java.util.function.Supplier;
 @Slf4j
 public class PrometheusDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private PrometheusDataCollectionInfo dataCollectionInfo;
-
+  @Inject DelegateCVActivityLogService delegateCVActivityLogService;
   @Inject private PrometheusDelegateService prometheusDelegateService;
   @Inject private MetricDataStoreService metricStoreService;
   @Inject private DelegateLogService delegateLogService;
@@ -230,7 +230,9 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
                   dataCollectionInfo.getApplicationId(), dataCollectionInfo.getWorkflowId(),
                   dataCollectionInfo.getWorkflowExecutionId(), dataCollectionInfo.getStateExecutionId(),
                   dataCollectionInfo.getServiceId(), host, dataCollectionInfo.getHosts().get(host),
-                  dataCollectionInfo.getStartTime(), dataCollectionInfo.getCvConfigId(), is247Task, url);
+                  dataCollectionInfo.getStartTime(), dataCollectionInfo.getCvConfigId(), is247Task, url,
+                  delegateCVActivityLogService.getLogger(getAccountId(), dataCollectionInfo.getCvConfigId(),
+                      dataCollectionInfo.getDataCollectionMinute(), dataCollectionInfo.getStateExecutionId()));
           metricRecords.cellSet().forEach(cell -> {
             if (rv.contains(cell.getRowKey(), cell.getColumnKey())) {
               NewRelicMetricDataRecord metricDataRecord = rv.get(cell.getRowKey(), cell.getColumnKey());
