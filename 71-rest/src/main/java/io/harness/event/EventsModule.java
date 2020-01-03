@@ -12,8 +12,10 @@ import io.harness.event.handler.impl.MarketoHandler;
 import io.harness.event.handler.impl.VerificationEventHandler;
 import io.harness.event.handler.impl.account.AccountChangeHandler;
 import io.harness.event.handler.impl.notifications.AlertNotificationHandler;
+import io.harness.event.handler.impl.segment.SalesforceApiCheck;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.event.handler.marketo.MarketoConfig;
+import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.event.listener.EventListener;
 import io.harness.event.publisher.EventPublisher;
@@ -34,6 +36,23 @@ public class EventsModule extends AbstractModule {
 
   public EventsModule(MainConfiguration mainConfiguration) {
     this.mainConfiguration = mainConfiguration;
+  }
+
+  @Provides
+  @Singleton
+  public SalesforceConfig salesforceConfig(MainConfiguration mainConfiguration) {
+    return mainConfiguration.getSalesforceConfig();
+  }
+
+  @Provides
+  @Singleton
+  public SalesforceApiCheck salesforceApiCheck(Injector injector, SalesforceConfig salesforceConfig) {
+    if (salesforceConfig == null) {
+      return null;
+    }
+    final SalesforceApiCheck salesforceApiCheck = new SalesforceApiCheck(salesforceConfig);
+    injector.injectMembers(salesforceApiCheck);
+    return salesforceApiCheck;
   }
 
   @Provides
