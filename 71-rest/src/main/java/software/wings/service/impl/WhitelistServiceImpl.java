@@ -24,6 +24,7 @@ import org.apache.commons.validator.routines.InetAddressValidator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.Event.Type;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistConfig;
@@ -50,6 +51,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private CacheManager cacheManager;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private AuditServiceHelper auditServiceHelper;
   @Inject @Named(IpWhitelistingFeature.FEATURE_NAME) private PremiumFeature ipWhitelistingFeature;
 
   @Override
@@ -60,6 +62,7 @@ public class WhitelistServiceImpl implements WhitelistService {
     evictWhitelistConfigCache(whitelist.getAccountId());
     eventPublishHelper.publishSetupIPWhitelistingEvent(savedWhitelist.getAccountId(), savedWhitelist.getUuid());
     logger.info("Created whitelist config {} for account {}", savedWhitelist.getUuid(), savedWhitelist.getAccountId());
+    auditServiceHelper.reportForAuditingUsingAccountId(whitelist.getAccountId(), null, whitelist, Type.CREATE);
     return savedWhitelist;
   }
 
@@ -232,6 +235,7 @@ public class WhitelistServiceImpl implements WhitelistService {
     wingsPersistence.update(query, operations);
     evictWhitelistConfigCache(whitelist.getAccountId());
     logger.info("Updated whitelist config {} for account {}", whitelist.getUuid(), whitelist.getAccountId());
+    auditServiceHelper.reportForAuditingUsingAccountId(whitelist.getAccountId(), null, whitelist, Type.UPDATE);
     return get(whitelist.getAccountId(), whitelist.getUuid());
   }
 
@@ -246,6 +250,7 @@ public class WhitelistServiceImpl implements WhitelistService {
     if (delete) {
       evictWhitelistConfigCache(whitelist.getAccountId());
       logger.info("Deleted whitelist config {} for account {}", whitelistId, accountId);
+      auditServiceHelper.reportDeleteForAuditingUsingAccountId(whitelist.getAccountId(), whitelist);
     }
     return delete;
   }

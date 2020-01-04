@@ -65,6 +65,7 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.trigger.DeploymentTrigger;
@@ -132,6 +133,14 @@ public class EntityHelper {
       entityName = userGroup.getName();
       affectedResourceId = userGroup.getUuid();
       affectedResourceName = userGroup.getName();
+      affectedResourceType = entityType;
+      affectedResourceOperation = type.name();
+    } else if (entity instanceof Whitelist) {
+      Whitelist whitelist = (Whitelist) entity;
+      entityType = EntityType.WHITELISTED_IP.name();
+      entityName = whitelist.getFilter();
+      affectedResourceId = whitelist.getUuid();
+      affectedResourceName = whitelist.getFilter();
       affectedResourceType = entityType;
       affectedResourceOperation = type.name();
     } else if (entity instanceof Pipeline) {
