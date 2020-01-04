@@ -88,7 +88,9 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesDataRecord;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.AlertServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -106,6 +108,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
@@ -2019,6 +2022,54 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     assertThat(task).isNotNull();
     assertThat(task.getAnalysis_minute()).isEqualTo(currentMinute - 1);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerTimeSeriesAnalysis_checkIfTagWithSpacesIsURLEncoded() {
+    String cvConfigId = generateUuid(), accId = generateUuid();
+    DatadogCVServiceConfiguration cvServiceConfiguration = getNRConfig();
+    cvServiceConfiguration.setUuid(cvConfigId);
+    cvServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+    wingsPersistence.save(cvServiceConfiguration);
+    Map<String, TimeSeriesMetricDefinition> metricTemplate = new HashMap<>();
+    metricTemplate.put("test",
+        TimeSeriesMetricDefinition.builder()
+            .metricName("test")
+            .metricType(MetricType.THROUGHPUT)
+            .tags(Sets.newHashSet("teg with space"))
+            .build());
+    TimeSeriesMetricTemplates timeSeriesMetricTemplates = TimeSeriesMetricTemplates.builder()
+                                                              .cvConfigId(cvConfigId)
+                                                              .accountId(accountId)
+                                                              .metricTemplates(metricTemplate)
+                                                              .build();
+    wingsPersistence.save(timeSeriesMetricTemplates);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(cvServiceConfiguration));
+    // save some raw timeseries data
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    for (long time = currentMinute - 135; time < currentMinute; time++) {
+      TimeSeriesDataRecord dataRecord = TimeSeriesDataRecord.builder()
+                                            .cvConfigId(cvConfigId)
+                                            .dataCollectionMinute((int) time)
+                                            .serviceId(serviceId)
+                                            .stateType(cvServiceConfiguration.getStateType())
+                                            .groupName(DEFAULT_GROUP_NAME)
+                                            .build();
+      wingsPersistence.save(dataRecord);
+    }
+
+    continuousVerificationService.triggerServiceGuardTimeSeriesAnalysis(accountId);
+
+    LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                          .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
+                                          .get();
+
+    assertThat(task).isNotNull();
+    assertThat(task.getTest_input_url()).contains("tag=teg+with+space");
+    assertThat(task.getAnalysis_save_url()).contains("tag=teg+with+space");
+    assertThat(task.getHistorical_analysis_url()).contains("tag=teg+with+space");
   }
 
   @Test

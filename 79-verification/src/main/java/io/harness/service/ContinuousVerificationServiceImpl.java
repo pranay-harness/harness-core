@@ -51,6 +51,7 @@ import io.harness.service.intfc.LogAnalysisService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
 import org.bson.types.ObjectId;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.FeatureName;
@@ -91,6 +92,7 @@ import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.SplunkCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -258,7 +260,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 // since analysis startMin is inclusive in LE, we  need to add 1.
                 analysisStartMinute += 1;
 
-                Set<String> tags = getTags(cvConfiguration.getUuid(), cvConfiguration.getAppId());
+                Set<String> tags = getTags(cvConfiguration.getUuid());
                 List<MLExperiments> experiments = get24x7Experiments(MLAnalysisType.TIME_SERIES.name());
                 if (isEmpty(tags)) {
                   LearningEngineAnalysisTask learningEngineAnalysisTask = createLearningEngineAnalysisTask(
@@ -314,7 +316,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
   }
 
-  private Set<String> getTags(String cvConfigId, String appId) {
+  private Set<String> getTags(String cvConfigId) {
     Set<String> tags = new HashSet<>();
     TimeSeriesMetricTemplates template = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class, excludeAuthority)
                                              .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, cvConfigId)
@@ -463,65 +465,132 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private String getSaveUrlForExperimentalTask(String taskId) {
-    return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
-        + "/save-dummy-experimental-247?cvConfigId=Dummy&taskId=" + taskId;
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(
+        VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/save-dummy-experimental-247");
+    uriBuilder.addParameter("cvConfigId", "Dummy");
+    uriBuilder.addParameter("taskId", taskId);
+    return getUriString(uriBuilder);
   }
 
   private String getMetricTemplateUrl(
       String accountId, String appId, StateType stateType, String serviceId, String cvConfigId) {
     final String stateExecutionIdForLETask = CV_24x7_STATE_EXECUTION + "-" + cvConfigId;
-    return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
-        + "/get-metric-template?accountId=" + accountId + "&appId=" + appId + "&stateType=" + stateType
-        + "&cvConfigId=" + cvConfigId + "&stateExecutionId=" + stateExecutionIdForLETask;
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(
+        VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/get-metric-template");
+    uriBuilder.addParameter("accountId", accountId);
+    uriBuilder.addParameter("appId", appId);
+    uriBuilder.addParameter("stateType", stateType.toString());
+    uriBuilder.addParameter("cvConfigId", cvConfigId);
+    uriBuilder.addParameter("stateExecutionId", stateExecutionIdForLETask);
+    return getUriString(uriBuilder);
   }
 
   private String getMetricAnalysisSaveUrl(CVConfiguration cvConfiguration, long endMinute, String taskId, String tag) {
-    return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/save-analysis"
-        + "?accountId=" + cvConfiguration.getAccountId() + "&applicationId=" + cvConfiguration.getAppId()
-        + "&stateType=" + cvConfiguration.getStateType() + "&serviceId=" + cvConfiguration.getServiceId()
-        + "&analysisMinute=" + endMinute + "&cvConfigId=" + cvConfiguration.getUuid() + "&taskId=" + taskId
-        + (tag != null ? ("&tag=" + tag) : "");
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/save-analysis");
+    uriBuilder.addParameter("accountId", cvConfiguration.getAccountId());
+    uriBuilder.addParameter("applicationId", cvConfiguration.getAppId());
+    uriBuilder.addParameter("stateType", cvConfiguration.getStateType().toString());
+    uriBuilder.addParameter("serviceId", cvConfiguration.getServiceId());
+    uriBuilder.addParameter("cvConfigId", cvConfiguration.getUuid());
+    uriBuilder.addParameter("analysisMinute", String.valueOf(endMinute));
+    uriBuilder.addParameter("taskId", taskId);
+    if (tag != null) {
+      uriBuilder.addParameter("tag", tag);
+    }
+    return getUriString(uriBuilder);
+  }
+  private String getUriString(URIBuilder uriBuilder) {
+    try {
+      return uriBuilder.build().toString();
+    } catch (URISyntaxException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   private String getDataFetchUrl(CVConfiguration cvConfiguration, long startMinute, long endMinute, String tag) {
-    return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
-        + "/get-metric-data-247?accountId=" + cvConfiguration.getAccountId() + "&appId=" + cvConfiguration.getAppId()
-        + "&stateType=" + cvConfiguration.getStateType() + "&cvConfigId=" + cvConfiguration.getUuid()
-        + "&serviceId=" + cvConfiguration.getServiceId() + "&analysisStartMin=" + startMinute
-        + "&analysisEndMin=" + endMinute + (tag != null ? ("&tag=" + tag) : "");
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(
+        VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/get-metric-data-247");
+    uriBuilder.addParameter("accountId", cvConfiguration.getAccountId());
+    uriBuilder.addParameter("appId", cvConfiguration.getAppId());
+    uriBuilder.addParameter("stateType", cvConfiguration.getStateType().toString());
+    uriBuilder.addParameter("serviceId", cvConfiguration.getServiceId());
+    uriBuilder.addParameter("cvConfigId", cvConfiguration.getUuid());
+    uriBuilder.addParameter("analysisStartMin", String.valueOf(startMinute));
+    uriBuilder.addParameter("analysisEndMin", String.valueOf(endMinute));
+    if (tag != null) {
+      uriBuilder.addParameter("tag", tag);
+    }
+    return getUriString(uriBuilder);
   }
 
   private String getPreviousAnalysisUrl(CVConfiguration cvConfiguration, String tag) {
     long min = timeSeriesAnalysisService.getLastCVAnalysisMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
-    return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
-        + "/previous-analysis-247?appId=" + cvConfiguration.getAppId() + "&cvConfigId=" + cvConfiguration.getUuid()
-        + "&dataCollectionMin=" + min + (tag != null ? ("&tag=" + tag) : "");
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(
+        VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/previous-analysis-247");
+    uriBuilder.addParameter("appId", cvConfiguration.getAppId());
+    uriBuilder.addParameter("cvConfigId", cvConfiguration.getUuid());
+    uriBuilder.addParameter("dataCollectionMin", String.valueOf(min));
+    if (tag != null) {
+      uriBuilder.addParameter("tag", tag);
+    }
+    return getUriString(uriBuilder);
   }
 
   private String getHistoricalAnalysisUrl(CVConfiguration cvConfiguration, long minute, String tag) {
-    return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
-        + "/historical-analysis-24x7?accountId=" + cvConfiguration.getAccountId() + "&applicationId="
-        + cvConfiguration.getAppId() + "&serviceId=" + cvConfiguration.getServiceId() + "&analysisMinute=" + minute
-        + "&cvConfigId=" + cvConfiguration.getUuid() + (tag != null ? ("&tag=" + tag) : "");
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(
+        VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/historical-analysis-24x7");
+    uriBuilder.addParameter("accountId", cvConfiguration.getAccountId());
+    uriBuilder.addParameter("applicationId", cvConfiguration.getAppId());
+    uriBuilder.addParameter("serviceId", cvConfiguration.getServiceId());
+    uriBuilder.addParameter("analysisMinute", String.valueOf(minute));
+    uriBuilder.addParameter("cvConfigId", cvConfiguration.getUuid());
+    if (tag != null) {
+      uriBuilder.addParameter("tag", tag);
+    }
+    return getUriString(uriBuilder);
   }
 
   private String getPreviousAnomaliesUrl(CVConfiguration cvConfiguration, String tag) {
-    return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/previous-anomalies-247"
-        + "?accountId=" + cvConfiguration.getAccountId() + "&applicationId=" + cvConfiguration.getAppId()
-        + "&cvConfigId=" + cvConfiguration.getUuid() + (tag != null ? ("&tag=" + tag) : "");
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(
+        VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/previous-anomalies-247");
+    uriBuilder.addParameter("accountId", cvConfiguration.getAccountId());
+    uriBuilder.addParameter("applicationId", cvConfiguration.getAppId());
+    uriBuilder.addParameter("cvConfigId", cvConfiguration.getUuid());
+    if (tag != null) {
+      uriBuilder.addParameter("tag", tag);
+    }
+    return getUriString(uriBuilder);
   }
 
   private String getCumulativeSumsUrl(CVConfiguration cvConfiguration, int analysisMinute, String tag) {
     int startMin = analysisMinute - (int) TimeUnit.DAYS.toMinutes(1);
-    return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/cumulative-sums-247"
-        + "?accountId=" + cvConfiguration.getAccountId() + "&applicationId=" + cvConfiguration.getAppId()
-        + "&cvConfigId=" + cvConfiguration.getUuid() + "&analysisMinStart=" + startMin
-        + "&analysisMinEnd=" + analysisMinute + (tag != null ? ("&tag=" + tag) : "");
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(
+        VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/cumulative-sums-247");
+    uriBuilder.addParameter("accountId", cvConfiguration.getAccountId());
+    uriBuilder.addParameter("applicationId", cvConfiguration.getAppId());
+    uriBuilder.addParameter("cvConfigId", cvConfiguration.getUuid());
+    uriBuilder.addParameter("analysisMinStart", String.valueOf(startMin));
+    uriBuilder.addParameter("analysisMinEnd", String.valueOf(analysisMinute));
+    if (tag != null) {
+      uriBuilder.addParameter("tag", tag);
+    }
+    return getUriString(uriBuilder);
   }
 
   private String getKeyTransactionsUrl(CVConfiguration cvConfiguration) {
-    return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/key-transactions-247"
-        + "?cvConfigId=" + cvConfiguration.getUuid();
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(
+        VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/key-transactions-247");
+    uriBuilder.addParameter("cvConfigId", cvConfiguration.getUuid());
+    return getUriString(uriBuilder);
   }
 
   private long getCollectionStartTimeForLogs(LogsCVConfiguration logsCVConfiguration, long maxCvCollectionMinute) {
