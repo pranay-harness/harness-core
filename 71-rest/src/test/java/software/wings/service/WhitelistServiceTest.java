@@ -3,7 +3,11 @@ package software.wings.service;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.USER_ID;
@@ -25,6 +29,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.Event.Type;
 import software.wings.beans.User;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.beans.security.access.Whitelist;
@@ -32,6 +37,7 @@ import software.wings.beans.security.access.WhitelistStatus;
 import software.wings.features.api.PremiumFeature;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.WhitelistService;
 
@@ -53,7 +59,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
 
   @Mock private AccountService accountService;
   @Mock private Account account;
-
+  @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private MainConfiguration mainConfig;
 
   @InjectMocks @Inject private WhitelistService whitelistService;
@@ -321,6 +327,8 @@ public class WhitelistServiceTest extends WingsBaseTest {
     whitelistFromGet.setFilter(ipFilter);
 
     Whitelist updatedWhitelist = whitelistService.update(whitelist);
+    verify(auditServiceHelper, times(1))
+        .reportForAuditingUsingAccountId(eq(accountId), eq(null), any(Whitelist.class), eq(Type.CREATE));
     compare(whitelist, updatedWhitelist);
 
     whitelistFromGet = whitelistService.get(accountId, whitelistId);
@@ -392,12 +400,16 @@ public class WhitelistServiceTest extends WingsBaseTest {
     Whitelist whitelist =
         Whitelist.builder().accountId(accountId).uuid(whitelistId).description(description).filter(cidrFilter).build();
     whitelistService.save(whitelist);
+    verify(auditServiceHelper, times(1))
+        .reportForAuditingUsingAccountId(eq(accountId), eq(null), any(Whitelist.class), eq(Type.CREATE));
 
     boolean delete = whitelistService.delete(accountId, whitelistId);
     assertThat(delete).isTrue();
 
     Whitelist whitelistAfterDelete = whitelistService.get(accountId, whitelistId);
     assertThat(whitelistAfterDelete).isNull();
+    whitelist.setStatus(WhitelistStatus.ACTIVE);
+    verify(auditServiceHelper, times(1)).reportDeleteForAuditingUsingAccountId(accountId, whitelist);
   }
 
   private void compare(Whitelist lhs, Whitelist rhs) {
