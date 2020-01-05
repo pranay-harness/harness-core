@@ -6,6 +6,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 
 import io.harness.exception.WingsException;
+import lombok.experimental.UtilityClass;
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedReader;
@@ -18,6 +19,7 @@ import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+@UtilityClass
 public class EncodingUtils {
   public static byte[] compressString(String toCompress) throws IOException {
     Preconditions.checkState(isNotEmpty(toCompress));

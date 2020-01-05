@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.Credentials;
@@ -39,6 +40,7 @@ import javax.net.ssl.X509TrustManager;
 /**
  * Created by anubhaw on 5/2/17.
  */
+@UtilityClass
 @Slf4j
 public class Http {
   private static UrlValidator urlValidator =

@@ -7,6 +7,7 @@ import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import com.google.common.io.Files;
 
 import io.harness.exception.WingsException;
+import lombok.experimental.UtilityClass;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +22,7 @@ import java.util.Arrays;
  * Utility classes used for encryption-related work.
  * Created by mike@ on 4/25/17.
  */
+@UtilityClass
 public class EncryptionUtils {
   public static final int DEFAULT_SALT_SIZE = 32;
 

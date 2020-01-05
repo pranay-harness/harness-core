@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
 import graphql.schema.TypeResolver;
+import lombok.experimental.UtilityClass;
 import software.wings.graphql.schema.type.QLDeploymentOutcome;
 import software.wings.graphql.schema.type.QLExecutedAlongPipeline;
 import software.wings.graphql.schema.type.QLExecutedByTrigger;
@@ -67,6 +68,7 @@ import java.util.Set;
 @Singleton
 public class TypeResolverManager {
   // Uniface is a short for union or interface
+  @UtilityClass
   public static final class TypeResolverManagerUnifaces {
     public static final String Cause = "Cause";
     public static final String CloudProvider = "CloudProvider";
@@ -78,6 +80,7 @@ public class TypeResolverManager {
     public static final String PhysicalInstance = "PhysicalInstance";
   }
 
+  @UtilityClass
   public static final class TypeResolverManagerTypes {
     public static final String AggregatedData = "AggregatedData";
     public static final String AutoScalingGroupInstance = "AutoScalingGroupInstance";

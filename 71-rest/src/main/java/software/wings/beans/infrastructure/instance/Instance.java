@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -140,6 +141,7 @@ public class Instance extends Base implements AccountAccess, ApplicationAccess {
     this.deletedAt = deletedAt;
   }
 
+  @UtilityClass
   public static final class InstanceKeys {
     // Temporary
     public static final String appId = "appId";

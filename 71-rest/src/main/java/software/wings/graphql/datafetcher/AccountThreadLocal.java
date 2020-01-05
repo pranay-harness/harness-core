@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class AccountThreadLocal {
   public static final ThreadLocal<String> accountIdThreadLocal = new ThreadLocal<>();
 

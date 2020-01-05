@@ -5,10 +5,12 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.task.utils.KmsUtils;
 import io.harness.expression.DummySubstitutor;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
 
+@UtilityClass
 @Slf4j
 public class HttpConnectionExecutionCapabilityGenerator {
   public static HttpConnectionExecutionCapability buildHttpConnectionExecutionCapability(String urlString) {

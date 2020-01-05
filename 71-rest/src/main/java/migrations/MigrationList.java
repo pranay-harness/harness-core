@@ -3,6 +3,7 @@ package migrations;
 
 import com.google.common.collect.ImmutableList;
 
+import lombok.experimental.UtilityClass;
 import migrations.all.AddAccountIdToAppEntities;
 import migrations.all.AddAccountIdToArtifactStreamsMigration;
 import migrations.all.AddAccountIdToArtifactsMigration;
@@ -131,6 +132,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 
+@UtilityClass
 public class MigrationList {
   /**
    * Add your migrations to the end of the list with the next sequence number. After it has been in production for a few

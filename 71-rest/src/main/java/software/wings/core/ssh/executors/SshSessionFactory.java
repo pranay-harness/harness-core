@@ -12,6 +12,7 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import io.harness.security.EncryptionUtils;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * Created by anubhaw on 2/8/16.
  */
+@UtilityClass
 @Slf4j
 public class SshSessionFactory {
   /**

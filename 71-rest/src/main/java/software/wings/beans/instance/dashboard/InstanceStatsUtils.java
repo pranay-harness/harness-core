@@ -1,11 +1,13 @@
 package software.wings.beans.instance.dashboard;
 
+import lombok.experimental.UtilityClass;
 import software.wings.resources.DashboardStatisticsResource;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+@UtilityClass
 public class InstanceStatsUtils {
   /**
    * Find 95th percentile of usage in last 30 days.

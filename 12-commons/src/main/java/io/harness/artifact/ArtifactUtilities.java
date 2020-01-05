@@ -4,9 +4,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 
+import lombok.experimental.UtilityClass;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 
+@UtilityClass
 public class ArtifactUtilities {
   public static String getArtifactoryRegistryUrl(String url, String dockerRepositoryServer, String jobName) {
     String registryUrl;

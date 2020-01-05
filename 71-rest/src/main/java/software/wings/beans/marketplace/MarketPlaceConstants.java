@@ -1,5 +1,8 @@
 package software.wings.beans.marketplace;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class MarketPlaceConstants {
   public static final String USERINVITE_ID_CLAIM_KEY = "userInviteID";
   public static final String MARKETPLACE_ID_CLAIM_KEY = "marketPlaceID";

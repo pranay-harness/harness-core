@@ -3,6 +3,7 @@ package software.wings.helpers.ext.jenkins;
 import com.google.common.base.MoreObjects;
 
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
+import lombok.experimental.UtilityClass;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class BuildDetails {
+  @UtilityClass
   public static final class BuildDetailsMetadataKeys {
     public static final String image = "image";
     public static final String tag = "tag";

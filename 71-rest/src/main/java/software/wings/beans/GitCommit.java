@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -61,6 +62,7 @@ public class GitCommit extends Base {
     COMMIT_PARSING_FAILED
   }
 
+  @UtilityClass
   public static final class GitCommitKeys {
     // Temporary
     public static final String lastUpdatedAt = "lastUpdatedAt";

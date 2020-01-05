@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.connector;
 
 import io.harness.exception.WingsException;
+import lombok.experimental.UtilityClass;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.type.connector.QLAmazonS3RepoConnector;
@@ -36,6 +37,7 @@ import software.wings.graphql.schema.type.connector.QLSplunkConnector;
 import software.wings.graphql.schema.type.connector.QLSumoConnector;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
+@UtilityClass
 public class ConnectorsController {
   public static QLConnectorBuilder populateConnector(SettingAttribute settingAttribute, QLConnectorBuilder builder) {
     return builder.id(settingAttribute.getUuid())

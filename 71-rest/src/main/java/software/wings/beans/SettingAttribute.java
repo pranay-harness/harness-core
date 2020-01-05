@@ -62,6 +62,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -301,6 +302,7 @@ public class SettingAttribute extends Base implements NameAccess {
     }
   }
 
+  @UtilityClass
   public static final class SettingAttributeKeys {
     // Temporary
     public static final String appId = "appId";

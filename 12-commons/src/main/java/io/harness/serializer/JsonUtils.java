@@ -27,6 +27,7 @@ import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.json.JsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -40,6 +41,7 @@ import java.util.Set;
 /**
  * The Class JsonUtils.
  */
+@UtilityClass
 @Slf4j
 public class JsonUtils {
   /**

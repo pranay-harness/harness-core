@@ -4,6 +4,7 @@ import static io.harness.eraro.ErrorCode.FILE_INTEGRITY_CHECK_FAILED;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.exception.WingsException;
+import lombok.experimental.UtilityClass;
 import org.bson.types.ObjectId;
 import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
@@ -16,6 +17,7 @@ import java.util.Base64;
  *
  * @author marklu on 2018-11-30
  */
+@UtilityClass
 public class FileServiceUtils {
   static final String GCS_ID_PREFIX = "_gcs_:";
   static final String FILE_PATH_SEPARATOR = "/";

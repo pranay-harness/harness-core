@@ -5,8 +5,10 @@ import graphql.schema.CoercingParseLiteralException;
 import graphql.schema.CoercingParseValueException;
 import graphql.schema.CoercingSerializeException;
 import graphql.schema.GraphQLScalarType;
+import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.NotNull;
 
+@UtilityClass
 public class LongScalar {
   public static final GraphQLScalarType type =
       GraphQLScalarType.newScalar()

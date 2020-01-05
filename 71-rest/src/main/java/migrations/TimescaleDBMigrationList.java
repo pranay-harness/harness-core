@@ -2,6 +2,7 @@ package migrations;
 
 import com.google.common.collect.ImmutableList;
 
+import lombok.experimental.UtilityClass;
 import migrations.timescaledb.AddFieldsToServiceGuardStats;
 import migrations.timescaledb.AddFieldsToWorkflowCVMetrics;
 import migrations.timescaledb.AddIndexToInstanceV2Migration;
@@ -23,6 +24,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 
+@UtilityClass
 public class TimescaleDBMigrationList {
   public static List<Pair<Integer, Class<? extends TimeScaleDBMigration>>> getMigrations() {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends TimeScaleDBMigration>>>()

@@ -21,6 +21,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -137,6 +138,7 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAwar
     }
   }
 
+  @UtilityClass
   public static final class PipelineKeys {
     // Temporary
     public static final String appId = "appId";

@@ -21,6 +21,7 @@ import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
+import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@UtilityClass
 public class ManifestHelper {
   public static final String values_filename = "values.yaml";
   public static final String yaml_file_extension = ".yaml";

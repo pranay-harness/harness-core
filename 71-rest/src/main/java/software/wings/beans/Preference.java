@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -44,6 +45,7 @@ public abstract class Preference extends Base {
     this.preferenceType = preferenceType;
   }
 
+  @UtilityClass
   public static final class PreferenceKeys {
     // Temporary
     public static final String createdAt = "createdAt";

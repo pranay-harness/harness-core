@@ -3,8 +3,6 @@ package software.wings.beans;
 import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
@@ -20,8 +18,6 @@ import software.wings.WingsBaseTest;
  */
 @Slf4j
 public class ApplicationTest extends WingsBaseTest {
-  @Inject private JsonUtils jsonUtils;
-
   /**
    * Test serialize deserialize.
    */
@@ -44,12 +40,12 @@ public class ApplicationTest extends WingsBaseTest {
       logger.debug("TestApp : " + app);
     }
 
-    String json = jsonUtils.asJson(app);
+    String json = JsonUtils.asJson(app);
     if (logger.isDebugEnabled()) {
       logger.debug("json : " + json);
     }
 
-    Application app2 = jsonUtils.asObject(json, Application.class);
+    Application app2 = JsonUtils.asObject(json, Application.class);
     assertThat(app2).isEqualToComparingFieldByField(app);
   }
 }

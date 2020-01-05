@@ -1,6 +1,7 @@
 package io.harness.delegate.task.utils;
 
 import com.amazonaws.regions.Regions;
+import lombok.experimental.UtilityClass;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author marklu on 2019-07-22
  */
+@UtilityClass
 public class KmsUtils {
   private static final Map<Regions, String> KMS_REGION_URL_MAP = new ConcurrentHashMap<>();
   static {

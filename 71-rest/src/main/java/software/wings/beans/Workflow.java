@@ -21,6 +21,7 @@ import io.harness.persistence.NameAccess;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -533,6 +534,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
     }
   }
 
+  @UtilityClass
   public static final class WorkflowKeys {
     // Temporary
     public static final String appId = "appId";

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import lombok.experimental.UtilityClass;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
@@ -13,6 +14,7 @@ import java.util.Calendar;
  * Utility class that has object to string and string to object representations.
  * @author rktummala on 09/10/2018
  */
+@UtilityClass
 public class LicenseUtils {
   /**
    * Trial expires end of day - 14 days from the date of creation.

@@ -6,12 +6,14 @@ import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.limits.checker.UsageLimitExceededException;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
+import lombok.experimental.UtilityClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.service.impl.StaticLimitActionTypeLogContext;
 
 import java.util.function.Supplier;
 
+@UtilityClass
 public class LimitEnforcementUtils {
   private static final Logger log = LoggerFactory.getLogger(LimitEnforcementUtils.class);
 

@@ -9,6 +9,7 @@ import io.harness.time.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 
@@ -18,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+@UtilityClass
 @Slf4j
 public class APMResponseParser {
   @Data

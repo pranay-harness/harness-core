@@ -5,6 +5,7 @@ import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -51,6 +52,7 @@ public class Personalization implements PersistentEntity {
 
   private Templates templates;
 
+  @UtilityClass
   public static final class PersonalizationKeys {
     public static final String steps_favorites = steps + "." + StepsKeys.favorites;
     public static final String steps_recent = steps + "." + StepsKeys.recent;

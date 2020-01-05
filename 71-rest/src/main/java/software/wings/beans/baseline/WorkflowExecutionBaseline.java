@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -39,6 +40,7 @@ public class WorkflowExecutionBaseline extends Base {
   @NotEmpty @Indexed private String workflowExecutionId;
   private String pipelineExecutionId;
 
+  @UtilityClass
   public static class WorkflowExecutionBaselineKeys {
     // Temporary
     public static final String appId = "appId";

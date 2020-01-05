@@ -1,7 +1,9 @@
 package software.wings.security;
 
+import lombok.experimental.UtilityClass;
 import software.wings.beans.User;
 
+@UtilityClass
 public class UserThreadLocal {
   public static class Guard implements AutoCloseable {
     private User old;

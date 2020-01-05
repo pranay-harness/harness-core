@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.execution;
 
+import lombok.experimental.UtilityClass;
 import software.wings.beans.WorkflowExecution;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.type.QLExecutedByUser;
@@ -13,6 +14,7 @@ import javax.validation.constraints.NotNull;
  * workflow and workflow execution.
  * Ideally, we should have two separate adapters.
  */
+@UtilityClass
 public class PipelineExecutionController {
   public static void populatePipelineExecution(
       @NotNull WorkflowExecution workflowExecution, QLPipelineExecutionBuilder builder) {
