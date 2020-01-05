@@ -22,6 +22,7 @@ import static software.wings.sm.StateType.PHASE_STEP;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.StateType.SUB_WORKFLOW;
 import static software.wings.sm.rollback.RollbackStateMachineGenerator.STAGING_PHASE_NAME;
+import static software.wings.sm.rollback.RollbackStateMachineGenerator.WHITE_SPACE;
 
 import com.google.inject.Inject;
 
@@ -121,11 +122,17 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           return null;
         }
         WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
+        String phaseName = workflowPhase.getName();
+        String displayName = ROLLING_PHASE_PREFIX + 1;
+        if (workflowExecutionService.checkIfOnDemand(context.getAppId(), context.getWorkflowExecutionId())) {
+          phaseName = STAGING_PHASE_NAME + WHITE_SPACE + phaseName;
+          displayName = STAGING_PHASE_NAME + WHITE_SPACE + displayName;
+        }
         return anExecutionEventAdvice()
             .withExecutionInterruptType(ExecutionInterruptType.NEXT_STEP)
-            .withNextStateName(workflowPhase.getName())
+            .withNextStateName(phaseName)
             .withNextChildStateMachineId(stateExecutionInstance.getChildStateMachineId())
-            .withNextStateDisplayName(ROLLING_PHASE_PREFIX + 1)
+            .withNextStateDisplayName(displayName)
             .build();
       }
 
@@ -143,7 +150,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           if (phaseSubWorkflow.getName().startsWith(STAGING_PHASE_NAME)
               && executionEvent.getExecutionStatus() == SUCCESS) {
             return phaseSubWorkflowOnDemandRollbackAdvice(
-                orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
+                orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance, rolling);
           }
 
           if (!rolling) {
@@ -330,6 +337,13 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   private ExecutionEventAdvice computeExecutionEventAdvice(CanaryOrchestrationWorkflow orchestrationWorkflow,
       FailureStrategy failureStrategy, ExecutionEvent executionEvent, PhaseSubWorkflow phaseSubWorkflow,
       StateExecutionInstance stateExecutionInstance) {
+    if (workflowExecutionService.checkIfOnDemand(
+            stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid())) {
+      if (phaseSubWorkflow == null) {
+        return null;
+      }
+      return phaseSubWorkflowAdvice(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
+    }
     if (failureStrategy == null) {
       return null;
     }
@@ -510,25 +524,31 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     if (stateExecutionInstance.getOrchestrationWorkflowType() == ROLLING
         && !workflowServiceHelper.isOrchestrationWorkflowForK8sV2Service(
                stateExecutionInstance.getAppId(), orchestrationWorkflow)) {
-      return phaseSubWorkflowAdviceForRolling(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
+      return phaseSubWorkflowAdviceForRolling(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance, false);
     } else {
       return phaseSubWorkflowAdviceForOthers(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
     }
   }
 
   private ExecutionEventAdvice phaseSubWorkflowOnDemandRollbackAdvice(CanaryOrchestrationWorkflow orchestrationWorkflow,
-      PhaseSubWorkflow phaseSubWorkflow, StateExecutionInstance stateExecutionInstance) {
+      PhaseSubWorkflow phaseSubWorkflow, StateExecutionInstance stateExecutionInstance, boolean rolling) {
     if (orchestrationWorkflow.checkLastPhaseForOnDemandRollback(phaseSubWorkflow.getName())) {
+      if (rolling) {
+        return phaseSubWorkflowAdviceForRolling(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance, true);
+      }
       return phaseSubWorkflowAdviceForOthers(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
     }
     return null;
   }
 
   private ExecutionEventAdvice phaseSubWorkflowAdviceForRolling(CanaryOrchestrationWorkflow orchestrationWorkflow,
-      PhaseSubWorkflow phaseSubWorkflow, StateExecutionInstance stateExecutionInstance) {
+      PhaseSubWorkflow phaseSubWorkflow, StateExecutionInstance stateExecutionInstance, boolean onDemandRollback) {
     int rollingIndex;
-    if (!phaseSubWorkflow.isRollback()) {
+    if (!phaseSubWorkflow.isRollback() && !onDemandRollback) {
       rollingIndex = Integer.parseInt(stateExecutionInstance.getDisplayName().substring(ROLLING_PHASE_PREFIX.length()));
+    } else if (!phaseSubWorkflow.isRollback() && onDemandRollback) {
+      rollingIndex = stateExecutionService.getRollingPhaseCount(
+          stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid());
     } else {
       rollingIndex = Integer.parseInt(
           stateExecutionInstance.getDisplayName().substring(ROLLBACK_PREFIX.length() + PHASE_NAME_PREFIX.length()));

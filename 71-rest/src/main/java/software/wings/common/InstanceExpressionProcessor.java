@@ -46,6 +46,7 @@ import software.wings.service.intfc.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExpressionProcessor;
+import software.wings.sm.rollback.RollbackStateMachineGenerator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,6 +58,8 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
+
 /**
  * The Class InstanceExpressionProcessor.
  */
@@ -436,11 +439,20 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     if (phaseElement == null) {
       return null;
     }
-    String suffix = phaseElement.isRollback() ? phaseElement.getPhaseNameForRollback() : phaseElement.getPhaseName();
+    String suffix = getSweepingOutputNameSuffix(phaseElement);
     return (ServiceInstanceIdsParam) sweepingOutputService.findSweepingOutput(
         context.prepareSweepingOutputInquiryBuilder()
             .name(ServiceInstanceIdsParam.SERVICE_INSTANCE_IDS_PARAMS + suffix)
             .build());
+  }
+
+  private String getSweepingOutputNameSuffix(@NotNull PhaseElement phaseElement) {
+    String phaseName = phaseElement.isRollback() ? phaseElement.getPhaseNameForRollback() : phaseElement.getPhaseName();
+    if (phaseElement.isOnDemandRollback()) {
+      return phaseName.replace(
+          RollbackStateMachineGenerator.STAGING_PHASE_NAME + RollbackStateMachineGenerator.WHITE_SPACE, "");
+    }
+    return phaseName;
   }
 
   private List<Service> getServices(String appId) {

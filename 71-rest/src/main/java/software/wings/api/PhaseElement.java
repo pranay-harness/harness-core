@@ -48,6 +48,7 @@ public class PhaseElement implements ContextElement {
   private String infraDefinitionId;
   private String workflowExecutionId;
   private boolean rollback;
+  private boolean onDemandRollback;
 
   @Override
   public ContextElementType getElementType() {

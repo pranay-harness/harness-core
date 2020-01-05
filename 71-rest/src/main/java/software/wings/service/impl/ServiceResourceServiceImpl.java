@@ -80,6 +80,7 @@ import io.harness.validation.PersistenceValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -170,6 +171,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByService;
@@ -287,6 +289,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private ApplicationManifestUtils applicationManifestUtils;
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   /**
    * {@inheritDoc}
@@ -2101,6 +2104,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Artifact findPreviousArtifact(String appId, String workflowExecutionId, ContextElement instanceElement) {
+    FindOptions findOptions = new FindOptions();
+    if (workflowExecutionService.checkIfOnDemand(appId, workflowExecutionId)) {
+      findOptions = findOptions.skip(1);
+    }
     Activity activity = wingsPersistence.createQuery(Activity.class)
                             .filter(ActivityKeys.appId, appId)
                             .filter(ActivityKeys.serviceInstanceId, instanceElement.getUuid())
@@ -2110,7 +2117,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                             .field(ActivityKeys.artifactId)
                             .exists()
                             .order(Sort.descending(ActivityKeys.createdAt))
-                            .get();
+                            .get(findOptions);
 
     if (activity == null) {
       return null;

@@ -229,6 +229,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
                                     .rollback(false)
                                     .phaseName("Phase 1")
                                     .phaseNameForRollback("Rollback Phase 1")
+                                    .onDemandRollback(false)
                                     .build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
@@ -340,6 +341,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
                                     .rollback(false)
                                     .phaseName("Phase 1")
                                     .phaseNameForRollback("Rollback Phase 1")
+                                    .onDemandRollback(false)
                                     .build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
@@ -516,6 +518,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
                                     .rollback(false)
                                     .phaseName("Phase 1")
                                     .phaseNameForRollback("Rollback Phase 1")
+                                    .onDemandRollback(false)
                                     .build();
     injector.injectMembers(context);
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
