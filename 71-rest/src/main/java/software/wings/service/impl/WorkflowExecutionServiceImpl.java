@@ -45,6 +45,7 @@ import static software.wings.beans.ElementExecutionSummary.ElementExecutionSumma
 import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.FeatureName.NODE_AGGREGATION;
+import static software.wings.beans.FeatureName.SSH_WINRM_SO;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER;
@@ -3366,6 +3367,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private WorkflowExecution fetchLastSuccessDeployment(WorkflowExecution workflowExecution) {
+    FindOptions findOptions = new FindOptions();
     Query<WorkflowExecution> workflowExecutionQuery =
         wingsPersistence.createQuery(WorkflowExecution.class)
             .filter(WorkflowExecutionKeys.status, SUCCESS)
@@ -3374,8 +3376,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
       workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, workflowExecution.getInfraMappingIds());
     }
-
-    return workflowExecutionQuery.order("-createdAt").get();
+    if (workflowExecution.isOnDemandRollback()) {
+      findOptions = findOptions.skip(1);
+    }
+    return workflowExecutionQuery.order("-createdAt").get(findOptions);
   }
 
   @Override
@@ -3886,8 +3890,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return false;
     } else {
       InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefId.get(0));
-      return infrastructureDefinition != null
-          && infrastructureDefinition.getDeploymentType().equals(DeploymentType.PCF);
+      return infrastructureDefinition != null && rollbackEnabledForDeploymentType(infrastructureDefinition);
     }
+  }
+
+  private boolean rollbackEnabledForDeploymentType(InfrastructureDefinition infrastructureDefinition) {
+    return DeploymentType.PCF == infrastructureDefinition.getDeploymentType()
+        || ((DeploymentType.SSH == infrastructureDefinition.getDeploymentType()
+                || DeploymentType.WINRM == infrastructureDefinition.getDeploymentType())
+               && featureFlagService.isEnabled(
+                      SSH_WINRM_SO, appService.getAccountIdByAppId(infrastructureDefinition.getAppId())));
   }
 }

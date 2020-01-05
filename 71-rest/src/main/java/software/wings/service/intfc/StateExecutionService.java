@@ -19,6 +19,8 @@ public interface StateExecutionService {
 
   List<String> phaseNames(String appId, String executionUuid);
 
+  int getRollingPhaseCount(String appId, String executionUuid);
+
   enum CurrentPhase { INCLUDE, EXCLUDE }
 
   List<StateExecutionData> fetchPhaseExecutionData(
