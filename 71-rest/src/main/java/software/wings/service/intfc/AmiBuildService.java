@@ -21,6 +21,7 @@ public interface AmiBuildService extends BuildService<AwsConfig> {
    * @param awsConfig                the aws cloud provider config
    * @return the builds
    */
+  @Override
   @DelegateTaskType(TaskType.AMI_GET_BUILDS)
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails);

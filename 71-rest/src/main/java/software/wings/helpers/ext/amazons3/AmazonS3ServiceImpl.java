@@ -220,6 +220,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     return listObjectsV2Request;
   }
 
+  @Override
   public Pair<String, InputStream> downloadArtifact(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, String key) {
     S3Object object = awsHelperService.getObjectFromS3(awsConfig, encryptionDetails, bucketName, key);
@@ -261,6 +262,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         .build();
   }
 
+  @Override
   public Long getFileSize(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, String key) {
     ObjectMetadata objectMetadata =

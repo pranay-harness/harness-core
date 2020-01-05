@@ -7,5 +7,5 @@ import software.wings.stencils.Stencil;
  * Created by peeyushaggarwal on 6/27/16.
  */
 public interface CommandUnitDescriptor extends Stencil<CommandUnit> {
-  @JsonIgnore Class<? extends CommandUnit> getTypeClass();
+  @Override @JsonIgnore Class<? extends CommandUnit> getTypeClass();
 }

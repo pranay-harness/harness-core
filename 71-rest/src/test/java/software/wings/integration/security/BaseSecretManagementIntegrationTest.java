@@ -55,6 +55,7 @@ public abstract class BaseSecretManagementIntegrationTest extends BaseIntegratio
 
   protected KmsConfig kmsConfig;
 
+  @Override
   @Before
   public void setUp() {
     super.loginAdminUser();

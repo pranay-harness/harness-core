@@ -7,6 +7,7 @@ public class VersionCommand extends AbstractExecutable {
 
   Kubectl client;
 
+  @Override
   public String command() {
     StringBuilder command = new StringBuilder();
     command.append(client.command()).append("version");

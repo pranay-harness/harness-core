@@ -25,6 +25,7 @@ public class AmazonS3HelmRepoConfigYamlHandler extends HelmRepoYamlHandler<Yaml,
     return yaml;
   }
 
+  @Override
   protected SettingAttribute toBean(
       SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;

@@ -833,6 +833,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         .build();
   }
 
+  @Override
   @VisibleForTesting
   public void saveMetricTemplates(String appId, StateType stateType, String stateExecutionId,
       Map<String, TimeSeriesMetricDefinition> metricTemplates) {

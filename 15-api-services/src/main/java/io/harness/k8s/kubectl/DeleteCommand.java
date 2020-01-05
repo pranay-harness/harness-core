@@ -29,6 +29,7 @@ public class DeleteCommand extends AbstractExecutable {
     return this;
   }
 
+  @Override
   public String command() {
     StringBuilder command = new StringBuilder();
     command.append(client.command()).append("delete ");

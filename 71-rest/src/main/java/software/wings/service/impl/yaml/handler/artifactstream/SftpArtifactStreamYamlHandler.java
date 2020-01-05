@@ -26,6 +26,7 @@ public class SftpArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yam
     return new SftpArtifactStream();
   }
 
+  @Override
   protected void toBean(SftpArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();

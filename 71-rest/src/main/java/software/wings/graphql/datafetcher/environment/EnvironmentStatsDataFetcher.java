@@ -51,6 +51,7 @@ public class EnvironmentStatsDataFetcher
     return getQLData(accountId, filters, entityClass, groupByEntityList);
   }
 
+  @Override
   public String getAggregationFieldName(String aggregation) {
     QLEnvironmentEntityAggregation qlEnvironmentAggregation = QLEnvironmentEntityAggregation.valueOf(aggregation);
     switch (qlEnvironmentAggregation) {

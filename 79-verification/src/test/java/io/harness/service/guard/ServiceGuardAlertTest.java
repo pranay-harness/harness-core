@@ -43,6 +43,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 @Slf4j
 public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

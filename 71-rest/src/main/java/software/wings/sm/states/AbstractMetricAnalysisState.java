@@ -360,6 +360,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         context.getStateExecutionInstanceId(), ExecutionStatus.ABORTED, true, false);
   }
 
+  @Override
   protected ExecutionResponse generateAnalysisResponse(
       AnalysisContext context, ExecutionStatus status, String message) {
     NewRelicMetricAnalysisRecord metricAnalysisRecord = NewRelicMetricAnalysisRecord.builder()

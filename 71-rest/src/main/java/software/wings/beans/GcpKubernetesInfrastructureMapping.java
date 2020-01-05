@@ -80,6 +80,7 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
     }
   }
 
+  @Override
   public String getReleaseName() {
     return isEmpty(releaseName) ? INFRA_KUBERNETES_INFRAID_EXPRESSION : releaseName;
   }

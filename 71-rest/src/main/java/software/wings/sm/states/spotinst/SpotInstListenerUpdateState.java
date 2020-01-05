@@ -72,6 +72,7 @@ public class SpotInstListenerUpdateState extends State {
     super(name, stateType);
   }
 
+  @Override
   public boolean isRollback() {
     return false;
   }

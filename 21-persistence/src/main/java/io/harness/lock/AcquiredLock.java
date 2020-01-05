@@ -7,5 +7,5 @@ import java.io.Closeable;
 public interface AcquiredLock extends Closeable {
   DistributedLock getLock();
   void release();
-  void close();
+  @Override void close();
 }

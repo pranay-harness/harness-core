@@ -14,18 +14,22 @@ public class UnmapRouteState extends MapRouteState {
   @Attributes(title = "Map Route")
   private String route;
 
+  @Override
   public String getPcfAppName() {
     return pcfAppName;
   }
 
+  @Override
   public void setPcfAppName(String pcfAppName) {
     this.pcfAppName = pcfAppName;
   }
 
+  @Override
   public String getRoute() {
     return route;
   }
 
+  @Override
   public void setRoute(String route) {
     this.route = route;
   }

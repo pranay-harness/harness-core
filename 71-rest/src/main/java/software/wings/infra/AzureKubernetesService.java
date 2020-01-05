@@ -42,6 +42,7 @@ public class AzureKubernetesService
         .build();
   }
 
+  @Override
   public String getReleaseName() {
     return isEmpty(releaseName) ? INFRA_KUBERNETES_INFRAID_EXPRESSION : releaseName;
   }
@@ -51,6 +52,7 @@ public class AzureKubernetesService
     return AzureKubernetesInfrastructureMapping.class;
   }
 
+  @Override
   public String getInfrastructureType() {
     return AZURE_KUBERNETES;
   }

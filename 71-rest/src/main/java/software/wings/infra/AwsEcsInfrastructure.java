@@ -73,6 +73,7 @@ public class AwsEcsInfrastructure
     return EcsInfrastructureMapping.class;
   }
 
+  @Override
   public String getInfrastructureType() {
     return AWS_ECS;
   }

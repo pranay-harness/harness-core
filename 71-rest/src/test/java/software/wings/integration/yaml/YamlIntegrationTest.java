@@ -65,6 +65,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceTemplateService serviceTemplateService;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

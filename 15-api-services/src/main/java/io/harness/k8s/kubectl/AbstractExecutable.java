@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 public abstract class AbstractExecutable implements Executable {
+  @Override
   public ProcessResult execute(String directory, OutputStream output, OutputStream error, boolean printCommand)
       throws Exception {
     String command = this.command();
@@ -18,6 +19,7 @@ public abstract class AbstractExecutable implements Executable {
     return Utils.executeScript(directory, command, output, error);
   }
 
+  @Override
   public StartedProcess executeInBackground(String directory, OutputStream output, OutputStream error)
       throws Exception {
     return Utils.startScript(directory, this.command(), output, error);

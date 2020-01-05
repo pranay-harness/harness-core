@@ -89,10 +89,12 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
     }
   }
 
+  @Override
   public DataCollectionTaskResult run(Object[] parameters) {
     throw new NotImplementedException("not supported. use DataCollectionTaskResult run(TaskParameters parameters)");
   }
 
+  @Override
   public DataCollectionTaskResult run(TaskParameters parameters) {
     try {
       DataCollectionTaskResult taskResult = initDataCollection(parameters);

@@ -250,6 +250,7 @@ public class AlertServiceImpl implements AlertService {
     }
   }
 
+  @Override
   public Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
     try (AutoLogContext ignore = new AlertLogContext(accountId, alertType, appId, OVERRIDE_ERROR)) {
       logger.info("Finding existing alerts");

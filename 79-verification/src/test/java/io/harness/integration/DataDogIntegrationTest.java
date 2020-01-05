@@ -72,6 +72,7 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
   @Inject private WingsPersistence wingsPersistence;
   private MetricDataAnalysisService metricDataAnalysisService;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

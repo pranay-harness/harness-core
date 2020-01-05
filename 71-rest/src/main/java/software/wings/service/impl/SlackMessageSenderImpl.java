@@ -36,6 +36,7 @@ import java.io.IOException;
 public class SlackMessageSenderImpl implements SlackMessageSender {
   private static final String WHITE_COLOR = "#FFFFFF";
 
+  @Override
   public void send(SlackMessage slackMessage, boolean sendFromDelegate) {
     String outgoingWebhookUrl = slackMessage.getOutgoingWebhookUrl();
     String slackChannel = slackMessage.getSlackChannel();

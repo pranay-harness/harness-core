@@ -22,6 +22,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
   private KmsConfig globalKmsDefault;
   private KmsConfig globalKmsBackup;
 
+  @Override
   @Before
   public void setUp() {
     super.setUp();

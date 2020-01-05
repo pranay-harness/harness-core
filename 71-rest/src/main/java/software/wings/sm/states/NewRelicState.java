@@ -83,6 +83,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     super(name, StateType.NEW_RELIC);
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
@@ -93,6 +94,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
+  @Override
   @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
   @DefaultValue("15")
   public String getTimeDuration() {
@@ -102,6 +104,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     return timeDuration;
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
   @Attributes(required = true, title = "Algorithm Sensitivity")
   @DefaultValue("MEDIUM")
@@ -112,6 +115,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     return AnalysisTolerance.valueOf(tolerance);
   }
 
+  @Override
   @Attributes(required = true, title = "Include nodes from previous phases")
   public boolean getIncludePreviousPhaseNodes() {
     return includePreviousPhaseNodes;
@@ -345,11 +349,13 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     return null;
   }
 
+  @Override
   @Attributes(required = false, title = "Expression for Host/Container name")
   public String getHostnameTemplate() {
     return hostnameTemplate;
   }
 
+  @Override
   public void setHostnameTemplate(String hostnameTemplate) {
     this.hostnameTemplate = hostnameTemplate;
   }

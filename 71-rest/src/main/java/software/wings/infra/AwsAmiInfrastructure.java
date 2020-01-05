@@ -90,6 +90,7 @@ public class AwsAmiInfrastructure
     return AwsAmiInfrastructureMapping.class;
   }
 
+  @Override
   public String getInfrastructureType() {
     return AWS_AMI;
   }

@@ -508,10 +508,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     return update(artifactStream, true);
   }
 
+  @Override
   public ArtifactStream update(ArtifactStream artifactStream, boolean validate) {
     return update(artifactStream, validate, false);
   }
 
+  @Override
   public ArtifactStream update(ArtifactStream artifactStream, boolean validate, boolean fromTemplate) {
     ArtifactStream existingArtifactStream = wingsPersistence.get(ArtifactStream.class, artifactStream.getUuid());
     if (existingArtifactStream == null) {

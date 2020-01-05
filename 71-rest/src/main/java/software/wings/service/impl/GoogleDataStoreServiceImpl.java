@@ -98,6 +98,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
         .build();
   }
 
+  @Override
   public <T extends GoogleDataStoreAware> T getEntity(Class<T> clazz, String id) {
     Key keyToFetch = datastore.newKeyFactory()
                          .setKind(clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
@@ -109,6 +110,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     }
   }
 
+  @Override
   public <T extends GoogleDataStoreAware> void incrementField(
       Class<T> clazz, String id, String fieldName, int incrementCount) {
     Transaction txn = datastore.newTransaction();

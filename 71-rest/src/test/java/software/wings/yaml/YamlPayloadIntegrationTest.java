@@ -17,6 +17,7 @@ public class YamlPayloadIntegrationTest extends BaseIntegrationTest {
   private final String TEST_YAML_PUT =
       "--- # app.yaml for new Application\nname: " + TEST_NAME_PUT + "\ndescription: " + TEST_DESCRIPTION_PUT;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     loginAdminUser();

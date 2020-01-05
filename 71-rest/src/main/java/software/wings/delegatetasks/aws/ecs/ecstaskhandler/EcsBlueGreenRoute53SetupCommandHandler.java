@@ -29,6 +29,7 @@ import java.util.List;
 public class EcsBlueGreenRoute53SetupCommandHandler extends EcsCommandTaskHandler {
   @Inject private EcsSetupCommandTaskHelper ecsSetupCommandTaskHelper;
 
+  @Override
   public EcsCommandExecutionResponse executeTaskInternal(EcsCommandRequest ecsCommandRequest,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     try {

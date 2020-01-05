@@ -28,6 +28,7 @@ public class AzureResourceServiceImpl implements AzureResourceService {
   @Inject private SettingsService settingService;
   @Inject private SecretManager secretManager;
 
+  @Override
   public Map<String, String> listSubscriptions(String cloudProviderId) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
@@ -35,6 +36,7 @@ public class AzureResourceServiceImpl implements AzureResourceService {
         azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null));
   }
 
+  @Override
   public List<String> listContainerRegistryNames(String cloudProviderId, String subscriptionId) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
@@ -42,6 +44,7 @@ public class AzureResourceServiceImpl implements AzureResourceService {
         azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId);
   }
 
+  @Override
   public List<AzureContainerRegistry> listContainerRegistries(String cloudProviderId, String subscriptionId) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
@@ -49,6 +52,7 @@ public class AzureResourceServiceImpl implements AzureResourceService {
         azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId);
   }
 
+  @Override
   public List<String> listRepositories(String cloudProviderId, String subscriptionId, String registryName) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
@@ -56,6 +60,7 @@ public class AzureResourceServiceImpl implements AzureResourceService {
         azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId, registryName);
   }
 
+  @Override
   public List<String> listRepositoryTags(
       String cloudProviderId, String subscriptionId, String registryName, String repositoryName) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
@@ -64,6 +69,7 @@ public class AzureResourceServiceImpl implements AzureResourceService {
         secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId, registryName, repositoryName);
   }
 
+  @Override
   public List<AzureKubernetesCluster> listKubernetesClusters(String cloudProviderId, String subscriptionId) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);

@@ -122,6 +122,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
         workflowPath.add(workflowYamlFileName), yamlGitSyncService, Type.WORKFLOW));
 
     doAnswer(new Answer() {
+      @Override
       public Object answer(InvocationOnMock invocation) {
         Object[] args = invocation.getArguments();
         gitFileChangeList = (List<GitFileChange>) args[4];
@@ -186,6 +187,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
   private void testEntityClone(String newPathForEntity, EntityType entityType, String entityId, String newEntityName)
       throws Exception {
     doAnswer(new Answer() {
+      @Override
       public Object answer(InvocationOnMock invocation) {
         Object[] args = invocation.getArguments();
         gitFileChangeList = (List<GitFileChange>) args[4];

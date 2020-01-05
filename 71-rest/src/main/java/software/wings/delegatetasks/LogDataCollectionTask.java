@@ -250,6 +250,7 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
       }
     }
 
+    @Override
     @SuppressWarnings("PMD")
     public void run() {
       int retry = 0;

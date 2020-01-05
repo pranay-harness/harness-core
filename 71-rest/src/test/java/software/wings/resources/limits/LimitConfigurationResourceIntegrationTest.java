@@ -30,6 +30,7 @@ import javax.ws.rs.core.GenericType;
 public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTest {
   @Inject private LimitConfigurationServiceMongo limits;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

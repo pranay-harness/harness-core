@@ -7,5 +7,5 @@ import software.wings.stencils.Stencil;
  * Created by anubhaw on 2/6/17.
  */
 public interface ContainerTaskTypeDescriptor extends Stencil<ContainerTask> {
-  @JsonIgnore Class<? extends ContainerTask> getTypeClass();
+  @Override @JsonIgnore Class<? extends ContainerTask> getTypeClass();
 }

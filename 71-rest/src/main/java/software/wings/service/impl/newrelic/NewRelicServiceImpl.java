@@ -349,6 +349,7 @@ public class NewRelicServiceImpl implements NewRelicService {
     }
   }
 
+  @Override
   public Map<String, TimeSeriesMetricDefinition> metricDefinitions(Collection<Metric> metrics) {
     Map<String, TimeSeriesMetricDefinition> metricDefinitionByName = new HashMap<>();
     for (Metric metric : metrics) {
@@ -388,6 +389,7 @@ public class NewRelicServiceImpl implements NewRelicService {
    * @param metricNames - List[String] containing metric names
    * @return - Map[String, Metric], a mapping from metric name to {@link Metric}
    */
+  @Override
   public Map<String, Metric> getMetricsCorrespondingToMetricNames(List<String> metricNames) {
     Map<String, Metric> metricMap = new HashMap<>();
     try {
@@ -442,6 +444,7 @@ public class NewRelicServiceImpl implements NewRelicService {
    * and return the metrics as a list.
    * @return List[Metric]
    */
+  @Override
   public List<Metric> getListOfMetrics() {
     try {
       Map<String, List<Metric>> metricsMap = getMetricsFromYaml(VerificationConstants.getNewRelicMetricsYamlUrl());

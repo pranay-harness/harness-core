@@ -73,6 +73,7 @@ public class NexusArtifactStream extends ArtifactStream {
     this.groupId = groupId;
     this.imageName = groupId;
   }
+  @Override
   public String fetchArtifactDisplayName(String buildNo) {
     if (isNotEmpty(artifactPaths)) {
       return format("%s_%s_%s", getSourceName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()));

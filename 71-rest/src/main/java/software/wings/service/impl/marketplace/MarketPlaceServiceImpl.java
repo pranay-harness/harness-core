@@ -16,6 +16,7 @@ import java.util.Optional;
 public class MarketPlaceServiceImpl implements MarketPlaceService {
   @Inject private WingsPersistence wingsPersistence;
 
+  @Override
   public Optional<MarketPlace> fetchMarketplace(String customerIdentificationCode, MarketPlaceType marketPlaceType) {
     MarketPlace marketPlace = wingsPersistence.createQuery(MarketPlace.class)
                                   .field("type")

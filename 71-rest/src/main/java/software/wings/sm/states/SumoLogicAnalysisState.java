@@ -59,6 +59,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
   @Attributes(required = true, title = "Algorithm Sensitivity")
   @DefaultValue("MEDIUM")
@@ -69,6 +70,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
     return AnalysisTolerance.valueOf(tolerance);
   }
 
+  @Override
   @Attributes(required = true, title = "Search Keywords")
   @DefaultValue("*exception*")
   public String getQuery() {
@@ -193,15 +195,18 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
     this.hostnameField = hostnameField;
   }
 
+  @Override
   @Attributes(required = false, title = "Expression for Host/Container name")
   public String getHostnameTemplate() {
     return hostnameTemplate;
   }
 
+  @Override
   public void setHostnameTemplate(String hostnameTemplate) {
     this.hostnameTemplate = hostnameTemplate;
   }
 
+  @Override
   @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
   @DefaultValue("15")
   public String getTimeDuration() {

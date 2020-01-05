@@ -125,6 +125,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
     return analysisServerConfigId;
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
@@ -135,6 +136,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
   @Attributes(required = true, title = "Algorithm Sensitivity")
   @DefaultValue("MEDIUM")
@@ -145,6 +147,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
     return AnalysisTolerance.valueOf(tolerance);
   }
 
+  @Override
   @Attributes(title = "Analysis Time duration (in minutes)")
   @DefaultValue("15")
   public String getTimeDuration() {
@@ -154,29 +157,34 @@ public class LogzAnalysisState extends ElkAnalysisState {
     return timeDuration;
   }
 
+  @Override
   @Attributes(required = true, title = "Search Keywords")
   @DefaultValue(".*[e|E]xception.*")
   public String getQuery() {
     return query;
   }
 
+  @Override
   @SchemaIgnore
   public String getIndices() {
     return indices;
   }
 
+  @Override
   @Attributes(required = true, title = "Hostname Field")
   @DefaultValue("hostname")
   public String getHostnameField() {
     return hostnameField;
   }
 
+  @Override
   @Attributes(required = true, title = "Message Field")
   @DefaultValue("message")
   public String getMessageField() {
     return messageField;
   }
 
+  @Override
   @Attributes(title = "Execute with previous steps")
   public boolean getExecuteWithPreviousSteps() {
     return super.isExecuteWithPreviousSteps();
@@ -196,11 +204,13 @@ public class LogzAnalysisState extends ElkAnalysisState {
     return super.getTimestampFormat();
   }
 
+  @Override
   @Attributes(required = false, title = "Expression for Host/Container name")
   public String getHostnameTemplate() {
     return hostnameTemplate;
   }
 
+  @Override
   public void setHostnameTemplate(String hostnameTemplate) {
     this.hostnameTemplate = hostnameTemplate;
   }

@@ -20,6 +20,7 @@ public class NoFieldShadowingRule implements Rule {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void evaluate(final PojoClass pojoClass) {
     final List<PojoField> parentPojoFields = new LinkedList<>();
     PojoClass parentPojoClass = pojoClass.getSuperClass();

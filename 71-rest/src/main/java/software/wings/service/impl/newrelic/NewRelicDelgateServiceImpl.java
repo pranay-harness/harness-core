@@ -435,6 +435,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     }
   }
 
+  @Override
   public Set<NewRelicMetric> getTxnsWithDataInLastHour(Collection<NewRelicMetric> metrics,
       NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails, long applicationId,
       boolean checkNotAllowedStrings, ThirdPartyApiCallLog apiCallLog) {

@@ -31,14 +31,17 @@ public class ExecutionLogCallback implements LogCallback {
     this.commandName = commandName;
   }
 
+  @Override
   public void saveExecutionLog(String line) {
     saveExecutionLog(line, LogLevel.INFO);
   }
 
+  @Override
   public void saveExecutionLog(String line, LogLevel logLevel) {
     saveExecutionLog(line, logLevel, CommandExecutionStatus.RUNNING);
   }
 
+  @Override
   public void saveExecutionLog(String line, LogLevel logLevel, CommandExecutionStatus commandExecutionStatus) {
     if (logService != null) {
       logService.save(accountId,

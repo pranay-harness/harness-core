@@ -65,6 +65,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
         .build();
   }
 
+  @Override
   public InfrastructureDefinition upsertFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
@@ -125,6 +126,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
     }
   }
 
+  @Override
   public InfrastructureDefinition get(String accountId, String yamlFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
     notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId, USER);

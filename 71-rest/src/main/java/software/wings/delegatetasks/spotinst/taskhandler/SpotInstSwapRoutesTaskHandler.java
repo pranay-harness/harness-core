@@ -39,6 +39,7 @@ import java.util.Optional;
 @NoArgsConstructor
 @Slf4j
 public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
+  @Override
   protected SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,
       SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception {
     if (!(spotInstTaskParameters instanceof SpotInstSwapRoutesTaskParameters)) {

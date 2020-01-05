@@ -74,11 +74,13 @@ public class SimpleEncryption implements EncryptionInterface {
     this.secretKey = generateSecretKey(key, salt);
   }
 
+  @Override
   @JsonIgnore
   public SecretKey getSecretKey() {
     return this.secretKey;
   }
 
+  @Override
   public byte[] encrypt(byte[] content) {
     try {
       Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");
@@ -107,6 +109,7 @@ public class SimpleEncryption implements EncryptionInterface {
     return CHARSET.decode(ByteBuffer.wrap(encrypted)).array();
   }
 
+  @Override
   public byte[] decrypt(byte[] encrypted) {
     try {
       byte[] newSalt = new byte[EncryptionUtils.DEFAULT_SALT_SIZE];

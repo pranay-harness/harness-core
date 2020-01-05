@@ -125,11 +125,13 @@ public abstract class InfrastructureMapping
   public abstract void applyProvisionerVariables(
       Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled);
 
+  @Override
   @SchemaIgnore
   public String getAccountId() {
     return accountId;
   }
 
+  @Override
   public void setAccountId(String accountId) {
     this.accountId = accountId;
   }
@@ -272,6 +274,7 @@ public abstract class InfrastructureMapping
     return super.getUuid();
   }
 
+  @Override
   public String getName() {
     return name;
   }

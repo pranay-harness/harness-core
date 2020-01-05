@@ -29,6 +29,7 @@ public class DescribeCommand extends AbstractExecutable {
     return this;
   }
 
+  @Override
   public String command() {
     StringBuilder command = new StringBuilder();
     command.append(this.client.command()).append("describe ");

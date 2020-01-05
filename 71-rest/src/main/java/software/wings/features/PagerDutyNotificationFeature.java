@@ -36,6 +36,7 @@ public class PagerDutyNotificationFeature extends AbstractNotificationFeature {
   }
 
   // Get usages of PagerDuty under user groups
+  @Override
   protected List<Usage> getUsages(String accountId) {
     return getUserGroups(accountId)
         .stream()

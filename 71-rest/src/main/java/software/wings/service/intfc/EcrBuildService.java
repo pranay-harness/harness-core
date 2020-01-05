@@ -22,17 +22,21 @@ public interface EcrBuildService extends BuildService<AwsConfig> {
    * @param awsConfig                the aws cloud provider config
    * @return the builds
    */
+  @Override
   @DelegateTaskType(TaskType.ECR_GET_BUILDS)
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails);
 
+  @Override
   @DelegateTaskType(TaskType.ECR_VALIDATE_ARTIFACT_STREAM)
   boolean validateArtifactSource(
       AwsConfig config, List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes);
 
+  @Override
   @DelegateTaskType(TaskType.ECR_GET_PLANS)
   Map<String, String> getPlans(AwsConfig config, List<EncryptedDataDetail> encryptionDetails);
 
+  @Override
   @DelegateTaskType(TaskType.ECR_GET_ARTIFACT_PATHS)
   List<String> getArtifactPaths(
       String region, String groupId, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);

@@ -46,6 +46,7 @@ public class BugsnagDelegateServiceImpl implements BugsnagDelegateService {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
 
+  @Override
   public Set<BugsnagApplication> getOrganizations(
       BugsnagConfig config, List<EncryptedDataDetail> encryptedDataDetails, ThirdPartyApiCallLog apiCallLog) {
     try {
@@ -69,6 +70,7 @@ public class BugsnagDelegateServiceImpl implements BugsnagDelegateService {
     }
     return null;
   }
+  @Override
   public Set<BugsnagApplication> getProjects(BugsnagConfig config, String orgId,
       List<EncryptedDataDetail> encryptedDataDetails, ThirdPartyApiCallLog apiCallLog) {
     try {

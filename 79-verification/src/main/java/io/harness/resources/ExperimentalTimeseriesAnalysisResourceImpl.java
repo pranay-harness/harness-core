@@ -54,6 +54,7 @@ public class ExperimentalTimeseriesAnalysisResourceImpl implements ExperimentalM
    * @param mlAnalysisResponse
    * @return {@link RestResponse}
    */
+  @Override
   @Produces({"application/json", "application/v1+json"})
   @POST
   @Path(ExperimentalMetricAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL)
@@ -87,6 +88,7 @@ public class ExperimentalTimeseriesAnalysisResourceImpl implements ExperimentalM
         mlAnalysisResponse, null));
   }
 
+  @Override
   @Produces({"application/json", "application/v1+json"})
   @GET
   @Path(ExperimentalMetricAnalysisResource.GET_METRIC_TEMPLATE)

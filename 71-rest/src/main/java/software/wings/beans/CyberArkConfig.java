@@ -48,6 +48,7 @@ public class CyberArkConfig extends SecretManagerConfig {
     return EncryptionType.CYBERARK + "-" + getName() + "-" + getUuid();
   }
 
+  @Override
   public EncryptionType getEncryptionType() {
     return EncryptionType.CYBERARK;
   }

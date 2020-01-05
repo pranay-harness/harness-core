@@ -61,6 +61,7 @@ public class AwsLambdaInfrastructure
     return CloudProviderType.AWS;
   }
 
+  @Override
   public String getInfrastructureType() {
     return AWS_LAMBDA;
   }

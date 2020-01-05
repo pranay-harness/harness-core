@@ -15,6 +15,7 @@ public abstract class AbstractArrayDataFetcher<T, P> extends PlainObjectBaseData
   // doesn't do any optimization around that.
   protected abstract T unusedReturnTypePassingDummyMethod();
 
+  @Override
   protected Object fetchPlainObject(P parameters, String accountId) {
     return fetch(parameters, accountId);
   }

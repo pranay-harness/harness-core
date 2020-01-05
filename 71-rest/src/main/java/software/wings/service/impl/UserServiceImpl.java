@@ -1077,6 +1077,7 @@ public class UserServiceImpl implements UserService {
     return completeTrialSignupAndSignIn(userInvite);
   }
 
+  @Override
   public User completePaidSignupAndSignIn(UserInvite userInvite) {
     String accountName = accountService.suggestAccountName(userInvite.getAccountName());
     String companyName = userInvite.getCompanyName();
@@ -1093,6 +1094,7 @@ public class UserServiceImpl implements UserService {
     return authenticationManager.defaultLoginUsingPasswordHash(userInvite.getEmail(), userInvite.getPasswordHash());
   }
 
+  @Override
   public User completeTrialSignupAndSignIn(UserInvite userInvite) {
     String accountName = accountService.suggestAccountName(userInvite.getAccountName());
     String companyName = userInvite.getCompanyName();
@@ -1576,6 +1578,7 @@ public class UserServiceImpl implements UserService {
     return BCrypt.checkpw(new String(password), hash);
   }
 
+  @Override
   public User save(User user, String accountId) {
     user = wingsPersistence.saveAndGet(User.class, user);
     evictUserFromCache(user.getUuid());
@@ -1700,6 +1703,7 @@ public class UserServiceImpl implements UserService {
     return applyUpdateOperations(user, operations);
   }
 
+  @Override
   public User applyUpdateOperations(User user, UpdateOperations<User> updateOperations) {
     wingsPersistence.update(user, updateOperations);
     evictUserFromCache(user.getUuid());
@@ -2264,6 +2268,7 @@ public class UserServiceImpl implements UserService {
         .collect(Collectors.toList());
   }
 
+  @Override
   public AuthenticationMechanism getAuthenticationMechanism(User user) {
     return getPrimaryAccount(user).getAuthenticationMechanism();
   }
@@ -2339,6 +2344,7 @@ public class UserServiceImpl implements UserService {
     return true;
   }
 
+  @Override
   public void sendPasswordExpirationWarning(String email, Integer passExpirationDays) {
     User user = getUserByEmail(email);
 
@@ -2357,6 +2363,7 @@ public class UserServiceImpl implements UserService {
     }
   }
 
+  @Override
   public String createSignupSecretToken(String email, Integer passExpirationDays) {
     String jwtPasswordSecret = getJwtSecret();
     try {
@@ -2392,6 +2399,7 @@ public class UserServiceImpl implements UserService {
     }
   }
 
+  @Override
   public void sendPasswordExpirationMail(String email) {
     User user = getUserByEmail(email);
 
@@ -2502,6 +2510,7 @@ public class UserServiceImpl implements UserService {
     emailNotificationService.send(emailData);
   }
 
+  @Override
   public Account getAccountByIdIfExistsElseGetDefaultAccount(User user, Optional<String> accountId) {
     if (accountId.isPresent()) {
       // First check if the user is associated with the account.
@@ -2536,6 +2545,7 @@ public class UserServiceImpl implements UserService {
     return result;
   }
 
+  @Override
   public String saveUserInvite(UserInvite userInvite) {
     return wingsPersistence.save(userInvite);
   }

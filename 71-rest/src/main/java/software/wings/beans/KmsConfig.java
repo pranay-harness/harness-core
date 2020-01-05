@@ -62,6 +62,7 @@ public class KmsConfig extends SecretManagerConfig implements ExecutionCapabilit
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapabilityForKms(region));
   }
 
+  @Override
   public EncryptionType getEncryptionType() {
     return EncryptionType.KMS;
   }
@@ -72,6 +73,7 @@ public class KmsConfig extends SecretManagerConfig implements ExecutionCapabilit
     this.kmsArn = SECRET_MASK;
   }
 
+  @Override
   public boolean isGlobalKms() {
     return Account.GLOBAL_ACCOUNT_ID.equals(getAccountId());
   }

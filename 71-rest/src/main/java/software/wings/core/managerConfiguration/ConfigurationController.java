@@ -63,10 +63,12 @@ public class ConfigurationController implements Managed, QueueController {
     running.set(false);
   }
 
+  @Override
   public boolean isPrimary() {
     return primary.get();
   }
 
+  @Override
   public boolean isNotPrimary() {
     return !primary.get();
   }

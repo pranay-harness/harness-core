@@ -77,6 +77,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
               .maximumSize(10000)
               .expireAfterWrite(2, TimeUnit.MINUTES)
               .build(new CacheLoader<ImmutablePair<String, String>, Optional<DelegateConnectionResult>>() {
+                @Override
                 public Optional<DelegateConnectionResult> load(ImmutablePair<String, String> key) {
                   return Optional.ofNullable(wingsPersistence.createQuery(DelegateConnectionResult.class)
                                                  .filter(DelegateConnectionResultKeys.delegateId, key.getLeft())
@@ -90,6 +91,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
           .maximumSize(1000)
           .expireAfterWrite(1, TimeUnit.MINUTES)
           .build(new CacheLoader<String, List<String>>() {
+            @Override
             public List<String> load(String accountId) {
               return wingsPersistence.createQuery(Delegate.class)
                   .filter(DelegateKeys.accountId, accountId)

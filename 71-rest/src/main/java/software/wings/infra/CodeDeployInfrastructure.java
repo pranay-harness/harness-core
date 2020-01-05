@@ -47,6 +47,7 @@ public class CodeDeployInfrastructure implements InfraMappingInfrastructureProvi
     return CodeDeployInfrastructureMapping.class;
   }
 
+  @Override
   public String getInfrastructureType() {
     return CODE_DEPLOY;
   }

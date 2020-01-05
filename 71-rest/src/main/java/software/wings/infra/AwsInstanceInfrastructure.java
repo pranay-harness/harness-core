@@ -82,6 +82,7 @@ public class AwsInstanceInfrastructure
     return AwsInfrastructureMapping.class;
   }
 
+  @Override
   public String getInfrastructureType() {
     return AWS_INSTANCE;
   }

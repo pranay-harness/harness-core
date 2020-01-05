@@ -76,6 +76,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   private Service service;
   private Environment environment;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());

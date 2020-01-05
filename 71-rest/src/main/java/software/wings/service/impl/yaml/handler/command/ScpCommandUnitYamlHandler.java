@@ -39,6 +39,7 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
     return yaml;
   }
 
+  @Override
   protected ScpCommandUnit toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
     ScpCommandUnit scpCommandUnit = super.toBean(changeContext);
     Yaml yaml = changeContext.getYaml();

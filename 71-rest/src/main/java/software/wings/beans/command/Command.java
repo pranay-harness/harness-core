@@ -108,10 +108,12 @@ public class Command extends Base implements CommandUnit {
     this.commandUnitType = commandUnitType;
   }
 
+  @Override
   public CommandExecutionStatus getCommandExecutionStatus() {
     return commandExecutionStatus;
   }
 
+  @Override
   public void setCommandExecutionStatus(CommandExecutionStatus commandExecutionStatus) {
     this.commandExecutionStatus = commandExecutionStatus;
   }
@@ -311,10 +313,12 @@ public class Command extends Base implements CommandUnit {
     this.templateVersion = templateVersion;
   }
 
+  @Override
   public List<Variable> getVariables() {
     return variables;
   }
 
+  @Override
   public void setVariables(List<Variable> variables) {
     this.variables = variables;
   }

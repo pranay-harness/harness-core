@@ -53,6 +53,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     super(name, StateType.SPLUNKV2.getType());
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
   @Attributes(required = true, title = "Algorithm Sensitivity")
   @DefaultValue("MEDIUM")
@@ -63,6 +64,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     return AnalysisTolerance.valueOf(tolerance);
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
@@ -73,6 +75,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
+  @Override
   @Attributes(title = "Analysis Time duration (in minutes)")
   @DefaultValue("15")
   public String getTimeDuration() {
@@ -82,6 +85,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     return timeDuration;
   }
 
+  @Override
   @Attributes(required = true, title = "Search Keywords")
   @DefaultValue("*exception*")
   public String getQuery() {
@@ -101,11 +105,13 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     this.hostnameField = hostnameField;
   }
 
+  @Override
   @Attributes(required = false, title = "Expression for Host/Container name")
   public String getHostnameTemplate() {
     return hostnameTemplate;
   }
 
+  @Override
   public void setHostnameTemplate(String hostnameTemplate) {
     this.hostnameTemplate = hostnameTemplate;
   }

@@ -297,6 +297,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     return metricsTemplate;
   }
 
+  @Override
   public void setStatisticsAndUnit(AwsNameSpace awsNameSpace, List<CloudWatchMetric> metrics) {
     if (isNotEmpty(metrics)) {
       metrics.stream()

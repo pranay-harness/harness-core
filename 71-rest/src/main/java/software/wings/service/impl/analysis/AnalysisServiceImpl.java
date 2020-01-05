@@ -869,6 +869,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     return analysisSummary;
   }
 
+  @Override
   public void updateClustersWithFeedback(Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap,
       CLUSTER_TYPE type, List<LogMLClusterSummary> clusterList) {
     // first set all the feedback data for which the logMLFeedbackId is already present.
@@ -1066,6 +1067,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
   }
 
+  @Override
   public Object getHostLogRecords(String accountId, String analysisServerConfigId, String index, ElkQueryType queryType,
       String query, String timeStampField, String timeStampFieldFormat, String messageField, String hostNameField,
       String hostName, StateType stateType) {
@@ -1130,6 +1132,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     return searchResponse;
   }
 
+  @Override
   public List<LogMLClusterSummary> computeCluster(Map<String, Map<String, SplunkAnalysisCluster>> cluster,
       Map<String, LogMLScore> clusterScores, CLUSTER_TYPE cluster_type) {
     if (cluster == null) {

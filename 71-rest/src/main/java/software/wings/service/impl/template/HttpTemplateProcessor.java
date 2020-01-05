@@ -52,6 +52,7 @@ public class HttpTemplateProcessor extends StateTemplateProcessor {
     properties.put(SOCKET_TIMEOUT_MILLIS, httpTemplate.getSocketTimeoutMillis());
   }
 
+  @Override
   public List<String> fetchTemplateProperties() {
     return asList(URL, METHOD, HEADER, BODY, ASSERTION);
   }

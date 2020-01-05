@@ -25,6 +25,7 @@ import java.util.Map;
  */
 public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml, B extends ExecCommandUnit>
     extends SshCommandUnitYamlHandler<Y, B> {
+  @Override
   protected void toYaml(Y yaml, B bean) {
     super.toYaml(yaml, bean);
     yaml.setScriptType(bean.getScriptType().name());
@@ -63,6 +64,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
         .collect(toList());
   }
 
+  @Override
   protected B toBean(ChangeContext<Y> changeContext) throws HarnessException {
     B bean = super.toBean(changeContext);
     Y yaml = changeContext.getYaml();

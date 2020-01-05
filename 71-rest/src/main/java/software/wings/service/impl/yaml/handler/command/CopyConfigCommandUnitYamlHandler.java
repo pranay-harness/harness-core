@@ -36,6 +36,7 @@ public class CopyConfigCommandUnitYamlHandler
     return yaml;
   }
 
+  @Override
   protected CopyConfigCommandUnit toBean(ChangeContext<CopyConfigCommandUnit.Yaml> changeContext)
       throws HarnessException {
     CopyConfigCommandUnit copyConfigCommandUnit = super.toBean(changeContext);

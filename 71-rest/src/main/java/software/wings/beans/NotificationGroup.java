@@ -81,6 +81,7 @@ public class NotificationGroup extends Base implements NotificationReceiverInfo,
    *
    * @return the name
    */
+  @Override
   public String getName() {
     return name;
   }
@@ -99,6 +100,7 @@ public class NotificationGroup extends Base implements NotificationReceiverInfo,
    *
    * @return the addresses by channel type
    */
+  @Override
   public Map<NotificationChannelType, List<String>> getAddressesByChannelType() {
     return addressesByChannelType;
   }

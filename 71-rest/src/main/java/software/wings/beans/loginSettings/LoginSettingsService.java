@@ -17,7 +17,7 @@ public interface LoginSettingsService extends OwnedByAccount {
 
   void createDefaultLoginSettings(Account account);
 
-  void deleteByAccountId(@NotNull String accountId);
+  @Override void deleteByAccountId(@NotNull String accountId);
 
   boolean verifyPasswordStrength(Account account, char[] password);
 

@@ -150,6 +150,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         accountId, applicationManifest, null, Type.DELETE, applicationManifest.isSyncFromGit(), false);
   }
 
+  @Override
   public ApplicationManifest getManifestByServiceId(String appId, String serviceId) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationKeys.appId, appId)

@@ -56,6 +56,7 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
     return limit;
   }
 
+  @Override
   @VisibleForTesting
   @Nullable
   public ConfiguredLimit get(String accountId, ActionType actionType) {

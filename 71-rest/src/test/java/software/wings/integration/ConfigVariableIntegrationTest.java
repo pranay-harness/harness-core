@@ -57,6 +57,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
   private ServiceTemplate serviceTemplate;
   private ServiceVariable serviceVariable1, serviceVariable2;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

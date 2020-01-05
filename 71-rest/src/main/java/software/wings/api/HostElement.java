@@ -61,6 +61,7 @@ public class HostElement implements ContextElement {
     this.publicDns = publicDns;
   }
 
+  @Override
   public String getUuid() {
     return uuid;
   }

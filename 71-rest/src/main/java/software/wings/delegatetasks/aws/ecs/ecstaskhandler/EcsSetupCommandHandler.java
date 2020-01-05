@@ -38,6 +38,7 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
   @Inject private EcsContainerService ecsContainerService;
   @Inject private EcsSetupCommandTaskHelper ecsSetupCommandTaskHelper;
 
+  @Override
   public EcsCommandExecutionResponse executeTaskInternal(EcsCommandRequest ecsCommandRequest,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     EcsServiceSetupResponse commandResponse =

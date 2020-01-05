@@ -813,6 +813,7 @@ public class NexusTwoServiceImpl {
       password = pass;
     }
 
+    @Override
     protected PasswordAuthentication getPasswordAuthentication() {
       return new PasswordAuthentication(username, password.toCharArray());
     }

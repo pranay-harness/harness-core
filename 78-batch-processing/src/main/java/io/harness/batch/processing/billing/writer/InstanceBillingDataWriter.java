@@ -37,6 +37,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
     parameters = stepExecution.getJobExecution().getJobParameters();
   }
 
+  @Override
   public void write(List<? extends InstanceData> instanceDataList) throws Exception {
     Instant startTime = getFieldValueFromJobParams(CCMJobConstants.JOB_START_DATE);
     Instant endTime = getFieldValueFromJobParams(CCMJobConstants.JOB_END_DATE);

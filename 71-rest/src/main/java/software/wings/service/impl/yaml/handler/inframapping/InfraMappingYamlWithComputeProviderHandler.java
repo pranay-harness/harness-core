@@ -10,6 +10,7 @@ import software.wings.beans.yaml.ChangeContext;
 public abstract class InfraMappingYamlWithComputeProviderHandler<
     Y extends InfrastructureMapping.YamlWithComputeProvider, B extends InfrastructureMapping>
     extends InfraMappingYamlHandler<Y, B> {
+  @Override
   protected void toYaml(Y yaml, B infraMapping) {
     super.toYaml(yaml, infraMapping);
     yaml.setComputeProviderType(infraMapping.getComputeProviderType());

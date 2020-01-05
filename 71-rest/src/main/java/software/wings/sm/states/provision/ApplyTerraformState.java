@@ -10,6 +10,7 @@ public class ApplyTerraformState extends TerraformProvisionState {
   public ApplyTerraformState(String name) {
     super(name, StateType.TERRAFORM_APPLY.name());
   }
+  @Override
   protected TerraformCommandUnit commandUnit() {
     return TerraformCommandUnit.Apply;
   }

@@ -34,6 +34,7 @@ public class AddArtifactIdentityMigration implements Migration {
   @Inject private ArtifactService artifactService;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
+  @Override
   public void migrate() {
     try {
       final DBCollection collection = wingsPersistence.getCollection(Artifact.class);

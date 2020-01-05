@@ -135,6 +135,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
    *
    * @return the name
    */
+  @Override
   public String getName() {
     return name;
   }
@@ -261,6 +262,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
     this.templateExpressions = templateExpressions;
   }
 
+  @Override
   public String getAccountId() {
     return accountId;
   }

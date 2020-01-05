@@ -97,22 +97,26 @@ public class HelmRollbackState extends HelmDeployState {
     }
   }
 
+  @Override
   @Attributes(title = "Deployment steady state timeout (in minutes).")
   @DefaultValue("10")
   public int getSteadyStateTimeout() {
     return super.getSteadyStateTimeout();
   }
 
+  @Override
   @SchemaIgnore
   public String getHelmReleaseNamePrefix() {
     return super.getHelmReleaseNamePrefix();
   }
 
+  @Override
   @SchemaIgnore
   public GitFileConfig getGitFileConfig() {
     return super.getGitFileConfig();
   }
 
+  @Override
   @SchemaIgnore
   public String getCommandFlags() {
     return super.getCommandFlags();

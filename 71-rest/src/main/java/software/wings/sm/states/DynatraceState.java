@@ -60,6 +60,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
     super(name, StateType.DYNA_TRACE);
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
@@ -70,6 +71,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
+  @Override
   @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
   @DefaultValue("15")
   public String getTimeDuration() {
@@ -79,6 +81,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
     return timeDuration;
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
   @Attributes(required = true, title = "Algorithm Sensitivity")
   @DefaultValue("MEDIUM")

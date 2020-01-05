@@ -50,6 +50,7 @@ public class CVActivityLog implements PersistentEntity, UuidAware, CreatedAtAwar
   private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(ACTIVITY_LOG_TTL_WEEKS).toInstant());
   ;
 
+  @Override
   @JsonIgnore
   public long getLastUpdatedAt() {
     return lastUpdatedAt;

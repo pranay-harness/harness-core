@@ -11,6 +11,7 @@ public class AdjustTerraformProvisionState extends TerraformProvisionState {
     super(name, StateType.TERRAFORM_PROVISION.name());
   }
 
+  @Override
   protected TerraformCommandUnit commandUnit() {
     return TerraformCommandUnit.Adjust;
   }

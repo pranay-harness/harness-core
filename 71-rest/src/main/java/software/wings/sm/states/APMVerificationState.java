@@ -93,25 +93,30 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     this.dataCollectionRate = dataCollectionRate;
   }
 
+  @Override
   @Attributes(title = "Expression for Host/Container name")
   @DefaultValue("")
   public String getHostnameTemplate() {
     return hostnameTemplate;
   }
 
+  @Override
   public void setHostnameTemplate(String hostnameTemplate) {
     this.hostnameTemplate = hostnameTemplate;
   }
 
+  @Override
   @Attributes(required = true, title = "Include nodes from previous phases")
   public boolean getIncludePreviousPhaseNodes() {
     return includePreviousPhaseNodes;
   }
 
+  @Override
   public void setIncludePreviousPhaseNodes(boolean includePreviousPhaseNodes) {
     this.includePreviousPhaseNodes = includePreviousPhaseNodes;
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
@@ -122,6 +127,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
+  @Override
   @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
   @DefaultValue("15")
   public String getTimeDuration() {
@@ -131,6 +137,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     return timeDuration;
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
   @Attributes(required = true, title = "Algorithm Sensitivity")
   @DefaultValue("MEDIUM")

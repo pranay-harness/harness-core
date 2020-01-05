@@ -59,6 +59,7 @@ public class ConnectorStatsDataFetcher extends SettingsAttributeStatsDataFetcher
     connectorQueryHelper.setQuery(filters, query);
   }
 
+  @Override
   public String getAggregationFieldName(String aggregation) {
     QLConnectorTypeAggregation connectorAggregation = QLConnectorTypeAggregation.valueOf(aggregation);
     switch (connectorAggregation) {

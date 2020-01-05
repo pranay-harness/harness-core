@@ -23,6 +23,7 @@ import java.util.List;
 public class DockerArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, DockerArtifactStream> {
   @Inject private FeatureFlagService featureFlagService;
 
+  @Override
   public Yaml toYaml(DockerArtifactStream bean, String appId) {
     Yaml yaml = Yaml.builder().build();
     super.toYaml(yaml, bean);

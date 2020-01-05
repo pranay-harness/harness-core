@@ -211,6 +211,7 @@ public class PipelineChangeHandler implements ChangeHandler {
     }
   }
 
+  @Override
   public boolean handleChange(ChangeEvent<?> changeEvent) {
     boolean isChangeHandled = true;
     if (changeEvent.isChangeFor(Pipeline.class)) {

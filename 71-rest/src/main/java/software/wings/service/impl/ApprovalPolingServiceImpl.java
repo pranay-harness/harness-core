@@ -13,6 +13,7 @@ import software.wings.service.intfc.ApprovalPolingService;
 public class ApprovalPolingServiceImpl implements ApprovalPolingService {
   @Inject WingsPersistence wingsPersistence;
 
+  @Override
   public String save(ApprovalPollingJobEntity approvalPollingJobEntity) {
     try {
       return wingsPersistence.save(approvalPollingJobEntity);
@@ -21,6 +22,7 @@ public class ApprovalPolingServiceImpl implements ApprovalPolingService {
     }
   }
 
+  @Override
   public void delete(String entityId) {
     wingsPersistence.delete(ApprovalPollingJobEntity.class, entityId);
   }

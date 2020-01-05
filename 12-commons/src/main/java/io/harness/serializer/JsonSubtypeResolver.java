@@ -33,6 +33,7 @@ public class JsonSubtypeResolver extends SubtypeResolver {
           .maximumSize(1000)
           .expireAfterWrite(10, TimeUnit.MINUTES)
           .build(new CacheLoader<Class<?>, List<NamedType>>() {
+            @Override
             public List<NamedType> load(Class<?> key) {
               Reflections reflections = new Reflections("software.wings", "io.harness");
               return reflections.getSubTypesOf(key)

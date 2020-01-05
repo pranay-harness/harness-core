@@ -34,6 +34,7 @@ import javax.ws.rs.core.Response.Status;
  * @author marklu on 2018-12-26
  */
 public class AccountResourceIntegrationTest extends BaseIntegrationTest {
+  @Override
   @Before
   public void setUp() {
     super.loginAdminUser();

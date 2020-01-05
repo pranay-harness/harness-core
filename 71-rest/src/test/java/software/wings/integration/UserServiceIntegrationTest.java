@@ -77,6 +77,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   private final String validEmail = "raghu" + System.currentTimeMillis() + "@wings.software";
   @Inject private SecretManager secretManager;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

@@ -136,6 +136,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
     });
   }
 
+  @Override
   @Before
   public void setUp() throws IllegalAccessException {
     initMocks(this);

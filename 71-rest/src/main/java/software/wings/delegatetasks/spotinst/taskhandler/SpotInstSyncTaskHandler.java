@@ -28,6 +28,7 @@ import java.util.List;
 @NoArgsConstructor
 @Slf4j
 public class SpotInstSyncTaskHandler extends SpotInstTaskHandler {
+  @Override
   protected SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,
       SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception {
     if (!spotInstTaskParameters.isSyncTask()) {

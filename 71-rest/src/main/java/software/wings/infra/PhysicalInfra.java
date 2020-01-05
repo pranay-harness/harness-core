@@ -59,6 +59,7 @@ public class PhysicalInfra implements PhysicalDataCenterInfra, InfraMappingInfra
     return PhysicalInfrastructureMapping.class;
   }
 
+  @Override
   public String getInfrastructureType() {
     return PHYSICAL_INFRA;
   }

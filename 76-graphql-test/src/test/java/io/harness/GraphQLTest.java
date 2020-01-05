@@ -25,6 +25,7 @@ public abstract class GraphQLTest extends CategoryTest implements GraphQLTestMix
   @Inject DataLoaderRegistryHelper dataLoaderRegistryHelper;
   @Inject AuthHandler authHandler;
 
+  @Override
   public GraphQL getGraphQL() {
     return graphQLRule.getGraphQL();
   }

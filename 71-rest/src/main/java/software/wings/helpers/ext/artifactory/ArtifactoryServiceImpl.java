@@ -669,6 +669,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     }
   }
 
+  @Override
   public Long getFileSize(
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
     String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath);

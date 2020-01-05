@@ -26,6 +26,7 @@ public class SmbArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
     return new SmbArtifactStream();
   }
 
+  @Override
   protected void toBean(SmbArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();

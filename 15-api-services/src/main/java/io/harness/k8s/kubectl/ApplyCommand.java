@@ -41,6 +41,7 @@ public class ApplyCommand extends AbstractExecutable {
     return this;
   }
 
+  @Override
   public String command() {
     StringBuilder command = new StringBuilder();
     command.append(client.command()).append("apply ");

@@ -51,6 +51,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   String DOCKER_REGISTRY_URL = "https://registry.hub.docker.com/v2/";
   String DOCKER_USERNAME = "wingsplugins";
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

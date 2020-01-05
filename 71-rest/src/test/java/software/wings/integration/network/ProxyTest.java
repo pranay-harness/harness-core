@@ -101,6 +101,7 @@ public class ProxyTest extends CategoryTest {
     Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
     OkHttpClient.Builder builder = new OkHttpClient.Builder().proxy(proxy);
     builder.proxyAuthenticator(new Authenticator() {
+      @Override
       public Request authenticate(Route route, Response response) throws IOException {
         String credential = Credentials.basic(proxyUser, proxyPassword);
         return response.request().newBuilder().header("Proxy-Authorization", credential).build();
@@ -140,6 +141,7 @@ public class ProxyTest extends CategoryTest {
     OkHttpClient.Builder builder = new OkHttpClient.Builder().proxy(proxy);
 
     builder.proxyAuthenticator(new Authenticator() {
+      @Override
       public Request authenticate(Route route, Response response) throws IOException {
         String credential = Credentials.basic(proxyUser, invalidProxyPassword);
         return response.request().newBuilder().header("Proxy-Authorization", credential).build();

@@ -11,6 +11,7 @@ import software.wings.beans.yaml.ChangeContext;
  */
 @Singleton
 public class EcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, EcrArtifactStream> {
+  @Override
   public Yaml toYaml(EcrArtifactStream bean, String appId) {
     Yaml yaml = Yaml.builder().build();
     super.toYaml(yaml, bean);
@@ -24,6 +25,7 @@ public class EcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
     return new EcrArtifactStream();
   }
 
+  @Override
   protected void toBean(EcrArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();

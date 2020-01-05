@@ -131,6 +131,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
     return vaultList.stream().map(HasName::name).collect(Collectors.toList());
   }
 
+  @Override
   public void decryptAzureConfigSecrets(AzureVaultConfig secretManagerConfig, boolean maskSecret) {
     if (maskSecret) {
       secretManagerConfig.maskSecrets();

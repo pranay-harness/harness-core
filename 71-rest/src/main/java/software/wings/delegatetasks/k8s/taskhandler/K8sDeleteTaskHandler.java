@@ -42,6 +42,7 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
   private Kubectl client;
   private List<KubernetesResourceId> resourceIdsToDelete;
 
+  @Override
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
     if (!(k8sTaskParameters instanceof K8sDeleteTaskParameters)) {

@@ -57,6 +57,7 @@ public class PhysicalInfraMappingYamlHandler
     return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
+  @Override
   protected void toBean(ChangeContext<Yaml> changeContext, PhysicalInfrastructureMapping bean, String appId,
       String envId, String computeProviderId, String serviceId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();

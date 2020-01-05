@@ -43,6 +43,7 @@ public class NexusArtifactStreamYamlHandler
     return yaml;
   }
 
+  @Override
   protected void toBean(NexusArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();

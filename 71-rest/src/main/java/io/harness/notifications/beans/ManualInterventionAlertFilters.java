@@ -11,11 +11,13 @@ public class ManualInterventionAlertFilters implements io.harness.notifications.
   private List<String> appIds;
   private List<String> envIds;
 
+  @Override
   @Nonnull
   public List<String> getAppIds() {
     return CollectionUtils.emptyIfNull(appIds);
   }
 
+  @Override
   @Nonnull
   public List<String> getEnvIds() {
     return CollectionUtils.emptyIfNull(envIds);

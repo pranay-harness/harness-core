@@ -83,6 +83,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).validateConnector(taskParameters);
   }
 
+  @Override
   public List<ServiceNowMetaDTO> getStates(
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId) {
     ServiceNowConfig serviceNowConfig;
@@ -157,6 +158,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
         .getAdditionalFields(taskParameters);
   }
 
+  @Override
   public ServiceNowExecutionData getIssueUrl(
       String issueNumber, String connectorId, ServiceNowTicketType ticketType, String appId, String accountId) {
     ServiceNowConfig serviceNowConfig;
@@ -224,6 +226,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     return null;
   }
 
+  @Override
   public ServiceNowExecutionData getApprovalStatus(ApprovalPollingJobEntity approvalPollingJobEntity) {
     ServiceNowConfig serviceNowConfig;
     try {
@@ -275,6 +278,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     }
   }
 
+  @Override
   public void handleServiceNowPolling(ApprovalPollingJobEntity entity) {
     ServiceNowExecutionData serviceNowExecutionData = null;
     String approvalId = entity.getApprovalId();

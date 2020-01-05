@@ -39,6 +39,7 @@ public class DirectKubernetesInfrastructure
         .build();
   }
 
+  @Override
   public String getReleaseName() {
     return isEmpty(releaseName) ? INFRA_KUBERNETES_INFRAID_EXPRESSION : releaseName;
   }
@@ -53,6 +54,7 @@ public class DirectKubernetesInfrastructure
     return CloudProviderType.KUBERNETES_CLUSTER;
   }
 
+  @Override
   public String getInfrastructureType() {
     return DIRECT_KUBERNETES;
   }

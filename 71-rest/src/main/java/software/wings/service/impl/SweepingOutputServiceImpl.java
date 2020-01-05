@@ -71,6 +71,7 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
     return sweepingOutputInstance.getValue();
   }
 
+  @Override
   public SweepingOutputInstance find(SweepingOutputInquiry sweepingOutputInquiry) {
     final Query<SweepingOutputInstance> query = wingsPersistence.createQuery(SweepingOutputInstance.class)
                                                     .filter(SweepingOutputKeys.appId, sweepingOutputInquiry.getAppId())

@@ -97,7 +97,7 @@ public interface ServiceInstanceService extends OwnedByHost, OwnedByInfrastructu
    * @param appId  the app id
    * @param hostId the host id
    */
-  void pruneByHost(String appId, String hostId);
+  @Override void pruneByHost(String appId, String hostId);
 
   List<ServiceInstance> fetchServiceInstances(String appId, Set<String> uuids);
 }

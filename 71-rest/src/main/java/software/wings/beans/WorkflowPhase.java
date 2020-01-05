@@ -60,6 +60,7 @@ public class WorkflowPhase implements UuidAccess {
 
   private static final String PHASE_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
 
+  @Override
   public String getUuid() {
     return uuid;
   }

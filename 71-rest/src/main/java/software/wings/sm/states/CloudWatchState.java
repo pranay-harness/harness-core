@@ -84,6 +84,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     super(name, StateType.CLOUD_WATCH);
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
@@ -94,6 +95,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
+  @Override
   @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
   @DefaultValue("15")
   public String getTimeDuration() {
@@ -103,6 +105,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     return timeDuration;
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
   @Attributes(required = true, title = "Algorithm Sensitivity")
   @DefaultValue("MEDIUM")
@@ -294,6 +297,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     return lambdaMetrics;
   }
 
+  @Override
   @Attributes(required = false, title = "Expression for Host/Container name")
   public String getHostnameTemplate() {
     if (isEmpty(hostnameTemplate)) {
@@ -302,6 +306,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     return hostnameTemplate;
   }
 
+  @Override
   public void setHostnameTemplate(String hostnameTemplate) {
     this.hostnameTemplate = hostnameTemplate;
   }

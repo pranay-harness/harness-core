@@ -33,6 +33,7 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
     return Yaml.class;
   }
 
+  @Override
   protected void toBean(AmiArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();

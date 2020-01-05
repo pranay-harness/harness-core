@@ -52,6 +52,7 @@ public class AwsSecretsManagerConfig extends SecretManagerConfig {
     return EncryptionType.AWS_SECRETS_MANAGER + "-" + getName() + "-" + getUuid();
   }
 
+  @Override
   public EncryptionType getEncryptionType() {
     return EncryptionType.AWS_SECRETS_MANAGER;
   }

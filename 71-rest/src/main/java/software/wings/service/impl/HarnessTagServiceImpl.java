@@ -262,6 +262,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     return response;
   }
 
+  @Override
   public List<HarnessTag> listTags(String accountId) {
     return wingsPersistence.createQuery(HarnessTag.class).filter(HarnessTagKeys.accountId, accountId).asList();
   }

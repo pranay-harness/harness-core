@@ -84,6 +84,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   private String releaseName;
   private String manifestFilesDirectory;
 
+  @Override
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
     if (!(k8sTaskParameters instanceof K8sRollingDeployTaskParameters)) {

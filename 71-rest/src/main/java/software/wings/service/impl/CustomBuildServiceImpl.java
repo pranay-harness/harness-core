@@ -16,6 +16,7 @@ import java.util.List;
 public class CustomBuildServiceImpl implements CustomBuildService {
   @Inject private CustomRepositoryService customRepositoryService;
 
+  @Override
   @DelegateTaskType(TaskType.CUSTOM_GET_BUILDS)
   public List<BuildDetails> getBuilds(ArtifactStreamAttributes artifactStreamAttributes) {
     // NOTE: Custom artifact stream doesn't support labels so the last two arguments can be null.
@@ -23,6 +24,7 @@ public class CustomBuildServiceImpl implements CustomBuildService {
         customRepositoryService.getBuilds(artifactStreamAttributes), artifactStreamAttributes, null, null);
   }
 
+  @Override
   @DelegateTaskType(TaskType.CUSTOM_VALIDATE_ARTIFACT_STREAM)
   public boolean validateArtifactSource(ArtifactStreamAttributes artifactStreamAttributes) {
     return customRepositoryService.validateArtifactSource(artifactStreamAttributes);

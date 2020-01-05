@@ -47,6 +47,7 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
   @Inject private AwsElbHelperServiceDelegate awsElbHelperServiceDelegate;
   @Inject private EcsContainerService ecsContainerService;
 
+  @Override
   public EcsCommandExecutionResponse executeTaskInternal(EcsCommandRequest ecsCommandRequest,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     EcsServiceSetupResponse ecsCommandResponse = EcsServiceSetupResponse.builder()

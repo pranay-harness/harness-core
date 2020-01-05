@@ -86,6 +86,7 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
     return k8sStateHelper.executeWrapperWithManifest(this, context);
   }
 
+  @Override
   public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
         applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);

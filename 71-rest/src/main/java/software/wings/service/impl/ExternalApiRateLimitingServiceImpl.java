@@ -22,6 +22,7 @@ public class ExternalApiRateLimitingServiceImpl implements ExternalApiRateLimiti
       CacheBuilder.newBuilder()
           .expireAfterAccess(CACHE_EXPIRATION.toMillis(), TimeUnit.MILLISECONDS)
           .build(new CacheLoader<String, RateLimiter>() {
+            @Override
             public RateLimiter load(String key) {
               return RateLimiter.create(MAX_QPM_PER_MANAGER / 60);
             }

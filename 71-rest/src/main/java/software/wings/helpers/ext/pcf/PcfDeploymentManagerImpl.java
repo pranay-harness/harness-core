@@ -108,6 +108,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
   }
 
+  @Override
   public ApplicationDetail upsizeApplicationWithSteadyStateCheck(
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     boolean steadyStateReached = false;
@@ -329,6 +330,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     return "SUCCESS";
   }
 
+  @Override
   public boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException {
     return pcfClient.checkIfAppAutoscalarInstalled();
   }

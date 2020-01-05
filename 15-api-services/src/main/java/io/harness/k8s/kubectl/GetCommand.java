@@ -59,6 +59,7 @@ public class GetCommand extends AbstractExecutable {
     return this;
   }
 
+  @Override
   public String command() {
     StringBuilder command = new StringBuilder();
     command.append(client.command()).append("get ");

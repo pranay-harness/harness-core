@@ -32,6 +32,7 @@ public class RemoveServiceInfraFolder implements Migration {
   private final String accountId = "kmpySmUISimoRrJL6NL73w";
   private final String DEBUG_LINE = "SERVICE_INFRA_YAML:";
 
+  @Override
   public void migrate() {
     final List<Application> applications = appService.getAppsByAccountId(accountId);
     List<GitFileChange> gitFileChanges = new ArrayList<>();

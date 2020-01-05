@@ -110,6 +110,7 @@ public class ServerlessInstanceServiceImpl implements ServerlessInstanceService 
     return wingsPersistence.getWithAppId(ServerlessInstance.class, instance.getAppId(), uid);
   }
 
+  @Override
   public List<SyncStatus> getSyncStatus(String appId, String serviceId, String envId) {
     PageRequest<SyncStatus> pageRequest = aPageRequest()
                                               .addFilter("appId", EQ, appId)

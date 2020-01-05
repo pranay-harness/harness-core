@@ -59,6 +59,7 @@ public class PhysicalInfraWinrmYamlHandler extends CloudProviderInfrastructureYa
     bean.setLoadBalancerId(yaml.getLoadBalancerName());
   }
 
+  @Override
   public Class getYamlClass() {
     return Yaml.class;
   }

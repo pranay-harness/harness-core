@@ -441,6 +441,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     return getMetricsAnalysis(stateExecutionId, offset, pageSize);
   }
 
+  @Override
   public Set<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
       final String appId, final String stateExecutionId, final String workflowExecutionId) {
     logger.info("Creating analysis summary for demo {}", stateExecutionId);

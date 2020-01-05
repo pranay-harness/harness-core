@@ -577,6 +577,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     authHandler.authorize(permissionAttributeList, asList(serviceVariable.getAppId()), entityId);
   }
 
+  @Override
   public void pushServiceVariablesToGit(ServiceVariable serviceVariable) {
     String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
     yamlPushService.pushYamlChangeSet(accountId, serviceVariable, serviceVariable, Event.Type.UPDATE, false, false);

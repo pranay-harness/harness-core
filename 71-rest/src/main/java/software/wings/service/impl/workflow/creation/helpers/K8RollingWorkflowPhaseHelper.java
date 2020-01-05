@@ -18,6 +18,7 @@ import java.util.List;
 
 public class K8RollingWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
   // Get all Rolling Steps
+  @Override
   public List<PhaseStep> getWorkflowPhaseSteps() {
     List<PhaseStep> phaseSteps = new ArrayList<>();
     phaseSteps.add(getRollingDeployPhaseStep());
@@ -27,6 +28,7 @@ public class K8RollingWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
   }
 
   // Get all Rolling Rollback Steps
+  @Override
   public List<PhaseStep> getRollbackPhaseSteps() {
     List<PhaseStep> phaseSteps = new ArrayList<>();
     phaseSteps.add(getRollingRollbackDeployPhaseStep());

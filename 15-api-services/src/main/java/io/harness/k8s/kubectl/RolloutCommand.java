@@ -19,6 +19,7 @@ public class RolloutCommand extends AbstractExecutable {
     return new RolloutUndoCommand(this);
   }
 
+  @Override
   public String command() {
     StringBuilder command = new StringBuilder();
     command.append(client.command()).append("rollout ");

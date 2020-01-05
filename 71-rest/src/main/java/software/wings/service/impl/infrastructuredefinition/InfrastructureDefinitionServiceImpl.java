@@ -1327,6 +1327,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return infraDefinitionNames;
   }
 
+  @Override
   public List<String> listNamesByScopedService(String appId, String serviceId) {
     return wingsPersistence.createQuery(InfrastructureDefinition.class)
         .filter(InfrastructureDefinitionKeys.appId, appId)

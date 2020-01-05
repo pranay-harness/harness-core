@@ -81,6 +81,7 @@ public class EcrServiceImpl implements EcrService {
     return listEcrRegistry(awsConfig, encryptionDetails, region).contains(repositoryName);
   }
 
+  @Override
   public List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     return awsHelperService.listRegions(awsConfig, encryptionDetails);
   }

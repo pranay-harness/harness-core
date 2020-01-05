@@ -23,6 +23,7 @@ public class SearchSyncHeartbeat implements Runnable {
   private String lockName;
   private String uuid;
 
+  @Override
   public void run() {
     Query<SearchDistributedLock> query = wingsPersistence.createQuery(SearchDistributedLock.class)
                                              .field(SearchDistributedLockKeys.name)

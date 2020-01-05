@@ -241,6 +241,7 @@ public class ApplicationChangeHandler implements ChangeHandler {
     }
   }
 
+  @Override
   public boolean handleChange(ChangeEvent<?> changeEvent) {
     if (changeEvent.isChangeFor(Application.class)) {
       return handleApplicationChange(changeEvent);

@@ -71,6 +71,7 @@ public class EcsContainerTask extends ContainerTask {
     this.artifactName = artifactName;
   }
 
+  @Override
   @SchemaIgnore
   public String getServiceId() {
     return super.getServiceId();
@@ -312,6 +313,7 @@ public class EcsContainerTask extends ContainerTask {
     return containerDefinition;
   }
 
+  @Override
   public ContainerTask cloneInternal() {
     ContainerTask newContainerTask = new EcsContainerTask();
     copyConfigToContainerTask(newContainerTask);

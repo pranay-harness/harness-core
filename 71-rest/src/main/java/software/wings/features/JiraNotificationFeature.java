@@ -31,6 +31,7 @@ public class JiraNotificationFeature extends AbstractNotificationFeature {
   }
 
   // gets usages of JIRA state under workflows
+  @Override
   protected List<Usage> getUsages(String accountId) {
     return getMatchingWorkflows(getAllWorkflowsByAccountId(accountId), JIRA_USAGE_PREDICATE)
         .stream()

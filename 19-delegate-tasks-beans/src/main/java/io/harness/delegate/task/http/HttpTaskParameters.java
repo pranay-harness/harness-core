@@ -20,6 +20,7 @@ public class HttpTaskParameters implements TaskParameters, ExecutionCapabilityDe
   @Expression private String body;
   private int socketTimeoutMillis;
 
+  @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Collections.singletonList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(url));

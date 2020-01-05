@@ -104,6 +104,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     return update(barrierInstance);
   }
 
+  @Override
   public BarrierInstance update(BarrierInstance barrierInstance) {
     if (!STANDING.name().equals(barrierInstance.getState())) {
       return barrierInstance;

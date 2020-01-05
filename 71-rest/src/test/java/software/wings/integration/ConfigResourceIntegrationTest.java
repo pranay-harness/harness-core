@@ -49,6 +49,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
   private String envId;
   private String templateId;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

@@ -659,6 +659,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     }
   }
 
+  @Override
   public EncryptedRecord encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       AzureVaultConfig azureConfig, EncryptedRecord savedEncryptedData) {
     int failedAttempts = 0;
@@ -685,6 +686,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     }
   }
 
+  @Override
   public char[] decrypt(EncryptedRecord data, AzureVaultConfig azureConfig) {
     if (data.getEncryptedValue() == null) {
       return null;

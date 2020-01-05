@@ -29,6 +29,7 @@ public class SplunkConfigYamlHandler extends VerificationProviderYamlHandler<Yam
     return yaml;
   }
 
+  @Override
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
       List<ChangeContext> changeSetContext) throws HarnessException {
     String uuid = previous != null ? previous.getUuid() : null;

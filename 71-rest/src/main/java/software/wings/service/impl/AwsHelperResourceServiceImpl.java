@@ -48,6 +48,7 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
   @Inject private SecretManager secretManager;
   @Inject private AwsS3HelperServiceManager s3HelperServiceManager;
 
+  @Override
   @Deprecated
   public Map<String, String> getRegions() {
     return Arrays.stream(Regions.values())
@@ -59,6 +60,7 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
                    .get(regions.getName())));
   }
 
+  @Override
   public List<NameValuePair> getAwsRegions() {
     Map<String, String> awsRegionIdToName = mainConfiguration.getAwsRegionIdToName();
     if (EmptyPredicate.isEmpty(awsRegionIdToName)) {

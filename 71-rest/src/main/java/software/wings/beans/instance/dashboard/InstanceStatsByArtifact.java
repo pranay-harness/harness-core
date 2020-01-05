@@ -35,10 +35,12 @@ public class InstanceStatsByArtifact extends InstanceStatsByEntity {
       return this;
     }
 
+    @Override
     public Builder but() {
       return (Builder) anInstanceStatsByArtifact().withEntitySummary(entitySummary).withInstanceStats(instanceStats);
     }
 
+    @Override
     public InstanceStatsByArtifact build() {
       InstanceStatsByArtifact instanceStatsByArtifact = new InstanceStatsByArtifact();
       instanceStatsByArtifact.setInstanceStats(instanceStats);

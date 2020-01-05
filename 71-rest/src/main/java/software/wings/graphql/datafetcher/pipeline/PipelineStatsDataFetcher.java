@@ -51,6 +51,7 @@ public class PipelineStatsDataFetcher
     return getQLData(accountId, filters, entityClass, groupByEntityList);
   }
 
+  @Override
   public String getAggregationFieldName(String aggregation) {
     QLPipelineEntityAggregation pipelineAggregation = QLPipelineEntityAggregation.valueOf(aggregation);
     switch (pipelineAggregation) {

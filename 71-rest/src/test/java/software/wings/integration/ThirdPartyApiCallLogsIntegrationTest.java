@@ -35,6 +35,7 @@ public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
   private String delegateId;
   private String delegateTaskId;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

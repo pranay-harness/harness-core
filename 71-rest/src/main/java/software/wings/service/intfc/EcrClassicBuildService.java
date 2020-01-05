@@ -22,17 +22,21 @@ public interface EcrClassicBuildService extends BuildService<EcrConfig> {
    * @param ecrConfig             the ecr config
    * @return the builds
    */
+  @Override
   @DelegateTaskType(TaskType.ECR_GET_BUILDS)
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, EcrConfig ecrConfig,
       List<EncryptedDataDetail> encryptionDetails);
 
+  @Override
   @DelegateTaskType(TaskType.ECR_VALIDATE_ARTIFACT_SERVER)
   boolean validateArtifactServer(EcrConfig config, List<EncryptedDataDetail> encryptedDataDetails);
 
+  @Override
   @DelegateTaskType(TaskType.ECR_VALIDATE_ARTIFACT_STREAM)
   boolean validateArtifactSource(
       EcrConfig config, List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes);
 
+  @Override
   @DelegateTaskType(TaskType.ECR_GET_PLANS)
   Map<String, String> getPlans(EcrConfig config, List<EncryptedDataDetail> encryptionDetails);
 }

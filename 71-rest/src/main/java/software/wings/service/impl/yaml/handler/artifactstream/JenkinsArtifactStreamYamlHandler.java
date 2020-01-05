@@ -27,6 +27,7 @@ public class JenkinsArtifactStreamYamlHandler
     return new JenkinsArtifactStream();
   }
 
+  @Override
   protected void toBean(JenkinsArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();

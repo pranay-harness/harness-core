@@ -27,6 +27,7 @@ public class K8sInstanceSyncTaskHandler extends K8sTaskHandler {
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private transient K8sTaskHelper k8sTaskHelper;
 
+  @Override
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
     if (!(k8sTaskParameters instanceof K8sInstanceSyncTaskParameters)) {
