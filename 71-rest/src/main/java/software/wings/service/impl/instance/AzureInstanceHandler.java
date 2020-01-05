@@ -39,7 +39,7 @@ public class AzureInstanceHandler extends InstanceHandler {
   @Inject protected AzureHelperService azureHelperService;
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) throws WingsException {
+  public void syncInstances(String appId, String infraMappingId) {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
 

@@ -7,7 +7,6 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.WingsException;
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
@@ -45,8 +44,8 @@ public class GoogleKubernetesEngineYamlHandler
   }
 
   @Override
-  public GoogleKubernetesEngine upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws WingsException {
+  public GoogleKubernetesEngine upsertFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     GoogleKubernetesEngine current = GoogleKubernetesEngine.builder().build();
     toBean(current, changeContext);
     return current;

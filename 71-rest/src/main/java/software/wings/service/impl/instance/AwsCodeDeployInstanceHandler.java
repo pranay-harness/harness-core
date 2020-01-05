@@ -54,8 +54,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
   @Override
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
-      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-      throws WingsException {
+      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact) {
     PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
 
     if (phaseStepExecutionSummary != null) {
@@ -94,12 +93,12 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
   }
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) throws WingsException {
+  public void syncInstances(String appId, String infraMappingId) {
     syncInstancesInternal(appId, infraMappingId, null, false);
   }
 
-  private void syncInstancesInternal(String appId, String infraMappingId,
-      List<DeploymentSummary> newDeploymentSummaries, boolean rollback) throws WingsException {
+  private void syncInstancesInternal(
+      String appId, String infraMappingId, List<DeploymentSummary> newDeploymentSummaries, boolean rollback) {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
     if (!(infrastructureMapping instanceof CodeDeployInfrastructureMapping)) {

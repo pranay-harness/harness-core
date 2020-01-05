@@ -834,17 +834,16 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     doReturn(new InstanceHandler() {
       @Override
-      public void syncInstances(String appId, String infraMappingId) throws WingsException {}
+      public void syncInstances(String appId, String infraMappingId) {}
 
       @Override
-      public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
-          OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {}
+      public void handleNewDeployment(
+          List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {}
 
       @Override
       public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
           PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
-          InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-          throws WingsException {
+          InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact) {
         return null;
       }
 
@@ -891,19 +890,18 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     doReturn(new InstanceHandler() {
       @Override
-      public void syncInstances(String appId, String infraMappingId) throws WingsException {
+      public void syncInstances(String appId, String infraMappingId) {
         throw WingsException.builder().message("cannot connect").build();
       }
 
       @Override
-      public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
-          OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {}
+      public void handleNewDeployment(
+          List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {}
 
       @Override
       public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
           PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
-          InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-          throws WingsException {
+          InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact) {
         return null;
       }
 

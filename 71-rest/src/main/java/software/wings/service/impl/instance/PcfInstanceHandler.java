@@ -55,7 +55,7 @@ public class PcfInstanceHandler extends InstanceHandler {
   @Inject private PcfHelperService pcfHelperService;
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) throws WingsException {
+  public void syncInstances(String appId, String infraMappingId) {
     Multimap<String, Instance> pcfAppNameInstanceMap = ArrayListMultimap.create();
     syncInstancesInternal(appId, infraMappingId, pcfAppNameInstanceMap, null, false,
         OnDemandRollbackInfo.builder().onDemandRollback(false).build());
@@ -66,11 +66,10 @@ public class PcfInstanceHandler extends InstanceHandler {
    * @param appId
    * @param infraMappingId
    * @param pcfAppNameInstanceMap  key - pcfAppName     value - Instances
-   * @throws WingsException
    */
   private void syncInstancesInternal(String appId, String infraMappingId,
       Multimap<String, Instance> pcfAppNameInstanceMap, List<DeploymentSummary> newDeploymentSummaries,
-      boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {
+      boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
     logger.info("# Performing PCF Instance sync");
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
@@ -238,8 +237,8 @@ public class PcfInstanceHandler extends InstanceHandler {
     return builder.build();
   }
 
-  private void loadPcfAppNameInstanceMap(String appId, String infraMappingId,
-      Multimap<String, Instance> pcfApplicationNameInstanceMap) throws WingsException {
+  private void loadPcfAppNameInstanceMap(
+      String appId, String infraMappingId, Multimap<String, Instance> pcfApplicationNameInstanceMap) {
     List<Instance> instanceListInDBForInfraMapping = getInstances(appId, infraMappingId);
     for (Instance instance : instanceListInDBForInfraMapping) {
       InstanceInfo instanceInfo = instance.getInstanceInfo();
@@ -256,8 +255,8 @@ public class PcfInstanceHandler extends InstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
-      OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {
+  public void handleNewDeployment(
+      List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
     Multimap<String, Instance> pcfApplicationNameInstanceMap = ArrayListMultimap.create();
     deploymentSummaries.forEach(deploymentSummary -> {
       PcfDeploymentInfo pcfDeploymentInfo = (PcfDeploymentInfo) deploymentSummary.getDeploymentInfo();
@@ -272,8 +271,7 @@ public class PcfInstanceHandler extends InstanceHandler {
   @Override
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
-      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-      throws WingsException {
+      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact) {
     PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
     if (phaseStepExecutionSummary == null) {
       if (logger.isDebugEnabled()) {

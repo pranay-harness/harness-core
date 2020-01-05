@@ -11,7 +11,6 @@ import com.google.inject.Singleton;
 
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.security.EncryptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -542,7 +541,7 @@ public class LicenseServiceImpl implements LicenseService {
   }
 
   @Override
-  public void validateLicense(String accountId, String operation) throws WingsException {
+  public void validateLicense(String accountId, String operation) {
     Account account = accountService.get(accountId);
     LicenseInfo licenseInfo = account.getLicenseInfo();
     if (licenseInfo == null) {

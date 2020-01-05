@@ -3,7 +3,6 @@ package software.wings.service.intfc;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
-import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -162,12 +161,11 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
 
   List<InfrastructureMapping> getInfraStructureMappingsByUuids(String appId, List<String> infraMappingIds);
 
-  List<String> listOrganizationsForPcf(String appId, String computeProviderId) throws WingsException;
+  List<String> listOrganizationsForPcf(String appId, String computeProviderId);
 
-  List<String> listSpacesForPcf(String appId, String computeProviderId, String organization) throws WingsException;
+  List<String> listSpacesForPcf(String appId, String computeProviderId, String organization);
 
-  List<String> lisRouteMapsForPcf(String appId, String computeProviderId, String organization, String spaces)
-      throws WingsException;
+  List<String> lisRouteMapsForPcf(String appId, String computeProviderId, String organization, String spaces);
 
   void deleteByYamlGit(String appId, String infraMappingId, boolean syncFromGit);
 

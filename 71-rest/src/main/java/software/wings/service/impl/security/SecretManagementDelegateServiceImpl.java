@@ -44,7 +44,6 @@ import com.microsoft.azure.keyvault.models.DeletedSecretBundle;
 import com.microsoft.azure.keyvault.models.SecretBundle;
 import com.microsoft.azure.keyvault.requests.SetSecretRequest;
 import io.harness.beans.EmbeddedUser;
-import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import lombok.ToString;
@@ -715,8 +714,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   private EncryptedRecord encryptInternal(String fullSecretName, String value, String accountId,
-      SettingVariableTypes type, AzureVaultConfig secretsManagerConfig, EncryptedRecord savedEncryptedData)
-      throws WingsException {
+      SettingVariableTypes type, AzureVaultConfig secretsManagerConfig, EncryptedRecord savedEncryptedData) {
     logger.info("Saving secret '{}' into Azure Secrets Manager: {}", fullSecretName, secretsManagerConfig.getName());
 
     long startTime = System.currentTimeMillis();

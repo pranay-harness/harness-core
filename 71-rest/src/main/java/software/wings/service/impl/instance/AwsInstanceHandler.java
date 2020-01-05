@@ -57,7 +57,7 @@ public class AwsInstanceHandler extends InstanceHandler {
   @Inject protected AwsInfrastructureProvider awsInfrastructureProvider;
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) throws WingsException {
+  public void syncInstances(String appId, String infraMappingId) {
     // Key - Auto scaling group with revision, Value - Instance
     Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
 
@@ -101,8 +101,8 @@ public class AwsInstanceHandler extends InstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
-      OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {
+  public void handleNewDeployment(
+      List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
     // All the new deployments are either handled at ASGInstanceHandler(for Aws ssh with asg) or InstanceHelper (for Aws
     // ssh with or without filter)
     throw WingsException.builder()
@@ -113,8 +113,7 @@ public class AwsInstanceHandler extends InstanceHandler {
   @Override
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
-      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-      throws WingsException {
+      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact) {
     // All the new deployments are either handled at ASGInstanceHandler(for Aws ssh with asg) or InstanceHelper (for Aws
     // ssh with or without filter)
     throw WingsException.builder()

@@ -19,7 +19,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentInfo;
@@ -58,7 +57,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler {
   @Inject private SpotinstHelperServiceManager spotinstHelperServiceManager;
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) throws WingsException {
+  public void syncInstances(String appId, String infraMappingId) {
     AwsAmiInfrastructureMapping infrastructureMapping = getInfraMapping(appId, infraMappingId);
     SettingAttribute spotinstSettingAttribute = settingsService.get(infrastructureMapping.getSpotinstCloudProvider());
     SpotInstConfig spotinstConfig = (SpotInstConfig) spotinstSettingAttribute.getValue();
@@ -83,8 +82,8 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
-      OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {
+  public void handleNewDeployment(
+      List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
     if (isEmpty(deploymentSummaries)) {
       return;
     }
@@ -230,8 +229,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler {
   @Override
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
-      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-      throws WingsException {
+      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact) {
     PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
     if (phaseStepExecutionSummary != null) {
       Optional<StepExecutionSummary> stepExecutionSummaryOptional =

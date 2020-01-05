@@ -1,6 +1,5 @@
 package software.wings.licensing;
 
-import io.harness.exception.WingsException;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
@@ -28,7 +27,7 @@ public interface LicenseService {
 
   boolean isAccountExpired(String accountId);
 
-  void validateLicense(String accountId, String operation) throws WingsException;
+  void validateLicense(String accountId, String operation);
 
   void setLicense(Account account);
 }

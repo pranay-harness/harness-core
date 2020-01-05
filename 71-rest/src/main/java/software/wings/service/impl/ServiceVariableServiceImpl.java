@@ -541,7 +541,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     }
   }
 
-  private void checkUserPermissions(ServiceVariable serviceVariable) throws WingsException {
+  private void checkUserPermissions(ServiceVariable serviceVariable) {
     notNullCheck("Service variable null", serviceVariable, WingsException.USER);
 
     notNullCheck("Unknown entity type for service variable " + serviceVariable.getName(),
