@@ -7,6 +7,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Property;
@@ -52,6 +53,7 @@ public class ServiceInstance extends Base {
   private String commandType;
   private long lastDeployedOn;
 
+  @UtilityClass
   public static final class ServiceInstanceKeys {
     // Temporary
     public static final String appId = "appId";

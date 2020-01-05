@@ -3,6 +3,7 @@ package io.harness.delegate.task.mixin;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.expression.DummySubstitutor;
 import lombok.Getter;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
@@ -10,6 +11,7 @@ import java.net.URISyntaxException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@UtilityClass
 @Slf4j
 public class SSHConnectionExecutionCapabilityGenerator {
   public static SocketConnectivityExecutionCapability buildSSHConnectionExecutionCapability(String urlString) {

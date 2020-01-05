@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -386,6 +387,7 @@ public class AuditHeader extends Base {
     this.failureStatusMsg = failureStatusMsg;
   }
 
+  @UtilityClass
   public static final class AuditHeaderKeys {
     // Temporary
     public static final String createdAt = "createdAt";

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -36,6 +37,7 @@ import javax.net.ssl.SSLContext;
 /**
  * @author marklu on 2019-08-01
  */
+@UtilityClass
 @Slf4j
 public class CyberArkRestClientFactory {
   private static final String TEMPORARY_KEY_PASSWORD = "changeit";

@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.workflow;
 
+import lombok.experimental.UtilityClass;
 import software.wings.beans.Workflow;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.type.QLWorkflow.QLWorkflowBuilder;
@@ -11,6 +12,7 @@ import javax.validation.constraints.NotNull;
  * workflow and workflow execution.
  * Ideally, we should have two separate adapters.
  */
+@UtilityClass
 public class WorkflowController {
   public static void populateWorkflow(@NotNull Workflow workflow, QLWorkflowBuilder builder) {
     builder.id(workflow.getUuid())

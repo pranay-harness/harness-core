@@ -1,5 +1,8 @@
 package software.wings.service.impl.notifications;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class SlackApprovalMessageKeys {
   // The paths to pick the Templates of the messages and the JSON payloads
 

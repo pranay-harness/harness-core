@@ -6,6 +6,7 @@ package io.harness.serializer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -23,6 +24,7 @@ import javax.xml.xpath.XPathFactory;
 /**
  * The Class XmlUtils.
  */
+@UtilityClass
 @Slf4j
 public class XmlUtils {
   /**

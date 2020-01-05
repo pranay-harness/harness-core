@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.network.Http;
+import lombok.experimental.UtilityClass;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import okhttp3.logging.HttpLoggingInterceptor.Level;
@@ -29,6 +30,7 @@ import java.util.Map;
  * Vault server.
  * @author mark.lu on 10/11/18
  */
+@UtilityClass
 public class VaultRestClientFactory {
   private static final String PATH_SEPARATOR = "/";
   private static final String KEY_NAME_SEPARATOR = "#";

@@ -2,10 +2,12 @@ package io.harness.logging;
 
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
+import lombok.experimental.UtilityClass;
 
 import java.io.IOException;
 import java.io.InputStream;
 
+@UtilityClass
 public class LoggingInitializer {
   public static final String RESPONSE_MESSAGE_FILE = "/response_messages.properties";
 

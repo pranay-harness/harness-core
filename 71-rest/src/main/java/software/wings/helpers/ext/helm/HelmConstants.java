@@ -1,10 +1,13 @@
 package software.wings.helpers.ext.helm;
 
+import lombok.experimental.UtilityClass;
+
 import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 3/23/18.
  */
+@UtilityClass
 public class HelmConstants {
   public static final String HELM_NAMESPACE_PLACEHOLDER_REGEX = "\\$\\{NAMESPACE}";
   public static final String HELM_NAMESPACE_PLACEHOLDER = "${NAMESPACE}";

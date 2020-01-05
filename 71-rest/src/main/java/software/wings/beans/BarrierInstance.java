@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -94,6 +95,7 @@ public class BarrierInstance implements PersistentEntity, UuidAware, PersistentR
   @Builder.Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 
+  @UtilityClass
   public static final class BarrierInstanceKeys {
     public static final String pipeline_executionId = pipeline + "." + PipelineKeys.executionId;
     public static final String pipeline_parallelIndex = pipeline + "." + PipelineKeys.parallelIndex;

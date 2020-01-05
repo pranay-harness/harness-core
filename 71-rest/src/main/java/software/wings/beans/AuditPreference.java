@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 
 import java.util.List;
 
@@ -33,6 +34,7 @@ public class AuditPreference extends Preference {
     super(AUDIT_PREFERENCE.name());
   }
 
+  @UtilityClass
   public static final class AuditPreferenceKeys {
     public static final String accountId = "accountId";
     public static final String createdAt = "createdAt";

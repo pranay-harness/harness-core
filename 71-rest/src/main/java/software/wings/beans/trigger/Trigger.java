@@ -14,6 +14,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -181,6 +182,8 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
       }
     }
   }
+
+  @UtilityClass
   public static final class TriggerKeys {
     // Temporary
     public static final String appId = "appId";

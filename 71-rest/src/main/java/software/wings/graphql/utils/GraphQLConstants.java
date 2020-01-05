@@ -1,7 +1,9 @@
 package software.wings.graphql.utils;
 
+import lombok.experimental.UtilityClass;
 import software.wings.beans.FeatureName;
 
+@UtilityClass
 public class GraphQLConstants {
   public static final String APP_ID_ARG = "applicationId";
   public static final String MAX_PAGE_SIZE_STR = "20";

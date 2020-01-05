@@ -8,6 +8,7 @@ import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
 import com.esotericsoftware.yamlbeans.YamlWriter;
+import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.StringWriter;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
+@UtilityClass
 public class ObjectYamlUtils {
   private static final YamlConfig yamlConfig = defaultYamlConfig();
 

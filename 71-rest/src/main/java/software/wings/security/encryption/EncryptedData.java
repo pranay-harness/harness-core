@@ -17,6 +17,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -229,6 +230,7 @@ public class EncryptedData extends Base implements EncryptedRecord, NameAccess {
     }
   }
 
+  @UtilityClass
   public static final class EncryptedDataKeys {
     // Temporary
     public static final String createdAt = "createdAt";

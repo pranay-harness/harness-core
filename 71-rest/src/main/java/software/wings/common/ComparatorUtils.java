@@ -1,5 +1,7 @@
 package software.wings.common;
 
+import lombok.experimental.UtilityClass;
+
 /*
  * The Alphanum Algorithm is an improved sorting algorithm for strings
  * containing numbers.  Instead of sorting numbers in ASCII order like
@@ -29,6 +31,7 @@ package software.wings.common;
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+@UtilityClass
 public class ComparatorUtils {
   public static boolean isDigit(char ch) {
     return (ch >= 48) && (ch <= 57);

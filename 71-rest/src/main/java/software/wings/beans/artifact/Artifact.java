@@ -11,6 +11,7 @@ import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -43,6 +44,7 @@ import java.util.Map;
 @Entity(value = "artifacts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class Artifact extends Base {
+  @UtilityClass
   public static final class ArtifactMetadataKeys {
     public static final String artifactFileName = "artifactFileName";
     public static final String artifactFileSize = "artifactFileSize";
@@ -63,6 +65,7 @@ public class Artifact extends Base {
     public static final String publishDate = "publishDate";
   }
 
+  @UtilityClass
   public static final class ArtifactKeys {
     public static final String uuid = "uuid";
     public static final String appId = "appId";

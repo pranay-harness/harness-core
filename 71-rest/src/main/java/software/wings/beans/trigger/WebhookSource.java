@@ -3,6 +3,7 @@ package software.wings.beans.trigger;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Value;
+import lombok.experimental.UtilityClass;
 
 import java.util.HashMap;
 import java.util.List;
@@ -47,7 +48,10 @@ public enum WebhookSource {
       GHEventHolder.map.put(value, this);
     }
 
-    public static class GHEventHolder { @Getter static Map<String, GitHubEventType> map = new HashMap<>(); }
+    @UtilityClass
+    public static class GHEventHolder {
+      @Getter static Map<String, GitHubEventType> map = new HashMap<>();
+    }
 
     public static GitHubEventType find(String val) {
       return GitHubEventType.GHEventHolder.map.get(val);

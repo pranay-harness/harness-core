@@ -546,7 +546,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
               ? new HashSet<>(dataCollectionInfo.getHosts().values())
               : new HashSet<>();
           Collection<NewRelicMetricDataRecord> newRelicMetricDataRecords =
-              new APMResponseParser().extract(apmResponseDataList);
+              APMResponseParser.extract(apmResponseDataList);
 
           newRelicMetricDataRecords.forEach(newRelicMetricDataRecord -> {
             if (newRelicMetricDataRecord.getTimeStamp() == 0) {

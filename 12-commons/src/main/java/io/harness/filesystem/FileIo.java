@@ -10,6 +10,7 @@ import static java.nio.file.StandardOpenOption.WRITE;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.beans.FileData;
+import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FileUtils;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -36,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
+@UtilityClass
 public class FileIo {
   public static void createDirectoryIfDoesNotExist(final String directoryPath) throws IOException {
     createDirectoryIfDoesNotExist(Paths.get(directoryPath));

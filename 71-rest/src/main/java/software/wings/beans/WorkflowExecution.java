@@ -24,6 +24,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -221,6 +222,7 @@ public class WorkflowExecution
     return nextIteration;
   }
 
+  @UtilityClass
   public static final class WorkflowExecutionKeys {
     public static final String executionArgs_pipelinePhaseElementId =
         executionArgs + "." + ExecutionArgsKeys.pipelinePhaseElementId;

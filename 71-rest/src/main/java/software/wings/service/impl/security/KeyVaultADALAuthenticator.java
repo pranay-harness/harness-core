@@ -6,6 +6,7 @@ import com.microsoft.aad.adal4j.ClientCredential;
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.keyvault.authentication.KeyVaultCredentials;
 import com.microsoft.rest.credentials.ServiceClientCredentials;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.MalformedURLException;
@@ -14,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+@UtilityClass
 @Slf4j
 public class KeyVaultADALAuthenticator {
   public static KeyVaultClient getClient(String clientId, String clientKey) {

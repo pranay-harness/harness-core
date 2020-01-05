@@ -17,6 +17,7 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
@@ -88,6 +89,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
 
   public enum Status { QUEUED, STARTED, FINISHED, ERROR, ABORTED }
 
+  @UtilityClass
   public static final class DelegateTaskKeys {
     public static final String data_parameters = data + "." + TaskDataKeys.parameters;
     public static final String data_taskType = data + "." + TaskDataKeys.taskType;

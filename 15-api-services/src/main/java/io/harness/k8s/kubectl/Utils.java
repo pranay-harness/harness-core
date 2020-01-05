@@ -1,5 +1,6 @@
 package io.harness.k8s.kubectl;
 
+import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
@@ -8,6 +9,7 @@ import org.zeroturnaround.exec.StartedProcess;
 import java.io.File;
 import java.io.OutputStream;
 
+@UtilityClass
 public class Utils {
   private static final String newLineRegex = "\\r?\\n";
 

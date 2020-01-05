@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.ldap;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class LdapConstants {
   public static final int DEFAULT_CONNECTION_PORT = 636;
   public static final boolean DEFAULT_SSL_STATE = true;

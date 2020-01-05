@@ -1,5 +1,8 @@
 package io.harness.windows;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class CmdUtils {
   public static String escapeEnvValueSpecialChars(String value) {
     /*

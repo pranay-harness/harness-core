@@ -23,6 +23,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -441,6 +442,7 @@ public abstract class InfrastructureMapping
     return (List<String>) input;
   }
 
+  @UtilityClass
   public static final class InfrastructureMappingKeys {
     // Temporary
     public static final String appId = "appId";

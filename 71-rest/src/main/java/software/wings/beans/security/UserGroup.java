@@ -16,6 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -190,6 +191,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
     return null != notificationSettings ? notificationSettings.getEmailAddresses() : Collections.emptyList();
   }
 
+  @UtilityClass
   public static final class UserGroupKeys {
     // Temporary
     public static final String createdAt = "createdAt";
