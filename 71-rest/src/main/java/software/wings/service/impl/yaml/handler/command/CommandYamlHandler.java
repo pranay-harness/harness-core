@@ -280,7 +280,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
   }
 
   @Override
-  public void delete(ChangeContext<CommandYaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<CommandYaml> changeContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);

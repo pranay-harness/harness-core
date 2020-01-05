@@ -33,7 +33,7 @@ public class DataCollectionExecutorServiceTest extends APMStateVerificationTestB
   @Test
   @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
-  public void executeParallel() throws WingsException {
+  public void executeParallel() {
     List<Callable<Boolean>> callables = new ArrayList<>();
     callables.add(() -> true);
     callables.add(() -> { throw new RuntimeException("fail on purpose"); });

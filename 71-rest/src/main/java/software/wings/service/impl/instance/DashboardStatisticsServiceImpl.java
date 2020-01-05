@@ -521,8 +521,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return query;
   }
 
-  private Query<Instance> getInstanceQueryAtTime(String accountId, List<String> appIds, long timestamp)
-      throws WingsException {
+  private Query<Instance> getInstanceQueryAtTime(String accountId, List<String> appIds, long timestamp) {
     Query<Instance> query;
     if (timestamp > 0) {
       query = getInstanceQuery(accountId, appIds, true, timestamp);
@@ -1100,7 +1099,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private Query<Instance> getInstanceQuery(
-      String accountId, List<String> appIds, boolean includeDeleted, long timestamp) throws WingsException {
+      String accountId, List<String> appIds, boolean includeDeleted, long timestamp) {
     Query query = wingsPersistence.createQuery(Instance.class);
     if (isNotEmpty(appIds)) {
       query.field("appId").in(appIds);

@@ -335,7 +335,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   /**
    *
    * @param changeList
-   * @throws WingsException
    */
   private void computeProcessingOrder(List<Change> changeList) {
     changeList.sort(new FilePathComparator());

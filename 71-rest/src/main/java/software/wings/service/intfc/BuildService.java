@@ -7,7 +7,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
 import com.google.common.collect.Lists;
 
-import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
@@ -220,7 +219,6 @@ public interface BuildService<T> {
    * Validates Artifact Server
    *
    * @param config
-   * @throws WingsException if not valid
    */
   default boolean validateArtifactServer(T config, List<EncryptedDataDetail> encryptedDataDetails) {
     throw new UnsupportedOperationException();
@@ -239,7 +237,6 @@ public interface BuildService<T> {
    * Validates Artifact Stream
    *
    * @param artifactStreamAttributes
-   * @throws WingsException if not valid
    */
   default boolean validateArtifactSource(
       T config, List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes) {

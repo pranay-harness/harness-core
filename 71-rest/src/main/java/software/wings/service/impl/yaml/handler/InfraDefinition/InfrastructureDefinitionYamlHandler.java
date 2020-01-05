@@ -9,7 +9,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.CollectionUtils;
-import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -143,7 +142,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
   }
 
   @Override
-  public void delete(ChangeContext<InfrastructureDefinition.Yaml> changeContext) throws WingsException {
+  public void delete(ChangeContext<InfrastructureDefinition.Yaml> changeContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);

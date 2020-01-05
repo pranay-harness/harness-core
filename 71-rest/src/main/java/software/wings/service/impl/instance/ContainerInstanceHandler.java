@@ -97,13 +97,12 @@ public class ContainerInstanceHandler extends InstanceHandler {
   @Inject private transient K8sStateHelper k8sStateHelper;
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) throws WingsException {
+  public void syncInstances(String appId, String infraMappingId) {
     // Key - containerSvcName, Value - Instances
     syncInstancesInternal(appId, infraMappingId, ArrayListMultimap.create(), null, false);
   }
 
-  private ContainerInfrastructureMapping getContainerInfraMapping(String appId, String inframappingId)
-      throws WingsException {
+  private ContainerInfrastructureMapping getContainerInfraMapping(String appId, String inframappingId) {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, inframappingId);
     notNullCheck("Infra mapping is null for id:" + inframappingId, infrastructureMapping);
 
@@ -119,7 +118,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
   private void syncInstancesInternal(String appId, String infraMappingId,
       Multimap<ContainerMetadata, Instance> containerMetadataInstanceMap,
-      List<DeploymentSummary> newDeploymentSummaries, boolean rollback) throws WingsException {
+      List<DeploymentSummary> newDeploymentSummaries, boolean rollback) {
     ContainerInfrastructureMapping containerInfraMapping = getContainerInfraMapping(appId, infraMappingId);
 
     Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap =
@@ -253,8 +252,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
   }
 
   private void syncK8sInstances(ContainerInfrastructureMapping containerInfraMapping,
-      ContainerMetadata containerMetadata, Collection<Instance> instancesInDB, DeploymentSummary deploymentSummary)
-      throws WingsException {
+      ContainerMetadata containerMetadata, Collection<Instance> instancesInDB, DeploymentSummary deploymentSummary) {
     List<K8sPod> currentPods = null;
     try {
       currentPods = k8sStateHelper.getPodList(
@@ -409,8 +407,8 @@ public class ContainerInstanceHandler extends InstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
-      OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {
+  public void handleNewDeployment(
+      List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
     Multimap<ContainerMetadata, Instance> containerSvcNameInstanceMap = ArrayListMultimap.create();
 
     if (isEmpty(deploymentSummaries)) {
@@ -460,7 +458,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     syncInstancesInternal(appId, infraMappingId, containerSvcNameInstanceMap, deploymentSummaries, rollback);
   }
 
-  private void validateDeploymentInfos(List<DeploymentSummary> deploymentSummaries) throws WingsException {
+  private void validateDeploymentInfos(List<DeploymentSummary> deploymentSummaries) {
     for (DeploymentSummary deploymentSummary : deploymentSummaries) {
       DeploymentInfo deploymentInfo = deploymentSummary.getDeploymentInfo();
       if (!(deploymentInfo instanceof ContainerDeploymentInfoWithNames)

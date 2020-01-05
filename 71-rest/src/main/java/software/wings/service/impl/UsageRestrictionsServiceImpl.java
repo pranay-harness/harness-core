@@ -844,8 +844,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   }
 
   @Override
-  public void validateUsageRestrictionsOnEntitySave(String accountId, UsageRestrictions usageRestrictions)
-      throws WingsException {
+  public void validateUsageRestrictionsOnEntitySave(String accountId, UsageRestrictions usageRestrictions) {
     checkIfValidUsageRestrictions(usageRestrictions);
 
     if (!hasUserContext()) {
@@ -872,8 +871,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   }
 
   @Override
-  public void validateUsageRestrictionsOnEntityUpdate(String accountId, UsageRestrictions oldUsageRestrictions,
-      UsageRestrictions newUsageRestrictions) throws WingsException {
+  public void validateUsageRestrictionsOnEntityUpdate(
+      String accountId, UsageRestrictions oldUsageRestrictions, UsageRestrictions newUsageRestrictions) {
     checkIfValidUsageRestrictions(newUsageRestrictions);
 
     if (!hasUserContext()) {

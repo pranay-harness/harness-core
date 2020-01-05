@@ -612,7 +612,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                                                                : artifactoryConfig.getArtifactoryUrl() + "/";
   }
 
-  private void handleAndRethrow(Exception e, EnumSet<ReportTarget> reportTargets) throws WingsException {
+  private void handleAndRethrow(Exception e, EnumSet<ReportTarget> reportTargets) {
     if (e instanceof HttpResponseException) {
       HttpResponseException httpResponseException = (HttpResponseException) e;
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets)

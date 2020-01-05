@@ -49,14 +49,14 @@ import java.util.Optional;
 @Slf4j
 public class AwsAmiInstanceHandler extends AwsInstanceHandler {
   @Override
-  public void syncInstances(String appId, String infraMappingId) throws WingsException {
+  public void syncInstances(String appId, String infraMappingId) {
     // Key - Auto scaling group with revision, Value - Instance
     Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
     syncInstancesInternal(appId, infraMappingId, asgInstanceMap, null, false);
   }
 
   private void syncInstancesInternal(String appId, String infraMappingId, Multimap<String, Instance> asgInstanceMap,
-      List<DeploymentSummary> newDeploymentSummaries, boolean rollbak) throws WingsException {
+      List<DeploymentSummary> newDeploymentSummaries, boolean rollbak) {
     Map<String, DeploymentSummary> asgNamesDeploymentSummaryMap = getDeploymentSummaryMap(newDeploymentSummaries);
 
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
@@ -102,8 +102,8 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
-      OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {
+  public void handleNewDeployment(
+      List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
     if (!(deploymentSummaries.iterator().next().getDeploymentInfo() instanceof AwsAutoScalingGroupDeploymentInfo)) {
       throw WingsException.builder().message("Incompatible deployment type.").build();
     }
@@ -123,7 +123,7 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
    * Returns the auto scaling group names
    */
   private List<String> getASGFromAMIDeployment(PhaseExecutionData phaseExecutionData,
-      PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution) throws WingsException {
+      PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution) {
     List<String> autoScalingGroupNames = Lists.newArrayList();
 
     PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
@@ -181,8 +181,7 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
   @Override
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
-      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-      throws WingsException {
+      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact) {
     List<String> autoScalingGroupNames =
         getASGFromAMIDeployment(phaseExecutionData, phaseStepExecutionData, workflowExecution);
     List<DeploymentInfo> deploymentInfos = new ArrayList<>();

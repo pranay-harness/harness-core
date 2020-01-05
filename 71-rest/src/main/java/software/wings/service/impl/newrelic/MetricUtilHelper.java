@@ -104,9 +104,8 @@ public class MetricUtilHelper {
    * @param yamlPath - String containing path from rest/src/main/java/resources
    *                   e.g. Path to new relic metrics yaml => /apm/newrelic_metrics.yml
    * @return Mapping of name of the group of metrics (e.g. WebTransactions) to List of Metric Objects
-   * @throws WingsException
    */
-  private Map<String, List<Metric>> getMetricsFromYaml(String yamlPath) throws WingsException {
+  private Map<String, List<Metric>> getMetricsFromYaml(String yamlPath) {
     YamlUtils yamlUtils = new YamlUtils();
     URL url = NewRelicState.class.getResource(yamlPath);
     try {
