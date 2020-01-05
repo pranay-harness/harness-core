@@ -115,6 +115,7 @@ public class CustomDropWizardExports extends Collector implements Describable {
     return name;
   }
 
+  @Override
   public List<MetricFamilySamples> collect() {
     ArrayList<MetricFamilySamples> mfSamples = new ArrayList();
     Iterator var2 = this.registry.getGauges().entrySet().iterator();
@@ -156,6 +157,7 @@ public class CustomDropWizardExports extends Collector implements Describable {
     return mfSamples;
   }
 
+  @Override
   public List<MetricFamilySamples> describe() {
     return new ArrayList();
   }

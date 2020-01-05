@@ -56,6 +56,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
   @Inject FeatureFlagService featureFlagService;
   @Inject AccountService accountService;
 
+  @Override
   public List<LogDataRecord> getLogRecordsToClassify(String accountId) {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
       return null;
@@ -124,8 +125,10 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     return returnList;
   }
 
+  @Override
   public void saveClassifiedLogRecord(LogDataRecord record, List<LogLabel> labels, String accountId, Object params) {}
 
+  @Override
   public List<LogLabel> getLabels() {
     return Arrays.asList(LogLabel.values());
   }
@@ -137,6 +140,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
    * @param serviceId
    * @return
    */
+  @Override
   public List<CVFeedbackRecord> getCVFeedbackToClassify(String accountId, String serviceId) {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
       return null;
@@ -167,6 +171,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
    * @param accountId
    * @return
    */
+  @Override
   public List<CVFeedbackRecord> getCVFeedbackToClassify(String accountId) {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
       return null;
@@ -183,6 +188,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
    * @param serviceId
    * @return
    */
+  @Override
   public Map<String, List<CVFeedbackRecord>> getLabeledSamplesForIgnoreFeedback(
       String accountId, String serviceId, String envId) {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
@@ -238,6 +244,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
    * @param accountId
    * @return
    */
+  @Override
   public Map<String, List<CVFeedbackRecord>> getLabeledSamplesForIgnoreFeedback(String accountId) {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
       return null;
@@ -254,6 +261,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
    *
    * @return
    */
+  @Override
   public boolean saveLabeledIgnoreFeedback(String accountId, CVFeedbackRecord feedbackRecord, String label) {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
       return false;
@@ -269,6 +277,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
    *
    * @return
    */
+  @Override
   public boolean saveLabeledIgnoreFeedback(String accountId, Map<String, List<CVFeedbackRecord>> feedbackRecordMap) {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
       return false;
@@ -286,6 +295,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     return true;
   }
 
+  @Override
   public Map<Pair<String, String>, Integer> getAccountsWithFeedback() {
     PageRequest<CVFeedbackRecord> feedbackRecordPageRequest =
         PageRequestBuilder.aPageRequest().withLimit(UNLIMITED).build();
@@ -309,6 +319,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
         .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
   }
 
+  @Override
   public Map<Pair<String, String>, Integer> getServicesWithFeedbackForAccount(String accountId) {
     PageRequest<CVFeedbackRecord> feedbackRecordPageRequest =
         PageRequestBuilder.aPageRequest()
@@ -339,6 +350,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
         .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
   }
 
+  @Override
   public Map<String, List<String>> getSampleLabeledRecords(String serviceId, String envId) {
     PageRequest<LabeledLogRecord> logRecordPageRequest =
         PageRequestBuilder.aPageRequest()
@@ -384,6 +396,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     return labelLogTextMap;
   }
 
+  @Override
   public List<LogDataRecord> getL2RecordsToClassify(String serviceId, String envId) {
     PageRequest<LogDataRecord> logDataRecordPageRequest =
         PageRequestBuilder.aPageRequest()
@@ -405,6 +418,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     return null;
   }
 
+  @Override
   public boolean saveLabeledL2AndFeedback(List<LabeledLogRecord> labeledLogRecords) {
     if (isNotEmpty(labeledLogRecords)) {
       labeledLogRecords.forEach(labeledLogRecord -> {

@@ -164,6 +164,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     return rand.nextInt(PORTS_BOUND) + PORTS_START_POINT;
   }
 
+  @Override
   public void stopChartMuseumServer(StartedProcess process) {
     try {
       if (process != null) {

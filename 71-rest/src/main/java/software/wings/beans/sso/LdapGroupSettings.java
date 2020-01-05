@@ -22,6 +22,7 @@ public class LdapGroupSettings implements LdapGroupConfig {
   @JsonProperty @NotBlank String userMembershipAttr = "member";
   @JsonProperty @NotBlank String referencedUserAttr = "dn";
 
+  @Override
   @JsonIgnore
   public String getFilter(String additionalFilter) {
     String filterString;

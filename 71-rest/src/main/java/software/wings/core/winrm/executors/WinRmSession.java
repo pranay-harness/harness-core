@@ -58,6 +58,7 @@ public class WinRmSession implements AutoCloseable {
     }
   }
 
+  @Override
   public void close() {
     if (shell != null) {
       shell.close();

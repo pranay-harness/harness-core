@@ -34,6 +34,7 @@ public class DatadogLogState extends AbstractLogAnalysisState {
 
   @Attributes(required = true, title = "Datadog Log Server") protected String analysisServerConfigId;
 
+  @Override
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
   @Attributes(required = true, title = "Algorithm Sensitivity")
   @DefaultValue("MEDIUM")
@@ -56,6 +57,7 @@ public class DatadogLogState extends AbstractLogAnalysisState {
     return query;
   }
 
+  @Override
   public String getAnalysisServerConfigId() {
     return analysisServerConfigId;
   }
@@ -95,6 +97,7 @@ public class DatadogLogState extends AbstractLogAnalysisState {
     return timeDuration;
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")

@@ -124,6 +124,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     return containerInfos;
   }
 
+  @Override
   protected void postExecution(
       ContextData contextData, List<ContainerServiceData> allData, ExecutionLogCallback executionLogCallback) {
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;

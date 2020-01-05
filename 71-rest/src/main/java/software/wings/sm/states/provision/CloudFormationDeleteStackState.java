@@ -29,10 +29,12 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
     super(name, StateType.CLOUD_FORMATION_DELETE_STACK.name());
   }
 
+  @Override
   protected String commandUnit() {
     return COMMAND_UNIT;
   }
 
+  @Override
   protected DelegateTask buildDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId) {
     CloudFormationDeleteStackRequest request =
@@ -64,6 +66,7 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
         .build();
   }
 
+  @Override
   protected List<CloudFormationElement> handleResponse(
       CloudFormationCommandResponse commandResponse, ExecutionContext context) {
     clearRollbackConfig((ExecutionContextImpl) context);

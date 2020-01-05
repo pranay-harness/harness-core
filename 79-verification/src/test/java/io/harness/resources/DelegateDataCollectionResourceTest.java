@@ -26,6 +26,7 @@ import javax.ws.rs.core.Response;
 
 public class DelegateDataCollectionResourceTest extends VerificationBaseIntegrationTest {
   @Inject CVActivityLogService cvActivityLogService;
+  @Override
   @Before
   public void setUp() {
     loginAdminUser();

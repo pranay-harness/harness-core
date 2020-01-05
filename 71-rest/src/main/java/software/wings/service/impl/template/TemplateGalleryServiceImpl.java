@@ -154,6 +154,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
     logger.info("Loading default templates for shell script success");
   }
 
+  @Override
   public TemplateGallery saveHarnessGallery() {
     return wingsPersistence.saveAndGet(TemplateGallery.class,
         TemplateGallery.builder()
@@ -165,6 +166,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
             .build());
   }
 
+  @Override
   public void copyHarnessTemplates() {
     List<Account> accounts = accountService.listAllAccounts();
     for (Account account : accounts) {
@@ -226,6 +228,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
     logger.info("Copying default templates for account {} success", accountName);
   }
 
+  @Override
   public void copyHarnessTemplatesToAccountV2(String accountId, String accountName) {
     logger.info("Copying Harness templates for the account {}", accountName);
 
@@ -316,6 +319,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
     }
   }
 
+  @Override
   public void copyHarnessTemplateFromGalleryToAccount(String sourceFolderPath, TemplateType templateType,
       String templateName, String yamlFilePath, String accountId, String accountName) {
     logger.info("Copying Harness template [{}] from global account to all accounts", templateName);
@@ -352,6 +356,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
     }
   }
 
+  @Override
   public void copyNewVersionFromGlobalToAllAccounts(Template globalTemplate, String keyword) {
     List<Account> accounts = accountService.listAllAccounts();
     for (Account account : accounts) {

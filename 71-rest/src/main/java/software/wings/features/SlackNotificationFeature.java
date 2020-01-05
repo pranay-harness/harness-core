@@ -36,6 +36,7 @@ public class SlackNotificationFeature extends AbstractNotificationFeature {
   }
 
   // Get usages of Slack under user groups
+  @Override
   protected List<Usage> getUsages(String accountId) {
     return getUserGroups(accountId)
         .stream()

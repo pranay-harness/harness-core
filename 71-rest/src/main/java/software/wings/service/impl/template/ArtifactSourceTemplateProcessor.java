@@ -113,6 +113,7 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
     }
   }
 
+  @Override
   public ArtifactStream constructEntityFromTemplate(Template template, EntityType entityType) {
     switch (entityType) {
       case ARTIFACT_STREAM:

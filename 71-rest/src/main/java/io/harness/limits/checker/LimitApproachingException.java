@@ -22,6 +22,7 @@ public class LimitApproachingException extends RuntimeException {
     this.percent = percent;
   }
 
+  @Override
   public String getMessage() {
     return arrayFormat(ERROR_MSG, new Object[] {String.valueOf(percent), limit.toString(), accountId}).getMessage();
   }

@@ -136,6 +136,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     return notificationRules;
   }
 
+  @Override
   public void setNotificationRules(List<NotificationRule> notificationRules) {
     this.notificationRules = notificationRules;
   }

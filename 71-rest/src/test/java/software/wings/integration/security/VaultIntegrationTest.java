@@ -47,6 +47,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
 
   private LocalEncryptionConfig localEncryptionConfig;
 
+  @Override
   @Before
   public void setUp() {
     super.setUp();

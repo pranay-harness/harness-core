@@ -50,6 +50,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
   @Inject private ScmSecret scmSecret;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

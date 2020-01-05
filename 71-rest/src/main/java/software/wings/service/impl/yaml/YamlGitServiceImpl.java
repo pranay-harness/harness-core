@@ -225,6 +225,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     return gitConfig;
   }
 
+  @Override
   public SettingAttribute getAndDecryptSettingAttribute(String sshSettingId) {
     SettingAttribute settingAttributeForSshKey = settingsService.get(sshSettingId);
     if (settingAttributeForSshKey != null) {
@@ -360,6 +361,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         .build();
   }
 
+  @Override
   public List<GitFileChange> obtainApplicationYamlGitFileChanges(String accountId, Application app) {
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
 
@@ -726,6 +728,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     return false;
   }
 
+  @Override
   public GitSyncWebhook getWebhook(String entityId, String accountId) {
     GitSyncWebhook gsw = wingsPersistence.createQuery(GitSyncWebhook.class)
                              .filter(GitSyncWebhookKeys.entityId, entityId)
@@ -790,6 +793,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     return GitConnectionErrorAlert.builder().accountId(accountId).message(message).build();
   }
 
+  @Override
   public <T extends Change> void upsertGitSyncErrors(T failedChange, String errorMessage, boolean fullSyncPath) {
     Query<GitSyncError> failedQuery = wingsPersistence.createQuery(GitSyncError.class)
                                           .filter(GitSyncError.ACCOUNT_ID_KEY, failedChange.getAccountId())
@@ -1056,6 +1060,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     return gitCommit;
   }
 
+  @Override
   public boolean retainYamlGitConfigsOfSelectedGitConnectorsAndDeleteRest(
       String accountId, List<String> selectedGitConnectors) {
     if (EmptyPredicate.isNotEmpty(selectedGitConnectors)) {

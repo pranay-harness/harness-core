@@ -9,6 +9,7 @@ public class QLTimeFilter implements Filter {
   private QLTimeOperator operator;
   private Number value;
 
+  @Override
   public Number[] getValues() {
     return new Number[] {value};
   }

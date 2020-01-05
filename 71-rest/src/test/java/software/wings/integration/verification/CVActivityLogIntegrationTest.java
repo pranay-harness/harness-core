@@ -27,6 +27,7 @@ import javax.ws.rs.core.GenericType;
 public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
   @Inject CVActivityLogService cvActivityLogService;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     loginAdminUser();

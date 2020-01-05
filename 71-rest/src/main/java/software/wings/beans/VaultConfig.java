@@ -80,6 +80,7 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(vaultUrl));
   }
 
+  @Override
   public EncryptionType getEncryptionType() {
     return EncryptionType.VAULT;
   }

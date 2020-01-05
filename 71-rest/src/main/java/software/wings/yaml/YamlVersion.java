@@ -154,6 +154,7 @@ public class YamlVersion extends Base implements YamlHistory {
     TAGS
   }
 
+  @Override
   public YamlVersion clone() {
     return aYamlVersion()
         .withUuid(getYamlVersionId())

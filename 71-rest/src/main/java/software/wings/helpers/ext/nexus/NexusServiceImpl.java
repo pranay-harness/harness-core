@@ -91,6 +91,7 @@ public class NexusServiceImpl implements NexusService {
     return getRepositories(nexusConfig, encryptionDetails, null);
   }
 
+  @Override
   public Map<String, String> getRepositories(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryFormat) {
     try {

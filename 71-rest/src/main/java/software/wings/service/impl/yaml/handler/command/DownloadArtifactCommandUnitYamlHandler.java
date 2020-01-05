@@ -46,6 +46,7 @@ public class DownloadArtifactCommandUnitYamlHandler
     return downloadArtifactCommandUnit;
   }
 
+  @Override
   public DownloadArtifactCommandUnit toBean(AbstractCommandUnit.Yaml yaml) {
     DownloadArtifactCommandUnit.Yaml downloadYaml = (DownloadArtifactCommandUnit.Yaml) yaml;
     DownloadArtifactCommandUnit downloadArtifactCommandUnit = super.toBean(yaml);

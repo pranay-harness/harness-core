@@ -8,6 +8,7 @@ import software.wings.beans.yaml.ChangeContext;
 
 @Singleton
 public class AcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, AcrArtifactStream> {
+  @Override
   public Yaml toYaml(AcrArtifactStream bean, String appId) {
     Yaml yaml = Yaml.builder().build();
     super.toYaml(yaml, bean);
@@ -18,6 +19,7 @@ public class AcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
     return yaml;
   }
 
+  @Override
   protected void toBean(AcrArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();

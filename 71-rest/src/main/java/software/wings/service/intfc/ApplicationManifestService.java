@@ -56,7 +56,7 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
 
   void deleteManifestFile(String appId, ManifestFile manifestFile);
 
-  void pruneByEnvironment(String appId, String envId);
+  @Override void pruneByEnvironment(String appId, String envId);
 
   void deleteAppManifest(ApplicationManifest applicationManifest);
 

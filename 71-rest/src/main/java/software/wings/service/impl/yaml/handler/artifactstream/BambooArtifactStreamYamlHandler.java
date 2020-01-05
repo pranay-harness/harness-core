@@ -11,6 +11,7 @@ import software.wings.beans.yaml.ChangeContext;
  */
 @Singleton
 public class BambooArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, BambooArtifactStream> {
+  @Override
   public Yaml toYaml(BambooArtifactStream bean, String appId) {
     Yaml yaml = Yaml.builder().build();
     super.toYaml(yaml, bean);
@@ -20,6 +21,7 @@ public class BambooArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
     return yaml;
   }
 
+  @Override
   protected void toBean(BambooArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();

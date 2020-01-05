@@ -45,6 +45,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
   private SettingAttribute cloudProvider;
   private Set<String> allInfraDefinitionsCreated = new HashSet<>();
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

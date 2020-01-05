@@ -27,6 +27,7 @@ import javax.ws.rs.core.MediaType;
  * @author marklu on 10/16/18
  */
 public class SecretManagerIntegrationTest extends BaseIntegrationTest {
+  @Override
   @Before
   public void setUp() {
     super.loginAdminUser();

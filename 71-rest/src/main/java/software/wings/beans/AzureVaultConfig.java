@@ -56,6 +56,7 @@ public class AzureVaultConfig extends SecretManagerConfig {
     return String.format("https://%s.vault.azure.net", getVaultName());
   }
 
+  @Override
   public EncryptionType getEncryptionType() {
     return EncryptionType.AZURE_VAULT;
   }

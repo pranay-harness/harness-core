@@ -57,6 +57,7 @@ public class YamlCloneServiceImpl implements YamlCloneService {
   @Inject private YamlGitService yamlGitSyncService;
   @Inject private YamlDirectoryService yamlDirectoryService;
 
+  @Override
   public RestResponse cloneEntityUsingYaml(
       String accountId, String appId, boolean includeFiles, String entityType, String entiytId, String newEntityName) {
     try {

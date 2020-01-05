@@ -89,6 +89,7 @@ public class HQuery<T> extends QueryImpl<T> {
     }
   }
 
+  @Override
   @SuppressWarnings("deprecation")
   public T get(FindOptions options) {
     try (AutoLogContext ignore = new CollectionLogContext(super.getCollection().getName(), OVERRIDE_ERROR)) {
@@ -96,6 +97,7 @@ public class HQuery<T> extends QueryImpl<T> {
     }
   }
 
+  @Override
   public Key<T> getKey(FindOptions options) {
     return HPersistence.retry(() -> super.getKey(options));
   }
@@ -133,6 +135,7 @@ public class HQuery<T> extends QueryImpl<T> {
     return HPersistence.retry(() -> super.count(options));
   }
 
+  @Override
   public MorphiaIterator<T, T> fetch() {
     enforceHarnessRules();
     return super.fetch();

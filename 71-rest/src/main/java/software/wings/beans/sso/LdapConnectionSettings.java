@@ -42,6 +42,7 @@ public class LdapConnectionSettings implements LdapConnectionConfig {
    * API to fetch ldap server url based on given host and port.
    * @return
    */
+  @Override
   public String generateUrl() {
     return String.format("%s://%s:%d", sslEnabled ? "ldaps" : "ldap", host, port);
   }

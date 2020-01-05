@@ -337,6 +337,7 @@ public class SecretManagerImpl implements SecretManager {
     }
   }
 
+  @Override
   public String encrypt(String accountId, String secret, UsageRestrictions usageRestrictions) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       logger.info("Encrypting a secret");
@@ -348,6 +349,7 @@ public class SecretManagerImpl implements SecretManager {
     }
   }
 
+  @Override
   public Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, refId);
     if (encryptedData == null) {
@@ -364,6 +366,7 @@ public class SecretManagerImpl implements SecretManager {
                            .build());
   }
 
+  @Override
   public List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object) {
     return getEncryptionDetails(object, null, null);
   }

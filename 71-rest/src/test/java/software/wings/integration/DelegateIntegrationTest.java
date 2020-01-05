@@ -37,6 +37,7 @@ import java.util.concurrent.TimeoutException;
  */
 @Slf4j
 public class DelegateIntegrationTest extends BaseIntegrationTest {
+  @Override
   @Before
   public void setUp() throws Exception {
     loginAdminUser();

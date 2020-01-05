@@ -31,6 +31,7 @@ public class ElasticsearchSyncJob implements Runnable {
   private ScheduledExecutorService scheduledExecutorService;
   private ScheduledFuture searchLock;
 
+  @Override
   public void run() {
     try {
       ElasticsearchBulkSyncTask elasticsearchBulkSyncTask = elasticsearchBulkSyncTaskProvider.get();

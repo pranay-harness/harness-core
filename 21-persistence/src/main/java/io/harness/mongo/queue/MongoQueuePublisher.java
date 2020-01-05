@@ -36,6 +36,7 @@ public class MongoQueuePublisher<T extends Queuable> implements QueuePublisher<T
     persistence.insertIgnoringDuplicateKeys(payload);
   }
 
+  @Override
   public void send(final T payload) {
     Objects.requireNonNull(payload);
     payload.setTopic(topicPrefix);

@@ -17,19 +17,23 @@ public class CV247Metric implements HarnessMetricsEvent {
   private static final List<String> staticCVMetricLabels = ImmutableList.of(
       EventConstants.ACCOUNT_ID, EventConstants.VERIFICATION_STATE_TYPE, EventConstants.IS_24X7_ENABLED);
 
+  @Override
   public String[] getLabelNames() {
     return staticCVMetricLabels.toArray(new String[] {});
   }
 
+  @Override
   public Type getType() {
     return Type.GAUGE;
   }
 
+  @Override
   public void handleEvent(HarnessMetricRegistry registry, Event event) {
     registry.recordGaugeValue(
         getEventType().name(), getLabelValues(event.getEventData()), event.getEventData().getValue());
   }
 
+  @Override
   public void registerMetrics(HarnessMetricRegistry registry) {
     registry.registerGaugeMetric(getEventType().name(), getLabelNames(), getMetricHelpDocument());
   }

@@ -27,6 +27,7 @@ public class RolloutStatusCommand extends AbstractExecutable {
     return this;
   }
 
+  @Override
   public String command() {
     StringBuilder command = new StringBuilder();
     command.append(rolloutCommand.command()).append("status ");

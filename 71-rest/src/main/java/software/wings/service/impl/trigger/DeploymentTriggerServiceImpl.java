@@ -327,6 +327,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
         .collect(Collectors.toList());
   }
 
+  @Override
   public WorkflowExecution triggerExecutionByWebHook(DeploymentTrigger deploymentTrigger,
       Map<String, String> parameters, List<TriggerArtifactVariable> artifactVariables,
       TriggerExecution triggerExecution) {

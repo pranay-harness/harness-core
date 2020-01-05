@@ -24,6 +24,7 @@ public class PhysicalDataCenterConfigYamlHandler extends CloudProviderYamlHandle
     return yaml;
   }
 
+  @Override
   protected SettingAttribute toBean(
       SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;

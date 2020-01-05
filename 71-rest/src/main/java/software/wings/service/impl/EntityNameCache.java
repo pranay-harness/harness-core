@@ -43,6 +43,7 @@ public class EntityNameCache {
           .maximumSize(20000)
           .expireAfterWrite(15, TimeUnit.MINUTES)
           .build(new CacheLoader<EntityNameCacheKey, String>() {
+            @Override
             public String load(EntityNameCacheKey entityNameCacheKey) {
               return fetchEntityName(entityNameCacheKey);
             }

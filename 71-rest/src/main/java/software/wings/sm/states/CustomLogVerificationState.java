@@ -85,6 +85,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     this.dataCollectionRate = dataCollectionRate;
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
@@ -105,6 +106,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     return timeDuration;
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
   @Attributes(required = true, title = "Algorithm Sensitivity")
   @DefaultValue("MEDIUM")

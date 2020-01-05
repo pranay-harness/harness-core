@@ -67,6 +67,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Mock private EncryptionService encryptionService;
   private String appdynamicsSettingId;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

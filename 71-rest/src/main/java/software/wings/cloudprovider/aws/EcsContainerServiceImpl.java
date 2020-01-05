@@ -1057,6 +1057,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
   }
 
+  @Override
   public void updateServiceCount(UpdateServiceCountRequestData updateServiceCountRequestData) {
     UpdateServiceRequest updateServiceRequest = new UpdateServiceRequest()
                                                     .withCluster(updateServiceCountRequestData.getCluster())
@@ -1513,6 +1514,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     return new ArrayList<>();
   }
 
+  @Override
   public List<ServiceEvent> getEventsFromService(Service service) {
     List<ServiceEvent> serviceEvents = new ArrayList<>();
     if (service != null && isNotEmpty(service.getEvents())) {

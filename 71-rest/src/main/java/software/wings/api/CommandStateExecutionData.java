@@ -135,6 +135,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     return data;
   }
 
+  @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "hostName", ExecutionDataValue.builder().displayName("Host").value(hostName).build());

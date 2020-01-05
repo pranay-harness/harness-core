@@ -52,6 +52,7 @@ public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFet
     return query;
   }
 
+  @Override
   public String getAggregationFieldName(String aggregation) {
     QLCloudProviderTypeAggregation cloudProviderAggregation = QLCloudProviderTypeAggregation.valueOf(aggregation);
     switch (cloudProviderAggregation) {

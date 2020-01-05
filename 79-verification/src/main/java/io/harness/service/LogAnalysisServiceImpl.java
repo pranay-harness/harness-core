@@ -1138,6 +1138,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     return mlAnalysisRecord == null ? -1 : mlAnalysisRecord.getLogCollectionMinute();
   }
 
+  @Override
   public long getLastLogDataCollectedMinute(String query, String appId, String stateExecutionId, StateType type) {
     LogDataRecord logDataRecords = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
                                        .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId)

@@ -37,6 +37,7 @@ public class WorkflowSearchEntity implements SearchEntity<Workflow> {
           .add(Pipeline.class)
           .build();
 
+  @Override
   public String getType() {
     return TYPE;
   }

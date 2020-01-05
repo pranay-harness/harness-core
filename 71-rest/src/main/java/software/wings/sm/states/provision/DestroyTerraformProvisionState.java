@@ -11,6 +11,7 @@ public class DestroyTerraformProvisionState extends TerraformProvisionState {
     super(name, StateType.TERRAFORM_DESTROY.name());
   }
 
+  @Override
   protected TerraformCommandUnit commandUnit() {
     return TerraformCommandUnit.Destroy;
   }

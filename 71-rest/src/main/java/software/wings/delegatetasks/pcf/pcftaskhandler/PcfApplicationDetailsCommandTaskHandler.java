@@ -29,6 +29,7 @@ import java.util.List;
 @Singleton
 @Slf4j
 public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandler {
+  @Override
   public PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     if (!(pcfCommandRequest instanceof PcfInstanceSyncRequest)) {

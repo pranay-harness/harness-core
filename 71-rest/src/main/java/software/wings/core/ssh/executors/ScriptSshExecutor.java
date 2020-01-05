@@ -193,6 +193,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
     }
   }
 
+  @Override
   public CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect) {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
     CommandExecutionResultBuilder commandExecutionResult = CommandExecutionResult.builder();

@@ -52,6 +52,7 @@ public class CategoryTimeoutRule extends Timeout {
     return element;
   }
 
+  @Override
   public Statement apply(Statement statement, Description description) {
     Category category = description.getAnnotation(Category.class);
     if (category == null) {

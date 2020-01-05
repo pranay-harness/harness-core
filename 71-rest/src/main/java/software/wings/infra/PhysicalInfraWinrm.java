@@ -46,6 +46,7 @@ public class PhysicalInfraWinrm implements PhysicalDataCenterInfra, InfraMapping
     return PhysicalInfrastructureMappingWinRm.class;
   }
 
+  @Override
   public String getInfrastructureType() {
     return PHYSICAL_INFRA_WINRM;
   }

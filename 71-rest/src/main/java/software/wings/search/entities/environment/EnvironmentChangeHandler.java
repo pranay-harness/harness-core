@@ -310,6 +310,7 @@ public class EnvironmentChangeHandler implements ChangeHandler {
     }
   }
 
+  @Override
   public boolean handleChange(ChangeEvent<?> changeEvent) {
     boolean isChangeHandled = true;
     if (changeEvent.isChangeFor(Environment.class)) {

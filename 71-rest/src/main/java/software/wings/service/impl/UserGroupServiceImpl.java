@@ -476,6 +476,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     return list(accountId, pageRequest.build(), true).getResponse();
   }
 
+  @Override
   public List<UserGroup> getUserGroupsByAccountId(String accountId) {
     PageRequestBuilder pageRequest = aPageRequest().addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId);
 

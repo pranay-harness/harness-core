@@ -32,6 +32,7 @@ public class AppYamlResourceServiceImpl implements AppYamlResourceService {
    * @param appId  the app id
    * @return the rest response
    */
+  @Override
   public RestResponse<YamlPayload> getApp(String appId) {
     Application app = appService.get(appId);
 
@@ -49,6 +50,7 @@ public class AppYamlResourceServiceImpl implements AppYamlResourceService {
    * @param yamlPayload the yaml version of app
    * @return the rest response
    */
+  @Override
   public RestResponse<Application> updateApp(String appId, YamlPayload yamlPayload, boolean deleteEnabled) {
     String accountId = appService.getAccountIdByAppId(appId);
     return yamlSyncService.update(yamlPayload, accountId);

@@ -27,6 +27,7 @@ public class ProceedResponseHandler implements SlackActionHandler {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private SlackApprovalUtils slackApprovalUtils;
 
+  @Override
   public RestResponse<Boolean> handle(SlackApprovalParams slackApprovalParams, String slackNotificationMessage,
       String sessionTimedOutMessage, String responseUrl) throws IOException {
     // Verifying JWT token

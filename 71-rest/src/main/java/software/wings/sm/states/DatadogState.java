@@ -109,6 +109,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
 
   @Attributes(required = false, title = "Custom Metrics") private Map<String, Set<Metric>> customMetrics;
 
+  @Override
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
   @Attributes(required = true, title = "Algorithm Sensitivity")
   @DefaultValue("MEDIUM")
@@ -244,6 +245,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
     return delegateService.queueTask(delegateTask);
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
@@ -254,12 +256,14 @@ public class DatadogState extends AbstractMetricAnalysisState {
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
+  @Override
   @Attributes(title = "Expression for Host/Container name")
   @DefaultValue("")
   public String getHostnameTemplate() {
     return hostnameTemplate;
   }
 
+  @Override
   public void setHostnameTemplate(String hostnameTemplate) {
     this.hostnameTemplate = hostnameTemplate;
   }

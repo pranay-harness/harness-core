@@ -122,6 +122,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
   private String newRelicConfigId;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

@@ -50,6 +50,7 @@ public class DynaTraceResourceIntegrationTest extends BaseIntegrationTest {
   private String appId;
   private String workflowId;
   private String workflowExecutionId;
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

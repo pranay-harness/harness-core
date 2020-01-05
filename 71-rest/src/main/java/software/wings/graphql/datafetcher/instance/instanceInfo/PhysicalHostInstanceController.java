@@ -11,6 +11,7 @@ import software.wings.graphql.schema.type.instance.QLPhysicalHostInstance;
 public class PhysicalHostInstanceController implements InstanceController<QLPhysicalHostInstance> {
   @Inject InstanceControllerUtils util;
 
+  @Override
   public QLPhysicalHostInstance populateInstance(Instance instance) {
     PhysicalHostInstanceInfo info = (PhysicalHostInstanceInfo) instance.getInstanceInfo();
     return QLPhysicalHostInstance.builder()

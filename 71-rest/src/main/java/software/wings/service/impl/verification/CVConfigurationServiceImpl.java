@@ -292,6 +292,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     return dbConfiguration;
   }
 
+  @Override
   public CVConfiguration saveToDatabase(CVConfiguration cvConfiguration, boolean createdFromYaml) {
     try {
       saveMetricTemplate(
@@ -334,6 +335,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     return (T) cvConfiguration;
   }
 
+  @Override
   public String updateConfiguration(CVConfiguration cvConfiguration, String appId) {
     CVConfiguration savedConfiguration =
         wingsPersistence.getWithAppId(CVConfiguration.class, appId, cvConfiguration.getUuid());
@@ -826,6 +828,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     }
   }
 
+  @Override
   public void fillInServiceAndConnectorNames(CVConfiguration cvConfiguration) {
     Service service = wingsPersistence.get(Service.class, cvConfiguration.getServiceId());
     if (service != null) {
@@ -959,6 +962,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     return metricTemplates;
   }
 
+  @Override
   public void deleteStaleConfigs() {
     List<CVConfiguration> cvConfigurationList =
         wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority).asList();

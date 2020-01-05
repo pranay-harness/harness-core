@@ -10,6 +10,7 @@ import javax.ws.rs.core.FeatureContext;
 public class KryoFeature implements Feature {
   public KryoFeature() {}
 
+  @Override
   public boolean configure(FeatureContext context) {
     Configuration config = context.getConfiguration();
     if (!config.isRegistered(KryoMessageBodyProvider.class)) {

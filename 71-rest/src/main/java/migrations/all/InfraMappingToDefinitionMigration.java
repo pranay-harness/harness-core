@@ -109,6 +109,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
           "SERx8_qVRT6zbzN05J1gwg", "e05393d5-f171-44f5-9083-387c7455d51c", "gz4oUAlfSgONuOrWmphHif",
           "kmpySmUISimoRrJL6NL73w", "lU1_N50mRcur3e6OO2_9sg", "x2Ynq8DDwjotzB9sw6X9nl"));
 
+  @Override
   public void migrate() {
     List<Account> allAccounts = accountService.listAllAccountWithDefaultsWithoutLicenseInfo();
     for (Account account : allAccounts) {

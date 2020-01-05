@@ -61,6 +61,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     return builder.build();
   }
 
+  @Override
   public RegisterScalableTargetResult registerScalableTarget(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, RegisterScalableTargetRequest scalableTargetRequest) {
     tracker.trackAPPASGCall("Register Scalable Target");
@@ -68,6 +69,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     return getAWSApplicationAutoScalingClient(region, awsConfig).registerScalableTarget(scalableTargetRequest);
   }
 
+  @Override
   public DeregisterScalableTargetResult deregisterScalableTarget(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DeregisterScalableTargetRequest deregisterTargetRequest) {
     tracker.trackAPPASGCall("Deregister Scalable Target");
@@ -75,6 +77,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     return getAWSApplicationAutoScalingClient(region, awsConfig).deregisterScalableTarget(deregisterTargetRequest);
   }
 
+  @Override
   public DescribeScalableTargetsResult listScalableTargets(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DescribeScalableTargetsRequest request) {
     tracker.trackAPPASGCall("List Scalable Targets");
@@ -82,6 +85,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     return getAWSApplicationAutoScalingClient(region, awsConfig).describeScalableTargets(request);
   }
 
+  @Override
   public DescribeScalingPoliciesResult listScalingPolicies(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DescribeScalingPoliciesRequest request) {
     tracker.trackAPPASGCall("List Scaling Policies");
@@ -89,6 +93,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     return getAWSApplicationAutoScalingClient(region, awsConfig).describeScalingPolicies(request);
   }
 
+  @Override
   public PutScalingPolicyResult upsertScalingPolicy(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, PutScalingPolicyRequest putScalingPolicyRequest) {
     tracker.trackAPPASGCall("Put Scaling Policy");
@@ -96,6 +101,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     return getAWSApplicationAutoScalingClient(region, awsConfig).putScalingPolicy(putScalingPolicyRequest);
   }
 
+  @Override
   public List<MetricAlarm> fetchAlarmsByName(
       String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, List<Alarm> alarms) {
     if (EmptyPredicate.isEmpty(alarms)) {
@@ -113,6 +119,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     return describeAlarmsResult.getMetricAlarms();
   }
 
+  @Override
   public PutMetricAlarmResult putMetricAlarm(
       String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, MetricAlarm alarm) {
     if (alarm == null) {
@@ -147,6 +154,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
             .withUnit(alarm.getUnit()));
   }
 
+  @Override
   public DeleteScalingPolicyResult deleteScalingPolicy(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DeleteScalingPolicyRequest deleteScalingPolicyRequest) {
     tracker.trackAPPASGCall("Delete Scaling Policy");
@@ -154,6 +162,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     return getAWSApplicationAutoScalingClient(region, awsConfig).deleteScalingPolicy(deleteScalingPolicyRequest);
   }
 
+  @Override
   public List<ScalingPolicy> getScalingPolicyFromJson(String json) {
     ObjectMapper mapper = new ObjectMapper();
     mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
@@ -169,6 +178,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     }
   }
 
+  @Override
   public ScalableTarget getScalableTargetFromJson(String json) {
     ObjectMapper mapper = new ObjectMapper();
     mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
@@ -180,6 +190,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     }
   }
 
+  @Override
   public String getJsonForAwsScalableTarget(ScalableTarget scalableTarget) {
     ObjectMapper mapper = new ObjectMapper();
     try {
@@ -190,6 +201,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     }
   }
 
+  @Override
   public String getJsonForAwsScalablePolicy(ScalingPolicy scalingPolicy) {
     ObjectMapper mapper = new ObjectMapper();
     try {

@@ -33,6 +33,7 @@ public class LocalEncryptionConfig extends SecretManagerConfig {
     return "encryption type: " + EncryptionType.LOCAL;
   }
 
+  @Override
   public EncryptionType getEncryptionType() {
     return EncryptionType.LOCAL;
   }

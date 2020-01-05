@@ -53,6 +53,7 @@ public class SpotInstListenerUpdateRollbackState extends SpotInstListenerUpdateS
     return super.isDownsizeOldElastiGroup();
   }
 
+  @Override
   protected ImmutableList<CommandUnit> getCommandUnits() {
     return ImmutableList.of(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
         new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),

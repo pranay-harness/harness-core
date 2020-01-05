@@ -50,6 +50,7 @@ public class ServiceTemplateElement implements ContextElement {
    *
    * @return the uuid
    */
+  @Override
   public String getUuid() {
     return uuid;
   }

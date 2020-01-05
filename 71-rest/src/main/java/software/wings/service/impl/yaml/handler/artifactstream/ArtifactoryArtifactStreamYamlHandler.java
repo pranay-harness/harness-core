@@ -35,6 +35,7 @@ public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHand
     return yaml;
   }
 
+  @Override
   protected void toBean(ArtifactoryArtifactStream artifactStream, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(artifactStream, changeContext, appId);
     Yaml yaml = changeContext.getYaml();

@@ -137,6 +137,7 @@ public class DeploymentChangeHandler implements ChangeHandler {
     }
   }
 
+  @Override
   public boolean handleChange(ChangeEvent<?> changeEvent) {
     boolean isChangeHandled = true;
     if (changeEvent.isChangeFor(WorkflowExecution.class)) {

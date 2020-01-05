@@ -12,18 +12,22 @@ public class Gitlab extends DefaultApi20 {
     return Gitlab.InstanceHolder.INSTANCE;
   }
 
+  @Override
   public String getAccessTokenEndpoint() {
     return "https://gitlab.com/oauth/token";
   }
 
+  @Override
   public String getAuthorizationBaseUrl() {
     return "https://gitlab.com/oauth/authorize";
   }
 
+  @Override
   public TokenExtractor<OAuth2AccessToken> getAccessTokenExtractor() {
     return OpenIdJsonTokenExtractor.instance();
   }
 
+  @Override
   public String getRevokeTokenEndpoint() {
     return "https://accounts.google.com/o/oauth2/revoke";
   }

@@ -53,6 +53,7 @@ public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnaly
     this.managerClientHelper = managerClientHelper;
   }
 
+  @Override
   @POST
   @Path(ExperimentalLogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL)
   @Timed
@@ -87,6 +88,7 @@ public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnaly
     }
   }
 
+  @Override
   @GET
   @Path(ExperimentalLogAnalysisResource.ANALYSIS_STATE_GET_EXP_ANALYSIS_INFO_URL)
   @Timed

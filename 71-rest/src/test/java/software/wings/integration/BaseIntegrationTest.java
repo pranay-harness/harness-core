@@ -136,10 +136,13 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
     config.register(MultiPartWriter.class);
     SSLContext sslcontext = SSLContext.getInstance("TLS");
     X509TrustManager x509TrustManager = new X509TrustManager() {
+      @Override
       public void checkClientTrusted(X509Certificate[] arg0, String arg1) {}
 
+      @Override
       public void checkServerTrusted(X509Certificate[] arg0, String arg1) {}
 
+      @Override
       public X509Certificate[] getAcceptedIssuers() {
         return new X509Certificate[0];
       }

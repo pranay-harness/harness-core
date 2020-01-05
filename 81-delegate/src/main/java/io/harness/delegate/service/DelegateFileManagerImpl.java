@@ -152,6 +152,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
     }
   }
 
+  @Override
   public Long getArtifactFileSize(ArtifactStreamAttributes artifactStreamAttributes) {
     return artifactCollectionTaskHelper.getArtifactFileSize(artifactStreamAttributes);
   }

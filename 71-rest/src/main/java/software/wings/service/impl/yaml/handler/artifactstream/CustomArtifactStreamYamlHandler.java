@@ -25,6 +25,7 @@ public class CustomArtifactStreamYamlHandler
     return yaml;
   }
 
+  @Override
   protected void toBean(CustomArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();

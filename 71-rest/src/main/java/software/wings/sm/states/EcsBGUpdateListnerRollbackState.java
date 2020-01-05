@@ -11,6 +11,7 @@ public class EcsBGUpdateListnerRollbackState extends EcsBGUpdateListnerState {
     super(name, StateType.ECS_LISTENER_UPDATE_ROLLBACK.name());
   }
 
+  @Override
   protected EcsListenerUpdateRequestConfigData getEcsListenerUpdateRequestConfigData(
       ContainerServiceElement containerServiceElement) {
     EcsListenerUpdateRequestConfigData configData =

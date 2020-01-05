@@ -13,6 +13,7 @@ import ch.qos.logback.core.CoreConstants;
 public class StackTraceProxyConverter extends ThrowableHandlingConverter {
   private static final int BUILDER_CAPACITY = 2048;
 
+  @Override
   public String convert(ILoggingEvent event) {
     IThrowableProxy tp = event.getThrowableProxy();
     if (tp == null) {

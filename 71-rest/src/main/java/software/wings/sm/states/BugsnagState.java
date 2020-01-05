@@ -84,6 +84,7 @@ public class BugsnagState extends AbstractLogAnalysisState {
     return query;
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
@@ -148,11 +149,13 @@ public class BugsnagState extends AbstractLogAnalysisState {
     return super.isExecuteWithPreviousSteps();
   }
 
+  @Override
   @Attributes(required = true, title = "Include nodes from previous phases")
   public boolean getIncludePreviousPhaseNodes() {
     return includePreviousPhaseNodes;
   }
 
+  @Override
   @Attributes(title = "Analysis Time duration (in minutes)")
   @DefaultValue("15")
   public String getTimeDuration() {

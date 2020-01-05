@@ -11,6 +11,7 @@ public class EntityNameValidationMigration_All_02 extends EntityNameValidationMi
   );
   // private static Set<String> accountsToSkip = emptySet();
 
+  @Override
   protected boolean skipAccount(String accountId) {
     return accountsToSkip.contains(accountId);
   }

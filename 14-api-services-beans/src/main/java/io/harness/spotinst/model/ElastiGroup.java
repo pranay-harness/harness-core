@@ -12,6 +12,7 @@ public class ElastiGroup implements Cloneable {
   private String name;
   private ElastiGroupCapacity capacity;
 
+  @Override
   public ElastiGroup clone() {
     return ElastiGroup.builder()
         .id(id)

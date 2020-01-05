@@ -80,10 +80,12 @@ public class DelegateFile extends FileMetadata {
     this.taskId = taskId;
   }
 
+  @Override
   public String getAccountId() {
     return accountId;
   }
 
+  @Override
   public void setAccountId(String accountId) {
     this.accountId = accountId;
   }

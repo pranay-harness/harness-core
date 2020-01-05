@@ -53,6 +53,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
           .maximumSize(1)
           .expireAfterWrite(50, TimeUnit.MINUTES)
           .build(new CacheLoader<String, AccessTokenBean>() {
+            @Override
             public AccessTokenBean load(String key) {
               String serviceAccountJson = getServiceAccountJson(key);
               if (isEmpty(serviceAccountJson)) {

@@ -50,6 +50,7 @@ public class ServiceStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QL
     return getQLData(accountId, filters, entityClass, groupByEntityList);
   }
 
+  @Override
   public String getAggregationFieldName(String aggregation) {
     QLServiceEntityAggregation serviceAggregation = QLServiceEntityAggregation.valueOf(aggregation);
     switch (serviceAggregation) {

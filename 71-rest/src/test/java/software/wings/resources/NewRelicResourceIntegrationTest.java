@@ -31,6 +31,7 @@ import javax.ws.rs.core.GenericType;
 @Slf4j
 public class NewRelicResourceIntegrationTest extends BaseIntegrationTest {
   private NewRelicState.Metric requestsPerMinuteMetric;
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

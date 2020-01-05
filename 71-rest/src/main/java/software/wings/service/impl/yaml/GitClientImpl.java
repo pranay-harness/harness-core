@@ -963,6 +963,7 @@ public class GitClientImpl implements GitClient {
     clone(gitConfig, gitClientHelper.getFileDownloadRepoDirectory(gitConfig, connectorId), branch, true);
   }
 
+  @Override
   public synchronized void ensureRepoLocallyClonedAndUpdated(GitOperationContext gitOperationContext) {
     GitConfig gitConfig = gitOperationContext.getGitConfig();
 

@@ -190,6 +190,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
     }
   }
 
+  @Override
   public RevisionLocation getApplicationRevisionList(String region, String appName, String deploymentGroupName,
       SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);

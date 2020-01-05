@@ -28,6 +28,7 @@ public class GcsArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
     return new GcsArtifactStream();
   }
 
+  @Override
   protected void toBean(GcsArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();

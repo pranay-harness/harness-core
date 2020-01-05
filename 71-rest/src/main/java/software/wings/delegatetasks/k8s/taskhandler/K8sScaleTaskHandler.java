@@ -54,6 +54,7 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
   private int targetReplicaCount;
   private K8sScaleResponse k8sScaleResponse;
 
+  @Override
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
     if (!(k8sTaskParameters instanceof K8sScaleTaskParameters)) {

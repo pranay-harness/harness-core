@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 public class TagsDataFetcher extends AbstractArrayDataFetcher<QLTag, QLTagsQueryParameters> {
   @Inject HPersistence persistence;
 
+  @Override
   protected QLTag unusedReturnTypePassingDummyMethod() {
     return null;
   }

@@ -369,6 +369,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
   }
 
+  @Override
   protected ExecutionResponse generateAnalysisResponse(
       AnalysisContext context, ExecutionStatus status, String message) {
     analysisService.createAndSaveSummary(

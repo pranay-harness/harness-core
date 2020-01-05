@@ -102,6 +102,7 @@ public class VaultLegacyConfig extends Base implements EncryptionConfig, Executi
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(vaultUrl));
   }
 
+  @Override
   public boolean isGlobalKms() {
     return false;
   }

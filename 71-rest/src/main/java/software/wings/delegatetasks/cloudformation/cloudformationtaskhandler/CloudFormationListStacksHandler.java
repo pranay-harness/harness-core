@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 @Singleton
 @NoArgsConstructor
 public class CloudFormationListStacksHandler extends CloudFormationCommandTaskHandler {
+  @Override
   protected CloudFormationCommandExecutionResponse executeInternal(CloudFormationCommandRequest request,
       List<EncryptedDataDetail> details, ExecutionLogCallback executionLogCallback) {
     CloudFormationListStacksRequest cloudFormationListStacksRequest = (CloudFormationListStacksRequest) request;

@@ -129,6 +129,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
         .build();
   }
 
+  @Override
   public List<String> listRegions(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException {
     encryptionService.decrypt(gcpConfig, encryptionDetails);
     String projectId = getProjectId(gcpConfig);
@@ -147,6 +148,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     return Collections.emptyList();
   }
 
+  @Override
   public Map<String, String> listForwardingRules(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String region) throws IOException {
     encryptionService.decrypt(gcpConfig, encryptionDetails);
@@ -168,6 +170,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     return Collections.emptyMap();
   }
 
+  @Override
   public String createFilter(StackDriverNameSpace nameSpace, String metric, String dimensionValue) {
     String filter;
     switch (nameSpace) {
@@ -228,11 +231,13 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     return response;
   }
 
+  @Override
   public String getProjectId(GcpConfig gcpConfig) {
     return (String) ((Map) JsonUtils.parseJson(new String(gcpConfig.getServiceAccountKeyFileContent())).json())
         .get("project_id");
   }
 
+  @Override
   public long getTimeStamp(String data) {
     Date date;
     try {
@@ -243,10 +248,12 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     return date.getTime();
   }
 
+  @Override
   public String getDateFormatTime(long time) {
     return rfc3339.format(new Date(time));
   }
 
+  @Override
   public VerificationNodeDataSetupResponse getLogWithDataForNode(GcpConfig gcpConfig,
       List<EncryptedDataDetail> encryptionDetails, String hostName, StackDriverSetupTestNodeData setupTestNodeData,
       ThirdPartyApiCallLog apiCallLog) {
@@ -324,6 +331,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
         .build();
   }
 
+  @Override
   public List<LogEntry> fetchLogs(String query, long startTime, long endTime, ThirdPartyApiCallLog callLog,
       Set<String> hosts, String hostnameField, GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
       boolean is24X7Task, boolean fetchNextPage) {

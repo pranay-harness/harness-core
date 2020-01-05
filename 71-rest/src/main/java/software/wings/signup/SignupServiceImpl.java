@@ -55,6 +55,7 @@ public class SignupServiceImpl implements SignupService {
   private List<Character> ILLEGAL_CHARACTERS = Collections.unmodifiableList(Arrays.asList(
       '$', '&', ',', '/', ':', ';', '=', '?', '<', '>', '#', '{', '}', '|', '^', '~', '(', ')', ']', '`', '\'', '\"'));
 
+  @Override
   public void sendTrialSignupCompletedEmail(UserInvite userInvite) {
     try {
       Map<String, String> templateModel = getTrialSignupCompletedTemplateModel(userInvite);
@@ -87,6 +88,7 @@ public class SignupServiceImpl implements SignupService {
     return baseUrl;
   }
 
+  @Override
   public void sendEmail(UserInvite userInvite, String templateName, Map<String, String> templateModel) {
     List<String> toList = new ArrayList<>();
     toList.add(userInvite.getEmail());
@@ -100,6 +102,7 @@ public class SignupServiceImpl implements SignupService {
     emailNotificationService.send(emailData);
   }
 
+  @Override
   public UserInvite getUserInviteByEmail(String email) {
     UserInvite userInvite = null;
     if (isNotEmpty(email)) {
@@ -108,6 +111,7 @@ public class SignupServiceImpl implements SignupService {
     return userInvite;
   }
 
+  @Override
   public void validateEmail(String email) {
     // Only validate if the email address is valid. Won't check if the email has been registered already.
     checkIfEmailIsValid(email);
@@ -119,6 +123,7 @@ public class SignupServiceImpl implements SignupService {
     blackListedDomainChecker.check(email);
   }
 
+  @Override
   public void validateCluster() {
     if (!configuration.isTrialRegistrationAllowed()) {
       throw new SignupException("Signup not allowed in this cluster");
@@ -134,6 +139,7 @@ public class SignupServiceImpl implements SignupService {
     return false;
   }
 
+  @Override
   public void checkIfEmailIsValid(String email) {
     if (isBlank(email)) {
       throw new WingsException(INVALID_EMAIL, USER).addParam("email", email);
@@ -145,6 +151,7 @@ public class SignupServiceImpl implements SignupService {
     }
   }
 
+  @Override
   public void sendPasswordSetupMailForSignup(UserInvite userInvite) {
     String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
     try {
@@ -156,6 +163,7 @@ public class SignupServiceImpl implements SignupService {
     }
   }
 
+  @Override
   public String createSignupTokeFromSecret(String jwtPasswordSecret, String email, int expireAfterDays)
       throws UnsupportedEncodingException {
     Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
@@ -188,6 +196,7 @@ public class SignupServiceImpl implements SignupService {
     return buildAbsoluteUrl("/complete-signup/" + token + mode);
   }
 
+  @Override
   public void validatePassword(char[] password) {
     if (isEmpty(password)) {
       throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Empty password has been provided.");
@@ -198,6 +207,7 @@ public class SignupServiceImpl implements SignupService {
     }
   }
 
+  @Override
   public String getEmail(String jwtToken) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(mainConfiguration.getPortal().getJwtPasswordSecret());
@@ -214,6 +224,7 @@ public class SignupServiceImpl implements SignupService {
     }
   }
 
+  @Override
   public void checkIfUserInviteIsValid(UserInvite userInvite, String email) {
     if (userInvite == null) {
       logger.info("No invite found in db for for email: {}", email);

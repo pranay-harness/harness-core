@@ -98,6 +98,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
    *
    * @return the name
    */
+  @Override
   public String getName() {
     return name;
   }
@@ -250,6 +251,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
    *
    * @return Value for property 'accountId'.
    */
+  @Override
   public String getAccountId() {
     return accountId;
   }

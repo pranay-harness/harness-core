@@ -10,13 +10,16 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import java.util.List;
 
 public interface SmbBuildService extends BuildService<SmbConfig> {
+  @Override
   @DelegateTaskType(TaskType.SMB_GET_BUILDS)
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, SmbConfig smbConfig,
       List<EncryptedDataDetail> encryptionDetails);
 
+  @Override
   @DelegateTaskType(TaskType.SMB_VALIDATE_ARTIFACT_SERVER)
   boolean validateArtifactServer(SmbConfig config, List<EncryptedDataDetail> encryptionDetails);
 
+  @Override
   @DelegateTaskType(TaskType.SMB_GET_SMB_PATHS)
   List<String> getSmbPaths(SmbConfig smbConfig, List<EncryptedDataDetail> encryptionDetails);
 }

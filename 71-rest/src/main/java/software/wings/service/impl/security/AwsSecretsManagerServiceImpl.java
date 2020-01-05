@@ -195,6 +195,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     return secretManagerConfigService.save(secretsManagerConfig);
   }
 
+  @Override
   public void validateSecretsManagerConfig(AwsSecretsManagerConfig secretsManagerConfig) {
     try {
       AWSSecretsManager client =

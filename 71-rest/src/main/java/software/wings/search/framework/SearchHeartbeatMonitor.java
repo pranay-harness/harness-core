@@ -25,6 +25,7 @@ public class SearchHeartbeatMonitor implements Runnable {
   private String uuid;
   private ConfigurationController configurationController;
 
+  @Override
   public void run() {
     Query<SearchDistributedLock> query = wingsPersistence.createQuery(SearchDistributedLock.class)
                                              .field(SearchDistributedLockKeys.name)

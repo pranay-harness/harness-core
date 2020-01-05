@@ -292,6 +292,7 @@ public class WorkflowChangeHandler implements ChangeHandler {
     }
   }
 
+  @Override
   public boolean handleChange(ChangeEvent<?> changeEvent) {
     boolean isChangeHandled = true;
     if (changeEvent.isChangeFor(Workflow.class)) {

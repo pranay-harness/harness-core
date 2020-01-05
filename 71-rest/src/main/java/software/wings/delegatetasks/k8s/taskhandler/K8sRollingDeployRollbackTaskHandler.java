@@ -59,6 +59,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
   private Release previousRollbackEligibleRelease;
   private List<KubernetesResourceIdRevision> previousManagedWorkloads = new ArrayList<>();
 
+  @Override
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
     if (!(k8sTaskParameters instanceof K8sRollingDeployRollbackTaskParameters)) {

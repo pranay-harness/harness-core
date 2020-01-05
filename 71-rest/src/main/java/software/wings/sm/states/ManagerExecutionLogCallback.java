@@ -24,6 +24,7 @@ public class ManagerExecutionLogCallback implements LogCallback {
     this.activityId = activityId;
   }
 
+  @Override
   public void saveExecutionLog(String line) {
     saveExecutionLog(line, CommandExecutionStatus.RUNNING, LogLevel.INFO);
   }
@@ -32,6 +33,7 @@ public class ManagerExecutionLogCallback implements LogCallback {
     saveExecutionLog(line, commandExecutionStatus, LogLevel.INFO);
   }
 
+  @Override
   public void saveExecutionLog(String line, LogLevel logLevel) {
     saveExecutionLog(line, CommandExecutionStatus.RUNNING, logLevel);
   }

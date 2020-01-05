@@ -41,6 +41,7 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
   private static final String OFFSET = "offset";
   private static final int MAX_RECORD_LIMIT = 100;
 
+  @Override
   public void addDataFetcherDirectiveAttributesForParent(
       String parentTypeName, DataFetcherDirectiveAttributes dataFetcherDirectiveAttributes) {
     parentToContextFieldArgsMap.putIfAbsent(parentTypeName, dataFetcherDirectiveAttributes);

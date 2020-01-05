@@ -72,6 +72,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

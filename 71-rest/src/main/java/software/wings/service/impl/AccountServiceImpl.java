@@ -650,6 +650,7 @@ public class AccountServiceImpl implements AccountService {
     return Optional.of(accountType);
   }
 
+  @Override
   public Boolean updateCloudCostEnabled(String accountId, boolean cloudCostEnabled) {
     Account account = get(accountId);
     account.setCloudCostEnabled(cloudCostEnabled);
@@ -1187,6 +1188,7 @@ public class AccountServiceImpl implements AccountService {
     }
   }
 
+  @Override
   public boolean isFeatureFlagEnabled(String featureName, String accountId) {
     for (FeatureName feature : FeatureName.values()) {
       if (feature.name().equals(featureName)) {
@@ -1196,6 +1198,7 @@ public class AccountServiceImpl implements AccountService {
     return false;
   }
 
+  @Override
   public List<Service> getServicesBreadCrumb(String accountId, User user) {
     PageRequest<String> request = aPageRequest().withOffset("0").withLimit(UNLIMITED_PAGE_SIZE).build();
     PageResponse<CVEnabledService> response = getServices(accountId, user, request, null);
@@ -1212,6 +1215,7 @@ public class AccountServiceImpl implements AccountService {
     return new ArrayList<>();
   }
 
+  @Override
   public PageResponse<CVEnabledService> getServices(
       String accountId, User user, PageRequest<String> request, String serviceId) {
     if (user == null) {
@@ -1314,11 +1318,13 @@ public class AccountServiceImpl implements AccountService {
         .build();
   }
 
+  @Override
   public Set<String> getWhitelistedDomains(String accountId) {
     Account account = get(accountId);
     return account.getWhitelistedDomains();
   }
 
+  @Override
   public Account updateWhitelistedDomains(String accountId, Set<String> whitelistedDomains) {
     Set<String> trimmedWhitelistedDomains =
         whitelistedDomains.stream().map(String::trim).filter(EmptyPredicate::isNotEmpty).collect(Collectors.toSet());
@@ -1343,6 +1349,7 @@ public class AccountServiceImpl implements AccountService {
     return get(accountId);
   }
 
+  @Override
   public AccountSettingsResponse getAuthSettingsByAccountId(String accountId) {
     Account account = get(accountId);
     AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
@@ -1365,6 +1372,7 @@ public class AccountServiceImpl implements AccountService {
     return true;
   }
 
+  @Override
   public boolean isSSOEnabled(Account account) {
     return (account.getAuthenticationMechanism() != null)
         && (account.getAuthenticationMechanism() != AuthenticationMechanism.USER_PASSWORD);

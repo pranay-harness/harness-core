@@ -44,6 +44,7 @@ public class SearchEntityBulkMigrationTask<T extends PersistentEntity> implement
     return true;
   }
 
+  @Override
   public Boolean call() {
     EntityBaseView entityBaseView = searchEntity.getView(object);
     if (entityBaseView != null) {

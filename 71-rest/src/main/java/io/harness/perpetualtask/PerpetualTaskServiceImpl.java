@@ -111,6 +111,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
     return PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(perpetualTaskParams)).build();
   }
 
+  @Override
   public boolean updateHeartbeat(String taskId, long heartbeatMillis) {
     PerpetualTaskRecord taskRecord = perpetualTaskRecordDao.getTask(taskId);
     if (null == taskRecord || taskRecord.getLastHeartbeat() > heartbeatMillis) {

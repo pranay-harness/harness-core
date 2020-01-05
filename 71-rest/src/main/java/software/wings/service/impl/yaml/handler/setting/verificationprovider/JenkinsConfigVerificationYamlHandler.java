@@ -35,6 +35,7 @@ public class JenkinsConfigVerificationYamlHandler
     return yaml;
   }
 
+  @Override
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<VerificationYaml> changeContext,
       List<ChangeContext> changeSetContext) throws HarnessException {
     String uuid = previous != null ? previous.getUuid() : null;

@@ -63,6 +63,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
   private KubernetesConfig kubernetesConfig;
   private VirtualService virtualService;
 
+  @Override
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) {
     if (!(k8sTaskParameters instanceof K8sTrafficSplitTaskParameters)) {

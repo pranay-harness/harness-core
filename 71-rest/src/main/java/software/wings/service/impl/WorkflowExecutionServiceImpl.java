@@ -3778,6 +3778,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @return only the skeleton of the environment object. Contains only the ID,the type and the name ->
    * Reconstructed from what we see in the pipelineExecution or the workflowExecution
    */
+  @Override
   public List<EnvSummary> getEnvironmentsForExecution(WorkflowExecution workflowExecution) {
     Set<EnvSummary> environments = new HashSet<>();
     if (workflowExecution.getPipelineExecution() != null) {
@@ -3812,6 +3813,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @return only the serviceIds that have been deployed in the pipeline or workflowExecution ->
    * Reconstructed from what we see in the pipelineExecution or the workflowExecution
    */
+  @Override
   public List<String> getServiceIdsForExecution(WorkflowExecution workflowExecution) {
     Set<String> serviceIds = new HashSet<>();
     if (workflowExecution.getPipelineExecution() != null) {
@@ -3840,6 +3842,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @return only the serviceIds that have been deployed in the pipeline or workflowExecution ->
    * Reconstructed from what we see in the pipelineExecution or the workflowExecution
    */
+  @Override
   public List<String> getCloudProviderIdsForExecution(WorkflowExecution workflowExecution) {
     Set<String> cloudProviderIds = new HashSet<>();
     if (workflowExecution.getPipelineExecution() != null) {
@@ -3862,6 +3865,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return new ArrayList<>(cloudProviderIds);
   }
 
+  @Override
   public boolean getOnDemandRollbackAvailable(String appId, WorkflowExecution lastWE) {
     if (!lastWE.getStatus().equals(SUCCESS)) {
       logger.info("On demand rollback not available for non successful executions {}", lastWE);

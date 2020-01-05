@@ -214,6 +214,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     return gitFileChanges;
   }
 
+  @Override
   public <R, T> String getEntityRootFilePath(T entity) {
     R helperEntity = obtainHelperEntity(null, entity);
     return yamlDirectoryService.obtainEntityRootPath(helperEntity, entity);

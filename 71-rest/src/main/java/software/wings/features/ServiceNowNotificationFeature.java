@@ -31,6 +31,7 @@ public class ServiceNowNotificationFeature extends AbstractNotificationFeature {
   }
 
   // gets usages of Service Now state under workflows
+  @Override
   protected List<Usage> getUsages(String accountId) {
     return getMatchingWorkflows(getAllWorkflowsByAccountId(accountId), SERVICENOW_USAGE_PREDICATE)
         .stream()

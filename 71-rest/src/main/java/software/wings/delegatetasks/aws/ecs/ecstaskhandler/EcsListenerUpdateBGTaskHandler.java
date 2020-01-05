@@ -28,6 +28,7 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
   @Inject private EcsContainerService ecsContainerService;
   @Inject private EcsSwapRoutesCommandTaskHelper ecsSwapRoutesCommandTaskHelper;
 
+  @Override
   public EcsCommandExecutionResponse executeTaskInternal(EcsCommandRequest ecsCommandRequest,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     EcsListenerUpdateCommandResponse ecsCommandResponse = EcsListenerUpdateCommandResponse.builder().build();

@@ -22,14 +22,17 @@ public interface GcrBuildService extends BuildService<GcpConfig> {
    * @param gcpConfig                the gcp config
    * @return the builds
    */
+  @Override
   @DelegateTaskType(TaskType.GCR_GET_BUILDS)
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, GcpConfig gcpConfig,
       List<EncryptedDataDetail> encryptionDetails);
 
+  @Override
   @DelegateTaskType(TaskType.GCR_VALIDATE_ARTIFACT_STREAM)
   boolean validateArtifactSource(
       GcpConfig config, List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes);
 
+  @Override
   @DelegateTaskType(TaskType.GCR_GET_PLANS)
   Map<String, String> getPlans(GcpConfig config, List<EncryptedDataDetail> encryptionDetails);
 }

@@ -194,6 +194,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
     return accountLevelResource;
   }
 
+  @Override
   public void deleteResourceLookupRecordIfNeeded(EntityAuditRecord record, String accountId) {
     try {
       if (isResourceLookupEntity(record)) {
@@ -210,6 +211,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
     }
   }
 
+  @Override
   public void saveResourceLookupRecordIfNeeded(EntityAuditRecord record, String accountId) {
     try {
       if (isResourceLookupEntity(record)) {
@@ -226,6 +228,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
     }
   }
 
+  @Override
   public <T> void updateResourceLookupRecordIfNeeded(
       EntityAuditRecord record, String accountId, T newEntity, T oldEntity) {
     try {

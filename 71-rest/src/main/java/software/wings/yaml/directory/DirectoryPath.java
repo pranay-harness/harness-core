@@ -21,6 +21,7 @@ public class DirectoryPath implements Cloneable {
     return this;
   }
 
+  @Override
   public DirectoryPath clone() {
     return new DirectoryPath(this.path);
   }

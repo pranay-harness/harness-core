@@ -52,6 +52,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
   private String workflowExecutionId;
   private static final String GCP_PLAYGROUND = "playground-gke-gcs-gcr";
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

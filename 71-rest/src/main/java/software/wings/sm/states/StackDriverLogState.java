@@ -67,6 +67,7 @@ public class StackDriverLogState extends AbstractLogAnalysisState {
     return null;
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
   @Attributes(required = true, title = "Algorithm Sensitivity")
   @DefaultValue("MEDIUM")
@@ -77,6 +78,7 @@ public class StackDriverLogState extends AbstractLogAnalysisState {
     return AnalysisTolerance.valueOf(tolerance);
   }
 
+  @Override
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
@@ -102,6 +104,7 @@ public class StackDriverLogState extends AbstractLogAnalysisState {
     this.analysisServerConfigId = analysisServerConfigId;
   }
 
+  @Override
   @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
   @DefaultValue("15")
   public String getTimeDuration() {
@@ -111,6 +114,7 @@ public class StackDriverLogState extends AbstractLogAnalysisState {
     return timeDuration;
   }
 
+  @Override
   @Attributes(required = true, title = "Search Keywords")
   @DefaultValue("*exception*")
   public String getQuery() {

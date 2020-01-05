@@ -46,6 +46,7 @@ public class ElasticsearchDao implements SearchDao {
   private static final String NEW_ELEMENT_PARAMS_KEY = "newList";
   private static final String ID_TO_BE_DELETED_PARAMS_KEY = "idToBeDeleted";
 
+  @Override
   public boolean upsertDocument(String entityType, String entityId, String entityJson) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateRequest updateRequest = new UpdateRequest(indexName, entityId);
@@ -64,6 +65,7 @@ public class ElasticsearchDao implements SearchDao {
     return false;
   }
 
+  @Override
   public boolean deleteDocument(String entityType, String documentId) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     DeleteRequest deleteRequest = new DeleteRequest(indexName, documentId);
@@ -79,6 +81,7 @@ public class ElasticsearchDao implements SearchDao {
     return false;
   }
 
+  @Override
   public boolean appendToListInMultipleDocuments(
       String entityType, String listToUpdate, List<String> documentIds, Map<String, Object> newElement) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
@@ -104,6 +107,7 @@ public class ElasticsearchDao implements SearchDao {
     return processUpdateByQuery(request, params, indexName);
   }
 
+  @Override
   public boolean appendToListInMultipleDocuments(String entityType, String listToUpdate, List<String> documentIds,
       Map<String, Object> newElement, int maxElementsInList) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
@@ -127,6 +131,7 @@ public class ElasticsearchDao implements SearchDao {
     return processUpdateByQuery(request, params, indexName);
   }
 
+  @Override
   public boolean appendToListInSingleDocument(
       String entityType, String listToUpdate, String documentId, Map<String, Object> newElement) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
@@ -148,6 +153,7 @@ public class ElasticsearchDao implements SearchDao {
     return processUpdateByQuery(request, params, indexName);
   }
 
+  @Override
   public boolean appendToListInSingleDocument(String entityType, String listToUpdate, String documentId,
       Map<String, Object> newElement, int maxElementsInList) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
@@ -170,6 +176,7 @@ public class ElasticsearchDao implements SearchDao {
     return processUpdateByQuery(request, params, indexName);
   }
 
+  @Override
   public boolean removeFromListInMultipleDocuments(
       String entityType, String listToUpdate, List<String> documentIds, String idToBeDeleted) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
@@ -186,6 +193,7 @@ public class ElasticsearchDao implements SearchDao {
     return processUpdateByQuery(request, params, indexName);
   }
 
+  @Override
   public boolean removeFromListInMultipleDocuments(
       String entityType, String listToUpdate, String documentId, String idToBeDeleted) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
@@ -202,6 +210,7 @@ public class ElasticsearchDao implements SearchDao {
     return processUpdateByQuery(request, params, indexName);
   }
 
+  @Override
   public boolean removeFromListInMultipleDocuments(String entityType, String listToUpdate, String idToBeDeleted) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
@@ -219,6 +228,7 @@ public class ElasticsearchDao implements SearchDao {
     return processUpdateByQuery(request, params, indexName);
   }
 
+  @Override
   public boolean updateListInMultipleDocuments(
       String type, String listToUpdate, String newElement, String elementId, String elementKeyToChange) {
     String indexName = elasticsearchIndexManager.getIndexName(type);
@@ -239,6 +249,7 @@ public class ElasticsearchDao implements SearchDao {
     return processUpdateByQuery(request, params, indexName);
   }
 
+  @Override
   public boolean updateKeyInMultipleDocuments(
       String entityType, String listToUpdate, String newValue, String filterKey, String filterValue) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
@@ -257,6 +268,7 @@ public class ElasticsearchDao implements SearchDao {
     return processUpdateByQuery(request, params, indexName);
   }
 
+  @Override
   public boolean addTimestamp(
       String entityType, String fieldName, String documentId, long createdAt, int daysToRetain) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
@@ -277,6 +289,7 @@ public class ElasticsearchDao implements SearchDao {
     return processUpdateByQuery(request, params, indexName);
   }
 
+  @Override
   public boolean addTimestamp(
       String entityType, String fieldName, List<String> documentIds, long createdAt, int daysToRetain) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
@@ -296,6 +309,7 @@ public class ElasticsearchDao implements SearchDao {
     return processUpdateByQuery(request, params, indexName);
   }
 
+  @Override
   public List<String> nestedQuery(String entityType, String fieldName, String value) {
     final int MAX_RESULTS = 500;
     String indexName = elasticsearchIndexManager.getIndexName(entityType);

@@ -780,6 +780,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         .collect(Collectors.toList());
   }
 
+  @Override
   public Query<Artifact> prepareArtifactWithMetadataQuery(ArtifactStream artifactStream) {
     // TODO: ASR: update with accountId
     Query<Artifact> artifactQuery =

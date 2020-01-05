@@ -66,6 +66,7 @@ public class ElasticsearchServiceImpl implements SearchService {
   private static final int BOOST_VALUE = 15;
   private static final int SLOP_DISTANCE_VALUE = 10;
 
+  @Override
   public SearchResults getSearchResults(@NotBlank String searchString, @NotBlank String accountId) throws IOException {
     List<SearchHits> searchHitsList = search(searchString, accountId);
     LinkedHashMap<String, List<SearchResult>> searchResult = new LinkedHashMap<>();

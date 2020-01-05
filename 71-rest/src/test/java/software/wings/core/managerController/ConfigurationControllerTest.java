@@ -44,6 +44,7 @@ public class ConfigurationControllerTest extends WingsBaseTest {
   }
 
   public class BackgroundThread extends Thread {
+    @Override
     public void run() {
       configurationController.start();
     }

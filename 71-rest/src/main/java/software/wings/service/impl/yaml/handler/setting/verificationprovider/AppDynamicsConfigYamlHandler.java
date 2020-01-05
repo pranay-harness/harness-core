@@ -30,6 +30,7 @@ public class AppDynamicsConfigYamlHandler extends VerificationProviderYamlHandle
     return yaml;
   }
 
+  @Override
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
       List<ChangeContext> changeSetContext) throws HarnessException {
     String uuid = previous != null ? previous.getUuid() : null;

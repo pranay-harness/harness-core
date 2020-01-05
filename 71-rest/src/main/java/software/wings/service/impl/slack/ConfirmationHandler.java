@@ -26,6 +26,7 @@ public class ConfirmationHandler implements SlackActionHandler {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private SlackApprovalUtils slackApprovalUtils;
 
+  @Override
   public RestResponse<Boolean> handle(final SlackApprovalParams slackApprovalParams, String slackNotificationMessage,
       String sessionTimedOutMessage, String responseUrl) throws IOException {
     boolean approve = slackApprovalParams.getActionType().equals(SlackApprovalMessageKeys.BUTTON_ACCEPT);

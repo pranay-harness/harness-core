@@ -30,6 +30,7 @@ public class AmazonS3ArtifactStreamYamlHandler extends ArtifactStreamYamlHandler
     return new AmazonS3ArtifactStream();
   }
 
+  @Override
   protected void toBean(AmazonS3ArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();

@@ -81,6 +81,7 @@ public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QL
     return query;
   }
 
+  @Override
   public String getAggregationFieldName(String aggregation) {
     QLTriggerEntityAggregation triggerAggregation = QLTriggerEntityAggregation.valueOf(aggregation);
     switch (triggerAggregation) {

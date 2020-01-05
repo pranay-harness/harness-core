@@ -133,6 +133,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @param serviceCommandId the service command id
    * @return the application
    */
+  @Override
   public RestResponse<YamlPayload> getServiceCommand(@NotEmpty String appId, @NotEmpty String serviceCommandId) {
     String accountId = appService.getAccountIdByAppId(appId);
     notNullCheck("No account found for appId:" + appId, accountId);
@@ -162,6 +163,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @param pipelineId the pipeline id
    * @return the rest response
    */
+  @Override
   public RestResponse<YamlPayload> getPipeline(String appId, String pipelineId) {
     String accountId = appService.getAccountIdByAppId(appId);
     notNullCheck("No account found for appId:" + appId, accountId);
@@ -173,6 +175,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         yamlGitSyncService, pipeline.getUuid(), accountId, pipelineYaml, pipeline.getName() + YAML_EXTENSION);
   }
 
+  @Override
   public RestResponse<YamlPayload> getApplicationManifest(String appId, String applicationManifestId) {
     String accountId = appService.getAccountIdByAppId(appId);
     notNullCheck("No account found for appId:" + appId, accountId);
@@ -186,6 +189,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml, INDEX_YAML);
   }
 
+  @Override
   public RestResponse<YamlPayload> getManifestFile(String appId, String manifestFileId) {
     String accountId = appService.getAccountIdByAppId(appId);
     notNullCheck("No account found for appId:" + appId, accountId);
@@ -215,6 +219,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @param artifactStreamId the artifact stream id
    * @return the rest response
    */
+  @Override
   public RestResponse<YamlPayload> getArtifactTrigger(String appId, String artifactStreamId) {
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (artifactStream == null) {
@@ -258,6 +263,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @param triggerId the trigger id
    * @return the rest response
    */
+  @Override
   public RestResponse<YamlPayload> getTrigger(String appId, String triggerId) {
     String accountId = appService.getAccountIdByAppId(appId);
     notNullCheck("No account found for appId:" + appId, accountId);
@@ -291,6 +297,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @param workflowId the workflow id
    * @return the rest response
    */
+  @Override
   public RestResponse<YamlPayload> getWorkflow(String appId, String workflowId) {
     String accountId = appService.getAccountIdByAppId(appId);
     notNullCheck("No account found for appId:" + appId, accountId);
@@ -325,6 +332,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @param provisionerId the provisioner id
    * @return the rest response
    */
+  @Override
   public RestResponse<YamlPayload> getProvisioner(String appId, String provisionerId) {
     String accountId = appService.getAccountIdByAppId(appId);
     notNullCheck("No account found for appId:" + appId, accountId);
@@ -338,6 +346,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         provisionerYaml, provisionerYaml.getName() + YAML_EXTENSION);
   }
 
+  @Override
   public RestResponse<YamlPayload> getCVConfiguration(String appId, String cvConfigId) {
     String accountId = appService.getAccountIdByAppId(appId);
     notNullCheck("No account found for appId:" + appId, accountId);
@@ -359,6 +368,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @param type        the SettingVariableTypes
    * @return the rest response
    */
+  @Override
   public RestResponse<YamlPayload> getGlobalSettingAttributesList(String accountId, String type) {
     List<SettingAttribute> settingAttributeList = settingsService.getSettingAttributesByType(accountId, type);
     BaseYaml yaml =
@@ -373,6 +383,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @param envId   the environment id
    * @return the rest response
    */
+  @Override
   public RestResponse<YamlPayload> getEnvironment(String appId, String envId) {
     Application app = appService.get(appId);
     Environment environment = environmentService.get(appId, envId, true);
@@ -381,6 +392,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         yamlGitSyncService, environment.getUuid(), app.getAccountId(), yaml, environment.getName() + YAML_EXTENSION);
   }
 
+  @Override
   public RestResponse<YamlPayload> getService(String appId, String serviceId) {
     Application app = appService.get(appId);
     Service service = serviceResourceService.get(appId, serviceId, true);

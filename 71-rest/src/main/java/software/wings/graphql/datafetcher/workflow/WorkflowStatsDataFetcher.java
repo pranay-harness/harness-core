@@ -51,6 +51,7 @@ public class WorkflowStatsDataFetcher
     return getQLData(accountId, filters, entityClass, groupByEntityList);
   }
 
+  @Override
   public String getAggregationFieldName(String aggregation) {
     QLWorkflowEntityAggregation workflowAggregation = QLWorkflowEntityAggregation.valueOf(aggregation);
     switch (workflowAggregation) {

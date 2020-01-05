@@ -49,6 +49,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     super(name, StateType.CLOUD_FORMATION_CREATE_STACK.name());
   }
 
+  @Override
   protected String commandUnit() {
     return COMMAND_UNIT;
   }
@@ -59,6 +60,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     }
   }
 
+  @Override
   protected DelegateTask buildDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId) {
     CloudFormationCreateStackRequestBuilder builder = CloudFormationCreateStackRequest.builder();
@@ -116,6 +118,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .build();
   }
 
+  @Override
   protected List<CloudFormationElement> handleResponse(
       CloudFormationCommandResponse commandResponse, ExecutionContext context) {
     CloudFormationCreateStackResponse createStackResponse = (CloudFormationCreateStackResponse) commandResponse;

@@ -66,6 +66,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   private String serviceId;
   private String envId;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     loginAdminUser();

@@ -26,6 +26,7 @@ public class ElasticsearchSyncService implements Managed {
   private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
   private ScheduledFuture elasticsearchSyncJobFuture;
 
+  @Override
   public void start() {
     if (featureFlagService.isGlobalEnabled(FeatureName.SEARCH)) {
       elasticsearchSyncJobFuture =
@@ -33,6 +34,7 @@ public class ElasticsearchSyncService implements Managed {
     }
   }
 
+  @Override
   public void stop() {
     if (featureFlagService.isGlobalEnabled(FeatureName.SEARCH)) {
       elasticsearchSyncJobFuture.cancel(true);

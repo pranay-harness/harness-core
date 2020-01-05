@@ -394,6 +394,7 @@ public class AuditServiceImpl implements AuditService {
     return wingsPersistence.delete(wingsPersistence.createQuery(AuditRecord.class).field(AuditRecordKeys.uuid).in(ids));
   }
 
+  @Override
   public <T> void handleEntityCrudOperation(String accountId, T oldEntity, T newEntity, Type type) {
     registerAuditActions(accountId, oldEntity, newEntity, type);
   }

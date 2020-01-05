@@ -82,6 +82,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     return wingsPersistence.createQuery(SamlSettings.class).field("url").equal(idpUrl).get();
   }
 
+  @Override
   public SamlSettings getSamlSettingsByAccountId(String accountId) {
     return wingsPersistence.createQuery(SamlSettings.class)
         .field(SamlSettings.ACCOUNT_ID_KEY)
@@ -91,6 +92,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
         .get();
   }
 
+  @Override
   public OauthSettings getOauthSettingsByAccountId(String accountId) {
     return wingsPersistence.createQuery(OauthSettings.class)
         .field("accountId")

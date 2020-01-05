@@ -58,6 +58,7 @@ public class MarketoSignupHandler implements SignupHandler {
     return true;
   }
 
+  @Override
   public User completeSignup(UpdatePasswordRequest passwordRequest, String token) {
     String email = signupService.getEmail(token);
     UserInvite userInvite = signupService.getUserInviteByEmail(email);

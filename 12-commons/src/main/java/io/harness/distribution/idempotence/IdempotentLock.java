@@ -73,6 +73,7 @@ public class IdempotentLock<T extends IdempotentResult> implements AutoCloseable
   /*
    * Close will register the id as finished if the operation was successful and will unregister it if it was not.
    */
+  @Override
   public void close() {
     if (registry == null) {
       return;

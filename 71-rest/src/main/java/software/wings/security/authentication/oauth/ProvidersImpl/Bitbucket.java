@@ -12,18 +12,22 @@ public class Bitbucket extends DefaultApi20 {
     return Bitbucket.InstanceHolder.INSTANCE;
   }
 
+  @Override
   public String getAccessTokenEndpoint() {
     return "https://bitbucket.org/site/oauth2/access_token";
   }
 
+  @Override
   public String getAuthorizationBaseUrl() {
     return "https://bitbucket.org/site/oauth2/authorize";
   }
 
+  @Override
   public TokenExtractor<OAuth2AccessToken> getAccessTokenExtractor() {
     return OpenIdJsonTokenExtractor.instance();
   }
 
+  @Override
   public String getRevokeTokenEndpoint() {
     return "https://accounts.google.com/o/oauth2/revoke";
   }

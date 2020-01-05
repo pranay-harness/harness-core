@@ -63,6 +63,7 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
     return upsertedClusterRecord;
   }
 
+  @Override
   public ClusterRecord get(String clusterId) {
     return clusterRecordDao.get(clusterId);
   }

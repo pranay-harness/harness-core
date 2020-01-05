@@ -45,6 +45,7 @@ public class SlackConfig extends SettingValue implements SlackNotificationConfig
    *
    * @return the incoming webhook url
    */
+  @Override
   public String getOutgoingWebhookUrl() {
     return outgoingWebhookUrl;
   }

@@ -84,6 +84,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   private long start12HoursAgo = endTime - TimeUnit.HOURS.toMillis(12);
   private long start2HoursAgo = endTime - TimeUnit.HOURS.toMillis(2);
 
+  @Override
   @Before
   public void setUp() {
     loginAdminUser();

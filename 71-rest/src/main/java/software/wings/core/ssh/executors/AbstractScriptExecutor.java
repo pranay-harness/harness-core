@@ -75,9 +75,11 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
     this.delegateFileManager = delegateFileManager;
   }
 
+  @Override
   public abstract CommandExecutionStatus executeCommandString(
       String command, StringBuffer output, boolean displayCommand);
 
+  @Override
   public abstract CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect);
 
   public abstract String getAccountId();

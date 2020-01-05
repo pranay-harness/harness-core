@@ -33,6 +33,7 @@ public class ElasticLoadBalancerConfigYamlHandler extends LoadBalancerYamlHandle
     return yaml;
   }
 
+  @Override
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
       List<ChangeContext> changeSetContext) throws HarnessException {
     String uuid = previous != null ? previous.getUuid() : null;

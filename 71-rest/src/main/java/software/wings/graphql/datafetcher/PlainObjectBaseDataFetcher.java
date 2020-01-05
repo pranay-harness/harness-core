@@ -41,6 +41,7 @@ import javax.validation.constraints.NotNull;
 public abstract class PlainObjectBaseDataFetcher<T, P> extends BaseDataFetcher {
   public static final String SELECTION_SET_FIELD_NAME = "selectionSet";
 
+  @Override
   public void addDataFetcherDirectiveAttributesForParent(
       String parentTypeName, DataFetcherDirectiveAttributes dataFetcherDirectiveAttributes) {
     parentToContextFieldArgsMap.putIfAbsent(parentTypeName, dataFetcherDirectiveAttributes);

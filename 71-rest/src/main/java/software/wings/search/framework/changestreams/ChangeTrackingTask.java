@@ -77,6 +77,7 @@ class ChangeTrackingTask implements Runnable {
     }
   }
 
+  @Override
   public void run() {
     try {
       logger.info("changeStream opened on {}", collection.getNamespace());

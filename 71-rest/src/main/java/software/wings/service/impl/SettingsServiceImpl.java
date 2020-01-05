@@ -811,6 +811,7 @@ public class SettingsServiceImpl implements SettingsService {
    * Retain only the selected
    * @param selectedGitConnectors List of setting attribute Names of Git connectors to be retained
    */
+  @Override
   public boolean retainSelectedGitConnectorsAndDeleteRest(String accountId, List<String> selectedGitConnectors) {
     if (EmptyPredicate.isNotEmpty(selectedGitConnectors)) {
       // Delete git connectors

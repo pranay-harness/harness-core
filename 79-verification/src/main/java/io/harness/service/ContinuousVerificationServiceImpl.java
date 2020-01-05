@@ -1339,6 +1339,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return l2RecordMin;
   }
 
+  @Override
   public void trigger247LogDataV2Analysis(LogsCVConfiguration logsCVConfiguration) {
     try {
       long analysisStartMin = logAnalysisService.getLogRecordMinute(

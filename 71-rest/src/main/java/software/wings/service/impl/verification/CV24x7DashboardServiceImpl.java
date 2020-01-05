@@ -240,6 +240,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
         .get();
   }
 
+  @Override
   public LogMLAnalysisSummary getAnalysisSummary(String cvConfigId, Long startTime, Long endTime, String appId) {
     LogsCVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
     if (!VerificationConstants.getLogAnalysisStates().contains(cvConfiguration.getStateType())) {
@@ -421,6 +422,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     });
   }
 
+  @Override
   public Map<String, Double> getMetricTags(
       String accountId, String appId, String cvConfigId, long startTime, long endTIme) {
     Set<String> tags = new HashSet<>();
@@ -543,6 +545,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     return 0;
   }
 
+  @Override
   public long getCurrentAnalysisWindow(final String cvConfigId) {
     CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
 

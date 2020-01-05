@@ -67,6 +67,7 @@ public class InstanceElement implements ContextElement, VerificationElement {
     this.ecsContainerDetails = ecsContainerDetails;
   }
 
+  @Override
   public String getUuid() {
     return uuid;
   }
@@ -130,6 +131,7 @@ public class InstanceElement implements ContextElement, VerificationElement {
     this.workloadName = workloadName;
   }
 
+  @Override
   public boolean isNewInstance() {
     return newInstance;
   }

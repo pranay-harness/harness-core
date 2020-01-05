@@ -14,17 +14,21 @@ import java.util.Map;
  * @author rktummala on 7/30/17.
  */
 public interface AmazonS3BuildService extends BuildService<AwsConfig> {
+  @Override
   @DelegateTaskType(TaskType.AMAZON_S3_GET_PLANS)
   Map<String, String> getPlans(AwsConfig config, List<EncryptedDataDetail> encryptionDetails);
 
+  @Override
   @DelegateTaskType(TaskType.AMAZON_S3_GET_ARTIFACT_PATHS)
   List<String> getArtifactPaths(
       String bucketName, String groupId, AwsConfig config, List<EncryptedDataDetail> encryptionDetails);
 
+  @Override
   @DelegateTaskType(TaskType.AMAZON_S3_LAST_SUCCESSFUL_BUILD)
   BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes, AwsConfig config,
       List<EncryptedDataDetail> encryptionDetails);
 
+  @Override
   @DelegateTaskType(TaskType.AMAZON_S3_GET_BUILDS)
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails);

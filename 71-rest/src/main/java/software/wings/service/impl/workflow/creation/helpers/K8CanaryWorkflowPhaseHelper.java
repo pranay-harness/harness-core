@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class K8CanaryWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
+  @Override
   public List<PhaseStep> getWorkflowPhaseSteps() {
     List<PhaseStep> phaseSteps = new ArrayList<>();
     phaseSteps.add(getCanaryDeployPhaseStep());
@@ -27,6 +28,7 @@ public class K8CanaryWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
     return phaseSteps;
   }
 
+  @Override
   public List<PhaseStep> getRollbackPhaseSteps() {
     List<PhaseStep> rollbackPhaseSteps = new ArrayList<>();
     rollbackPhaseSteps.add(getCanaryRollbackDeployPhaseStep());

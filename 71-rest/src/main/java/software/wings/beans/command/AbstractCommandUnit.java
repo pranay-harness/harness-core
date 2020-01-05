@@ -70,6 +70,7 @@ public abstract class AbstractCommandUnit implements CommandUnit {
    *
    * @return the execution status
    */
+  @Override
   @SchemaIgnore
   public CommandExecutionStatus getCommandExecutionStatus() {
     return commandExecutionStatus;
@@ -80,6 +81,7 @@ public abstract class AbstractCommandUnit implements CommandUnit {
    *
    * @param commandExecutionStatus the execution status
    */
+  @Override
   public void setCommandExecutionStatus(CommandExecutionStatus commandExecutionStatus) {
     this.commandExecutionStatus = commandExecutionStatus;
   }
@@ -148,6 +150,7 @@ public abstract class AbstractCommandUnit implements CommandUnit {
    *
    * @param deploymentType the deployment type
    */
+  @Override
   public void setDeploymentType(String deploymentType) {
     this.deploymentType = deploymentType;
   }

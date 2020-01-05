@@ -605,6 +605,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
    * @param analysisType
    * @return a positive backoff number based on previous backoff count
    */
+  @Override
   public int getNextServiceGuardBackoffCount(
       String stateExecutionId, String cvConfig, long analysisMinute, MLAnalysisType analysisType) {
     Query<LearningEngineAnalysisTask> query =
@@ -632,6 +633,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     return nextBackoffCount;
   }
 
+  @Override
   public boolean isTaskRunningOrQueued(String cvConfigId, long analysisMinute) {
     LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
                                           .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
@@ -651,6 +653,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     }
   }
 
+  @Override
   public boolean isEligibleToCreateTask(
       String stateExecutionId, String cvConfig, long analysisMinute, MLAnalysisType analysisType) {
     Query<LearningEngineAnalysisTask> query =

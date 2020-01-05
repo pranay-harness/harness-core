@@ -7,5 +7,5 @@ import software.wings.stencils.Stencil;
  * Created by peeyushaggarwal on 4/11/17.
  */
 public interface InfrastructureMappingDescriptor extends Stencil<InfrastructureMapping> {
-  @JsonIgnore Class<? extends InfrastructureMapping> getTypeClass();
+  @Override @JsonIgnore Class<? extends InfrastructureMapping> getTypeClass();
 }

@@ -49,6 +49,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
     super(name, StateType.CLOUD_FORMATION_ROLLBACK_STACK.name());
   }
 
+  @Override
   protected String commandUnit() {
     return COMMAND_UNIT;
   }
@@ -95,11 +96,13 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
     return super.isUseCustomStackName();
   }
 
+  @Override
   protected DelegateTask buildDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId) {
     throw new WingsException("Method should not be called");
   }
 
+  @Override
   protected List<CloudFormationElement> handleResponse(
       CloudFormationCommandResponse commandResponse, ExecutionContext context) {
     CloudFormationRollbackInfoElement stackElement = context.getContextElement(CLOUD_FORMATION_ROLLBACK);
@@ -233,6 +236,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
     }
   }
 
+  @Override
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     ExecutionResponse executionResponse = executeInternalWithSavedElement(context, activityId);
     if (executionResponse != null) {

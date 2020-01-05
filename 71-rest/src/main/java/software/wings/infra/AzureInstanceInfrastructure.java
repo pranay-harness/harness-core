@@ -56,6 +56,7 @@ public class AzureInstanceInfrastructure implements InfraMappingInfrastructurePr
     return CloudProviderType.AZURE;
   }
 
+  @Override
   public String getInfrastructureType() {
     return AZURE_SSH;
   }

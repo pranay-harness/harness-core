@@ -47,6 +47,7 @@ public class SearchModule extends AbstractModule {
     return null;
   }
 
+  @Override
   protected void configure() {
     bind(SearchService.class).to(ElasticsearchServiceImpl.class);
     bind(SearchDao.class).to(SynchronousElasticsearchDao.class);

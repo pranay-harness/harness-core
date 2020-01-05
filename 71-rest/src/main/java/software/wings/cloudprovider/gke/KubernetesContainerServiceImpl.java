@@ -750,6 +750,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
   }
 
+  @Override
   public PodTemplateSpec getPodTemplateSpec(HasMetadata controller) {
     PodTemplateSpec podTemplateSpec = null;
     if (controller instanceof ReplicationController) {
@@ -1010,6 +1011,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
   }
 
+  @Override
   public CustomResourceDefinition getCustomResourceDefinition(KubernetesClient client, IstioResource resource) {
     final Optional<String> crdName = IstioSpecRegistry.getCRDNameFor(resource.getKind().toLowerCase());
     final CustomResourceDefinition customResourceDefinition =
@@ -1409,6 +1411,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
   }
 
+  @Override
   public List<Pod> getRunningPods(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
     HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);

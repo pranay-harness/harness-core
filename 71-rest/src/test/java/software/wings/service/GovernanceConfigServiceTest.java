@@ -54,6 +54,7 @@ public class GovernanceConfigServiceTest extends BaseIntegrationTest {
   /**
    * Sets mocks.
    */
+  @Override
   @Before
   public void setUp() {
     Account account = anAccount()

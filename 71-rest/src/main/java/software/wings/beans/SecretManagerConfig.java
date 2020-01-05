@@ -69,6 +69,7 @@ public abstract class SecretManagerConfig implements EncryptionConfig, Persisten
 
   public abstract void maskSecrets();
 
+  @Override
   @JsonIgnore
   public boolean isGlobalKms() {
     return false;

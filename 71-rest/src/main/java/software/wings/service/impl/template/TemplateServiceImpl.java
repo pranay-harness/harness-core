@@ -541,6 +541,7 @@ public class TemplateServiceImpl implements TemplateService {
     return addUserKeyWords(template.getKeywords(), generatedKeywords);
   }
 
+  @Override
   public Template fetchTemplateByKeyword(@NotEmpty String accountId, String keyword) {
     Template template = null;
     if (isNotEmpty(keyword)) {
@@ -560,6 +561,7 @@ public class TemplateServiceImpl implements TemplateService {
     return template;
   }
 
+  @Override
   public Template fetchTemplateByKeyword(@NotEmpty String accountId, @NotEmpty String appId, String keyword) {
     Template template = null;
     if (isNotEmpty(keyword)) {
@@ -579,6 +581,7 @@ public class TemplateServiceImpl implements TemplateService {
     return template;
   }
 
+  @Override
   public Template fetchTemplateByKeywords(@NotEmpty String accountId, Set<String> keywords) {
     Template template = null;
     if (isNotEmpty(keywords)) {
@@ -599,6 +602,7 @@ public class TemplateServiceImpl implements TemplateService {
     return template;
   }
 
+  @Override
   public List<Template> fetchTemplatesWithReferencedTemplateId(@NotEmpty String templateId) {
     Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
                                         .filter(TemplateKeys.appId, GLOBAL_APP_ID)
@@ -612,11 +616,13 @@ public class TemplateServiceImpl implements TemplateService {
     return templates;
   }
 
+  @Override
   public Template convertYamlToTemplate(String templatePath) throws IOException {
     URL url = this.getClass().getClassLoader().getResource(templatePath);
     return mapper.readValue(url, Template.class);
   }
 
+  @Override
   public void loadDefaultTemplates(List<String> templateFiles, String accountId, String accountName) {
     // First
     templateFiles.forEach(templatePath -> {
@@ -667,6 +673,7 @@ public class TemplateServiceImpl implements TemplateService {
     }
   }
 
+  @Override
   public List<String> fetchTemplateProperties(Template template) {
     AbstractTemplateProcessor abstractTemplateProcessor = getAbstractTemplateProcessor(template);
     return abstractTemplateProcessor.fetchTemplateProperties();

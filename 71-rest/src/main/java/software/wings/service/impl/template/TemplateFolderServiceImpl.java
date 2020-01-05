@@ -457,6 +457,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     return i == -1;
   }
 
+  @Override
   public Map<String, String> fetchTemplateFolderNames(String accountId, List<String> parentUuids) {
     List<TemplateFolder> templateFolders = wingsPersistence.createQuery(TemplateFolder.class)
                                                .project(NAME_KEY, true)

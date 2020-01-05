@@ -49,6 +49,7 @@ public class GoogleKubernetesEngine
         .build();
   }
 
+  @Override
   public String getReleaseName() {
     return isEmpty(releaseName) ? INFRA_KUBERNETES_INFRAID_EXPRESSION : releaseName;
   }
@@ -58,6 +59,7 @@ public class GoogleKubernetesEngine
     return GcpKubernetesInfrastructureMapping.class;
   }
 
+  @Override
   public String getInfrastructureType() {
     return GCP_KUBERNETES_ENGINE;
   }

@@ -22,6 +22,7 @@ import javax.ws.rs.core.GenericType;
  * Created by Pranjal on 09/26/2018
  */
 public class ExperimentalLogAnalysisResourceIntegrationTest extends VerificationBaseIntegrationTest {
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

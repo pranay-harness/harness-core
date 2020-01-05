@@ -26,6 +26,7 @@ import java.util.Optional;
 @Singleton
 @NoArgsConstructor
 public class CloudFormationDeleteStackHandler extends CloudFormationCommandTaskHandler {
+  @Override
   protected CloudFormationCommandExecutionResponse executeInternal(CloudFormationCommandRequest request,
       List<EncryptedDataDetail> details, ExecutionLogCallback executionLogCallback) {
     CloudFormationDeleteStackRequest cloudFormationDeleteStackRequest = (CloudFormationDeleteStackRequest) request;

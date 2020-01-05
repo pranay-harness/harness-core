@@ -16,6 +16,7 @@ public class UsageLimitExceededException extends RuntimeException {
     this.accountId = accountId;
   }
 
+  @Override
   public String getMessage() {
     return "Usage limit reached. Limit: " + limit + " , accountId=" + accountId;
   }

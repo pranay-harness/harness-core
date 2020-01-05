@@ -85,6 +85,7 @@ public class KubernetesContainerTask extends ContainerTask {
     this.artifactName = artifactName;
   }
 
+  @Override
   @SchemaIgnore
   public String getServiceId() {
     return super.getServiceId();
@@ -318,6 +319,7 @@ public class KubernetesContainerTask extends ContainerTask {
     return containerBuilder.build();
   }
 
+  @Override
   public ContainerTask cloneInternal() {
     ContainerTask newContainerTask = new KubernetesContainerTask();
     copyConfigToContainerTask(newContainerTask);

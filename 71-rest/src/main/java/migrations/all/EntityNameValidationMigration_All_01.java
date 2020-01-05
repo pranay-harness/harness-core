@@ -11,6 +11,7 @@ public class EntityNameValidationMigration_All_01 extends EntityNameValidationMi
       "AOg9T42HTSq26LtpHm9YTg" // Opengov
   );
 
+  @Override
   protected boolean skipAccount(String accountId) {
     return accountsToSkip.contains(accountId);
   }
