@@ -275,7 +275,7 @@ public enum StepType {
       asList(AMI_DEPLOY_AUTOSCALING_GROUP), Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK)),
   AWS_AMI_SWITCH_ROUTES(AwsAmiSwitchRoutesState.class, UPGRADE_AUTOSCALING_GROUP_ROUTE,
       asList(WorkflowStepType.AWS_AMI), singletonList(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES),
-      Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK)),
+      Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
   AWS_AMI_SERVICE_ROLLBACK(AwsAmiServiceRollback.class, ROLLBACK_AWS_AMI_CLUSTER, asList(WorkflowStepType.AWS_AMI),
       asList(AMI_DEPLOY_AUTOSCALING_GROUP), Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.ROLLBACK)),
   AWS_AMI_ROLLBACK_SWITCH_ROUTES(AwsAmiRollbackSwitchRoutesState.class, ROLLBACK_AUTOSCALING_GROUP_ROUTE,

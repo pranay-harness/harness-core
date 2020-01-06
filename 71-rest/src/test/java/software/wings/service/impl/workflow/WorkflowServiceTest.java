@@ -51,6 +51,7 @@ import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aN
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
+import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
@@ -97,6 +98,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.ass
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertTemplatizedWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertWorkflowPhaseTemplateExpressions;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertWorkflowPhaseTemplateStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAmiBGWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAmiInfraMapping;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAmiWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAppDVerifyStep;
@@ -268,6 +270,7 @@ import software.wings.app.GeneralNotifyEventListener;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
+import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.BlueGreenOrchestrationWorkflow;
@@ -4336,6 +4339,40 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
         .doesNotContain(APM.name(), LOG.name(), ARTIFACT.name()); // TODO: should this contain APM and LOG
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void categoriesForAmiBGWorkflowRollbackSection() {
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID)
+                        .withDeploymentType(AMI.name())
+                        .withInfraMappingType(InfrastructureMappingType.AWS_AMI.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+    Workflow workflow = workflowService.createWorkflow(constructAmiBGWorkflow());
+    String phaseId =
+        ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    WorkflowCategorySteps workflowCategorySteps = workflowService.calculateCategorySteps(
+        workflow, user.getUuid(), phaseId, AMI_SWITCH_AUTOSCALING_GROUP_ROUTES.name(), 0, true);
+    assertThat(workflowCategorySteps.getCategories()).isNotEmpty();
+
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple(AWS_AMI.name(), AWS_AMI.getDisplayName(),
+            asList(StepType.AWS_AMI_SWITCH_ROUTES.name(), StepType.AWS_AMI_ROLLBACK_SWITCH_ROUTES.name())));
+
+    validateCommonCategories(workflowCategorySteps);
+
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(WorkflowCategoryStepsMeta::getId)
+        .doesNotContain(APM.name(), LOG.name(), ARTIFACT.name());
   }
 
   @Test
