@@ -2642,7 +2642,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (!(stateExecutionInstance.fetchStateExecutionData() instanceof ElementStateExecutionData)) {
         continue;
       }
-      if (stateExecutionInstance.isRollback()) {
+      if (stateExecutionInstance.isRollback()
+          && !checkIfOnDemand(workflowExecution.getAppId(), workflowExecution.getUuid())) {
         continue;
       }
 
@@ -2782,7 +2783,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .filter(StateExecutionInstanceKeys.appId, workflowExecution.getAppId())
             .filter(StateExecutionInstanceKeys.executionUuid, workflowExecution.getUuid())
             .filter(StateExecutionInstanceKeys.stateType, PHASE.name())
-            .filter(StateExecutionInstanceKeys.rollback, false)
+            .filter(StateExecutionInstanceKeys.rollback, workflowExecution.isOnDemandRollback())
             .field(StateExecutionInstanceKeys.createdAt)
             .greaterThanOrEq(workflowExecution.getCreatedAt())
             .asList();
