@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"encryptionKey", "encryptedValue"})
+@ToString(exclude = {"encryptionKey", "encryptedValue", "backupEncryptionKey", "backupEncryptedValue"})
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "encryptedRecords", noClassnameStored = true)
 @HarnessEntity(exportable = true)
@@ -86,6 +86,14 @@ public class EncryptedData extends Base implements EncryptedRecord, NameAccess {
   @Default private List<String> serviceIds = new ArrayList<>();
 
   @Default private List<String> envIds = new ArrayList<>();
+
+  private char[] backupEncryptedValue;
+
+  private String backupEncryptionKey;
+
+  private String backupKmsId;
+
+  private EncryptionType backupEncryptionType;
 
   private Set<String> serviceVariableIds;
 

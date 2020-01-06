@@ -34,6 +34,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
+import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +46,6 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.QueryImpl;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EntityType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
@@ -58,12 +58,12 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.AuditServiceHelper;
-import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.security.GcpKmsService;
+import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
@@ -88,9 +88,10 @@ public class SecretManagerTest extends CategoryTest {
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private SecretManagerConfigService secretManagerConfigService;
   @Mock private LocalEncryptionService localEncryptionService;
-  @Mock private FeatureFlagService featureFlagService;
   @Mock private KmsService kmsService;
-  @Mock private KmsEncryptDecryptClient kmsEncryptDecryptClient;
+  @Mock private GcpSecretsManagerService gcpSecretsManagerService;
+  @Mock private GcpKmsService gcpKmsService;
+  @Mock private GlobalEncryptDecryptClient globalEncryptDecryptClient;
   @Inject @InjectMocks private SecretManagerImpl secretManager;
 
   @Before
@@ -342,7 +343,6 @@ public class SecretManagerTest extends CategoryTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void getEncryptionDetails() {
-    when(featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, ACCOUNT_ID)).thenReturn(true);
     JenkinsConfig jenkinsConfig = getJenkinsConfig(ACCOUNT_ID);
     EncryptedRecordData encryptedRecordData = EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build();
     String kmsId = UUIDGenerator.generateUuid();
@@ -352,8 +352,8 @@ public class SecretManagerTest extends CategoryTest {
     when(kmsConfig.getEncryptionType()).thenReturn(EncryptionType.KMS);
     when(secretManagerConfigService.getSecretManager(ACCOUNT_ID, kmsId)).thenReturn(kmsConfig);
     when(wingsPersistence.get(EncryptedData.class, jenkinsConfig.getEncryptedPassword())).thenReturn(mockEncryptedData);
-    when(kmsEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
-             any(EncryptedData.class), any(KmsConfig.class)))
+    when(globalEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
+             any(EncryptedData.class), any(String.class), any(EncryptionConfig.class)))
         .thenReturn(encryptedRecordData);
     when(localEncryptionService.getEncryptionConfig(ACCOUNT_ID))
         .thenReturn(LocalEncryptionConfig.builder().uuid(ACCOUNT_ID).build());

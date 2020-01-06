@@ -4,6 +4,7 @@ import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.CREATED_AT_KEY;
+import static software.wings.service.intfc.security.SecretManager.ENCRYPTION_TYPE_KEY;
 import static software.wings.service.intfc.security.SecretManager.ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.IS_DEFAULT_KEY;
 
@@ -19,6 +20,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.CyberArkConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SecretManagerConfig;
@@ -26,6 +28,7 @@ import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.CyberArkService;
@@ -38,6 +41,7 @@ import software.wings.service.intfc.security.VaultService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author marklu on 2019-05-31
@@ -53,6 +57,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
   @Inject private LocalEncryptionService localEncryptionService;
   @Inject private AzureSecretsManagerService azureSecretsManagerService;
   @Inject private CyberArkService cyberArkService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public String save(SecretManagerConfig secretManagerConfig) {
@@ -82,9 +87,34 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
                                                   .equal(accountId)
                                                   .filter(IS_DEFAULT_KEY, true)
                                                   .get();
+
+    if (secretManagerConfig != null) {
+      secretManagerConfig = getEncryptionConfigInternal(accountId, secretManagerConfig);
+      secretManagerConfig.setDefault(true);
+      return secretManagerConfig;
+    }
+    return getGlobalSecretManager(accountId);
+  }
+
+  @Override
+  public SecretManagerConfig getGlobalSecretManager(String accountId) {
+    SecretManagerConfig secretManagerConfig = null;
+    if (featureFlagService.isEnabled(FeatureName.SWITCH_GLOBAL_TO_GCP_KMS, accountId)) {
+      secretManagerConfig = wingsPersistence.createQuery(SecretManagerConfig.class)
+                                .field(ACCOUNT_ID_KEY)
+                                .equal(GLOBAL_ACCOUNT_ID)
+                                .field(ENCRYPTION_TYPE_KEY)
+                                .equal(EncryptionType.GCP_KMS)
+                                .get();
+    }
+
     if (secretManagerConfig == null) {
-      secretManagerConfig =
-          wingsPersistence.createQuery(SecretManagerConfig.class).field(ACCOUNT_ID_KEY).equal(GLOBAL_ACCOUNT_ID).get();
+      secretManagerConfig = wingsPersistence.createQuery(SecretManagerConfig.class)
+                                .field(ACCOUNT_ID_KEY)
+                                .equal(GLOBAL_ACCOUNT_ID)
+                                .field(ENCRYPTION_TYPE_KEY)
+                                .equal(EncryptionType.KMS)
+                                .get();
     }
 
     if (secretManagerConfig != null) {
@@ -171,6 +201,14 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
     return listSecretManagersInternal(accountId, encryptionType, maskSecret, true);
   }
 
+  @Override
+  public List<SecretManagerConfig> getAllGlobalSecretManagers() {
+    return wingsPersistence.createQuery(SecretManagerConfig.class)
+        .field(ACCOUNT_ID_KEY)
+        .equal(GLOBAL_ACCOUNT_ID)
+        .asList();
+  }
+
   private List<SecretManagerConfig> listSecretManagersInternal(
       String accountId, EncryptionType encryptionType, boolean maskSecret, boolean includeGlobalSecretManager) {
     List<SecretManagerConfig> rv = new ArrayList<>();
@@ -186,19 +224,18 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
                                                               .asList();
 
       boolean defaultSet = false;
-      SecretManagerConfig globalSecretManager = null;
+      List<SecretManagerConfig> globalSecretManagerConfigList = new ArrayList<>();
       for (SecretManagerConfig secretManagerConfig : secretManagerConfigList) {
         if (secretManagerConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID) && !includeGlobalSecretManager) {
           continue;
         }
 
         if (encryptionType == null || secretManagerConfig.getEncryptionType() == encryptionType) {
-          rv.add(secretManagerConfig);
-
           if (secretManagerConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)) {
-            globalSecretManager = secretManagerConfig;
+            globalSecretManagerConfigList.add(secretManagerConfig);
           } else {
             defaultSet = secretManagerConfig.isDefault() || defaultSet;
+            rv.add(secretManagerConfig);
           }
 
           Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
@@ -231,14 +268,50 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
           }
         }
       }
-
+      SecretManagerConfig globalSecretManager = getDefaultGlobalSecretManager(globalSecretManagerConfigList, accountId);
       if (globalSecretManager != null) {
-        // PL-3472: There should be only one secret manager to be default in the list API call.
         globalSecretManager.setDefault(!defaultSet);
+        rv.add(globalSecretManager);
+      }
+    }
+    return rv;
+  }
+
+  private SecretManagerConfig getDefaultGlobalSecretManager(
+      List<SecretManagerConfig> globalSecretManagerConfigList, String accountId) {
+    if (globalSecretManagerConfigList.isEmpty()) {
+      return null;
+    }
+
+    int total = calculateTotalCount(globalSecretManagerConfigList);
+
+    if (featureFlagService.isEnabled(FeatureName.SWITCH_GLOBAL_TO_GCP_KMS, accountId)) {
+      Optional<SecretManagerConfig> optionalSecretManagerConfig =
+          globalSecretManagerConfigList.stream()
+              .filter(secretManagerConfig -> secretManagerConfig.getEncryptionType() == EncryptionType.GCP_KMS)
+              .findFirst();
+      if (optionalSecretManagerConfig.isPresent()) {
+        SecretManagerConfig secretManagerConfig = optionalSecretManagerConfig.get();
+        secretManagerConfig.setNumOfEncryptedValue(total);
+        return secretManagerConfig;
       }
     }
 
-    return rv;
+    Optional<SecretManagerConfig> optionalSecretManagerConfig =
+        globalSecretManagerConfigList.stream()
+            .filter(secretManagerConfig -> secretManagerConfig.getEncryptionType() == EncryptionType.KMS)
+            .findFirst();
+    if (optionalSecretManagerConfig.isPresent()) {
+      SecretManagerConfig secretManagerConfig = optionalSecretManagerConfig.get();
+      secretManagerConfig.setNumOfEncryptedValue(total);
+      return secretManagerConfig;
+    }
+
+    return null;
+  }
+
+  private int calculateTotalCount(List<SecretManagerConfig> globalSecretManagerConfigList) {
+    return globalSecretManagerConfigList.stream().mapToInt(SecretManagerConfig::getNumOfEncryptedValue).sum();
   }
 
   private boolean isLocalEncryptionEnabled(String accountId) {

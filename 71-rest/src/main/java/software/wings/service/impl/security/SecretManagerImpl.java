@@ -90,7 +90,6 @@ import software.wings.beans.CyberArkConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
@@ -114,7 +113,6 @@ import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretChangeLog.SecretChangeLogKeys;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.AuditServiceHelper;
-import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
@@ -178,6 +176,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private KmsService kmsService;
   @Inject private GcpSecretsManagerService gcpSecretsManagerService;
   @Inject private GcpKmsService gcpKmsService;
+  @Inject private GlobalEncryptDecryptClient globalEncryptDecryptClient;
   @Inject private VaultService vaultService;
   @Inject private AwsSecretsManagerService secretsManagerService;
   @Inject private AzureVaultService azureVaultService;
@@ -196,7 +195,6 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private UserService userService;
   @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private AzureSecretsManagerService azureSecretsManagerService;
-  @Inject private KmsEncryptDecryptClient kmsEncryptDecryptClient;
   @Inject private FeatureFlagService featureFlagService;
 
   @Override
@@ -247,7 +245,6 @@ public class SecretManagerImpl implements SecretManager {
         case LOCAL:
           LocalEncryptionConfig localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
           rv = localEncryptionService.encrypt(secret, accountId, localEncryptionConfig);
-          rv.setType(settingType);
           break;
 
         case KMS:
@@ -294,13 +291,17 @@ public class SecretManagerImpl implements SecretManager {
             // valid. If the  CyberArk reference is not valid, an exception will be throw.
             cyberArkService.decrypt(encryptedData, accountId, cyberArkConfig);
           } else {
-            KmsConfig fallbackKmsConfig = kmsService.getGlobalKmsConfig();
-            if (fallbackKmsConfig != null) {
+            SecretManagerConfig secretManagerConfig = secretManagerConfigService.getGlobalSecretManager(accountId);
+            if (secretManagerConfig != null) {
               logger.info(
                   "CyberArk doesn't support creating new secret. This new secret text will be created in the global KMS SecretStore instead");
-              rv = kmsService.encrypt(secret, accountId, fallbackKmsConfig);
-              rv.setEncryptionType(KMS);
-              rv.setKmsId(fallbackKmsConfig.getUuid());
+              if (secretManagerConfig.getEncryptionType() == GCP_KMS) {
+                rv = gcpKmsService.encrypt(toEncrypt, accountId, (GcpKmsConfig) secretManagerConfig, encryptedData);
+              } else {
+                rv = kmsService.encrypt(secret, accountId, (KmsConfig) secretManagerConfig);
+              }
+              rv.setEncryptionType(secretManagerConfig.getEncryptionType());
+              rv.setKmsId(secretManagerConfig.getUuid());
             } else {
               logger.info(
                   "CyberArk doesn't support creating new secret. This new secret text will be created in the local Harness SecretStore instead");
@@ -419,13 +420,12 @@ public class SecretManagerImpl implements SecretManager {
 
           // PL-1836: Need to preprocess global KMS and turn the KMS encryption into a LOCAL encryption.
           final EncryptedRecordData encryptedRecordData;
-          if (encryptionConfig.isGlobalKms()
-              && featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, object.getAccountId())) {
+          if (encryptionConfig.isGlobalKms()) {
             logger.info("Pre-processing the encrypted secret by global KMS secret manager for secret {}",
                 encryptedData.getUuid());
 
-            encryptedRecordData = kmsEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
-                encryptedData, (KmsConfig) encryptionConfig);
+            encryptedRecordData = globalEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
+                encryptedData, accountId, encryptionConfig);
 
             // The encryption type will be set to LOCAL only if manager was able to decrypt.
             // If the decryption failed, we need to retain the kms encryption config, otherwise delegate task would
@@ -892,6 +892,11 @@ public class SecretManagerImpl implements SecretManager {
     checkNotNull(toEncryptionType, "toEncryptionType can't be blank");
     checkState(isNotEmpty(toSecretManagerId), "toSecretManagerId can't be blank");
 
+    SecretManagerConfig secretManagerConfig = wingsPersistence.get(SecretManagerConfig.class, fromSecretManagerId);
+    if (secretManagerConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)) {
+      return transitionSecretsFromGlobalSecretManager(accountId, toEncryptionType, toSecretManagerId);
+    }
+
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .filter(ACCOUNT_ID_KEY, accountId)
                                      .filter(EncryptedDataKeys.kmsId, fromSecretManagerId);
@@ -910,6 +915,34 @@ public class SecretManagerImpl implements SecretManager {
                                     .toEncryptionType(toEncryptionType)
                                     .toKmsId(toSecretManagerId)
                                     .build());
+      }
+    }
+    return true;
+  }
+
+  private boolean transitionSecretsFromGlobalSecretManager(
+      String accountId, EncryptionType toEncryptionType, String toSecretManagerId) {
+    List<SecretManagerConfig> secretManagerConfigList = secretManagerConfigService.getAllGlobalSecretManagers();
+    for (SecretManagerConfig secretManagerConfig : secretManagerConfigList) {
+      Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+                                       .filter(ACCOUNT_ID_KEY, accountId)
+                                       .filter(EncryptedDataKeys.kmsId, secretManagerConfig.getUuid());
+
+      if (toEncryptionType == EncryptionType.VAULT) {
+        query = query.field(EncryptedDataKeys.type).notEqual(SettingVariableTypes.VAULT);
+      }
+
+      try (HIterator<EncryptedData> iterator = new HIterator<>(query.fetch())) {
+        for (EncryptedData dataToTransition : iterator) {
+          transitionKmsQueue.send(KmsTransitionEvent.builder()
+                                      .accountId(accountId)
+                                      .entityId(dataToTransition.getUuid())
+                                      .fromEncryptionType(secretManagerConfig.getEncryptionType())
+                                      .fromKmsId(secretManagerConfig.getUuid())
+                                      .toEncryptionType(toEncryptionType)
+                                      .toKmsId(toSecretManagerId)
+                                      .build());
+        }
       }
     }
     return true;
@@ -1045,6 +1078,10 @@ public class SecretManagerImpl implements SecretManager {
     encryptedData.setEncryptionType(toEncryptionType);
     encryptedData.setEncryptionKey(encrypted.getEncryptionKey());
     encryptedData.setEncryptedValue(encrypted.getEncryptedValue());
+    encryptedData.setBackupKmsId(encrypted.getBackupKmsId());
+    encryptedData.setBackupEncryptionKey(encrypted.getBackupEncryptionKey());
+    encryptedData.setBackupEncryptedValue(encrypted.getBackupEncryptedValue());
+    encryptedData.setBackupEncryptionType(encrypted.getBackupEncryptionType());
 
     String recordId = wingsPersistence.save(encryptedData);
     generateAuditForEncryptedRecord(accountId, existingEncryptedData, recordId);
@@ -1138,6 +1175,11 @@ public class SecretManagerImpl implements SecretManager {
     encryptedData.setEncryptionType(toEncryptionType);
     encryptedData.setKmsId(toConfig.getUuid());
     encryptedData.setBase64Encoded(true);
+
+    encryptedData.setBackupKmsId(encryptedFileData.getBackupKmsId());
+    encryptedData.setBackupEncryptionKey(encryptedFileData.getBackupEncryptionKey());
+    encryptedData.setBackupEncryptedValue(encryptedFileData.getBackupEncryptedValue());
+    encryptedData.setBackupEncryptionType(encryptedFileData.getBackupEncryptionType());
     String recordId = wingsPersistence.save(encryptedData);
     generateAuditForEncryptedRecord(accountId, existingEncryptedRecord, recordId);
   }
@@ -1466,6 +1508,10 @@ public class SecretManagerImpl implements SecretManager {
         savedData.setEncryptedValue(encryptedData.getEncryptedValue());
         savedData.setEncryptionType(encryptedData.getEncryptionType());
         savedData.setKmsId(encryptedData.getKmsId());
+        savedData.setBackupKmsId(encryptedData.getBackupKmsId());
+        savedData.setBackupEncryptionType(encryptedData.getBackupEncryptionType());
+        savedData.setBackupEncryptedValue(encryptedData.getBackupEncryptedValue());
+        savedData.setBackupEncryptionKey(encryptedData.getBackupEncryptionKey());
       }
       savedData.setUsageRestrictions(usageRestrictions);
       wingsPersistence.save(savedData);
@@ -1897,6 +1943,10 @@ public class SecretManagerImpl implements SecretManager {
         encryptedData.setEncryptedValue(newEncryptedFile.getEncryptedValue());
         encryptedData.setKmsId(newEncryptedFile.getKmsId());
         encryptedData.setEncryptionType(newEncryptedFile.getEncryptionType());
+        encryptedData.setBackupEncryptionKey(newEncryptedFile.getBackupEncryptionKey());
+        encryptedData.setBackupEncryptedValue(newEncryptedFile.getBackupEncryptedValue());
+        encryptedData.setBackupEncryptionType(newEncryptedFile.getBackupEncryptionType());
+        encryptedData.setBackupKmsId(newEncryptedFile.getBackupKmsId());
         encryptedData.setFileSize(uploadFileSize);
       }
     } else {
@@ -2128,6 +2178,8 @@ public class SecretManagerImpl implements SecretManager {
         filteredEncryptedDataList.add(encryptedData);
         encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
         encryptedData.setEncryptionKey(SECRET_MASK);
+        encryptedData.setBackupEncryptedValue(SECRET_MASK.toCharArray());
+        encryptedData.setBackupEncryptionKey(SECRET_MASK);
 
         // Already got all data the page request wanted. Break out of the loop, no more filtering
         // to save some CPU cycles and reduce the latency.
@@ -2372,8 +2424,13 @@ public class SecretManagerImpl implements SecretManager {
 
   private Map<String, SecretManagerConfig> getSecretManagerMap(String accountId) {
     Map<String, SecretManagerConfig> result = new HashMap<>();
-    List<SecretManagerConfig> secretManagerConfigs = listSecretManagers(accountId);
+    List<SecretManagerConfig> secretManagerConfigs =
+        secretManagerConfigService.listSecretManagers(accountId, true, false);
     for (SecretManagerConfig secretManagerConfig : secretManagerConfigs) {
+      result.put(secretManagerConfig.getUuid(), secretManagerConfig);
+    }
+    List<SecretManagerConfig> globalSecretManagers = secretManagerConfigService.getAllGlobalSecretManagers();
+    for (SecretManagerConfig secretManagerConfig : globalSecretManagers) {
       result.put(secretManagerConfig.getUuid(), secretManagerConfig);
     }
     return result;

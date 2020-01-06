@@ -91,6 +91,7 @@ import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.KmsService;
@@ -137,6 +138,7 @@ public class VaultTest extends WingsBaseTest {
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private PremiumFeature secretsManagementFeature;
   @Mock protected AuditServiceHelper auditServiceHelper;
+  @Mock private GlobalEncryptDecryptClient globalEncryptDecryptClient;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "UTKARSH";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
@@ -161,6 +163,17 @@ public class VaultTest extends WingsBaseTest {
     workflowName = UUID.randomUUID().toString();
     envId = UUID.randomUUID().toString();
     workflowExecutionId = wingsPersistence.save(WorkflowExecution.builder().name(workflowName).envId(envId).build());
+
+    when(globalEncryptDecryptClient.encrypt(anyString(), any(), any(KmsConfig.class))).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return encrypt((String) args[0], (char[]) args[1], (KmsConfig) args[2]);
+    });
+
+    when(globalEncryptDecryptClient.decrypt(anyObject(), anyString(), any(KmsConfig.class))).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return decrypt((EncryptedData) args[0], (KmsConfig) args[2]);
+    });
+
     when(secretManagementDelegateService.encrypt(anyString(), anyObject(), anyString(), any(SettingVariableTypes.class),
              any(VaultConfig.class), any(EncryptedData.class)))
         .then(invocation -> {

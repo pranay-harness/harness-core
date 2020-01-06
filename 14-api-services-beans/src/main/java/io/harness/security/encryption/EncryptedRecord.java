@@ -13,4 +13,8 @@ public interface EncryptedRecord {
   char[] getEncryptedValue();
   String getKmsId();
   EncryptionType getEncryptionType();
+  char[] getBackupEncryptedValue(); // Only relevant in case of GLOBAL secret manager.
+  String getBackupEncryptionKey(); // Only relevant in case of GLOBAL secret manager.
+  String getBackupKmsId(); // Only relevant in case of GLOBAL secret manager.
+  EncryptionType getBackupEncryptionType(); // Only relevant in case of GLOBAL secret manager.
 }

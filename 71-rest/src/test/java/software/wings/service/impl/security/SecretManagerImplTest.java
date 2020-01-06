@@ -7,6 +7,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
@@ -28,8 +29,10 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.security.GcpKmsService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -42,7 +45,9 @@ public class SecretManagerImplTest extends WingsBaseTest {
   private GcpKmsConfig gcpKmsConfig;
   @Mock private GcpKmsService gcpKmsService;
   @Mock private AccountService accountService;
+  @Mock private HarnessUserGroupService harnessUserGroupService;
   @Mock private FileService fileService;
+  @Inject @InjectMocks private KmsService kmsService;
   @Inject @InjectMocks private GcpSecretsManagerService gcpSecretsManagerService;
   @Inject @InjectMocks private SecretManager secretManager;
 
@@ -54,6 +59,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
     List<Account> accounts = new ArrayList<>();
     accounts.add(account);
     User user = User.Builder.anUser()
+                    .withUuid("uuid")
                     .withName("Hello")
                     .withUuid(UUIDGenerator.generateUuid())
                     .withEmail("hello@harness.io")
@@ -69,6 +75,9 @@ public class SecretManagerImplTest extends WingsBaseTest {
     gcpKmsConfig.setDefault(true);
 
     when(accountService.get(account.getUuid())).thenReturn(account);
+    when(accountService.get(GLOBAL_ACCOUNT_ID)).thenReturn(account);
+    when(harnessUserGroupService.isHarnessSupportUser(user.getUuid())).thenReturn(true);
+
     when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
     String result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
     assertThat(result).isNotNull();
@@ -186,5 +195,41 @@ public class SecretManagerImplTest extends WingsBaseTest {
     verify(gcpKmsService, times(1))
         .encryptFile(eq(account.getUuid()), any(GcpKmsConfig.class), eq(encryptedData.getName()), any(),
             any(EncryptedData.class));
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testTransitionSecrets_FromGlobalAccount() {
+    char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
+
+    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials);
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
+    gcpKmsConfig.setDefault(true);
+
+    String result = gcpSecretsManagerService.saveGcpKmsConfig(GLOBAL_ACCOUNT_ID, gcpKmsConfig);
+    assertThat(result).isNotNull();
+    gcpKmsConfig.setUuid(result);
+
+    EncryptedData encryptedData = EncryptedData.builder()
+                                      .accountId(account.getUuid())
+                                      .enabled(true)
+                                      .kmsId(gcpKmsConfig.getUuid())
+                                      .encryptionType(EncryptionType.GCP_KMS)
+                                      .encryptionKey("Dummy Key")
+                                      .encryptedValue("Dummy Value".toCharArray())
+                                      .base64Encoded(false)
+                                      .name("Dummy record")
+                                      .type(SettingVariableTypes.GCP_KMS)
+                                      .build();
+
+    String encryptedDataId = wingsPersistence.save(encryptedData);
+    encryptedData.setUuid(encryptedDataId);
+
+    boolean transitionEventsCreated = secretManager.transitionSecrets(
+        account.getUuid(), EncryptionType.GCP_KMS, gcpKmsConfig.getUuid(), EncryptionType.KMS, "kmsConfigId");
+
+    assertThat(transitionEventsCreated).isTrue();
   }
 }

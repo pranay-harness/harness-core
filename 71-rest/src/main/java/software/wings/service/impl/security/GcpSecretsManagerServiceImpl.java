@@ -8,6 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
+import static software.wings.service.intfc.security.SecretManager.ENCRYPTION_TYPE_KEY;
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
 import static software.wings.utils.Utils.isJSONValid;
 
@@ -52,6 +53,21 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
                                     .get();
     Preconditions.checkNotNull(
         gcpKmsConfig, String.format("GCP KMS config not found for id: %s in account: %s", configId, accountId));
+    decryptGcpConfigSecrets(gcpKmsConfig, false);
+    return gcpKmsConfig;
+  }
+
+  @Override
+  public GcpKmsConfig getGlobalKmsConfig() {
+    GcpKmsConfig gcpKmsConfig = wingsPersistence.createQuery(GcpKmsConfig.class)
+                                    .field(ACCOUNT_ID_KEY)
+                                    .equal(GLOBAL_ACCOUNT_ID)
+                                    .field(ENCRYPTION_TYPE_KEY)
+                                    .equal(EncryptionType.GCP_KMS)
+                                    .get();
+    if (gcpKmsConfig == null) {
+      return null;
+    }
     decryptGcpConfigSecrets(gcpKmsConfig, false);
     return gcpKmsConfig;
   }

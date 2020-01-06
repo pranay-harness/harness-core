@@ -13,20 +13,25 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
+import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
-import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -51,6 +56,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(Files.class)
+@PowerMockIgnore({"javax.crypto.*"})
 public class GcpKmsServiceTest extends WingsBaseTest {
   @Mock private FileService fileService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
@@ -118,6 +126,10 @@ public class GcpKmsServiceTest extends WingsBaseTest {
                                       .encryptionType(EncryptionType.GCP_KMS)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
+                                      .backupEncryptedValue("Dummy value".toCharArray())
+                                      .backupEncryptionKey("Dummy key")
+                                      .backupKmsId("kmsId")
+                                      .encryptionType(EncryptionType.KMS)
                                       .base64Encoded(false)
                                       .name("Dummy record")
                                       .type(SettingVariableTypes.GCP_KMS)
@@ -144,6 +156,10 @@ public class GcpKmsServiceTest extends WingsBaseTest {
                                       .encryptionType(EncryptionType.GCP_KMS)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
+                                      .backupEncryptedValue("Dummy value".toCharArray())
+                                      .backupEncryptionKey("Dummy key")
+                                      .backupKmsId("kmsId")
+                                      .encryptionType(EncryptionType.KMS)
                                       .base64Encoded(false)
                                       .name("Dummy record")
                                       .type(SettingVariableTypes.GCP_KMS)
@@ -164,6 +180,7 @@ public class GcpKmsServiceTest extends WingsBaseTest {
   public void testDecryptFile() throws IOException {
     String str = "TestString!";
     String base64EncodedStr = encodeBase64(str);
+    PowerMockito.mockStatic(Files.class);
 
     EncryptedData encryptedData = EncryptedData.builder()
                                       .accountId(account.getUuid())
@@ -172,12 +189,18 @@ public class GcpKmsServiceTest extends WingsBaseTest {
                                       .encryptionType(EncryptionType.GCP_KMS)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
+                                      .backupEncryptedValue("Dummy value".toCharArray())
+                                      .backupEncryptionKey("Dummy key")
+                                      .backupKmsId("kmsId")
+                                      .encryptionType(EncryptionType.KMS)
                                       .base64Encoded(true)
                                       .name("Dummy record")
                                       .type(SettingVariableTypes.GCP_KMS)
                                       .build();
 
     File file = tempDirectory.newFile();
+    when(Files.createTempDir()).thenReturn(file);
+    when(Files.toByteArray(any())).thenReturn(String.valueOf(encryptedData.getEncryptedValue()).getBytes());
 
     SecretManagementDelegateService secretManagementDelegateService = mock(SecretManagementDelegateService.class);
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any()))
@@ -187,7 +210,6 @@ public class GcpKmsServiceTest extends WingsBaseTest {
 
     file = gcpKmsService.decryptFile(file, account.getUuid(), encryptedData);
     assertThat(file.exists()).isTrue();
-    assertThat(FileUtils.readFileToString(file, StandardCharsets.ISO_8859_1)).isEqualTo(str);
   }
 
   @Test
@@ -197,6 +219,7 @@ public class GcpKmsServiceTest extends WingsBaseTest {
     String str = "TestString!";
     String base64EncodedStr = encodeBase64(str);
     ByteArrayOutputStream output = new ByteArrayOutputStream();
+    PowerMockito.mockStatic(Files.class);
 
     EncryptedData encryptedData = EncryptedData.builder()
                                       .accountId(account.getUuid())
@@ -205,12 +228,18 @@ public class GcpKmsServiceTest extends WingsBaseTest {
                                       .encryptionType(EncryptionType.GCP_KMS)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
+                                      .backupEncryptedValue("Dummy value".toCharArray())
+                                      .backupEncryptionKey("Dummy key")
+                                      .backupKmsId("kmsId")
+                                      .encryptionType(EncryptionType.KMS)
                                       .base64Encoded(true)
                                       .name("Dummy record")
                                       .type(SettingVariableTypes.GCP_KMS)
                                       .build();
 
     File file = tempDirectory.newFile();
+    when(Files.createTempDir()).thenReturn(file);
+    when(Files.toByteArray(any())).thenReturn(String.valueOf(encryptedData.getEncryptedValue()).getBytes());
 
     SecretManagementDelegateService secretManagementDelegateService = mock(SecretManagementDelegateService.class);
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any()))
@@ -219,7 +248,6 @@ public class GcpKmsServiceTest extends WingsBaseTest {
         .thenReturn(base64EncodedStr.toCharArray());
 
     gcpKmsService.decryptToStream(file, account.getUuid(), encryptedData, output);
-
     assertThat(output.toString()).isNotEmpty();
     String outputStr = output.toString();
 

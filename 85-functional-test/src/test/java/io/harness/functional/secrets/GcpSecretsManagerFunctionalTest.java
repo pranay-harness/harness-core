@@ -50,7 +50,6 @@ public class GcpSecretsManagerFunctionalTest extends AbstractFunctionalTest {
 
   private void enableFeatureFlag() {
     featureFlagService.enableAccount(FeatureName.GOOGLE_KMS, account.getUuid());
-    featureFlagService.enableAccount(FeatureName.GLOBAL_KMS_PRE_PROCESSING, account.getUuid());
   }
 
   @Test

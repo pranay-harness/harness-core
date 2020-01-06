@@ -5,7 +5,6 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
@@ -28,11 +27,9 @@ import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedRecord;
-import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -41,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KmsConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementDelegateException;
-import software.wings.service.intfc.security.SecretManager;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -100,29 +96,6 @@ public class KmsEncryptDecryptClient {
           throw new SecretManagementDelegateException(KMS_OPERATION_ERROR, e.getMessage(), e, USER);
         }
       }
-    }
-  }
-
-  public EncryptedRecordData convertEncryptedRecordToLocallyEncrypted(
-      EncryptedData encryptedRecord, KmsConfig kmsConfig) {
-    try {
-      char[] decryptedValue = decrypt(encryptedRecord, kmsConfig);
-      String randomEncryptionKey = UUIDGenerator.generateUuid();
-      char[] reEncryptedValue = new SimpleEncryption(randomEncryptionKey).encryptChars(decryptedValue);
-
-      return EncryptedRecordData.builder()
-          .uuid(encryptedRecord.getUuid())
-          .name(encryptedRecord.getName())
-          .encryptionType(LOCAL)
-          .encryptionKey(randomEncryptionKey)
-          .encryptedValue(reEncryptedValue)
-          .build();
-    } catch (DelegateRetryableException | SecretManagementDelegateException e) {
-      logger.warn(
-          "Failed to decrypt secret {} with secret manager {}. Falling back to decrypt this secret using delegate",
-          encryptedRecord.getUuid(), kmsConfig.getUuid(), e);
-      // This means we are falling back to use delegate to decrypt.
-      return SecretManager.buildRecordData(encryptedRecord);
     }
   }
 

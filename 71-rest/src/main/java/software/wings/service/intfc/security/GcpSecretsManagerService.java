@@ -9,6 +9,8 @@ public interface GcpSecretsManagerService {
 
   String updateGcpKmsConfig(String accountId, GcpKmsConfig gcpKmsConfig);
 
+  GcpKmsConfig getGlobalKmsConfig();
+
   boolean deleteGcpKmsConfig(String accountId, String configId);
 
   void validateSecretsManagerConfig(GcpKmsConfig gcpKmsConfig);
