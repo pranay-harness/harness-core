@@ -237,146 +237,18 @@ helper shell scripts:
    - Go to `Preferences -> Editor -> Colorscheme -> Sonarlint`. For Blocker, Critical & Major, untick "Inherit values from" checkbox and configure a different highlighting style. These violations are treated as release blockers and this configuration is to highlight them differently from regular warnings.
     ![config image](img/sonar-highlight-config.png).
    - Just right click on file in intellij and "Analyze with SonarLint" or enable autoscan.
-6. Setup issue navigation to linkify PRs & Jiras in git log. In `Preferences -> Version Control -> Issue navigation`, add below mappings:
-    ```
-    [A-Z]+\-\d+ -> https://harness.atlassian.net/browse/$0
-    \(#(\d+)\)  -> https://github.com/wings-software/portal/pull/$1
-    ```
-    This will linkify PRs & issue ids in git log.
-    ![config image](img/issue-navigation.png).
-7. Setup Checkstyle plugin. In `Preferences -> Other settings -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness-checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to "java sources including tests".
+6. Setup Checkstyle plugin. In `Preferences -> Other settings -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness-checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to "java sources including tests".
     ![config image](img/checkstyle-config.png).
-8. Change settings to mark injected fields as assigned. (Settings > Editor > Inspections > Java > Declaration Redundancy > Unused Declarations>Entry Points >
+7. Change settings to mark injected fields as assigned. (Settings > Editor > Inspections > Java > Declaration Redundancy > Unused Declarations>Entry Points >
    Annotations > Mark field as implicitly written if annotated by) Click add, then search for "Inject". Add both google and javax annotations.
-9. Setup code style. Preferences > Code Style > Scheme > Gear icon > Import > IntelliJ XML.
-   Select portal/tools/config/src/main/resources/intellij-java-google-style.xml
-10. Setup your imports settings. From Preferences | Editor > Code Style > Java | Imports make sure that your limits are big enough to not take affect
-11. Increase Build Process Heap Size (Preferences > Build, Execution, Development > Compiler, search for "Build Process Heap Size" and set it to 2048 or higher if you still see an out of memory exception in future)
-
-![config image](img/imports_limits.png)
-
-Also make sure that the layout looks like this:
-
-![config image](img/imports_layout.png).
+8. Increase Build Process Heap Size (Preferences > Build, Execution, Development > Compiler, search for "Build Process Heap Size" and set it to 2048 or higher if you still see an out of memory exception in future)
 
 
 ### Run from IntelliJ
 
-1. Create the API Server application - "WingsApplication":  
-   [Run > Edit Configurations...]
+Run configurations for the different applications are already checked into the repo. Choose the appropriate run configuration from the menu.
+![Run configuration menu](img/run_configs.png)
 
-       * Add new Application:  
-           Use the "+" on the left to add a new application. Call it "WingsApplication"
-
-       * Set Main class:
-           'WingsApplication' class (found at software.wings.app.WingsApplication) with the following configurations.
-
-       * VM Options:  
-           `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar`
-
-       * Program Arguments:  
-           `server config.yml`
-
-       * Working Directory:  
-           `$MODULE_DIR$`
-
-       * Environment Variable:
-           `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_<update number>.jdk/Contents/Home`
-
-       * Use classpath of module:  
-           71-rest
-
-       * JRE:  
-           Default (1.8 - SDK of 'rest' module)
-
-       * Ensure [File > Project Structure > Project SDK] "java version" is 1.8.0_\<update number>. (update number - java build aupdate number, say 191)
-       * Ensure [IntelliJ IDEA > Preferences > Build, Execution, Deployment > Compile > Java Compiler > Module] "Target Bytecode Version" is 1.8 for all modules.
-
-2. Create the "DelegateApplication":  
-   [Run > Edit Configurations...]
-   _ Add new Application:  
-    Use the "+" on the left to add a new application. Call it "DelegateApplication"
-
-    _ Set Main class:  
-    'DelegateApplication' class (found at io.harness.delegate.app.DelegateApplication) with the following configurations.
-
-    _ VM Options:  
-    `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dversion=999.0.0`
-
-    _ Program Arguments:  
-    `config-delegate.yml`
-
-    _ Working Directory:  
-    `$MODULE_DIR$`
-
-    _ Environment Variable:  
-    `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_<update number>.jdk/Contents/Home`
-
-    _ Use classpath of module:  
-    81-delegate
-
-    _ JRE:  
-    Default (1.8 - SDK of 'delegate' module)
-
-3. Create the Verification API Server application - "VerificationServiceApplication":
-   [Run > Edit Configurations...]
-
-       * Add new Application:
-           Use the "+" on the left to add a new application. Call it "VerificationServiceApplication"
-
-       * Set Main class:
-           'VerificationServiceApplication' class (found at io.harness.app.VerificationServiceApplication) with the following configurations.
-
-       * VM Options:
-           `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar`
-
-       * Program Arguments:
-           `server verification-config.yml`
-
-       * Working Directory:
-           `$MODULE_DIR$`
-
-       * Environment Variable:
-           `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_<update number>.jdk/Contents/Home`
-
-       * Use classpath of module:
-           79-verification
-
-       * JRE:
-           Default (1.8 - SDK of 'rest' module)
-
-       * Ensure [File > Project Structure > Project SDK] "java version" is 1.8.0_\<update number>. (update number - java build aupdate number, say 191)
-       * Ensure [IntelliJ IDEA > Preferences > Build, Execution, Deployment > Compile > Java Compiler > Module] "Target Bytecode Version" is 1.8 for all modules.
-
-4. Create the Data Model Generation tool - "DataGeneration":
-   [Run > Edit Configurations...]
-
-       * Add new Application:
-           Use the "+" on the left to add a new application. Call it "DataGeneration"
-
-       * Set Main class:
-           'DataGenApplication' class (found at io.harness.DataGenApplication) with the following configurations.
-
-       * VM Options:
-           `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar`
-
-       * Program Arguments:
-           `server config-datagen.yml`
-
-       * Working Directory:
-           `$MODULE_DIR$`
-
-       * Environment Variable:
-           `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_<update number>.jdk/Contents/Home`
-
-       * Use classpath of module:
-           91-model-gen-tool
-
-       * JRE:
-           Default (1.8 - SDK of 'rest' module)
-
-       * Ensure [File > Project Structure > Project SDK] "java version" is 1.8.0_\<update number>. (update number - java build aupdate number, say 191)
-       * Ensure [IntelliJ IDEA > Preferences > Build, Execution, Deployment > Compile > Java Compiler > Module] "Target Bytecode Version" is 1.8 for all modules.
 
 ### Show current git branch in command prompt
 
