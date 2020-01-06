@@ -82,4 +82,22 @@ public interface Ec2InstanceInfoOrBuilder extends
    * <code>string region = 8;</code>
    */
   com.google.protobuf.ByteString getRegionBytes();
+
+  /**
+   * <code>string cluster_id = 9;</code>
+   */
+  java.lang.String getClusterId();
+  /**
+   * <code>string cluster_id = 9;</code>
+   */
+  com.google.protobuf.ByteString getClusterIdBytes();
+
+  /**
+   * <code>string setting_id = 10;</code>
+   */
+  java.lang.String getSettingId();
+  /**
+   * <code>string setting_id = 10;</code>
+   */
+  com.google.protobuf.ByteString getSettingIdBytes();
 }

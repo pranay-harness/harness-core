@@ -15,6 +15,8 @@ message Ec2InstanceInfo {
   InstanceState instance_state = 6;
   string cluster_arn = 7;
   string region = 8;
+  string cluster_id = 9;
+  string setting_id = 10;
 }
 
 message InstanceState {

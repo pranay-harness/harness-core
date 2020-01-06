@@ -116,7 +116,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
       List<Task> tasks = listTask(clusterName, region, awsConfig, encryptionDetails);
 
       Set<String> currentActiveEc2InstanceIds = new HashSet<>();
-      publishEc2InstanceEvent(clusterName, region, currentActiveEc2InstanceIds, instances);
+      publishEc2InstanceEvent(clusterId, settingId, clusterName, region, currentActiveEc2InstanceIds, instances);
       Set<String> currentActiveContainerInstanceArns = getCurrentActiveContainerInstanceArns(containerInstances);
       publishContainerInstanceEvent(clusterId, settingId, clusterName, region, currentActiveContainerInstanceArns,
           lastProcessedTime, containerInstances);
@@ -332,8 +332,8 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
     }
   }
 
-  private void publishEc2InstanceEvent(
-      String clusterName, String region, Set<String> currentActiveEc2InstanceIds, List<Instance> instances) {
+  private void publishEc2InstanceEvent(String clusterId, String settingId, String clusterName, String region,
+      Set<String> currentActiveEc2InstanceIds, List<Instance> instances) {
     logger.info("Instance list size is {} ", instances.size());
     Set<String> activeEc2InstanceIds = fetchActiveEc2InstanceIds(clusterName);
     logger.info("Active instance in cache {}", activeEc2InstanceIds);
@@ -357,7 +357,9 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
                                                              .setClusterArn(clusterName)
                                                              .setInstanceType(instance.getInstanceType())
                                                              .setInstanceState(instanceStateBuilder.build())
-                                                             .setRegion(region);
+                                                             .setRegion(region)
+                                                             .setClusterId(clusterId)
+                                                             .setSettingId(settingId);
 
         if (null != instance.getCapacityReservationId()) {
           ec2InstanceInfoBuilder.setCapacityReservationId(instance.getCapacityReservationId());
