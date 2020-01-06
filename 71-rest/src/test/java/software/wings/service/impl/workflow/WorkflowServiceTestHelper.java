@@ -598,6 +598,29 @@ public class WorkflowServiceTestHelper {
         .build();
   }
 
+  public static Workflow constructAmiBGWorkflow() {
+    return aWorkflow()
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .envId(ENV_ID)
+        .serviceId(SERVICE_ID)
+        .infraMappingId(INFRA_MAPPING_ID)
+        .orchestrationWorkflow(
+            aBlueGreenOrchestrationWorkflow()
+                .withWorkflowPhases(asList(
+                    aWorkflowPhase()
+                        .serviceId(SERVICE_ID)
+                        .infraMappingId(INFRA_MAPPING_ID)
+                        .deploymentType(AMI)
+                        .phaseSteps(asList(
+                            aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, AMI_DEPLOY_AUTOSCALING_GROUP.name()).build()))
+                        .build()))
+                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                .build())
+        .build();
+  }
+
   public static GcpKubernetesInfrastructureMapping constructGKInfraMapping() {
     return aGcpKubernetesInfrastructureMapping()
         .withUuid(INFRA_MAPPING_ID)
