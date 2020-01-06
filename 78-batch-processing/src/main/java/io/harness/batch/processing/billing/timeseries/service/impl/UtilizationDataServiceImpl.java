@@ -4,6 +4,7 @@ import com.google.inject.Singleton;
 
 import io.harness.batch.processing.billing.service.UtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
+import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.exception.InvalidRequestException;
@@ -149,30 +150,21 @@ public class UtilizationDataServiceImpl {
     Map<String, List<String>> instanceIds = new HashMap<>();
     instanceDataList.forEach(instanceData -> {
       String instanceId = instanceData.getInstanceId();
-      if (instanceData.getInstanceType().toString().contains("K8S")) {
-        List<String> instances = instanceIds.get(instanceId);
-        if (instances == null) {
-          instances = new ArrayList<>();
-        }
-        instances.add(instanceId);
-        instanceIds.put(instanceData.getInstanceId(), instances);
-      } else {
-        String serviceArn = getServiceArnFromInstanceMetaData(instanceData);
-        List<String> instances = instanceIds.get(serviceArn);
-        if (instances == null) {
-          instances = new ArrayList<>();
-        }
-        instances.add(instanceId);
-        instanceIds.put(serviceArn, instances);
+      String utilInstanceId = instanceId;
+      if (instanceData.getInstanceType() == InstanceType.ECS_TASK_EC2) {
+        utilInstanceId = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ECS_SERVICE_ARN, instanceData);
+      } else if (instanceData.getInstanceType() == InstanceType.ECS_CONTAINER_INSTANCE) {
+        utilInstanceId = instanceData.getClusterName();
       }
+      instanceIds.computeIfAbsent(utilInstanceId, k -> new ArrayList<>());
+      instanceIds.get(utilInstanceId).add(instanceId);
     });
     return instanceIds;
   }
 
-  private String getServiceArnFromInstanceMetaData(InstanceData instanceData) {
-    if (null != instanceData.getMetaData()
-        && instanceData.getMetaData().containsKey(InstanceMetaDataConstants.ECS_SERVICE_ARN)) {
-      return instanceData.getMetaData().get(InstanceMetaDataConstants.ECS_SERVICE_ARN);
+  private String getValueForKeyFromInstanceMetaData(String metaDataKey, InstanceData instanceData) {
+    if (null != instanceData.getMetaData() && instanceData.getMetaData().containsKey(metaDataKey)) {
+      return instanceData.getMetaData().get(metaDataKey);
     }
     return null;
   }
