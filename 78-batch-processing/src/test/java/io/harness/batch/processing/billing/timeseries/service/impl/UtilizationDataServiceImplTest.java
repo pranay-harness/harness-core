@@ -179,7 +179,7 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
     when(resultSet.getDouble("MAXMEMORYUTILIZATION")).thenAnswer((Answer<Double>) invocation -> MEMORY_UTILIZATION);
     when(resultSet.getDouble("AVGCPUUTILIZATION")).thenAnswer((Answer<Double>) invocation -> CPU_UTILIZATION);
     when(resultSet.getDouble("AVGMEMORYUTILIZATION")).thenAnswer((Answer<Double>) invocation -> MEMORY_UTILIZATION);
-    when(resultSet.getString("INSTANCEID")).thenAnswer((Answer<String>) invocation -> SERVICE_ARN);
+    when(resultSet.getString("INSTANCEID")).thenAnswer((Answer<String>) invocation -> INSTANCE_ID);
     returnResultSet(1);
   }
 

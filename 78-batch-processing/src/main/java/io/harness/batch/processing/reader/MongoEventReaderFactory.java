@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Qualifier("mongoEventReader")
 public class MongoEventReaderFactory implements EventReaderFactory {
-  private static final int READER_BATCH_SIZE = 10;
+  private static final int READER_BATCH_SIZE = 500;
   @Autowired private MongoTemplate mongoTemplate;
 
   @Override

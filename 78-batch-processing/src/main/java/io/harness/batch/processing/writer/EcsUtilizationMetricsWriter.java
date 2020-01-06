@@ -34,7 +34,7 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
         .forEach(publishedMessage -> {
           String accountId = publishedMessage.getAccountId();
           EcsUtilization ecsUtilization = (EcsUtilization) publishedMessage.getMessage();
-          logger.info("Ecs Utilization {} ", ecsUtilization);
+          logger.debug("Ecs Utilization {} ", ecsUtilization);
 
           String serviceArn = ecsUtilization.getServiceArn();
           String serviceName = ecsUtilization.getServiceName();
@@ -106,10 +106,10 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
                     .instanceId(instanceId)
                     .instanceType(instanceType)
                     .settingId(settingId)
-                    .cpuUtilizationMax(cpuUtilizationMaxList.get(metricIndex))
-                    .cpuUtilizationAvg(cpuUtilizationAvgList.get(metricIndex))
-                    .memoryUtilizationMax(memoryUtilizationMaxList.get(metricIndex))
-                    .memoryUtilizationAvg(memoryUtilizationAvgList.get(metricIndex))
+                    .cpuUtilizationMax(getScaledUtilValue(cpuUtilizationMaxList.get(metricIndex)))
+                    .cpuUtilizationAvg(getScaledUtilValue(cpuUtilizationAvgList.get(metricIndex)))
+                    .memoryUtilizationMax(getScaledUtilValue(memoryUtilizationMaxList.get(metricIndex)))
+                    .memoryUtilizationAvg(getScaledUtilValue(memoryUtilizationAvgList.get(metricIndex)))
                     .startTimestamp(startTime)
                     .endTimestamp(startTime + oneHourMillis)
                     .build();
@@ -117,5 +117,9 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
             utilizationDataService.create(utilizationData);
           }
         });
+  }
+
+  private double getScaledUtilValue(double value) {
+    return value / 100;
   }
 }
