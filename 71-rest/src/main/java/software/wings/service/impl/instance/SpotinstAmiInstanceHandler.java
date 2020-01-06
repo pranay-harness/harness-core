@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
@@ -195,8 +196,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler {
     if (isEmpty(instances)) {
       return emptyMap();
     }
-    return instances.stream().collect(
-        toMap(com.amazonaws.services.ec2.model.Instance::getInstanceId, ec2Instance -> ec2Instance));
+    return instances.stream().collect(toMap(com.amazonaws.services.ec2.model.Instance::getInstanceId, identity()));
   }
 
   private AwsAmiInfrastructureMapping getInfraMapping(String appId, String infraMappingId) {

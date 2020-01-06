@@ -33,6 +33,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.time.Duration.ofDays;
 import static java.util.Arrays.asList;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
@@ -2308,7 +2309,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                                    .progress(0)
                                                                    .status(STARTING)
                                                                    .build())
-                                                        .collect(toMap(StateExecutionElement::getName, x -> x));
+                                                        .collect(toMap(StateExecutionElement::getName, identity()));
 
     StateMachine stateMachine = stateExecutionService.obtainStateMachine(stateExecutionInstance);
 
@@ -2581,8 +2582,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         });
       }
     }
-    Map<String, ElementExecutionSummary> serviceExecutionSummaryMap = serviceExecutionSummaries.stream().collect(
-        toMap(summary -> summary.getContextElement().getUuid(), Function.identity()));
+    Map<String, ElementExecutionSummary> serviceExecutionSummaryMap =
+        serviceExecutionSummaries.stream().collect(toMap(summary -> summary.getContextElement().getUuid(), identity()));
 
     populateServiceSummary(serviceExecutionSummaryMap, workflowExecution);
 
@@ -2883,7 +2884,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     Map<String, StateExecutionInstance> prevInstanceIdMap =
         allStateExecutionInstances.stream()
             .filter(instance -> instance.getPrevInstanceId() != null)
-            .collect(toMap(instance -> instance.getPrevInstanceId(), Function.identity()));
+            .collect(toMap(instance -> instance.getPrevInstanceId(), identity()));
 
     List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
     for (StateExecutionInstance stateExecutionInstance : contextTransitionInstances) {

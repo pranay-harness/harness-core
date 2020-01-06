@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -161,7 +162,7 @@ public class AwsInstanceHandler extends InstanceHandler {
 
         Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap =
             latestEc2Instances.stream().collect(
-                Collectors.toMap(ec2Instance -> ec2Instance.getInstanceId(), ec2Instance -> ec2Instance));
+                Collectors.toMap(ec2Instance -> ec2Instance.getInstanceId(), identity()));
 
         Collection<Instance> instancesInDB = asgInstanceMap.get(autoScalingGroupName);
         Map<String, Instance> instancesInDBMap = Maps.newHashMap();

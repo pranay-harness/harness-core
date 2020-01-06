@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.defaults;
 
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
@@ -99,7 +100,7 @@ public class DefaultVariablesHelper {
     }
 
     Map<String, SettingAttribute> defaultVarMap =
-        previousDefaultValues.stream().collect(Collectors.toMap(SettingAttribute::getName, defaultVar -> defaultVar));
+        previousDefaultValues.stream().collect(Collectors.toMap(SettingAttribute::getName, identity()));
 
     // do deletions
     for (NameValuePair.Yaml defaultVar1 : varsToDelete) {

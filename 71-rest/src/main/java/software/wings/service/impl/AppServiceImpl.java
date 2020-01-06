@@ -11,6 +11,7 @@ import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -261,7 +262,7 @@ public class AppServiceImpl implements AppService {
       List<YamlGitConfig> yamlGitConfigList =
           wingsPersistence.getAllEntities(yamlPageRequest, () -> yamlGitService.list(yamlPageRequest));
       Map<String, YamlGitConfig> yamlGitConfigMap =
-          yamlGitConfigList.stream().collect(Collectors.toMap(config -> config.getEntityId(), config -> config));
+          yamlGitConfigList.stream().collect(Collectors.toMap(config -> config.getEntityId(), identity()));
 
       Map<String, List<Environment>> appIdEnvMap;
       Map<String, List<Service>> appIdServiceMap;

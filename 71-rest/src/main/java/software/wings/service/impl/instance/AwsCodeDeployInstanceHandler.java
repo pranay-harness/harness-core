@@ -3,6 +3,7 @@ package software.wings.service.impl.instance;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.singletonList;
+import static java.util.function.Function.identity;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -138,10 +139,9 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
             (AwsCodeDeployDeploymentInfo) newDeploymentSummary.getDeploymentInfo();
 
         // instancesInDBMap contains all instancesInDB for current appId and infraMapId
-        Map<String, Instance> instancesInDBMap =
-            instancesInDB.stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(this ::getKeyFromInstance, instance -> instance));
+        Map<String, Instance> instancesInDBMap = instancesInDB.stream()
+                                                     .filter(Objects::nonNull)
+                                                     .collect(Collectors.toMap(this ::getKeyFromInstance, identity()));
 
         // This will create filter for "instance-state-name" = "running"
         List<com.amazonaws.services.ec2.model.Instance> latestEc2Instances =
@@ -149,7 +149,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
                 awsCodeDeployDeploymentInfo.getDeploymentId(), codeDeployInfraMapping.getAppId());
         Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap =
             latestEc2Instances.stream().collect(
-                Collectors.toMap(com.amazonaws.services.ec2.model.Instance::getInstanceId, ec2Instance -> ec2Instance));
+                Collectors.toMap(com.amazonaws.services.ec2.model.Instance::getInstanceId, identity()));
 
         SetView<String> instancesToBeUpdated =
             Sets.intersection(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());

@@ -11,6 +11,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Objects.requireNonNull;
+import static java.util.function.Function.identity;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -170,7 +171,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     Map<String, UserGroup> idUserGroupMap =
-        allUserGroupList.stream().collect(Collectors.toMap(ug -> ug.getUuid(), ug -> ug));
+        allUserGroupList.stream().collect(Collectors.toMap(ug -> ug.getUuid(), identity()));
 
     apiKeyEntries.forEach(apiKeyEntry -> {
       List<String> userGroupIds = apiKeyEntry.getUserGroupIds();

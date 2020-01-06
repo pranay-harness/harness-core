@@ -15,6 +15,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -929,7 +930,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
         .listNetworkBalancers(computeProviderSetting, region, appId)
         .stream()
-        .collect(toMap(s -> s, s -> s));
+        .collect(toMap(identity(), identity()));
   }
 
   @Override
@@ -970,7 +971,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       return ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
           .listLoadBalancers(computeProviderSetting, region, appId)
           .stream()
-          .collect(toMap(s -> s, s -> s));
+          .collect(toMap(identity(), identity()));
     } else if (PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
       return settingsService
           .getGlobalSettingAttributesByType(computeProviderSetting.getAccountId(), SettingVariableTypes.ELB.name())
@@ -1010,7 +1011,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
         .listElasticBalancers(computeProviderSetting, region, appId)
         .stream()
-        .collect(toMap(s -> s, s -> s));
+        .collect(toMap(identity(), identity()));
   }
 
   @Override

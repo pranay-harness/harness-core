@@ -1,5 +1,7 @@
 package software.wings.graphql.utils.nameservice;
 
+import static java.util.function.Function.identity;
+
 import com.google.inject.Inject;
 
 import io.harness.persistence.HQuery;
@@ -45,7 +47,7 @@ public class NameServiceImpl implements NameService {
       case environmentType:
       case Type:
         return nameResultBuilder.type(type)
-            .idNameMap(ids.stream().collect(Collectors.toMap(id -> id, id -> id)))
+            .idNameMap(ids.stream().collect(Collectors.toMap(identity(), identity())))
             .build();
       default:
         return getData(type, ids);
