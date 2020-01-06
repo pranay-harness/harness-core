@@ -25,7 +25,7 @@ public class DelegateCVTaskServiceImpl implements DelegateCVTaskService {
               -> execute(verificationClient.updateCVTaskStatus(accountId, cvTaskId, dataCollectionTaskResult)),
           TIMEOUT_DURATION_SEC, TimeUnit.SECONDS, true);
     } catch (Exception e) {
-      throw new TimeoutException("Timeout of " + TIMEOUT_DURATION_SEC + " exceeded while updating CVTask status");
+      throw new TimeoutException("Timeout of " + TIMEOUT_DURATION_SEC + " sec exceeded while updating CVTask status");
     }
   }
 }

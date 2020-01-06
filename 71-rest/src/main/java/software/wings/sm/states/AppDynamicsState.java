@@ -155,14 +155,6 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
         results.put("Required Fields missing", "Connector, Application and tier should be provided");
         return results;
       }
-
-      try {
-        Long.parseLong(applicationId);
-        Long.parseLong(tierId);
-      } catch (NumberFormatException exception) {
-        results.put("Invalid Required Fields", "Valid AppId and tierId should be provided");
-        return results;
-      }
       return results;
     }
 
@@ -227,13 +219,12 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
                       appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
           if (tier == null) {
             // tierId will actually contain tier Name
-            tierId = appdynamicsService.getTierByName(analysisServerConfigId, applicationId, tierId,
-                ThirdPartyApiCallLog.createApiCallLog(
-                    appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
+            tierId = getTierByName(context, tierId);
           }
         }
       }
     }
+
     if (settingAttribute == null) {
       settingAttribute = settingsService.get(analysisServerConfigId);
       if (settingAttribute == null) {
@@ -255,6 +246,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
         ? PREDICTIVE
         : TimeSeriesMlAnalysisType.COMPARATIVE;
     try {
+      renderExpressions(context);
       Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(analysisServerConfigId, Long.parseLong(applicationId),
           ThirdPartyApiCallLog.createApiCallLog(
               appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
@@ -332,6 +324,43 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     return StringUtils.join(delegateTaskIds, ",");
   }
 
+  private String getTierByName(ExecutionContext context, String tierName) {
+    return appdynamicsService.getTierByName(analysisServerConfigId, applicationId, tierName,
+        ThirdPartyApiCallLog.createApiCallLog(
+            appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
+  }
+
+  private void renderExpressions(ExecutionContext context) {
+    if (isNotLong(applicationId)) {
+      String applicationName = context.renderExpression(applicationId);
+      applicationId = appdynamicsService.getAppDynamicsApplicationByName(analysisServerConfigId, applicationName);
+      Preconditions.checkState(isLong(applicationId),
+          "Not able to resolve applicationId for application name %s. Please check your expression or application name",
+          applicationName);
+    }
+    if (isNotLong(tierId)) {
+      String tierName = context.renderExpression(tierId);
+      tierId = getTierByName(context, tierName);
+      Preconditions.checkState(isLong(tierId),
+          "Not able to resolve  tier ID for tier name %s. Please check your expression or tier name", tierName);
+    }
+  }
+
+  private boolean isNotLong(String s) {
+    return !isLong(s);
+  }
+
+  private boolean isLong(String s) {
+    if (s == null) {
+      return false;
+    }
+    try {
+      Long.parseLong(s);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
   private String createDelegateTask(ExecutionContext context, Map<String, String> hosts, String envId,
       String finalApplicationId, long finalTierId, AppDynamicsConfig appDynamicsConfig,
       long dataCollectionStartTimeStamp, TimeSeriesMlAnalysisType mlAnalysisType, List<DelegateTask> delegateTasks) {

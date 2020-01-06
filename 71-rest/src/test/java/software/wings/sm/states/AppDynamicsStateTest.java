@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -14,6 +15,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -86,7 +88,8 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
 
   private AppDynamicsState appDynamicsState;
   private String infraMappingId;
-
+  private String tierId = "456";
+  private String applicationId = "30444";
   @Before
   public void setup() throws IOException, IllegalAccessException {
     setupCommon();
@@ -103,12 +106,12 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(accountService.getAccountType(anyString())).thenReturn(Optional.of(AccountType.PAID));
 
     appDynamicsState = new AppDynamicsState("AppDynamicsState");
-    appDynamicsState.setApplicationId("30444");
-    appDynamicsState.setTierId("456");
+    appDynamicsState.setApplicationId(applicationId);
+    appDynamicsState.setTierId(tierId);
     appDynamicsState.setTimeDuration("6000");
 
     when(appdynamicsService.getTiers(anyString(), anyLong(), any()))
-        .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().id(456).name("tier").build()));
+        .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().id(Long.parseLong(tierId)).name("tier").build()));
     FieldUtils.writeField(appDynamicsState, "appService", appService, true);
     FieldUtils.writeField(appDynamicsState, "configuration", configuration, true);
     FieldUtils.writeField(appDynamicsState, "settingsService", settingsService, true);
@@ -149,6 +152,79 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void shouldTestExpressionForTierAndApplicationNameWhenExpressionDoesNotRender() {
+    String tierIdExpression = "${workflow.variables.appd_tier_name}";
+    appDynamicsState.setTierId(tierIdExpression);
+    String applicationIdExpression = "${workflow.variables.applicationId}";
+    appDynamicsState.setApplicationId(applicationIdExpression);
+    AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
+    ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo(
+            "IllegalStateException: Not able to resolve applicationId for application name ${workflow.variables.applicationId}. Please check your expression or application name");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void shouldTestExpressionForTierAndApplicationNameWhenExpressionDoesNotRenderForTierId() {
+    String tierIdExpression = "${workflow.variables.appd_tier_name}";
+    appDynamicsState.setTierId(tierIdExpression);
+    String applicationIdExpression = "${workflow.variables.applicationId}";
+    appDynamicsState.setApplicationId(applicationIdExpression);
+    String applicationName = generateUuid();
+    when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn(applicationName);
+    when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName))).thenReturn(applicationId);
+    AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
+    ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo(
+            "IllegalStateException: Not able to resolve  tier ID for tier name ${workflow.variables.appd_tier_name}. Please check your expression or tier name");
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void shouldTestExpressionForTierAndApplicationNameWhenTierNameIsNotResolved() {
+    String tierIdExpression = "${workflow.variables.appd_tier_name}";
+    appDynamicsState.setTierId(tierIdExpression);
+    String applicationIdExpression = "${workflow.variables.applicationId}";
+    appDynamicsState.setApplicationId(applicationIdExpression);
+    String applicationName = generateUuid();
+    when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn(applicationName);
+    when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName))).thenReturn(applicationId);
+    when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn("tierName");
+    AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
+    ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo(
+            "IllegalStateException: Not able to resolve applicationId for application name tierName. Please check your expression or application name");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void shouldTestExpressionForTierAndApplicationNameWhenExpressionRendersToValidIds() {
+    String tierIdExpression = "${workflow.variables.appd_tier_name}";
+    appDynamicsState.setTierId(tierIdExpression);
+    String applicationIdExpression = "${workflow.variables.applicationId}";
+    appDynamicsState.setApplicationId(applicationIdExpression);
+    AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
+    String applicationName = "appdApplicationName";
+    String tierName = "appDTierName";
+    when(executionContext.renderExpression(eq(tierIdExpression))).thenReturn(tierName);
+    when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn(applicationName);
+    when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName))).thenReturn(applicationId);
+    when(appdynamicsService.getTierByName(any(), any(), eq(tierName), any())).thenReturn(tierId);
+    ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(RUNNING);
   }
 
   private AppDynamicsState setupNonTemplatized(boolean isBadTier) {
@@ -195,8 +271,8 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     ExecutionResponse executionResponse = setupNonTemplatized(true).execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
     assertThat(executionResponse.getErrorMessage())
-        .isEqualTo("Error while fetching from AppDynamics. ApplicationId : 30444 and "
-            + "TierId : 123aa in AppDynamics setup must be valid numbers");
+        .isEqualTo(
+            "IllegalStateException: Not able to resolve  tier ID for tier name 123aa. Please check your expression or tier name");
   }
 
   @Test
@@ -320,20 +396,6 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = PRANJAL)
-  @Category(UnitTests.class)
-  public void testValidateFieldsInValidCase() {
-    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
-    appDynamicsState.setApplicationId("test");
-    appDynamicsState.setTierId("test12");
-    appDynamicsState.setAnalysisServerConfigId("test1234");
-    // not adding any metrics for verification
-    Map<String, String> invalidFields = appDynamicsState.validateFields();
-    assertThat(invalidFields.size() == 1).isTrue();
-    assertThat(invalidFields.keySet().iterator().next()).isEqualTo("Invalid Required Fields");
-  }
-
-  @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testEmptyParam() {
@@ -342,34 +404,6 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     assertThat(validationResult.size()).isEqualTo(1);
     assertThat(validationResult.get("Required Fields missing"))
         .isEqualTo("Connector, Application and tier should be provided");
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testInvalidApp() {
-    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
-    appDynamicsState.setAnalysisServerConfigId(generateUuid());
-    appDynamicsState.setApplicationId(generateUuid());
-    appDynamicsState.setTierId(generateUuid());
-
-    final Map<String, String> validationResult = appDynamicsState.validateFields();
-    assertThat(validationResult.size()).isEqualTo(1);
-    assertThat(validationResult.get("Invalid Required Fields")).isEqualTo("Valid AppId and tierId should be provided");
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testInvalidTier() {
-    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
-    appDynamicsState.setAnalysisServerConfigId(generateUuid());
-    appDynamicsState.setApplicationId("123");
-    appDynamicsState.setTierId(generateUuid());
-
-    final Map<String, String> validationResult = appDynamicsState.validateFields();
-    assertThat(validationResult.size()).isEqualTo(1);
-    assertThat(validationResult.get("Invalid Required Fields")).isEqualTo("Valid AppId and tierId should be provided");
   }
 
   @Test
