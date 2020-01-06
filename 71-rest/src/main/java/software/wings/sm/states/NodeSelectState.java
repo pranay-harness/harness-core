@@ -190,7 +190,7 @@ public abstract class NodeSelectState extends State {
       // Save this to the sweeping output here.......
       sweepingOutputService.save(
           context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
-              .name(ServiceInstanceIdsParam.SERVICE_INSTANCE_IDS_PARAMS + phaseElement.getPhaseName())
+              .name(ServiceInstanceIdsParam.SERVICE_INSTANCE_IDS_PARAMS + phaseElement.getPhaseName().trim())
               .value(serviceIdParamElement)
               .build());
     }

@@ -57,6 +57,7 @@ public class RepeatState extends State {
   @SchemaIgnore private String repeatTransitionStateName;
 
   @Transient @Inject private WorkflowExecutionService workflowExecutionService;
+  @Transient @Inject private RepeatStateHelper repeatStateHelper;
 
   /**
    * Instantiates a new repeat state.
@@ -65,6 +66,10 @@ public class RepeatState extends State {
    */
   public RepeatState(String name) {
     super(name, StateType.REPEAT.name());
+  }
+
+  public void setWorkflowExecutionService(WorkflowExecutionService workflowExecutionService) {
+    this.workflowExecutionService = workflowExecutionService;
   }
 
   /**

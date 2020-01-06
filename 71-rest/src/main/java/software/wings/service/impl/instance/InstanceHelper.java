@@ -1,6 +1,5 @@
 package software.wings.service.impl.instance;
 
-import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -169,11 +168,6 @@ public class InstanceHelper {
           return;
         }
 
-        if (checkIfAnyStepsFailed(phaseStepExecutionSummary)) {
-          logger.info("Deploy Service Phase step failed, not capturing any instances");
-          return;
-        }
-
         if (phaseStepExecutionData.getElementStatusSummary() == null) {
           logger.warn(
               "elementStatusSummary is null for InfraMappingType {}, appId: {}, WorkflowExecution<Name, Id> :<{},{}>",
@@ -248,11 +242,6 @@ public class InstanceHelper {
 
   private boolean hasNoInstanceHandler(String infraMappingType) {
     return false;
-  }
-
-  private boolean checkIfAnyStepsFailed(PhaseStepExecutionSummary phaseStepExecutionSummary) {
-    return phaseStepExecutionSummary.getStepExecutionSummaryList().stream().anyMatch(
-        stepExecutionSummary -> stepExecutionSummary.getStatus() == FAILED);
   }
 
   public Instance buildInstanceUsingHostInfo(WorkflowExecution workflowExecution, Artifact artifact,

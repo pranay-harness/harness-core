@@ -7,6 +7,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -19,6 +20,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.api.ServiceElement;
 import software.wings.beans.ExecutionStrategy;
+import software.wings.service.impl.WorkflowExecutionServiceImpl;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -43,11 +46,13 @@ public class RepeatStateTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldExecuteSerial() {
     String stateName = "test";
-
+    WorkflowExecutionService workflowExecutionService = mock(WorkflowExecutionServiceImpl.class);
     List<ContextElement> repeatElements = getTestRepeatElements();
 
     ExecutionContextImpl context = prepareExecutionContext(stateName, repeatElements);
+    when(workflowExecutionService.checkIfOnDemand(any(), any())).thenReturn(false);
     RepeatState repeatState = new RepeatState(stateName);
+    repeatState.setWorkflowExecutionService(workflowExecutionService);
     repeatState.setRepeatElementExpression("services()");
     repeatState.setExecutionStrategy(ExecutionStrategy.SERIAL);
     repeatState.setRepeatTransitionStateName("abc");
@@ -76,10 +81,13 @@ public class RepeatStateTest extends CategoryTest {
   public void shouldExecuteParallel() {
     List<ContextElement> repeatElements = getTestRepeatElements();
     String stateName = "test";
+    WorkflowExecutionService workflowExecutionService = mock(WorkflowExecutionServiceImpl.class);
+    when(workflowExecutionService.checkIfOnDemand(any(), any())).thenReturn(false);
 
     ExecutionContextImpl context = prepareExecutionContext(stateName, repeatElements);
 
     RepeatState repeatState = new RepeatState(stateName);
+    repeatState.setWorkflowExecutionService(workflowExecutionService);
     repeatState.setRepeatElementExpression("services()");
     repeatState.setExecutionStrategy(ExecutionStrategy.PARALLEL);
     repeatState.setRepeatTransitionStateName("abc");

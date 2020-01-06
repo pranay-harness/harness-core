@@ -114,6 +114,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -2107,23 +2108,27 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public Artifact findPreviousArtifact(String appId, String workflowExecutionId, ContextElement instanceElement) {
     FindOptions findOptions = new FindOptions();
     if (workflowExecutionService.checkIfOnDemand(appId, workflowExecutionId)) {
-      findOptions = findOptions.skip(1);
-    }
-    Activity activity = wingsPersistence.createQuery(Activity.class)
-                            .filter(ActivityKeys.appId, appId)
-                            .filter(ActivityKeys.serviceInstanceId, instanceElement.getUuid())
-                            .filter(ActivityKeys.status, ExecutionStatus.SUCCESS)
-                            .field(ActivityKeys.workflowExecutionId)
-                            .notEqual(workflowExecutionId)
-                            .field(ActivityKeys.artifactId)
-                            .exists()
-                            .order(Sort.descending(ActivityKeys.createdAt))
-                            .get(findOptions);
+      WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
+      notNullCheck("Workflow Execution is Null", workflowExecution);
+      List<Artifact> artifacts = workflowExecution.getArtifacts();
+      return isNotEmpty(artifacts) ? artifacts.get(0) : null;
+    } else {
+      Activity activity = wingsPersistence.createQuery(Activity.class)
+                              .filter(ActivityKeys.appId, appId)
+                              .filter(ActivityKeys.serviceInstanceId, instanceElement.getUuid())
+                              .filter(ActivityKeys.status, ExecutionStatus.SUCCESS)
+                              .field(ActivityKeys.workflowExecutionId)
+                              .notEqual(workflowExecutionId)
+                              .field(ActivityKeys.artifactId)
+                              .exists()
+                              .order(Sort.descending(ActivityKeys.createdAt))
+                              .get(findOptions);
 
-    if (activity == null) {
-      return null;
+      if (activity == null) {
+        return null;
+      }
+      return artifactService.getWithSource(activity.getArtifactId());
     }
-    return artifactService.getWithSource(activity.getArtifactId());
   }
 
   private boolean isCommandUnitsOrderChanged(List<CommandUnit> commandUnits, List<CommandUnit> oldCommandUnits) {
