@@ -2529,7 +2529,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     final Variable infraVariable1 =
         orchestrationWorkflow.getUserVariables()
             .stream()
-            .filter(variable -> variable.obtainEntityType().equals(EntityType.INFRASTRUCTURE_MAPPING))
+            .filter(variable -> variable.obtainEntityType() == EntityType.INFRASTRUCTURE_MAPPING)
             .findFirst()
             .orElse(null);
 
@@ -4087,11 +4087,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   private Workflow createLinkedWorkflow(TemplateType templateType) {
     GraphNode templateStep = null;
 
-    if (templateType.equals(TemplateType.HTTP)) {
+    if (templateType == TemplateType.HTTP) {
       templateStep = constructHttpTemplateStep();
-    } else if (templateType.equals(TemplateType.SHELL_SCRIPT)) {
+    } else if (templateType == TemplateType.SHELL_SCRIPT) {
       templateStep = constructShellScriptTemplateStep();
-    } else if (templateType.equals(TemplateType.SSH)) {
+    } else if (templateType == TemplateType.SSH) {
       templateStep = constructCommandTemplateStep();
     }
     final Template httpTemplate =

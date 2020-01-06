@@ -241,7 +241,7 @@ public class AlertServiceImpl implements AlertService {
                                   .field(AlertKeys.status)
                                   .in(STATUS_ACTIVE);
     for (Alert alert : alertQuery) {
-      String alertExecutionId = alert.getType().equals(ApprovalNeeded)
+      String alertExecutionId = alert.getType() == ApprovalNeeded
           ? ((ApprovalNeededAlert) alert.getAlertData()).getExecutionId()
           : ((ManualInterventionNeededAlert) alert.getAlertData()).getExecutionId();
       if (executionId.equals(alertExecutionId)) {

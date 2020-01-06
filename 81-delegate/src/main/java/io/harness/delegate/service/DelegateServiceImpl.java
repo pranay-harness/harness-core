@@ -1252,7 +1252,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       Delegate delegateReceived = delegateResponse.getResource();
       if (delegateId.equals(delegateReceived.getUuid())) {
-        if (Status.DELETED.equals(delegateReceived.getStatus())) {
+        if (Status.DELETED == delegateReceived.getStatus()) {
           initiateSelfDestruct();
         } else {
           delegateId = delegateReceived.getUuid();

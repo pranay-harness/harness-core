@@ -53,7 +53,7 @@ public class PipelineChangeHandler implements ChangeHandler {
   private static final int DAYS_TO_RETAIN = 7;
 
   private boolean handleAuditRelatedChange(ChangeEvent<?> changeEvent) {
-    if (changeEvent.getChangeType().equals(ChangeType.UPDATE) && changeEvent.getChanges() != null
+    if (changeEvent.getChangeType() == ChangeType.UPDATE && changeEvent.getChanges() != null
         && changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
       boolean result = true;
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
@@ -84,7 +84,7 @@ public class PipelineChangeHandler implements ChangeHandler {
   private boolean handleWorkflowExecutionInsert(ChangeEvent<?> changeEvent) {
     boolean result = true;
     WorkflowExecution workflowExecution = (WorkflowExecution) changeEvent.getFullDocument();
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)) {
+    if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
       String documentToUpdate = workflowExecution.getWorkflowId();
       String fieldToUpdate = WorkflowViewKeys.deployments;
       Map<String, Object> deploymentRelatedEntityViewMap =
@@ -101,7 +101,7 @@ public class PipelineChangeHandler implements ChangeHandler {
 
   private boolean handleWorkflowExecutionUpdate(ChangeEvent<?> changeEvent) {
     WorkflowExecution workflowExecution = (WorkflowExecution) changeEvent.getFullDocument();
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)) {
+    if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
       DBObject changes = changeEvent.getChanges();
       if (changes.containsField(WorkflowExecutionKeys.status)) {
         String type = WorkflowViewKeys.deployments;

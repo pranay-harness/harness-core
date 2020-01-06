@@ -105,7 +105,7 @@ public class AwsAmiInfrastructure
   @Override
   public void applyExpressions(
       Map<String, Object> resolvedExpressions, String appId, String envId, String infraDefinitionId) {
-    if (!AWS_ASG.equals(getAmiDeploymentType())) {
+    if (AWS_ASG != getAmiDeploymentType()) {
       // Should never happen
       throw new InvalidRequestException("Provisioning ONLY supported for AWS_ASG type AMI deployments");
     }

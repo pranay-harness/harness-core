@@ -105,7 +105,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
 
       // downsize previous apps with non zero instances by same count new app was upsized
       List<PcfInstanceElement> pcfInstanceElementsForVerification = new ArrayList<>();
-      if (ResizeStrategy.DOWNSIZE_OLD_FIRST.equals(pcfCommandDeployRequest.getResizeStrategy())) {
+      if (ResizeStrategy.DOWNSIZE_OLD_FIRST == pcfCommandDeployRequest.getResizeStrategy()) {
         pcfCommandTaskHelper.downsizePreviousReleases(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback,
             pcfServiceDataUpdated, stepDecrease, pcfInstanceElementsForVerification, pcfAppAutoscalarRequestData);
         unmapRoutesIfAppDownsizedToZero(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback);

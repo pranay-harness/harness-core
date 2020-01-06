@@ -103,8 +103,8 @@ public class LogServiceImpl implements LogService {
       Map<String, Map<String, Log>> activityCommandUnitLastLogMap = logs.stream().collect(groupingBy(Log::getActivityId,
           toMap(Log::getCommandUnitName, Function.identity(),
               (l1, l2)
-                  -> l1.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)
-                      || l1.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)
+                  -> l1.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+                      || l1.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE
                   ? l1
                   : l2)));
 

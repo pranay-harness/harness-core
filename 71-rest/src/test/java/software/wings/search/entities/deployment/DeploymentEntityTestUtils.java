@@ -71,7 +71,7 @@ public class DeploymentEntityTestUtils extends WingsBaseTest {
                              .fullDocument(fullDocument)
                              .entityType(entityType)
                              .changeType(changeType);
-    if (changeType.equals(ChangeType.UPDATE)) {
+    if (changeType == ChangeType.UPDATE) {
       changeEventBuilder = changeEventBuilder.changes(getStatusChange());
     }
     return changeEventBuilder.build();

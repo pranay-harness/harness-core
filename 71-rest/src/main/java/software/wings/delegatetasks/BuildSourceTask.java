@@ -70,7 +70,7 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
       BuildSourceRequestType buildSourceRequestType = buildSourceRequest.getBuildSourceRequestType();
 
       List<BuildDetails> buildDetails = new ArrayList<>();
-      if (buildSourceRequestType.equals(BuildSourceRequestType.GET_BUILDS)) {
+      if (buildSourceRequestType == BuildSourceRequestType.GET_BUILDS) {
         if (ArtifactStreamType.CUSTOM.name().equals(artifactStreamType)) {
           buildDetails = service.getBuilds(artifactStreamAttributes);
         } else {

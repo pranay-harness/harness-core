@@ -202,7 +202,7 @@ public class JiraHelperService {
                                     .build();
 
     ResponseData responseData = delegateService.executeTask(delegateTask);
-    if (jiraTaskParameters.getJiraAction().equals(CHECK_APPROVAL) && delegateTask != null) {
+    if (jiraTaskParameters.getJiraAction() == CHECK_APPROVAL && delegateTask != null) {
       logger.info("Delegate task Id = {}, for Polling Jira Approval for IssueId {}", delegateTask.getUuid(),
           jiraTaskParameters.getIssueId());
     }

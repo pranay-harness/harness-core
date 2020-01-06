@@ -147,8 +147,8 @@ public class ApplicationManifestUtils {
       K8sValuesLocation k8sValuesLocation = entry.getKey();
       ApplicationManifest applicationManifest = entry.getValue();
 
-      if (StoreType.Remote.equals(applicationManifest.getStoreType())
-          || StoreType.HelmSourceRepo.equals(applicationManifest.getStoreType())) {
+      if (StoreType.Remote == applicationManifest.getStoreType()
+          || StoreType.HelmSourceRepo == applicationManifest.getStoreType()) {
         GitFileConfig gitFileConfig =
             gitFileConfigHelperService.renderGitFileConfig(context, applicationManifest.getGitFileConfig());
         GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
@@ -175,14 +175,14 @@ public class ApplicationManifestUtils {
     }
 
     ApplicationManifest applicationManifest = appManifestMap.get(K8sValuesLocation.Service);
-    return Local.equals(applicationManifest.getStoreType());
+    return Local == applicationManifest.getStoreType();
   }
 
   public boolean isValuesInGit(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
       ApplicationManifest applicationManifest = entry.getValue();
-      if (StoreType.Remote.equals(applicationManifest.getStoreType())
-          || StoreType.HelmSourceRepo.equals(applicationManifest.getStoreType())) {
+      if (StoreType.Remote == applicationManifest.getStoreType()
+          || StoreType.HelmSourceRepo == applicationManifest.getStoreType()) {
         return true;
       }
     }
@@ -218,7 +218,7 @@ public class ApplicationManifestUtils {
     for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
       K8sValuesLocation k8sValuesLocation = entry.getKey();
       ApplicationManifest applicationManifest = entry.getValue();
-      if (Local.equals(applicationManifest.getStoreType())) {
+      if (Local == applicationManifest.getStoreType()) {
         ManifestFile manifestFile =
             applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), values_filename);
         if (manifestFile != null) {
@@ -277,7 +277,7 @@ public class ApplicationManifestUtils {
 
     ApplicationManifest applicationManifest =
         applicationManifestService.getByServiceId(appId, serviceId, AppManifestKind.K8S_MANIFEST);
-    if (applicationManifest == null || !Local.equals(applicationManifest.getStoreType())) {
+    if (applicationManifest == null || Local != applicationManifest.getStoreType()) {
       return expressionSet;
     }
 
@@ -325,7 +325,7 @@ public class ApplicationManifestUtils {
 
   public boolean isValuesInHelmChartRepo(ExecutionContext context) {
     ApplicationManifest applicationManifest = getApplicationManifestForService(context);
-    return applicationManifest != null && StoreType.HelmChartRepo.equals(applicationManifest.getStoreType())
+    return applicationManifest != null && StoreType.HelmChartRepo == applicationManifest.getStoreType()
         && applicationManifest.getHelmChartConfig() != null
         && isNotBlank(applicationManifest.getHelmChartConfig().getChartName());
   }

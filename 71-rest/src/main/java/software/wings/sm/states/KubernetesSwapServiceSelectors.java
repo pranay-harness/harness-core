@@ -131,7 +131,7 @@ public class KubernetesSwapServiceSelectors extends State {
         (KubernetesSwapServiceSelectorsExecutionData) context.getStateExecutionData();
     stateExecutionData.setStatus(executionResponse.getExecutionStatus());
 
-    if (ExecutionStatus.SUCCESS.equals(executionResponse.getExecutionStatus())) {
+    if (ExecutionStatus.SUCCESS == executionResponse.getExecutionStatus()) {
       K8sSwapServiceElement k8sSwapServiceElement = getK8sSwapServiceElement(context);
       if (k8sSwapServiceElement == null) {
         saveK8sSwapServiceElement(context, K8sSwapServiceElement.builder().swapDone(true).build());
@@ -174,7 +174,7 @@ public class KubernetesSwapServiceSelectors extends State {
                                                            .build());
 
     if (executionContext.getOrchestrationWorkflowType() != null
-        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
+        && executionContext.getOrchestrationWorkflowType() == BUILD) {
       activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
     } else {
       activityBuilder.environmentId(env.getUuid())

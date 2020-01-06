@@ -118,7 +118,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
       logger.info("{} flag is disabled, it will be handled by cron", WORKFLOW_VERIFICATION_REMOVE_CRON);
       return;
     }
-    if (ExecutionStatus.QUEUED.equals(analysisContext.getExecutionStatus())) {
+    if (ExecutionStatus.QUEUED == analysisContext.getExecutionStatus()) {
       learningEngineService.markJobStatus(analysisContext, ExecutionStatus.RUNNING);
       analysisContext.replaceUnicodeInControlNodesAndTestNodes();
     }
@@ -308,11 +308,11 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
               .metric_template_url(metricTemplateUrl)
               .analysis_failure_url(failureUrl)
               .control_nodes(getNodesForGroup(groupName, controlNodes))
-              .test_nodes(mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)
+              .test_nodes(mlAnalysisType == TimeSeriesMlAnalysisType.PREDICTIVE
                       ? Sets.newHashSet(groupName)
                       : getNodesForGroup(groupName, testNodes))
               .analysis_start_time(
-                  mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE) ? PREDECTIVE_HISTORY_MINUTES : 0)
+                  mlAnalysisType == TimeSeriesMlAnalysisType.PREDICTIVE ? PREDECTIVE_HISTORY_MINUTES : 0)
               .stateType(context.getStateType())
               .ml_analysis_type(MLAnalysisType.TIME_SERIES)
               .group_name(groupName)
@@ -321,7 +321,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
       learningEngineAnalysisTask.setAppId(context.getAppId());
       learningEngineAnalysisTask.setUuid(uuid);
 
-      if (mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)) {
+      if (mlAnalysisType == TimeSeriesMlAnalysisType.PREDICTIVE) {
         learningEngineAnalysisTask.setPrediction_start_time(PREDECTIVE_HISTORY_MINUTES);
       }
 
@@ -373,7 +373,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
             final NewRelicMetricDataRecord firstHeartBeatRecord =
                 analysisService.getHeartBeat(context.getStateType(), context.getAppId(), context.getStateExecutionId(),
                     context.getWorkflowExecutionId(), context.getServiceId(), groupName, OrderType.ASC);
-            completeCron = timeSeriesMlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)
+            completeCron = timeSeriesMlAnalysisType == TimeSeriesMlAnalysisType.PREDICTIVE
                 ? lastHeartBeatRecord.getDataCollectionMinute()
                     >= PREDECTIVE_HISTORY_MINUTES + context.getStartDataCollectionMinute() + analysisDuration
                 : lastHeartBeatRecord.getDataCollectionMinute() - firstHeartBeatRecord.getDataCollectionMinute()
@@ -556,11 +556,11 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
               .analysis_save_url(experimentalMetricAnalysisSaveUrl)
               .metric_template_url(metricTemplateUrl)
               .control_nodes(getNodesForGroup(groupName, controlNodes))
-              .test_nodes(mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)
+              .test_nodes(mlAnalysisType == TimeSeriesMlAnalysisType.PREDICTIVE
                       ? Sets.newHashSet(groupName)
                       : getNodesForGroup(groupName, testNodes))
               .analysis_start_time(
-                  mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE) ? PREDECTIVE_HISTORY_MINUTES : 0)
+                  mlAnalysisType == TimeSeriesMlAnalysisType.PREDICTIVE ? PREDECTIVE_HISTORY_MINUTES : 0)
               .stateType(context.getStateType())
               .ml_analysis_type(MLAnalysisType.TIME_SERIES)
               .group_name(groupName)

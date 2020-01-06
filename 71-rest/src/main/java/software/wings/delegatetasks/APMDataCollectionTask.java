@@ -501,7 +501,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     }
 
     private boolean isPredictiveAnalysis() {
-      return dataCollectionInfo.getStrategy().equals(AnalysisComparisonStrategy.PREDICTIVE);
+      return dataCollectionInfo.getStrategy() == AnalysisComparisonStrategy.PREDICTIVE;
     }
 
     /**

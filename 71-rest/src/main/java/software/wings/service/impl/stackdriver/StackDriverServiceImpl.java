@@ -92,7 +92,7 @@ public class StackDriverServiceImpl implements StackDriverService {
                                             .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
 
-      if (StateType.STACK_DRIVER_LOG.equals(setupTestNodeData.getStateType())) {
+      if (StateType.STACK_DRIVER_LOG == setupTestNodeData.getStateType()) {
         long startTime = setupTestNodeData.getFromTime() * TimeUnit.SECONDS.toMillis(1);
         long endTime = setupTestNodeData.getToTime() * TimeUnit.SECONDS.toMillis(1);
         return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)

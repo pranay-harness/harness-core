@@ -225,7 +225,7 @@ public class HostServiceImpl implements HostService {
     Query<Host> query =
         wingsPersistence.createQuery(Host.class).filter("appId", appId).filter(HostKeys.infraMappingId, infraMappingId);
 
-    UpdateOperations<Host> operations = DeploymentType.SSH.equals(deploymentType)
+    UpdateOperations<Host> operations = DeploymentType.SSH == deploymentType
         ? wingsPersistence.createUpdateOperations(Host.class).set("hostConnAttr", hostConnectionAttrs)
         : wingsPersistence.createUpdateOperations(Host.class).set("winrmConnAttr", hostConnectionAttrs);
     wingsPersistence.update(query, operations);

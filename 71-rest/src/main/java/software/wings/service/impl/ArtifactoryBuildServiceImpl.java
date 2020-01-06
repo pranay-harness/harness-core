@@ -61,7 +61,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
     if (!appId.equals(GLOBAL_APP_ID)) {
-      if (artifactStreamAttributes.getArtifactType().equals(DOCKER)) {
+      if (artifactStreamAttributes.getArtifactType() == DOCKER) {
         return artifactoryService.getBuilds(
             artifactoryConfig, encryptionDetails, artifactStreamAttributes, limit == -1 ? 1000 : limit);
       } else {
@@ -113,7 +113,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Override
   public Map<String, String> getPlans(ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactType artifactType, String repositoryType) {
-    if (artifactType.equals(DOCKER)) {
+    if (artifactType == DOCKER) {
       return artifactoryService.getRepositories(config, encryptionDetails, artifactType);
     }
     return artifactoryService.getRepositories(config, encryptionDetails, repositoryType);

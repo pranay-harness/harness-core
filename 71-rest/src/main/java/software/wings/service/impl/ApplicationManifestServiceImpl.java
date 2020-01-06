@@ -467,7 +467,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   private void validateAppManifestForEnvironment(ApplicationManifest appManifest) {
     if (isNotBlank(appManifest.getEnvId())) {
-      if (!StoreType.Local.equals(appManifest.getStoreType()) && !StoreType.Remote.equals(appManifest.getStoreType())) {
+      if (StoreType.Local != appManifest.getStoreType() && StoreType.Remote != appManifest.getStoreType()) {
         throw new InvalidRequestException(
             "Only local and remote store types are allowed for values.yaml in environment");
       }
@@ -644,7 +644,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException("Application manifest doesn't exist with id " + appManifestId, USER);
     }
 
-    if (!StoreType.Remote.equals(appManifest.getStoreType())) {
+    if (StoreType.Remote != appManifest.getStoreType()) {
       throw new InvalidRequestException(
           "Manifest files from git should only be requested when store type is remote", USER);
     }
@@ -687,7 +687,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
 
     GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) notifyResponseData;
-    if (!executionResponse.getGitCommandStatus().equals(GitCommandStatus.SUCCESS)) {
+    if (executionResponse.getGitCommandStatus() != GitCommandStatus.SUCCESS) {
       throw new InvalidRequestException(executionResponse.getErrorMessage());
     }
 

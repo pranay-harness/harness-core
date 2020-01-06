@@ -97,7 +97,7 @@ public class WorkflowUtils {
       }
 
       if (props.containsKey(APPROVAL_STATE_TYPE_VARIABLE)
-          && (approvalStepType.equals(props.get(APPROVAL_STATE_TYPE_VARIABLE))
+          && (approvalStepType == props.get(APPROVAL_STATE_TYPE_VARIABLE)
                  || approvalStepType.name().equals(props.get(APPROVAL_STATE_TYPE_VARIABLE)))) {
         return true;
       }

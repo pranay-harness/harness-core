@@ -73,9 +73,8 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
         .withAccountId(accountId)
         .withChangeType(changeType)
         .withFileContent(yamlContent)
-        .withFilePath(changeType.equals(ChangeType.DELETE) && isDirectory
-                ? path
-                : path + "/" + name + YamlConstants.YAML_EXTENSION)
+        .withFilePath(
+            changeType == ChangeType.DELETE && isDirectory ? path : path + "/" + name + YamlConstants.YAML_EXTENSION)
         .build();
   }
 
@@ -110,7 +109,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
   public GitFileChange getCommandGitSyncFile(
       String accountId, Service service, ServiceCommand serviceCommand, ChangeType changeType) {
     String yaml = null;
-    if (!changeType.equals(ChangeType.DELETE)) {
+    if (changeType != ChangeType.DELETE) {
       yaml = yamlResourceService.getServiceCommand(serviceCommand.getAppId(), serviceCommand.getUuid())
                  .getResource()
                  .getYaml();
@@ -152,7 +151,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     // The default variables is a special case where one yaml is mapped to a list of setting variables.
     // So, even if a default variable is deleted, we should not delete the whole file.
     // Sending DELETE would do that. So, sending MODIFY
-    if (ChangeType.DELETE.equals(changeType)) {
+    if (ChangeType.DELETE == changeType) {
       changeType = ChangeType.MODIFY;
     }
     return Lists.newArrayList(getDefaultVarGitSyncFile(accountId, appId, changeType));
@@ -188,7 +187,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       isNonLeafEntity = yamlHandlerFactory.isNonLeafEntityWithFeatureFlag(entity);
     }
     boolean isEntityNeedsActualFile = yamlHandlerFactory.isEntityNeedsActualFile(entity);
-    if (!changeType.equals(ChangeType.DELETE) && !isEntityNeedsActualFile) {
+    if (changeType != ChangeType.DELETE && !isEntityNeedsActualFile) {
       yaml = yamlResourceService.obtainEntityYamlVersion(accountId, entity).getResource().getYaml();
     }
 
@@ -272,7 +271,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     if (entity instanceof Service) {
       Service service = (Service) entity;
 
-      if (changeType.equals(ChangeType.ADD) && !serviceResourceService.hasInternalCommands(service)) {
+      if (changeType == ChangeType.ADD && !serviceResourceService.hasInternalCommands(service)) {
         serviceResourceService.getServiceCommands(service.getAppId(), service.getUuid())
             .forEach(serviceCommand
                 -> gitFileChanges.add(getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD)));
@@ -280,8 +279,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     } else if (entity instanceof ConfigFile) {
       ConfigFile configFile = (ConfigFile) entity;
       // When its delete, fileContent would have been already deleted at this point. No point in fetching it
-      String fileContent =
-          ChangeType.DELETE.equals(changeType) ? StringUtils.EMPTY : loadFileContentIntoString(configFile);
+      String fileContent = ChangeType.DELETE == changeType ? StringUtils.EMPTY : loadFileContentIntoString(configFile);
       String fileName = Utils.normalize(configFile.getRelativeFilePath());
 
       if (fileContent != null) {

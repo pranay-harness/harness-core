@@ -71,7 +71,7 @@ public class PcfHelperService {
                                         .build();
     }
 
-    if (CommandExecutionStatus.FAILURE.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
+    if (CommandExecutionStatus.FAILURE == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
       logger.warn(pcfCommandExecutionResponse.getErrorMessage());
       throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
     }
@@ -107,7 +107,7 @@ public class PcfHelperService {
       PcfInstanceSyncResponse pcfInstanceSyncResponse =
           (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
-      if (CommandExecutionStatus.FAILURE.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
+      if (CommandExecutionStatus.FAILURE == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
         logger.warn("Failed to fetch PCF application details for Instance Sync, check delegate logs"
             + pcfCommandExecutionResponse.getPcfCommandResponse().getOutput());
         if (pcfCommandExecutionResponse.getErrorMessage().contains(pcfApplicationName + " does not exist")
@@ -175,7 +175,7 @@ public class PcfHelperService {
                                         .build();
     }
 
-    if (CommandExecutionStatus.SUCCESS.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
+    if (CommandExecutionStatus.SUCCESS == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
       return ((PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse()).getOrganizations();
     } else {
       logger.warn(pcfCommandExecutionResponse.getErrorMessage());
@@ -219,7 +219,7 @@ public class PcfHelperService {
                                         .build();
     }
 
-    if (CommandExecutionStatus.SUCCESS.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
+    if (CommandExecutionStatus.SUCCESS == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
       return ((PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse()).getRouteMaps().get(0);
     } else {
       logger.warn(pcfCommandExecutionResponse.getErrorMessage());
@@ -256,7 +256,7 @@ public class PcfHelperService {
                                         .build();
     }
 
-    if (CommandExecutionStatus.SUCCESS.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
+    if (CommandExecutionStatus.SUCCESS == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
       return ((PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse()).getSpaces();
     } else {
       logger.warn(pcfCommandExecutionResponse.getErrorMessage());
@@ -294,7 +294,7 @@ public class PcfHelperService {
                                         .build();
     }
 
-    if (CommandExecutionStatus.SUCCESS.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
+    if (CommandExecutionStatus.SUCCESS == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
       return ((PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse()).getRouteMaps();
     } else {
       logger.warn(pcfCommandExecutionResponse.getErrorMessage());
@@ -333,7 +333,7 @@ public class PcfHelperService {
                                         .build();
     }
 
-    if (CommandExecutionStatus.SUCCESS.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
+    if (CommandExecutionStatus.SUCCESS == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
       PcfInfraMappingDataResponse pcfInfraMappingDataResponse =
           (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
       return pcfInfraMappingDataResponse.getRunningInstanceCount();

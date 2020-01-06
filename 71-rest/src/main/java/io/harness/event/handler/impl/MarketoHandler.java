@@ -195,7 +195,7 @@ public class MarketoHandler implements EventHandler {
 
       String accessToken = getAccessToken(marketoConfig.getClientId(), marketoConfig.getClientSecret());
 
-      if (NEW_TRIAL_SIGNUP.equals(eventType)) {
+      if (NEW_TRIAL_SIGNUP == eventType) {
         String email = properties.get(EMAIL_ID);
         if (isEmpty(email)) {
           logger.error("User email is empty");

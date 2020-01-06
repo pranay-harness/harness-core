@@ -127,9 +127,9 @@ public class SpotInstServiceSetup extends State {
     String activityId = response.keySet().iterator().next();
     SpotInstTaskExecutionResponse executionResponse =
         (SpotInstTaskExecutionResponse) response.values().iterator().next();
-    ExecutionStatus executionStatus =
-        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                             : ExecutionStatus.FAILED;
+    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
 
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
 
@@ -141,7 +141,7 @@ public class SpotInstServiceSetup extends State {
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
 
-    if (ExecutionStatus.SUCCESS.equals(executionStatus) && spotInstSetupTaskResponse != null) {
+    if (ExecutionStatus.SUCCESS == executionStatus && spotInstSetupTaskResponse != null) {
       if (spotInstSetupTaskResponse.getNewElastiGroup() != null) {
         stateExecutionData.getElastiGroupOriginalConfig().setId(spotInstSetupTaskResponse.getNewElastiGroup().getId());
         stateExecutionData.getElastiGroupOriginalConfig().setName(

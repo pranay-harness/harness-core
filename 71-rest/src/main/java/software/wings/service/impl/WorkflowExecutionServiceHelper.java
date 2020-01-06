@@ -59,10 +59,10 @@ public class WorkflowExecutionServiceHelper {
 
     WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
     if (workflowExecution == null || workflowExecution.getExecutionArgs() == null
-        || !executionArgs.getWorkflowType().equals(workflowExecution.getWorkflowType())
-        || (ORCHESTRATION.equals(workflowExecution.getWorkflowType())
+        || executionArgs.getWorkflowType() != workflowExecution.getWorkflowType()
+        || (ORCHESTRATION == workflowExecution.getWorkflowType()
                && !executionArgs.getOrchestrationId().equals(workflowExecution.getWorkflowId()))
-        || (PIPELINE.equals(workflowExecution.getWorkflowType())
+        || (PIPELINE == workflowExecution.getWorkflowType()
                && (workflowExecution.getPipelineExecution() == null
                       || workflowExecution.getPipelineExecution().getPipeline() == null
                       || !executionArgs.getPipelineId().equals(
@@ -73,7 +73,7 @@ public class WorkflowExecutionServiceHelper {
     Map<String, String> oldWorkflowVariablesValueMap = workflowExecution.getExecutionArgs().getWorkflowVariables();
     if (isEmpty(oldWorkflowVariablesValueMap)) {
       return new WorkflowVariablesMetadata(
-          workflowVariables, workflowVariables.stream().anyMatch(variable -> ENTITY.equals(variable.getType())));
+          workflowVariables, workflowVariables.stream().anyMatch(variable -> ENTITY == variable.getType()));
     }
 
     boolean changed = populateWorkflowVariablesValues(workflowVariables, new HashMap<>(oldWorkflowVariablesValueMap));
@@ -226,7 +226,7 @@ public class WorkflowExecutionServiceHelper {
   private List<Variable> fetchWorkflowVariables(String appId, ExecutionArgs executionArgs) {
     // Fetch workflow variables without any value.
     List<Variable> workflowVariables;
-    if (ORCHESTRATION.equals(executionArgs.getWorkflowType())) {
+    if (ORCHESTRATION == executionArgs.getWorkflowType()) {
       Workflow workflow = workflowService.readWorkflowWithoutServices(appId, executionArgs.getOrchestrationId());
       workflowVariables = (workflow == null || workflow.getOrchestrationWorkflow() == null)
           ? null
@@ -259,7 +259,7 @@ public class WorkflowExecutionServiceHelper {
     boolean resetEntities = false;
     for (Variable variable : workflowVariables) {
       String name = variable.getName();
-      boolean isEntity = ENTITY.equals(variable.getType());
+      boolean isEntity = ENTITY == variable.getType();
       boolean oldVariablePresent = oldWorkflowVariablesMap.containsKey(name);
       if (!oldVariablePresent) {
         // A new workflow variable.
@@ -286,7 +286,7 @@ public class WorkflowExecutionServiceHelper {
   private void resetEntityWorkflowVariables(List<Variable> workflowVariables) {
     // NOTE: workflowVariables are not empty.
     for (Variable variable : workflowVariables) {
-      if (ENTITY.equals(variable.getType())) {
+      if (ENTITY == variable.getType()) {
         variable.setValue(null);
       }
     }

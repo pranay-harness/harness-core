@@ -121,7 +121,7 @@ public class WorkflowChangeHandler implements ChangeHandler {
   }
 
   private boolean handleAuditRelatedChange(ChangeEvent changeEvent) {
-    if (changeEvent.getChangeType().equals(ChangeType.UPDATE) && changeEvent.getChanges() != null
+    if (changeEvent.getChangeType() == ChangeType.UPDATE && changeEvent.getChanges() != null
         && changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
       boolean result = true;
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
@@ -154,7 +154,7 @@ public class WorkflowChangeHandler implements ChangeHandler {
   private boolean handleWorkflowExecutionInsert(ChangeEvent<?> changeEvent) {
     boolean result = true;
     WorkflowExecution workflowExecution = (WorkflowExecution) changeEvent.getFullDocument();
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
+    if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION) {
       String fieldToUpdate = WorkflowViewKeys.deployments;
       List<String> documentsToUpdate = workflowExecution.getWorkflowIds();
       Map<String, Object> deploymentRelatedEntityViewMap =
@@ -174,7 +174,7 @@ public class WorkflowChangeHandler implements ChangeHandler {
     DBObject changes = changeEvent.getChanges();
     WorkflowExecution workflowExecution = (WorkflowExecution) changeEvent.getFullDocument();
     boolean result = true;
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
+    if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION) {
       if (changes.containsField(WorkflowExecutionKeys.status)) {
         String entityType = WorkflowViewKeys.deployments;
         String newNameValue = workflowExecution.getStatus().toString();

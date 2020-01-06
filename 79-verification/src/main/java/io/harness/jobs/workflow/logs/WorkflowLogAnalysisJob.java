@@ -89,7 +89,7 @@ public class WorkflowLogAnalysisJob implements Job, Handler<AnalysisContext> {
       logger.info("{} flag is disabled, it will be handled by cron", WORKFLOW_VERIFICATION_REMOVE_CRON);
       return;
     }
-    if (ExecutionStatus.QUEUED.equals(analysisContext.getExecutionStatus())) {
+    if (ExecutionStatus.QUEUED == analysisContext.getExecutionStatus()) {
       learningEngineService.markJobStatus(analysisContext, ExecutionStatus.RUNNING);
     }
 

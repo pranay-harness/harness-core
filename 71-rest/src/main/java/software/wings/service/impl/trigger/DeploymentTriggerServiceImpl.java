@@ -284,8 +284,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     List<DeploymentTrigger> triggersForAppId =
         wingsPersistence.createQuery(DeploymentTrigger.class).filter(DeploymentTriggerKeys.appId, appId).asList();
     for (DeploymentTrigger deploymentTrigger : triggersForAppId) {
-      if (deploymentTrigger.getAction() != null
-          && deploymentTrigger.getAction().getActionType().equals(ActionType.PIPELINE)
+      if (deploymentTrigger.getAction() != null && deploymentTrigger.getAction().getActionType() == ActionType.PIPELINE
           && ((PipelineAction) deploymentTrigger.getAction()).getPipelineId().equals(pipelineId)) {
         String name = deploymentTrigger.getName();
         triggerNames.add(name);
@@ -300,8 +299,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     List<DeploymentTrigger> triggersForAppId =
         wingsPersistence.createQuery(DeploymentTrigger.class).filter(DeploymentTriggerKeys.appId, appId).asList();
     for (DeploymentTrigger deploymentTrigger : triggersForAppId) {
-      if (deploymentTrigger.getAction() != null
-          && deploymentTrigger.getAction().getActionType().equals(ActionType.WORKFLOW)
+      if (deploymentTrigger.getAction() != null && deploymentTrigger.getAction().getActionType() == ActionType.WORKFLOW
           && ((WorkflowAction) deploymentTrigger.getAction()).getWorkflowId().equals(workflowId)) {
         String name = deploymentTrigger.getName();
         triggerNames.add(name);
@@ -357,8 +355,8 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
   }
 
   private String obtainTriggerConditionType(Condition condition) {
-    if (condition.getType().equals(NEW_ARTIFACT) || condition.getType().equals(SCHEDULED)
-        || condition.getType().equals(PIPELINE_COMPLETION) || condition.getType().equals(WEBHOOK)) {
+    if (condition.getType() == NEW_ARTIFACT || condition.getType() == SCHEDULED
+        || condition.getType() == PIPELINE_COMPLETION || condition.getType() == WEBHOOK) {
       return condition.getType().name();
     }
     throw new InvalidRequestException("Invalid Trigger Condition for trigger " + condition.getType().name(), USER);

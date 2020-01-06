@@ -760,7 +760,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     if (serviceVariables != null) {
       for (ServiceVariable serviceVariable : serviceVariables) {
         ServiceVariable clonedServiceVariable = serviceVariable.cloneInternal();
-        if (ENCRYPTED_TEXT.equals(clonedServiceVariable.getType())) {
+        if (ENCRYPTED_TEXT == clonedServiceVariable.getType()) {
           clonedServiceVariable.setValue(clonedServiceVariable.getEncryptedValue().toCharArray());
         }
         if (targetAppId != null) {
@@ -774,17 +774,17 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             clonedServiceVariable.setTemplateId(serviceTemplateId);
           }
         }
-        if (clonedServiceVariable.getEntityType().equals(SERVICE_TEMPLATE)) {
+        if (clonedServiceVariable.getEntityType() == SERVICE_TEMPLATE) {
           if (serviceTemplateId != null) {
             clonedServiceVariable.setEntityId(serviceTemplateId);
           }
         }
-        if (clonedServiceVariable.getEntityType().equals(SERVICE)) {
+        if (clonedServiceVariable.getEntityType() == SERVICE) {
           if (targetServiceId != null) {
             clonedServiceVariable.setEntityId(targetServiceId);
           }
         }
-        if (clonedServiceVariable.getEntityType().equals(ENVIRONMENT)) {
+        if (clonedServiceVariable.getEntityType() == ENVIRONMENT) {
           clonedServiceVariable.setEntityId(clonedEnvironment.getUuid());
         }
         serviceVariableService.save(clonedServiceVariable);
@@ -806,10 +806,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         if (!clonedConfigFile.getTemplateId().equals(DEFAULT_TEMPLATE_ID)) {
           clonedConfigFile.setTemplateId(clonedServiceTemplate.getUuid());
         }
-        if (clonedConfigFile.getEntityType().equals(SERVICE_TEMPLATE)) {
+        if (clonedConfigFile.getEntityType() == SERVICE_TEMPLATE) {
           clonedConfigFile.setEntityId(clonedServiceTemplate.getUuid());
         }
-        if (clonedConfigFile.getEntityType().equals(SERVICE)) {
+        if (clonedConfigFile.getEntityType() == SERVICE) {
           if (targetServiceId != null) {
             clonedConfigFile.setEntityId(targetServiceId);
           }
@@ -857,8 +857,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           notNullCheck("service", oldService, USER);
           Service newService = serviceResourceService.get(targetAppId, targetServiceId, false);
           notNullCheck("targetService", newService, USER);
-          if (oldService.getArtifactType() != null
-              && !oldService.getArtifactType().equals(newService.getArtifactType())) {
+          if (oldService.getArtifactType() != null && oldService.getArtifactType() != newService.getArtifactType()) {
             throw new InvalidRequestException("Target service  [" + oldService.getName()
                     + " ] is not compatible with service [" + newService.getName() + "]",
                 USER);

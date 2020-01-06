@@ -36,7 +36,7 @@ public class PagerDutyEventDispatcher {
     }
 
     for (Notification notification : notifications) {
-      if (EventType.CLOSE_ALERT.equals(notification.getEventType())) {
+      if (EventType.CLOSE_ALERT == notification.getEventType()) {
         logger.info("ignoring close alert for pager duty {}", notification);
         continue;
       }

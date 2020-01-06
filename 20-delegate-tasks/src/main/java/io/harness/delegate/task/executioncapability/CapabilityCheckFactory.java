@@ -26,35 +26,35 @@ public class CapabilityCheckFactory {
   @Inject ChartMuseumCapabilityCheck chartMuseumCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
-    if (SOCKET.equals(capabilityCheckType)) {
+    if (SOCKET == capabilityCheckType) {
       return socketConnectivityCapabilityCheck;
     }
 
-    if (ALWAYS_TRUE.equals(capabilityCheckType)) {
+    if (ALWAYS_TRUE == capabilityCheckType) {
       return ignoreValidationCapabilityCheck;
     }
 
-    if (PROCESS_EXECUTOR.equals(capabilityCheckType)) {
+    if (PROCESS_EXECUTOR == capabilityCheckType) {
       return processExecutorCapabilityCheck;
     }
 
-    if (AWS_REGION.equals(capabilityCheckType)) {
+    if (AWS_REGION == capabilityCheckType) {
       return awsRegionCapabilityCheck;
     }
 
-    if (SYSTEM_ENV.equals(capabilityCheckType)) {
+    if (SYSTEM_ENV == capabilityCheckType) {
       return systemEnvCapabilityCheck;
     }
 
-    if (HTTP.equals(capabilityCheckType)) {
+    if (HTTP == capabilityCheckType) {
       return httpConnectionExecutionCapabilityCheck;
     }
 
-    if (HELM.equals(capabilityCheckType)) {
+    if (HELM == capabilityCheckType) {
       return helmCapabilityCheck;
     }
 
-    if (CHART_MUSEUM.equals(capabilityCheckType)) {
+    if (CHART_MUSEUM == capabilityCheckType) {
       return chartMuseumCapabilityCheck;
     }
 

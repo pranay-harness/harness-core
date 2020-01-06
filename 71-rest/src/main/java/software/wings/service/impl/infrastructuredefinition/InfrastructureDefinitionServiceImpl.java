@@ -514,7 +514,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       throw new InvalidRequestException("Region is mandatory");
     }
     String baseAsgName = expressions.get(AwsAmiInfrastructureKeys.autoScalingGroupName);
-    if (AmiDeploymentType.AWS_ASG.equals(infra.getAmiDeploymentType()) && isEmpty(baseAsgName)) {
+    if (AmiDeploymentType.AWS_ASG == infra.getAmiDeploymentType() && isEmpty(baseAsgName)) {
       throw new InvalidRequestException("Auto Scaling Group is mandatory");
     }
   }
@@ -558,10 +558,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   public void validateImmutableFields(
       InfrastructureDefinition newInfrastructureDefinition, InfrastructureDefinition oldInfraDefinition) {
-    if (!oldInfraDefinition.getDeploymentType().equals(newInfrastructureDefinition.getDeploymentType())) {
+    if (oldInfraDefinition.getDeploymentType() != newInfrastructureDefinition.getDeploymentType()) {
       throw new InvalidRequestException("Deployment Type is immutable");
     }
-    if (!oldInfraDefinition.getCloudProviderType().equals(newInfrastructureDefinition.getCloudProviderType())) {
+    if (oldInfraDefinition.getCloudProviderType() != newInfrastructureDefinition.getCloudProviderType()) {
       throw new InvalidRequestException("Cloud Provider Type is immutable");
     }
     if (newInfrastructureDefinition.getInfrastructure() instanceof AwsAmiInfrastructure) {

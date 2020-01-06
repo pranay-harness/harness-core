@@ -203,11 +203,10 @@ public class AppContainer extends BaseFile {
     }
     final AppContainer other = (AppContainer) obj;
     return Objects.equals(this.standard, other.standard) && Objects.equals(this.description, other.description)
-        && Objects.equals(this.standardUpload, other.standardUpload) && Objects.equals(this.family, other.family)
-        && Objects.equals(this.stackRootDirectory, other.stackRootDirectory)
-        && Objects.equals(this.fileType, other.fileType) && Objects.equals(this.accountId, other.accountId)
-        && Objects.equals(this.systemCreated, other.systemCreated) && Objects.equals(this.version, other.version)
-        && Objects.equals(this.hardened, other.hardened);
+        && Objects.equals(this.standardUpload, other.standardUpload) && this.family == other.family
+        && Objects.equals(this.stackRootDirectory, other.stackRootDirectory) && this.fileType == other.fileType
+        && Objects.equals(this.accountId, other.accountId) && Objects.equals(this.systemCreated, other.systemCreated)
+        && Objects.equals(this.version, other.version) && Objects.equals(this.hardened, other.hardened);
   }
 
   /**

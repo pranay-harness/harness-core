@@ -323,12 +323,12 @@ public class EntityHelper {
         EntityType entityTypeForFile = configFile.getEntityType();
         affectedResourceId = configFile.getEntityId();
         // Config file defined in service
-        if (EntityType.SERVICE.equals(entityTypeForFile)) {
+        if (EntityType.SERVICE == entityTypeForFile) {
           affectedResourceName = getServiceName(affectedResourceId, appId);
           affectedResourceType = EntityType.SERVICE.name();
           affectedResourceOperation =
               getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
-        } else if (EntityType.ENVIRONMENT.equals(entityTypeForFile)) {
+        } else if (EntityType.ENVIRONMENT == entityTypeForFile) {
           // Config file override in ENV for all services
           affectedResourceName = getEnvironmentName(affectedResourceId, appId);
           affectedResourceType = EntityType.ENVIRONMENT.name();
@@ -425,13 +425,13 @@ public class EntityHelper {
       String envId = variable.getEnvId();
       if (Environment.GLOBAL_ENV_ID.equals(envId)) {
         EntityType entityTypeForVariable = variable.getEntityType();
-        if (EntityType.SERVICE.equals(entityTypeForVariable)) {
+        if (EntityType.SERVICE == entityTypeForVariable) {
           affectedResourceId = variable.getEntityId();
           affectedResourceName = getServiceName(affectedResourceId, appId);
           affectedResourceOperation =
               getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
           affectedResourceType = EntityType.SERVICE.name();
-        } else if (EntityType.ENVIRONMENT.equals(entityTypeForVariable)) {
+        } else if (EntityType.ENVIRONMENT == entityTypeForVariable) {
           affectedResourceId = variable.getEntityId();
           affectedResourceName = getEnvironmentName(affectedResourceId, appId);
           affectedResourceType = EntityType.ENVIRONMENT.name();

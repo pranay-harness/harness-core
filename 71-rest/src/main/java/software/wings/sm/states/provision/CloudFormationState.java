@@ -131,12 +131,12 @@ public abstract class CloudFormationState extends State {
     String activityId = response.keySet().iterator().next();
     CloudFormationCommandExecutionResponse executionResponse =
         (CloudFormationCommandExecutionResponse) response.values().iterator().next();
-    ExecutionStatus executionStatus =
-        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                             : ExecutionStatus.FAILED;
+    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
     ExecutionResponseBuilder builder = ExecutionResponse.builder().executionStatus(executionStatus);
-    if (ExecutionStatus.SUCCESS.equals(executionStatus)) {
+    if (ExecutionStatus.SUCCESS == executionStatus) {
       List<CloudFormationElement> elements = handleResponse(executionResponse.getCommandResponse(), context);
       if (isNotEmpty(elements)) {
         elements.forEach(element -> {
@@ -223,7 +223,7 @@ public abstract class CloudFormationState extends State {
     ManagerExecutionLogCallback executionLogCallback =
         new ManagerExecutionLogCallback(logService, logBuilder, scriptStateExecutionData.getActivityId());
 
-    if (CommandExecutionStatus.SUCCESS.equals(commandResponse.getCommandExecutionStatus())) {
+    if (CommandExecutionStatus.SUCCESS == commandResponse.getCommandExecutionStatus()) {
       Map<String, Object> outputs = createStackResponse.getCloudFormationOutputMap();
       if (isNotEmpty(outputs)) {
         infrastructureProvisionerService.regenerateInfrastructureMappings(
@@ -264,7 +264,7 @@ public abstract class CloudFormationState extends State {
                              .build());
 
     if (executionContext.getOrchestrationWorkflowType() != null
-        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
+        && executionContext.getOrchestrationWorkflowType() == BUILD) {
       activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
     } else {
       activityBuilder.environmentId(env.getUuid())

@@ -223,7 +223,7 @@ public class PcfPluginState extends State {
   }
 
   private boolean isServiceManifestRemote(ApplicationManifest serviceManifest) {
-    return serviceManifest.getStoreType().equals(StoreType.Remote);
+    return serviceManifest.getStoreType() == StoreType.Remote;
   }
 
   private ExecutionResponse executeGitTask(ExecutionContext context, ApplicationManifest serviceManifest,
@@ -543,9 +543,9 @@ public class PcfPluginState extends State {
     final String activityId = getActivityId(context);
 
     PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
-    ExecutionStatus executionStatus =
-        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                             : ExecutionStatus.FAILED;
+    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
     PcfPluginStateExecutionData pcfPluginStateExecutionData = getPcfPluginStateExecutionData(context);
     pcfPluginStateExecutionData.setStatus(executionStatus);
@@ -563,11 +563,11 @@ public class PcfPluginState extends State {
     final String activityId = getActivityId(context);
 
     GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) response.values().iterator().next();
-    ExecutionStatus executionStatus = executionResponse.getGitCommandStatus().equals(GitCommandStatus.SUCCESS)
+    ExecutionStatus executionStatus = executionResponse.getGitCommandStatus() == GitCommandStatus.SUCCESS
         ? ExecutionStatus.SUCCESS
         : ExecutionStatus.FAILED;
 
-    if (ExecutionStatus.FAILED.equals(executionStatus)) {
+    if (ExecutionStatus.FAILED == executionStatus) {
       WorkflowStandardParams workflowStandardParams = getWorkflowStandardParams(context);
       activityService.updateStatus(activityId, workflowStandardParams.getAppId(), executionStatus);
       return ExecutionResponse.builder().executionStatus(ExecutionStatus.FAILED).build();

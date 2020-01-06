@@ -106,7 +106,7 @@ public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAwa
     Optional<Threshold> defaultThreshold = supervisedThreshold.getMetricType()
                                                .getThresholds()
                                                .stream()
-                                               .filter(t -> t.getComparisonType().equals(ThresholdComparisonType.DELTA))
+                                               .filter(t -> t.getComparisonType() == ThresholdComparisonType.DELTA)
                                                .findAny();
 
     Optional<Double> thresholdValue = Optional.empty();

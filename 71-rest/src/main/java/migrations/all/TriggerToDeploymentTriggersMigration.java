@@ -385,7 +385,7 @@ public class TriggerToDeploymentTriggersMigration implements Migration {
   }
 
   private String getVariableValue(Entry<String, String> variable, TriggerConditionType condition) {
-    return condition.equals(TriggerConditionType.WEBHOOK) && matchesVariablePattern(variable.getValue())
+    return condition == TriggerConditionType.WEBHOOK && matchesVariablePattern(variable.getValue())
         ? StringUtils.join("${", variable.getKey(), "}")
         : variable.getValue();
     // Concrete values will be validated with trigger validation. And trigger should be marked invalid if validation
@@ -402,7 +402,7 @@ public class TriggerToDeploymentTriggersMigration implements Migration {
         TriggerArtifactSelectionValue artifactSelectionValue = null;
         switch (artifactSelectiontype) {
           case LAST_DEPLOYED:
-            if (actionType.equals(WorkflowType.ORCHESTRATION)) {
+            if (actionType == WorkflowType.ORCHESTRATION) {
               String workflowId = artifactSelection.getWorkflowId();
               Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
               notNullCheck(StringUtils.join(DEBUG_LINE, "Workflow not found for Id in artifact selection",

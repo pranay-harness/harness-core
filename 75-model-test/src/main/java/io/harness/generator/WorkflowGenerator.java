@@ -560,7 +560,7 @@ public class WorkflowGenerator {
     } else {
       OrchestrationWorkflowType orchestrationWorkflowType =
           workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType();
-      if (!OrchestrationWorkflowType.BUILD.equals(orchestrationWorkflowType)) {
+      if (OrchestrationWorkflowType.BUILD != orchestrationWorkflowType) {
         Environment environment = owners.obtainEnvironment(
             () -> environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST));
         builder.envId(environment.getUuid());
@@ -572,7 +572,7 @@ public class WorkflowGenerator {
     } else {
       OrchestrationWorkflowType orchestrationWorkflowType =
           workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType();
-      if (!OrchestrationWorkflowType.BUILD.equals(orchestrationWorkflowType)) {
+      if (OrchestrationWorkflowType.BUILD != orchestrationWorkflowType) {
         Service service =
             owners.obtainService(() -> serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST));
         builder.serviceId(service.getUuid());

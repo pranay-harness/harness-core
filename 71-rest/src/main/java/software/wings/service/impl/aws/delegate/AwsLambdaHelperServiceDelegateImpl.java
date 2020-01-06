@@ -206,7 +206,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       String message = "Successfully completed Aws Lambda Deploy step";
       CommandExecutionStatus finalStatus = CommandExecutionStatus.SUCCESS;
       LogLevel level = INFO;
-      if (FAILED.equals(status)) {
+      if (FAILED == status) {
         message = "Failed while deploying Lambda functions";
         finalStatus = CommandExecutionStatus.FAILURE;
         level = ERROR;

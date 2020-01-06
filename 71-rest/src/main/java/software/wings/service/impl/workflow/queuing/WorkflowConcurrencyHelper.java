@@ -111,7 +111,7 @@ public class WorkflowConcurrencyHelper {
 
   @NotNull
   private Predicate<PhaseStep> getProvisionInfrastructurePhaseStepPredicate() {
-    return phaseStep -> phaseStep.getPhaseStepType().equals(PhaseStepType.PROVISION_INFRASTRUCTURE);
+    return phaseStep -> phaseStep.getPhaseStepType() == PhaseStepType.PROVISION_INFRASTRUCTURE;
   }
 
   public GraphNode getResourceConstraintStep(String appId, ConcurrencyStrategy concurrencyStrategy) {

@@ -60,7 +60,7 @@ public class ServiceHelmValuesToManifestFileMigration implements Migration {
     for (Service service : services) {
       boolean migrationNeeded = false;
 
-      if (DeploymentType.HELM.equals(service.getDeploymentType())
+      if (DeploymentType.HELM == service.getDeploymentType()
           || (service.getDeploymentType() == null && isHelmDeploymentTypeInfraMappingPresent(service.getUuid()))) {
         migrationNeeded = true;
       }

@@ -75,7 +75,7 @@ public class SamlClientService {
 
   public SSORequest generateSamlRequest(User user) {
     Account primaryAccount = authenticationUtils.getDefaultAccount(user);
-    if (primaryAccount.getAuthenticationMechanism().equals(AuthenticationMechanism.SAML)) {
+    if (primaryAccount.getAuthenticationMechanism() == AuthenticationMechanism.SAML) {
       return generateSamlRequestFromAccount(primaryAccount);
     }
 

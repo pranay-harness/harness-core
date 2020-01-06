@@ -475,7 +475,7 @@ public class ArtifactCollectionUtils {
     Script versionScript =
         customArtifactStream.getScripts()
             .stream()
-            .filter(script -> script.getAction() == null || script.getAction().equals(Action.FETCH_VERSIONS))
+            .filter(script -> script.getAction() == null || script.getAction() == Action.FETCH_VERSIONS)
             .findFirst()
             .orElse(null);
     if (isNotEmpty(customArtifactStream.getTemplateVariables())) {
@@ -563,7 +563,7 @@ public class ArtifactCollectionUtils {
 
   private static boolean isArtifactoryDockerOrGeneric(ArtifactStream artifactStream, ArtifactType artifactType) {
     if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
-      return ArtifactType.DOCKER.equals(artifactType)
+      return ArtifactType.DOCKER == artifactType
           || !"maven".equals(artifactStream.fetchArtifactStreamAttributes().getRepositoryType());
     }
     return false;
@@ -599,7 +599,7 @@ public class ArtifactCollectionUtils {
   }
 
   public static int getLimit(String artifactStreamType, BuildSourceRequestType requestType) {
-    return ARTIFACTORY.name().equals(artifactStreamType) && BuildSourceRequestType.GET_BUILDS.equals(requestType)
+    return ARTIFACTORY.name().equals(artifactStreamType) && BuildSourceRequestType.GET_BUILDS == requestType
         ? ARTIFACT_RETENTION_SIZE
         : -1;
   }
@@ -742,7 +742,7 @@ public class ArtifactCollectionUtils {
     }
     if (ARTIFACTORY.name().equals(artifactStreamType)) {
       if (artifactStreamAttributes.getArtifactType() != null
-          && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER)) {
+          && artifactStreamAttributes.getArtifactType() == ArtifactType.DOCKER) {
         return false;
       }
       return artifactStreamAttributes.getRepositoryType() == null

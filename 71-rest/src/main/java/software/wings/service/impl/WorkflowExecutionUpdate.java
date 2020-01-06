@@ -202,7 +202,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     handlePostExecution(context);
 
     final String workflowId = context.getWorkflowId();
-    if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
+    if (WorkflowType.PIPELINE != context.getWorkflowType()) {
       try {
         workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
       } catch (Exception exception) {
@@ -265,7 +265,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                 accountID);
           }
         }
-        if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
+        if (WorkflowType.PIPELINE != context.getWorkflowType()) {
           if (workflowExecution.getPipelineExecutionId() != null) {
             workflowExecutionService.refreshCollectedArtifacts(
                 appId, workflowExecution.getPipelineExecutionId(), workflowExecutionId);

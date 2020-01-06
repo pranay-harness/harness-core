@@ -130,9 +130,9 @@ public class EcsBGUpdateListnerState extends State {
       String activityId = response.keySet().iterator().next();
 
       EcsCommandExecutionResponse executionResponse = (EcsCommandExecutionResponse) response.values().iterator().next();
-      ExecutionStatus executionStatus =
-          executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                               : ExecutionStatus.FAILED;
+      ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+          ? ExecutionStatus.SUCCESS
+          : ExecutionStatus.FAILED;
 
       activityService.updateStatus(activityId, context.getAppId(), executionStatus);
 

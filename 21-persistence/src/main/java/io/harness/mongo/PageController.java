@@ -119,7 +119,7 @@ public class PageController {
 
       query.order(req.getOrders()
                       .stream()
-                      .map(so -> (DESC.equals(so.getOrderType())) ? "-" + so.getFieldName() : so.getFieldName())
+                      .map(so -> (DESC == so.getOrderType()) ? "-" + so.getFieldName() : so.getFieldName())
                       .collect(joining(", ")));
     }
 

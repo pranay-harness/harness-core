@@ -520,8 +520,8 @@ public class InstanceHelper {
 
   @VisibleForTesting
   boolean isSupported(InfrastructureMappingType infrastructureMappingType) {
-    if (PHYSICAL_DATA_CENTER_SSH.equals(infrastructureMappingType)
-        || PHYSICAL_DATA_CENTER_WINRM.equals(infrastructureMappingType)) {
+    if (PHYSICAL_DATA_CENTER_SSH == infrastructureMappingType
+        || PHYSICAL_DATA_CENTER_WINRM == infrastructureMappingType) {
       return false;
     }
     return true;

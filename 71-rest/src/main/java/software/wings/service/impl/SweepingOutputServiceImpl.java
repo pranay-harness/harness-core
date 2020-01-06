@@ -99,14 +99,14 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
       SweepingOutputInstance.Scope sweepingOutputScope) {
     // Default scope is pipeline
 
-    if (pipelineExecutionId == null || !Scope.PIPELINE.equals(sweepingOutputScope)) {
+    if (pipelineExecutionId == null || Scope.PIPELINE != sweepingOutputScope) {
       pipelineExecutionId = "dummy-" + generateUuid();
     }
     if (workflowExecutionId == null
-        || (!Scope.PIPELINE.equals(sweepingOutputScope) && !Scope.WORKFLOW.equals(sweepingOutputScope))) {
+        || (Scope.PIPELINE != sweepingOutputScope && Scope.WORKFLOW != sweepingOutputScope)) {
       workflowExecutionId = "dummy-" + generateUuid();
     }
-    if (phaseExecutionId == null || Scope.STATE.equals(sweepingOutputScope)) {
+    if (phaseExecutionId == null || Scope.STATE == sweepingOutputScope) {
       phaseExecutionId = "dummy-" + generateUuid();
     }
     if (stateExecutionId == null) {

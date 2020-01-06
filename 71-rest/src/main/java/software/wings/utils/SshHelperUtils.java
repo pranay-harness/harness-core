@@ -55,8 +55,7 @@ public class SshHelperUtils {
     } else {
       HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) hostConnectionSetting.getValue();
       AccessType accessType = hostConnectionAttributes.getAccessType();
-      if (accessType.equals(AccessType.KEY) || accessType.equals(KEY_SU_APP_USER)
-          || accessType.equals(KEY_SUDO_APP_USER)) {
+      if (accessType == AccessType.KEY || accessType == KEY_SU_APP_USER || accessType == KEY_SUDO_APP_USER) {
         executorType = KEY_AUTH;
       } else {
         executorType = PASSWORD_AUTH;
@@ -145,7 +144,7 @@ public class SshHelperUtils {
     builder.withExecutorType(executorType);
     HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) hostConnectionSetting.getValue();
 
-    if (executorType.equals(KEY_AUTH)) {
+    if (executorType == KEY_AUTH) {
       if (isNotEmpty(hostConnectionAttributes.getKey())) {
         builder.withKey(new String(hostConnectionAttributes.getKey()).toCharArray());
       }
@@ -160,7 +159,7 @@ public class SshHelperUtils {
           .withPassword(null)
           .withKeyLess(hostConnectionAttributes.isKeyless())
           .withKeyPath(hostConnectionAttributes.getKeyPath());
-    } else if (KERBEROS.equals(hostConnectionAttributes.getAuthenticationScheme())) {
+    } else if (KERBEROS == hostConnectionAttributes.getAuthenticationScheme()) {
       KerberosConfig kerberosConfig = hostConnectionAttributes.getKerberosConfig();
 
       if (isNotEmpty(hostConnectionAttributes.getKerberosPassword())) {
@@ -170,7 +169,7 @@ public class SshHelperUtils {
       builder.withAuthenticationScheme(KERBEROS)
           .withKerberosConfig(kerberosConfig)
           .withPort(hostConnectionAttributes.getSshPort());
-    } else if (USER_PASSWORD.equals(hostConnectionAttributes.getAccessType())) {
+    } else if (USER_PASSWORD == hostConnectionAttributes.getAccessType()) {
       if (isNotEmpty(hostConnectionAttributes.getSshPassword())) {
         builder.withSshPassword(new String(hostConnectionAttributes.getSshPassword()).toCharArray());
       }

@@ -149,7 +149,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     Map<String, String> lambdaFunctions = new HashMap<>();
-    if (shouldDoLambdaVerification && getDeploymentType(context).equals(DeploymentType.AWS_LAMBDA)) {
+    if (shouldDoLambdaVerification && getDeploymentType(context) == DeploymentType.AWS_LAMBDA) {
       AwsLambdaContextElement elements = context.getContextElement(ContextElementType.PARAM);
       if (isNotEmpty(elements.getFunctionArns())) {
         elements.getFunctionArns().forEach(contextElement -> {
@@ -173,7 +173,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.CLOUD_WATCH,
         context.getStateExecutionInstanceId(), null, fetchMetricTemplates(cloudWatchMetrics));
 
-    if (shouldDoECSClusterVerification && getDeploymentType(context).equals(DeploymentType.ECS)) {
+    if (shouldDoECSClusterVerification && getDeploymentType(context) == DeploymentType.ECS) {
       // If shouldDoECSClusterVerification but no ecs metrics map is provided. This is to handle backword compatibility
       // in-case no ecsMetrics provided than fetch cluster details from the context and use default ecs metrics for
       // verification.

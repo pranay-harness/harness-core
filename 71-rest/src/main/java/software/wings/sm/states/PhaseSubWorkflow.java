@@ -384,8 +384,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
               artifactsMap.put(artifactVariable.getName(), artifact);
             } else {
               for (ArtifactVariable overridingVariable : artifactVariable.getOverriddenArtifactVariables()) {
-                if (EntityType.SERVICE.equals(
-                        overridingVariable.getEntityType())) { // defined in service and overridden in workflow
+                if (EntityType.SERVICE
+                    == overridingVariable.getEntityType()) { // defined in service and overridden in workflow
                   if (service == null) {
                     throw new InvalidRequestException("Service cannot be empty", USER);
                   }
@@ -393,14 +393,14 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                     artifact = getArtifactByUuid(workflowExecution.getArtifacts(), artifactVariable.getValue());
                     artifactsMap.put(artifactVariable.getName(), artifact);
                   }
-                } else if (EntityType.ENVIRONMENT.equals(overridingVariable.getEntityType())) {
+                } else if (EntityType.ENVIRONMENT == overridingVariable.getEntityType()) {
                   if (isEmpty(overridingVariable
                                   .getOverriddenArtifactVariables())) { // direct env variables - all service overrides
                     artifact = getArtifactByUuid(workflowExecution.getArtifacts(), artifactVariable.getValue());
                     artifactsMap.put(artifactVariable.getName(), artifact);
                   } else { // overridden for specific service
                     for (ArtifactVariable variable : overridingVariable.getOverriddenArtifactVariables()) {
-                      if (EntityType.SERVICE.equals(variable.getEntityType())) {
+                      if (EntityType.SERVICE == variable.getEntityType()) {
                         if (service == null) {
                           throw new InvalidRequestException("Service cannot be empty", USER);
                         }
@@ -422,7 +422,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
               artifactsMap.put(artifactVariable.getName(), artifact);
             } else { // overridden for specific service
               for (ArtifactVariable variable : artifactVariable.getOverriddenArtifactVariables()) {
-                if (EntityType.SERVICE.equals(variable.getEntityType())) {
+                if (EntityType.SERVICE == variable.getEntityType()) {
                   if (service == null) {
                     throw new InvalidRequestException("Service cannot be empty", USER);
                   }
@@ -502,21 +502,21 @@ public class PhaseSubWorkflow extends SubWorkflowState {
             artifact = fetchLastSuccessArtifact(previousArtifactVariables, previousArtifacts, artifactVariable);
           } else {
             for (ArtifactVariable overridingVariable : artifactVariable.getOverriddenArtifactVariables()) {
-              if (EntityType.SERVICE.equals(
-                      overridingVariable.getEntityType())) { // defined in service and overridden in workflow
+              if (EntityType.SERVICE
+                  == overridingVariable.getEntityType()) { // defined in service and overridden in workflow
                 if (service == null) {
                   throw new InvalidRequestException("Service cannot be empty", USER);
                 }
                 if (artifactVariable.getEntityId().equals(service.getUuid())) {
                   artifact = fetchLastSuccessArtifact(previousArtifactVariables, previousArtifacts, artifactVariable);
                 }
-              } else if (EntityType.ENVIRONMENT.equals(overridingVariable.getEntityType())) {
+              } else if (EntityType.ENVIRONMENT == overridingVariable.getEntityType()) {
                 if (isEmpty(overridingVariable
                                 .getOverriddenArtifactVariables())) { // direct env variables - all service overrides
                   artifact = fetchLastSuccessArtifact(previousArtifactVariables, previousArtifacts, artifactVariable);
                 } else { // overridden for specific service
                   for (ArtifactVariable variable : overridingVariable.getOverriddenArtifactVariables()) {
-                    if (EntityType.SERVICE.equals(variable.getEntityType())) {
+                    if (EntityType.SERVICE == variable.getEntityType()) {
                       if (service == null) {
                         throw new InvalidRequestException("Service cannot be empty", USER);
                       }
@@ -538,7 +538,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
           } else { // overridden for specific service
             for (ArtifactVariable variable : artifactVariable.getOverriddenArtifactVariables()) {
-              if (EntityType.SERVICE.equals(variable.getEntityType())) {
+              if (EntityType.SERVICE == variable.getEntityType()) {
                 if (service == null) {
                   throw new InvalidRequestException("Service cannot be empty", USER);
                 }

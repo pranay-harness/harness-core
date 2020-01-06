@@ -54,7 +54,7 @@ public class TemplateUtils {
     Map<String, Object> map = new HashMap<>();
     for (Variable variable : variables) {
       if (variable.getName() != null && variable.getValue() != null) {
-        if (!ARTIFACT.equals(variable.getType())) {
+        if (ARTIFACT != variable.getType()) {
           map.put(variable.getName(), variable.getValue());
         } else {
           processArtifactVariable(context, variable);

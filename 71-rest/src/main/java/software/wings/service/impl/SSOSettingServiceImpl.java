@@ -165,7 +165,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       throw new InvalidRequestException("No Oauth settings found for this account.");
     }
     Account account = accountService.get(accountId);
-    if (AuthenticationMechanism.OAUTH.equals(account.getAuthenticationMechanism())) {
+    if (AuthenticationMechanism.OAUTH == account.getAuthenticationMechanism()) {
       throw new InvalidRequestException("Oauth settings cannot be deleted as authentication mechanism is OAUTH.");
     }
     account.setOauthEnabled(false);
@@ -351,14 +351,14 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     }
 
     AuthenticationMechanism authenticationMechanism = accountService.get(accountId).getAuthenticationMechanism();
-    if (authenticationMechanism.equals(AuthenticationMechanism.LDAP)) {
-      if (ssoSettings.getType().equals(SSOType.LDAP)) {
+    if (authenticationMechanism == AuthenticationMechanism.LDAP) {
+      if (ssoSettings.getType() == SSOType.LDAP) {
         return true;
       }
     }
 
-    if (authenticationMechanism.equals(AuthenticationMechanism.SAML)) {
-      if (ssoSettings.getType().equals(SSOType.SAML)) {
+    if (authenticationMechanism == AuthenticationMechanism.SAML) {
+      if (ssoSettings.getType() == SSOType.SAML) {
         return true;
       }
     }

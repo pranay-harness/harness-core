@@ -90,7 +90,7 @@ public class WorkflowLogClusterJob implements Job, MongoPersistenceIterator.Hand
           analysisContext.getAccountId());
       return;
     }
-    if (ExecutionStatus.QUEUED.equals(analysisContext.getExecutionStatus())) {
+    if (ExecutionStatus.QUEUED == analysisContext.getExecutionStatus()) {
       learningEngineService.markJobStatus(analysisContext, ExecutionStatus.RUNNING);
       analysisContext.replaceUnicodeInControlNodesAndTestNodes();
     }

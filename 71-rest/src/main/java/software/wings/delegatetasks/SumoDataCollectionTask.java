@@ -191,7 +191,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
           }
         }
       }
-      if (taskResult.getStatus().equals(DataCollectionTaskStatus.FAILURE)) {
+      if (taskResult.getStatus() == DataCollectionTaskStatus.FAILURE) {
         logger.info(
             "Failed Data collection for SumoLogic collection task so quitting the task with StateExecutionId {}",
             dataCollectionInfo.getStateExecutionId());

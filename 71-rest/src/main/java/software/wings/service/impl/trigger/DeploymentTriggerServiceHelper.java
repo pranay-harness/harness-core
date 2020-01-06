@@ -188,7 +188,7 @@ public class DeploymentTriggerServiceHelper {
           }
           if (events.containsKey(gitHubEventType.getEventType().name())) {
             WebhookSource.WebhookEventInfo webhookEventInfo = events.get(gitHubEventType.getEventType().name());
-            if (gitHubEventType.getEventType().equals(PULL_REQUEST)) {
+            if (gitHubEventType.getEventType() == PULL_REQUEST) {
               webhookEventInfo.getSubEvents().add(WebhookSubEventInfo.builder()
                                                       .displayValue(gitHubEventType.getDisplayName())
                                                       .enumName(gitHubEventType.name())
@@ -197,7 +197,7 @@ public class DeploymentTriggerServiceHelper {
           } else {
             List<WebhookSubEventInfo> subEvents = new ArrayList<>();
 
-            if (gitHubEventType.getEventType().equals(PULL_REQUEST)) {
+            if (gitHubEventType.getEventType() == PULL_REQUEST) {
               subEvents.add(WebhookSubEventInfo.builder()
                                 .displayValue(gitHubEventType.getDisplayName())
                                 .enumName(gitHubEventType.name())
@@ -237,8 +237,8 @@ public class DeploymentTriggerServiceHelper {
           }
           if (events.containsKey(bitBucketEventType.getEventType().name())) {
             WebhookSource.WebhookEventInfo webhookEventInfo = events.get(bitBucketEventType.getEventType().name());
-            if (bitBucketEventType.getEventType().equals(PULL_REQUEST)
-                || bitBucketEventType.getEventType().equals(ISSUE) || bitBucketEventType.getEventType().equals(PUSH)) {
+            if (bitBucketEventType.getEventType() == PULL_REQUEST || bitBucketEventType.getEventType() == ISSUE
+                || bitBucketEventType.getEventType() == PUSH) {
               webhookEventInfo.getSubEvents().add(WebhookSubEventInfo.builder()
                                                       .displayValue(bitBucketEventType.getDisplayName())
                                                       .enumName(bitBucketEventType.name())
@@ -247,8 +247,8 @@ public class DeploymentTriggerServiceHelper {
           } else {
             List<WebhookSubEventInfo> subEvents = new ArrayList<>();
 
-            if (bitBucketEventType.getEventType().equals(PULL_REQUEST)
-                || bitBucketEventType.getEventType().equals(ISSUE) || bitBucketEventType.getEventType().equals(PUSH)) {
+            if (bitBucketEventType.getEventType() == PULL_REQUEST || bitBucketEventType.getEventType() == ISSUE
+                || bitBucketEventType.getEventType() == PUSH) {
               subEvents.add(WebhookSubEventInfo.builder()
                                 .displayValue(bitBucketEventType.getDisplayName())
                                 .enumName(bitBucketEventType.name())

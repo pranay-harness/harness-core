@@ -389,7 +389,7 @@ public class GitClientImplTest extends WingsBaseTest {
         .containsExactlyInAnyOrderElementsOf(
             gitCommitRequest.getGitFileChanges()
                 .stream()
-                .filter(gfc -> ChangeType.ADD.equals(gfc.getChangeType()))
+                .filter(gfc -> ChangeType.ADD == gfc.getChangeType())
                 .map(gitFileChange -> Paths.get(gitFileChange.getFilePath()).getFileName().toString())
                 .collect(Collectors.toSet()));
 
@@ -402,7 +402,7 @@ public class GitClientImplTest extends WingsBaseTest {
         .doesNotContainAnyElementsOf(
             gitCommitRequest.getGitFileChanges()
                 .stream()
-                .filter(gfc -> ChangeType.DELETE.equals(gfc.getChangeType()))
+                .filter(gfc -> ChangeType.DELETE == gfc.getChangeType())
                 .map(gitFileChange -> Paths.get(gitFileChange.getFilePath()).getFileName().toString())
                 .collect(Collectors.toSet()));
 

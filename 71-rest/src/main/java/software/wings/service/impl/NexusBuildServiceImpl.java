@@ -45,11 +45,11 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public Map<String, String> getPlans(NexusConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactType artifactType, String repositoryFormat) {
-    if (!artifactType.equals(ArtifactType.DOCKER) && repositoryFormat != null
+    if (artifactType != ArtifactType.DOCKER && repositoryFormat != null
         && repositoryFormat.equals(RepositoryFormat.docker.name())) {
       throw new WingsException(format("Not supported for Artifact Type %s", artifactType), USER);
     }
-    if (artifactType.equals(ArtifactType.DOCKER)) {
+    if (artifactType == ArtifactType.DOCKER) {
       return nexusService.getRepositories(config, encryptionDetails, RepositoryFormat.docker.name());
     }
     return nexusService.getRepositories(config, encryptionDetails, repositoryFormat);
@@ -73,7 +73,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
     if (!appId.equals(GLOBAL_APP_ID)) {
       if (artifactStreamAttributes.getArtifactType() != null
-              && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER)
+              && artifactStreamAttributes.getArtifactType() == ArtifactType.DOCKER
           || (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.docker.name()))) {
         return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes, 50);
       } else if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.nuget.name())

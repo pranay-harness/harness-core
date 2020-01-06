@@ -87,7 +87,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
             application.getUuid(), artifactStream.getUuid(), false, changeContext.getChange().isSyncFromGit());
       }
     } else {
-      if (changeContext.getYamlType().equals(YamlType.ARTIFACT_STREAM)) {
+      if (changeContext.getYamlType() == YamlType.ARTIFACT_STREAM) {
         Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
         if (!optionalApplication.isPresent()) {
           return;
@@ -162,7 +162,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
         artifactStream.setSyncFromGit(changeContext.getChange().isSyncFromGit());
         return (B) artifactStreamService.createWithBinding(appId, artifactStream, !artifactStream.isSyncFromGit());
       } else {
-        if (changeContext.getYamlType().equals(YamlType.ARTIFACT_STREAM)) {
+        if (changeContext.getYamlType() == YamlType.ARTIFACT_STREAM) {
           String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), yamlFilePath);
           String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
 

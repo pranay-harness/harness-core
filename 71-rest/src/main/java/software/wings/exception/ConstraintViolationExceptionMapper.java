@@ -84,7 +84,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
 
     final StringBuilder result = new StringBuilder("server response");
     for (Path.Node node : violation.getPropertyPath()) {
-      if (node.getKind().equals(ElementKind.RETURN_VALUE)) {
+      if (node.getKind() == ElementKind.RETURN_VALUE) {
         returnValueNames = 0;
       } else if (returnValueNames >= 0) {
         result.append(returnValueNames++ == 0 ? " " : ".").append(node);

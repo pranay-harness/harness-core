@@ -323,14 +323,14 @@ public class PcfStateHelper {
       return;
     }
 
-    if (StoreType.Local.equals(applicationManifest.getStoreType())) {
+    if (StoreType.Local == applicationManifest.getStoreType()) {
       List<ManifestFile> manifestFiles = applicationManifestService.getManifestFilesByAppManifestId(
           applicationManifest.getAppId(), applicationManifest.getUuid());
 
       for (ManifestFile manifestFile : manifestFiles) {
         addToPcfManifestFilesMap(manifestFile.getFileContent(), pcfManifestsPackage);
       }
-    } else if (StoreType.Remote.equals(applicationManifest.getStoreType())) {
+    } else if (StoreType.Remote == applicationManifest.getStoreType()) {
       if (fetchFilesResult == null || isEmpty(fetchFilesResult.getFilesFromMultipleRepo())) {
         return;
       }
@@ -355,14 +355,14 @@ public class PcfStateHelper {
       return;
     }
 
-    if (APPLICATION_MANIFEST.equals(manifestType)) {
+    if (APPLICATION_MANIFEST == manifestType) {
       pcfManifestsPackage.setManifestYml(fileContent);
-    } else if (VARIABLE_MANIFEST.equals(manifestType)) {
+    } else if (VARIABLE_MANIFEST == manifestType) {
       if (isEmpty(pcfManifestsPackage.getVariableYmls())) {
         pcfManifestsPackage.setVariableYmls(new ArrayList<>());
       }
       pcfManifestsPackage.getVariableYmls().add(fileContent);
-    } else if (AUTOSCALAR_MANIFEST.equals(manifestType)) {
+    } else if (AUTOSCALAR_MANIFEST == manifestType) {
       pcfManifestsPackage.setAutoscalarManifestYml(fileContent);
     }
   }
@@ -583,7 +583,7 @@ public class PcfStateHelper {
   public boolean isManifestInGit(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
       ApplicationManifest applicationManifest = entry.getValue();
-      if (StoreType.Remote.equals(applicationManifest.getStoreType())) {
+      if (StoreType.Remote == applicationManifest.getStoreType()) {
         return true;
       }
     }

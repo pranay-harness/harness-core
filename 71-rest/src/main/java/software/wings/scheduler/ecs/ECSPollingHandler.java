@@ -44,7 +44,7 @@ public class ECSPollingHandler implements Handler<ECSPollingJobEntity> {
   public void handle(ECSPollingJobEntity entity) {
     try {
       logger.info("Inside ECS polling job entity");
-      if (entity.getAwsEcsRequestType().equals(AwsEcsRequestType.LIST_CLUSTER_SERVICES)) {
+      if (entity.getAwsEcsRequestType() == AwsEcsRequestType.LIST_CLUSTER_SERVICES) {
         List<Service> ecsClusterServices =
             cloudWatchService.getECSClusterServices(entity.getSettingId(), entity.getRegion(), entity.getClusterName());
         logger.info("List cluster services {}", ecsClusterServices.toString());

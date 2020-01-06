@@ -304,7 +304,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
               .getExperimentalRiskLevel();
     }
 
-    boolean mismatch = !experimentalRiskLevel.equals(riskLevel);
+    boolean mismatch = experimentalRiskLevel != riskLevel;
 
     metricRecord.setRiskLevel(riskLevel);
     metricRecord.setExperimentalRiskLevel(experimentalRiskLevel);
@@ -356,7 +356,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
         globalExperimentalRisk = experimentalRiskLevel;
       }
 
-      boolean mismatch = !experimentalRiskLevel.equals(riskLevel);
+      boolean mismatch = experimentalRiskLevel != riskLevel;
 
       metricValues.add(ExperimentalMetricAnalysisValue.builder()
                            .name(metricSummary.getMetric_name())
@@ -370,7 +370,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
                            .build());
     }
 
-    boolean mismatch = !globalExperimentalRisk.equals(globalRisk);
+    boolean mismatch = globalExperimentalRisk != globalRisk;
 
     return ExperimentalMetricAnalysis.builder()
         .metricName(txnSummary.getTxn_name())

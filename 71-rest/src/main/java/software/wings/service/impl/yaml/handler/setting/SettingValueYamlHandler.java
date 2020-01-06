@@ -92,7 +92,7 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
       String accountId, String yamlFilePath, String uuid, B config, SettingCategory category) {
     String name;
     YamlType yamlType = yamlHelper.getYamlTypeFromSettingAttributePath(yamlFilePath);
-    if (yamlType == null || yamlType.equals(YamlType.ARTIFACT_SERVER) || yamlType.equals(YamlType.CLOUD_PROVIDER)) {
+    if (yamlType == null || yamlType == YamlType.ARTIFACT_SERVER || yamlType == YamlType.CLOUD_PROVIDER) {
       name = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
     } else {
       name = yamlHelper.extractParentEntityName(yamlType.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);

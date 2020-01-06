@@ -356,7 +356,7 @@ public class HelmDeployState extends State {
       throw new InvalidRequestException(builder.toString(), WingsException.USER);
     }
 
-    if (helmCommandExecutionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
+    if (helmCommandExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       List<ReleaseInfo> releaseInfoList =
           ((HelmReleaseHistoryCommandResponse) helmCommandExecutionResponse.getHelmCommandResponse())
               .getReleaseInfoList();
@@ -406,11 +406,11 @@ public class HelmDeployState extends State {
     String appId = workflowStandardParams.getAppId();
     String activityId = obtainActivityId(context);
     HelmValuesFetchTaskResponse executionResponse = (HelmValuesFetchTaskResponse) response.values().iterator().next();
-    ExecutionStatus executionStatus =
-        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                             : ExecutionStatus.FAILED;
+    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
 
-    if (ExecutionStatus.FAILED.equals(executionStatus)) {
+    if (ExecutionStatus.FAILED == executionStatus) {
       activityService.updateStatus(activityId, appId, executionStatus);
       return ExecutionResponse.builder().executionStatus(executionStatus).build();
     }
@@ -470,7 +470,7 @@ public class HelmDeployState extends State {
                                                            .build());
 
     if (executionContext.getOrchestrationWorkflowType() != null
-        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
+        && executionContext.getOrchestrationWorkflowType() == BUILD) {
       activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
     } else {
       activityBuilder.environmentId(env.getUuid())
@@ -824,9 +824,9 @@ public class HelmDeployState extends State {
     String activityId = response.keySet().iterator().next();
     HelmCommandExecutionResponse executionResponse =
         fetchHelmCommandExecutionResponse(response.values().iterator().next());
-    ExecutionStatus executionStatus =
-        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                             : ExecutionStatus.FAILED;
+    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
     HelmDeployStateExecutionData stateExecutionData = (HelmDeployStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setStatus(executionStatus);
@@ -847,7 +847,7 @@ public class HelmDeployState extends State {
 
     updateHelmExecutionSummary(context, helmCommandResponse);
 
-    if (CommandExecutionStatus.SUCCESS.equals(helmCommandResponse.getCommandExecutionStatus())) {
+    if (CommandExecutionStatus.SUCCESS == helmCommandResponse.getCommandExecutionStatus()) {
       HelmInstallCommandResponse helmInstallCommandResponse = (HelmInstallCommandResponse) helmCommandResponse;
 
       List<InstanceStatusSummary> instanceStatusSummaries = containerDeploymentHelper.getInstanceStatusSummaries(
@@ -877,11 +877,11 @@ public class HelmDeployState extends State {
     String activityId = obtainActivityId(context);
 
     GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) response.values().iterator().next();
-    ExecutionStatus executionStatus = executionResponse.getGitCommandStatus().equals(GitCommandStatus.SUCCESS)
+    ExecutionStatus executionStatus = executionResponse.getGitCommandStatus() == GitCommandStatus.SUCCESS
         ? ExecutionStatus.SUCCESS
         : ExecutionStatus.FAILED;
 
-    if (ExecutionStatus.FAILED.equals(executionStatus)) {
+    if (ExecutionStatus.FAILED == executionStatus) {
       activityService.updateStatus(activityId, appId, executionStatus);
       return ExecutionResponse.builder().executionStatus(executionStatus).build();
     }
@@ -1023,7 +1023,7 @@ public class HelmDeployState extends State {
             .build();
 
     ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
-    if (applicationManifest == null || !HelmChartRepo.equals(applicationManifest.getStoreType())) {
+    if (applicationManifest == null || HelmChartRepo != applicationManifest.getStoreType()) {
       return helmValuesFetchTaskParameters;
     }
 

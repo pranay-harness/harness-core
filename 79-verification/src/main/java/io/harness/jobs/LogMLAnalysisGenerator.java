@@ -84,7 +84,7 @@ public class LogMLAnalysisGenerator implements Runnable {
   public void run() {
     try (VerificationLogContext ignored = new VerificationLogContext(
              accountId, null, context.getStateExecutionId(), context.getStateType(), OVERRIDE_ERROR)) {
-      if (analysisType != null && analysisType.equals(MLAnalysisType.FEEDBACK_ANALYSIS)) {
+      if (analysisType != null && analysisType == MLAnalysisType.FEEDBACK_ANALYSIS) {
         generateFeedbackAnalysis();
       } else {
         generateAnalysis();
@@ -206,7 +206,7 @@ public class LogMLAnalysisGenerator implements Runnable {
               .getResource();
       String featureName = isFlagEnabled ? null : "NEURAL_NET";
 
-      if (context.getStateType().equals(StateType.BUG_SNAG)) {
+      if (context.getStateType() == StateType.BUG_SNAG) {
         featureName = null;
       }
       String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL

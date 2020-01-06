@@ -256,7 +256,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
           }
         }
       }
-      if (taskResult.getStatus().equals(DataCollectionTaskStatus.FAILURE)) {
+      if (taskResult.getStatus() == DataCollectionTaskStatus.FAILURE) {
         logger.info("Failed Data collection for ELK collection task so quitting the task with StateExecutionId {}",
             dataCollectionInfo.getStateExecutionId());
         completed.set(true);

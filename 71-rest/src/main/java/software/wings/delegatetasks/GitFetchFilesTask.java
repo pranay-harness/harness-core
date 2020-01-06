@@ -92,8 +92,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
         String exceptionMsg = ex.getMessage();
 
         // Values.yaml in service spec is optional.
-        if (AppManifestKind.VALUES.equals(appManifestKind)
-            && K8sValuesLocation.Service.toString().equals(k8ValuesLocation)
+        if (AppManifestKind.VALUES == appManifestKind && K8sValuesLocation.Service.toString().equals(k8ValuesLocation)
             && ex.getCause() instanceof NoSuchFileException) {
           logger.info("Values.yaml file not found. " + exceptionMsg, ex);
           executionLogCallback.saveExecutionLog(exceptionMsg, WARN);

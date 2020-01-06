@@ -74,7 +74,7 @@ public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperService
       if (notifyResponseData instanceof ErrorNotifyResponseData) {
         throw new GeneralException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
       } else if (notifyResponseData instanceof AwsResponse
-          && ((AwsResponse) notifyResponseData).getExecutionStatus().equals(ExecutionStatus.FAILED)) {
+          && ((AwsResponse) notifyResponseData).getExecutionStatus() == ExecutionStatus.FAILED) {
         throw new GeneralException(((AwsResponse) notifyResponseData).getErrorMessage());
       }
 

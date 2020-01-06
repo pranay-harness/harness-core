@@ -116,9 +116,9 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
   public ExecutionResponse handleAsyncResponseForK8sTask(ExecutionContext context, Map<String, ResponseData> response) {
     K8sTaskExecutionResponse executionResponse = (K8sTaskExecutionResponse) response.values().iterator().next();
 
-    ExecutionStatus executionStatus =
-        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                             : ExecutionStatus.FAILED;
+    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
 
     activityService.updateStatus(
         k8sStateHelper.getActivityId(context), k8sStateHelper.getAppId(context), executionStatus);
@@ -127,7 +127,7 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
 
-    if (ExecutionStatus.FAILED.equals(executionStatus)) {
+    if (ExecutionStatus.FAILED == executionStatus) {
       return ExecutionResponse.builder()
           .executionStatus(executionStatus)
           .stateExecutionData(context.getStateExecutionData())

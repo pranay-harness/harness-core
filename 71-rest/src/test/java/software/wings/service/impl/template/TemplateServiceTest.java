@@ -530,7 +530,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
       List<CommandCategory> commandTemplateCategories, List<String> includeList, List<String> excludeList) {
     List<CommandCategory> commandTemplateCommandCategories =
         commandTemplateCategories.stream()
-            .filter(commandCategory -> commandCategory.getType().equals(COMMANDS))
+            .filter(commandCategory -> commandCategory.getType() == COMMANDS)
             .collect(toList());
     assertThat(commandTemplateCommandCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
     commandTemplateCommandCategories.forEach(commandCategory -> {
@@ -549,10 +549,9 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   private void validateCopyTemplateCategories(List<CommandCategory> commandTemplateCategories) {
-    List<CommandCategory> copyTemplateCategories =
-        commandTemplateCategories.stream()
-            .filter(commandCategory -> commandCategory.getType().equals(COPY))
-            .collect(toList());
+    List<CommandCategory> copyTemplateCategories = commandTemplateCategories.stream()
+                                                       .filter(commandCategory -> commandCategory.getType() == COPY)
+                                                       .collect(toList());
     assertThat(copyTemplateCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
     copyTemplateCategories.forEach(commandCategory -> {
       assertThat(commandCategory.getType()).isEqualTo(COPY);
@@ -567,7 +566,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   private void validateVerifyTemplateCategories(List<CommandCategory> commandTemplateCategories) {
     List<CommandCategory> verifyTemplateCategories =
         commandTemplateCategories.stream()
-            .filter(commandCategory -> commandCategory.getType().equals(VERIFICATIONS))
+            .filter(commandCategory -> commandCategory.getType() == VERIFICATIONS)
             .collect(toList());
     assertThat(verifyTemplateCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
     verifyTemplateCategories.forEach(commandCategory -> {
@@ -583,7 +582,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   private void validateScriptTemplateCategories(List<CommandCategory> commandTemplateCategories) {
     List<CommandCategory> scriptTemplateCategories =
         commandTemplateCategories.stream()
-            .filter(commandCategory -> commandCategory.getType().equals(SCRIPTS))
+            .filter(commandCategory -> commandCategory.getType() == SCRIPTS)
             .collect(toList());
     assertThat(scriptTemplateCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
     scriptTemplateCategories.forEach(commandCategory -> {

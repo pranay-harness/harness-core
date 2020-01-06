@@ -227,7 +227,7 @@ public class ResourceConstraintState extends State {
     variables.put("WORKFLOW_URL", workflowUrl);
     variables.put("APP_NAME", application.getName());
 
-    if (RESOURCE_CONSTRAINT_BLOCKED_NOTIFICATION.equals(type)) {
+    if (RESOURCE_CONSTRAINT_BLOCKED_NOTIFICATION == type) {
       final List<ResourceConstraintUsage> usages =
           resourceConstraintService.usage(accountId, asList(resourceConstraint.getUuid()));
 

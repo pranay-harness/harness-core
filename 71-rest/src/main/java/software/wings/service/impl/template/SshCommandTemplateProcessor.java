@@ -79,7 +79,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
     if (isNotEmpty(sshCommandTemplate.getCommandUnits())) {
       for (CommandUnit commandUnit : sshCommandTemplate.getCommandUnits()) {
         ReferencedTemplateBuilder referencedTemplateBuilder = ReferencedTemplate.builder();
-        if (commandUnit.getCommandUnitType().equals(CommandUnitType.COMMAND)) {
+        if (commandUnit.getCommandUnitType() == CommandUnitType.COMMAND) {
           if (((Command) commandUnit).getTemplateReference() != null) {
             referencedTemplateBuilder.templateReference(((Command) commandUnit).getTemplateReference());
             List<Variable> commandVariables = ((Command) commandUnit).getTemplateVariables();
@@ -125,7 +125,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
     SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
     if (isNotEmpty(sshCommandTemplate.getCommandUnits())) {
       for (CommandUnit commandUnit : sshCommandTemplate.getCommandUnits()) {
-        if (commandUnit.getCommandUnitType().equals(CommandUnitType.COMMAND)) {
+        if (commandUnit.getCommandUnitType() == CommandUnitType.COMMAND) {
           validateTemplateReference(parentScope, template.getAppId(), (Command) commandUnit);
           List<Variable> commandVariables = ((Command) commandUnit).getTemplateVariables();
           for (Variable commandVariable : commandVariables) {

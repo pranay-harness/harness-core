@@ -15,7 +15,7 @@ public abstract class ArtifactServerYamlHandler<Y extends ArtifactServerYaml, B 
   @Override
   public SettingAttribute get(String accountId, String yamlFilePath) {
     YamlType yamlType = yamlHelper.getYamlTypeFromSettingAttributePath(yamlFilePath);
-    if (yamlType == null || yamlType.equals(YamlType.ARTIFACT_SERVER)) {
+    if (yamlType == null || yamlType == YamlType.ARTIFACT_SERVER) {
       return yamlHelper.getArtifactServer(accountId, yamlFilePath);
     } else {
       return yamlHelper.getArtifactServerAtConnector(accountId, yamlFilePath);

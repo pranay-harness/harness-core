@@ -711,7 +711,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       String hexkey = format("%040x", new BigInteger(1, accountId.substring(0, 6).getBytes(Charsets.UTF_8)))
                           .replaceFirst("^0+(?!$)", "");
 
-      if (mainConfiguration.getDeployMode().equals(DeployMode.KUBERNETES_ONPREM)) {
+      if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES_ONPREM) {
         delegateDockerImage = mainConfiguration.getPortal().getDelegateDockerImage();
       }
 

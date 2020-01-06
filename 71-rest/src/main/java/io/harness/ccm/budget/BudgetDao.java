@@ -37,7 +37,7 @@ public class BudgetDao {
                                                     .set(BudgetKeys.scope, budget.getScope())
                                                     .set(BudgetKeys.type, budget.getType());
 
-    if (SPECIFIED_AMOUNT.equals(budget.getType())) {
+    if (SPECIFIED_AMOUNT == budget.getType()) {
       updateOperations = updateOperations.set(BudgetKeys.budgetAmount, budget.getBudgetAmount());
     }
     if (null != budget.getAlertThresholds()) {

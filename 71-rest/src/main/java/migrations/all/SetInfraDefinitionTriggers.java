@@ -94,7 +94,7 @@ public class SetInfraDefinitionTriggers {
   private boolean migrateWorkflowVariables(Trigger trigger) {
     String workflowId = trigger.getWorkflowId();
 
-    if (trigger.getWorkflowType().equals(WorkflowType.PIPELINE)) {
+    if (trigger.getWorkflowType() == WorkflowType.PIPELINE) {
       logger.info("[INFRA_MIGRATION_INFO] No migration should be needed for pipelines variables in trigger: "
           + trigger.getUuid());
       return false;
@@ -116,7 +116,7 @@ public class SetInfraDefinitionTriggers {
     List<Variable> infraUserVariables = new ArrayList<>();
     for (Variable userVariable : userVariables) {
       if (userVariable.obtainEntityType() != null
-          && userVariable.obtainEntityType().equals(EntityType.INFRASTRUCTURE_MAPPING)) {
+          && userVariable.obtainEntityType() == EntityType.INFRASTRUCTURE_MAPPING) {
         infraUserVariables.add(userVariable);
       }
     }

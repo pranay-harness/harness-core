@@ -105,7 +105,7 @@ public class MigrateArtifactStreamBindingsToServiceVariable implements Migration
         try {
           if (serviceVariableMap.containsKey(serviceId)) {
             ServiceVariable serviceVariable = serviceVariableMap.get(serviceId);
-            if (!Type.ARTIFACT.equals(serviceVariable.getType())) {
+            if (Type.ARTIFACT != serviceVariable.getType()) {
               // A non-artifact service variable exists with the same name. Logging and skipping.
               logger.info(
                   "Service variable with name " + ARTIFACT_VARIABLE_NAME + " already exists for service: " + serviceId);

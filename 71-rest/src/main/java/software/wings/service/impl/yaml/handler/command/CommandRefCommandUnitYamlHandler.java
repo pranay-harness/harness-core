@@ -67,7 +67,7 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
       Optional<ChangeContext> commandContextOptional =
           changeSetContext.stream()
               .filter(context -> {
-                if (!context.getYamlType().equals(YamlType.COMMAND)) {
+                if (context.getYamlType() != YamlType.COMMAND) {
                   return false;
                 }
 

@@ -108,7 +108,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
 
     String accountId = executionContext.getApp().getAccountId();
     ServiceNowTaskParameters serviceNowTaskParameters;
-    if (serviceNowCreateUpdateParams.getAction().equals(ServiceNowAction.IMPORT_SET)) {
+    if (serviceNowCreateUpdateParams.getAction() == ServiceNowAction.IMPORT_SET) {
       if (!isJSONValid(serviceNowCreateUpdateParams.getJsonBody())) {
         throw new WingsException(
             "Json Body is not a valid Json: " + serviceNowCreateUpdateParams.getJsonBody(), WingsException.USER);

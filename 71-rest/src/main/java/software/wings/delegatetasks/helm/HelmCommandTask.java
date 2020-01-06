@@ -101,7 +101,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
             .helmCommandResponse(commandResponse)
             .build();
 
-    if (!CommandExecutionStatus.SUCCESS.equals(commandResponse.getCommandExecutionStatus())) {
+    if (CommandExecutionStatus.SUCCESS != commandResponse.getCommandExecutionStatus()) {
       helmCommandExecutionResponse.setErrorMessage(commandResponse.getOutput());
     }
 

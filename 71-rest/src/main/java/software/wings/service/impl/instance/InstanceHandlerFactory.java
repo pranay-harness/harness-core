@@ -42,7 +42,7 @@ public class InstanceHandlerFactory {
 
   private boolean isAmiSpotinstInfraMappingType(InfrastructureMapping infraMapping) {
     return infraMapping instanceof AwsAmiInfrastructureMapping
-        && SPOTINST.equals(((AwsAmiInfrastructureMapping) infraMapping).getAmiDeploymentType());
+        && SPOTINST == ((AwsAmiInfrastructureMapping) infraMapping).getAmiDeploymentType();
   }
 
   public InstanceHandler getInstanceHandler(InfrastructureMapping infraMapping) {

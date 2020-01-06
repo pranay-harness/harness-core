@@ -140,7 +140,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
   }
 
   private GitFileConfig getGitFileConfigForToYaml(ApplicationManifest applicationManifest) {
-    if (StoreType.Local.equals(applicationManifest.getStoreType())) {
+    if (StoreType.Local == applicationManifest.getStoreType()) {
       return null;
     }
 
@@ -153,7 +153,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     if (gitFileConfig == null) {
       return null;
     }
-    if (StoreType.Local.equals(storeType)) {
+    if (StoreType.Local == storeType) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam("args", "Git file config should be null for store type local");
     }
@@ -162,7 +162,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
   }
 
   private HelmChartConfig getHelmChartConfigForToYaml(ApplicationManifest applicationManifest) {
-    if (StoreType.Local.equals(applicationManifest.getStoreType())) {
+    if (StoreType.Local == applicationManifest.getStoreType()) {
       return null;
     }
 
@@ -175,7 +175,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
       return null;
     }
 
-    if (StoreType.Local.equals(storeType)) {
+    if (StoreType.Local == storeType) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam("args", "gitFileConfig cannot be used for Local storeType.");
     }

@@ -129,9 +129,9 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
     String appId = workflowStandardParams.getAppId();
     K8sTaskExecutionResponse executionResponse = (K8sTaskExecutionResponse) response.values().iterator().next();
 
-    ExecutionStatus executionStatus =
-        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                             : ExecutionStatus.FAILED;
+    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
 
     K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setStatus(executionStatus);
@@ -140,7 +140,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
     String activityId = stateExecutionData.getActivityId();
     activityService.updateStatus(activityId, appId, executionStatus);
 
-    if (ExecutionStatus.FAILED.equals(executionStatus)) {
+    if (ExecutionStatus.FAILED == executionStatus) {
       if (executionResponse.getK8sTaskResponse() instanceof K8sCanaryDeployResponse) {
         K8sCanaryDeployResponse k8sCanaryDeployResponse =
             (K8sCanaryDeployResponse) executionResponse.getK8sTaskResponse();

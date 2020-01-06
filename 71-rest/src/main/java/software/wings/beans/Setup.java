@@ -63,7 +63,7 @@ public class Setup {
       return false;
     }
     final Setup other = (Setup) obj;
-    return Objects.equals(this.setupStatus, other.setupStatus) && Objects.equals(this.actions, other.actions);
+    return this.setupStatus == other.setupStatus && Objects.equals(this.actions, other.actions);
   }
 
   @Override

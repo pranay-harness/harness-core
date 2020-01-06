@@ -236,7 +236,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
 
       if (isNotEmpty(metricCollectionInfo.getBaselineCollectionUrl())) {
         hasBaselineUrl.set(true);
-        if (!AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.equals(getComparisonStrategy())) {
+        if (AnalysisComparisonStrategy.COMPARE_WITH_CURRENT != getComparisonStrategy()) {
           invalidFields.put("collectionUrl",
               "Baseline url can only be set for canary verification strategy. For "
                   + metricCollectionInfo.getMetricName() + " there is baseline url set "
@@ -396,7 +396,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
           ? context.get().renderExpression(metricCollectionInfo.getCollectionUrl())
           : metricCollectionInfo.getCollectionUrl();
 
-      if (metricCollectionInfo.getMethod() != null && metricCollectionInfo.getMethod().equals(Method.POST)) {
+      if (metricCollectionInfo.getMethod() != null && metricCollectionInfo.getMethod() == Method.POST) {
         evaluatedUrl += URL_BODY_APPENDER + metricCollectionInfo.getCollectionBody();
       }
 
@@ -421,7 +421,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   }
 
   private List<APMMetricInfo> getCanaryMetricInfos(final ExecutionContext context) {
-    if (!AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.equals(getComparisonStrategy())) {
+    if (AnalysisComparisonStrategy.COMPARE_WITH_CURRENT != getComparisonStrategy()) {
       return Collections.emptyList();
     }
 
@@ -440,7 +440,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
       String testUrl = context.renderExpression(metricCollectionInfo.getCollectionUrl());
       String controlUrl = context.renderExpression(metricCollectionInfo.getBaselineCollectionUrl());
 
-      if (metricCollectionInfo.getMethod() != null && metricCollectionInfo.getMethod().equals(Method.POST)) {
+      if (metricCollectionInfo.getMethod() != null && metricCollectionInfo.getMethod() == Method.POST) {
         testUrl += URL_BODY_APPENDER + metricCollectionInfo.getCollectionBody();
         controlUrl += URL_BODY_APPENDER + metricCollectionInfo.getCollectionBody();
       }

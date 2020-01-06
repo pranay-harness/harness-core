@@ -342,12 +342,12 @@ public class NotificationMessageResolver {
   }
 
   private String generateUrl(Application app, ExecutionContext context, AlertType alertType) {
-    if (alertType.equals(AlertType.ApprovalNeeded)) {
-      if (context.getWorkflowType().equals(WorkflowType.PIPELINE)) {
+    if (alertType == AlertType.ApprovalNeeded) {
+      if (context.getWorkflowType() == WorkflowType.PIPELINE) {
         return buildAbsoluteUrl(configuration,
             format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details", app.getAccountId(),
                 app.getUuid(), context.getWorkflowExecutionId()));
-      } else if (context.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
+      } else if (context.getWorkflowType() == WorkflowType.ORCHESTRATION) {
         WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
         String pipelineExecutionId = null;
         if (workflowStandardParams != null && workflowStandardParams.getWorkflowElement() != null) {
@@ -373,7 +373,7 @@ public class NotificationMessageResolver {
         logger.error("Unhandled Approval case. No URL can be generated for alertType ", alertType.name());
         return "";
       }
-    } else if (alertType.equals(AlertType.ManualInterventionNeeded)) {
+    } else if (alertType == AlertType.ManualInterventionNeeded) {
       String envId = "empty";
       if (((ExecutionContextImpl) context).getEnv() != null) {
         envId = ((ExecutionContextImpl) context).getEnv().getUuid();
@@ -393,9 +393,9 @@ public class NotificationMessageResolver {
   }
 
   public String getApprovalType(WorkflowType workflowType) {
-    if (workflowType.equals(WorkflowType.PIPELINE)) {
+    if (workflowType == WorkflowType.PIPELINE) {
       return toCamelCase(WorkflowType.PIPELINE.name());
-    } else if (workflowType.equals(WorkflowType.ORCHESTRATION)) {
+    } else if (workflowType == WorkflowType.ORCHESTRATION) {
       return "Workflow";
     }
     return "";

@@ -210,7 +210,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
           LogMLAnalysisRecord prevRecord = indexInMap != null ? records.get(indexInMap) : null;
           if (prevRecord != null) {
             prevRecord.decompressLogAnalysisRecord();
-            if (prevRecord.getAnalysisStatus().equals(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE)) {
+            if (prevRecord.getAnalysisStatus() == LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE) {
               indexesWithFeedback.add(analysisMinRecordIndexMap.get(record.getLogCollectionMinute()));
             } else {
               indexesWithFeedback.add(index);

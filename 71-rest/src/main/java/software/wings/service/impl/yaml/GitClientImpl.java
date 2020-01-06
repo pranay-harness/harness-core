@@ -234,7 +234,7 @@ public class GitClientImpl implements GitClient {
     for (DiffEntry entry : diffs) {
       ObjectId objectId;
       String filePath;
-      if (entry.getChangeType().equals(DiffEntry.ChangeType.DELETE)) {
+      if (entry.getChangeType() == DiffEntry.ChangeType.DELETE) {
         filePath = entry.getOldPath();
         objectId = entry.getOldId().toObjectId();
       } else {
@@ -257,7 +257,7 @@ public class GitClientImpl implements GitClient {
       String content = null;
       String filePath;
       ObjectId objectId;
-      if (entry.getChangeType().equals(DiffEntry.ChangeType.DELETE)) {
+      if (entry.getChangeType() == DiffEntry.ChangeType.DELETE) {
         filePath = entry.getOldPath();
         // we still want to collect content for deleted file, as it will be needed to decide yamlhandlerSubType in
         // many cases. so getting oldObjectId
@@ -1059,7 +1059,7 @@ public class GitClientImpl implements GitClient {
   private void configureHttpCredentialProvider(TransportCommand gitCommand, GitConfig gitConfig) {
     String username = gitConfig.getUsername();
     char[] password = gitConfig.getPassword();
-    if (KERBEROS.equals(gitConfig.getAuthenticationScheme())) {
+    if (KERBEROS == gitConfig.getAuthenticationScheme()) {
       addApacheConnectionFactoryAndGenerateTGT(gitConfig);
       username = ((HostConnectionAttributes) gitConfig.getSshSettingAttribute().getValue())
                      .getKerberosConfig()

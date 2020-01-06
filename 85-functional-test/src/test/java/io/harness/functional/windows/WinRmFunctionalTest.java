@@ -132,7 +132,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
         .until(()
                    -> workflowExecutionService.getWorkflowExecution(application.getUuid(), workflowExecution.getUuid())
                           .getStatus()
-                          .equals(ExecutionStatus.SUCCESS));
+                == ExecutionStatus.SUCCESS);
 
     // Clean up workflow
     cleanUpWorkflow(application.getUuid(), workflow.getUuid());
@@ -177,7 +177,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
         .until(()
                    -> workflowExecutionService.getWorkflowExecution(application.getUuid(), workflowExecution.getUuid())
                           .getStatus()
-                          .equals(ExecutionStatus.SUCCESS));
+                == ExecutionStatus.SUCCESS);
   }
 
   private void cleanUpWorkflow(String appId, String workflowId) {

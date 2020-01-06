@@ -109,7 +109,7 @@ public class YamlVersion extends Base implements YamlHistory {
       return false;
     }
     YamlVersion yv = (YamlVersion) o;
-    return Objects.equals(type, yv.type) && Objects.equals(entityId, yv.entityId) && Objects.equals(yaml, yv.yaml);
+    return type == yv.type && Objects.equals(entityId, yv.entityId) && Objects.equals(yaml, yv.yaml);
   }
 
   @Override

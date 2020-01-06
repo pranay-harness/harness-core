@@ -147,7 +147,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
     }
 
     if (!workflow.envValid()) {
-      if (!BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType())) {
+      if (BUILD != orchestrationWorkflow.getOrchestrationWorkflowType()) {
         orchestrationWorkflow.setValid(false);
         orchestrationWorkflow.setValidationMessage(Constants.WORKFLOW_ENV_VALIDATION_MESSAGE);
       }

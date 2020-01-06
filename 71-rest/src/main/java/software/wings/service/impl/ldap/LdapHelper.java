@@ -106,7 +106,7 @@ public class LdapHelper {
     String searchStatusMsg = null;
 
     LdapResponse connectionTestResponse = validateConnectionConfig();
-    if (connectionTestResponse.getStatus().equals(Status.FAILURE)) {
+    if (connectionTestResponse.getStatus() == Status.FAILURE) {
       searchStatus = connectionTestResponse.getStatus();
       searchStatusMsg = connectionTestResponse.getMessage();
     } else { // now test for user config
@@ -147,7 +147,7 @@ public class LdapHelper {
 
   public LdapResponse validateGroupConfig(LdapGroupConfig config) {
     LdapResponse connectionTestResponse = validateConnectionConfig();
-    if (Status.FAILURE.equals(connectionTestResponse.getStatus())) {
+    if (Status.FAILURE == connectionTestResponse.getStatus()) {
       return connectionTestResponse;
     }
 
@@ -162,7 +162,7 @@ public class LdapHelper {
     }
 
     if (ldapListGroupsResponses != null) {
-      if (Status.FAILURE.equals(ldapListGroupsResponses.getLdapResponse().getStatus())
+      if (Status.FAILURE == ldapListGroupsResponses.getLdapResponse().getStatus()
           || (ldapListGroupsResponses.getSearchResult() != null
                  && ldapListGroupsResponses.getSearchResult().size() == 0)) {
         message = LdapConstants.GROUP_CONFIG_FAILURE;

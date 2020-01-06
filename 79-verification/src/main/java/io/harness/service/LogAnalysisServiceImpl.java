@@ -164,7 +164,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                      .filter(LogDataRecordKeys.cvConfigId, cvConfigId)
                                      .filter(LogDataRecordKeys.clusterLevel, fromLevel);
 
-    if (L2.equals(toLevel)) {
+    if (L2 == toLevel) {
       query = query.field(LogDataRecordKeys.logCollectionMinute).lessThanOrEq(logCollectionMinute);
     } else {
       query = query.filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute);
@@ -181,7 +181,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                   .filter(LogDataRecordKeys.cvConfigId, cvConfigId)
                   .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.getHeartBeatLevel(fromLevel));
 
-      if (L2.equals(toLevel)) {
+      if (L2 == toLevel) {
         query = query.field(LogDataRecordKeys.logCollectionMinute).lessThanOrEq(logCollectionMinute);
       } else {
         query = query.filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute);
@@ -305,17 +305,15 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     final String fieldValueForQuery = isEmpty(cvConfigId) ? stateExecutionId : cvConfigId;
 
     Set<Long> clusteredMinutes = new HashSet<>();
-    logDataRecords.stream()
-        .filter(logDataRecord -> logDataRecord.getClusterLevel().equals(H0))
-        .forEach(logDataRecord -> {
-          // Assumption: We either save all the records or none of the records in a batch.
-          final Set<String> hostsForMinute = getHostsForMinute(
-              appId, fieldNameForQuery, fieldValueForQuery, logDataRecord.getLogCollectionMinute(), H0, H1, H2, HF);
-          if (isNotEmpty(hostsForMinute)
-              && (isEmpty(stateExecutionId) || hostsForMinute.contains(logDataRecord.getHost()))) {
-            clusteredMinutes.add(logDataRecord.getLogCollectionMinute());
-          }
-        });
+    logDataRecords.stream().filter(logDataRecord -> logDataRecord.getClusterLevel() == H0).forEach(logDataRecord -> {
+      // Assumption: We either save all the records or none of the records in a batch.
+      final Set<String> hostsForMinute = getHostsForMinute(
+          appId, fieldNameForQuery, fieldValueForQuery, logDataRecord.getLogCollectionMinute(), H0, H1, H2, HF);
+      if (isNotEmpty(hostsForMinute)
+          && (isEmpty(stateExecutionId) || hostsForMinute.contains(logDataRecord.getHost()))) {
+        clusteredMinutes.add(logDataRecord.getLogCollectionMinute());
+      }
+    });
     if (clusteredMinutes.isEmpty()) {
       return true;
     }
@@ -340,7 +338,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       logger.info("Saved {} clustered data for cvConfig: {}, minute {}, toLevel {}, host {}", logDataRecords.size(),
           cvConfigId, logCollectionMinute, clusterLevel, host);
 
-      if (dataStoreService instanceof GoogleDataStoreServiceImpl && L2.equals(clusterLevel)) {
+      if (dataStoreService instanceof GoogleDataStoreServiceImpl && L2 == clusterLevel) {
         try {
           dataStoreService.save(LogDataRecord.class, logDataRecords, true);
           logger.info("Saved L2 clustered data to GoogleDatStore for cvConfig: {}, minute {}, toLevel {}", cvConfigId,
@@ -465,7 +463,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     Preconditions.checkState(
         logCollectionMinute > 0 ? startMinute <= 0 && endMinute <= 0 : startMinute >= 0 && endMinute >= 0,
         "both logCollectionMinute and start end minute set");
-    Preconditions.checkState(!L0.equals(clusterLevel) || (L0.equals(clusterLevel) && isNotEmpty(logRequest.getNodes())),
+    Preconditions.checkState(L0 != clusterLevel || (L0 == clusterLevel && isNotEmpty(logRequest.getNodes())),
         "for L0 -> L1 clustering nodes can not be empty, level: " + clusterLevel + " logRequest: " + logRequest);
     Set<LogDataRecord> logDataRecords = new HashSet<>();
     final Query<LogDataRecord> recordQuery = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)

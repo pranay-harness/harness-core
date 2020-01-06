@@ -242,7 +242,7 @@ public class WebhookEventUtils {
       switch (webhookSource) {
         case GITHUB: {
           GitHubEventType gitHubEventType = getGitHubEventType(httpHeaders);
-          if (GitHubEventType.PUSH.equals(gitHubEventType)) {
+          if (GitHubEventType.PUSH == gitHubEventType) {
             return;
           }
 
@@ -251,7 +251,7 @@ public class WebhookEventUtils {
 
         case GITLAB: {
           GitLabEventType gitLabEventType = getGitLabEventType(httpHeaders);
-          if (GitLabEventType.PUSH.equals(gitLabEventType)) {
+          if (GitLabEventType.PUSH == gitLabEventType) {
             return;
           }
 
@@ -261,8 +261,7 @@ public class WebhookEventUtils {
         case BITBUCKET: {
           BitBucketEventType bitBucketEventType = getBitBucketEventType(httpHeaders);
 
-          if (BitBucketEventType.PUSH.equals(bitBucketEventType)
-              || BitBucketEventType.REFS_CHANGED.equals(bitBucketEventType)) {
+          if (BitBucketEventType.PUSH == bitBucketEventType || BitBucketEventType.REFS_CHANGED == bitBucketEventType) {
             return;
           }
 
@@ -302,6 +301,6 @@ public class WebhookEventUtils {
         noop();
     }
 
-    return WebhookEventType.PING.equals(webhookEventType);
+    return WebhookEventType.PING == webhookEventType;
   }
 }

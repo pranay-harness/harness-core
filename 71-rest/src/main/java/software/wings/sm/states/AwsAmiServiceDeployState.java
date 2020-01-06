@@ -283,7 +283,7 @@ public class AwsAmiServiceDeployState extends State {
 
     awsAmiDeployStateExecutionData = prepareStateExecutionData(activity.getUuid(), serviceSetupElement,
         instanceCountLocal, getInstanceUnitType(), newInstanceData, oldInstanceData);
-    boolean resizeNewFirst = serviceSetupElement.getResizeStrategy().equals(ResizeStrategy.RESIZE_NEW_FIRST);
+    boolean resizeNewFirst = serviceSetupElement.getResizeStrategy() == ResizeStrategy.RESIZE_NEW_FIRST;
 
     createAndQueueResizeTask(awsConfig, encryptionDetails, region, infrastructureMapping.getAccountId(),
         infrastructureMapping.getAppId(), activity.getUuid(), getCommandName(), resizeNewFirst, newAutoScalingGroupName,
@@ -457,9 +457,8 @@ public class AwsAmiServiceDeployState extends State {
 
     executionLogCallback.saveExecutionLog(
         format("AutoScaling Group resize operation completed with status:[%s]", executionStatus),
-        ExecutionStatus.SUCCESS.equals(executionStatus) ? LogLevel.INFO : LogLevel.ERROR,
-        ExecutionStatus.SUCCESS.equals(executionStatus) ? CommandExecutionStatus.SUCCESS
-                                                        : CommandExecutionStatus.FAILURE);
+        ExecutionStatus.SUCCESS == executionStatus ? LogLevel.INFO : LogLevel.ERROR,
+        ExecutionStatus.SUCCESS == executionStatus ? CommandExecutionStatus.SUCCESS : CommandExecutionStatus.FAILURE);
 
     final InstanceElementListParam instanceElementListParam = instanceElementListParamBuilder.build();
 

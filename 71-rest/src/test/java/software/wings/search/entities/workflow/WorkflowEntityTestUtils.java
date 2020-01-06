@@ -74,7 +74,7 @@ public class WorkflowEntityTestUtils {
                              .uuid(workflow.getUuid())
                              .entityType(Workflow.class);
 
-    if (changeType.equals(ChangeType.UPDATE)) {
+    if (changeType == ChangeType.UPDATE) {
       changeEventBuilder = changeEventBuilder.changes(getWorkflowChanges());
     }
 

@@ -49,7 +49,7 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
       return expressions;
     }
     boolean isBuildWorkflow =
-        OrchestrationWorkflowType.BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
+        OrchestrationWorkflowType.BUILD == workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType();
     if (subEntityType == null) {
       expressions = new TreeSet<>(getWorkflowVariableExpressions(workflow));
       if (isNotBlank(serviceId) && !serviceId.equalsIgnoreCase("All")) {
@@ -67,7 +67,7 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
       if (stateType != null) {
         expressions.addAll(getStateTypeExpressions(stateType));
       }
-    } else if (NOTIFICATION_GROUP.equals(subEntityType)) {
+    } else if (NOTIFICATION_GROUP == subEntityType) {
       // Return only the service variables and workflow variables
       expressions = new TreeSet<>(getWorkflowVariableExpressions(workflow, false));
       if (isNotBlank(serviceId) && !serviceId.equalsIgnoreCase("All")) {
@@ -140,7 +140,7 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
           .stream()
           .filter(variable -> variable.getName() != null && (includeEntityType || variable.obtainEntityType() == null))
           .forEach(variable -> {
-            if (VariableType.ARTIFACT.equals(variable.getType())) {
+            if (VariableType.ARTIFACT == variable.getType()) {
               String artifactMentions = "artifacts." + variable.getName();
               workflowVariableMentions.add(artifactMentions);
               for (String suffix : getArtifactExpressionSuffixes()) {

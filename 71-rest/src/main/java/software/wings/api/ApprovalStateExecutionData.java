@@ -147,10 +147,10 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
     }
 
     if (approvedBy != null) {
-      if (getStatus().equals(ExecutionStatus.SUCCESS)) {
+      if (getStatus() == ExecutionStatus.SUCCESS) {
         putNotNull(executionDetails, "approvedBy",
             ExecutionDataValue.builder().displayName("Approved By").value(approvedBy).build());
-      } else if (getStatus().equals(ExecutionStatus.REJECTED)) {
+      } else if (getStatus() == ExecutionStatus.REJECTED) {
         putNotNull(executionDetails, "approvedBy",
             ExecutionDataValue.builder().displayName("Rejected By").value(approvedBy).build());
       }

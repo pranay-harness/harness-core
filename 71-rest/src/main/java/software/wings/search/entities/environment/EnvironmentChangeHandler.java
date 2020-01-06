@@ -225,7 +225,7 @@ public class EnvironmentChangeHandler implements ChangeHandler {
   }
 
   private boolean handleAuditRelatedChange(ChangeEvent changeEvent) {
-    if (changeEvent.getChangeType().equals(ChangeType.UPDATE) && changeEvent.getChanges() != null
+    if (changeEvent.getChangeType() == ChangeType.UPDATE && changeEvent.getChanges() != null
         && changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
       boolean result = true;
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();

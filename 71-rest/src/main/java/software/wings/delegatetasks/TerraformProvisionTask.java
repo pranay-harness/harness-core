@@ -356,7 +356,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       }
 
       DelegateFile planLogFile = null;
-      if (APPLY.equals(parameters.getCommand())) {
+      if (APPLY == parameters.getCommand()) {
         planLogFile = aDelegateFile()
                           .withAccountId(parameters.getAccountId())
                           .withDelegateId(getDelegateId())
@@ -401,7 +401,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           TerraformExecutionData.builder()
               .entityId(delegateFile.getEntityId())
               .stateFileId(delegateFile.getFileId())
-              .planLogFileId(APPLY.equals(parameters.getCommand()) ? planLogFile.getFileId() : null)
+              .planLogFileId(APPLY == parameters.getCommand() ? planLogFile.getFileId() : null)
               .commandExecuted(parameters.getCommand())
               .sourceRepoReference(sourceRepoReference)
               .variables(variableList)

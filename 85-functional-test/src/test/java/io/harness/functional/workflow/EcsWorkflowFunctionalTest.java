@@ -370,6 +370,6 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution completedWorkflowExecution =
         workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true);
     logger.info("ECs Execution status: " + completedWorkflowExecution.getStatus());
-    assertThat(ExecutionStatus.SUCCESS.equals(completedWorkflowExecution.getStatus()));
+    assertThat(ExecutionStatus.SUCCESS == completedWorkflowExecution.getStatus());
   }
 }

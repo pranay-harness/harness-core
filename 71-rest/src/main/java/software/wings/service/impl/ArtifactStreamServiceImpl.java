@@ -965,7 +965,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (service == null) {
       throw new InvalidRequestException("Service does not exist", USER);
     }
-    if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
+    if (service.getArtifactType() == ArtifactType.DOCKER) {
       ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
                                                          .put(DOCKER.name(), DOCKER.name())
                                                          .put(ECR.name(), ECR.name())
@@ -975,16 +975,16 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                          .put(NEXUS.name(), NEXUS.name())
                                                          .put(CUSTOM.name(), CUSTOM.name());
       return builder.build();
-    } else if (service.getArtifactType().equals(ArtifactType.AWS_LAMBDA)) {
+    } else if (service.getArtifactType() == ArtifactType.AWS_LAMBDA) {
       ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
                                                          .put(AMAZON_S3.name(), AMAZON_S3.name())
                                                          .put(CUSTOM.name(), CUSTOM.name());
       return builder.build();
-    } else if (service.getArtifactType().equals(ArtifactType.AMI)) {
+    } else if (service.getArtifactType() == ArtifactType.AMI) {
       ImmutableMap.Builder<String, String> builder =
           new ImmutableMap.Builder<String, String>().put(AMI.name(), AMI.name()).put(CUSTOM.name(), CUSTOM.name());
       return builder.build();
-    } else if (service.getArtifactType().equals(ArtifactType.OTHER)) {
+    } else if (service.getArtifactType() == ArtifactType.OTHER) {
       ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
                                                          .put(DOCKER.name(), DOCKER.name())
                                                          .put(ECR.name(), ECR.name())

@@ -181,7 +181,7 @@ public class BuildSourceCallback implements NotifyCallback {
          AutoLogContext ignore2 = new ArtifactStreamLogContext(
              artifactStream.getUuid(), artifactStream.getArtifactStreamType(), OVERRIDE_ERROR)) {
       if (notifyResponseData instanceof BuildSourceExecutionResponse) {
-        if (SUCCESS.equals(((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus())) {
+        if (SUCCESS == ((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus()) {
           handleResponseForSuccess(notifyResponseData, artifactStream);
         } else {
           logger.info("Request failed :[{}]", ((BuildSourceExecutionResponse) notifyResponseData).getErrorMessage());

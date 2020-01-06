@@ -727,11 +727,11 @@ public abstract class AbstractAnalysisState extends State {
 
   protected boolean isAwsLambdaState(ExecutionContext context) {
     return getStateType().equals(StateType.CLOUD_WATCH.name())
-        && getDeploymentType(context).equals(DeploymentType.AWS_LAMBDA);
+        && getDeploymentType(context) == DeploymentType.AWS_LAMBDA;
   }
 
   protected boolean isAwsECSState(ExecutionContext context) {
-    return getStateType().equals(StateType.CLOUD_WATCH.name()) && getDeploymentType(context).equals(DeploymentType.ECS);
+    return getStateType().equals(StateType.CLOUD_WATCH.name()) && getDeploymentType(context) == DeploymentType.ECS;
   }
 
   protected String getPcfHostName(PcfInstanceElement pcfInstanceElement, boolean includePrevious) {
@@ -916,8 +916,7 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   private String getGroupName(InstanceElement instanceElement, DeploymentType deploymentType) {
-    if (deploymentType == null || !deploymentType.equals(DeploymentType.HELM)
-        || isEmpty(instanceElement.getWorkloadName())) {
+    if (deploymentType == null || deploymentType != DeploymentType.HELM || isEmpty(instanceElement.getWorkloadName())) {
       return DEFAULT_GROUP_NAME;
     }
 

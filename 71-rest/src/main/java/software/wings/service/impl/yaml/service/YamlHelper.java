@@ -327,7 +327,7 @@ public class YamlHelper {
     } else {
       YamlType entityType = getEntityType(yamlFilePath);
       notNullCheck("YamlType can not be null", entityType);
-      if (entityType.equals(ARTIFACT_STREAM)) {
+      if (entityType == ARTIFACT_STREAM) {
         String appId = getAppId(accountId, yamlFilePath);
         notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
         String serviceId = getServiceId(appId, yamlFilePath);

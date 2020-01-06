@@ -93,7 +93,7 @@ public class SetInfraDefinitionWorkflows {
     OrchestrationWorkflowType orchestrationWorkflowType = canaryOrchestrationWorkflow.getOrchestrationWorkflowType();
 
     // No migration for Build workflows.
-    if (orchestrationWorkflowType.equals(OrchestrationWorkflowType.BUILD)) {
+    if (orchestrationWorkflowType == OrchestrationWorkflowType.BUILD) {
       return;
     }
 

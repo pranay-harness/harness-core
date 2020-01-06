@@ -194,9 +194,9 @@ public class PcfSwitchBlueGreenRoutes extends State {
     try {
       String activityId = response.keySet().iterator().next();
       PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
-      ExecutionStatus executionStatus =
-          executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                               : ExecutionStatus.FAILED;
+      ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+          ? ExecutionStatus.SUCCESS
+          : ExecutionStatus.FAILED;
       activityService.updateStatus(activityId, context.getAppId(), executionStatus);
 
       // update PcfDeployStateExecutionData,

@@ -62,7 +62,7 @@ public class MultiArtifactWorkflowExecutionServiceHelper {
       }
 
       // process only artifact variables associated with workflow
-      if (variable.getEntityType().equals(EntityType.WORKFLOW) && variable.getEntityId().equals(workflowId)) {
+      if (variable.getEntityType() == EntityType.WORKFLOW && variable.getEntityId().equals(workflowId)) {
         if (variable.isFixed()) {
           setVariables(variable.getName(), variable.getValue(), variables, ARTIFACT, accountId);
           continue;
@@ -93,7 +93,7 @@ public class MultiArtifactWorkflowExecutionServiceHelper {
   private Artifact setVariables(
       String key, Object value, Map<String, Object> variableMap, VariableType variableType, String accountId) {
     if (!isEmpty(key) && !key.equals("null")) {
-      if (variableType.equals(ARTIFACT)) {
+      if (variableType == ARTIFACT) {
         Artifact artifact = artifactService.get(accountId, String.valueOf(value));
         if (artifact != null) {
           variableMap.put(key, artifact);

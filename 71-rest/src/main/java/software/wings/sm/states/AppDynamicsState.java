@@ -319,7 +319,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     DeploymentType deploymentType =
         serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
 
-    if (DeploymentType.HELM.equals(deploymentType)) {
+    if (DeploymentType.HELM == deploymentType) {
       super.createAndSaveMetricGroups(context, hosts);
     } else {
       metricAnalysisService.saveMetricGroups(
@@ -374,8 +374,9 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   protected void createAndSaveMetricGroups(ExecutionContext context, Map<String, String> hostsToCollect) {
     if (!isEmpty(dependentTiersToAnalyze)) {
       InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
-      if (DeploymentType.HELM.equals(serviceResourceService.getDeploymentType(
-              infrastructureMapping, null, infrastructureMapping.getServiceId()))) {
+      if (DeploymentType.HELM
+          == serviceResourceService.getDeploymentType(
+                 infrastructureMapping, null, infrastructureMapping.getServiceId())) {
         throw new WingsException("can not analyze dependent tiers for helm type deployment");
       }
     }

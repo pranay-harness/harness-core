@@ -142,7 +142,7 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
     try {
       return fetchConnection(filters, pageQueryParameters, sortCriteria);
     } catch (WingsException ex) {
-      if (ErrorCode.ACCESS_DENIED.equals(ex.getCode())) {
+      if (ErrorCode.ACCESS_DENIED == ex.getCode()) {
         logger.warn("User doesn't have access to resource or no entities exist in that app");
       }
       throw ex;

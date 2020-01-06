@@ -122,7 +122,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   public Map<String, Object> paramMap(ExecutionContext context) {
     Map<String, Object> map = new HashMap<>();
     if (workflowElement != null) {
-      if (WorkflowType.ORCHESTRATION.equals(context.getWorkflowType()) && workflowElement.getStartTs() == null) {
+      if (WorkflowType.ORCHESTRATION == context.getWorkflowType() && workflowElement.getStartTs() == null) {
         workflowElement.setStartTs(workflowExecutionService.fetchWorkflowExecutionStartTs(
             getApp().getAppId(), context.getWorkflowExecutionId()));
       }
@@ -137,7 +137,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     if (env != null) {
       envUrlId = env.getUuid();
     } else {
-      envUrlId = BUILD.equals(context.getOrchestrationWorkflowType()) ? "build" : "noEnv";
+      envUrlId = BUILD == context.getOrchestrationWorkflowType() ? "build" : "noEnv";
     }
     map.put(DEPLOYMENT_URL,
         buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(), app.getUuid(),

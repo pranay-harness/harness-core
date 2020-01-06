@@ -126,7 +126,7 @@ public class StackDriverLogState extends AbstractLogAnalysisState {
     if (hostnameField != null) {
       return hostnameField;
     }
-    if (getDeploymentType(executionContext).equals(DeploymentType.KUBERNETES)) {
+    if (getDeploymentType(executionContext) == DeploymentType.KUBERNETES) {
       return KUBERNETES_HOSTNAME;
     } else {
       return STACK_DRIVER_DEFAULT_HOSTNAME;

@@ -91,8 +91,8 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
     if (webhookSource == null) {
       return null;
     }
-    if (webhookSource.equals(WebhookSource.GITHUB) || webhookSource.equals(WebhookSource.GITLAB)
-        || webhookSource.equals(WebhookSource.BITBUCKET)) {
+    if (webhookSource == WebhookSource.GITHUB || webhookSource == WebhookSource.GITLAB
+        || webhookSource == WebhookSource.BITBUCKET) {
       return webhookSource.name();
     } else {
       notNullCheck("webhook source is invalid or not supported", webhookSource);
@@ -136,14 +136,14 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
 
   private List<String> getYAMLActions(WebHookTriggerCondition webHookTriggerCondition) {
     if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource() != null
-        && webHookTriggerCondition.getWebhookSource().equals(GITHUB)) {
+        && webHookTriggerCondition.getWebhookSource() == GITHUB) {
       if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getActions())) {
         return webHookTriggerCondition.getActions().stream().map(PrAction::getValue).collect(Collectors.toList());
       } else {
         return null;
       }
     } else if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource() != null
-        && webHookTriggerCondition.getWebhookSource().equals(WebhookSource.BITBUCKET)) {
+        && webHookTriggerCondition.getWebhookSource() == WebhookSource.BITBUCKET) {
       if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getBitBucketEvents())) {
         return webHookTriggerCondition.getBitBucketEvents()
             .stream()

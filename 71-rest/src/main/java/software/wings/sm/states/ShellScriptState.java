@@ -195,7 +195,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
       executionResponseBuilder.errorMessage(commandExecutionResult.getErrorMessage());
 
       ScriptStateExecutionData scriptStateExecutionData = (ScriptStateExecutionData) context.getStateExecutionData();
-      if (commandExecutionResult.getStatus().equals(SUCCESS)) {
+      if (commandExecutionResult.getStatus() == SUCCESS) {
         Map<String, String> sweepingOutputEnvVariables =
             ((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
                 .getSweepingOutputEnvVariables();
@@ -317,9 +317,9 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     }
 
     if (StringUtils.isEmpty(commandPath)) {
-      if (scriptType.equals(ScriptType.BASH)) {
+      if (scriptType == ScriptType.BASH) {
         commandPath = "/tmp";
-      } else if (scriptType.equals(ScriptType.POWERSHELL)) {
+      } else if (scriptType == ScriptType.POWERSHELL) {
         commandPath = "%TEMP%";
       }
     }

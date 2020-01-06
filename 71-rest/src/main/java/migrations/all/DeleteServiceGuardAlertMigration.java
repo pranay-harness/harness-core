@@ -50,7 +50,7 @@ public class DeleteServiceGuardAlertMigration implements Migration {
       logger.info("Going through {} alerts to find which ones to delete", dataCollectionAlertList.size());
       dataCollectionAlertList.forEach(alert -> {
         CVConfiguration cvConfigurationInAlert = null;
-        if (alert.getType().equals(AlertType.CONTINUOUS_VERIFICATION_ALERT)) {
+        if (alert.getType() == AlertType.CONTINUOUS_VERIFICATION_ALERT) {
           cvConfigurationInAlert = ((ContinuousVerificationAlertData) alert.getAlertData()).getCvConfiguration();
         } else {
           cvConfigurationInAlert =

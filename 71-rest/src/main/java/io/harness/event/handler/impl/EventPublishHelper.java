@@ -251,7 +251,7 @@ public class EventPublishHelper {
 
   private boolean isFirstRbacConfigInAccount(
       String accountId, String entityId, EntityType entityType, String userEmail) {
-    if (EntityType.USER_GROUP.equals(entityType)) {
+    if (EntityType.USER_GROUP == entityType) {
       PageRequest<UserGroup> pageRequest = aPageRequest()
                                                .addFilter("accountId", Operator.EQ, accountId)
                                                .addFilter("createdBy.email", Operator.EQ, userEmail)
@@ -285,7 +285,7 @@ public class EventPublishHelper {
       if (entityId.equals(firstUserGroupOptional.get().getUuid())) {
         return true;
       }
-    } else if (EntityType.USER.equals(entityType)) {
+    } else if (EntityType.USER == entityType) {
       Account account = accountService.getFromCache(accountId);
       PageRequest<User> pageRequest = aPageRequest()
                                           .addFilter("accounts", Operator.IN, account)

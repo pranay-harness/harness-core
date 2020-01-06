@@ -93,10 +93,10 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     Workflow workflow = null;
 
     String workflowOrPipelineId = bean.getWorkflowId();
-    if (bean.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
+    if (bean.getWorkflowType() == WorkflowType.ORCHESTRATION) {
       workflow = yamlHelper.getWorkflowFromId(appId, workflowOrPipelineId);
       executionName = workflow.getName();
-    } else if (bean.getWorkflowType().equals(WorkflowType.PIPELINE)) {
+    } else if (bean.getWorkflowType() == WorkflowType.PIPELINE) {
       executionName = yamlHelper.getPipelineName(appId, workflowOrPipelineId);
     }
 
@@ -210,9 +210,9 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
   }
 
   private String getExecutionType(WorkflowType workflowType) {
-    if (workflowType.equals(ORCHESTRATION)) {
+    if (workflowType == ORCHESTRATION) {
       return WORKFLOW;
-    } else if (workflowType.equals(WorkflowType.PIPELINE)) {
+    } else if (workflowType == WorkflowType.PIPELINE) {
       return PIPELINE;
     } else {
       notNullCheck("WorkflowType type is invalid", workflowType);

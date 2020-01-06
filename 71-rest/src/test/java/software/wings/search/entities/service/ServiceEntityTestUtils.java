@@ -36,7 +36,7 @@ public class ServiceEntityTestUtils {
                              .uuid(service.getUuid())
                              .entityType(Service.class);
 
-    if (changeType.equals(ChangeType.UPDATE)) {
+    if (changeType == ChangeType.UPDATE) {
       changeEventBuilder = changeEventBuilder.changes(getServiceChanges());
     }
 

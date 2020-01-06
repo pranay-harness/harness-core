@@ -35,7 +35,7 @@ public class WorkflowYAMLHelper {
       return variableValue;
     }
     EntityType entityTypeEnum = EntityType.valueOf(entityType);
-    if (ENVIRONMENT.equals(entityTypeEnum)) {
+    if (ENVIRONMENT == entityTypeEnum) {
       return null;
     }
 

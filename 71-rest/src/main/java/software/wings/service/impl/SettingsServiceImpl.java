@@ -415,7 +415,7 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   private boolean isSettingAttributeReferencingCloudProvider(SettingAttribute settingAttribute) {
-    return SettingCategory.HELM_REPO.equals(settingAttribute.getCategory())
+    return SettingCategory.HELM_REPO == settingAttribute.getCategory()
         && (AMAZON_S3_HELM_REPO.name().equals(settingAttribute.getValue().getType())
                || GCS_HELM_REPO.name().equals(settingAttribute.getValue().getType()));
   }
@@ -460,10 +460,10 @@ public class SettingsServiceImpl implements SettingsService {
                            -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
             "name", settingAttribute.getName());
     if (createdSettingAttribute != null && !createdSettingAttribute.isSample()) {
-      if (SettingCategory.CLOUD_PROVIDER.equals(createdSettingAttribute.getCategory())) {
+      if (SettingCategory.CLOUD_PROVIDER == createdSettingAttribute.getCategory()) {
         eventPublishHelper.publishAccountEvent(settingAttribute.getAccountId(),
             AccountEvent.builder().accountEventType(AccountEventType.CLOUD_PROVIDER_CREATED).build(), true, true);
-      } else if (SettingCategory.CONNECTOR.equals(createdSettingAttribute.getCategory())
+      } else if (SettingCategory.CONNECTOR == createdSettingAttribute.getCategory()
           && isArtifactServer(createdSettingAttribute.getValue().getSettingType())) {
         eventPublishHelper.publishAccountEvent(settingAttribute.getAccountId(),
             AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_REPO_CREATED).build(), true, true);
@@ -831,13 +831,13 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   private void ensureSettingAttributeSafeToDelete(SettingAttribute settingAttribute) {
-    if (settingAttribute.getCategory().equals(SettingCategory.CLOUD_PROVIDER)) {
+    if (settingAttribute.getCategory() == SettingCategory.CLOUD_PROVIDER) {
       ensureCloudProviderSafeToDelete(settingAttribute);
-    } else if (settingAttribute.getCategory().equals(SettingCategory.CONNECTOR)) {
+    } else if (settingAttribute.getCategory() == SettingCategory.CONNECTOR) {
       ensureConnectorSafeToDelete(settingAttribute);
-    } else if (settingAttribute.getCategory().equals(SettingCategory.SETTING)) {
+    } else if (settingAttribute.getCategory() == SettingCategory.SETTING) {
       ensureSettingSafeToDelete(settingAttribute);
-    } else if (settingAttribute.getCategory().equals(SettingCategory.AZURE_ARTIFACTS)) {
+    } else if (settingAttribute.getCategory() == SettingCategory.AZURE_ARTIFACTS) {
       ensureAzureArtifactsConnectorSafeToDelete(settingAttribute);
     }
   }

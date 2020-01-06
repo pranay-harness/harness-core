@@ -101,7 +101,7 @@ public class SpotinstHelperServiceManager {
         throw new InvalidRequestException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
       }
       SpotInstTaskExecutionResponse response = (SpotInstTaskExecutionResponse) notifyResponseData;
-      if (FAILURE.equals(response.getCommandExecutionStatus())) {
+      if (FAILURE == response.getCommandExecutionStatus()) {
         throw new InvalidRequestException(response.getErrorMessage());
       }
       return response.getSpotInstTaskResponse();

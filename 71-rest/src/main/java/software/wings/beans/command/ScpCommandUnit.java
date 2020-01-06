@@ -144,7 +144,7 @@ public class ScpCommandUnit extends SshCommandUnit {
               CommandExecutionStatus executionStatus = context.copyFiles(destinationDirectoryPath,
                   artifactStreamAttributes, context.getAccountId(), context.getAppId(), context.getActivityId(),
                   getName(), context.getHost() == null ? null : context.getHost().getPublicDns());
-              if (FAILURE.equals(executionStatus)) {
+              if (FAILURE == executionStatus) {
                 return executionStatus;
               }
             }
@@ -180,10 +180,9 @@ public class ScpCommandUnit extends SshCommandUnit {
   }
 
   private boolean isArtifactTypeAllowedForArtifactory(ArtifactType artifactType) {
-    if (ArtifactType.JAR.equals(artifactType) || ArtifactType.TAR.equals(artifactType)
-        || ArtifactType.WAR.equals(artifactType) || ArtifactType.ZIP.equals(artifactType)
-        || ArtifactType.IIS.equals(artifactType) || ArtifactType.IIS_APP.equals(artifactType)
-        || ArtifactType.IIS_VirtualDirectory.equals(artifactType) || ArtifactType.OTHER.equals(artifactType)) {
+    if (ArtifactType.JAR == artifactType || ArtifactType.TAR == artifactType || ArtifactType.WAR == artifactType
+        || ArtifactType.ZIP == artifactType || ArtifactType.IIS == artifactType || ArtifactType.IIS_APP == artifactType
+        || ArtifactType.IIS_VirtualDirectory == artifactType || ArtifactType.OTHER == artifactType) {
       return true;
     }
     return false;
@@ -205,7 +204,7 @@ public class ScpCommandUnit extends SshCommandUnit {
   @SchemaIgnore
   @Override
   public boolean isArtifactNeeded() {
-    return fileCategory != null && fileCategory.equals(ARTIFACTS);
+    return fileCategory != null && fileCategory == ARTIFACTS;
   }
 
   @SchemaIgnore
@@ -275,7 +274,7 @@ public class ScpCommandUnit extends SshCommandUnit {
       return false;
     }
     final ScpCommandUnit other = (ScpCommandUnit) obj;
-    return Objects.equals(this.fileCategory, other.fileCategory)
+    return this.fileCategory == other.fileCategory
         && Objects.equals(this.destinationDirectoryPath, other.destinationDirectoryPath)
         && Objects.equals(this.getArtifactVariableName(), other.getArtifactVariableName());
   }

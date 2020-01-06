@@ -61,7 +61,7 @@ public class AwsUtils {
         instanceFilter.getTags().forEach(tag -> tags.put(tag.getKey(), tag.getValue()));
         tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
       }
-      if (DeploymentType.WINRM.equals(deploymentType)) {
+      if (DeploymentType.WINRM == deploymentType) {
         filters.add(new Filter("platform", asList("windows")));
       }
     }

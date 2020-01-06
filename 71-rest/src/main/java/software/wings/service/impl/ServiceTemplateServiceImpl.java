@@ -439,7 +439,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
 
     AppManifestKind appManifestKind = AppManifestKind.VALUES;
-    if (ArtifactType.PCF.equals(service.getArtifactType())) {
+    if (ArtifactType.PCF == service.getArtifactType()) {
       appManifestKind = AppManifestKind.PCF_OVERRIDE;
     }
 
@@ -454,7 +454,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
 
     AppManifestKind appManifestKind = AppManifestKind.VALUES;
-    if (ArtifactType.PCF.equals(service.getArtifactType())) {
+    if (ArtifactType.PCF == service.getArtifactType()) {
       appManifestKind = AppManifestKind.PCF_OVERRIDE;
     }
 

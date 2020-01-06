@@ -383,7 +383,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
 
   private Variable prepareVariable(int index, VariableType type, EntityType entityType) {
     Variable variable = aVariable().name("var" + index).type(type).build();
-    if (VariableType.ENTITY.equals(type)) {
+    if (VariableType.ENTITY == type) {
       variable.setMetadata(singletonMap(Variable.ENTITY_TYPE, entityType));
     }
     return variable;

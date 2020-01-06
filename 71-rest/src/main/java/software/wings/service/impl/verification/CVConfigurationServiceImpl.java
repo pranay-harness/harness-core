@@ -596,7 +596,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   }
 
   private void deleteTemplate(String accountId, String serviceConfigurationId, StateType stateType) {
-    if (!stateType.equals(StateType.APP_DYNAMICS) && !stateType.equals(StateType.NEW_RELIC)) {
+    if (stateType != StateType.APP_DYNAMICS && stateType != StateType.NEW_RELIC) {
       TimeSeriesMetricTemplates timeSeriesMetricTemplates =
           wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
               .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, serviceConfigurationId)
@@ -1051,7 +1051,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     if (isNotEmpty(alertList)) {
       alertList.forEach(alert -> {
         CVConfiguration cvConfigurationInAlert = null;
-        if (alert.getType().equals(AlertType.CONTINUOUS_VERIFICATION_ALERT)) {
+        if (alert.getType() == AlertType.CONTINUOUS_VERIFICATION_ALERT) {
           cvConfigurationInAlert = ((ContinuousVerificationAlertData) alert.getAlertData()).getCvConfiguration();
         } else {
           cvConfigurationInAlert =
@@ -1087,7 +1087,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       return null;
     }
     CVConfiguration cvConfiguration = getConfiguration(cvConfigId);
-    if (cvConfiguration == null || !StateType.APM_VERIFICATION.equals(cvConfiguration.getStateType())) {
+    if (cvConfiguration == null || StateType.APM_VERIFICATION != cvConfiguration.getStateType()) {
       logger.error(
           "The cvConfigId provided in getTxnMetricPairsForAPMCVConfig doesn't correspond to a Custom Metrics Config");
       return null;

@@ -396,8 +396,8 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
       if (config.getBastionHostConfig() != null) {
         config.setExecutorType(BASTION_HOST);
       } else {
-        if (config.getAccessType().equals(HostConnectionAttributes.AccessType.KEY)
-            || config.getAccessType().equals(KEY_SU_APP_USER) || config.getAccessType().equals(KEY_SUDO_APP_USER)) {
+        if (config.getAccessType() == HostConnectionAttributes.AccessType.KEY
+            || config.getAccessType() == KEY_SU_APP_USER || config.getAccessType() == KEY_SUDO_APP_USER) {
           config.setExecutorType(KEY_AUTH);
         } else {
           config.setExecutorType(PASSWORD_AUTH);

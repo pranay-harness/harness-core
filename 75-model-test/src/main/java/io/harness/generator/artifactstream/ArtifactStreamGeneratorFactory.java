@@ -20,34 +20,34 @@ public class ArtifactStreamGeneratorFactory {
   @Inject private SpotinstAmiArtifactStreamsGenerator spotinstAmiArtifactStreamsGenerator;
 
   public ArtifactStreamsGenerator getArtifactStreamGenerator(ArtifactStreams artifactStreams) {
-    if (ArtifactStreams.HARNESS_SAMPLE_ECR.equals(artifactStreams)) {
+    if (ArtifactStreams.HARNESS_SAMPLE_ECR == artifactStreams) {
       return ecrArtifactStreamGenerator;
     }
-    if (ArtifactStreams.HARNESS_SAMPLE_DOCKER.equals(artifactStreams)) {
+    if (ArtifactStreams.HARNESS_SAMPLE_DOCKER == artifactStreams) {
       return dockerArtifactStreamGenerator;
     }
-    if (ArtifactStreams.ARTIFACTORY_ECHO_WAR.equals(artifactStreams) || ArtifactStreams.PCF.equals(artifactStreams)) {
+    if (ArtifactStreams.ARTIFACTORY_ECHO_WAR == artifactStreams || ArtifactStreams.PCF == artifactStreams) {
       return artifactoryArtifactStreamStreamsGenerator;
     }
-    if (ArtifactStreams.HARNESS_SAMPLE_IIS_APP.equals(artifactStreams)) {
+    if (ArtifactStreams.HARNESS_SAMPLE_IIS_APP == artifactStreams) {
       return amazonS3ArtifactStreamStreamsGenerator;
     }
-    if (ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR.equals(artifactStreams)) {
+    if (ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR == artifactStreams) {
       return jenkinsArtifactStreamStreamsGenerator;
     }
-    if (ArtifactStreams.AWS_AMI.equals(artifactStreams)) {
+    if (ArtifactStreams.AWS_AMI == artifactStreams) {
       return amazonAmiArtifactStreamsGenerator;
     }
     if (ArtifactStreams.SPOTINST_AMI == artifactStreams) {
       return spotinstAmiArtifactStreamsGenerator;
     }
-    if (ArtifactStreams.HARNESS_EXAMPLE_LAMBDA.equals(artifactStreams)) {
+    if (ArtifactStreams.HARNESS_EXAMPLE_LAMBDA == artifactStreams) {
       return amazonLambdaArtifactStreamGenerator;
     }
-    if (ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR_AT_CONNECTOR.equals(artifactStreams)) {
+    if (ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR_AT_CONNECTOR == artifactStreams) {
       return jenkinsArtifactStreamStreamsGenerator;
     }
-    if (ArtifactStreams.HARNESS_SAMPLE_DOCKER_AT_CONNECTOR.equals(artifactStreams)) {
+    if (ArtifactStreams.HARNESS_SAMPLE_DOCKER_AT_CONNECTOR == artifactStreams) {
       return dockerArtifactStreamGenerator;
     }
 

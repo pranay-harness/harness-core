@@ -36,7 +36,7 @@ public class OauthEnabledFieldMigration implements Migration {
         AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
         logger.info("Processing accountId {}", account.getUuid());
         try {
-          boolean oauthEnabled = AuthenticationMechanism.OAUTH.equals(authenticationMechanism);
+          boolean oauthEnabled = AuthenticationMechanism.OAUTH == authenticationMechanism;
           account.setOauthEnabled(oauthEnabled);
           wingsPersistence.save(account);
           logger.info("Successfully set oauthEnabled={} for accountId {}", oauthEnabled, account.getUuid());

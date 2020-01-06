@@ -327,8 +327,7 @@ public class WorkflowServiceHelper {
   public boolean workflowHasSshDeploymentPhase(CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
     List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
     if (isNotEmpty(workflowPhases)) {
-      return workflowPhases.stream().anyMatch(
-          workflowPhase -> DeploymentType.SSH.equals(workflowPhase.getDeploymentType()));
+      return workflowPhases.stream().anyMatch(workflowPhase -> DeploymentType.SSH == workflowPhase.getDeploymentType());
     }
     return false;
   }
@@ -485,7 +484,7 @@ public class WorkflowServiceHelper {
       notNullCheck("Source service does not exist", oldService, USER);
       Service newService = serviceResourceService.get(targetAppId, service.getValue(), false);
       notNullCheck("Target service does not exist", newService, USER);
-      if (oldService.getArtifactType() != null && !oldService.getArtifactType().equals(newService.getArtifactType())) {
+      if (oldService.getArtifactType() != null && oldService.getArtifactType() != newService.getArtifactType()) {
         throw new InvalidRequestException("Target service  [" + oldService.getName()
                 + " ] is not compatible with service [" + newService.getName() + "]",
             USER);
@@ -528,7 +527,7 @@ public class WorkflowServiceHelper {
 
     // Ignoring validation for old Services where no deployment type is present
     if (service.getDeploymentType() != null) {
-      if (!service.getDeploymentType().equals(infrastructureDefinition.getDeploymentType())) {
+      if (service.getDeploymentType() != infrastructureDefinition.getDeploymentType()) {
         throw new InvalidRequestException(
             "Service [" + serviceId + "] Infrastructure Definition[" + infraDefinitionId + "] are not compatible",
             USER);
@@ -748,7 +747,7 @@ public class WorkflowServiceHelper {
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
 
-    if (isDynamicInfrastructure && BASIC.equals(orchestrationWorkflowType)) {
+    if (isDynamicInfrastructure && BASIC == orchestrationWorkflowType) {
       phaseSteps.add(aPhaseStep(PhaseStepType.PROVISION_INFRASTRUCTURE, PROVISION_INFRASTRUCTURE).build());
     }
 
@@ -1012,7 +1011,7 @@ public class WorkflowServiceHelper {
     boolean isDaemonSchedulingStrategy = false;
 
     // DaemonSchedulingStrategy is only allowed for Basic workflow
-    if (OrchestrationWorkflowType.BASIC.equals(orchestrationWorkflowType)) {
+    if (OrchestrationWorkflowType.BASIC == orchestrationWorkflowType) {
       String serviceId = workflowPhase.getServiceId();
       EcsServiceSpecification serviceSpecification =
           serviceResourceService.getEcsServiceSpecification(appId, serviceId);
@@ -1257,7 +1256,7 @@ public class WorkflowServiceHelper {
 
     if (!workflowPhase.isDaemonSet() && !workflowPhase.isStatefulSet()) {
       Map<String, Object> properties = new HashMap<>();
-      if (BASIC.equals(orchestrationWorkflowType)) {
+      if (BASIC == orchestrationWorkflowType) {
         // Setting instance count always 100 percent
         properties.put("instanceCount", "100");
       }
@@ -1965,11 +1964,11 @@ public class WorkflowServiceHelper {
       boolean infraChanged, boolean migration) {
     if (orchestrationWorkflow != null) {
       OrchestrationWorkflowType orchestrationWorkflowType = orchestrationWorkflow.getOrchestrationWorkflowType();
-      if (orchestrationWorkflowType.equals(BASIC) || orchestrationWorkflowType.equals(ROLLING)
-          || orchestrationWorkflowType.equals(BLUE_GREEN)) {
+      if (orchestrationWorkflowType == BASIC || orchestrationWorkflowType == ROLLING
+          || orchestrationWorkflowType == BLUE_GREEN) {
         handleBasicWorkflow((CanaryOrchestrationWorkflow) orchestrationWorkflow, templateExpressions, appId, serviceId,
             infraId, envChanged, infraChanged);
-      } else if (orchestrationWorkflowType.equals(MULTI_SERVICE) || orchestrationWorkflowType.equals(CANARY)) {
+      } else if (orchestrationWorkflowType == MULTI_SERVICE || orchestrationWorkflowType == CANARY) {
         handleCanaryOrMultiServiceWorkflow(
             orchestrationWorkflow, templateExpressions, appId, envChanged, infraChanged, migration);
       }
@@ -2141,7 +2140,7 @@ public class WorkflowServiceHelper {
 
     Service newService = serviceResourceService.get(appId, serviceId, false);
     notNullCheck("service", newService, USER);
-    if (oldService.getArtifactType() != null && !oldService.getArtifactType().equals(newService.getArtifactType())) {
+    if (oldService.getArtifactType() != null && oldService.getArtifactType() != newService.getArtifactType()) {
       throw new InvalidRequestException(
           "Service [" + newService.getName() + "] is not compatible with the service [" + oldService.getName() + "]",
           USER);
@@ -2160,7 +2159,7 @@ public class WorkflowServiceHelper {
     }
     phase.getPhaseSteps()
         .stream()
-        .filter(phaseStep -> phaseStep.getPhaseStepType().equals(INFRASTRUCTURE_NODE))
+        .filter(phaseStep -> phaseStep.getPhaseStepType() == INFRASTRUCTURE_NODE)
         .map(PhaseStep::getSteps)
         .filter(Objects::nonNull)
         .flatMap(Collection::stream)
@@ -2302,7 +2301,7 @@ public class WorkflowServiceHelper {
 
   private List<String> getEntityNames(List<Variable> userVariables, EntityType entityType) {
     return userVariables.stream()
-        .filter(variable -> entityType.equals(variable.obtainEntityType()))
+        .filter(variable -> entityType == variable.obtainEntityType())
         .map(Variable::getName)
         .collect(toList());
   }
@@ -2431,13 +2430,13 @@ public class WorkflowServiceHelper {
       if (featureFlagService.isEnabled(FeatureName.SPOTINST, accountId)
           && isSpotInstTypeInfra(infraMappingRefactorEnabled, workflowPhase.getInfraDefinitionId(),
                  workflowPhase.getInfraMappingId(), appId)) {
-        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
+        if (BLUE_GREEN == orchestrationWorkflowType) {
           generateNewWorkflowPhaseStepsForSpotInstBlueGreen(appId, workflowPhase, !serviceRepeat);
         } else {
           generateNewWorkflowPhaseStepsForSpotinst(appId, workflowPhase, !serviceRepeat);
         }
       } else {
-        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
+        if (BLUE_GREEN == orchestrationWorkflowType) {
           generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(
               appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure);
         } else {
@@ -2485,13 +2484,13 @@ public class WorkflowServiceHelper {
       if (featureFlagService.isEnabled(FeatureName.SPOTINST, accountId)
           && isSpotInstTypeInfra(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId),
                  workflowPhase.getInfraDefinitionId(), workflowPhase.getInfraMappingId(), appId)) {
-        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
+        if (BLUE_GREEN == orchestrationWorkflowType) {
           return generateRollbackWorkflowPhaseForSpotInstBlueGreen(workflowPhase);
         } else {
           return generateRollbackWorkflowPhaseForSpotinst(workflowPhase);
         }
       } else {
-        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
+        if (BLUE_GREEN == orchestrationWorkflowType) {
           return generateRollbackWorkflowPhaseForAwsAmiBlueGreen(workflowPhase);
         } else {
           return generateRollbackWorkflowPhaseForAwsAmi(workflowPhase);
@@ -2539,11 +2538,11 @@ public class WorkflowServiceHelper {
       InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
       InfraMappingInfrastructureProvider infrastructure = infrastructureDefinition.getInfrastructure();
       return infrastructure instanceof AwsAmiInfrastructure
-          && AmiDeploymentType.SPOTINST.equals(((AwsAmiInfrastructure) infrastructure).getAmiDeploymentType());
+          && AmiDeploymentType.SPOTINST == ((AwsAmiInfrastructure) infrastructure).getAmiDeploymentType();
     } else {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, infraMappingId);
       return infraMapping instanceof AwsAmiInfrastructureMapping
-          && AmiDeploymentType.SPOTINST.equals(((AwsAmiInfrastructureMapping) infraMapping).getAmiDeploymentType());
+          && AmiDeploymentType.SPOTINST == ((AwsAmiInfrastructureMapping) infraMapping).getAmiDeploymentType();
     }
   }
 
@@ -2577,7 +2576,7 @@ public class WorkflowServiceHelper {
    * @return
    */
   public List<String> getServiceCommands(WorkflowPhase workflowPhase, String appId, String svcId) {
-    if (svcId == null || workflowPhase == null || !SSH.equals(workflowPhase.getDeploymentType())
+    if (svcId == null || workflowPhase == null || SSH != workflowPhase.getDeploymentType()
         || !serviceResourceService.exist(appId, svcId)) {
       return new ArrayList<>();
     }

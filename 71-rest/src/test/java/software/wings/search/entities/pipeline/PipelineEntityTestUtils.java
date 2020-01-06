@@ -54,7 +54,7 @@ public class PipelineEntityTestUtils {
                              .uuid(pipeline.getUuid())
                              .entityType(Pipeline.class);
 
-    if (changeType.equals(ChangeType.UPDATE)) {
+    if (changeType == ChangeType.UPDATE) {
       changeEventBuilder = changeEventBuilder.changes(getPipelineChanges());
     }
 

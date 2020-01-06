@@ -151,7 +151,7 @@ public class TimeSeriesRawData implements GoogleDataStoreAware, UuidAware {
         List<Double> optimalData = new ArrayList<>();
 
         hostSummaryMap.values().forEach(hostSummary -> {
-          if (RiskLevel.LOW.equals(RiskLevel.getRiskLevel(hostSummary.getRisk()))) {
+          if (RiskLevel.LOW == RiskLevel.getRiskLevel(hostSummary.getRisk())) {
             if (isNotEmpty(hostSummary.getControl_data())) {
               controlData.addAll(hostSummary.getControl_data());
             }

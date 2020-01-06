@@ -187,7 +187,7 @@ public class TriggerDeploymentExecution {
     if (deploymentArtifactVariables != null) {
       List<String> artifactVariables =
           deploymentArtifactVariables.stream()
-              .filter(deploymentVariable -> deploymentVariable.getType().equals(VariableType.ARTIFACT))
+              .filter(deploymentVariable -> deploymentVariable.getType() == VariableType.ARTIFACT)
               .filter(deploymentVariable -> !triggerArtifactVariableNames.contains(deploymentVariable.getName()))
               .map(Variable::getName)
               .collect(Collectors.toList());
@@ -240,7 +240,7 @@ public class TriggerDeploymentExecution {
     Condition condition = trigger.getCondition();
     if (condition instanceof WebhookCondition) {
       WebhookCondition webHookTriggerCondition = (WebhookCondition) condition;
-      if (webHookTriggerCondition.getPayloadSource().getType().equals(Type.GITHUB)) {
+      if (webHookTriggerCondition.getPayloadSource().getType() == Type.GITHUB) {
         GitHubPayloadSource gitHubPayloadSource = (GitHubPayloadSource) webHookTriggerCondition.getPayloadSource();
         return gitHubPayloadSource.getWebhookGitParam() != null;
       } else {
@@ -292,7 +292,7 @@ public class TriggerDeploymentExecution {
         deploymentTrigger.getAppId(), pipeline, null, null, Include.ARTIFACT_SERVICE);
 
     List<ArtifactVariable> artifactVariables = deploymentMetadata.getArtifactVariables();
-    if (deploymentTrigger.getType().equals(Condition.Type.WEBHOOK)) {
+    if (deploymentTrigger.getType() == Condition.Type.WEBHOOK) {
       artifactVariables = deploymentMetadata.getArtifactVariables();
       if (artifactVariables != null && pipelineAction.getTriggerArgs() != null) {
         artifactVariables.forEach(artifactVariable -> {
@@ -355,7 +355,7 @@ public class TriggerDeploymentExecution {
 
     WorkflowType workflowType = null;
     String executionName = null;
-    if (deploymentTrigger.getAction().getActionType().equals(ActionType.PIPELINE)) {
+    if (deploymentTrigger.getAction().getActionType() == ActionType.PIPELINE) {
       PipelineAction pipelineAction = (PipelineAction) deploymentTrigger.getAction();
       workflowType = PIPELINE;
       executionName = pipelineAction.getPipelineName();
@@ -368,7 +368,7 @@ public class TriggerDeploymentExecution {
     if (isEmpty(artifactNeededServiceIds) && isNotEmpty(collectedArtifactServiceIds)) {
       StringBuilder msg = new StringBuilder(128);
       msg.append("Trigger rejected. Reason: ")
-          .append(PIPELINE.equals(workflowType) ? "Pipeline" : "Workflow")
+          .append(PIPELINE == workflowType ? "Pipeline" : "Workflow")
           .append(" [")
           .append(executionName)
           .append("] does not need artifacts. However, trigger received with the artifacts");
@@ -396,10 +396,7 @@ public class TriggerDeploymentExecution {
     if (isNotEmpty(collectedArtifactServiceIds)) {
       StringBuilder msg =
           new StringBuilder("Trigger rejected. Reason: More artifacts received than required artifacts for ");
-      msg.append(PIPELINE.equals(workflowType) ? "Pipeline" : "Workflow")
-          .append(" [")
-          .append(executionName)
-          .append(']');
+      msg.append(PIPELINE == workflowType ? "Pipeline" : "Workflow").append(" [").append(executionName).append(']');
       logger.warn(msg.toString());
       //      throw new WingsException(msg.toString());
     }
@@ -481,7 +478,7 @@ public class TriggerDeploymentExecution {
     Map<String, String> triggerWorkflowVariableValues = overrideTriggerVariables(deploymentTrigger, executionArgs);
 
     String envId = null;
-    if (BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
+    if (BUILD == workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()) {
       executionArgs.setArtifactVariables(new ArrayList<>());
     } else {
       envId =
@@ -497,7 +494,7 @@ public class TriggerDeploymentExecution {
           deploymentTrigger.getAppId(), workflow, triggerWorkflowVariableValues, null, null, Include.ARTIFACT_SERVICE);
 
       List<ArtifactVariable> artifactVariables = deploymentMetadata.getArtifactVariables();
-      if (deploymentTrigger.getType().equals(Condition.Type.WEBHOOK)) {
+      if (deploymentTrigger.getType() == Condition.Type.WEBHOOK) {
         // We have to find artifact variable value because of resolved variables here
         artifactVariables = deploymentMetadata.getArtifactVariables();
         if (artifactVariables != null && workflowAction.getTriggerArgs() != null) {

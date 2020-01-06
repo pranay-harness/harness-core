@@ -92,7 +92,7 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
 
     // If resize new first is selected as true by the user in setup state. Then in rollback we want to resize the
     // list of older Asgs first. In that case, the flag sent to the delegate would need to be reversed.
-    boolean resizeNewFirst = !RESIZE_NEW_FIRST.equals(serviceSetupElement.getResizeStrategy());
+    boolean resizeNewFirst = RESIZE_NEW_FIRST != serviceSetupElement.getResizeStrategy();
 
     createAndQueueResizeTask(awsConfig, encryptionDetails, region, infrastructureMapping.getAccountId(),
         infrastructureMapping.getAppId(), activity.getUuid(), getCommandName(), resizeNewFirst, newAgName,
@@ -119,7 +119,7 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
   protected List<InstanceElement> handleAsyncInternal(AwsAmiServiceDeployResponse amiServiceDeployResponse,
       ExecutionContext context, AmiServiceSetupElement serviceSetupElement,
       ManagerExecutionLogCallback executionLogCallback) {
-    if (rollbackAllPhasesAtOnce && ExecutionStatus.SUCCESS.equals(amiServiceDeployResponse.getExecutionStatus())) {
+    if (rollbackAllPhasesAtOnce && ExecutionStatus.SUCCESS == amiServiceDeployResponse.getExecutionStatus()) {
       markAllPhaseRollbackDone(context);
     }
     return emptyList();

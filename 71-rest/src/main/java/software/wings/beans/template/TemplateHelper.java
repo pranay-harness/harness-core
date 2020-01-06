@@ -93,7 +93,7 @@ public class TemplateHelper {
                                .in(templateUuids)
                                .count(new CountOptions().limit(1));
     long templatesReferencedInOtherTemplates;
-    if (templateType.equals(TemplateType.SSH)) {
+    if (templateType == TemplateType.SSH) {
       templatesReferencedInOtherTemplates =
           wingsPersistence.createQuery(VersionedTemplate.class, excludeValidate)
               .field("templateObject.referencedTemplateList.templateReference.templateUuid")
@@ -176,7 +176,7 @@ public class TemplateHelper {
           }
         }
         if (variable.getType() != null) {
-          if (!variable.getType().equals(oldVariable.getType())) {
+          if (variable.getType() != oldVariable.getType()) {
             variablesChanged = true;
             break;
           }

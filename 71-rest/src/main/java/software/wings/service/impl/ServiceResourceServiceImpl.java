@@ -397,7 +397,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private boolean skipDefaultCommands(Service service) {
-    if (ArtifactType.PCF.equals(service.getArtifactType())) {
+    if (ArtifactType.PCF == service.getArtifactType()) {
       return true;
     }
 
@@ -470,7 +470,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
       originalService.getServiceVariables().forEach(originalServiceVariable -> {
         ServiceVariable clonedServiceVariable = originalServiceVariable.cloneInternal();
-        if (ENCRYPTED_TEXT.equals(clonedServiceVariable.getType())) {
+        if (ENCRYPTED_TEXT == clonedServiceVariable.getType()) {
           clonedServiceVariable.setValue(clonedServiceVariable.getEncryptedValue().toCharArray());
         }
         clonedServiceVariable.setEntityId(savedCloneService.getUuid());
@@ -485,7 +485,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     clonePcfSpecification(appId, clonedServiceId, originalServiceId);
 
-    if (ArtifactType.DOCKER.equals(originalService.getArtifactType())) {
+    if (ArtifactType.DOCKER == originalService.getArtifactType()) {
       cloneHelmChartSpecification(appId, clonedServiceId, originalServiceId);
       cloneContainerTasks(appId, clonedServiceId, originalServiceId);
     }
@@ -530,7 +530,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public Service cloneCommand(String appId, String serviceId, String commandName, ServiceCommand command) {
     // don't allow cloning of Docker commands
     Service service = getServiceWithServiceCommands(appId, serviceId);
-    if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
+    if (service.getArtifactType() == ArtifactType.DOCKER) {
       throw new InvalidRequestException("Docker commands can not be cloned");
     }
     ServiceCommand oldServiceCommand = service.getServiceCommands()
@@ -582,7 +582,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return command.getCommandUnits()
         .stream()
         .flatMap(commandUnit -> {
-          if (COMMAND.equals(commandUnit.getCommandUnitType())) {
+          if (COMMAND == commandUnit.getCommandUnitType()) {
             String commandUnitName = isNotBlank(((Command) commandUnit).getReferenceId())
                 ? ((Command) commandUnit).getReferenceId()
                 : commandUnit.getName();
@@ -1653,7 +1653,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     } else {
       // Check if Name and CommandType changes
       if (!oldCommand.getName().equals(newcommand.getName())
-          || !oldCommand.getCommandType().equals(newcommand.getCommandType())) {
+          || oldCommand.getCommandType() != newcommand.getCommandType()) {
         UpdateOperations<Command> commandUpdateOperations = wingsPersistence.createUpdateOperations(Command.class);
         setUnset(commandUpdateOperations, "name", newcommand.getName());
         setUnset(commandUpdateOperations, "commandType", newcommand.getCommandType());
@@ -2205,7 +2205,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       return service;
     }
 
-    if (HELM.equals(service.getDeploymentType())) {
+    if (HELM == service.getDeploymentType()) {
       ManifestFile manifestFile = ManifestFile.builder().fileContent(DEFAULT_HELM_VALUE_YAML).build();
 
       createValuesYaml(service.getAppId(), service.getUuid(), manifestFile);
@@ -2284,7 +2284,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void createDefaultPCFManifestsIfApplicable(Service service, boolean createdFromGit) {
-    if (!PCF.equals(service.getDeploymentType()) || createdFromGit) {
+    if (PCF != service.getDeploymentType() || createdFromGit) {
       return;
     }
 
@@ -2412,7 +2412,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public void setK8v2ServiceFromAppManifest(
       ApplicationManifest applicationManifest, AppManifestSource appManifestSource) {
-    if (!AppManifestSource.SERVICE.equals(appManifestSource)) {
+    if (AppManifestSource.SERVICE != appManifestSource) {
       return;
     }
 
@@ -2432,7 +2432,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public void setPcfV2ServiceFromAppManifestIfRequired(
       ApplicationManifest applicationManifest, AppManifestSource appManifestSource) {
-    if (!AppManifestSource.SERVICE.equals(appManifestSource)) {
+    if (AppManifestSource.SERVICE != appManifestSource) {
       return;
     }
 

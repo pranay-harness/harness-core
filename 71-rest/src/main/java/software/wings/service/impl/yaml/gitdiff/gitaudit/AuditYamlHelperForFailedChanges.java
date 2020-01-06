@@ -621,12 +621,12 @@ public class AuditYamlHelperForFailedChanges {
   }
 
   private SettingCategory getCategory(YamlType type) {
-    if (YamlType.CLOUD_PROVIDER.equals(type)) {
+    if (YamlType.CLOUD_PROVIDER == type) {
       return SettingCategory.CLOUD_PROVIDER;
     }
 
-    if (YamlType.VERIFICATION_PROVIDER.equals(type) || YamlType.ARTIFACT_SERVER.equals(type)
-        || YamlType.COLLABORATION_PROVIDER.equals(type) || YamlType.LOADBALANCER_PROVIDER.equals(type)) {
+    if (YamlType.VERIFICATION_PROVIDER == type || YamlType.ARTIFACT_SERVER == type
+        || YamlType.COLLABORATION_PROVIDER == type || YamlType.LOADBALANCER_PROVIDER == type) {
       return SettingCategory.CONNECTOR;
     }
 
@@ -674,23 +674,23 @@ public class AuditYamlHelperForFailedChanges {
   }
 
   private SettingAttribute getSettingAttribute(String accountId, YamlType type, String yamlFilePath) {
-    if (YamlType.COLLABORATION_PROVIDER.equals(type)) {
+    if (YamlType.COLLABORATION_PROVIDER == type) {
       return yamlHelper.getCollaborationProvider(accountId, yamlFilePath);
     }
 
-    if (YamlType.CLOUD_PROVIDER.equals(type)) {
+    if (YamlType.CLOUD_PROVIDER == type) {
       return yamlHelper.getCloudProvider(accountId, yamlFilePath);
     }
 
-    if (YamlType.VERIFICATION_PROVIDER.equals(type)) {
+    if (YamlType.VERIFICATION_PROVIDER == type) {
       return yamlHelper.getVerificationProvider(accountId, yamlFilePath);
     }
 
-    if (YamlType.LOADBALANCER_PROVIDER.equals(type)) {
+    if (YamlType.LOADBALANCER_PROVIDER == type) {
       return yamlHelper.getLoadBalancerProvider(accountId, yamlFilePath);
     }
 
-    if (YamlType.ARTIFACT_SERVER.equals(type)) {
+    if (YamlType.ARTIFACT_SERVER == type) {
       return yamlHelper.getArtifactServer(accountId, yamlFilePath);
     }
 

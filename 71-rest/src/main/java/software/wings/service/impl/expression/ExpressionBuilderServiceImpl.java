@@ -72,14 +72,14 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
       expressions.addAll(
           account.getDefaults().keySet().stream().map(s -> "account.defaults." + s).collect(Collectors.toSet()));
     }
-    if (entityType.equals(SERVICE)) {
+    if (entityType == SERVICE) {
       expressions.addAll(serviceExpressionsBuilder.getExpressions(appId, entityId, stateType));
-    } else if (entityType.equals(ENVIRONMENT)) {
+    } else if (entityType == ENVIRONMENT) {
       expressions.addAll(envExpressionBuilder.getExpressions(appId, entityId, serviceId));
-    } else if (entityType.equals(WORKFLOW)) {
+    } else if (entityType == WORKFLOW) {
       expressions.addAll(
           workflowExpressionBuilder.getExpressions(appId, entityId, serviceId, stateType, subEntityType));
-      if (SubEntityType.NOTIFICATION_GROUP.equals(subEntityType)) {
+      if (SubEntityType.NOTIFICATION_GROUP == subEntityType) {
         // Filter account and app defaults
         final Set<String> filteredExpressions =
             expressions.stream()
@@ -87,7 +87,7 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
                 .collect(Collectors.toSet());
         expressions = new TreeSet<>(filteredExpressions);
       }
-    } else if (entityType.equals(APPLICATION)) {
+    } else if (entityType == APPLICATION) {
       expressions.addAll(applicationExpressionBuilder.getExpressions(appId, entityId));
     }
     return expressions;

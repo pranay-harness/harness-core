@@ -2342,9 +2342,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                                     .feed(FEED)
                                                                     .packageId(PACKAGE_ID)
                                                                     .build();
-    if (ProtocolType.maven.equals(protocolType)) {
+    if (ProtocolType.maven == protocolType) {
       azureArtifactsArtifactStream.setPackageName(PACKAGE_NAME_MAVEN);
-    } else if (ProtocolType.nuget.equals(protocolType)) {
+    } else if (ProtocolType.nuget == protocolType) {
       azureArtifactsArtifactStream.setPackageName(PACKAGE_NAME_NUGET);
     }
     return azureArtifactsArtifactStream;

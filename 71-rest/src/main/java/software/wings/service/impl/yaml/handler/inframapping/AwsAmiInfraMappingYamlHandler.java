@@ -34,7 +34,7 @@ public class AwsAmiInfraMappingYamlHandler
     yaml.setStageTargetGroupArns(bean.getStageTargetGroupArns());
     yaml.setAmiDeploymentType(bean.getAmiDeploymentType());
     yaml.setSpotinstElastiGroupJson(bean.getSpotinstElastiGroupJson());
-    if (AmiDeploymentType.SPOTINST.equals(bean.getAmiDeploymentType())) {
+    if (AmiDeploymentType.SPOTINST == bean.getAmiDeploymentType()) {
       yaml.setSpotinstCloudProviderName(getSettingName(bean.getSpotinstCloudProvider()));
     }
     return yaml;
@@ -55,7 +55,7 @@ public class AwsAmiInfraMappingYamlHandler
     String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
     notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId, USER);
     String spotinstCloudProviderId = null;
-    if (AmiDeploymentType.SPOTINST.equals(infraMappingYaml.getAmiDeploymentType())) {
+    if (AmiDeploymentType.SPOTINST == infraMappingYaml.getAmiDeploymentType()) {
       spotinstCloudProviderId = getSettingId(accountId, appId, infraMappingYaml.getSpotinstCloudProviderName());
     }
 

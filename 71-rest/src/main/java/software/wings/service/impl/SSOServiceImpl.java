@@ -251,7 +251,7 @@ public class SSOServiceImpl implements SSOService {
   @Override
   public LdapSettings deleteLdapSettings(@NotBlank String accountId) {
     LdapSettings settings = ssoSettingService.deleteLdapSettings(accountId);
-    if (accountService.get(accountId).getAuthenticationMechanism().equals(AuthenticationMechanism.LDAP)) {
+    if (accountService.get(accountId).getAuthenticationMechanism() == AuthenticationMechanism.LDAP) {
       setAuthenticationMechanism(accountId, USER_PASSWORD);
     }
     return settings;

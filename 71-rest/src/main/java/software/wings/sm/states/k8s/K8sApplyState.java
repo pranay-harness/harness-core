@@ -124,9 +124,9 @@ public class K8sApplyState extends State implements K8sStateExecutor {
     Application app = appService.get(context.getAppId());
     K8sTaskExecutionResponse executionResponse = (K8sTaskExecutionResponse) response.values().iterator().next();
 
-    ExecutionStatus executionStatus =
-        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                             : ExecutionStatus.FAILED;
+    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
 
     activityService.updateStatus(k8sStateHelper.getActivityId(context), app.getUuid(), executionStatus);
 

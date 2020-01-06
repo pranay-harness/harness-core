@@ -153,9 +153,9 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     boolean isAccountLevelPermissions = authRuleFilter.isAccountLevelPermissions(permissionAttributes);
     boolean emptyAppIdsInReq = isEmpty(appId);
     List<String> appIdsFromRequest = emptyAppIdsInReq ? null : asList(appId);
-    boolean isScopedToApp = ResourceType.APPLICATION.equals(resourceType);
+    boolean isScopedToApp = ResourceType.APPLICATION == resourceType;
 
-    if (isEmpty(permissionAttributes) || PermissionType.LOGGED_IN.equals(permissionAttribute.getPermissionType())) {
+    if (isEmpty(permissionAttributes) || PermissionType.LOGGED_IN == permissionAttribute.getPermissionType()) {
       UserRequestContext userRequestContext = buildUserRequestContext(
           userPermissionInfo, userRestrictionInfo, accountId, emptyAppIdsInReq, isScopedToApp, appIdsFromRequest);
       user.setUserRequestContext(userRequestContext);

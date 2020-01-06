@@ -33,7 +33,7 @@ public class EnvironmentEntityTestUtils {
                              .uuid(environment.getUuid())
                              .entityType(Environment.class);
 
-    if (changeType.equals(ChangeType.UPDATE)) {
+    if (changeType == ChangeType.UPDATE) {
       changeEventBuilder = changeEventBuilder.changes(getEnvironmentChanges());
     }
 

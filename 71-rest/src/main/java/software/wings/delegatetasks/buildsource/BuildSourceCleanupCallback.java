@@ -121,7 +121,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
     ResponseData notifyResponseData = response.values().iterator().next();
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (notifyResponseData instanceof BuildSourceExecutionResponse) {
-      if (SUCCESS.equals(((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus())) {
+      if (SUCCESS == ((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus()) {
         handleResponseForSuccess(notifyResponseData, artifactStream);
       } else {
         logger.info("Request failed :[{}]", ((BuildSourceExecutionResponse) notifyResponseData).getErrorMessage());

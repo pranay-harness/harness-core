@@ -40,7 +40,7 @@ public class DatadogCVServiceConfigurationMigration implements Migration {
         DBObject next = cvConfigurationRecords.next();
         StateType stateType = StateType.valueOf(next.get("stateType").toString());
 
-        if (stateType.equals(StateType.DATA_DOG)) {
+        if (stateType == StateType.DATA_DOG) {
           String uuId = (String) next.get("_id");
           String metrics = (String) next.get("metrics");
           String dockerMetricFilter = (String) next.get("applicationFilter");

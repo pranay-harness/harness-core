@@ -265,7 +265,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     List<Variable> variables = new ArrayList<>();
     if (isNotEmpty(this.getTemplateVariables())) {
       for (Variable variable : this.getTemplateVariables()) {
-        if (!VariableType.ARTIFACT.equals(variable.getType())) {
+        if (VariableType.ARTIFACT != variable.getType()) {
           variables.add(variable);
         }
       }
@@ -402,7 +402,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       executionData.setAssertionStatement(assertion);
       executionData.setTemplateVariable(templateUtils.processTemplateVariables(context, getTemplateVariables()));
       ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-      if (!evaluateAssertion(context, executionData) || executionData.getStatus().equals(ExecutionStatus.ERROR)) {
+      if (!evaluateAssertion(context, executionData) || executionData.getStatus() == ExecutionStatus.ERROR) {
         executionStatus = ExecutionStatus.FAILED;
       }
       executionResponseBuilder.executionStatus(executionStatus);
@@ -442,7 +442,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       return true;
     }
 
-    if (executionData.getStatus().equals(ExecutionStatus.ERROR)) {
+    if (executionData.getStatus() == ExecutionStatus.ERROR) {
       return true;
     }
 

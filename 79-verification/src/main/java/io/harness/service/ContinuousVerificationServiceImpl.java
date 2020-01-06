@@ -673,7 +673,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 TimeUnit.MINUTES.toMillis(getCollectionStartTimeForLogs(logsCVConfiguration, maxCVCollectionMinute));
             long endTime = startTime + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES - 1);
 
-            if (PREDICTIVE.equals(cvConfiguration.getComparisonStrategy())
+            if (PREDICTIVE == cvConfiguration.getComparisonStrategy()
                 && maxCVCollectionMinute >= logsCVConfiguration.getBaselineEndMinute()) {
               AnalysisContext analysisContext =
                   wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());
@@ -737,7 +737,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Timed
   public boolean triggerWorkflowDataCollection(AnalysisContext context) {
     long lastDataCollectionMinute;
-    if (context.getAnalysisType().equals(MLAnalysisType.TIME_SERIES)) {
+    if (context.getAnalysisType() == MLAnalysisType.TIME_SERIES) {
       lastDataCollectionMinute = timeSeriesAnalysisService.getLastDataCollectedMinute(
           context.getAppId(), context.getStateExecutionId(), context.getStateType());
     } else {
@@ -796,7 +796,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     cvConfigurations.stream()
         .filter(cvConfiguration
             -> cvConfiguration.isEnabled24x7() && getLogAnalysisStates().contains(cvConfiguration.getStateType())
-                && !cvConfiguration.getStateType().equals(StateType.SPLUNKV2))
+                && cvConfiguration.getStateType() != StateType.SPLUNKV2)
         .forEach(cvConfiguration -> {
           try (VerificationLogContext ignored = new VerificationLogContext(cvConfiguration.getAccountId(),
                    cvConfiguration.getUuid(), null, cvConfiguration.getStateType(), OVERRIDE_ERROR)) {
@@ -933,7 +933,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     cvConfigurations.stream()
         .filter(cvConfiguration
             -> cvConfiguration.isEnabled24x7() && getLogAnalysisStates().contains(cvConfiguration.getStateType())
-                && !cvConfiguration.getStateType().equals(StateType.SPLUNKV2))
+                && cvConfiguration.getStateType() != StateType.SPLUNKV2)
         .forEach(cvConfiguration -> {
           try (VerificationLogContext ignored = new VerificationLogContext(cvConfiguration.getAccountId(),
                    cvConfiguration.getUuid(), null, cvConfiguration.getStateType(), OVERRIDE_ERROR)) {
@@ -969,7 +969,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 minLogRecordL1Minute = currentMinute - PREDECTIVE_HISTORY_MINUTES;
               }
 
-              if (!AnalysisComparisonStrategy.PREDICTIVE.equals(cvConfiguration.getComparisonStrategy())
+              if (AnalysisComparisonStrategy.PREDICTIVE != cvConfiguration.getComparisonStrategy()
                   && maxLogRecordL1Minute < minLogRecordL1Minute + CRON_POLL_INTERVAL_IN_MINUTES - 1) {
                 logger.info(
                     "For CV config {} there is still node data clustering is pending. min l1 {} max l1 {}. Skipping L2 clustering",
@@ -978,7 +978,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               }
               maxLogRecordL1Minute = minLogRecordL1Minute + CRON_POLL_INTERVAL_IN_MINUTES - 1;
 
-              if (PREDICTIVE.equals(cvConfiguration.getComparisonStrategy())
+              if (PREDICTIVE == cvConfiguration.getComparisonStrategy()
                   && minLogRecordL1Minute >= ((LogsCVConfiguration) cvConfiguration).getBaselineEndMinute()) {
                 maxLogRecordL1Minute = minLogRecordL1Minute + 1;
               }

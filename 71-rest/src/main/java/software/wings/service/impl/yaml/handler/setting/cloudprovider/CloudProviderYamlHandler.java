@@ -15,7 +15,7 @@ public abstract class CloudProviderYamlHandler<Y extends CloudProviderYaml, B ex
   @Override
   public SettingAttribute get(String accountId, String yamlFilePath) {
     YamlType yamlType = yamlHelper.getYamlTypeFromSettingAttributePath(yamlFilePath);
-    if (yamlType == null || yamlType.equals(YamlType.CLOUD_PROVIDER)) {
+    if (yamlType == null || yamlType == YamlType.CLOUD_PROVIDER) {
       return yamlHelper.getCloudProvider(accountId, yamlFilePath);
     } else {
       return yamlHelper.getCloudProviderAtConnector(accountId, yamlFilePath);

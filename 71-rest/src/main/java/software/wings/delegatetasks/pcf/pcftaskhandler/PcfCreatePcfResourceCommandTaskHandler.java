@@ -47,7 +47,7 @@ public class PcfCreatePcfResourceCommandTaskHandler extends PcfCommandTaskHandle
     pcfCommandExecutionResponse.setPcfCommandResponse(pcfInfraMappingDataResponse);
 
     try {
-      if (PcfCommandType.CREATE_ROUTE.equals(pcfInfraMappingDataRequest.getPcfCommandType())) {
+      if (PcfCommandType.CREATE_ROUTE == pcfInfraMappingDataRequest.getPcfCommandType()) {
         String routeCreated = pcfDeploymentManager.createRouteMap(
             PcfRequestConfig.builder()
                 .orgName(pcfInfraMappingDataRequest.getOrganization())

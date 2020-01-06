@@ -279,7 +279,7 @@ public class AwsCodeDeployState extends State {
     CommandExecutionResult commandExecutionResult = (CommandExecutionResult) response.values().iterator().next();
 
     ExecutionStatus status =
-        commandExecutionResult != null && CommandExecutionStatus.SUCCESS.equals(commandExecutionResult.getStatus())
+        commandExecutionResult != null && CommandExecutionStatus.SUCCESS == commandExecutionResult.getStatus()
         ? ExecutionStatus.SUCCESS
         : ExecutionStatus.FAILED;
     activityService.updateStatus(

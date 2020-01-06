@@ -190,7 +190,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
 
     private int getCollectionMinute(final long metricTimeStamp, String host, boolean isHeartbeat) {
       boolean isPredictiveAnalysis =
-          dataCollectionInfo.getAnalysisComparisonStrategy().equals(AnalysisComparisonStrategy.PREDICTIVE);
+          dataCollectionInfo.getAnalysisComparisonStrategy() == AnalysisComparisonStrategy.PREDICTIVE;
       int collectionMinute;
       if (isHeartbeat) {
         if (is247Task) {
@@ -371,7 +371,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                         .groupName(DEFAULT_GROUP_NAME)
                         .build();
                 if (metricDataRecord.getTimeStamp() >= dataCollectionInfo.getStartTime()
-                    || dataCollectionInfo.getAnalysisComparisonStrategy().equals(COMPARE_WITH_CURRENT)) {
+                    || dataCollectionInfo.getAnalysisComparisonStrategy() == COMPARE_WITH_CURRENT) {
                   records.put(btName, timeStamp.longValue(), metricDataRecord);
                 } else {
                   logger.info("Metric record for stateExecutionId {} is before the startTime. Ignoring.",

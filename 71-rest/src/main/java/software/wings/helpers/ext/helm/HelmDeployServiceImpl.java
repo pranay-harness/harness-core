@@ -310,7 +310,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     try {
       return timeLimiter.callWithTimeout(() -> {
         HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(helmCommandRequest);
-        if (cliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
+        if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
           throw new InvalidRequestException(cliResponse.getOutput());
         }
         return new HelmCommandResponse(cliResponse.getCommandExecutionStatus(), cliResponse.getOutput());
@@ -331,7 +331,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         "Checking if the repository has already been added", LogLevel.INFO, CommandExecutionStatus.RUNNING);
 
     HelmCliResponse cliResponse = helmClient.getHelmRepoList(commandRequest);
-    if (cliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
+    if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
       throw new InvalidRequestException(cliResponse.getOutput());
     }
 
@@ -347,7 +347,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
               + " with name " + commandRequest.getRepoName(),
           LogLevel.INFO, CommandExecutionStatus.RUNNING);
       cliResponse = helmClient.addPublicRepo(commandRequest);
-      if (cliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
+      if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
         String msg = "Failed to add repository. Reason: " + cliResponse.getOutput();
         executionLogCallback.saveExecutionLog(msg);
         throw new InvalidRequestException(msg);
@@ -406,8 +406,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     return CSVParser.parse(listReleaseOutput, csvFormat)
         .getRecords()
         .stream()
-        .map(helmCommandType.equals(HelmCommandType.RELEASE_HISTORY) ? this ::releaseHistoryCsvRecordToReleaseInfo
-                                                                     : this ::listReleaseCsvRecordToReleaseInfo)
+        .map(helmCommandType == HelmCommandType.RELEASE_HISTORY ? this ::releaseHistoryCsvRecordToReleaseInfo
+                                                                : this ::listReleaseCsvRecordToReleaseInfo)
         .collect(Collectors.toList());
   }
 
@@ -447,7 +447,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   private String preProcessReleaseHistoryCommandOutput(HelmCliResponse helmCliResponse, String releaseName) {
-    if (helmCliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
+    if (helmCliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
       return "Release: \"" + releaseName + "\" not found\n";
     }
 
@@ -470,7 +470,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     HelmListReleasesCommandResponse commandResponse = listReleases(commandRequest);
 
     logger.info(commandResponse.getOutput());
-    return commandResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)
+    return commandResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
         && isEmpty(commandResponse.getReleaseInfoList());
   }
 
@@ -478,7 +478,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     HelmListReleasesCommandResponse commandResponse = listReleases(commandRequest);
 
     logger.info(commandResponse.getOutput());
-    if (commandResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
+    if (commandResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       if (isEmpty(commandResponse.getReleaseInfoList())) {
         return false;
       }
@@ -711,7 +711,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
 
     HelmCliResponse cliResponse = helmClient.getHelmRepoList(request);
-    if (cliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
+    if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
       return null;
     }
 

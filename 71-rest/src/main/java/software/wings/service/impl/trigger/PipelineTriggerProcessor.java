@@ -97,7 +97,7 @@ public class PipelineTriggerProcessor implements TriggerProcessor {
       throw new TriggerException(
           "Pipeline does not exist for pipeline name " + pipelineCondition.getPipelineName(), USER);
     }
-    if (deploymentTrigger.getAction().getActionType().equals(PIPELINE)
+    if (deploymentTrigger.getAction().getActionType() == PIPELINE
         && ((PipelineCondition) deploymentTrigger.getCondition())
                .getPipelineId()
                .equals(((PipelineAction) deploymentTrigger.getAction()).getPipelineId())) {

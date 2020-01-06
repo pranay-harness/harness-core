@@ -138,7 +138,7 @@ public class SpotInstDeployState extends State {
           new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR));
     } else {
       commandUnitList = newArrayList();
-      if (isRollback() || ResizeStrategy.RESIZE_NEW_FIRST.equals(spotInstSetupContextElement.getResizeStrategy())) {
+      if (isRollback() || ResizeStrategy.RESIZE_NEW_FIRST == spotInstSetupContextElement.getResizeStrategy()) {
         commandUnitList.add(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT));
         commandUnitList.add(new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
         commandUnitList.add(new SpotinstDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT));
@@ -203,11 +203,11 @@ public class SpotInstDeployState extends State {
     String activityId = response.keySet().iterator().next();
     SpotInstTaskExecutionResponse executionResponse =
         (SpotInstTaskExecutionResponse) response.values().iterator().next();
-    ExecutionStatus executionStatus =
-        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                             : ExecutionStatus.FAILED;
+    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
-    if (isRollback() && ExecutionStatus.SUCCESS.equals(executionStatus)) {
+    if (isRollback() && ExecutionStatus.SUCCESS == executionStatus) {
       markAllPhaseRollbackDone(context);
     }
 
@@ -305,7 +305,7 @@ public class SpotInstDeployState extends State {
         .commandName(SPOTINST_DEPLOY_COMMAND)
         .workflowExecutionId(context.getWorkflowExecutionId())
         .rollback(isRollback())
-        .resizeNewFirst(ResizeStrategy.RESIZE_NEW_FIRST.equals(spotInstSetupContextElement.getResizeStrategy()))
+        .resizeNewFirst(ResizeStrategy.RESIZE_NEW_FIRST == spotInstSetupContextElement.getResizeStrategy())
         .blueGreen(isBlueGreen)
         .timeoutIntervalInMin(commandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin())
         .oldElastiGroupWithUpdatedCapacity(oldElastiGroup)
@@ -371,7 +371,7 @@ public class SpotInstDeployState extends State {
     if (downsizeInstanceCount == null) {
       return Math.max(0, oldElastigroupTargetAtStart - updateCount);
     } else {
-      if (InstanceUnitType.COUNT.equals(downsizeInstanceUnitType)) {
+      if (InstanceUnitType.COUNT == downsizeInstanceUnitType) {
         return downsizeInstanceCount;
       } else {
         int percent = Math.min(downsizeInstanceCount, 100);

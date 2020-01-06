@@ -57,7 +57,7 @@ public class VariableProcessor {
       List<ServiceVariable> serviceSettingMap = serviceTemplateService.computeServiceVariables(standardParam.getAppId(),
           standardParam.getEnvId(), instance.getServiceTemplateElement().getUuid(), workflowExecutionId, OBTAIN_VALUE);
       variables = serviceSettingMap.stream()
-                      .filter(serviceVariable -> !ARTIFACT.equals(serviceVariable.getType()))
+                      .filter(serviceVariable -> ARTIFACT != serviceVariable.getType())
                       .collect(Collectors.toMap(ServiceVariable::getName,
                           serviceVariable -> new String(serviceVariable.getValue()), (a, b) -> b));
     }

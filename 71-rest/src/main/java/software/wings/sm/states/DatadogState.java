@@ -163,7 +163,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
     List<String> metricNames = metrics != null ? Arrays.asList(metrics.split(",")) : Collections.EMPTY_LIST;
-    String hostFilter = getDeploymentType(context).equals(DeploymentType.ECS) ? DD_ECS_HOST_NAME : DD_K8s_HOST_NAME;
+    String hostFilter = getDeploymentType(context) == DeploymentType.ECS ? DD_ECS_HOST_NAME : DD_K8s_HOST_NAME;
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.DATA_DOG,
         context.getStateExecutionInstanceId(), null,
         metricDefinitions(metrics(Optional.of(metricNames), Optional.ofNullable(datadogServiceName),
@@ -342,7 +342,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
       }
 
       String hostFilter;
-      if (deploymentType.isPresent() && deploymentType.get().equals(DeploymentType.ECS)) {
+      if (deploymentType.isPresent() && deploymentType.get() == DeploymentType.ECS) {
         parseMetricInfo(metricInfos.get("Docker"), DD_ECS_HOST_NAME);
         hostFilter = DD_ECS_HOST_NAME;
       } else {
@@ -473,7 +473,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
       MetricInfo metricInfo, String datadogMetricType, Optional<DeploymentType> deploymentType) {
     String metricUrl;
     if (deploymentType.isPresent()) {
-      metricUrl = deploymentType.get().equals(DeploymentType.ECS) && datadogMetricType.equals("Docker")
+      metricUrl = deploymentType.get() == DeploymentType.ECS && datadogMetricType.equals("Docker")
           ? metricInfo.getUrlEcs()
           : metricInfo.getUrl();
     } else {

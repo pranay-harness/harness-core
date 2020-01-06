@@ -115,7 +115,7 @@ class PipelineViewBuilder {
                                  .fetch())) {
       while (iterator.hasNext()) {
         final WorkflowExecution workflowExecution = iterator.next();
-        if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)) {
+        if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
           if (deployments.size() < MAX_RELATED_ENTITIES_COUNT) {
             deployments.add(new RelatedDeploymentView(workflowExecution));
           }

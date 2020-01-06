@@ -122,7 +122,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
   protected List<CloudFormationElement> handleResponse(
       CloudFormationCommandResponse commandResponse, ExecutionContext context) {
     CloudFormationCreateStackResponse createStackResponse = (CloudFormationCreateStackResponse) commandResponse;
-    if (CommandExecutionStatus.SUCCESS.equals(commandResponse.getCommandExecutionStatus())) {
+    if (CommandExecutionStatus.SUCCESS == commandResponse.getCommandExecutionStatus()) {
       updateInfraMappings(commandResponse, context, provisionerId);
       saveCloudFormationRollbackConfig(
           createStackResponse.getRollbackInfo(), (ExecutionContextImpl) context, fetchResolvedAwsConfigId(context));
