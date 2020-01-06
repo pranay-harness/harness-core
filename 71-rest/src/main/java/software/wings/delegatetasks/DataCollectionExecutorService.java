@@ -31,7 +31,7 @@ public class DataCollectionExecutorService {
     CompletionService<T> completionService = new ExecutorCompletionService<>(dataCollectionService);
     logger.info("Parallelizing callables {} ", callables.size());
     for (Callable<T> callable : callables) {
-      completionService.submit(() -> callable.call());
+      completionService.submit(callable::call);
     }
 
     List<Optional<T>> rv = new ArrayList<>();

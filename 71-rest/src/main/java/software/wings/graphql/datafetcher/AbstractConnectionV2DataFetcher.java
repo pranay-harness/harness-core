@@ -86,7 +86,9 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
 
   private String getCombinedErrorMessages(WingsException ex) {
     List<ResponseMessage> responseMessages = ExceptionLogger.getResponseMessageList(ex, GRAPHQL_API);
-    return responseMessages.stream().map(rm -> rm.getMessage()).collect(Collectors.joining(EXCEPTION_MSG_DELIMITER));
+    return responseMessages.stream()
+        .map(ResponseMessage::getMessage)
+        .collect(Collectors.joining(EXCEPTION_MSG_DELIMITER));
   }
 
   protected abstract F generateFilter(DataFetchingEnvironment environment, String key, String value);

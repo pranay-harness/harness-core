@@ -77,8 +77,8 @@ public class EmailDispatcher {
     String subject = emailSubjectList.get(emailSubjectList.size() - 1);
     Optional<String> accountIdOptional = notifications.stream()
                                              .filter(Objects::nonNull)
-                                             .map(n -> n.getAccountId())
-                                             .filter(a -> StringUtils.isNotBlank(a))
+                                             .map(Notification::getAccountId)
+                                             .filter(StringUtils::isNotBlank)
                                              .findFirst();
 
     EmailData emailData = EmailData.builder().to(validToAddresses).subject(subject).body(body).build();

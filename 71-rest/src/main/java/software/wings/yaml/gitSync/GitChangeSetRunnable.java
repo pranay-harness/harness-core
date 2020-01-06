@@ -13,6 +13,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.Base;
 import software.wings.beans.FeatureName;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
@@ -152,14 +153,13 @@ public class GitChangeSetRunnable implements Runnable {
     if (isNotEmpty(stuckChangeSets)) {
       // Map Acc vs such yamlChangeSets (with multigit support, there can be more than 1 for an account)
       Map<String, List<YamlChangeSet>> accountIdToStuckChangeSets =
-          stuckChangeSets.stream().collect(Collectors.groupingBy(yamlChangeSet -> yamlChangeSet.getAccountId()));
+          stuckChangeSets.stream().collect(Collectors.groupingBy(YamlChangeSet::getAccountId));
 
       // Mark these yamlChagneSets as Queued.
       accountIdToStuckChangeSets.forEach(
           (k, v)
-              -> yamlChangeSetService.updateStatusForGivenYamlChangeSets(k, Status.QUEUED,
-                  Arrays.asList(Status.RUNNING),
-                  v.stream().map(yamlChangeSet -> yamlChangeSet.getUuid()).collect(toList())));
+              -> yamlChangeSetService.updateStatusForGivenYamlChangeSets(
+                  k, Status.QUEUED, Arrays.asList(Status.RUNNING), v.stream().map(Base::getUuid).collect(toList())));
     }
   }
 }

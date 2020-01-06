@@ -73,8 +73,7 @@ public class AuthResponseFilter implements ContainerResponseFilter {
     String httpMethod = requestContext.getMethod();
     String resourcePath = requestContext.getUriInfo().getAbsolutePath().getPath();
 
-    if (HttpMethod.PUT.name().equals(httpMethod)
-        && restResourcesUpdateURIs.stream().anyMatch(pattern -> resourcePath.matches(pattern))) {
+    if (HttpMethod.PUT.name().equals(httpMethod) && restResourcesUpdateURIs.stream().anyMatch(resourcePath::matches)) {
       if (resourcePath.matches(RESOURCE_URI_UPDATE_ENVIRONMENT)) {
         evictPermissionsAndRestrictions(requestContext, resourcePath, true, true);
       } else {
@@ -82,7 +81,7 @@ public class AuthResponseFilter implements ContainerResponseFilter {
       }
     } else if (HttpMethod.POST.name().equals(httpMethod)
         && (restResourcesCreateURIs.contains(resourcePath)
-               || restResourcesCloneURIs.stream().anyMatch(pattern -> resourcePath.matches(pattern)))) {
+               || restResourcesCloneURIs.stream().anyMatch(resourcePath::matches))) {
       if (resourcePath.equals(RESOURCE_URI_CREATE_APP) || resourcePath.equals(RESOURCE_URI_CREATE_ENVIRONMENT)
           || resourcePath.matches(RESOURCE_URI_CLONE_ENVIRONMENT)) {
         evictPermissionsAndRestrictions(requestContext, resourcePath, true, true);

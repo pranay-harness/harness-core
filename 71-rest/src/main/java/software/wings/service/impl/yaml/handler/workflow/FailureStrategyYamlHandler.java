@@ -50,7 +50,7 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
   public Yaml toYaml(FailureStrategy bean, String appId) {
     List<String> failureTypeList = null;
     if (bean.getFailureTypes() != null) {
-      failureTypeList = bean.getFailureTypes().stream().map(failureType -> failureType.name()).collect(toList());
+      failureTypeList = bean.getFailureTypes().stream().map(Enum::name).collect(toList());
     }
     String repairActionCode = Utils.getStringFromEnum(bean.getRepairActionCode());
     String repairActionCodeAfterRetry = Utils.getStringFromEnum(bean.getRepairActionCodeAfterRetry());

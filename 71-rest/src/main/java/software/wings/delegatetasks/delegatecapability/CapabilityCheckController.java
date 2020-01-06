@@ -69,9 +69,7 @@ public class CapabilityCheckController extends AbstractDelegateValidateTask {
               .collect(toList());
     }
 
-    return executionCapabilities.stream()
-        .map(executionCapability -> executionCapability.fetchCapabilityBasis())
-        .collect(toList());
+    return executionCapabilities.stream().map(ExecutionCapability::fetchCapabilityBasis).collect(toList());
   }
 
   // TODO: remove this method once manager is updated to receive CapabilityResponse

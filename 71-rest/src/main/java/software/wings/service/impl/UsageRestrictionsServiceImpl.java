@@ -202,8 +202,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
             return false;
           }
 
-          return envIdsFromRestrictions.stream().anyMatch(
-              envIdFromRestriction -> envIdsOfUser.contains(envIdFromRestriction));
+          return envIdsFromRestrictions.stream().anyMatch(envIdsOfUser::contains);
         });
   }
 
@@ -575,7 +574,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         false, false, null);
 
     Map<String, String> appMap =
-        pageResponse.getResponse().stream().collect(Collectors.toMap(app -> app.getUuid(), app -> app.getName()));
+        pageResponse.getResponse().stream().collect(Collectors.toMap(Base::getUuid, Application::getName));
 
     if (isEmpty(appMap)) {
       return RestrictionsSummary.builder()
@@ -594,7 +593,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
             false, false, null);
 
     Map<String, String> envMap =
-        envPageResponse.getResponse().stream().collect(Collectors.toMap(env -> env.getUuid(), env -> env.getName()));
+        envPageResponse.getResponse().stream().collect(Collectors.toMap(Base::getUuid, Environment::getName));
 
     Map<String, Set<String>> appEnvMapOfUser = restrictionsAndAppEnvMap.getAppEnvMap();
 
@@ -818,8 +817,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
             return false;
           }
 
-          return envIdsFromRestrictions.stream().allMatch(
-              envIdFromRestriction -> envIdsFromUserPermissions.contains(envIdFromRestriction));
+          return envIdsFromRestrictions.stream().allMatch(envIdsFromUserPermissions::contains);
         });
   }
 
@@ -1280,7 +1278,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         if (appFilter.getFilterType().equals(GenericEntityFilter.FilterType.SELECTED)) {
           if (isEmpty(appFilter.getIds())) {
             throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
-          } else if (appFilter.getIds().stream().anyMatch(id -> isEmpty(id))) {
+          } else if (appFilter.getIds().stream().anyMatch(EmptyPredicate::isEmpty)) {
             throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
           }
         }
@@ -1307,7 +1305,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
           } else {
             if (isEmpty(envFilter.getIds())) {
               throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
-            } else if (envFilter.getIds().stream().anyMatch(id -> isEmpty(id))) {
+            } else if (envFilter.getIds().stream().anyMatch(EmptyPredicate::isEmpty)) {
               throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
             }
           }

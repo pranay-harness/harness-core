@@ -181,8 +181,7 @@ public class DataFetcherUtils {
 
     QLEnum[] values = (QLEnum[]) filter.getValues();
 
-    List<String> enumValueList =
-        Arrays.stream(values).map(value -> value.getStringValue()).collect(Collectors.toList());
+    List<String> enumValueList = Arrays.stream(values).map(QLEnum::getStringValue).collect(Collectors.toList());
     switch (operator) {
       case IN:
         field.in(enumValueList);

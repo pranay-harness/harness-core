@@ -97,7 +97,7 @@ public abstract class PlainObjectBaseDataFetcher<T, P> extends BaseDataFetcher {
   private String getCombinedErrorMessages(WingsException ex) {
     List<ResponseMessage> responseMessages = ExceptionLogger.getResponseMessageList(ex, GRAPHQL_API);
     return responseMessages.stream()
-        .map(rm -> rm.getMessage())
+        .map(ResponseMessage::getMessage)
         .collect(Collectors.joining(DataFetcherUtils.EXCEPTION_MSG_DELIMITER));
   }
 

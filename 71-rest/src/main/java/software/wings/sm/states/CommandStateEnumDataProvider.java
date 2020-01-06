@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.Service;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.stencils.DataProvider;
 
@@ -45,7 +46,7 @@ public class CommandStateEnumDataProvider implements DataProvider {
       return services.stream()
           .filter(service -> service.getServiceCommands() != null)
           .flatMap(service -> service.getServiceCommands().stream())
-          .map(command -> command.getName())
+          .map(ServiceCommand::getName)
           .distinct()
           .collect(toMap(Function.identity(), Function.identity()));
     }

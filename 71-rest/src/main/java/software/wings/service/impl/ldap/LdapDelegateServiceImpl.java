@@ -214,7 +214,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
                                      .stream()
                                      .map(user -> buildLdapUserResponse(user, ldapGetUsersResponse.getLdapUserConfig()))
                                      .collect(Collectors.toList()))
-                          .flatMap(x -> x.stream())
+                          .flatMap(Collection::stream)
                           .collect(Collectors.toList());
 
       groupResponse.setUsers(userResponses);

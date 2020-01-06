@@ -312,7 +312,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     if (headerLink == null) {
       return null;
     }
-    List<String> links = Arrays.stream(headerLink.split(";")).map(s -> s.trim()).collect(toList());
+    List<String> links = Arrays.stream(headerLink.split(";")).map(String::trim).collect(toList());
 
     // Replace space with empty string
     links.stream().map(s -> s.replace(" ", "")).collect(toList());

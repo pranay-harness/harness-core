@@ -29,7 +29,7 @@ public class QueryDepthInstrumentation extends MaxQueryDepthInstrumentation {
   @Override
   public InstrumentationContext<List<ValidationError>> beginValidation(InstrumentationValidationParameters parameters) {
     String query = parameters.getQuery();
-    boolean isIntrospectionQuery = INTROSPECTION_QUERY_TOKENS.parallelStream().allMatch(e -> query.contains(e));
+    boolean isIntrospectionQuery = INTROSPECTION_QUERY_TOKENS.parallelStream().allMatch(query::contains);
     if (isIntrospectionQuery) {
       logger.debug("This query is Introspection Query hence not applying max depth check");
       return new SimpleInstrumentationContext<>();

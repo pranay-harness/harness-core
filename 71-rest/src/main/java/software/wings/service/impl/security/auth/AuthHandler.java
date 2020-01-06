@@ -993,7 +993,7 @@ public class AuthHandler {
     Set<EnvironmentType> environmentTypeSet = envFilter.getFilterTypes()
                                                   .stream()
                                                   .filter(filter -> !filter.equals(EnvFilter.FilterType.SELECTED))
-                                                  .map(filter -> EnvironmentType.valueOf(filter))
+                                                  .map(EnvironmentType::valueOf)
                                                   .collect(Collectors.toSet());
     existingEnvTypes.addAll(environmentTypeSet);
 

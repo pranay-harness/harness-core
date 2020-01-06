@@ -112,9 +112,8 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     encryptionService.decrypt(awsConfig, encryptionDetails);
     AmazonCloudWatchClient amazonCloudWatchClient = getAmazonCloudWatchClient(region, awsConfig);
 
-    DescribeAlarmsResult describeAlarmsResult =
-        amazonCloudWatchClient.describeAlarms(new DescribeAlarmsRequest().withAlarmNames(
-            alarms.stream().map(alarm -> alarm.getAlarmName()).collect(toList())));
+    DescribeAlarmsResult describeAlarmsResult = amazonCloudWatchClient.describeAlarms(
+        new DescribeAlarmsRequest().withAlarmNames(alarms.stream().map(Alarm::getAlarmName).collect(toList())));
 
     return describeAlarmsResult.getMetricAlarms();
   }

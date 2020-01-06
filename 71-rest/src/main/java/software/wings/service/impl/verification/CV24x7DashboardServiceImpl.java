@@ -259,7 +259,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
       return null;
     }
 
-    analysisRecords.forEach(analysisRecord -> analysisRecord.decompressLogAnalysisRecord());
+    analysisRecords.forEach(LogMLAnalysisRecord::decompressLogAnalysisRecord);
 
     // TODO: Incorporate user feedbacks into this.
     final LogMLAnalysisSummary analysisSummary = LogMLAnalysisSummary.builder().build();

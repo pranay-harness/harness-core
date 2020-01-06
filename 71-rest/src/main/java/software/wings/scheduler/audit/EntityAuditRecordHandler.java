@@ -57,12 +57,11 @@ public class EntityAuditRecordHandler implements Handler<AuditRecord> {
     }
 
     List<EntityAuditRecord> recordsToBeAdded =
-        auditRecords.stream().map(auditRecord -> auditRecord.getEntityAuditRecord()).collect(toList());
+        auditRecords.stream().map(AuditRecord::getEntityAuditRecord).collect(toList());
 
     if (isNotEmpty(recordsToBeAdded)) {
       auditService.addEntityAuditRecordsToSet(recordsToBeAdded, entity.getAccountId(), entity.getAuditHeaderId());
-      auditService.deleteTempAuditRecords(
-          auditRecords.stream().map(auditRecord -> auditRecord.getUuid()).collect(toList()));
+      auditService.deleteTempAuditRecords(auditRecords.stream().map(AuditRecord::getUuid).collect(toList()));
     }
   }
 }

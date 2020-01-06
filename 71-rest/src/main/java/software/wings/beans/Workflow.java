@@ -338,7 +338,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
       keywords.add("template");
     }
     if (services != null) {
-      keywords.addAll(services.stream().map(service -> service.getName()).distinct().collect(toList()));
+      keywords.addAll(services.stream().map(Service::getName).distinct().collect(toList()));
     }
     return keywords;
   }

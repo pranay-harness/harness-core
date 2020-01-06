@@ -447,22 +447,10 @@ public class WorkflowServiceTestHelper {
     assertThat(clonedOrchestrationWorkflow.isValid()).isFalse();
     assertThat(clonedOrchestrationWorkflow.getValidationMessage()).startsWith("Environment");
     List<WorkflowPhase> workflowPhases = clonedOrchestrationWorkflow.getWorkflowPhases();
-    assertThat(workflowPhases).extracting(workflowPhase -> workflowPhase.getServiceId()).contains(TARGET_SERVICE_ID);
-    assertThat(workflowPhases)
-        .isNotNull()
-        .hasSize(1)
-        .extracting(workflowPhase -> workflowPhase.getInfraMappingId())
-        .containsNull();
-    assertThat(workflowPhases)
-        .isNotNull()
-        .hasSize(1)
-        .extracting(workflowPhase -> workflowPhase.getInfraMappingName())
-        .containsNull();
-    assertThat(workflowPhases)
-        .isNotNull()
-        .hasSize(1)
-        .extracting(workflowPhase -> workflowPhase.getComputeProviderId())
-        .containsNull();
+    assertThat(workflowPhases).extracting(WorkflowPhase::getServiceId).contains(TARGET_SERVICE_ID);
+    assertThat(workflowPhases).isNotNull().hasSize(1).extracting(WorkflowPhase::getInfraMappingId).containsNull();
+    assertThat(workflowPhases).isNotNull().hasSize(1).extracting(WorkflowPhase::getInfraMappingName).containsNull();
+    assertThat(workflowPhases).isNotNull().hasSize(1).extracting(WorkflowPhase::getComputeProviderId).containsNull();
   }
 
   public static void assertOrchestrationWorkflow(CanaryOrchestrationWorkflow orchestrationWorkflow) {
@@ -752,7 +740,7 @@ public class WorkflowServiceTestHelper {
   public static void assertTemplatizedWorkflow(Workflow workflow3) {
     assertThat(workflow3.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("envId");
     OrchestrationWorkflow orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
     List<WorkflowPhase> workflowPhases = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
@@ -770,10 +758,10 @@ public class WorkflowServiceTestHelper {
     assertThat(workflowPhase.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("infraMappingId");
     assertThat(orchestrationWorkflow.getUserVariables())
-        .extracting(variable -> variable.obtainEntityType())
+        .extracting(Variable::obtainEntityType)
         .containsSequence(ENVIRONMENT, SERVICE, INFRASTRUCTURE_MAPPING);
   }
 
@@ -990,10 +978,10 @@ public class WorkflowServiceTestHelper {
     assertThat(workflowPhase3.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase3.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("infraMappingId");
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables())
-        .extracting(variable -> variable.obtainEntityType())
+        .extracting(Variable::obtainEntityType)
         .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
     return workflowPhase3;
   }

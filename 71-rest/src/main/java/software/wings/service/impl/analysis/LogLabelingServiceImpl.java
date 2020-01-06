@@ -71,7 +71,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
         logQuery.criteria("timesLabeled").doesNotExist());
 
     List<LogMLAnalysisRecord> logAnalysisRecords = logQuery.asList(new FindOptions().limit(100));
-    logAnalysisRecords.forEach(logAnalysisRecord -> logAnalysisRecord.decompressLogAnalysisRecord());
+    logAnalysisRecords.forEach(LogMLAnalysisRecord::decompressLogAnalysisRecord);
 
     List<LogDataRecord> logDataRecords = new ArrayList<>();
 

@@ -193,7 +193,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (isEmpty(userGroupList)) {
       return Collections.emptyList();
     }
-    return userGroupList.stream().map(userGroup -> getUserGroupSummary(userGroup)).collect(toList());
+    return userGroupList.stream().map(this ::getUserGroupSummary).collect(toList());
   }
 
   @Override

@@ -725,7 +725,7 @@ public enum StateType implements StateTypeDescriptor {
       List<PhaseStepType> phaseStepTypes, StateTypeScope... scopes) {
     this.stateClass = stateClass;
     this.scopes = asList(scopes);
-    this.phaseStepTypes = phaseStepTypes.stream().map(phaseStepType -> phaseStepType.name()).collect(toList());
+    this.phaseStepTypes = phaseStepTypes.stream().map(Enum::name).collect(toList());
     jsonSchema = loadJsonSchema();
     this.stencilCategory = stencilCategory;
     this.displayOrder = displayOrder;

@@ -167,7 +167,7 @@ public class InstanceStatsDataFetcher
               .sort(ascending("_id." + entityIdColumn), ascending("_id." + secondLevelEntityIdColumn),
                   descending("count"))
               .aggregate(TwoLevelAggregatedData.class)
-              .forEachRemaining(twoLevelAggregatedData -> { aggregatedDataList.add(twoLevelAggregatedData); });
+              .forEachRemaining(aggregatedDataList::add);
 
           return getStackedData(
               nameService, aggregatedDataList, firstLevelAggregation.name(), secondLevelAggregation.name());

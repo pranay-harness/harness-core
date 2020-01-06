@@ -190,11 +190,10 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
     }
 
     UsageRestrictions.Yaml.YamlBuilder usageRestrictionsYamlBuilder = UsageRestrictions.Yaml.builder();
-    List<AppEnvRestriction.Yaml> appEnvRestrictionYamlList =
-        usageRestrictions.getAppEnvRestrictions()
-            .stream()
-            .map(appEnvRestriction -> constructAppEnvRestrictionYaml(appEnvRestriction))
-            .collect(Collectors.toList());
+    List<AppEnvRestriction.Yaml> appEnvRestrictionYamlList = usageRestrictions.getAppEnvRestrictions()
+                                                                 .stream()
+                                                                 .map(this ::constructAppEnvRestrictionYaml)
+                                                                 .collect(Collectors.toList());
     usageRestrictionsYamlBuilder.appEnvRestrictions(appEnvRestrictionYamlList);
     return usageRestrictionsYamlBuilder.build();
   }

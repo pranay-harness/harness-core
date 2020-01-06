@@ -128,7 +128,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
         Collections.singletonList(new StencilType(DefaultMethodStencilObject.class)), APP_ID, Maps.newHashMap());
 
     processedStencils.stream()
-        .map(stencil -> stencil.getJsonSchema())
+        .map(Stencil::getJsonSchema)
         .map(inputNode -> inputNode.get("properties"))
         .forEach(StencilPostProcessorTest::accept);
   }

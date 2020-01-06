@@ -227,8 +227,7 @@ public class SegmentHandler implements EventHandler {
       return;
     }
 
-    List<String> IdentityList =
-        usersOfAccount.stream().map(user -> user.getSegmentIdentity()).collect(Collectors.toList());
+    List<String> IdentityList = usersOfAccount.stream().map(User::getSegmentIdentity).collect(Collectors.toList());
     reportTrackEvent(eventType, IdentityList);
   }
 

@@ -95,6 +95,6 @@ public class AwsElbTask extends AbstractDelegateRunnableTask {
   }
 
   private List<String> generateLoadBalancerNamesList(List<AwsLoadBalancerDetails> details) {
-    return details.stream().map(detail -> detail.getName()).collect(toList());
+    return details.stream().map(AwsLoadBalancerDetails::getName).collect(toList());
   }
 }

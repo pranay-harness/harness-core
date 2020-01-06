@@ -145,7 +145,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
             .build(),
         50);
     assertThat(builds).isNotNull();
-    assertThat(builds).extracting(buildDetails -> buildDetails.getNumber()).contains("latest");
+    assertThat(builds).extracting(BuildDetails::getNumber).contains("latest");
   }
 
   @Test
@@ -155,7 +155,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
     List<BuildDetails> builds =
         artifactoryService.getFilePaths(artifactoryConfig, null, "harness-rpm", "todolist*", "generic", 50);
     assertThat(builds).isNotNull();
-    assertThat(builds).extracting(buildDetails -> buildDetails.getNumber()).contains("todolist-1.0-2.x86_64.rpm");
+    assertThat(builds).extracting(BuildDetails::getNumber).contains("todolist-1.0-2.x86_64.rpm");
   }
 
   @Test
@@ -166,7 +166,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
         artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/*/*.war", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds)
-        .extracting(buildDetails -> buildDetails.getNumber())
+        .extracting(BuildDetails::getNumber)
         .contains("1.0.0-SNAPSHOT/todolist-1.0.0-20170930.195402-1.war");
   }
 
@@ -178,7 +178,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
         artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/[0-9]+/*.war", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds)
-        .extracting(buildDetails -> buildDetails.getNumber())
+        .extracting(BuildDetails::getNumber)
         .contains("1.0.0-SNAPSHOT/todolist-1.0.0-20170930.195402-1.war");
   }
 
@@ -190,7 +190,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
         artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/1.0/todolist-1.0.war", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds)
-        .extracting(buildDetails -> buildDetails.getNumber())
+        .extracting(BuildDetails::getNumber)
         .contains("io/harness/todolist/todolist/1.0/todolist-1.0.war");
   }
 
@@ -201,7 +201,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
         artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/1.0/*.war", "any", 50);
     assertThat(builds).isNotNull();
-    assertThat(builds).extracting(buildDetails -> buildDetails.getNumber()).contains("todolist-1.0.war");
+    assertThat(builds).extracting(BuildDetails::getNumber).contains("todolist-1.0.war");
   }
 
   @Test(expected = WingsException.class)
@@ -324,7 +324,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
         artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "tdlist/*/*.war", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds)
-        .extracting(buildDetails -> buildDetails.getNumber())
+        .extracting(BuildDetails::getNumber)
         .contains("tdlist/1.1/tdlist-1.1.war", "tdlist/1.2/tdlist-1.2.war");
   }
 
@@ -335,6 +335,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
     List<BuildDetails> builds =
         artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "myartifact", "any", 50);
     assertThat(builds).isNotNull();
-    assertThat(builds).extracting(buildDetails -> buildDetails.getNumber()).contains("myartifact2");
+    assertThat(builds).extracting(BuildDetails::getNumber).contains("myartifact2");
   }
 }

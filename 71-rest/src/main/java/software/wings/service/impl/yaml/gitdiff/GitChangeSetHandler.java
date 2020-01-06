@@ -13,6 +13,7 @@ import com.mongodb.DuplicateKeyException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application;
+import software.wings.beans.Base;
 import software.wings.beans.GitCommit;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitDiffResult;
@@ -140,7 +141,7 @@ public class GitChangeSetHandler {
         .project(YamlGitConfig.ID_KEY, true)
         .asList()
         .stream()
-        .map(yamlGitConfig -> yamlGitConfig.getUuid())
+        .map(Base::getUuid)
         .collect(Collectors.toList());
   }
 

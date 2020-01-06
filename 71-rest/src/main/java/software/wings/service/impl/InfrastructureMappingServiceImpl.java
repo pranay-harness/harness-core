@@ -51,6 +51,7 @@ import com.google.inject.Singleton;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
 import com.microsoft.azure.management.compute.VirtualMachine;
+import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -1985,7 +1986,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       // Get VMs
       List<VirtualMachine> vms = azureHelperService.listVms(azureInfrastructureMapping, computeProviderSetting,
           secretManager.getEncryptionDetails((EncryptableSetting) computeProviderSetting.getValue(), null, null));
-      hostDisplayNames = vms.stream().map(vm -> vm.name()).collect(Collectors.toList());
+      hostDisplayNames = vms.stream().map(HasName::name).collect(Collectors.toList());
       return hostDisplayNames;
     }
     return emptyList();

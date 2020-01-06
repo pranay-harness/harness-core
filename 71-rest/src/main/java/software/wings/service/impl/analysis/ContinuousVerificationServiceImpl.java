@@ -646,7 +646,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return emptySet();
     }
 
-    return envInfoSet.stream().map(envInfo -> envInfo.getEnvId()).collect(Collectors.toSet());
+    return envInfoSet.stream().map(EnvInfo::getEnvId).collect(Collectors.toSet());
   }
 
   /**
@@ -924,8 +924,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         timeSeriesMLAnalysisRecords.add(analysisRecords.next());
       }
     }
-    timeSeriesMLAnalysisRecords.forEach(
-        timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompressTransactions());
+    timeSeriesMLAnalysisRecords.forEach(MetricAnalysisRecord::decompressTransactions);
 
     return timeSeriesMLAnalysisRecords;
   }
@@ -1115,7 +1114,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
       List<TimeSeriesRiskSummary> riskSummaries = timeSeriesRiskSummaryQuery.asList();
 
-      riskSummaries.forEach(summary -> summary.decompressMaps());
+      riskSummaries.forEach(TimeSeriesRiskSummary::decompressMaps);
 
       for (TimeSeriesRiskSummary summary : riskSummaries) {
         observedTimeSeries.forEach((transaction, metricMap) -> {

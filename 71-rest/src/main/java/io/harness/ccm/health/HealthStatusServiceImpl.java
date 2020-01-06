@@ -68,7 +68,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         taskErrorMap.put(perpetualTaskRecord.getUuid(), errors);
       }
     }
-    boolean isHealthy = taskErrorMap.values().stream().allMatch(x -> x.isEmpty());
+    boolean isHealthy = taskErrorMap.values().stream().allMatch(List::isEmpty);
 
     return builder.isHealthy(isHealthy && perpetualTaskIds.size() >= clusterRecords.size())
         .clusterRecords(clusterRecords)

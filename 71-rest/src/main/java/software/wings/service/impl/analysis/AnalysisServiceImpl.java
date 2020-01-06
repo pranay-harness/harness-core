@@ -243,8 +243,8 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     Set<LogMLFeedbackRecord> recordSet = new HashSet<>();
 
-    records.forEach(record -> recordSet.add(record));
-    recordsServiceOnlyFilter.forEach(record -> recordSet.add(record));
+    records.forEach(recordSet::add);
+    recordsServiceOnlyFilter.forEach(recordSet::add);
 
     return new ArrayList<>(recordSet);
   }

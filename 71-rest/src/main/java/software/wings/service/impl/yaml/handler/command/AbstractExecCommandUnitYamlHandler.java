@@ -20,6 +20,8 @@ import software.wings.utils.Utils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
 /**
  * @author rktummala on 11/13/17
  */
@@ -40,7 +42,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     }
 
     return patternEntryList.stream()
-        .filter(entry -> entry != null)
+        .filter(Objects::nonNull)
         .map(entry
             -> TailFilePatternEntry.Yaml.Builder.anYaml()
                    .withFilePath(entry.getFilePath())
@@ -55,7 +57,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     }
 
     return patternEntryYamlList.stream()
-        .filter(yamlEntry -> yamlEntry != null)
+        .filter(Objects::nonNull)
         .map(yamlEntry
             -> TailFilePatternEntry.Builder.aTailFilePatternEntry()
                    .withFilePath(yamlEntry.getFilePath())
@@ -105,8 +107,8 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     List<TailFilePatternEntry.Yaml> filePatternEntryList = yaml.getFilePatternEntryList();
     if (isNotEmpty(filePatternEntryList)) {
       List<String> patternList = filePatternEntryList.stream()
-                                     .filter(filePatternEntry -> filePatternEntry != null)
-                                     .map(filePatternEntry -> filePatternEntry.getSearchPattern())
+                                     .filter(Objects::nonNull)
+                                     .map(TailFilePatternEntry.Yaml::getSearchPattern)
                                      .collect(toList());
       nodeProperties.put(NODE_PROPERTY_TAIL_FILES, true);
       nodeProperties.put(NODE_PROPERTY_TAIL_PATTERNS, patternList);

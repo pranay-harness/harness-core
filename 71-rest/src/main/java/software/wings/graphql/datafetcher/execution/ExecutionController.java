@@ -18,6 +18,7 @@ import software.wings.graphql.schema.type.QLPipelineExecution.QLPipelineExecutio
 import software.wings.graphql.schema.type.QLWorkflowExecution;
 import software.wings.graphql.schema.type.QLWorkflowExecution.QLWorkflowExecutionBuilder;
 
+import java.util.Collection;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
@@ -69,7 +70,7 @@ public class ExecutionController {
   }
 
   public static List<ExecutionStatus> convertStatus(List<QLExecutionStatus> statuses) {
-    return statuses.stream().map(status -> convertStatus(status)).flatMap(list -> list.stream()).collect(toList());
+    return statuses.stream().map(ExecutionController::convertStatus).flatMap(Collection::stream).collect(toList());
   }
 
   public static List<ExecutionStatus> convertStatus(QLExecutionStatus status) {

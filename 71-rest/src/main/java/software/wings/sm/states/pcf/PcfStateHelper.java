@@ -37,6 +37,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.InvalidArgumentsException;
@@ -452,7 +453,7 @@ public class PcfStateHelper {
     // evaluate expression in variables.yml
     List<String> varYmls = pcfManifestsPackage.getVariableYmls();
     if (isNotEmpty(varYmls)) {
-      varYmls = varYmls.stream().map(varYml -> context.renderExpression(varYml)).collect(toList());
+      varYmls = varYmls.stream().map(context::renderExpression).collect(toList());
       pcfManifestsPackage.setVariableYmls(varYmls);
     }
   }
@@ -539,7 +540,7 @@ public class PcfStateHelper {
     }
 
     return routeMaps.stream()
-        .filter(route -> isNotEmpty(route))
+        .filter(EmptyPredicate::isNotEmpty)
         .map(route -> applyVarsYamlVariables(route, pcfManifestsPackage))
         .collect(toList());
   }

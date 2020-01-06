@@ -124,7 +124,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
     Iterables.partition(getTxnsWithoutSpecialChars(transactionsToCollect), METRIC_DATA_QUERY_BATCH_SIZE)
         .forEach(batch
             -> metricDataCallabels.add(
-                () -> getMetricData(node, batch.stream().map(metric -> metric.getName()).collect(Collectors.toSet()))));
+                () -> getMetricData(node, batch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
     List<Optional<MetricElementTable>> results = dataCollectionService.executeParrallel(metricDataCallabels);
 
     metricDataCallabels.clear();
@@ -132,7 +132,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
     Iterables.partition(getTxnsWithSpecialChars(transactionsToCollect), METRIC_DATA_QUERY_BATCH_SIZE)
         .forEach(batch
             -> metricDataCallabels.add(
-                () -> getMetricData(node, batch.stream().map(metric -> metric.getName()).collect(Collectors.toSet()))));
+                () -> getMetricData(node, batch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
     try {
       results.addAll(dataCollectionService.executeParrallel(metricDataCallabels));
     } catch (Exception e) {
@@ -165,7 +165,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
     Iterables.partition(getTxnsWithoutSpecialChars(transactionsToCollect), METRIC_DATA_QUERY_BATCH_SIZE)
         .forEach(batch
             -> metricDataCallabels.add(
-                () -> getMetricData(batch.stream().map(tc -> tc.getName()).collect(Collectors.toSet()))));
+                () -> getMetricData(batch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
     List<Optional<MetricElementTable>> results = dataCollectionService.executeParrallel(metricDataCallabels);
 
     metricDataCallabels.clear();
@@ -173,7 +173,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
     Iterables.partition(getTxnsWithSpecialChars(transactionsToCollect), METRIC_DATA_QUERY_BATCH_SIZE)
         .forEach(batch
             -> metricDataCallabels.add(
-                () -> getMetricData(batch.stream().map(metric -> metric.getName()).collect(Collectors.toSet()))));
+                () -> getMetricData(batch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
     try {
       results.addAll(dataCollectionService.executeParrallel(metricDataCallabels));
     } catch (Exception e) {
@@ -437,7 +437,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
             -> metricDataCallabels.add(
                 ()
                     -> getMetricsWithNoData(
-                        metricBatch.stream().map(metric -> metric.getName()).collect(Collectors.toSet()))));
+                        metricBatch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
 
     List<Optional<Set<String>>> results = dataCollectionService.executeParrallel(metricDataCallabels);
     metricDataCallabels.clear();
@@ -446,7 +446,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
             -> metricDataCallabels.add(
                 ()
                     -> getMetricsWithNoData(
-                        metricBatch.stream().map(metric -> metric.getName()).collect(Collectors.toSet()))));
+                        metricBatch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
     try {
       results.addAll(dataCollectionService.executeParrallel(metricDataCallabels));
     } catch (Exception e) {

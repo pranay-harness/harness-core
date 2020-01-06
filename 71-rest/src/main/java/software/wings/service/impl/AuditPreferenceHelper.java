@@ -223,7 +223,7 @@ public class AuditPreferenceHelper {
   private SearchFilter generateElementMatchFilterWithOperationType(
       AuditPreference auditPreference, List<SearchFilter> searchFilterList) {
     PageRequest pageRequest = aPageRequest().build();
-    searchFilterList.forEach(searchFilter -> pageRequest.addFilter(searchFilter));
+    searchFilterList.forEach(pageRequest::addFilter);
 
     if (isNotEmpty(auditPreference.getOperationTypes())) {
       pageRequest.addFilter(

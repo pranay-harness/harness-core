@@ -111,7 +111,7 @@ public class ElkLogFetchRequest {
                 result.push(eval(lval, rval, operator));
               }
             }
-            result.forEach(op -> operandStack.push(op));
+            result.forEach(operandStack::push);
           } else {
             if ("or".equals(token.toLowerCase()) || "and".equals(token.toLowerCase())) {
               operatorStack.push(token);

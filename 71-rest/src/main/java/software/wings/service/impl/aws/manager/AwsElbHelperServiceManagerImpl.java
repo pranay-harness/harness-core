@@ -67,7 +67,7 @@ public class AwsElbHelperServiceManagerImpl implements AwsElbHelperServiceManage
             .build(),
         appId);
     List<AwsLoadBalancerDetails> details = ((AwsElbListAppElbsResponse) response).getAppElbs();
-    return details.stream().map(detail -> detail.getName()).collect(toList());
+    return details.stream().map(AwsLoadBalancerDetails::getName).collect(toList());
   }
 
   @Override
@@ -95,7 +95,7 @@ public class AwsElbHelperServiceManagerImpl implements AwsElbHelperServiceManage
         appId);
 
     List<AwsLoadBalancerDetails> details = ((AwsElbListAppElbsResponse) response).getAppElbs();
-    return details.stream().map(detail -> detail.getName()).collect(toList());
+    return details.stream().map(AwsLoadBalancerDetails::getName).collect(toList());
   }
 
   @Override
@@ -124,7 +124,7 @@ public class AwsElbHelperServiceManagerImpl implements AwsElbHelperServiceManage
         appId);
 
     List<AwsLoadBalancerDetails> details = ((AwsElbListAppElbsResponse) response).getAppElbs();
-    return details.stream().map(detail -> detail.getName()).collect(toList());
+    return details.stream().map(AwsLoadBalancerDetails::getName).collect(toList());
   }
 
   @Override

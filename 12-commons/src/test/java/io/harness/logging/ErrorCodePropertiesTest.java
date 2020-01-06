@@ -31,10 +31,8 @@ public class ErrorCodePropertiesTest extends CategoryTest {
       throw new WingsException(exception);
     }
 
-    Set<String> errorCodeSet =
-        Arrays.stream(ErrorCode.values()).map(error -> error.toString()).collect(Collectors.toSet());
-    Set<String> propertiesSet =
-        messages.keySet().stream().map(message -> message.toString()).collect(Collectors.toSet());
+    Set<String> errorCodeSet = Arrays.stream(ErrorCode.values()).map(Enum::toString).collect(Collectors.toSet());
+    Set<String> propertiesSet = messages.keySet().stream().map(Object::toString).collect(Collectors.toSet());
 
     // Assert that all errorCodes are defined in properties
     // and each property should have ErrorCode enum

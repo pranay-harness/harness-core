@@ -156,7 +156,7 @@ public class UserGroupResource {
     if (isEmpty(userGroups)) {
       return new RestResponse<>(pageResponse);
     }
-    userGroups.forEach(userGroup -> setUserSummary(userGroup));
+    userGroups.forEach(this ::setUserSummary);
     return new RestResponse<>(pageResponse);
   }
 

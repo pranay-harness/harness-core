@@ -20,7 +20,7 @@ public class DataCollectionValidator extends AbstractSecretManagerValidation {
   public List<String> getCriteria() {
     DataCollectionInfoV2 dataCollectionInfoV2 = (DataCollectionInfoV2) getParameters()[0];
     Optional<String> criteria = dataCollectionInfoV2.getUrlForValidation();
-    return criteria.map(v -> Lists.newArrayList(v)).orElse(Lists.newArrayList());
+    return criteria.map(Lists::newArrayList).orElse(Lists.newArrayList());
   }
 
   @Override

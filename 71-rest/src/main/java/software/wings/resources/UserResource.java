@@ -1194,7 +1194,7 @@ public class UserResource {
     if (isEmpty(userInvites)) {
       return new RestResponse<>(pageResponse);
     }
-    userInvites.forEach(userInvite -> setUserGroupSummary(userInvite));
+    userInvites.forEach(this ::setUserGroupSummary);
     return new RestResponse<>(pageResponse);
   }
 
@@ -1202,7 +1202,7 @@ public class UserResource {
     if (isEmpty(userInvites)) {
       return new RestResponse<>(userInvites);
     }
-    userInvites.forEach(userInvite -> setUserGroupSummary(userInvite));
+    userInvites.forEach(this ::setUserGroupSummary);
     return new RestResponse<>(userInvites);
   }
 

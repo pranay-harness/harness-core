@@ -91,6 +91,7 @@ import software.wings.beans.AccountEventType;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityKeys;
 import software.wings.beans.AppContainer;
+import software.wings.beans.Base;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.ConfigFile;
@@ -2128,9 +2129,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private boolean isCommandUnitsOrderChanged(List<CommandUnit> commandUnits, List<CommandUnit> oldCommandUnits) {
     if (commandUnits != null && oldCommandUnits != null) {
       if (commandUnits.size() == oldCommandUnits.size()) {
-        List<String> commandNames = commandUnits.stream().map(commandUnit -> commandUnit.getName()).collect(toList());
-        List<String> oldCommandNames =
-            oldCommandUnits.stream().map(oldCommandUnit -> oldCommandUnit.getName()).collect(toList());
+        List<String> commandNames = commandUnits.stream().map(CommandUnit::getName).collect(toList());
+        List<String> oldCommandNames = oldCommandUnits.stream().map(CommandUnit::getName).collect(toList());
         return !commandNames.equals(oldCommandNames);
       }
     }
@@ -2153,7 +2153,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   public void setServiceCommands(List<Service> services) {
-    List<String> serviceIds = services.stream().map(service -> service.getUuid()).collect(toList());
+    List<String> serviceIds = services.stream().map(Base::getUuid).collect(toList());
     ArrayListMultimap<String, ServiceCommand> serviceToServiceCommandMap = ArrayListMultimap.create();
     try (HIterator<ServiceCommand> iterator =
              new HIterator<>(wingsPersistence.createQuery(ServiceCommand.class, excludeAuthority)

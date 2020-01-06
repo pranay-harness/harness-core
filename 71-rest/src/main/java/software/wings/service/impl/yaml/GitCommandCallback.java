@@ -18,6 +18,7 @@ import io.harness.persistence.AccountLogContext;
 import io.harness.waiter.NotifyCallback;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.Base;
 import software.wings.beans.GitCommit;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitConnectionErrorAlert;
@@ -183,7 +184,7 @@ public class GitCommandCallback implements NotifyCallback {
         .project(YamlGitConfig.ID_KEY, true)
         .asList()
         .stream()
-        .map(yamlGitConfig -> yamlGitConfig.getUuid())
+        .map(Base::getUuid)
         .collect(Collectors.toList());
   }
 

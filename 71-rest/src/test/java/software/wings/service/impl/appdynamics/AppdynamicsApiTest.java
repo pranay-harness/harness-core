@@ -198,9 +198,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
         NewRelicApplication.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build());
 
     List<NewRelicApplication> sortedApplicationsByName =
-        applications.stream()
-            .sorted(Comparator.comparing(application -> application.getName()))
-            .collect(Collectors.toList());
+        applications.stream().sorted(Comparator.comparing(NewRelicApplication::getName)).collect(Collectors.toList());
 
     when(restCall.execute()).thenReturn(Response.success(applications));
     when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);

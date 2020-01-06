@@ -661,7 +661,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
 
     Map<String, GraphNode> nodesMap = subWorkflowGraph.getNodesMap();
-    phaseStep.setSteps(phaseStep.getStepsIds().stream().map(stepId -> nodesMap.get(stepId)).collect(toList()));
+    phaseStep.setSteps(phaseStep.getStepsIds().stream().map(nodesMap::get).collect(toList()));
   }
 
   public Graph generateGraph() {

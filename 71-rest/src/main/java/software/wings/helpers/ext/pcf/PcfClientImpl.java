@@ -1017,7 +1017,7 @@ public class PcfClientImpl implements PcfClient {
       throws PivotalClientApiException, InterruptedException {
     List<Route> routes = getAllRoutesForSpace(pcfRequestConfig);
     if (!CollectionUtils.isEmpty(routes)) {
-      return routes.stream().map(route -> getPathFromRouteMap(route)).collect(toList());
+      return routes.stream().map(this ::getPathFromRouteMap).collect(toList());
     }
 
     return Collections.EMPTY_LIST;
@@ -1031,7 +1031,7 @@ public class PcfClientImpl implements PcfClient {
     }
 
     List<Route> routes = getAllRoutesForSpace(pcfRequestConfig);
-    paths = paths.stream().map(path -> path.toLowerCase()).collect(toList());
+    paths = paths.stream().map(String::toLowerCase).collect(toList());
     Set<String> routeSet = new HashSet<>(paths);
 
     return routes.stream()
@@ -1339,7 +1339,7 @@ public class PcfClientImpl implements PcfClient {
 
     if (isNotEmpty(routesNeedToBeCreated)) {
       List<Domain> allDomainsForSpace = getAllDomainsForSpace(pcfRequestConfig);
-      Set<String> domainNames = allDomainsForSpace.stream().map(domain -> domain.getName()).collect(toSet());
+      Set<String> domainNames = allDomainsForSpace.stream().map(Domain::getName).collect(toSet());
       createRoutesThatDoNotExists(routesNeedToBeCreated, domainNames, pcfRequestConfig);
       routeList = getRouteMapsByNames(routes, pcfRequestConfig);
     }
@@ -1391,7 +1391,7 @@ public class PcfClientImpl implements PcfClient {
   @VisibleForTesting
   List<String> findRoutesNeedToBeCreated(List<String> routes, List<Route> routeList) {
     if (isNotEmpty(routes)) {
-      Set<String> routesExisting = routeList.stream().map(route -> getPathFromRouteMap(route)).collect(toSet());
+      Set<String> routesExisting = routeList.stream().map(this ::getPathFromRouteMap).collect(toSet());
       return routes.stream().filter(route -> !routesExisting.contains(route)).collect(toList());
     }
 

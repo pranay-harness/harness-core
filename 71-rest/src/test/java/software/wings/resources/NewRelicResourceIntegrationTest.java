@@ -52,7 +52,7 @@ public class NewRelicResourceIntegrationTest extends BaseIntegrationTest {
       uriBuilder.setPort(9090);
       uriBuilder.setPath(path);
       if (params != null) {
-        params.forEach((name, value) -> uriBuilder.addParameter(name, value));
+        params.forEach(uriBuilder::addParameter);
       }
       return uriBuilder.build().toString();
     } catch (URISyntaxException uriSyntaxException) {

@@ -82,7 +82,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
       List<String> envIdList = envIdVersionMap.entrySet()
                                    .stream()
                                    .filter(entry -> entry.getValue() == null)
-                                   .map(entry -> entry.getKey())
+                                   .map(Map.Entry::getKey)
                                    .collect(toList());
       if (isNotEmpty(envIdList)) {
         envIdList.forEach(envId -> {

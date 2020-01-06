@@ -50,6 +50,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.TerraformExecutionData;
+import software.wings.beans.Base;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.CloudFormationSourceType;
@@ -289,8 +290,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       detailsBuilder.services(provisioner.getMappingBlueprints()
                                   .stream()
                                   .map(InfrastructureMappingBlueprint::getServiceId)
-                                  .map(serviceId -> idToServiceMapping.get(serviceId))
-                                  .collect(toMap(service -> service.getName(), service -> service.getUuid())));
+                                  .map(idToServiceMapping::get)
+                                  .collect(toMap(Service::getName, Base::getUuid)));
     }
 
     return detailsBuilder.build();

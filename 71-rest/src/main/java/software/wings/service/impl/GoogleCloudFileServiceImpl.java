@@ -439,10 +439,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
                                                  .filter(GcsFileMetadataKeys.fileBucket, fileBucket)
                                                  .asList();
 
-    return gcsFileMetadatas.stream()
-        .map(gcsFileMetadata -> gcsFileMetadata.getGcsFileId())
-        .distinct()
-        .collect(Collectors.toList());
+    return gcsFileMetadatas.stream().map(GcsFileMetadata::getGcsFileId).distinct().collect(Collectors.toList());
   }
 
   private String getLatestFileIdFromGcsFileMetadata(String entityId, FileBucket fileBucket) {

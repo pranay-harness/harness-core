@@ -148,7 +148,7 @@ public enum FileType {
       bufferedInputStream.mark(10 * 1024);
       return Misc.ignoreException(() -> getArchiveInputStream(bufferedInputStream).getNextEntry() != null, false);
     } finally {
-      Misc.ignoreException(() -> bufferedInputStream.reset());
+      Misc.ignoreException(bufferedInputStream::reset);
     }
   }
 
@@ -170,7 +170,7 @@ public enum FileType {
         }
       }, null);
     } finally {
-      Misc.ignoreException(() -> bufferedInputStream.reset());
+      Misc.ignoreException(bufferedInputStream::reset);
     }
   }
 

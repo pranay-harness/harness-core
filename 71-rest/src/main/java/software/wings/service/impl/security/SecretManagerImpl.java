@@ -2259,7 +2259,7 @@ public class SecretManagerImpl implements SecretManager {
 
     List<UuidAware> rv = new ArrayList<>();
     parentByTypes.cellSet().forEach(cell -> {
-      List<String> parentIds = cell.getValue().stream().map(parent -> parent.getId()).collect(Collectors.toList());
+      List<String> parentIds = cell.getValue().stream().map(Parent::getId).collect(Collectors.toList());
       switch (cell.getRowKey()) {
         case KMS:
           EncryptionConfig encryptionConfig = secretManagerConfigService.getDefaultSecretManager(accountId);

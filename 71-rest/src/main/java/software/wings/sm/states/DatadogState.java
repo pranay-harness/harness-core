@@ -570,7 +570,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
     try {
       Map<String, List<Metric>> metricsMap =
           yamlUtils.read(DATADOG_METRICS_YAML, new TypeReference<Map<String, List<Metric>>>() {});
-      return metricsMap.values().stream().flatMap(metric -> metric.stream()).collect(Collectors.toList());
+      return metricsMap.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
     } catch (Exception ex) {
       throw new WingsException("Unable to load datadog metrics", ex);
     }

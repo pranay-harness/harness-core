@@ -230,8 +230,10 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     assertThat(pcfSetupCommandResponse.getDownsizeDetails()).isNotNull();
     assertThat(pcfSetupCommandResponse.getDownsizeDetails()).hasSize(2);
-    Set<String> appsToBeDownsized = new HashSet<>(
-        pcfSetupCommandResponse.getDownsizeDetails().stream().map(app -> app.getApplicationName()).collect(toList()));
+    Set<String> appsToBeDownsized = new HashSet<>(pcfSetupCommandResponse.getDownsizeDetails()
+                                                      .stream()
+                                                      .map(PcfAppSetupTimeDetails::getApplicationName)
+                                                      .collect(toList()));
     assertThat(appsToBeDownsized.contains("a_s_e__3")).isTrue();
     assertThat(appsToBeDownsized.contains("a_s_e__4")).isTrue();
   }

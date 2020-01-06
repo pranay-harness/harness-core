@@ -91,9 +91,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
               "Skipping Status Check since there is no previous eligible Managed Workload.", INFO, SUCCESS);
     } else {
       List<KubernetesResourceId> kubernetesResourceIds =
-          previousManagedWorkloads.stream()
-              .map(kubernetesResourceIdRevision -> kubernetesResourceIdRevision.getWorkload())
-              .collect(Collectors.toList());
+          previousManagedWorkloads.stream().map(KubernetesResourceIdRevision::getWorkload).collect(Collectors.toList());
       k8sTaskHelper.doStatusCheckForAllResources(client, kubernetesResourceIds, k8sDelegateTaskParams,
           kubernetesConfig.getNamespace(), k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState));
 

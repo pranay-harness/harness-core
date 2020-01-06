@@ -35,6 +35,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.ApiKeyEntry.ApiKeyEntryKeys;
+import software.wings.beans.Base;
 import software.wings.beans.Event.Type;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
@@ -171,7 +172,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     Map<String, UserGroup> idUserGroupMap =
-        allUserGroupList.stream().collect(Collectors.toMap(ug -> ug.getUuid(), identity()));
+        allUserGroupList.stream().collect(Collectors.toMap(Base::getUuid, identity()));
 
     apiKeyEntries.forEach(apiKeyEntry -> {
       List<String> userGroupIds = apiKeyEntry.getUserGroupIds();

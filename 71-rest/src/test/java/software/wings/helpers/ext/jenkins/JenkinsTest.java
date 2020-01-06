@@ -31,12 +31,14 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.helpers.ext.jenkins.model.JobProperty;
 import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
 import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -328,9 +330,9 @@ public class JenkinsTest extends CategoryTest {
 
     List<ParametersDefinitionProperty> properties = jobWithExtendedDetails.getProperties()
                                                         .stream()
-                                                        .map(jp -> jp.getParameterDefinitions())
+                                                        .map(JobProperty::getParameterDefinitions)
                                                         .filter(Objects::nonNull)
-                                                        .flatMap(pd -> pd.stream())
+                                                        .flatMap(Collection::stream)
                                                         .collect(toList());
     assertThat(properties)
         .isNotNull()

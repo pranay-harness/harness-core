@@ -410,7 +410,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return false;
     }
 
-    return requiredPermissionAttributes.stream().anyMatch(permissionAttribute -> permissionAttribute.isSkipAuth());
+    return requiredPermissionAttributes.stream().anyMatch(PermissionAttribute::isSkipAuth);
   }
 
   public boolean setAppIdFilterInUserRequestContext(

@@ -65,7 +65,7 @@ public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends Ab
     long limitPerMinute = TOTAL_HITS_PER_MIN_THRESHOLD;
     long limitForTheDuration = limitPerMinute * getDuration().toMinutes();
     Map<String, Long> hostsCount =
-        allLogs.stream().collect(Collectors.groupingBy(log -> log.getHost(), Collectors.counting()));
+        allLogs.stream().collect(Collectors.groupingBy(LogElement::getHost, Collectors.counting()));
     hostsCount.forEach((host, count) -> {
       if (count > limitForTheDuration) {
         String errorMsg = "Too many logs(" + count + ") for host " + host

@@ -435,9 +435,7 @@ public class InstanceHelper {
         return;
       }
 
-      deploymentSummaries = deploymentSummaries.stream()
-                                .filter(deploymentSummary -> hasDeploymentKey(deploymentSummary))
-                                .collect(Collectors.toList());
+      deploymentSummaries = deploymentSummaries.stream().filter(this ::hasDeploymentKey).collect(Collectors.toList());
 
       deploymentSummaries.forEach(deploymentSummary -> saveDeploymentSummary(deploymentSummary, false));
 

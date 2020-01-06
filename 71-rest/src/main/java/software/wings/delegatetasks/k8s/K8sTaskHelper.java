@@ -1237,7 +1237,7 @@ public class K8sTaskHelper {
         resources.stream()
             .filter(
                 kubernetesResource -> kubernetesResource.getResourceId().getKind().equals(Kind.DestinationRule.name()))
-            .filter(resource -> resource.isManaged())
+            .filter(KubernetesResource::isManaged)
             .collect(Collectors.toList());
 
     if (isEmpty(destinationRuleResources)) {
@@ -1285,7 +1285,7 @@ public class K8sTaskHelper {
         resources.stream()
             .filter(
                 kubernetesResource -> kubernetesResource.getResourceId().getKind().equals(Kind.VirtualService.name()))
-            .filter(resource -> resource.isManaged())
+            .filter(KubernetesResource::isManaged)
             .collect(Collectors.toList());
 
     if (isEmpty(virtualServiceResources)) {

@@ -99,7 +99,7 @@ public class ManagerExecutor {
 
         processExecutor.start();
 
-        Poller.pollFor(ofMinutes(2), ofSeconds(2), () -> isHealthy());
+        Poller.pollFor(ofMinutes(2), ofSeconds(2), ManagerExecutor::isHealthy);
       } catch (RuntimeException | IOException exception) {
         failedAlready = true;
         throw exception;

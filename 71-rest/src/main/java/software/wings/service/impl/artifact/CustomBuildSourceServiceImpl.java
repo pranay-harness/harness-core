@@ -8,6 +8,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.artifact.ArtifactStream;
@@ -57,7 +58,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
     List<String> tags = customArtifactStream.getTags();
     if (isNotEmpty(tags)) {
       // To remove if any empty tags in case saved for custom artifact stream
-      tags = tags.stream().filter(s -> isNotEmpty(s)).distinct().collect(Collectors.toList());
+      tags = tags.stream().filter(EmptyPredicate::isNotEmpty).distinct().collect(Collectors.toList());
     }
 
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
@@ -91,7 +92,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
     List<String> tags = customArtifactStream.getTags();
     if (isNotEmpty(tags)) {
       // To remove if any empty tags in case saved for custom artifact stream
-      tags = tags.stream().filter(s -> isNotEmpty(s)).distinct().collect(Collectors.toList());
+      tags = tags.stream().filter(EmptyPredicate::isNotEmpty).distinct().collect(Collectors.toList());
     }
 
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()

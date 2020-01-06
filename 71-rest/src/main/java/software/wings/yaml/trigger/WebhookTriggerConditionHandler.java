@@ -105,13 +105,13 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
     if (EmptyPredicate.isEmpty(eventTypes)) {
       return null;
     }
-    return eventTypes.stream().map(eventType -> WebhookEventType.find(eventType)).collect(Collectors.toList());
+    return eventTypes.stream().map(WebhookEventType::find).collect(Collectors.toList());
   }
 
   private List<PrAction> getPRActionTypes(List<String> actions, String webhookSource) {
     if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
         && webhookSource.equals(GITHUB.name())) {
-      return actions.stream().map(action -> PrAction.find(action)).collect(Collectors.toList());
+      return actions.stream().map(PrAction::find).collect(Collectors.toList());
     } else {
       return null;
     }
@@ -120,7 +120,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   private List<BitBucketEventType> getBitBucketEventType(List<String> actions, String webhookSource) {
     if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
         && webhookSource.equals("BITBUCKET")) {
-      return actions.stream().map(action -> BitBucketEventType.find(action)).collect(Collectors.toList());
+      return actions.stream().map(BitBucketEventType::find).collect(Collectors.toList());
     } else {
       return null;
     }
@@ -128,7 +128,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
 
   private List<String> getYAMLEventTypes(List<WebhookEventType> eventTypes) {
     if (EmptyPredicate.isNotEmpty(eventTypes)) {
-      return eventTypes.stream().map(eventType -> { return eventType.getValue(); }).collect(Collectors.toList());
+      return eventTypes.stream().map(WebhookEventType::getValue).collect(Collectors.toList());
     } else {
       return null;
     }
@@ -138,10 +138,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
     if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource() != null
         && webHookTriggerCondition.getWebhookSource().equals(GITHUB)) {
       if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getActions())) {
-        return webHookTriggerCondition.getActions()
-            .stream()
-            .map(prAction -> { return prAction.getValue(); })
-            .collect(Collectors.toList());
+        return webHookTriggerCondition.getActions().stream().map(PrAction::getValue).collect(Collectors.toList());
       } else {
         return null;
       }
@@ -150,7 +147,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
       if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getBitBucketEvents())) {
         return webHookTriggerCondition.getBitBucketEvents()
             .stream()
-            .map(bitBucketEvent -> { return bitBucketEvent.getValue(); })
+            .map(BitBucketEventType::getValue)
             .collect(Collectors.toList());
       } else {
         return null;

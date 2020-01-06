@@ -60,7 +60,7 @@ public class StackDriverSetupTestNodeData extends SetupTestNodeData {
   public void setMetricDefinitions(List<StackDriverMetricDefinition> metricDefinitions) {
     this.metricDefinitions = metricDefinitions;
     if (isNotEmpty(metricDefinitions)) {
-      metricDefinitions.forEach(metricDefinition -> metricDefinition.extractJson());
+      metricDefinitions.forEach(StackDriverMetricDefinition::extractJson);
     }
   }
 }

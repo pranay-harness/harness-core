@@ -442,7 +442,7 @@ public class PcfSetupState extends State {
     if (isEmpty(tempRouteMaps)) {
       return emptyList();
     }
-    tempRouteMaps = tempRouteMaps.stream().map(tempRoute -> context.renderExpression(tempRoute)).collect(toList());
+    tempRouteMaps = tempRouteMaps.stream().map(context::renderExpression).collect(toList());
     return tempRouteMaps;
   }
 
