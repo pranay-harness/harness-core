@@ -55,16 +55,21 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
         double memoryAvgPercentage = 1;
         double memoryMaxPercentage = 1;
 
+        double cpuAvgValue = instanceUtilizationData.getCpuUtilizationAvg();
+        double cpuMaxValue = instanceUtilizationData.getCpuUtilizationMax();
+        double memoryAvgValue = instanceUtilizationData.getMemoryUtilizationAvg();
+        double memoryMaxValue = instanceUtilizationData.getMemoryUtilizationMax();
+
         if (null != instanceData && instanceData.getTotalResource() != null) {
           Double totalCpuResource = instanceData.getTotalResource().getCpuUnits();
           Double totalMemoryResource = instanceData.getTotalResource().getMemoryMb();
           if (totalCpuResource != 0) {
-            cpuAvgPercentage = instanceUtilizationData.getCpuUtilizationAvg() / totalCpuResource;
-            cpuMaxPercentage = instanceUtilizationData.getCpuUtilizationMax() / totalCpuResource;
+            cpuAvgPercentage = cpuAvgValue / totalCpuResource;
+            cpuMaxPercentage = cpuMaxValue / totalCpuResource;
           }
           if (totalMemoryResource != 0) {
-            memoryAvgPercentage = instanceUtilizationData.getMemoryUtilizationAvg() / totalMemoryResource;
-            memoryMaxPercentage = instanceUtilizationData.getMemoryUtilizationMax() / totalMemoryResource;
+            memoryAvgPercentage = memoryAvgValue / totalMemoryResource;
+            memoryMaxPercentage = memoryMaxValue / totalMemoryResource;
           }
           instanceUtilizationData.setInstanceId(instanceData.getInstanceId());
         }
@@ -73,6 +78,10 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
         instanceUtilizationData.setCpuUtilizationMax(cpuMaxPercentage);
         instanceUtilizationData.setMemoryUtilizationAvg(memoryAvgPercentage);
         instanceUtilizationData.setMemoryUtilizationMax(memoryMaxPercentage);
+        instanceUtilizationData.setCpuUtilizationAvgValue(cpuAvgValue);
+        instanceUtilizationData.setCpuUtilizationMaxValue(cpuMaxValue);
+        instanceUtilizationData.setMemoryUtilizationAvgValue(memoryAvgValue);
+        instanceUtilizationData.setMemoryUtilizationMaxValue(memoryMaxValue);
         instanceUtilizationData.setStartTimestamp(startDate);
         instanceUtilizationData.setEndTimestamp(endDate);
 
