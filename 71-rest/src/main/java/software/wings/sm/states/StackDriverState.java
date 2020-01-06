@@ -277,7 +277,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
           .stream()
           .filter(timeSeries -> timeSeries.getMetricName().equals(metricName))
           .findAny()
-          .map(timeSeries -> timeSeries.getMetricType())
+          .map(StackDriverMetricDefinition::getMetricType)
           .orElse(null);
     }
     return null;

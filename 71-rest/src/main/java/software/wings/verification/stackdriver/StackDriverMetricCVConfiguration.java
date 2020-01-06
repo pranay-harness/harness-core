@@ -27,7 +27,7 @@ public class StackDriverMetricCVConfiguration extends CVConfiguration {
   private List<StackDriverMetricDefinition> metricDefinitions;
 
   public void setMetricFilters() {
-    this.metricDefinitions.forEach(metricDefinition -> { metricDefinition.extractJson(); });
+    this.metricDefinitions.forEach(StackDriverMetricDefinition::extractJson);
   }
 
   @Override

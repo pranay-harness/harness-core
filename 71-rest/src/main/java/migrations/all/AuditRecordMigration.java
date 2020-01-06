@@ -148,10 +148,8 @@ public class AuditRecordMigration implements Migration {
 
     boolean unchanged = true;
     // stamp _GLOBAL_APP_ID_ as appId wherever missing
-    List<EntityAuditRecord> recordList = auditHeader.getEntityAuditRecords()
-                                             .stream()
-                                             .filter(record -> recordNeedsUpdateForGlobalAppId(record))
-                                             .collect(toList());
+    List<EntityAuditRecord> recordList =
+        auditHeader.getEntityAuditRecords().stream().filter(this ::recordNeedsUpdateForGlobalAppId).collect(toList());
 
     if (isNotEmpty(recordList)) {
       recordList.forEach(record -> record.setAppId(Application.GLOBAL_APP_ID));
@@ -175,7 +173,7 @@ public class AuditRecordMigration implements Migration {
                      .filter(record -> "CONNECTOR".equals(record.getAffectedResourceType()))
                      .collect(toList());
     if (isNotEmpty(recordList)) {
-      recordList.forEach(record -> { updateRequiredForConnectorToNewCategory(record); });
+      recordList.forEach(this ::updateRequiredForConnectorToNewCategory);
       unchanged = false;
     }
 

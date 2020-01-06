@@ -134,9 +134,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
           k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
       List<KubernetesResourceId> managedWorkloadKubernetesResourceIds =
-          managedWorkloads.stream()
-              .map(kubernetesResource -> kubernetesResource.getResourceId())
-              .collect(Collectors.toList());
+          managedWorkloads.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
       success = k8sTaskHelper.doStatusCheckForAllResources(client, managedWorkloadKubernetesResourceIds,
           k8sDelegateTaskParams, kubernetesConfig.getNamespace(),
           k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WaitForSteadyState));
@@ -261,10 +259,10 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       if (!k8sRollingDeployTaskParameters.isInCanaryWorkflow()) {
         release = releaseHistory.createNewRelease(
-            resources.stream().map(resource -> resource.getResourceId()).collect(Collectors.toList()));
+            resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList()));
       } else {
         release = releaseHistory.getLatestRelease();
-        release.setResources(resources.stream().map(resource -> resource.getResourceId()).collect(Collectors.toList()));
+        release.setResources(resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList()));
       }
 
       executionLogCallback.saveExecutionLog("\nCurrent release number is: " + release.getNumber());

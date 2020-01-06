@@ -2458,7 +2458,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(workflow3.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("envId");
     OrchestrationWorkflow orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
     List<WorkflowPhase> workflowPhases =
@@ -2472,17 +2472,17 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("infraMappingId");
     assertThat(orchestrationWorkflow.getUserVariables())
-        .extracting(variable -> variable.obtainEntityType())
+        .extracting(Variable::obtainEntityType)
         .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
 
     workflowPhase = workflowPhases.get(1);
     assertThat(workflowPhase.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("infraMappingId");
   }
 
@@ -2505,7 +2505,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(workflow3.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("envId");
     OrchestrationWorkflow orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
 
@@ -2519,10 +2519,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("infraMappingId");
     assertThat(orchestrationWorkflow.getUserVariables())
-        .extracting(variable -> variable.obtainEntityType())
+        .extracting(Variable::obtainEntityType)
         .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
 
     // Assert Service Infra variable has metadata with the associated service infrastructure
@@ -2539,7 +2539,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("infraMappingId");
   }
 
@@ -2614,7 +2614,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(workflow3.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("envId");
     orchestrationWorkflow = templatizedWorkflow.getOrchestrationWorkflow();
     workflowPhases = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
@@ -2647,14 +2647,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("infraMappingId");
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("serviceId");
     assertThat(orchestrationWorkflow.getUserVariables())
-        .extracting(variable -> variable.obtainEntityType())
+        .extracting(Variable::obtainEntityType)
         .containsSequence(ENVIRONMENT, SERVICE, INFRASTRUCTURE_MAPPING);
   }
 
@@ -2676,7 +2676,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(workflow3.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("envId");
     OrchestrationWorkflow orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
     List<WorkflowPhase> workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
@@ -2694,10 +2694,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("infraMappingId");
     assertThat(orchestrationWorkflow.getUserVariables())
-        .extracting(variable -> variable.obtainEntityType())
+        .extracting(Variable::obtainEntityType)
         .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
 
     TemplateExpression envExpression = TemplateExpression.builder()
@@ -2711,7 +2711,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(workflow3.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("envId");
     orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
     workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
@@ -2735,10 +2735,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("infraMappingId");
     assertThat(orchestrationWorkflow.getUserVariables())
-        .extracting(variable -> variable.obtainEntityType())
+        .extracting(Variable::obtainEntityType)
         .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
   }
 
@@ -2768,10 +2768,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase3.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase3.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("infraMappingId");
     assertThat(workflow3.getOrchestrationWorkflow().getUserVariables())
-        .extracting(variable -> variable.obtainEntityType())
+        .extracting(Variable::obtainEntityType)
         .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
   }
 
@@ -2802,7 +2802,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(workflow3.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("envId");
 
     OrchestrationWorkflow orchestrationWorkflow = templatizedWorkflow.getOrchestrationWorkflow();
@@ -2814,14 +2814,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("infraMappingId");
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .doesNotContain("serviceId");
     assertThat(orchestrationWorkflow.getUserVariables())
-        .extracting(variable -> variable.obtainEntityType())
+        .extracting(Variable::obtainEntityType)
         .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
   }
 
@@ -2891,10 +2891,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase3.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase3.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("infraMappingId");
     assertThat(workflow3.getOrchestrationWorkflow().getUserVariables())
-        .extracting(variable -> variable.obtainEntityType())
+        .extracting(Variable::obtainEntityType)
         .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
 
     workflowPhase3.setTemplateExpressions(null);
@@ -3019,7 +3019,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         (CanaryOrchestrationWorkflow) workflow5.getOrchestrationWorkflow();
     assertThat(orchestrationWorkflow5).extracting("userVariables").isNotNull();
     assertThat(orchestrationWorkflow5.getUserVariables())
-        .extracting(variable -> variable.obtainEntityType())
+        .extracting(Variable::obtainEntityType)
         .containsSequence(APPDYNAMICS_CONFIGID, EntityType.APPDYNAMICS_APPID, EntityType.APPDYNAMICS_TIERID,
             ELK_CONFIGID, ELK_INDICES);
   }
@@ -3062,7 +3062,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow savedWorkflow = workflowService.createWorkflow(workflow1);
     assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid");
     List<Service> resolvedServices = workflowService.getResolvedServices(savedWorkflow, null);
-    assertThat(resolvedServices).isNotEmpty().extracting(service1 -> service1.getName()).contains(SERVICE_NAME);
+    assertThat(resolvedServices).isNotEmpty().extracting(Service::getName).contains(SERVICE_NAME);
   }
 
   @Test
@@ -3098,16 +3098,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase3.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase3.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("infraMappingId");
     assertThat(workflow3.getOrchestrationWorkflow().getUserVariables())
-        .extracting(variable -> variable.obtainEntityType())
+        .extracting(Variable::obtainEntityType)
         .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
 
     when(serviceResourceService.fetchServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
     List<Service> resolvedServices = workflowService.getResolvedServices(
         workflow3, ImmutableMap.of("Service", SERVICE_ID, "ServiceInfra_SSH", INFRA_MAPPING_ID));
-    assertThat(resolvedServices).isNotEmpty().extracting(service1 -> service1.getName()).contains(SERVICE_NAME);
+    assertThat(resolvedServices).isNotEmpty().extracting(Service::getName).contains(SERVICE_NAME);
   }
 
   @Test
@@ -3130,7 +3130,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     List<InfrastructureMapping> resolvedInfraMappings = workflowService.getResolvedInfraMappings(savedWorkflow, null);
     assertThat(resolvedInfraMappings)
         .isNotEmpty()
-        .extracting(infrastructureMapping -> infrastructureMapping.getUuid())
+        .extracting(InfrastructureMapping::getUuid)
         .contains(INFRA_MAPPING_ID);
   }
 
@@ -3176,10 +3176,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase3.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase3.getTemplateExpressions())
         .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
+        .extracting(TemplateExpression::getFieldName)
         .contains("infraMappingId");
     assertThat(workflow3.getOrchestrationWorkflow().getUserVariables())
-        .extracting(variable -> variable.obtainEntityType())
+        .extracting(Variable::obtainEntityType)
         .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
 
     when(serviceResourceService.fetchServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
@@ -3189,7 +3189,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(resolvedInfraMappings)
         .isNotEmpty()
-        .extracting(infrastructureMapping -> infrastructureMapping.getUuid())
+        .extracting(InfrastructureMapping::getUuid)
         .contains(INFRA_MAPPING_ID);
   }
 

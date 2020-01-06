@@ -1453,8 +1453,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     List<ServiceEvent> events = new ArrayList<>();
     events.addAll(service.getEvents());
 
-    Set<String> eventIdsProcessed =
-        eventsAlreadyProcessed.stream().map(serviceEvent -> serviceEvent.getId()).collect(toSet());
+    Set<String> eventIdsProcessed = eventsAlreadyProcessed.stream().map(ServiceEvent::getId).collect(toSet());
     events = events.stream().filter(event -> !eventIdsProcessed.contains(event.getId())).collect(toList());
 
     events.forEach(event

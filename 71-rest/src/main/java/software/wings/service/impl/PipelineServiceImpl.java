@@ -1119,11 +1119,7 @@ public class PipelineServiceImpl implements PipelineService {
     Set<String> pseWorkflowVariableNames = pseWorkflowVariables.keySet();
     Set<String> workflowVariableNames = (workflow.getOrchestrationWorkflow().getUserVariables() == null)
         ? new HashSet<>()
-        : (workflow.getOrchestrationWorkflow()
-                  .getUserVariables()
-                  .stream()
-                  .map(variable -> variable.getName())
-                  .collect(toSet()));
+        : (workflow.getOrchestrationWorkflow().getUserVariables().stream().map(Variable::getName).collect(toSet()));
     for (String pseWorkflowVariable : pseWorkflowVariableNames) {
       if (!workflowVariableNames.contains(pseWorkflowVariable)) {
         pse.setValid(false);
@@ -1451,7 +1447,7 @@ public class PipelineServiceImpl implements PipelineService {
       throw new InvalidArgumentsException(
           "A pipeline may only have one environment expression across all workflows", USER);
     }
-    keywords.addAll(services.stream().map(service -> service.getName()).distinct().collect(toList()));
+    keywords.addAll(services.stream().map(Service::getName).distinct().collect(toList()));
   }
 
   private boolean isValidPipelineStageName(String name) {

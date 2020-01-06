@@ -366,8 +366,7 @@ public abstract class TerraformProvisionState extends State {
   protected static List<NameValuePair> validateAndFilterVariables(
       List<NameValuePair> workflowVariables, List<NameValuePair> provisionerVariables) {
     Map<String, String> variableTypesMap = isNotEmpty(provisionerVariables)
-        ? provisionerVariables.stream().collect(
-              Collectors.toMap(variable -> variable.getName(), variable -> variable.getValueType()))
+        ? provisionerVariables.stream().collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValueType))
         : Maps.newHashMap();
     List<NameValuePair> validVariables = new ArrayList<>();
     if (isNotEmpty(workflowVariables)) {

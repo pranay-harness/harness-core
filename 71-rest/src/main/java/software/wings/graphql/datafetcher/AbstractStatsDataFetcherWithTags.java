@@ -189,7 +189,7 @@ public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends
     Set<HarnessTagLink> tagLinks = tagService.getTagLinks(
         accountId, getEntityType((E) groupByTag.getEntityType()), entityIdSet, groupByTag.getTagName());
     Map<String, HarnessTagLink> entityIdTagLinkMap =
-        tagLinks.stream().collect(Collectors.toMap(tagLink -> tagLink.getEntityId(), identity()));
+        tagLinks.stream().collect(Collectors.toMap(HarnessTagLink::getEntityId, identity()));
 
     ArrayMap<String, QLDataPoint> tagNameDataPointMap = new ArrayMap<>();
 
@@ -223,7 +223,7 @@ public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends
     Set<HarnessTagLink> tagLinks = tagService.getTagLinks(
         accountId, getEntityType((E) groupByTag.getEntityType()), entityIdSet, groupByTag.getTagName());
     Map<String, HarnessTagLink> entityIdTagLinkMap =
-        tagLinks.stream().collect(Collectors.toMap(tagLink -> tagLink.getEntityId(), identity()));
+        tagLinks.stream().collect(Collectors.toMap(HarnessTagLink::getEntityId, identity()));
 
     ArrayMap<String, QLStackedDataPoint> tagNameStackedDataPointMap = new ArrayMap<>();
 

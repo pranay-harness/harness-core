@@ -90,7 +90,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
   }
 
   private List<AddressYaml> toAddressYamlList(Map<NotificationChannelType, List<String>> addressesByChannelType) {
-    return addressesByChannelType.entrySet().stream().map(entry -> toAddressYaml(entry)).collect(toList());
+    return addressesByChannelType.entrySet().stream().map(this ::toAddressYaml).collect(toList());
   }
 
   private AddressYaml toAddressYaml(Entry<NotificationChannelType, List<String>> entry) {

@@ -308,7 +308,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       }
 
       currentRelease = releaseHistory.createNewRelease(
-          resources.stream().map(resource -> resource.getResourceId()).collect(Collectors.toList()));
+          resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList()));
 
       cleanupForBlueGreen(k8sDelegateTaskParams, releaseHistory, executionLogCallback);
 

@@ -243,7 +243,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       }
 
       currentRelease = releaseHistory.createNewRelease(
-          resources.stream().map(resource -> resource.getResourceId()).collect(Collectors.toList()));
+          resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList()));
 
       executionLogCallback.saveExecutionLog("\nCurrent release number is: " + currentRelease.getNumber());
 

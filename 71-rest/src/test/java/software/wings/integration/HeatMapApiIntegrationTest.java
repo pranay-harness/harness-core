@@ -331,7 +331,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     }
     final List<TimeSeriesDataRecord> dataRecords =
         TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(metricDataRecords);
-    dataRecords.forEach(dataRecord -> dataRecord.compress());
+    dataRecords.forEach(TimeSeriesDataRecord::compress);
     wingsPersistence.save(dataRecords);
   }
 

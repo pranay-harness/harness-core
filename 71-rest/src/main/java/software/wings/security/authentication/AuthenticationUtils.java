@@ -89,7 +89,7 @@ public class AuthenticationUtils {
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
       uriBuilder.setPath(path);
       if (params != null) {
-        params.forEach((name, value) -> uriBuilder.addParameter(name, value));
+        params.forEach(uriBuilder::addParameter);
       }
       return uriBuilder.build();
     } catch (URISyntaxException e) {

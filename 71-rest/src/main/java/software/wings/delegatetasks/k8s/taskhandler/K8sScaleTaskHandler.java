@@ -110,7 +110,7 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
 
   private List<K8sPod> getNewPods(List<K8sPod> beforePodList, List<K8sPod> afterPodList) {
     Set<String> beforePodSet = (beforePodList != null)
-        ? beforePodList.stream().map(pod -> pod.getName()).collect(Collectors.toSet())
+        ? beforePodList.stream().map(K8sPod::getName).collect(Collectors.toSet())
         : Collections.emptySet();
 
     List<K8sPod> newPods = Collections.EMPTY_LIST;

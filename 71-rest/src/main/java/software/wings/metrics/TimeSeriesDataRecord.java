@@ -136,14 +136,14 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
 
     values.rowMap().forEach((txnName, metricMap) -> {
       final MetricValues.Builder metricValueBuilder = MetricValues.newBuilder();
-      metricMap.forEach((metricName, value) -> metricValueBuilder.putMetricValues(metricName, value));
+      metricMap.forEach(metricValueBuilder::putMetricValues);
       txnMetricBuilder.putValues(txnName, metricValueBuilder.build());
     });
 
     if (deeplinkMetadata != null) {
       deeplinkMetadata.rowMap().forEach((txnName, deepLinkMap) -> {
         final MetricDeeplinks.Builder deepLinkBuilder = MetricDeeplinks.newBuilder();
-        deepLinkMap.forEach((metricName, deepLink) -> deepLinkBuilder.putMetricDeeplinks(metricName, deepLink));
+        deepLinkMap.forEach(deepLinkBuilder::putMetricDeeplinks);
         txnMetricBuilder.putDeeplinkMetadata(txnName, deepLinkBuilder.build());
       });
     }

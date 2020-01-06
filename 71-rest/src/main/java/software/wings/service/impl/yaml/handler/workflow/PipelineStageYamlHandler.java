@@ -102,7 +102,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       Map<String, Object> yamlProperties = yaml.getProperties();
 
       if (yamlProperties != null) {
-        yamlProperties.forEach((name, value) -> properties.put(name, value));
+        yamlProperties.forEach(properties::put);
       }
     }
 

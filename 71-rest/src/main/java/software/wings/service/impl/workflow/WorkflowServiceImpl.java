@@ -118,6 +118,7 @@ import software.wings.app.StaticConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
+import software.wings.beans.Base;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.ElementExecutionSummary;
@@ -1226,7 +1227,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Map<String, String> getData(String appId, Map<String, String> params) {
     List<Workflow> workflows = wingsPersistence.createQuery(Workflow.class).filter(WorkflowKeys.appId, appId).asList();
-    return workflows.stream().collect(toMap(Workflow::getUuid, o -> o.getName()));
+    return workflows.stream().collect(toMap(Workflow::getUuid, Workflow::getName));
   }
 
   StateType getCorrespondingRollbackState(GraphNode step) {
@@ -3102,8 +3103,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (settingAttribute.getAppId().equals(GLOBAL_APP_ID)) {
       String accountId = settingAttribute.getAccountId();
-      List<String> appsIds =
-          appService.getAppsByAccountId(accountId).stream().map(app -> app.getAppId()).collect(toList());
+      List<String> appsIds = appService.getAppsByAccountId(accountId).stream().map(Base::getAppId).collect(toList());
 
       if (!appsIds.isEmpty()) {
         workflows = listWorkflows(
@@ -3569,7 +3569,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void addRecentsToWorkflowCategories(LinkedList<String> recent, List<WorkflowCategoryStepsMeta> categories) {
     if (isNotEmpty(recent)) {
       List<String> stepIds = new ArrayList<>();
-      recent.descendingIterator().forEachRemaining(stepId -> stepIds.add(stepId));
+      recent.descendingIterator().forEachRemaining(stepIds::add);
       categories.add(
           WorkflowCategoryStepsMeta.builder().id("RECENTLY_USED").name("Recently Used").stepIds(stepIds).build());
     }

@@ -839,7 +839,7 @@ public class GitClientImpl implements GitClient {
     if (filePaths.size() == 1 && filePaths.get(0).equals("")) {
       checkoutCommand.setAllPaths(true);
     } else {
-      filePaths.forEach(filePath -> checkoutCommand.addPath(filePath));
+      filePaths.forEach(checkoutCommand::addPath);
     }
   }
 

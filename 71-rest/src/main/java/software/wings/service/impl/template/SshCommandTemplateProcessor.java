@@ -335,9 +335,8 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   private boolean isCommandUnitsOrderChanged(List<CommandUnit> commandUnits, List<CommandUnit> oldCommandUnits) {
     if (commandUnits != null && oldCommandUnits != null) {
       if (commandUnits.size() == oldCommandUnits.size()) {
-        List<String> commandNames = commandUnits.stream().map(commandUnit -> commandUnit.getName()).collect(toList());
-        List<String> oldCommandNames =
-            oldCommandUnits.stream().map(oldCommandUnit -> oldCommandUnit.getName()).collect(toList());
+        List<String> commandNames = commandUnits.stream().map(CommandUnit::getName).collect(toList());
+        List<String> oldCommandNames = oldCommandUnits.stream().map(CommandUnit::getName).collect(toList());
         return !commandNames.equals(oldCommandNames);
       }
     }

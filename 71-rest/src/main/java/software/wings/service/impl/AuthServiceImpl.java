@@ -817,7 +817,7 @@ public class AuthServiceImpl implements AuthService {
         return false;
       }
 
-      Set<String> envIdSet = envInfoSet.stream().map(envInfo -> envInfo.getEnvId()).collect(toSet());
+      Set<String> envIdSet = envInfoSet.stream().map(EnvInfo::getEnvId).collect(toSet());
       return envIdSet.contains(entityId);
 
     } else if (requiredPermissionType == PermissionType.WORKFLOW) {

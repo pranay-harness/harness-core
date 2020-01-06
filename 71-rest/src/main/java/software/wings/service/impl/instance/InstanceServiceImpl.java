@@ -194,7 +194,7 @@ public class InstanceServiceImpl implements InstanceService {
     });
 
     Query<SyncStatus> syncStatusQuery = wingsPersistence.createQuery(SyncStatus.class);
-    inputs.forEach((key, value) -> syncStatusQuery.filter(key, value));
+    inputs.forEach(syncStatusQuery::filter);
     wingsPersistence.delete(syncStatusQuery);
   }
 
@@ -368,7 +368,7 @@ public class InstanceServiceImpl implements InstanceService {
                                            .field("_id")
                                            .in(manualJobIdSet)
                                            .asKeyList();
-    Set<Object> jobIdSetInDB = keyList.stream().map(key -> key.getId()).collect(Collectors.toSet());
+    Set<Object> jobIdSetInDB = keyList.stream().map(Key::getId).collect(Collectors.toSet());
     List<Boolean> result = Lists.newArrayList();
     manualJobIdSet.forEach(jobId -> result.add(!jobIdSetInDB.contains(jobId)));
     return result;

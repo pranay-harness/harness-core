@@ -162,7 +162,7 @@ public class AwsInstanceHandler extends InstanceHandler {
 
         Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap =
             latestEc2Instances.stream().collect(
-                Collectors.toMap(ec2Instance -> ec2Instance.getInstanceId(), identity()));
+                Collectors.toMap(com.amazonaws.services.ec2.model.Instance::getInstanceId, identity()));
 
         Collection<Instance> instancesInDB = asgInstanceMap.get(autoScalingGroupName);
         Map<String, Instance> instancesInDBMap = Maps.newHashMap();

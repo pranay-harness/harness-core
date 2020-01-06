@@ -2426,7 +2426,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     List<ArtifactStream> artifactStreams = artifactStreamService.listByAppId(APP_ID);
     assertThat(artifactStreams).isNotEmpty().size().isEqualTo(2);
     assertThat(artifactStreams)
-        .extracting(artifactStream -> artifactStream.getArtifactStreamType())
+        .extracting(ArtifactStream::getArtifactStreamType)
         .contains(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.ARTIFACTORY.name());
   }
 
@@ -2455,7 +2455,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     List<ArtifactStream> artifactStreams = artifactStreamService.listBySettingId(SETTING_ID);
     assertThat(artifactStreams).isNotEmpty().size().isEqualTo(1);
     assertThat(artifactStreams)
-        .extracting(artifactStream -> artifactStream.getArtifactStreamType())
+        .extracting(ArtifactStream::getArtifactStreamType)
         .contains(ArtifactStreamType.JENKINS.name());
   }
 

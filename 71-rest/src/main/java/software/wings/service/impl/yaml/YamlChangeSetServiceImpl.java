@@ -25,6 +25,7 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
+import software.wings.beans.Base;
 import software.wings.beans.FeatureName;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
@@ -174,7 +175,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
     updateStatusForYamlChangeSets(Status.RUNNING,
         wingsPersistence.createQuery(YamlChangeSet.class)
             .field("_id")
-            .in(yamlChangeSets.stream().map(yamlChangeSet -> yamlChangeSet.getUuid()).collect(Collectors.toList())));
+            .in(yamlChangeSets.stream().map(Base::getUuid).collect(Collectors.toList())));
 
     return yamlChangeSets;
   }
@@ -272,8 +273,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
         List<YamlChangeSet> yamlChangeSets = listYamlChangeSets(pageRequestBuilder.build()).getResponse();
         if (isNotEmpty(yamlChangeSets)) {
-          List<String> ids =
-              yamlChangeSets.stream().map(yamlChangeSet -> yamlChangeSet.getUuid()).collect(Collectors.toList());
+          List<String> ids = yamlChangeSets.stream().map(Base::getUuid).collect(Collectors.toList());
           wingsPersistence.delete(wingsPersistence.createQuery(YamlChangeSet.class).field("_id").in(ids));
           deletedCount = deletedCount + Integer.parseInt(batchSize);
         } else {

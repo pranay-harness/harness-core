@@ -84,8 +84,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
 
   @Override
   public Yaml toYaml(NotificationRule notificationRule, String appId) {
-    List<String> conditionList =
-        notificationRule.getConditions().stream().map(condition -> condition.name()).collect(toList());
+    List<String> conditionList = notificationRule.getConditions().stream().map(Enum::name).collect(toList());
 
     List<String> notificationGroupList =
         notificationRule.getNotificationGroups()

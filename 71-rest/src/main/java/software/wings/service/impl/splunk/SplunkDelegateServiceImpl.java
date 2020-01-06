@@ -162,7 +162,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
   }
 
   private String createJSONBodyForThirdPartyAPILogs(List<LogElement> logElements) {
-    List<String> logs = logElements.stream().map(logElement -> logElement.getLogMessage()).collect(Collectors.toList());
+    List<String> logs = logElements.stream().map(LogElement::getLogMessage).collect(Collectors.toList());
     SplunkJSONResponse splunkResponse = new SplunkJSONResponse(logs);
     Gson gson = new Gson();
     return gson.toJson(splunkResponse);

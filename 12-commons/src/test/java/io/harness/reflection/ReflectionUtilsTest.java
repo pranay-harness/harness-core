@@ -20,6 +20,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -158,10 +159,8 @@ public class ReflectionUtilsTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testGetAccessorMethods() {
-    final List<String> accessorMethods = ReflectionUtils.getAccessorMethods(Accessors.class)
-                                             .stream()
-                                             .map(method -> method.getName())
-                                             .collect(Collectors.toList());
+    final List<String> accessorMethods =
+        ReflectionUtils.getAccessorMethods(Accessors.class).stream().map(Method::getName).collect(Collectors.toList());
     accessorMethods.sort(String::compareTo);
 
     assertThat(accessorMethods).isEqualTo(asList("getAnyType", "getBaseAccessor", "isABoolean", "isBooleanType"));

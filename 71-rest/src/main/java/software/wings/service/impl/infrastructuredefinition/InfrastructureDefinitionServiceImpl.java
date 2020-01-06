@@ -52,6 +52,7 @@ import com.google.inject.Singleton;
 import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.ecs.model.LaunchType;
 import com.microsoft.azure.management.compute.VirtualMachine;
+import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import com.mongodb.DuplicateKeyException;
 import io.fabric8.utils.CountingMap;
 import io.harness.beans.PageRequest;
@@ -1190,7 +1191,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       List<VirtualMachine> vms = azureHelperService.listVms(azureInstanceInfrastructure, computeProviderSetting,
           secretManager.getEncryptionDetails((EncryptableSetting) computeProviderSetting.getValue(), null, null),
           infrastructureDefinition.getDeploymentType());
-      hostDisplayNames = vms.stream().map(vm -> vm.name()).collect(Collectors.toList());
+      hostDisplayNames = vms.stream().map(HasName::name).collect(Collectors.toList());
       return hostDisplayNames;
     }
     return emptyList();

@@ -78,9 +78,9 @@ public class SpotInstListenerUpdateStateExecutionData
     List<String> tgNames;
     if (isRollback) {
       // If rollback, we are restoring original prodTargetGroups.
-      tgNames = lbDetails.stream().map(lbDetail -> lbDetail.getProdTargetGroupName()).collect(toList());
+      tgNames = lbDetails.stream().map(LoadBalancerDetailsForBGDeployment::getProdTargetGroupName).collect(toList());
     } else {
-      tgNames = lbDetails.stream().map(lbDetail -> lbDetail.getStageListenerArn()).collect(toList());
+      tgNames = lbDetails.stream().map(LoadBalancerDetailsForBGDeployment::getStageListenerArn).collect(toList());
     }
 
     return returnTargetGroupDisplayString(tgNames);
@@ -90,9 +90,9 @@ public class SpotInstListenerUpdateStateExecutionData
     List<String> tgNames;
     if (isRollback) {
       // If rollback, we are restoring original prodTargetGroups.
-      tgNames = lbDetails.stream().map(lbDetail -> lbDetail.getStageListenerArn()).collect(toList());
+      tgNames = lbDetails.stream().map(LoadBalancerDetailsForBGDeployment::getStageListenerArn).collect(toList());
     } else {
-      tgNames = lbDetails.stream().map(lbDetail -> lbDetail.getProdTargetGroupName()).collect(toList());
+      tgNames = lbDetails.stream().map(LoadBalancerDetailsForBGDeployment::getProdTargetGroupName).collect(toList());
     }
 
     return returnTargetGroupDisplayString(tgNames);

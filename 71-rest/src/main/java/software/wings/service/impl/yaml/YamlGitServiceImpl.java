@@ -64,6 +64,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitCommit.GitCommitKeys;
@@ -306,8 +307,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       List<YamlChangeSet> yamlChangeSetsToBeMarkedSkipped =
           yamlChangeSetService.getChangeSetsToBeMarkedSkipped(accountId);
       List<String> yamlChangesetIdsToBeSkipped = new ArrayList<>();
-      yamlChangesetIdsToBeSkipped.addAll(
-          yamlChangeSetsToBeMarkedSkipped.stream().map(changeSet -> changeSet.getUuid()).collect(toList()));
+      yamlChangesetIdsToBeSkipped.addAll(yamlChangeSetsToBeMarkedSkipped.stream().map(Base::getUuid).collect(toList()));
 
       // mark these change sets as Skipped
       yamlChangeSetService.updateStatusForGivenYamlChangeSets(
@@ -490,8 +490,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       return true;
     }
 
-    List<String> yamlChangeSetIds =
-        yamlChangeSets.stream().map(yamlChangeSet -> yamlChangeSet.getUuid()).collect(toList());
+    List<String> yamlChangeSetIds = yamlChangeSets.stream().map(Base::getUuid).collect(toList());
     String mostRecentYamlChangesetId = yamlChangeSets.get(yamlChangeSets.size() - 1).getUuid();
 
     List<GitFileChange> gitFileChanges = (yamlChangeSets.size() > 1) ? getGitFileChangesToBeApplied(yamlChangeSets)

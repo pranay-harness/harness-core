@@ -332,7 +332,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .isEqualTo(ARTIFACT_STREAM_ID);
     assertThat(updatedTrigger.getArtifactSelections())
         .isNotNull()
-        .extracting(artifactSelection -> artifactSelection.getType())
+        .extracting(ArtifactSelection::getType)
         .contains(ARTIFACT_SOURCE);
 
     assertThat(((ArtifactTriggerCondition) updatedTrigger.getCondition()).isRegex()).isTrue();
@@ -373,7 +373,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .isEqualTo(ARTIFACT_STREAM_ID);
     assertThat(updatedTrigger.getArtifactSelections())
         .isNotNull()
-        .extracting(artifactSelection -> artifactSelection.getType())
+        .extracting(ArtifactSelection::getType)
         .contains(ARTIFACT_SOURCE, LAST_DEPLOYED, LAST_COLLECTED);
     assertThat(updatedTrigger.getWorkflowType()).isEqualTo(ORCHESTRATION);
 
@@ -406,7 +406,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(updatedTrigger.getCondition()).isInstanceOf(PipelineTriggerCondition.class);
     assertThat(updatedTrigger.getArtifactSelections())
         .isNotNull()
-        .extracting(artifactSelection -> artifactSelection.getType())
+        .extracting(ArtifactSelection::getType)
         .contains(PIPELINE_SOURCE, LAST_DEPLOYED);
 
     verify(pipelineService, times(2)).readPipeline(APP_ID, PIPELINE_ID, true);
@@ -451,7 +451,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .isEqualTo("* * * * ?");
     assertThat(updatedTrigger.getArtifactSelections())
         .isNotNull()
-        .extracting(artifactSelection -> artifactSelection.getType())
+        .extracting(ArtifactSelection::getType)
         .contains(LAST_COLLECTED, LAST_DEPLOYED);
     verify(jobScheduler).rescheduleJob(any(TriggerKey.class), any(org.quartz.Trigger.class));
   }
@@ -596,7 +596,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .isNotNull();
     assertThat(updatedTrigger.getArtifactSelections())
         .isNotNull()
-        .extracting(artifactSelection -> artifactSelection.getType())
+        .extracting(ArtifactSelection::getType)
         .contains(LAST_COLLECTED, LAST_DEPLOYED);
   }
 
@@ -632,7 +632,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((WebHookTriggerCondition) updatedTrigger.getCondition()).getWebHookToken()).isNotNull();
     assertThat(updatedTrigger.getArtifactSelections())
         .isNotNull()
-        .extracting(artifactSelection -> artifactSelection.getType())
+        .extracting(ArtifactSelection::getType)
         .contains(LAST_COLLECTED, LAST_DEPLOYED);
     verify(jobScheduler).deleteJob(TRIGGER_ID, ScheduledTriggerJob.GROUP);
   }

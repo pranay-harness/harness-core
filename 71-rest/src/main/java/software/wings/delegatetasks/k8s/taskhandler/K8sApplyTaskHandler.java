@@ -33,6 +33,7 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -140,7 +141,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
     try {
       List<String> applyFilePaths = Arrays.stream(k8sApplyTaskParameters.getFilePaths().split(","))
                                         .map(String::trim)
-                                        .filter(filePath -> isNotBlank(filePath))
+                                        .filter(StringUtils::isNotBlank)
                                         .collect(Collectors.toList());
 
       if (isEmpty(applyFilePaths)) {

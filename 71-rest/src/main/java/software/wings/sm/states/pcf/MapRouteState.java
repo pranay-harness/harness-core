@@ -29,6 +29,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.common.Constants;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
+import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
@@ -197,7 +198,7 @@ public class MapRouteState extends State {
               ? Collections.EMPTY_LIST
               : setupSweepingOutputPcf.getAppDetailsToBeDownsized()
                     .stream()
-                    .map(app -> app.getApplicationName())
+                    .map(PcfAppSetupTimeDetails::getApplicationName)
                     .collect(toList()));
     }
 

@@ -138,6 +138,7 @@ import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AwsLambdaExecutionSummary;
+import software.wings.beans.Base;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
@@ -704,7 +705,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     // Adding check for pse.getStateUuid() == null for backward compatibility. Can be removed later
     Map<String, LongSummaryStatistics> stateEstimatesSum =
         workflowExecutions.stream()
-            .map(we -> we.getPipelineExecution())
+            .map(WorkflowExecution::getPipelineExecution)
             .flatMap(pe -> pe.getPipelineStageExecutions().stream())
             .collect(Collectors.groupingBy(pse
                 -> (pse.getStateUuid() == null) ? pse.getStateName() : pse.getStateUuid(),
@@ -735,7 +736,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private ImmutableMap<String, StateExecutionInstance> getStateExecutionInstanceMap(
       WorkflowExecution workflowExecution) {
     List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(workflowExecution);
-    return Maps.uniqueIndex(stateExecutionInstances, v -> v.getDisplayName());
+    return Maps.uniqueIndex(stateExecutionInstances, StateExecutionInstance::getDisplayName);
   }
 
   private List<StateExecutionInstance> getStateExecutionInstances(WorkflowExecution workflowExecution) {
@@ -2880,11 +2881,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     List<StateExecutionInstance> contextTransitionInstances =
-        allStateExecutionInstances.stream().filter(instance -> instance.isContextTransition()).collect(toList());
+        allStateExecutionInstances.stream().filter(StateExecutionInstance::isContextTransition).collect(toList());
     Map<String, StateExecutionInstance> prevInstanceIdMap =
         allStateExecutionInstances.stream()
             .filter(instance -> instance.getPrevInstanceId() != null)
-            .collect(toMap(instance -> instance.getPrevInstanceId(), identity()));
+            .collect(toMap(StateExecutionInstance::getPrevInstanceId, identity()));
 
     List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
     for (StateExecutionInstance stateExecutionInstance : contextTransitionInstances) {
@@ -3117,8 +3118,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       buildExecutionSummaries = new ArrayList<>();
     }
     buildExecutionSummaries.add(buildExecutionSummary);
-    buildExecutionSummaries =
-        buildExecutionSummaries.stream().filter(distinctByKey(bs -> bs.getArtifactStreamId())).collect(toList());
+    buildExecutionSummaries = buildExecutionSummaries.stream()
+                                  .filter(distinctByKey(BuildExecutionSummary::getArtifactStreamId))
+                                  .collect(toList());
     wingsPersistence.updateField(
         WorkflowExecution.class, workflowExecutionId, "buildExecutionSummaries", buildExecutionSummaries);
   }
@@ -3536,8 +3538,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     collectedArtifacts.addAll(artifacts);
-    collectedArtifacts =
-        collectedArtifacts.stream().filter(distinctByKey(artifact -> artifact.getUuid())).collect(toList());
+    collectedArtifacts = collectedArtifacts.stream().filter(distinctByKey(Base::getUuid)).collect(toList());
 
     Query<WorkflowExecution> updatedQuery = wingsPersistence.createQuery(WorkflowExecution.class)
                                                 .project(WorkflowExecutionKeys.artifacts, true)

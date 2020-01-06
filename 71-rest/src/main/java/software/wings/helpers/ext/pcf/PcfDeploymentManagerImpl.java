@@ -44,7 +44,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   public List<String> getOrganizations(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
       List<OrganizationSummary> organizationSummaries = pcfClient.getOrganizations(pcfRequestConfig);
-      return organizationSummaries.stream().map(organizationSummary -> organizationSummary.getName()).collect(toList());
+      return organizationSummaries.stream().map(OrganizationSummary::getName).collect(toList());
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }

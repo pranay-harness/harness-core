@@ -22,6 +22,7 @@ import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.QLTagsInUse;
 import software.wings.graphql.schema.type.QLTagsInUseConnection;
+import software.wings.graphql.schema.type.aggregation.QLEntityType;
 import software.wings.graphql.schema.type.aggregation.QLEntityTypeFilter;
 import software.wings.graphql.schema.type.aggregation.QLEnumOperator;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
@@ -148,7 +149,7 @@ public class TagsInUseConnectionDataFetcher
       }
 
       List<String> entityTypes =
-          Arrays.stream(entityTypeFilter.getValues()).map(value -> value.getStringValue()).collect(Collectors.toList());
+          Arrays.stream(entityTypeFilter.getValues()).map(QLEntityType::getStringValue).collect(Collectors.toList());
 
       switch (operator) {
         case IN:

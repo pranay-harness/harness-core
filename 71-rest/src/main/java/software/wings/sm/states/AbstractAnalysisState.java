@@ -337,7 +337,7 @@ public abstract class AbstractAnalysisState extends State {
                   DEFAULT_GROUP_NAME);
             }
           });
-          phaseHosts.keySet().forEach(host -> hosts.remove(host));
+          phaseHosts.keySet().forEach(hosts::remove);
         }
       }
       getLogger().info("hosts returned as getLastExecutionNodes in K8sV2 for {} are {}",
@@ -397,7 +397,7 @@ public abstract class AbstractAnalysisState extends State {
               DEFAULT_GROUP_NAME);
         }
       });
-      phaseHosts.keySet().forEach(host -> hosts.remove(host));
+      phaseHosts.keySet().forEach(hosts::remove);
       return hosts;
     }
 
@@ -449,7 +449,7 @@ public abstract class AbstractAnalysisState extends State {
           }
         }
         getLogger().info("hosts deployed with last workflow execution: {}", hosts);
-        phaseHosts.keySet().forEach(host -> hosts.remove(host));
+        phaseHosts.keySet().forEach(hosts::remove);
         return hosts;
       }
     }

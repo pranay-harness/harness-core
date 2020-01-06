@@ -53,7 +53,7 @@ public class KryoUtils {
     return kryo;
   }
 
-  private static final KryoPool pool = new KryoPool.Builder(() -> kryo()).softReferences().build();
+  private static final KryoPool pool = new KryoPool.Builder(KryoUtils::kryo).softReferences().build();
 
   static void check(IntMap<Registration> previousState, IntMap<Registration> newState) {
     for (IntMap.Entry entry : newState.entries()) {

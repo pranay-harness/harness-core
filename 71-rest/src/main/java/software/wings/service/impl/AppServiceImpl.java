@@ -51,6 +51,7 @@ import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
+import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
@@ -241,7 +242,7 @@ public class AppServiceImpl implements AppService {
     if (isEmpty(applicationList)) {
       return response;
     }
-    List<String> appIdList = applicationList.stream().map(application -> application.getUuid()).collect(toList());
+    List<String> appIdList = applicationList.stream().map(Base::getUuid).collect(toList());
 
     PermissionAttribute svcPermissionAttribute = new PermissionAttribute(PermissionType.SERVICE, Action.READ);
     authHandler.setEntityIdFilterIfUserAction(asList(svcPermissionAttribute), appIdList);
@@ -262,7 +263,7 @@ public class AppServiceImpl implements AppService {
       List<YamlGitConfig> yamlGitConfigList =
           wingsPersistence.getAllEntities(yamlPageRequest, () -> yamlGitService.list(yamlPageRequest));
       Map<String, YamlGitConfig> yamlGitConfigMap =
-          yamlGitConfigList.stream().collect(Collectors.toMap(config -> config.getEntityId(), identity()));
+          yamlGitConfigList.stream().collect(Collectors.toMap(YamlGitConfig::getEntityId, identity()));
 
       Map<String, List<Environment>> appIdEnvMap;
       Map<String, List<Service>> appIdServiceMap;

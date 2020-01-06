@@ -277,7 +277,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
         units.add(instance.getResourceUnit());
       }
     }
-    return units.stream().map(unit -> new ConstraintUnit(unit)).collect(toList());
+    return units.stream().map(ConstraintUnit::new).collect(toList());
   }
 
   @Override

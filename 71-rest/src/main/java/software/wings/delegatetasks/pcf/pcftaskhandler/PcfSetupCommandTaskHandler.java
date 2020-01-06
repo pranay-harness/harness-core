@@ -235,7 +235,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
     List<String> varFiles = setupRequest.getPcfManifestsPackage().getVariableYmls();
     if (isNotEmpty(varFiles)) {
-      varFiles = varFiles.stream().filter(varFileContent -> isNotBlank(varFileContent)).collect(toList());
+      varFiles = varFiles.stream().filter(StringUtils::isNotBlank).collect(toList());
     }
 
     return isNotEmpty(varFiles);
@@ -290,7 +290,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
       // Delete all manifests created.
       filesToBeRemoved.add(pcfManifestFileData.getManifestFile());
-      pcfManifestFileData.getVarFiles().forEach(file -> filesToBeRemoved.add(file));
+      pcfManifestFileData.getVarFiles().forEach(filesToBeRemoved::add);
 
       if (artifactFile != null) {
         filesToBeRemoved.add(artifactFile);

@@ -1036,7 +1036,7 @@ public class NexusServiceTest extends WingsBaseTest {
                        .build(),
                    10))
         .hasSize(3)
-        .extracting(buildDetails -> buildDetails.getNumber())
+        .extracting(BuildDetails::getNumber)
         .contains("latest");
   }
 

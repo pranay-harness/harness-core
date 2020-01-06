@@ -470,7 +470,7 @@ public class UserServiceImpl implements UserService {
     if (isEmpty(userList)) {
       return Collections.emptyList();
     }
-    return userList.stream().map(user -> getUserSummary(user)).collect(toList());
+    return userList.stream().map(this ::getUserSummary).collect(toList());
   }
 
   private void sendSuccessfullyAddedToNewAccountEmail(User user, Account account) {

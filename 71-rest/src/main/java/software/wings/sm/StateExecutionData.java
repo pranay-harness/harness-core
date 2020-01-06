@@ -296,7 +296,7 @@ public class StateExecutionData {
     return map.entrySet()
         .stream()
         .filter(e -> e.getValue() != null)
-        .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
   @JsonIgnore

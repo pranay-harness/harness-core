@@ -82,7 +82,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       return response.body()
           .stream()
           .filter(application -> isNotEmpty(application.getName()))
-          .sorted(Comparator.comparing(application -> application.getName()))
+          .sorted(Comparator.comparing(NewRelicApplication::getName))
           .collect(Collectors.toList());
     } else {
       logger.info("Request not successful. Reason: {}", response);
@@ -102,7 +102,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     apiCallLog.setTitle("Fetching tiers for application " + appdynamicsAppId);
     final Set<AppdynamicsTier> response = requestExecutor.executeRequest(apiCallLog, request);
     response.forEach(tier -> tier.setExternalTiers(new HashSet<>()));
-    return response.stream().sorted(Comparator.comparing(tier -> tier.getName())).collect(Collectors.toSet());
+    return response.stream().sorted(Comparator.comparing(AppdynamicsTier::getName)).collect(Collectors.toSet());
   }
 
   @Override

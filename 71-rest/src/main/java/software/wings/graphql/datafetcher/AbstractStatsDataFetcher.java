@@ -106,7 +106,9 @@ public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetche
 
   private String getCombinedErrorMessages(WingsException ex) {
     List<ResponseMessage> responseMessages = ExceptionLogger.getResponseMessageList(ex, ReportTarget.GRAPHQL_API);
-    return responseMessages.stream().map(rm -> rm.getMessage()).collect(Collectors.joining(EXCEPTION_MSG_DELIMITER));
+    return responseMessages.stream()
+        .map(ResponseMessage::getMessage)
+        .collect(Collectors.joining(EXCEPTION_MSG_DELIMITER));
   }
 
   private <O> Object fetchObject(DataFetchingEnvironment dataFetchingEnvironment, String fieldName, Class<O> klass) {

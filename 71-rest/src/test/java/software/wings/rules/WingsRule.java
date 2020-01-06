@@ -203,7 +203,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
     List<Module> modules = getRequiredModules(configuration, distributedLockSvc);
     addQueueModules(modules);
 
-    if (annotations.stream().filter(annotation -> Cache.class.isInstance(annotation)).findFirst().isPresent()) {
+    if (annotations.stream().filter(Cache.class ::isInstance).findFirst().isPresent()) {
       System.setProperty("hazelcast.jcache.provider.type", "server");
       CacheModule cacheModule = new CacheModule((MainConfiguration) configuration);
       modules.add(0, cacheModule);
@@ -230,7 +230,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
 
     injector = Guice.createInjector(modules);
 
-    registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
+    registerListeners(annotations.stream().filter(Listeners.class ::isInstance).findFirst());
     registerScheduledJobs(injector);
     registerProviders();
     registerObservers();
@@ -372,7 +372,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
             .findFirst()
             .isPresent()) {
       CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
-      cacheManager.getCacheNames().forEach(s -> cacheManager.destroyCache(s));
+      cacheManager.getCacheNames().forEach(cacheManager::destroyCache);
     }
 
     try {

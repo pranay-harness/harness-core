@@ -34,6 +34,7 @@ import com.microsoft.azure.management.containerservice.KubernetesCluster;
 import com.microsoft.azure.management.containerservice.OSType;
 import com.microsoft.azure.management.keyvault.Vault;
 import com.microsoft.azure.management.resources.ResourceGroup;
+import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import com.microsoft.rest.LogLevel;
 import io.fabric8.kubernetes.api.model.AuthInfo;
 import io.fabric8.kubernetes.api.model.Cluster;
@@ -341,7 +342,7 @@ public class AzureHelperService {
             .map(tagDetails
                 -> AzureTagDetails.builder()
                        .tagName(tagDetails.getTagName())
-                       .values(tagDetails.getValues().stream().map(value -> value.getTagValue()).collect(toList()))
+                       .values(tagDetails.getValues().stream().map(TagValue::getTagValue).collect(toList()))
                        .build())
             .collect(toList());
       } else {
@@ -363,7 +364,7 @@ public class AzureHelperService {
           getAzureManagementRestClient().listTags(getAzureBearerAuthToken(azureConfig), subscriptionId).execute();
 
       if (response.isSuccessful()) {
-        return response.body().getValue().stream().map(tagDetails -> tagDetails.getTagName()).collect(toSet());
+        return response.body().getValue().stream().map(TagDetails::getTagName).collect(toSet());
       } else {
         logger.error("Error occurred while getting Tags from subscriptionId : " + subscriptionId
             + " Response: " + response.raw());
@@ -383,7 +384,7 @@ public class AzureHelperService {
       Azure azure = getAzureClient(azureConfig, subscriptionId);
       notNullCheck("Azure Client", azure);
       List<ResourceGroup> resourceGroupList = azure.resourceGroups().list();
-      return resourceGroupList.stream().map(rg -> rg.name()).collect(Collectors.toSet());
+      return resourceGroupList.stream().map(HasName::name).collect(Collectors.toSet());
     } catch (Exception e) {
       HandleAzureAuthenticationException(e);
     }

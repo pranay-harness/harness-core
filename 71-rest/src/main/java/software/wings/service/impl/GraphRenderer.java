@@ -550,7 +550,7 @@ public class GraphRenderer {
         aggregateStatus(instances.stream().map(StateExecutionInstance::getStatus).collect(toList()));
 
     final Multiset<ExecutionStatus> multiset = HashMultiset.create();
-    instances.stream().map(StateExecutionInstance::getStatus).forEach(state -> multiset.add(state));
+    instances.stream().map(StateExecutionInstance::getStatus).forEach(multiset::add);
 
     Map<String, ExecutionDataValue> executionDetails = new LinkedHashMap<>();
 

@@ -144,7 +144,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
                                PropertyFilter.eq("appId", appId), PropertyFilter.eq("activityId", activityId)))
                            .build();
     List<Key> keysToDelete = new ArrayList<>();
-    datastore.run(query).forEachRemaining(key -> keysToDelete.add(key));
+    datastore.run(query).forEachRemaining(keysToDelete::add);
     logger.info("deleting {} keys for activity {}", keysToDelete.size(), activityId);
     datastore.delete(keysToDelete.stream().toArray(Key[] ::new));
   }
@@ -164,7 +164,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
                              .setFilter(PropertyFilter.lt("validUntil", System.currentTimeMillis()))
                              .build();
       List<Key> keysToDelete = new ArrayList<>();
-      datastore.run(query).forEachRemaining(key -> keysToDelete.add(key));
+      datastore.run(query).forEachRemaining(keysToDelete::add);
       logger.info("Total keys to delete {} for {}", keysToDelete.size(), collectionName);
       final List<List<Key>> keyBatches = Lists.partition(keysToDelete, DATA_STORE_BATCH_SIZE);
       keyBatches.forEach(keys -> {
@@ -216,7 +216,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
                            .setLimit(10000)
                            .build();
     List<Key> keys = new ArrayList<>();
-    datastore.run(query).forEachRemaining(key -> keys.add(key));
+    datastore.run(query).forEachRemaining(keys::add);
     return keys.size();
   }
 

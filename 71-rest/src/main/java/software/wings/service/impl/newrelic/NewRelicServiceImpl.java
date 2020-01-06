@@ -452,7 +452,7 @@ public class NewRelicServiceImpl implements NewRelicService {
             + "Probably the path to the YAML is incorrect.");
         return new ArrayList<>();
       }
-      return metricsMap.values().stream().flatMap(metric -> metric.stream()).collect(Collectors.toList());
+      return metricsMap.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
     } catch (Exception ex) {
       throw new WingsException("Unable to load New Relic metrics", ex);
     }

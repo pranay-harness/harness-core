@@ -185,13 +185,10 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getChildren()).isNotEmpty();
     assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
+    assertThat(templateFolder.getChildren()).isNotEmpty().extracting(TemplateFolder::getName).contains(TOMCAT_COMMANDS);
     assertThat(templateFolder.getChildren())
         .isNotEmpty()
-        .extracting(templateFolder1 -> templateFolder1.getName())
-        .contains(TOMCAT_COMMANDS);
-    assertThat(templateFolder.getChildren())
-        .isNotEmpty()
-        .extracting(templateFolder1 -> templateFolder1.getName())
+        .extracting(TemplateFolder::getName)
         .doesNotContain(JBOSS_COMMANDS);
   }
 
@@ -205,12 +202,8 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
     assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
     assertThat(templateFolder.getChildren()).isNotEmpty();
 
-    assertThat(templateFolder.getChildren())
-        .extracting(templateFolder1 -> templateFolder1.getName())
-        .contains(TOMCAT_COMMANDS);
-    assertThat(templateFolder.getChildren())
-        .extracting(templateFolder1 -> templateFolder1.getName())
-        .doesNotContain(LOAD_BALANCERS);
+    assertThat(templateFolder.getChildren()).extracting(TemplateFolder::getName).contains(TOMCAT_COMMANDS);
+    assertThat(templateFolder.getChildren()).extracting(TemplateFolder::getName).doesNotContain(LOAD_BALANCERS);
   }
 
   @Test
@@ -225,12 +218,8 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
     assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
     assertThat(templateFolder.getChildren()).isNotEmpty();
 
-    assertThat(templateFolder.getChildren())
-        .extracting(templateFolder1 -> templateFolder1.getName())
-        .contains(TOMCAT_COMMANDS);
-    assertThat(templateFolder.getChildren())
-        .extracting(templateFolder1 -> templateFolder1.getName())
-        .doesNotContain(LOAD_BALANCERS);
+    assertThat(templateFolder.getChildren()).extracting(TemplateFolder::getName).contains(TOMCAT_COMMANDS);
+    assertThat(templateFolder.getChildren()).extracting(TemplateFolder::getName).doesNotContain(LOAD_BALANCERS);
   }
 
   @Test
@@ -246,12 +235,8 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
     assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
     assertThat(templateFolder.getChildren()).isNotEmpty();
 
-    assertThat(templateFolder.getChildren())
-        .extracting(templateFolder1 -> templateFolder1.getName())
-        .contains(TOMCAT_COMMANDS);
-    assertThat(templateFolder.getChildren())
-        .extracting(templateFolder1 -> templateFolder1.getName())
-        .doesNotContain(LOAD_BALANCERS);
+    assertThat(templateFolder.getChildren()).extracting(TemplateFolder::getName).contains(TOMCAT_COMMANDS);
+    assertThat(templateFolder.getChildren()).extracting(TemplateFolder::getName).doesNotContain(LOAD_BALANCERS);
   }
 
   @Test
@@ -328,13 +313,9 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
     assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(TEMPLATE_GALLERY);
     assertThat(templateFolder.getChildren()).isNotEmpty();
 
-    assertThat(templateFolder.getChildren())
-        .extracting(templateFolder1 -> templateFolder1.getName())
-        .contains(TOMCAT_COMMANDS);
+    assertThat(templateFolder.getChildren()).extracting(TemplateFolder::getName).contains(TOMCAT_COMMANDS);
 
-    assertThat(templateFolder.getChildren())
-        .extracting(templateFolder1 -> templateFolder1.getName())
-        .doesNotContain(LOAD_BALANCERS);
+    assertThat(templateFolder.getChildren()).extracting(TemplateFolder::getName).doesNotContain(LOAD_BALANCERS);
   }
 
   @Test
@@ -571,7 +552,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
         .extracting(templateFolder1 -> templateFolder1.getName().contains(TEMPLATE_FOLDER_NAME_2));
     assertThat(templateFolder.getChildren())
         .isNotEmpty()
-        .extracting(templateFolder1 -> templateFolder1.getName())
+        .extracting(TemplateFolder::getName)
         .doesNotContain(GLOBAL_FOLDER);
   }
 

@@ -678,7 +678,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         if (isEmpty(envInfos)) {
           envSet = emptySet();
         } else {
-          envSet = envInfos.stream().map(envInfo -> envInfo.getEnvId()).collect(Collectors.toSet());
+          envSet = envInfos.stream().map(EnvInfo::getEnvId).collect(Collectors.toSet());
         }
       }
 
