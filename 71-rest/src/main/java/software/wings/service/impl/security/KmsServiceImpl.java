@@ -17,6 +17,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
+import static software.wings.service.intfc.security.SecretManager.ENCRYPTION_TYPE_KEY;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -31,13 +32,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.BaseFile;
-import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
-import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
@@ -60,8 +58,7 @@ import java.util.UUID;
 @Slf4j
 public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {
   @Inject private FileService fileService;
-  @Inject private FeatureFlagService featureFlagService;
-  @Inject private KmsEncryptDecryptClient kmsEncryptDecryptClient;
+  @Inject private GlobalEncryptDecryptClient globalEncryptDecryptClient;
 
   @Override
   public EncryptedData encrypt(char[] value, String accountId, KmsConfig kmsConfig) {
@@ -69,11 +66,10 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       return encryptLocal(value);
     }
 
-    if (GLOBAL_ACCOUNT_ID.equals(kmsConfig.getAccountId())
-        && featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, accountId)) {
+    if (GLOBAL_ACCOUNT_ID.equals(kmsConfig.getAccountId())) {
       // PL-1836: Perform encrypt/decrypt at manager side for global shared KMS.
       logger.info("Encrypt secret with global KMS secret manager for account {}", accountId);
-      return (EncryptedData) kmsEncryptDecryptClient.encrypt(accountId, value, kmsConfig);
+      return globalEncryptDecryptClient.encrypt(accountId, value, kmsConfig);
     } else {
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                             .accountId(accountId)
@@ -91,11 +87,10 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       return decryptLocal(data);
     }
 
-    if (GLOBAL_ACCOUNT_ID.equals(kmsConfig.getAccountId())
-        && featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, accountId)) {
+    if (GLOBAL_ACCOUNT_ID.equals(kmsConfig.getAccountId())) {
       // PL-1836: Perform encrypt/decrypt at manager side for global shared KMS.
       logger.info("Decrypt secret with global KMS secret manager for account {}", accountId);
-      return kmsEncryptDecryptClient.decrypt(data, kmsConfig);
+      return globalEncryptDecryptClient.decrypt(data, accountId, kmsConfig);
     } else {
       // HAR-7605: Shorter timeout for decryption tasks, and it should retry on timeout or failure.
       int failedAttempts = 0;
@@ -128,9 +123,15 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public KmsConfig getGlobalKmsConfig() {
-    KmsConfig globalKmsConfig =
-        wingsPersistence.createQuery(KmsConfig.class).field(ACCOUNT_ID_KEY).equal(GLOBAL_ACCOUNT_ID).get();
-
+    KmsConfig globalKmsConfig = wingsPersistence.createQuery(KmsConfig.class)
+                                    .field(ACCOUNT_ID_KEY)
+                                    .equal(GLOBAL_ACCOUNT_ID)
+                                    .field(ENCRYPTION_TYPE_KEY)
+                                    .equal(EncryptionType.KMS)
+                                    .get();
+    if (globalKmsConfig == null) {
+      return null;
+    }
     // Secrets field of raw KmsConfig are encrypted record IDs. It needs to be decrypted to be used.
     decryptKmsConfigSecrets(globalKmsConfig);
     return globalKmsConfig;

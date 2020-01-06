@@ -23,5 +23,9 @@ public interface SecretManagerConfigService {
 
   SecretManagerConfig getDefaultSecretManager(String accountId);
 
+  SecretManagerConfig getGlobalSecretManager(String accountId);
+
+  List<SecretManagerConfig> getAllGlobalSecretManagers();
+
   SecretManagerConfig getSecretManager(String accountId, String entityId);
 }

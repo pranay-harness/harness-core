@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.GCP_KMS_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
@@ -17,16 +18,14 @@ import static software.wings.service.intfc.security.SecretManagementDelegateServ
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.BaseFile;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.gcpkms.GcpKmsEncryptDecryptClient;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.GcpKmsService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
@@ -43,10 +42,9 @@ import java.time.Duration;
 
 @Slf4j
 public class GcpKmsServiceImpl extends AbstractSecretServiceImpl implements GcpKmsService {
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private GcpSecretsManagerService gcpSecretsManagerService;
-  @Inject private GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient;
   @Inject private FileService fileService;
+  @Inject private GlobalEncryptDecryptClient globalEncryptDecryptClient;
 
   @Override
   public EncryptedData encrypt(String value, String accountId, GcpKmsConfig gcpKmsConfig, EncryptedData encryptedData) {
@@ -57,10 +55,9 @@ public class GcpKmsServiceImpl extends AbstractSecretServiceImpl implements GcpK
       return encryptLocal(value.toCharArray());
     }
 
-    if (GLOBAL_ACCOUNT_ID.equals(gcpKmsConfig.getAccountId())
-        && featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, accountId)) {
+    if (GLOBAL_ACCOUNT_ID.equals(gcpKmsConfig.getAccountId())) {
       logger.info("Encrypt secret with global KMS secret manager for account {}", accountId);
-      return (EncryptedData) gcpKmsEncryptDecryptClient.encrypt(value, accountId, gcpKmsConfig, encryptedData);
+      return globalEncryptDecryptClient.encrypt(accountId, value.toCharArray(), gcpKmsConfig);
     } else {
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                             .accountId(accountId)
@@ -78,11 +75,10 @@ public class GcpKmsServiceImpl extends AbstractSecretServiceImpl implements GcpK
       return decryptLocal(data);
     }
 
-    if (GLOBAL_ACCOUNT_ID.equals(gcpKmsConfig.getAccountId())
-        && featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, accountId)) {
+    if (GLOBAL_ACCOUNT_ID.equals(gcpKmsConfig.getAccountId())) {
       // PL-1836: Perform encrypt/decrypt at manager side for global shared KMS.
       logger.info("Decrypt secret with global KMS secret manager for account {}", accountId);
-      return gcpKmsEncryptDecryptClient.decrypt(data, gcpKmsConfig);
+      return globalEncryptDecryptClient.decrypt(data, gcpKmsConfig);
     } else {
       // HAR-7605: Shorter timeout for decryption tasks, and it should retry on timeout or failure.
       int failedAttempts = 0;
@@ -120,13 +116,14 @@ public class GcpKmsServiceImpl extends AbstractSecretServiceImpl implements GcpK
     fileData.setType(SettingVariableTypes.CONFIG_FILE);
     fileData.setBase64Encoded(true);
     char[] encryptedValue = fileData.getEncryptedValue();
-    BaseFile baseFile = new BaseFile();
-    baseFile.setFileName(name);
-    baseFile.setAccountId(accountId);
-    baseFile.setFileUuid(UUIDGenerator.generateUuid());
-    String fileId = fileService.saveFile(
-        baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedValue)).array()), CONFIGS);
+    String fileId = createFile(name, accountId, encryptedValue);
     fileData.setEncryptedValue(fileId.toCharArray());
+
+    char[] backupEncryptedValue = fileData.getBackupEncryptedValue();
+    if (EmptyPredicate.isNotEmpty(backupEncryptedValue)) {
+      String backupfileId = createFile(name, accountId, backupEncryptedValue);
+      fileData.setBackupEncryptedValue(backupfileId.toCharArray());
+    }
     fileData.setFileSize(inputBytes.length);
     return fileData;
   }
@@ -134,14 +131,7 @@ public class GcpKmsServiceImpl extends AbstractSecretServiceImpl implements GcpK
   @Override
   public File decryptFile(File file, String accountId, EncryptedData encryptedData) {
     try {
-      GcpKmsConfig gcpKmsConfig = gcpSecretsManagerService.getGcpKmsConfig(accountId, encryptedData.getKmsId());
-      checkNotNull(gcpKmsConfig, "GCP KMS configuration can't be null");
-      checkNotNull(encryptedData, "Encrypted data record can't be null");
-      byte[] bytes = Files.toByteArray(file);
-      encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(bytes)).array());
-      char[] decrypt = decrypt(encryptedData, accountId, gcpKmsConfig);
-      byte[] fileData =
-          encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
+      byte[] fileData = decryptFileInternal(file, accountId, encryptedData);
       Files.write(fileData, file);
       return file;
     } catch (IOException ioe) {
@@ -153,19 +143,43 @@ public class GcpKmsServiceImpl extends AbstractSecretServiceImpl implements GcpK
   @Override
   public void decryptToStream(File file, String accountId, EncryptedData encryptedData, OutputStream output) {
     try {
-      GcpKmsConfig gcpKmsConfig = gcpSecretsManagerService.getGcpKmsConfig(accountId, encryptedData.getKmsId());
-      checkNotNull(gcpKmsConfig, "KMS configuration can't be null");
-      checkNotNull(encryptedData, "Encrypted data record can't be null");
-      byte[] bytes = Files.toByteArray(file);
-      encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(bytes)).array());
-      char[] decrypt = decrypt(encryptedData, accountId, gcpKmsConfig);
-      byte[] fileData =
-          encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
+      byte[] fileData = decryptFileInternal(file, accountId, encryptedData);
       output.write(fileData, 0, fileData.length);
       output.flush();
     } catch (IOException ioe) {
       throw new SecretManagementException(
           KMS_OPERATION_ERROR, "Failed to decrypt data into an output stream", ioe, USER);
     }
+  }
+
+  private byte[] decryptFileInternal(File file, String accountId, EncryptedData encryptedData) throws IOException {
+    GcpKmsConfig gcpKmsConfig = gcpSecretsManagerService.getGcpKmsConfig(accountId, encryptedData.getKmsId());
+    checkNotNull(gcpKmsConfig, "KMS configuration can't be null");
+    checkNotNull(encryptedData, "Encrypted data record can't be null");
+    byte[] bytes = Files.toByteArray(file);
+    encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(bytes)).array());
+
+    if (EmptyPredicate.isNotEmpty(encryptedData.getBackupEncryptedValue())) {
+      char[] backupEncryptedValue = getEncryptedValueFromFile(String.valueOf(encryptedData.getBackupEncryptedValue()));
+      encryptedData.setBackupEncryptedValue(backupEncryptedValue);
+    }
+
+    char[] decrypt = decrypt(encryptedData, accountId, gcpKmsConfig);
+    return encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
+  }
+
+  private char[] getEncryptedValueFromFile(String fileId) throws IOException {
+    File file = new File(Files.createTempDir(), generateUuid());
+    fileService.download(fileId, file, CONFIGS);
+    return CHARSET.decode(ByteBuffer.wrap(Files.toByteArray(file))).array();
+  }
+
+  private String createFile(String name, String accountId, char[] encryptedValue) {
+    BaseFile baseFile = new BaseFile();
+    baseFile.setFileName(name);
+    baseFile.setAccountId(accountId);
+    baseFile.setFileUuid(UUIDGenerator.generateUuid());
+    return fileService.saveFile(
+        baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedValue)).array()), CONFIGS);
   }
 }

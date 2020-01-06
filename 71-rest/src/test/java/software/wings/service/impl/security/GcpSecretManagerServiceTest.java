@@ -8,6 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.alerts.AlertStatus.Pending;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -65,6 +66,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
                     .withAccounts(accounts)
                     .build();
     UserThreadLocal.set(user);
+    when(harnessUserGroupService.isHarnessSupportUser(user.getUuid())).thenReturn(true);
   }
 
   @Test
@@ -451,5 +453,30 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     assertThat(result).isTrue();
     Alert alert = wingsPersistence.get(Alert.class, alertId);
     assertThat(alert.getStatus()).isEqualTo(AlertStatus.Closed);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testGetGlobalKmsConfig() {
+    setup();
+    String credentialsString = "{\"credentials\":\"abc\"}";
+    char[] credentials = credentialsString.toCharArray();
+
+    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials);
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setAccountId(account.getUuid());
+    gcpKmsConfig.setDefault(true);
+
+    when(accountService.get(GLOBAL_ACCOUNT_ID)).thenReturn(account);
+    when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
+
+    String result = gcpSecretsManagerService.saveGcpKmsConfig(GLOBAL_ACCOUNT_ID, gcpKmsConfig);
+    assertThat(result).isNotNull();
+    gcpKmsConfig.setUuid(result);
+
+    GcpKmsConfig returnedGcpKmsConfig = gcpSecretsManagerService.getGlobalKmsConfig();
+    assertThat(returnedGcpKmsConfig).isNotNull();
+    assertThat(returnedGcpKmsConfig.getCredentials()).isEqualTo(credentials);
   }
 }

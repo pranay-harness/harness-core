@@ -7,7 +7,6 @@ import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
-import software.wings.beans.KmsConfig;
 import software.wings.features.api.AbstractPremiumFeature;
 import software.wings.features.api.ComplianceByRemovingUsage;
 import software.wings.features.api.FeatureRestrictions;
@@ -99,9 +98,9 @@ public class SecretsManagementFeature extends AbstractPremiumFeature implements 
   }
 
   private static boolean isHarnessSecretManager(EncryptionConfig secretManagerConfig) {
-    if (secretManagerConfig.getEncryptionType() == EncryptionType.KMS) {
-      KmsConfig kmsConfig = (KmsConfig) secretManagerConfig;
-      return Account.GLOBAL_ACCOUNT_ID.equals(kmsConfig.getAccountId());
+    if (secretManagerConfig.getEncryptionType() == EncryptionType.KMS
+        || secretManagerConfig.getEncryptionType() == EncryptionType.GCP_KMS) {
+      return Account.GLOBAL_ACCOUNT_ID.equals(secretManagerConfig.getAccountId());
     }
 
     return false;

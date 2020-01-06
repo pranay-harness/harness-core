@@ -482,6 +482,10 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
       encryptedData.setEncryptedValue(encryptedPair.getEncryptedValue());
       encryptedData.setEncryptionType(encryptedPair.getEncryptionType());
       encryptedData.setKmsId(encryptedPair.getKmsId());
+      encryptedData.setBackupEncryptionKey(encryptedPair.getBackupEncryptionKey());
+      encryptedData.setBackupEncryptedValue(encryptedPair.getBackupEncryptedValue());
+      encryptedData.setBackupKmsId(encryptedPair.getBackupKmsId());
+      encryptedData.setBackupEncryptionType(encryptedPair.getBackupEncryptionType());
       changeLogDescription = "Changed " + decryptedField.getName();
     }
 

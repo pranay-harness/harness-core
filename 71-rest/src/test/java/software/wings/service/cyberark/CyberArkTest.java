@@ -51,6 +51,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.KmsService;
@@ -73,14 +74,15 @@ import java.util.UUID;
 public class CyberArkTest extends WingsBaseTest {
   @Inject private CyberArkResource cyberArkResource;
   @Mock private AccountService accountService;
-  @Inject @InjectMocks private KmsService kmsService;
-  @Inject @InjectMocks private CyberArkService cyberArkService;
-  @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
   @Inject private LocalEncryptionService localEncryptionService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private PremiumFeature secretsManagementFeature;
+  @Mock private GlobalEncryptDecryptClient globalEncryptDecryptClient;
   @Mock protected AuditServiceHelper auditServiceHelper;
+  @Inject @InjectMocks private KmsService kmsService;
+  @Inject @InjectMocks private CyberArkService cyberArkService;
+  @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
   private final int numOfEncryptedValsForCyberArk = 1;
   private final int numOfEncryptedValsForCyberKms = 3;
   private final String userEmail = "mark.lu@harness.io";
@@ -118,6 +120,17 @@ public class CyberArkTest extends WingsBaseTest {
       Object[] args = invocation.getArguments();
       return decrypt((EncryptedData) args[0], (CyberArkConfig) args[1]);
     });
+
+    when(globalEncryptDecryptClient.encrypt(anyString(), any(), any(KmsConfig.class))).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return encrypt((String) args[0], (char[]) args[1], (KmsConfig) args[2]);
+    });
+
+    when(globalEncryptDecryptClient.decrypt(anyObject(), anyString(), any(KmsConfig.class))).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return decrypt((EncryptedData) args[0], (KmsConfig) args[2]);
+    });
+
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(secretManagementDelegateService);
     when(secretManagementDelegateService.encrypt(anyString(), anyObject(), any(KmsConfig.class))).then(invocation -> {

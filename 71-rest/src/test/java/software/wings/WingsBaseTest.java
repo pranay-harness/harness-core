@@ -28,6 +28,7 @@ import software.wings.beans.CyberArkConfig;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureFlag.FeatureFlagKeys;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
@@ -179,6 +180,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
                                   .secretEngineVersion(1)
                                   .build();
     vaultConfig.setDefault(true);
+    vaultConfig.setEncryptionType(EncryptionType.VAULT);
     return vaultConfig;
   }
 
@@ -189,7 +191,16 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     kmsConfig.setKmsArn(generateUuid());
     kmsConfig.setAccessKey(generateUuid());
     kmsConfig.setSecretKey(generateUuid());
+    kmsConfig.setEncryptionType(EncryptionType.KMS);
     return kmsConfig;
+  }
+
+  protected GcpKmsConfig getGcpKmsConfig() {
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("gcpKms", "projectId", "region", "keyRing", "keyName", "{\"abc\": \"value\"}".toCharArray());
+    gcpKmsConfig.setDefault(true);
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    return gcpKmsConfig;
   }
 
   protected CyberArkConfig getCyberArkConfig() {
@@ -203,6 +214,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     cyberArkConfig.setCyberArkUrl("https://app.harness.io"); // Just a valid URL.
     cyberArkConfig.setAppId(generateUuid());
     cyberArkConfig.setClientCertificate(clientCertificate);
+    cyberArkConfig.setEncryptionType(EncryptionType.CYBERARK);
     return cyberArkConfig;
   }
 
@@ -215,6 +227,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     azureVaultConfig.setClientId(generateUuid());
     azureVaultConfig.setSubscription(generateUuid());
     azureVaultConfig.setTenantId(generateUuid());
+    azureVaultConfig.setEncryptionType(EncryptionType.AZURE_VAULT);
     return azureVaultConfig;
   }
 
@@ -227,6 +240,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
                                                        .secretNamePrefix(generateUuid())
                                                        .build();
     secretsManagerConfig.setDefault(true);
+    secretsManagerConfig.setEncryptionType(EncryptionType.AWS_SECRETS_MANAGER);
 
     return secretsManagerConfig;
   }
