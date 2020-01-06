@@ -32,13 +32,14 @@ public final class Ec2Messages {
     java.lang.String[] descriptorData = {"\n,io/harness/event/payloads/ec2_messages"
         + ".proto\022\031io.harness.event.payloads\032/io/ha"
         + "rness/event/payloads/common_messages.pro"
-        + "to\"\203\002\n\017Ec2InstanceInfo\022\023\n\013instance_id\030\001 "
+        + "to\"\253\002\n\017Ec2InstanceInfo\022\023\n\013instance_id\030\001 "
         + "\001(\t\022\025\n\rinstance_type\030\002 \001(\t\022\037\n\027capacity_r"
         + "eservation_id\030\003 \001(\t\022 \n\030spot_instance_req"
         + "uest_id\030\004 \001(\t\022\032\n\022instance_lifecycle\030\005 \001("
         + "\t\022@\n\016instance_state\030\006 \001(\0132(.io.harness.e"
         + "vent.payloads.InstanceState\022\023\n\013cluster_a"
-        + "rn\030\007 \001(\t\022\016\n\006region\030\010 \001(\t\"+\n\rInstanceStat"
+        + "rn\030\007 \001(\t\022\016\n\006region\030\010 \001(\t\022\022\n\ncluster_id\030\t"
+        + " \001(\t\022\022\n\nsetting_id\030\n \001(\t\"+\n\rInstanceStat"
         + "e\022\014\n\004code\030\001 \001(\005\022\014\n\004name\030\002 \001(\t\"G\n\014Ec2Life"
         + "cycle\0227\n\tlifecycle\030\001 \001(\0132$.io.harness.ev"
         + "ent.payloads.LifecycleB\002P\001b\006proto3"};
@@ -68,6 +69,8 @@ public final class Ec2Messages {
                 "InstanceState",
                 "ClusterArn",
                 "Region",
+                "ClusterId",
+                "SettingId",
             });
     internal_static_io_harness_event_payloads_InstanceState_descriptor = getDescriptor().getMessageTypes().get(1);
     internal_static_io_harness_event_payloads_InstanceState_fieldAccessorTable =

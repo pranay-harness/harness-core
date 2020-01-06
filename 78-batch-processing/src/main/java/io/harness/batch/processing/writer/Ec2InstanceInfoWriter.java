@@ -35,6 +35,9 @@ public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<Pub
 
           InstanceData instanceData = fetchActiveInstanceData(accountId, instanceId);
           if (null == instanceData) {
+            String clusterId = ec2InstanceInfo.getClusterId();
+            String settingId = ec2InstanceInfo.getSettingId();
+
             String instanceFamily = ec2InstanceInfo.getInstanceType();
             Map<String, String> metaData = new HashMap<>();
             metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, instanceFamily);
@@ -48,6 +51,8 @@ public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<Pub
                                .instanceType(InstanceType.EC2_INSTANCE)
                                .instanceState(InstanceState.INITIALIZING)
                                .metaData(metaData)
+                               .clusterId(clusterId)
+                               .settingId(settingId)
                                .build();
             logger.info("Creating ec2 instance {} ", instanceId);
             instanceDataService.create(instanceData);
