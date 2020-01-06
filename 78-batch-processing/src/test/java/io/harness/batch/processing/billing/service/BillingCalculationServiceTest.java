@@ -258,6 +258,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
     addParentResource(metaData, 1024, 1024);
+    metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
     InstanceData instanceData = getInstance(
         instanceResource, metaData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP, InstanceType.ECS_TASK_EC2);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);

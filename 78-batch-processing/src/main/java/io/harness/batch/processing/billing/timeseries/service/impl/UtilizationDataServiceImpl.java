@@ -36,9 +36,9 @@ public class UtilizationDataServiceImpl {
   private static final int MAX_RETRY_COUNT = 5;
 
   static final String INSERT_STATEMENT =
-      "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, ACCOUNTID, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTANCEID, INSTANCETYPE, SETTINGID ) VALUES (?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, ACCOUNTID, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTANCEID, INSTANCETYPE, SETTINGID, MAXCPUVALUE, MAXMEMORYVALUE, AVGCPUVALUE, AVGMEMORYVALUE ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
   private static final String UTILIZATION_DATA_QUERY =
-      "SELECT MAX(MAXCPU) as MAXCPUUTILIZATION, MAX(MAXMEMORY) as MAXMEMORYUTILIZATION, AVG(AVGCPU) as AVGCPUUTILIZATION, AVG(AVGMEMORY) as AVGMEMORYUTILIZATION, INSTANCEID FROM UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY INSTANCEID;";
+      "SELECT MAX(MAXCPU) as MAXCPUUTILIZATION, MAX(MAXMEMORY) as MAXMEMORYUTILIZATION, AVG(AVGCPU) as AVGCPUUTILIZATION, AVG(AVGMEMORY) as AVGMEMORYUTILIZATION, MAX(MAXCPUVALUE) as MAXCPUVALUE, MAX(MAXMEMORYVALUE) as MAXMEMORYVALUE, AVG(AVGCPUVALUE) as AVGCPUVALUE, AVG(AVGMEMORYVALUE) as AVGMEMORYVALUE, INSTANCEID FROM UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY INSTANCEID;";
 
   public boolean create(InstanceUtilizationData instanceUtilizationData) {
     boolean successfulInsert = false;
@@ -78,6 +78,10 @@ public class UtilizationDataServiceImpl {
     statement.setString(8, instanceUtilizationData.getInstanceId());
     statement.setString(9, instanceUtilizationData.getInstanceType());
     statement.setString(10, instanceUtilizationData.getSettingId());
+    statement.setDouble(11, instanceUtilizationData.getCpuUtilizationMaxValue());
+    statement.setDouble(12, instanceUtilizationData.getMemoryUtilizationMaxValue());
+    statement.setDouble(13, instanceUtilizationData.getCpuUtilizationAvgValue());
+    statement.setDouble(14, instanceUtilizationData.getMemoryUtilizationAvgValue());
   }
 
   public Map<String, UtilizationData> getUtilizationDataForInstances(
@@ -110,8 +114,12 @@ public class UtilizationDataServiceImpl {
         String instanceId = resultSet.getString("INSTANCEID");
         double maxCpuUtilization = resultSet.getDouble("MAXCPUUTILIZATION");
         double maxMemoryUtilization = resultSet.getDouble("MAXMEMORYUTILIZATION");
-        double avgCpuUtilization = resultSet.getDouble("MAXCPUUTILIZATION");
-        double avgMemoryUtilization = resultSet.getDouble("MAXMEMORYUTILIZATION");
+        double avgCpuUtilization = resultSet.getDouble("AVGCPUUTILIZATION");
+        double avgMemoryUtilization = resultSet.getDouble("AVGMEMORYUTILIZATION");
+        double maxCpuValue = resultSet.getDouble("MAXCPUVALUE");
+        double maxMemoryValue = resultSet.getDouble("MAXMEMORYVALUE");
+        double avgCpuValue = resultSet.getDouble("AVGCPUVALUE");
+        double avgMemoryValue = resultSet.getDouble("AVGMEMORYVALUE");
         if (serviceArnToInstanceIds.get(instanceId) != null) {
           serviceArnToInstanceIds.get(instanceId)
               .forEach(instance
@@ -121,6 +129,10 @@ public class UtilizationDataServiceImpl {
                           .maxMemoryUtilization(maxMemoryUtilization)
                           .avgCpuUtilization(avgCpuUtilization)
                           .avgMemoryUtilization(avgMemoryUtilization)
+                          .maxCpuUtilizationValue(maxCpuValue)
+                          .avgCpuUtilizationValue(avgCpuValue)
+                          .maxMemoryUtilizationValue(maxMemoryValue)
+                          .avgMemoryUtilizationValue(avgMemoryValue)
                           .build()));
         }
       }
