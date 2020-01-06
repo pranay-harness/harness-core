@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher;
 
 import static com.amazonaws.util.CollectionUtils.mergeLists;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.function.Function.identity;
 
 import com.google.api.client.util.ArrayMap;
 
@@ -188,7 +189,7 @@ public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends
     Set<HarnessTagLink> tagLinks = tagService.getTagLinks(
         accountId, getEntityType((E) groupByTag.getEntityType()), entityIdSet, groupByTag.getTagName());
     Map<String, HarnessTagLink> entityIdTagLinkMap =
-        tagLinks.stream().collect(Collectors.toMap(tagLink -> tagLink.getEntityId(), tagLink -> tagLink));
+        tagLinks.stream().collect(Collectors.toMap(tagLink -> tagLink.getEntityId(), identity()));
 
     ArrayMap<String, QLDataPoint> tagNameDataPointMap = new ArrayMap<>();
 
@@ -222,7 +223,7 @@ public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends
     Set<HarnessTagLink> tagLinks = tagService.getTagLinks(
         accountId, getEntityType((E) groupByTag.getEntityType()), entityIdSet, groupByTag.getTagName());
     Map<String, HarnessTagLink> entityIdTagLinkMap =
-        tagLinks.stream().collect(Collectors.toMap(tagLink -> tagLink.getEntityId(), tagLink -> tagLink));
+        tagLinks.stream().collect(Collectors.toMap(tagLink -> tagLink.getEntityId(), identity()));
 
     ArrayMap<String, QLStackedDataPoint> tagNameStackedDataPointMap = new ArrayMap<>();
 

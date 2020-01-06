@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -134,7 +135,7 @@ public class DelegateQueueTask implements Runnable {
                                      .project(DelegateTaskKeys.data_taskType, true)
                                      .project(DelegateTaskKeys.data_parameters, true)
                                      .asList();
-      delegateTasks.putAll(tasks.stream().collect(toMap(DelegateTask::getUuid, delegateTask -> delegateTask)));
+      delegateTasks.putAll(tasks.stream().collect(toMap(DelegateTask::getUuid, identity())));
       taskWaitIds.putAll(tasks.stream()
                              .filter(task -> isNotEmpty(task.getWaitId()))
                              .collect(toMap(DelegateTask::getUuid, DelegateTask::getWaitId)));

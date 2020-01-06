@@ -9,6 +9,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.validation.Validator.unEqualCheck;
 import static java.util.Arrays.asList;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -158,7 +159,7 @@ public class UserGroupServiceImpl implements UserGroupService {
       return;
     }
 
-    Map<String, User> userMap = allUsersList.stream().collect(Collectors.toMap(User::getUuid, u -> u));
+    Map<String, User> userMap = allUsersList.stream().collect(Collectors.toMap(User::getUuid, identity()));
     userGroups.forEach(userGroup -> {
       List<String> memberIds = userGroup.getMemberIds();
       if (isEmpty(memberIds)) {

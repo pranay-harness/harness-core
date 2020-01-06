@@ -7,6 +7,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -816,8 +817,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     Map<String, ContainerDeploymentInfo> containerSvcNameDeploymentInfoMap =
         instanceService.getContainerDeploymentInfoList(containerSvcNameNoRevision, context.getAppId())
             .stream()
-            .collect(toMap(ContainerDeploymentInfo::getContainerSvcName,
-                currentContainerDeploymentInDB -> currentContainerDeploymentInDB));
+            .collect(toMap(ContainerDeploymentInfo::getContainerSvcName, identity()));
 
     for (ContainerMetadata containerMetadata : containerMetadataSet) {
       ContainerDeploymentInfo containerDeploymentInfo =

@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -279,7 +280,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   private void saveOrUpdateServiceVariables(Yaml updatedYaml, List<ServiceVariable> previousServiceVariables,
       String appId, String serviceId, boolean syncFromGit) {
     Map<String, ServiceVariable> serviceVariableMap =
-        previousServiceVariables.stream().collect(Collectors.toMap(ServiceVariable::getName, serviceVar -> serviceVar));
+        previousServiceVariables.stream().collect(Collectors.toMap(ServiceVariable::getName, identity()));
 
     List<NameValuePair.Yaml> configVarsToAdd = getConfigVariablesToAdd(updatedYaml, serviceVariableMap);
     List<ServiceVariable> configVarsToDelete = getConfigVariablesToDelete(updatedYaml, serviceVariableMap);

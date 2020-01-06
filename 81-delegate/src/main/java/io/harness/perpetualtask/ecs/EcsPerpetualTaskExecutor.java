@@ -2,6 +2,7 @@ package io.harness.perpetualtask.ecs;
 
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
+import static java.util.function.Function.identity;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Ordering;
@@ -288,13 +289,13 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
 
         List<Resource> registeredResources = containerInstance.getRegisteredResources();
         Map<String, Resource> resourceMap =
-            registeredResources.stream().collect(Collectors.toMap(Resource::getName, resource -> resource));
+            registeredResources.stream().collect(Collectors.toMap(Resource::getName, identity()));
 
         int memory = resourceMap.get("MEMORY").getIntegerValue();
         int cpu = resourceMap.get("CPU").getIntegerValue();
 
-        Map<String, Attribute> attributeMap = containerInstance.getAttributes().stream().collect(
-            Collectors.toMap(Attribute::getName, attribute -> attribute));
+        Map<String, Attribute> attributeMap =
+            containerInstance.getAttributes().stream().collect(Collectors.toMap(Attribute::getName, identity()));
         Attribute attribute = attributeMap.get(ECS_OS_TYPE);
 
         EcsContainerInstanceInfo ecsContainerInstanceInfo =

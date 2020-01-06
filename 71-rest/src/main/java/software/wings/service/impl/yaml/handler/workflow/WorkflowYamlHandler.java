@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.emptyList;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -135,7 +136,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       }
 
       Map<String, WorkflowPhase> workflowPhaseMap =
-          phaseList.stream().collect(Collectors.toMap(WorkflowPhase::getName, phase -> phase));
+          phaseList.stream().collect(Collectors.toMap(WorkflowPhase::getName, identity()));
 
       // rollback phases
       Map<String, WorkflowPhase> rollbackPhaseMap = Maps.newHashMap();

@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.model.EventConstants.ACCOUNT_ID;
 import static io.harness.event.model.EventConstants.IS_24X7_ENABLED;
 import static io.harness.event.model.EventConstants.VERIFICATION_STATE_TYPE;
+import static java.util.function.Function.identity;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Inject;
@@ -74,7 +75,7 @@ public class UsageMetricsService {
     List<CVConfiguration> cvConfigurationList = cvConfigurationService.listConfigurations(account.getUuid());
     List<Environment> environments = environmentService.getEnvByAccountId(account.getUuid());
     Map<String, Environment> environmentMap =
-        environments.stream().collect(Collectors.toMap(Environment::getUuid, env -> env));
+        environments.stream().collect(Collectors.toMap(Environment::getUuid, identity()));
 
     Map<SetupEventGroupByKey, List<CVConfiguration>> groupConfigMap =
         cvConfigurationList.stream()

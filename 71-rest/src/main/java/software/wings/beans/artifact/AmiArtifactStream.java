@@ -2,6 +2,7 @@ package software.wings.beans.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 
@@ -86,7 +87,7 @@ public class AmiArtifactStream extends ArtifactStream {
                    .keySet()
                    .stream()
                    .collect(Collectors.toMap(
-                       s -> s, s -> collect.get(s).stream().map(tag -> tag.value).collect(toList()), (a, b) -> b));
+                       identity(), s -> collect.get(s).stream().map(tag -> tag.value).collect(toList()), (a, b) -> b));
     }
 
     if (filters != null) {

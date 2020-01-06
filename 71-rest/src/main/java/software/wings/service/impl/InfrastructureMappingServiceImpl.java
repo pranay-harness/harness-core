@@ -11,6 +11,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -177,7 +178,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -1246,7 +1246,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return stencilPostProcessor
         .postProcess(Lists.newArrayList(InfrastructureMappingType.values()), appId, Maps.newHashMap())
         .stream()
-        .collect(toMap(Stencil::getName, Function.identity()));
+        .collect(toMap(Stencil::getName, identity()));
   }
 
   @Override
@@ -1664,7 +1664,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listLoadBalancers(computeProviderSetting, Regions.US_EAST_1.getName(), appId)
           .stream()
-          .collect(toMap(s -> s, s -> s));
+          .collect(toMap(identity(), identity()));
     } else if (PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
       return settingsService
           .getGlobalSettingAttributesByType(computeProviderSetting.getAccountId(), SettingVariableTypes.ELB.name())
@@ -1691,7 +1691,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return ((AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name()))
           .listLoadBalancers(computeProviderSetting, region, appId)
           .stream()
-          .collect(toMap(s -> s, s -> s));
+          .collect(toMap(identity(), identity()));
     } else if (PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
       return settingsService
           .getGlobalSettingAttributesByType(computeProviderSetting.getAccountId(), SettingVariableTypes.ELB.name())
@@ -1728,7 +1728,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return ((AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name()))
         .listElasticBalancers(computeProviderSetting, region, appId)
         .stream()
-        .collect(toMap(s -> s, s -> s));
+        .collect(toMap(identity(), identity()));
   }
 
   @Override
@@ -1748,7 +1748,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return ((AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name()))
           .listNetworkBalancers(computeProviderSetting, region, appId)
           .stream()
-          .collect(toMap(s -> s, s -> s));
+          .collect(toMap(identity(), identity()));
     }
     return Collections.emptyMap();
   }

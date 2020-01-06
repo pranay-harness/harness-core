@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.util.function.Function.identity;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
@@ -115,8 +116,8 @@ public class PcfInstanceHandler extends InstanceHandler {
           notNullCheck("latestpcfInstanceInfoList", latestpcfInstanceInfoList);
           logger.info("Received Instance details for Instance count: " + latestpcfInstanceInfoList.size());
 
-          Map<String, PcfInstanceInfo> latestPcfInstanceInfoMap = latestpcfInstanceInfoList.stream().collect(
-              Collectors.toMap(PcfInstanceInfo::getId, pcfInstanceInfo -> pcfInstanceInfo));
+          Map<String, PcfInstanceInfo> latestPcfInstanceInfoMap =
+              latestpcfInstanceInfoList.stream().collect(Collectors.toMap(PcfInstanceInfo::getId, identity()));
 
           Collection<Instance> instancesInDB = pcfAppNameInstanceMap.get(pcfApplicationName);
 
