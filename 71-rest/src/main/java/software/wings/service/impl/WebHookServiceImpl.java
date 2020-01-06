@@ -223,7 +223,7 @@ public class WebHookServiceImpl implements WebHookService {
     }
     WebhookSource webhookSource = webhookEventUtils.obtainWebhookSource(httpHeaders);
 
-    if (!WebhookSource.GITHUB.equals(webhookSource)) {
+    if (WebhookSource.GITHUB != webhookSource) {
       return false;
     }
 
@@ -294,7 +294,7 @@ public class WebHookServiceImpl implements WebHookService {
 
     Type payloadType = ((WebhookCondition) deploymentTrigger.getCondition()).getPayloadSource().getType();
 
-    if (!payloadType.equals(Type.CUSTOM) && isGithubPingEvent(httpHeaders)) {
+    if (payloadType != Type.CUSTOM && isGithubPingEvent(httpHeaders)) {
       return prepareResponse(WebHookResponse.builder().message("Received ping event").build(), Response.Status.OK);
     }
 
@@ -309,7 +309,7 @@ public class WebHookServiceImpl implements WebHookService {
 
     WorkflowExecution workflowExecution = null;
     try {
-      if (payloadType.equals(Type.CUSTOM)) {
+      if (payloadType == Type.CUSTOM) {
         logger.info("Executing custom request for trigger {}  ", deploymentTrigger.getName());
         Map<String, Object> payLoadMap =
             JsonUtils.asObject(webhookEventPayload, new TypeReference<Map<String, Object>>() {});
@@ -349,9 +349,9 @@ public class WebHookServiceImpl implements WebHookService {
   }
 
   private WorkflowType getWorkflowType(ActionType actionType) {
-    if (actionType.equals(ActionType.WORKFLOW)) {
+    if (actionType == ActionType.WORKFLOW) {
       return ORCHESTRATION;
-    } else if (actionType.equals(ActionType.PIPELINE)) {
+    } else if (actionType == ActionType.PIPELINE) {
       return PIPELINE;
     } else {
       throw new WingsException("Invalid action type " + actionType.name());
@@ -359,9 +359,9 @@ public class WebHookServiceImpl implements WebHookService {
   }
 
   private String getWorkflowId(Action action) {
-    if (action.getActionType().equals(ActionType.WORKFLOW)) {
+    if (action.getActionType() == ActionType.WORKFLOW) {
       return ((WorkflowAction) action).getWorkflowId();
-    } else if (action.getActionType().equals(ActionType.PIPELINE)) {
+    } else if (action.getActionType() == ActionType.PIPELINE) {
       return ((PipelineAction) action).getPipelineId();
     } else {
       throw new WingsException("Invalid action type " + action.getActionType().name());
@@ -515,7 +515,7 @@ public class WebHookServiceImpl implements WebHookService {
     Map<String, String> resolvedParameters = new HashMap<>();
     WebhookSource webhookSource = webhookEventUtils.obtainWebhookSource(httpHeaders);
 
-    if (!webhookSource.equals(webhookTriggerCondition.getWebhookSource())) {
+    if (webhookSource != webhookTriggerCondition.getWebhookSource()) {
       String msg = "Trigger [" + trigger.getName() + "] is set for source ["
           + webhookTriggerCondition.getWebhookSource() + "] not associate with the in coming source   [" + webhookSource
           + "]";
@@ -561,9 +561,9 @@ public class WebHookServiceImpl implements WebHookService {
 
   private void validateWebHook(WebhookSource webhookSource, Trigger trigger, WebHookTriggerCondition triggerCondition,
       Map<String, Object> payLoadMap, HttpHeaders httpHeaders) {
-    if (WebhookSource.GITHUB.equals(webhookSource)) {
+    if (WebhookSource.GITHUB == webhookSource) {
       validateGitHubWebhook(trigger, triggerCondition, payLoadMap, httpHeaders);
-    } else if (WebhookSource.BITBUCKET.equals(webhookSource)) {
+    } else if (WebhookSource.BITBUCKET == webhookSource) {
       validateBitBucketWebhook(trigger, triggerCondition, payLoadMap, httpHeaders);
     }
   }
@@ -581,7 +581,7 @@ public class WebHookServiceImpl implements WebHookService {
   private void validateBitBucketWebhook(
       Trigger trigger, WebHookTriggerCondition triggerCondition, Map<String, Object> content, HttpHeaders headers) {
     WebhookSource webhookSource = triggerCondition.getWebhookSource();
-    if (BITBUCKET.equals(webhookSource)) {
+    if (BITBUCKET == webhookSource) {
       logger.info("Trigger is set for BitBucket. Checking the http headers for the request type");
       String bitBucketEvent = headers == null ? null : headers.getHeaderString(X_BIT_BUCKET_EVENT);
       logger.info("X-Event-Key is {} ", bitBucketEvent);
@@ -606,7 +606,7 @@ public class WebHookServiceImpl implements WebHookService {
   private void validateGitHubWebhook(
       Trigger trigger, WebHookTriggerCondition triggerCondition, Map<String, Object> content, HttpHeaders headers) {
     WebhookSource webhookSource = triggerCondition.getWebhookSource();
-    if (GITHUB.equals(webhookSource)) {
+    if (GITHUB == webhookSource) {
       logger.info("Trigger is set for GitHub. Checking the http headers for the request type");
       String gitHubEvent = headers == null ? null : headers.getHeaderString(X_GIT_HUB_EVENT);
       logger.info("X-GitHub-Event is {} ", gitHubEvent);
@@ -619,7 +619,7 @@ public class WebHookServiceImpl implements WebHookService {
           "Trigger [" + trigger.getName() + "] is not associated with the received GitHub event [" + gitHubEvent + "]";
 
       validateEventType(triggerCondition, content, errorMsg, webhookEventType);
-      if (PULL_REQUEST.equals(webhookEventType)) {
+      if (PULL_REQUEST == webhookEventType) {
         Object prAction = content.get("action");
         if (prAction != null && triggerCondition.getActions() != null
             && !triggerCondition.getActions().contains(PrAction.find(prAction.toString()))) {
@@ -644,7 +644,7 @@ public class WebHookServiceImpl implements WebHookService {
             .requestId(workflowExecution.getUuid())
             .status(workflowExecution.getStatus().name())
             .apiUrl(getApiUrl(app.getAccountId(), appId, workflowExecution.getUuid()))
-            .uiUrl(getUiUrl(PIPELINE.equals(workflowExecution.getWorkflowType()), app.getAccountId(), appId,
+            .uiUrl(getUiUrl(PIPELINE == workflowExecution.getWorkflowType(), app.getAccountId(), appId,
                 workflowExecution.getEnvId(), workflowExecution.getUuid()))
             .build();
 

@@ -221,7 +221,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
             break;
           case STRING:
             final String entityId = resultSet.getString(field.getFieldName());
-            if (queryData.getGroupByFields().get(1).equals(field)) {
+            if (queryData.getGroupByFields().get(1) == field) {
               dataPointBuilder.key(buildQLReference(field, entityId));
             } else {
               dataPointBuilder.groupBy1(entityId);
@@ -269,7 +269,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     QLSortOrder countSortOrder = null;
     if (queryData.getSortCriteria() != null) {
       for (QLDeploymentSortCriteria sortCriteria : queryData.getSortCriteria()) {
-        if (sortCriteria.getSortType().equals(QLDeploymentSortType.Count)) {
+        if (sortCriteria.getSortType() == QLDeploymentSortType.Count) {
           countSort = true;
           countSortOrder = sortCriteria.getSortOrder();
           stackedDataPoints.sort(new QLStackedDataPointComparator(countSortOrder));
@@ -621,13 +621,13 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   private TimeFilterQueryResult evaluateTimeFilter(
       TimeFilterQueryResult result, QLTimeFilter timeOperator, QLDeploymentFilterType type) {
     if (timeOperator != null) {
-      if (timeOperator.getOperator().equals(QLTimeOperator.BEFORE)) {
+      if (timeOperator.getOperator() == QLTimeOperator.BEFORE) {
         result.setT2Present(true);
         if (result.getT2() == null) {
           result.setT2(timeOperator.getValue().longValue());
           result.setT2Type(type);
         }
-      } else if (timeOperator.getOperator().equals(QLTimeOperator.AFTER)) {
+      } else if (timeOperator.getOperator() == QLTimeOperator.AFTER) {
         result.setT1Present(true);
         if (result.getT1() == null) {
           result.setT1(timeOperator.getValue().longValue());
@@ -695,9 +695,9 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     for (QLDeploymentFilter filter : filters) {
       Set<QLDeploymentFilterType> filterTypes = QLDeploymentFilter.getFilterTypes(filter);
       for (QLDeploymentFilterType type : filterTypes) {
-        if (type.getMetaDataFields().getFilterKind().equals(QLFilterKind.SIMPLE)) {
+        if (type.getMetaDataFields().getFilterKind() == QLFilterKind.SIMPLE) {
           decorateSimpleFilter(selectQuery, filter, type);
-        } else if (type.getMetaDataFields().getFilterKind().equals(QLFilterKind.ARRAY)) {
+        } else if (type.getMetaDataFields().getFilterKind() == QLFilterKind.ARRAY) {
           decorateArrayFilter(selectQuery, filter, type);
         } else {
           logger.error("Failed to apply filter :[{}]", filter);
@@ -711,7 +711,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     for (QLDeploymentFilter filter : filters) {
       Set<QLDeploymentFilterType> filterTypes = QLDeploymentFilter.getFilterTypes(filter);
       for (QLDeploymentFilterType type : filterTypes) {
-        if (type.equals(QLDeploymentFilterType.Tag)) {
+        if (type == QLDeploymentFilterType.Tag) {
           QLDeploymentTagFilter tagFilter = filter.getTag();
 
           if (tagFilter != null) {
@@ -1087,9 +1087,9 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   private void decorateQueryWithGroupBy(List<DeploymentMetaDataFields> fieldNames, SelectQuery selectQuery,
       List<QLDeploymentEntityAggregation> groupBy, List<DeploymentMetaDataFields> groupByFields) {
     for (QLDeploymentEntityAggregation aggregation : groupBy) {
-      if (aggregation.getAggregationKind().equals(QLAggregationKind.SIMPLE)) {
+      if (aggregation.getAggregationKind() == QLAggregationKind.SIMPLE) {
         decorateSimpleGroupBy(fieldNames, selectQuery, aggregation, groupByFields);
-      } else if (aggregation.getAggregationKind().equals(QLAggregationKind.ARRAY)) {
+      } else if (aggregation.getAggregationKind() == QLAggregationKind.ARRAY) {
         decorateAggregateGroupBy(fieldNames, selectQuery, aggregation, groupByFields);
       }
     }

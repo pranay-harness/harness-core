@@ -128,7 +128,7 @@ public class ServiceNowCrudTest extends AbstractFunctionalTest {
         .until(()
                    -> workflowExecutionService.getWorkflowExecution(application.getUuid(), workflowExecution.getUuid())
                           .getStatus()
-                          .equals(ExecutionStatus.SUCCESS));
+                == ExecutionStatus.SUCCESS);
 
     WorkflowExecution completedExecution =
         workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), false);

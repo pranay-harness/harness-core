@@ -91,8 +91,7 @@ public class AddServiceIdToArtifactCollectionStates implements Migration {
     }
     // Skip if the workflow is not a BUILD workflow.
     if (workflow == null || workflow.getOrchestrationWorkflow() == null
-        || !OrchestrationWorkflowType.BUILD.equals(
-               workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
+        || OrchestrationWorkflowType.BUILD != workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()) {
       return;
     }
 
@@ -114,7 +113,7 @@ public class AddServiceIdToArtifactCollectionStates implements Migration {
       boolean updated = false;
       for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
         // Skip if phase step is not of type COLLECT_ARTIFACT or has no workflow steps.
-        if (!PhaseStepType.COLLECT_ARTIFACT.equals(phaseStep.getPhaseStepType()) || isEmpty(phaseStep.getSteps())) {
+        if (PhaseStepType.COLLECT_ARTIFACT != phaseStep.getPhaseStepType() || isEmpty(phaseStep.getSteps())) {
           continue;
         }
 

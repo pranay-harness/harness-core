@@ -100,7 +100,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         return getRepositories(artifactoryConfig, encryptionDetails, Arrays.asList(PackageType.maven));
       default:
         return getRepositories(artifactoryConfig, encryptionDetails,
-            Arrays.asList(PackageType.values()).stream().filter(type -> !docker.equals(type)).collect(toList()));
+            Arrays.asList(PackageType.values()).stream().filter(type -> docker != type).collect(toList()));
     }
   }
 
@@ -114,7 +114,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         return getRepositories(artifactoryConfig, encryptionDetails, Arrays.asList(PackageType.maven));
       case any:
         return getRepositories(artifactoryConfig, encryptionDetails,
-            Arrays.asList(PackageType.values()).stream().filter(type -> !docker.equals(type)).collect(toList()));
+            Arrays.asList(PackageType.values()).stream().filter(type -> docker != type).collect(toList()));
       default:
         return getRepositories(artifactoryConfig, encryptionDetails, "");
     }

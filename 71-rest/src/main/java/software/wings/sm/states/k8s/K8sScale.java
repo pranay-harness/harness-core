@@ -115,9 +115,9 @@ public class K8sScale extends State {
       String appId = workflowStandardParams.getAppId();
       K8sTaskExecutionResponse executionResponse = (K8sTaskExecutionResponse) response.values().iterator().next();
 
-      ExecutionStatus executionStatus =
-          executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                               : ExecutionStatus.FAILED;
+      ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+          ? ExecutionStatus.SUCCESS
+          : ExecutionStatus.FAILED;
 
       K8sScaleResponse k8sScaleResponse = (K8sScaleResponse) executionResponse.getK8sTaskResponse();
 
@@ -127,7 +127,7 @@ public class K8sScale extends State {
       stateExecutionData.setStatus(executionStatus);
       stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
 
-      if (ExecutionStatus.FAILED.equals(executionStatus)) {
+      if (ExecutionStatus.FAILED == executionStatus) {
         return ExecutionResponse.builder()
             .executionStatus(executionStatus)
             .stateExecutionData(context.getStateExecutionData())

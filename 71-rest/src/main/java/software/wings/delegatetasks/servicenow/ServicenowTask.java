@@ -177,7 +177,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
   }
 
   private ResponseData updateServiceNowTicket(ServiceNowTaskParameters parameters) {
-    if (parameters.getTicketType().equals(CHANGE_TASK) && parameters.isUpdateMultiple()) {
+    if (parameters.getTicketType() == CHANGE_TASK && parameters.isUpdateMultiple()) {
       return updateAllChangeTaskTickets(parameters);
     }
 

@@ -384,7 +384,7 @@ public class AwsLambdaState extends State {
         serviceTemplateService
             .computeServiceVariables(appId, envId, serviceTemplateId, context.getWorkflowExecutionId(), OBTAIN_VALUE)
             .stream()
-            .filter(serviceVariable -> !ServiceVariable.Type.ARTIFACT.equals(serviceVariable.getType()))
+            .filter(serviceVariable -> ServiceVariable.Type.ARTIFACT != serviceVariable.getType())
             .collect(
                 Collectors.toMap(ServiceVariable::getName, sv -> context.renderExpression(new String(sv.getValue()))));
     wfRequestBuilder.serviceVariables(serviceVariables);

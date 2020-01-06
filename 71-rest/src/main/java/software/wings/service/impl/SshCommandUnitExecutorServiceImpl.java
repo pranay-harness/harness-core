@@ -171,7 +171,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     }
 
     logService.save(context.getAccountId(),
-        logBuilder.withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
+        logBuilder.withLogLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
             .withLogLine("Command execution finished with status " + commandExecutionStatus)
             .withExecutionResult(commandExecutionStatus)
             .build());

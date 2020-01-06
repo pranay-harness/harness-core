@@ -157,7 +157,7 @@ public class JenkinsStateTest extends CategoryTest {
                 .subTaskType(JenkinsSubTaskType.POLL_TASK)
                 .filePathAssertionMap(Collections.emptyList())
                 .build()));
-    assertThat(executionResponse.getExecutionStatus().equals(ExecutionStatus.FAILED));
+    assertThat(executionResponse.getExecutionStatus() == ExecutionStatus.FAILED);
 
     // Set a Queued URL, expecting status to SUCCESS
     executionResponse = jenkinsState.startJenkinsPollTask(executionContext,
@@ -172,7 +172,7 @@ public class JenkinsStateTest extends CategoryTest {
                 .filePathAssertionMap(Collections.emptyList())
                 .timeElapsed(10000L)
                 .build()));
-    assertThat(executionResponse.getExecutionStatus().equals(ExecutionStatus.SUCCESS));
+    assertThat(executionResponse.getExecutionStatus() == ExecutionStatus.SUCCESS);
   }
 
   @Test

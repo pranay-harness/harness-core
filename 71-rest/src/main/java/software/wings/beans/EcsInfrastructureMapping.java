@@ -152,7 +152,7 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
     }
     ensureSetString(getRegion(), "Region is required");
     ensureSetString(getClusterName(), "Cluster is required");
-    if (AWS_ECS_FARGATE.equals(nodeFilteringType)
+    if (AWS_ECS_FARGATE == nodeFilteringType
         || (featureFlagEnabled && LaunchType.FARGATE.toString().equals(getLaunchType()))) {
       ensureSetString(getExecutionRole(), "Task execution role is required for Fargate Launch type");
       ensureSetString(getVpcId(), "VpcId is required for Fargate Launch Type");

@@ -63,7 +63,7 @@ public enum AppdynamicsTimeSeries {
   public static Set<String> getErrorMetrics() {
     Set<String> errorMetrics = new HashSet<>();
     for (AppdynamicsTimeSeries metric : AppdynamicsTimeSeries.values()) {
-      if (metric.getMetricType().equals(MetricType.ERROR)) {
+      if (metric.getMetricType() == MetricType.ERROR) {
         errorMetrics.add(metric.getMetricName());
       }
     }

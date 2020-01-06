@@ -99,7 +99,7 @@ public class DelegateExecutor {
       if (!delegateStatus.getDelegates().isEmpty()) {
         for (DelegateInner delegateInner : delegateStatus.getDelegates()) {
           long lastMinuteMillis = System.currentTimeMillis() - 60000;
-          if (delegateInner.getStatus().equals(Status.ENABLED) && delegateInner.getLastHeartBeat() > lastMinuteMillis) {
+          if (delegateInner.getStatus() == Status.ENABLED && delegateInner.getLastHeartBeat() > lastMinuteMillis) {
             return true;
           }
         }

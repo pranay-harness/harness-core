@@ -343,7 +343,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
   public int getCollectionMinute(final long metricTimeStamp, AnalysisComparisonStrategy analysisComparisonStrategy,
       boolean isHeartbeat, boolean is247Task, long startTime, int dataCollectionMinute, int collectionTime, String host,
       Map<String, Long> hostStartTimeMap) {
-    boolean isPredictiveAnalysis = analysisComparisonStrategy.equals(PREDICTIVE);
+    boolean isPredictiveAnalysis = analysisComparisonStrategy == PREDICTIVE;
     int collectionMinute;
     if (isHeartbeat) {
       if (is247Task) {

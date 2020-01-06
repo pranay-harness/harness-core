@@ -49,7 +49,7 @@ public class RevertResponseHandler implements SlackActionHandler {
     ExecutionStatus currentStatus =
         workflowExecutionService.getStateExecutionData(revertParams.getAppId(), revertParams.getStateExecutionId())
             .getStatus();
-    if (currentStatus.equals(ExecutionStatus.PAUSED)) {
+    if (currentStatus == ExecutionStatus.PAUSED) {
       RequestBody approvalBody = RequestBody.create(JSON, approvalPayload);
       return slackPostRequest(approvalBody, responseUrl);
     } else {

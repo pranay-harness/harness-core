@@ -49,7 +49,7 @@ public class RelatedDeploymentEntityTestUtils {
                              .changeType(changeType)
                              .entityType(WorkflowExecution.class);
 
-    if (changeType.equals(ChangeType.UPDATE)) {
+    if (changeType == ChangeType.UPDATE) {
       changeEventBuilder = changeEventBuilder.changes(createWorkflowExecutionChanges());
     }
     return changeEventBuilder.build();

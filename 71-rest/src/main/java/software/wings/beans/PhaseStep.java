@@ -331,7 +331,7 @@ public class PhaseStep {
     if (steps != null) {
       for (GraphNode step : steps) {
         GraphNode clonedStep = step.cloneInternal();
-        if (INFRASTRUCTURE_NODE.equals(clonedPhaseStep.getPhaseStepType())
+        if (INFRASTRUCTURE_NODE == clonedPhaseStep.getPhaseStepType()
             && (clonedStep.getType().equals(StateType.DC_NODE_SELECT.name())
                    || clonedStep.getType().equals(StateType.AWS_NODE_SELECT.name()))) {
           Map<String, Object> properties = new HashMap<>(clonedStep.getProperties());

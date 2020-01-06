@@ -24,7 +24,7 @@ public class EmailNotificationCallBack implements NotifyCallback {
     try {
       ResponseData data = response.entrySet().iterator().next().getValue();
       CollaborationProviderResponse collaborationProviderResponse = (CollaborationProviderResponse) data;
-      if (collaborationProviderResponse.getStatus().equals(CommandExecutionStatus.SUCCESS)) {
+      if (collaborationProviderResponse.getStatus() == CommandExecutionStatus.SUCCESS) {
         logger.info("Email sending succeeded. Response : [{}]", data);
         alertService.closeAlertsOfType(
             collaborationProviderResponse.getAccountId(), GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT);

@@ -157,7 +157,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
     for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
       if (workflowPhase.getName().equalsIgnoreCase("Phase 2")) {
         for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
-          if (phaseStep.getPhaseStepType().equals(PhaseStepType.VERIFY_SERVICE)) {
+          if (phaseStep.getPhaseStepType() == PhaseStepType.VERIFY_SERVICE) {
             phaseStep.setSteps(Collections.singletonList(getHTTPNode()));
             break;
           }

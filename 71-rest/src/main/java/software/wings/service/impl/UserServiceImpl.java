@@ -732,7 +732,7 @@ public class UserServiceImpl implements UserService {
     User user = getUserByEmail(userInvite.getEmail());
     if (user == null) {
       AuthenticationMechanism currentAuthenticationMechanism = account.getAuthenticationMechanism();
-      boolean emailVerified = !currentAuthenticationMechanism.equals(AuthenticationMechanism.USER_PASSWORD);
+      boolean emailVerified = currentAuthenticationMechanism != AuthenticationMechanism.USER_PASSWORD;
       user = anUser()
                  .withAccounts(Lists.newArrayList(account))
                  .withEmail(userInvite.getEmail().trim().toLowerCase())
@@ -745,7 +745,7 @@ public class UserServiceImpl implements UserService {
       user = save(user, accountId);
       // Invitation email should sent only in case of USER_PASSWORD authentication mechanism. Because only in that case
       // we need user to set the password.
-      if (currentAuthenticationMechanism.equals(AuthenticationMechanism.USER_PASSWORD)) {
+      if (currentAuthenticationMechanism == AuthenticationMechanism.USER_PASSWORD) {
         sendNewInvitationMail(userInvite, account);
         sendNotification = false;
       }
@@ -965,16 +965,16 @@ public class UserServiceImpl implements UserService {
     model.put("addedToUserGroups", String.join(",", userGroupNamesList));
 
     // In case of username-password authentication mechanism, we don't need to add the SSO details in the email.
-    if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.USER_PASSWORD)) {
+    if (account.getAuthenticationMechanism() == AuthenticationMechanism.USER_PASSWORD) {
       return model;
     }
 
     SSOSettings ssoSettings;
-    if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.SAML)) {
+    if (account.getAuthenticationMechanism() == AuthenticationMechanism.SAML) {
       ssoSettings = ssoSettingService.getSamlSettingsByAccountId(account.getUuid());
-    } else if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.LDAP)) {
+    } else if (account.getAuthenticationMechanism() == AuthenticationMechanism.LDAP) {
       ssoSettings = ssoSettingService.getLdapSettingsByAccountId(account.getUuid());
-    } else if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.OAUTH)) {
+    } else if (account.getAuthenticationMechanism() == AuthenticationMechanism.OAUTH) {
       ssoSettings = ssoSettingService.getOauthSettingsByAccountId(account.getUuid());
     } else {
       logger.warn("New authentication mechanism detected. Needs to handle the added role email template flow.");
@@ -2463,9 +2463,9 @@ public class UserServiceImpl implements UserService {
       String token, PasswordSource passwordSource, String password) {
     Account account = null;
     try {
-      if (PasswordSource.PASSWORD_RESET_FLOW.equals(passwordSource)) {
+      if (PasswordSource.PASSWORD_RESET_FLOW == passwordSource) {
         account = getAccountFromResetPasswordToken(token);
-      } else if (PasswordSource.SIGN_UP_FLOW.equals(passwordSource)) {
+      } else if (PasswordSource.SIGN_UP_FLOW == passwordSource) {
         account = getAccountFromInviteId(token);
       } else {
         throw new InvalidRequestException("Incorrect password source provided.", USER);

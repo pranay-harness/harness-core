@@ -57,7 +57,7 @@ public class APMDelegateServiceImpl implements APMDelegateService {
     Call<Object> request = getAPMRestClient(config).validate(
         resolveDollarReferences(config.getUrl()), config.getHeaders(), config.getOptions());
     decryptFields(config.getEncryptedDataDetails());
-    if (config.getCollectionMethod() != null && config.getCollectionMethod().equals(Method.POST)) {
+    if (config.getCollectionMethod() != null && config.getCollectionMethod() == Method.POST) {
       Map<String, Object> body = new HashMap<>();
       if (isNotEmpty(config.getBody())) {
         config.setBody(resolveDollarReferences(config.getBody()));
@@ -151,7 +151,7 @@ public class APMDelegateServiceImpl implements APMDelegateService {
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
 
     Call<Object> request;
-    if (config.getCollectionMethod() != null && config.getCollectionMethod().equals(Method.POST)) {
+    if (config.getCollectionMethod() != null && config.getCollectionMethod() == Method.POST) {
       Map<String, Object> body = new HashMap<>();
       if (isNotEmpty(config.getBody())) {
         String bodyToLog = config.getBody();

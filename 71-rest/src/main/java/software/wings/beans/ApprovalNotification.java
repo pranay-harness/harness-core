@@ -49,12 +49,12 @@ public class ApprovalNotification extends ActionableNotification {
 
   @Override
   public boolean performAction(NotificationActionType actionType) {
-    if (EntityType.ARTIFACT.equals(getEntityType())) {
+    if (EntityType.ARTIFACT == getEntityType()) {
       artifactService.updateStatus(
-          getEntityId(), getAccountId(), actionType.equals(APPROVE) ? Status.APPROVED : Status.REJECTED);
+          getEntityId(), getAccountId(), actionType == APPROVE ? Status.APPROVED : Status.REJECTED);
     }
-    wingsPersistence.updateFields(ApprovalNotification.class, getUuid(),
-        ImmutableMap.of("stage", actionType.equals(APPROVE) ? APPROVED : REJECTED));
+    wingsPersistence.updateFields(
+        ApprovalNotification.class, getUuid(), ImmutableMap.of("stage", actionType == APPROVE ? APPROVED : REJECTED));
     return true;
   }
 

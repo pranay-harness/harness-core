@@ -128,7 +128,7 @@ class EnvironmentViewBuilder {
                                  .fetch())) {
       while (iterator.hasNext()) {
         final WorkflowExecution workflowExecution = iterator.next();
-        if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
+        if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION) {
           if (deployments.size() < MAX_RELATED_ENTITIES_COUNT) {
             deployments.add(new RelatedDeploymentView(workflowExecution));
           }

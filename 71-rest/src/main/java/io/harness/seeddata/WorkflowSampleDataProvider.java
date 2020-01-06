@@ -153,7 +153,7 @@ public class WorkflowSampleDataProvider {
     final PhaseStep containerSetup =
         workflowPhase.getPhaseSteps()
             .stream()
-            .filter(phaseStep -> phaseStep.getPhaseStepType().equals(PhaseStepType.CONTAINER_SETUP))
+            .filter(phaseStep -> phaseStep.getPhaseStepType() == PhaseStepType.CONTAINER_SETUP)
             .findFirst()
             .orElse(null);
     notNullCheck("Container Setup Phase Step required", containerSetup);
@@ -183,7 +183,7 @@ public class WorkflowSampleDataProvider {
     final PhaseStep containerDeploy =
         workflowPhase.getPhaseSteps()
             .stream()
-            .filter(phaseStep -> phaseStep.getPhaseStepType().equals(PhaseStepType.CONTAINER_DEPLOY))
+            .filter(phaseStep -> phaseStep.getPhaseStepType() == PhaseStepType.CONTAINER_DEPLOY)
             .findFirst()
             .orElse(null);
     notNullCheck("Container Deploy Phase Step required", containerDeploy);

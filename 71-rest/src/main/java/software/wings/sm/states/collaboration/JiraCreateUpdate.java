@@ -132,7 +132,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
                                         .appId(context.getAppId())
                                         .build();
 
-    if (jiraAction.equals(JiraAction.UPDATE_TICKET)) {
+    if (jiraAction == JiraAction.UPDATE_TICKET) {
       List<String> issueIds = parseExpression(issueId);
       if (EmptyPredicate.isEmpty(issueIds)) {
         return ExecutionResponse.builder()
@@ -219,7 +219,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
                                           .status(ExecutionStatus.RUNNING);
 
     if (executionContext.getOrchestrationWorkflowType() != null
-        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
+        && executionContext.getOrchestrationWorkflowType() == BUILD) {
       activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
     } else {
       Environment env = ((ExecutionContextImpl) executionContext).fetchRequiredEnvironment();

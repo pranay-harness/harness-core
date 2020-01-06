@@ -306,7 +306,7 @@ public class AccountServiceImpl implements AccountService {
   private void createDefaultAccountEntities(Account account, boolean fromDataGen) {
     createDefaultRoles(account)
         .stream()
-        .filter(role -> RoleType.ACCOUNT_ADMIN.equals(role.getRoleType()))
+        .filter(role -> RoleType.ACCOUNT_ADMIN == role.getRoleType())
         .forEach(role -> createDefaultNotificationGroup(account, role));
     createSystemAppContainers(account);
     authHandler.createDefaultUserGroups(account);

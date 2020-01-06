@@ -96,9 +96,9 @@ public class K8sDelete extends State {
       String appId = workflowStandardParams.getAppId();
       K8sTaskExecutionResponse executionResponse = (K8sTaskExecutionResponse) response.values().iterator().next();
 
-      ExecutionStatus executionStatus =
-          executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                               : ExecutionStatus.FAILED;
+      ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+          ? ExecutionStatus.SUCCESS
+          : ExecutionStatus.FAILED;
 
       activityService.updateStatus(k8sStateHelper.getActivityId(context), appId, executionStatus);
 

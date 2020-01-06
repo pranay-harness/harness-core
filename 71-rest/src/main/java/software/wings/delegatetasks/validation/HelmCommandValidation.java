@@ -58,7 +58,7 @@ public class HelmCommandValidation extends AbstractDelegateValidateTask {
           containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(commandRequest.getContainerServiceParams());
       commandRequest.setKubeConfigLocation(configLocation);
       HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmCliAndTillerInstalled(commandRequest);
-      if (helmCommandResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
+      if (helmCommandResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
         validated = containerValidationHelper.validateContainerServiceParams(params);
         logger.info("Helm containerServiceParams validation result. Validated: " + validated);
       }

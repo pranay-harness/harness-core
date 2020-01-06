@@ -352,7 +352,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
 
     private int getCollectionMinute(long metricTimeStamp, TimeSeriesMlAnalysisType analysisType, boolean isHeartbeat,
         boolean is247Task, long startTime, int dataCollectionMinute, int collectionTime) {
-      boolean isPredictiveAnalysis = analysisType.equals(PREDICTIVE);
+      boolean isPredictiveAnalysis = analysisType == PREDICTIVE;
       int collectionMinute;
       if (isHeartbeat) {
         if (is247Task) {

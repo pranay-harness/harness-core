@@ -520,7 +520,7 @@ public class CommandState extends State {
   private void flattenTemplateVariables(Command command, Map<String, String> artifactTemplateVariables) {
     if (isNotEmpty(command.getTemplateVariables())) {
       for (Variable var : command.getTemplateVariables()) {
-        if (var.getType().equals(VariableType.ARTIFACT)) {
+        if (var.getType() == VariableType.ARTIFACT) {
           artifactTemplateVariables.put(var.getName(), var.getValue());
         }
       }
@@ -1000,7 +1000,7 @@ public class CommandState extends State {
   void renderCommandString(Command command, ExecutionContext context,
       CommandStateExecutionData commandStateExecutionData, Artifact artifact, boolean linkedFromTemplateLibrary) {
     for (CommandUnit commandUnit : command.getCommandUnits()) {
-      if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
+      if (CommandUnitType.COMMAND == commandUnit.getCommandUnitType()) {
         Command commandCommandUnit = (Command) commandUnit;
         commandStateExecutionData.setTemplateVariable(
             templateUtils.processTemplateVariables(context, commandCommandUnit.getTemplateVariables()));
@@ -1053,7 +1053,7 @@ public class CommandState extends State {
   void renderCommandString(Command command, ExecutionContext context,
       CommandStateExecutionData commandStateExecutionData, boolean linkedFromTemplateLibrary) {
     for (CommandUnit commandUnit : command.getCommandUnits()) {
-      if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
+      if (CommandUnitType.COMMAND == commandUnit.getCommandUnitType()) {
         Command commandCommandUnit = (Command) commandUnit;
         commandStateExecutionData.setTemplateVariable(
             templateUtils.processTemplateVariables(context, commandCommandUnit.getTemplateVariables()));
@@ -1174,7 +1174,7 @@ public class CommandState extends State {
     return command.getCommandUnits()
         .stream()
         .flatMap(commandUnit -> {
-          if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
+          if (CommandUnitType.COMMAND == commandUnit.getCommandUnitType()) {
             return getFlattenCommandUnitList((Command) commandUnit).stream();
           } else {
             return Stream.of(commandUnit);
@@ -1245,10 +1245,10 @@ public class CommandState extends State {
     }
 
     activityHelperService.updateStatus(activityId, appId,
-        commandExecutionResult.getStatus().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED);
+        commandExecutionResult.getStatus() == SUCCESS ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED);
 
     ExecutionStatus executionStatus =
-        commandExecutionResult.getStatus().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
+        commandExecutionResult.getStatus() == SUCCESS ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     updateWorkflowExecutionStats(executionStatus, context);
 
     CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
@@ -1339,7 +1339,7 @@ public class CommandState extends State {
     }
 
     for (CommandUnit commandUnit : command.getCommandUnits()) {
-      if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
+      if (CommandUnitType.COMMAND == commandUnit.getCommandUnitType()) {
         expandCommand(serviceInstance, (Command) commandUnit, serviceId, envId);
       }
     }
@@ -1354,7 +1354,7 @@ public class CommandState extends State {
     }
     command.setCommandUnits(referredCommand.getCommandUnits());
     for (CommandUnit commandUnit : command.getCommandUnits()) {
-      if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
+      if (CommandUnitType.COMMAND == commandUnit.getCommandUnitType()) {
         if (((Command) commandUnit).getTemplateReference() == null) {
           throw new WingsException("No command units found in command " + commandUnit.getName(), USER);
         }
@@ -1371,7 +1371,7 @@ public class CommandState extends State {
       Command command, List<ReferencedTemplate> referencedTemplateList, List<Variable> globalVariables) {
     for (int i = 0; i < command.getCommandUnits().size(); i++) {
       CommandUnit commandUnit = command.getCommandUnits().get(i);
-      if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
+      if (CommandUnitType.COMMAND == commandUnit.getCommandUnitType()) {
         List<Variable> variables = ((Command) commandUnit).getTemplateVariables();
         if (isNotEmpty(referencedTemplateList)) {
           ReferencedTemplate referencedTemplate = referencedTemplateList.get(i);

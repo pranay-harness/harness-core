@@ -443,7 +443,7 @@ public class PipelineServiceImpl implements PipelineService {
               pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"), infraRefactor);
           OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
           if (orchestrationWorkflow != null) {
-            if (BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType())) {
+            if (BUILD == orchestrationWorkflow.getOrchestrationWorkflowType()) {
               return new ArrayList<>();
             }
             if (!entityTypes.contains(ARTIFACT)) {
@@ -542,7 +542,7 @@ public class PipelineServiceImpl implements PipelineService {
               WorkflowServiceHelper.overrideWorkflowVariables(workflow.getOrchestrationWorkflow().getUserVariables(),
                   pipelineStageElement.getWorkflowVariables(), pipelineVariables);
           pipelineStageElement.setWorkflowVariables(resolvedWorkflowStepVariables);
-          if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
+          if (BUILD != workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()) {
             resolveServices(services, serviceIds, resolvedWorkflowStepVariables, workflow);
             resolveInfraMappings(infraMappingIds, resolvedWorkflowStepVariables, workflow);
             resolveInfraDefinitions(infraDefinitionIds, resolvedWorkflowStepVariables, workflow);
@@ -743,7 +743,7 @@ public class PipelineServiceImpl implements PipelineService {
           }
 
           if (!hasBuildWorkflow) {
-            hasBuildWorkflow = BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
+            hasBuildWorkflow = BUILD == workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType();
           }
           resolveArtifactNeededServicesOfWorkflowAndEnvIds(
               serviceIds, envIds, deploymentTypes, pse.getWorkflowVariables(), workflow);
@@ -819,7 +819,7 @@ public class PipelineServiceImpl implements PipelineService {
               pipelineVariable.setName(variableName);
               EntityType entityType = pipelineVariable.obtainEntityType();
 
-              if (ENVIRONMENT.equals(entityType)) {
+              if (ENVIRONMENT == entityType) {
                 setRelatedFieldEnvironment(infraRefator, workflowVariables, pseWorkflowVariables, pipelineVariable);
               } else {
                 cloneRelatedFieldName(pseWorkflowVariables, pipelineVariable);
@@ -836,7 +836,7 @@ public class PipelineServiceImpl implements PipelineService {
               pipelineVariables.add(pipelineVariable);
             } else {
               Variable storedVar = getContainedVariable(pipelineVariables, variableName);
-              if (storedVar != null && ENVIRONMENT.equals(storedVar.obtainEntityType())) {
+              if (storedVar != null && ENVIRONMENT == storedVar.obtainEntityType()) {
                 updateRelatedFieldEnvironment(infraRefator, workflowVariables, pseWorkflowVariables, storedVar);
               }
             }
@@ -905,7 +905,7 @@ public class PipelineServiceImpl implements PipelineService {
       List<Variable> workflowVariables, String originalVarName, Map<String, String> pseWorkflowVariables) {
     Map<String, String> parentFields = new HashMap<>();
     for (Variable var : workflowVariables) {
-      if (NEWRELIC_MARKER_CONFIGID.equals(var.obtainEntityType())) {
+      if (NEWRELIC_MARKER_CONFIGID == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
           parentFields.put("analysisServerConfigId", relatedVarValue);
@@ -919,7 +919,7 @@ public class PipelineServiceImpl implements PipelineService {
       String originalVarName, Map<String, String> pseWorkflowVariables) {
     Map<String, String> parentFields = new HashMap<>();
     for (Variable var : workflowVariables) {
-      if (NEWRELIC_CONFIGID.equals(var.obtainEntityType())) {
+      if (NEWRELIC_CONFIGID == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
           parentFields.put("analysisServerConfigId", relatedVarValue);
@@ -933,7 +933,7 @@ public class PipelineServiceImpl implements PipelineService {
       String originalVarName, Map<String, String> pseWorkflowVariables) {
     Map<String, String> parentFields = new HashMap<>();
     for (Variable var : workflowVariables) {
-      if (ELK_CONFIGID.equals(var.obtainEntityType())) {
+      if (ELK_CONFIGID == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
           parentFields.put("analysisServerConfigId", relatedVarValue);
@@ -947,7 +947,7 @@ public class PipelineServiceImpl implements PipelineService {
       String originalVarName, Map<String, String> pseWorkflowVariables) {
     Map<String, String> parentFields = new HashMap<>();
     for (Variable var : workflowVariables) {
-      if (SPLUNK_CONFIGID.equals(var.obtainEntityType())) {
+      if (SPLUNK_CONFIGID == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
           parentFields.put("analysisServerConfigId", relatedVarValue);
@@ -961,7 +961,7 @@ public class PipelineServiceImpl implements PipelineService {
       List<Variable> workflowVariables, String originalVarName, Map<String, String> pseWorkflowVariables) {
     Map<String, String> parentFields = new HashMap<>();
     for (Variable var : workflowVariables) {
-      if (APPDYNAMICS_CONFIGID.equals(var.obtainEntityType())) {
+      if (APPDYNAMICS_CONFIGID == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
           parentFields.put("analysisServerConfigId", relatedVarValue);
@@ -975,12 +975,12 @@ public class PipelineServiceImpl implements PipelineService {
       List<Variable> workflowVariables, String originalVarName, Map<String, String> pseWorkflowVariables) {
     Map<String, String> parentFields = new HashMap<>();
     for (Variable var : workflowVariables) {
-      if (APPDYNAMICS_APPID.equals(var.obtainEntityType())) {
+      if (APPDYNAMICS_APPID == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
           parentFields.put("applicationId", relatedVarValue);
         }
-      } else if (APPDYNAMICS_CONFIGID.equals(var.obtainEntityType())) {
+      } else if (APPDYNAMICS_CONFIGID == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
           parentFields.put("analysisServerConfigId", relatedVarValue);
@@ -993,7 +993,7 @@ public class PipelineServiceImpl implements PipelineService {
   private void handleInfraPipelineVariable(Variable pipelineVariable, List<Variable> workflowVariables,
       String originalVarName, Map<String, String> pseWorkflowVariables) {
     for (Variable var : workflowVariables) {
-      if (ENVIRONMENT.equals(var.obtainEntityType())) {
+      if (ENVIRONMENT == var.obtainEntityType()) {
         if (var.getMetadata() == null || var.getMetadata().get(Variable.RELATED_FIELD) == null) {
           continue;
         }
@@ -1006,7 +1006,7 @@ public class PipelineServiceImpl implements PipelineService {
             pipelineVariable.getMetadata().put(Variable.ENV_ID, relatedVarValue);
           }
         }
-      } else if (SERVICE.equals(var.obtainEntityType())) {
+      } else if (SERVICE == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
           if (!matchesVariablePattern(relatedVarValue)) {
@@ -1058,7 +1058,7 @@ public class PipelineServiceImpl implements PipelineService {
   private List<String> getInfraVariables(List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables) {
     List<Variable> infraMappingVariable =
         workflowVariables.stream()
-            .filter(t -> t.obtainEntityType() != null && t.obtainEntityType().equals(INFRASTRUCTURE_MAPPING))
+            .filter(t -> t.obtainEntityType() != null && t.obtainEntityType() == INFRASTRUCTURE_MAPPING)
             .collect(toList());
     List<String> infraVarNames = new ArrayList<>();
     for (Variable variable : infraMappingVariable) {
@@ -1071,7 +1071,7 @@ public class PipelineServiceImpl implements PipelineService {
       List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables) {
     List<Variable> infraDefVariable =
         workflowVariables.stream()
-            .filter(t -> t.obtainEntityType() != null && t.obtainEntityType().equals(INFRASTRUCTURE_DEFINITION))
+            .filter(t -> t.obtainEntityType() != null && t.obtainEntityType() == INFRASTRUCTURE_DEFINITION)
             .collect(toList());
     List<String> infraVarNames = new ArrayList<>();
     for (Variable variable : infraDefVariable) {
@@ -1278,7 +1278,7 @@ public class PipelineServiceImpl implements PipelineService {
           continue;
         }
 
-        if (!isBuildPipeline && BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType())) {
+        if (!isBuildPipeline && BUILD == orchestrationWorkflow.getOrchestrationWorkflowType()) {
           // If pipeline is a build pipeline, don't get artifact variable metadata.
           isBuildPipeline = true;
 
@@ -1287,8 +1287,7 @@ public class PipelineServiceImpl implements PipelineService {
 
           // Remove ARTIFACT_SERVICE from includeList.
           Stream<Include> includeStream = isEmpty(includeList) ? stream(Include.values()) : stream(includeList);
-          includeList =
-              includeStream.filter(include -> !Include.ARTIFACT_SERVICE.equals(include)).toArray(Include[] ::new);
+          includeList = includeStream.filter(include -> Include.ARTIFACT_SERVICE != include).toArray(Include[] ::new);
         }
 
         mergeDeploymentMetadata(workflow, finalDeploymentMetadata, deploymentMetadata);

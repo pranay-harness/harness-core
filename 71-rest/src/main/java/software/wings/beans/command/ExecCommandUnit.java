@@ -77,7 +77,7 @@ public class ExecCommandUnit extends SshCommandUnit {
       return false;
     }
     final ExecCommandUnit other = (ExecCommandUnit) obj;
-    return Objects.equals(this.commandPath, other.commandPath) && Objects.equals(this.scriptType, other.scriptType)
+    return Objects.equals(this.commandPath, other.commandPath) && this.scriptType == other.scriptType
         && Objects.equals(this.commandString, other.commandString)
         && Objects.equals(this.tailPatterns, other.tailPatterns);
   }

@@ -925,7 +925,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     long maxAnalyzedMinute = getLogRecordMinute(
         analysisContext.getAppId(), analysisContext.getStateExecutionId(), ClusterLevel.HF, OrderType.DESC);
-    if (AnalysisComparisonStrategy.PREDICTIVE.equals(analysisContext.getComparisonStrategy())) {
+    if (AnalysisComparisonStrategy.PREDICTIVE == analysisContext.getComparisonStrategy()) {
       if (isNotEmpty(analysisContext.getPredictiveCvConfigId())) {
         LogsCVConfiguration logsCVConfiguration =
             wingsPersistence.get(LogsCVConfiguration.class, analysisContext.getPredictiveCvConfigId());

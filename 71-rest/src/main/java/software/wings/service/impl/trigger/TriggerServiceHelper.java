@@ -117,7 +117,7 @@ public class TriggerServiceHelper {
         .stream()
         .filter(trigger
             -> trigger.getArtifactSelections().stream().anyMatch(artifactSelection
-                -> artifactSelection.getType().equals(LAST_DEPLOYED)
+                -> artifactSelection.getType() == LAST_DEPLOYED
                     && artifactSelection.getWorkflowId().equals(workflowId)))
         .collect(toList());
   }
@@ -127,7 +127,7 @@ public class TriggerServiceHelper {
         .stream()
         .filter(trigger
             -> trigger.getArtifactSelections().stream().anyMatch(
-                artifactSelection -> artifactSelection.getType().equals(LAST_COLLECTED)))
+                artifactSelection -> artifactSelection.getType() == LAST_COLLECTED))
         .collect(toList());
   }
 
@@ -140,7 +140,7 @@ public class TriggerServiceHelper {
         .stream()
         .filter(trigger
             -> trigger.getArtifactSelections().stream().anyMatch(artifactSelection
-                -> artifactSelection.getType().equals(LAST_COLLECTED)
+                -> artifactSelection.getType() == LAST_COLLECTED
                     && artifactStreamId.equals(artifactSelection.getArtifactStreamId())))
         .collect(toList());
   }
@@ -148,7 +148,7 @@ public class TriggerServiceHelper {
   public List<Trigger> getNewInstanceTiggers(String appId) {
     return getTriggersByApp(appId)
         .stream()
-        .filter(trigger -> trigger.getCondition().getConditionType().equals(TriggerConditionType.NEW_INSTANCE))
+        .filter(trigger -> trigger.getCondition().getConditionType() == TriggerConditionType.NEW_INSTANCE)
         .collect(toList());
   }
 
@@ -168,7 +168,7 @@ public class TriggerServiceHelper {
     return getTriggersByApp(appId)
         .stream()
         .filter(tr
-            -> tr.getCondition().getConditionType().equals(NEW_ARTIFACT)
+            -> tr.getCondition().getConditionType() == NEW_ARTIFACT
                 && ((ArtifactTriggerCondition) tr.getCondition()).getArtifactStreamId().equals(artifactStreamId))
         .collect(toList());
   }
@@ -177,7 +177,7 @@ public class TriggerServiceHelper {
     Trigger trigger = getTriggersByApp(appId)
                           .stream()
                           .filter(tr
-                              -> tr.getCondition().getConditionType().equals(WEBHOOK)
+                              -> tr.getCondition().getConditionType() == WEBHOOK
                                   && ((WebHookTriggerCondition) tr.getCondition())
                                          .getWebHookToken()
                                          .getWebHookToken()
@@ -196,7 +196,7 @@ public class TriggerServiceHelper {
 
   private Stream<Trigger> getMatchedSourcePipelineTriggers(String appId, String sourcePipelineId) {
     return getTriggersByApp(appId).stream().filter(trigger
-        -> trigger.getCondition().getConditionType().equals(PIPELINE_COMPLETION)
+        -> trigger.getCondition().getConditionType() == PIPELINE_COMPLETION
             && ((PipelineTriggerCondition) trigger.getCondition()).getPipelineId().equals(sourcePipelineId));
   }
 
@@ -245,7 +245,7 @@ public class TriggerServiceHelper {
   }
 
   public static void validateAndSetCronExpression(Trigger trigger) {
-    if (trigger == null || !trigger.getCondition().getConditionType().equals(SCHEDULED)) {
+    if (trigger == null || trigger.getCondition().getConditionType() != SCHEDULED) {
       return;
     }
     ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
@@ -307,7 +307,7 @@ public class TriggerServiceHelper {
 
     List<Variable> filteredVariables = includeEntityType
         ? variables
-        : variables.stream().filter(variable -> !variable.getType().equals(VariableType.ENTITY)).collect(toList());
+        : variables.stream().filter(variable -> variable.getType() != VariableType.ENTITY).collect(toList());
 
     for (Variable userVariable : filteredVariables) {
       if (!parameters.contains(userVariable.getName())) {

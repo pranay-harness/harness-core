@@ -334,7 +334,7 @@ public class NexusServiceImpl implements NexusService {
       ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds) {
     try {
       if ((artifactStreamAttributes.getArtifactType() != null
-              && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER))
+              && artifactStreamAttributes.getArtifactType() == ArtifactType.DOCKER)
           || (artifactStreamAttributes.getRepositoryType() != null
                  && artifactStreamAttributes.getRepositoryType().equals(RepositoryType.docker.name()))) {
         return nexusThreeService.getDockerTags(nexusConfig, encryptionDetails, artifactStreamAttributes);

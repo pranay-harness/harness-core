@@ -284,7 +284,7 @@ public class LdapGroupSyncJob implements Job {
       logger.info("Executing ldap group sync job for ssoId: {}", ssoId);
 
       LdapTestResponse ldapTestResponse = ssoService.validateLdapConnectionSettings(ldapSettings, accountId);
-      if (ldapTestResponse.getStatus().equals(Status.FAILURE)) {
+      if (ldapTestResponse.getStatus() == Status.FAILURE) {
         if (ssoSettingService.isDefault(accountId, ssoId)) {
           ssoSettingService.sendSSONotReachableNotification(accountId, ldapSettings);
         } else {
@@ -301,7 +301,7 @@ public class LdapGroupSyncJob implements Job {
 
       logger.info("Ldap group sync job done for ssoId:" + ssoId);
     } catch (WingsException exception) {
-      if (exception.getCode().equals(ErrorCode.USER_GROUP_SYNC_FAILURE)) {
+      if (exception.getCode() == ErrorCode.USER_GROUP_SYNC_FAILURE) {
         ssoSettingService.raiseSyncFailureAlert(accountId, ssoId, exception.getMessage());
       } else {
         ssoSettingService.raiseSyncFailureAlert(accountId, ssoId,

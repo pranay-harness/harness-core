@@ -83,7 +83,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
     }
 
     String serviceName = null;
-    if (EntityType.SERVICE_TEMPLATE.equals(bean.getEntityType())) {
+    if (EntityType.SERVICE_TEMPLATE == bean.getEntityType()) {
       ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, bean.getTemplateId());
       notNullCheck("Service template is null for the given id:" + bean.getTemplateId(), serviceTemplate, USER);
       String serviceId = serviceTemplate.getServiceId();
@@ -91,7 +91,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       notNullCheck("Service is null for the given id:" + serviceId, service, USER);
       serviceName = service.getName();
     } else {
-      if (!EntityType.ENVIRONMENT.equals(bean.getEntityType())) {
+      if (EntityType.ENVIRONMENT != bean.getEntityType()) {
         throw new WingsException("Unknown entity type: " + bean.getEntityType());
       }
     }

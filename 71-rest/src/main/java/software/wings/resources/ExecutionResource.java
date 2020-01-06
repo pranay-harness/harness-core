@@ -286,7 +286,7 @@ public class ExecutionResource {
       authHandler.authorize(permissionAttributeList, asList(appId), workflowId);
     }
 
-    if (requiredAction.equals(EXECUTE)) {
+    if (requiredAction == EXECUTE) {
       String envId = workflowExecution.getEnvId();
       authService.checkIfUserAllowedToDeployToEnv(appId, envId);
     }

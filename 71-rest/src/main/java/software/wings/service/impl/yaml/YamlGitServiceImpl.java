@@ -265,12 +265,12 @@ public class YamlGitServiceImpl implements YamlGitService {
         List<GitFileChange> gitFileChanges = new ArrayList<>();
         List<GitFileChange> deletedGitFileChanges = new ArrayList<>();
 
-        if (EntityType.ACCOUNT.equals(entityType)) {
+        if (EntityType.ACCOUNT == entityType) {
           // Handle everything except for application
           gitFileChanges = obtainAccountOnlyGitFileChanges(accountId, true);
           deletedGitFileChanges = obtainAccountOnlyGitFileChangeForDelete(accountId);
 
-        } else if (EntityType.APPLICATION.equals(entityType)) {
+        } else if (EntityType.APPLICATION == entityType) {
           // Fetch application changeSets. The reason for special handling is that with application level yamlGitConfig,
           // each app can refer to different yamlGitConfig
           Application app = appService.get(appId);
@@ -762,7 +762,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public void raiseAlertForGitFailure(String accountId, String appId, ErrorCode errorCode, String errorMessage) {
-    if (ErrorCode.GIT_CONNECTION_ERROR.equals(errorCode)) {
+    if (ErrorCode.GIT_CONNECTION_ERROR == errorCode) {
       alertService.openAlert(
           accountId, appId, AlertType.GitConnectionError, getGitConnectionErrorAlert(accountId, errorMessage));
     } else {

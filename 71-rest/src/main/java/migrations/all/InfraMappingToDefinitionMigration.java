@@ -463,9 +463,9 @@ public class InfraMappingToDefinitionMigration implements Migration {
               awsInfrastructureMapping.getUuid())));
     } else if (blueprintList.size() == 1) {
       InfrastructureMappingBlueprint blueprint = blueprintList.get(0);
-      if (NodeFilteringType.AWS_AUTOSCALING_GROUP.equals(blueprint.getNodeFilteringType())) {
+      if (NodeFilteringType.AWS_AUTOSCALING_GROUP == blueprint.getNodeFilteringType()) {
         return true;
-      } else if (NodeFilteringType.AWS_INSTANCE_FILTER.equals(blueprint.getNodeFilteringType())) {
+      } else if (NodeFilteringType.AWS_INSTANCE_FILTER == blueprint.getNodeFilteringType()) {
         return false;
       } else {
         logger.error(StringUtils.join(DEBUG_LINE,
@@ -501,9 +501,9 @@ public class InfraMappingToDefinitionMigration implements Migration {
               ecsInfrastructureMapping.getUuid())));
     } else if (blueprintList.size() == 1) {
       InfrastructureMappingBlueprint blueprint = blueprintList.get(0);
-      if (NodeFilteringType.AWS_ECS_EC2.equals(blueprint.getNodeFilteringType())) {
+      if (NodeFilteringType.AWS_ECS_EC2 == blueprint.getNodeFilteringType()) {
         return LaunchType.EC2.toString();
-      } else if (NodeFilteringType.AWS_ECS_FARGATE.equals(blueprint.getNodeFilteringType())) {
+      } else if (NodeFilteringType.AWS_ECS_FARGATE == blueprint.getNodeFilteringType()) {
         return LaunchType.FARGATE.toString();
       } else {
         logger.error(StringUtils.join(DEBUG_LINE,

@@ -57,7 +57,7 @@ public class ConfirmationHandler implements SlackActionHandler {
         workflowExecutionService
             .getStateExecutionData(confirmationParams.getAppId(), confirmationParams.getStateExecutionId())
             .getStatus();
-    if (currentStatus.equals(ExecutionStatus.PAUSED)) {
+    if (currentStatus == ExecutionStatus.PAUSED) {
       RequestBody confirmationBody = RequestBody.create(JSON, confirmationPayload);
       return slackPostRequest(confirmationBody, responseUrl);
     } else {

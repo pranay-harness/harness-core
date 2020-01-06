@@ -113,7 +113,7 @@ public class DatadogLogState extends AbstractLogAnalysisState {
     if (hostnameField != null) {
       return hostnameField;
     }
-    if (getDeploymentType(executionContext).equals(DeploymentType.KUBERNETES)) {
+    if (getDeploymentType(executionContext) == DeploymentType.KUBERNETES) {
       return KUBERNETES_HOSTNAME;
     } else {
       return DATA_DOG_DEFAULT_HOSTNAME;

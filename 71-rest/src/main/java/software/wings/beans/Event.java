@@ -139,7 +139,7 @@ public class Event {
     final Event other = (Event) obj;
     return Objects.equals(this.orgId, other.orgId) && Objects.equals(this.appId, other.appId)
         && Objects.equals(this.envId, other.envId) && Objects.equals(this.serviceId, other.serviceId)
-        && Objects.equals(this.type, other.type) && Objects.equals(this.uuid, other.uuid);
+        && this.type == other.type && Objects.equals(this.uuid, other.uuid);
   }
 
   @Override

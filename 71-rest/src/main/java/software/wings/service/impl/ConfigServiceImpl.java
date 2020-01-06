@@ -111,7 +111,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public String save(ConfigFile configFile, BoundedInputStream inputStream) {
     validateEntity(configFile.getAppId(), configFile.getEntityId(), configFile.getEntityType());
-    String envId = configFile.getEntityType().equals(SERVICE) || configFile.getEntityType().equals(ENVIRONMENT)
+    String envId = configFile.getEntityType() == SERVICE || configFile.getEntityType() == ENVIRONMENT
         ? GLOBAL_ENV_ID
         : serviceTemplateService.get(configFile.getAppId(), configFile.getTemplateId()).getEnvId();
 
@@ -163,13 +163,13 @@ public class ConfigServiceImpl implements ConfigService {
 
   private void validateEntity(String appId, String entityId, EntityType entityType) {
     boolean entityExist;
-    if (EntityType.SERVICE.equals(entityType)) {
+    if (EntityType.SERVICE == entityType) {
       entityExist = serviceResourceService.exist(appId, entityId);
-    } else if (EntityType.ENVIRONMENT.equals(entityType)) {
+    } else if (EntityType.ENVIRONMENT == entityType) {
       entityExist = environmentService.exist(appId, entityId);
-    } else if (EntityType.HOST.equals(entityType)) {
+    } else if (EntityType.HOST == entityType) {
       entityExist = hostService.exist(appId, entityId);
-    } else if (EntityType.SERVICE_TEMPLATE.equals(entityType)) {
+    } else if (EntityType.SERVICE_TEMPLATE == entityType) {
       entityExist = serviceTemplateService.exist(appId, entityId);
     } else {
       throw new WingsException(INVALID_ARGUMENT)
@@ -210,10 +210,10 @@ public class ConfigServiceImpl implements ConfigService {
     final Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class);
 
     String columnName;
-    if (EntityType.SERVICE.equals(entityType)) {
+    if (EntityType.SERVICE == entityType) {
       columnName = ConfigFileKeys.entityId;
       query.filter(ConfigFileKeys.entityType, entityType.name());
-    } else if (EntityType.ENVIRONMENT.equals(entityType)) {
+    } else if (EntityType.ENVIRONMENT == entityType) {
       columnName = ConfigFileKeys.envId;
     } else {
       return null;
@@ -322,7 +322,7 @@ public class ConfigServiceImpl implements ConfigService {
     ConfigFile savedConfigFile = get(inputConfigFile.getAppId(), inputConfigFile.getUuid());
     notNullCheck("Configuration File", savedConfigFile);
 
-    if (savedConfigFile.getEntityType().equals(SERVICE)
+    if (savedConfigFile.getEntityType() == SERVICE
         && !savedConfigFile.getRelativeFilePath().equals(inputConfigFile.getRelativeFilePath())) {
       updateRelativeFilePathForServiceAndAllOverrideFiles(savedConfigFile, inputConfigFile.getRelativeFilePath());
     }

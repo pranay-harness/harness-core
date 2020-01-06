@@ -188,7 +188,7 @@ public class WorkflowServiceTemplateHelper {
                       .stream()
                       .filter(fromYaml ? phaseStep1
                           -> phaseStep.getPhaseStepType() != null
-                              && phaseStep.getPhaseStepType().equals(phaseStep1.getPhaseStepType())
+                              && phaseStep.getPhaseStepType() == phaseStep1.getPhaseStepType()
                               && phaseStep.getName() != null && phaseStep.getName().equals(phaseStep1.getName())
                                        : phaseStep1
                           -> phaseStep.getUuid() != null && phaseStep.getUuid().equals(phaseStep1.getUuid()))
@@ -353,7 +353,7 @@ public class WorkflowServiceTemplateHelper {
   public static String getTemplatizedEnvVariableName(List<Variable> variables) {
     if (isNotEmpty(variables)) {
       return variables.stream()
-          .filter((Variable variable) -> ENVIRONMENT.equals(variable.obtainEntityType()))
+          .filter((Variable variable) -> ENVIRONMENT == variable.obtainEntityType())
           .map(Variable::getName)
           .findFirst()
           .orElse(null);
@@ -364,7 +364,7 @@ public class WorkflowServiceTemplateHelper {
   public static Variable getEnvVariable(List<Variable> variables) {
     if (isNotEmpty(variables)) {
       return variables.stream()
-          .filter((Variable variable) -> ENVIRONMENT.equals(variable.obtainEntityType()))
+          .filter((Variable variable) -> ENVIRONMENT == variable.obtainEntityType())
           .findFirst()
           .orElse(null);
     }
@@ -462,8 +462,8 @@ public class WorkflowServiceTemplateHelper {
       return new ArrayList<>();
     }
     return variables.stream()
-        .filter(variable
-            -> variable.obtainEntityType() != null && variable.obtainEntityType().equals(INFRASTRUCTURE_MAPPING))
+        .filter(
+            variable -> variable.obtainEntityType() != null && variable.obtainEntityType() == INFRASTRUCTURE_MAPPING)
         .map(Variable::getName)
         .distinct()
         .collect(toList());
@@ -474,8 +474,8 @@ public class WorkflowServiceTemplateHelper {
       return new ArrayList<>();
     }
     return variables.stream()
-        .filter(variable
-            -> variable.obtainEntityType() != null && variable.obtainEntityType().equals(INFRASTRUCTURE_DEFINITION))
+        .filter(
+            variable -> variable.obtainEntityType() != null && variable.obtainEntityType() == INFRASTRUCTURE_DEFINITION)
         .map(Variable::getName)
         .distinct()
         .collect(toList());
@@ -486,7 +486,7 @@ public class WorkflowServiceTemplateHelper {
       return new ArrayList<>();
     }
     return variables.stream()
-        .filter(variable -> variable.obtainEntityType() != null && variable.obtainEntityType().equals(SERVICE))
+        .filter(variable -> variable.obtainEntityType() != null && variable.obtainEntityType() == SERVICE)
         .map(Variable::getName)
         .distinct()
         .collect(toList());

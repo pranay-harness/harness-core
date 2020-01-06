@@ -161,8 +161,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   private void ensureMultiArtifactSupport(Service service, ArtifactStreamBinding artifactStreamBinding) {
     // Right now only supported for SSH and K8s V2.
     // TODO: ASR: Add support for other deployment types, especially ECS and Helm.
-    if (SSH.equals(service.getDeploymentType())
-        || (KUBERNETES.equals(service.getDeploymentType()) && service.isK8sV2())) {
+    if (SSH == service.getDeploymentType() || (KUBERNETES == service.getDeploymentType() && service.isK8sV2())) {
       return;
     }
 
@@ -581,7 +580,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     if (isNotEmpty(serviceVariables)) {
       for (ServiceVariable serviceVariable : serviceVariables) {
         List<ArtifactStreamSummary> artifactStreams = new ArrayList<>();
-        if (Type.ARTIFACT.equals(serviceVariable.getType())) {
+        if (Type.ARTIFACT == serviceVariable.getType()) {
           if (isNotEmpty(serviceVariable.getAllowedList())) {
             for (String artifactStreamId : serviceVariable.getAllowedList()) {
               ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
@@ -604,7 +603,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     if (isNotEmpty(variables)) {
       for (Variable variable : variables) {
         List<ArtifactStreamSummary> artifactStreams = new ArrayList<>();
-        if (VariableType.ARTIFACT.equals(variable.getType())) {
+        if (VariableType.ARTIFACT == variable.getType()) {
           if (isNotEmpty(variable.getAllowedList())) {
             for (String artifactStreamId : variable.getAllowedList()) {
               ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);

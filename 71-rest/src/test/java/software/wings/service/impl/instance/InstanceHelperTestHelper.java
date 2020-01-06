@@ -145,15 +145,15 @@ public class InstanceHelperTestHelper {
       InfrastructureMappingType infrastructureMappingType, long endTime, String deploymentType) {
     List<InstanceStatusSummary> instanceStatusSummaries = null;
 
-    if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.equals(infrastructureMappingType)) {
+    if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH == infrastructureMappingType) {
       instanceStatusSummaries = getInstanceStatusSummariesForPDC();
-    } else if (InfrastructureMappingType.AWS_SSH.equals(infrastructureMappingType)) {
+    } else if (InfrastructureMappingType.AWS_SSH == infrastructureMappingType) {
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
-    } else if (InfrastructureMappingType.AWS_AMI.equals(infrastructureMappingType)) {
+    } else if (InfrastructureMappingType.AWS_AMI == infrastructureMappingType) {
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
-    } else if (InfrastructureMappingType.AWS_AWS_CODEDEPLOY.equals(infrastructureMappingType)) {
+    } else if (InfrastructureMappingType.AWS_AWS_CODEDEPLOY == infrastructureMappingType) {
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
-    } else if (InfrastructureMappingType.AWS_ECS.equals(infrastructureMappingType)) {
+    } else if (InfrastructureMappingType.AWS_ECS == infrastructureMappingType) {
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
     }
 
@@ -163,7 +163,7 @@ public class InstanceHelperTestHelper {
   public PhaseExecutionData initKubernetesExecutionSummary(
       InfrastructureMappingType infrastructureMappingType, long endTime, String deploymentType, boolean helm) {
     List<InstanceStatusSummary> instanceStatusSummaries = null;
-    if (InfrastructureMappingType.GCP_KUBERNETES.equals(infrastructureMappingType)) {
+    if (InfrastructureMappingType.GCP_KUBERNETES == infrastructureMappingType) {
       instanceStatusSummaries = getInstanceStatusSummariesForGCP();
     }
     return initExecutionSummary(instanceStatusSummaries, endTime, deploymentType);
@@ -256,17 +256,17 @@ public class InstanceHelperTestHelper {
       InfrastructureMappingType infrastructureMappingType, String phaseStepExecutionSummaryString) {
     List<StepExecutionSummary> stepExecutionSummaries = null;
 
-    if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.equals(infrastructureMappingType)) {
+    if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH == infrastructureMappingType) {
       stepExecutionSummaries =
           asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
               StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build());
 
-    } else if (InfrastructureMappingType.AWS_SSH.equals(infrastructureMappingType)) {
+    } else if (InfrastructureMappingType.AWS_SSH == infrastructureMappingType) {
       stepExecutionSummaries =
           asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
               StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build());
 
-    } else if (InfrastructureMappingType.AWS_AMI.equals(infrastructureMappingType)) {
+    } else if (InfrastructureMappingType.AWS_AMI == infrastructureMappingType) {
       stepExecutionSummaries =
           asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
               AmiStepExecutionSummary.builder()
@@ -278,7 +278,7 @@ public class InstanceHelperTestHelper {
                       asList(ContainerServiceData.builder().desiredCount(1).name("asgOld").previousCount(1).build()))
                   .build());
 
-    } else if (InfrastructureMappingType.AWS_AWS_CODEDEPLOY.equals(infrastructureMappingType)) {
+    } else if (InfrastructureMappingType.AWS_AWS_CODEDEPLOY == infrastructureMappingType) {
       CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
       commandStepExecutionSummary.setCodeDeployDeploymentId(InstanceHelperTest.CODE_DEPLOY_DEPLOYMENT_ID);
       commandStepExecutionSummary.setCodeDeployParams(
@@ -292,7 +292,7 @@ public class InstanceHelperTestHelper {
           asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
               commandStepExecutionSummary);
 
-    } else if (InfrastructureMappingType.AWS_ECS.equals(infrastructureMappingType)) {
+    } else if (InfrastructureMappingType.AWS_ECS == infrastructureMappingType) {
       CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
       commandStepExecutionSummary.setCodeDeployDeploymentId(InstanceHelperTest.CODE_DEPLOY_DEPLOYMENT_ID);
       commandStepExecutionSummary.setClusterName(InstanceHelperTest.CLUSTER_NAME);
@@ -324,7 +324,7 @@ public class InstanceHelperTestHelper {
       InfrastructureMappingType infrastructureMappingType, String phaseStepExecutionSummaryString, boolean helm) {
     List<StepExecutionSummary> stepExecutionSummaries = null;
 
-    if (InfrastructureMappingType.GCP_KUBERNETES.equals(infrastructureMappingType)) {
+    if (InfrastructureMappingType.GCP_KUBERNETES == infrastructureMappingType) {
       if (helm) {
         HelmSetupExecutionSummary helmSetupExecutionSummary =
             new HelmSetupExecutionSummary("version1", 1, 0, 0, "default", null);

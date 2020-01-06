@@ -36,7 +36,7 @@ public class CustomLogCVServiceConfiguration extends LogsCVConfiguration {
 
   public boolean validateConfiguration() {
     if (logCollectionInfo != null) {
-      if (logCollectionInfo.getMethod().equals(Method.POST) && isEmpty(logCollectionInfo.getCollectionBody())) {
+      if (logCollectionInfo.getMethod() == Method.POST && isEmpty(logCollectionInfo.getCollectionBody())) {
         return false;
       }
       boolean bodyContainsStartTime = isNotEmpty(logCollectionInfo.getCollectionBody())

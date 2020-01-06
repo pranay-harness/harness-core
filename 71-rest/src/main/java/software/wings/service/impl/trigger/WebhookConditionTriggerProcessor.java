@@ -215,7 +215,7 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
 
   private WebHookToken getExistingWebhookToken(DeploymentTrigger existingTrigger) {
     WebHookToken existingWebhookToken = null;
-    if (existingTrigger != null && existingTrigger.getType().equals(WEBHOOK)) {
+    if (existingTrigger != null && existingTrigger.getType() == WEBHOOK) {
       WebhookCondition existingTriggerCondition = (WebhookCondition) existingTrigger.getCondition();
       existingWebhookToken = existingTriggerCondition.getWebHookToken();
     }

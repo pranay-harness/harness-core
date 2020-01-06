@@ -90,7 +90,7 @@ public class WebhookTriggerDeploymentExecution {
 
     Type webhookSource = webhookEventUtils.obtainEventType(httpHeaders);
 
-    if (!webhookSource.equals(webhookCondition.getPayloadSource().getType())) {
+    if (webhookSource != webhookCondition.getPayloadSource().getType()) {
       String msg = "Deployment Trigger [" + deploymentTrigger.getName() + "] is set for source ["
           + webhookCondition.getPayloadSource().getType() + "] not associate with the in coming source   ["
           + webhookSource + "]";
@@ -256,7 +256,7 @@ public class WebhookTriggerDeploymentExecution {
   }
 
   private String fetchEntityId(String appId, EntityType entityType, String entityName) {
-    if (entityType.equals(EntityType.SERVICE)) {
+    if (entityType == EntityType.SERVICE) {
       Service service = serviceResourceService.getServiceByName(appId, entityName);
       if (service == null) {
         throw new TriggerException("Service " + entityName + " does not exist ", null);
@@ -358,7 +358,7 @@ public class WebhookTriggerDeploymentExecution {
         if (ExpressionEvaluator.matchesVariablePattern(executionId)) {
           name = getSubstitutedValue(lastDeployed.getId(), payLoadMap);
 
-          if (lastDeployed.getType().equals(TriggerLastDeployedType.WORKFLOW)) {
+          if (lastDeployed.getType() == TriggerLastDeployedType.WORKFLOW) {
             Workflow workflow = workflowService.readWorkflowByName(appId, name);
             if (workflow != null) {
               executionId = workflow.getUuid();
@@ -366,7 +366,7 @@ public class WebhookTriggerDeploymentExecution {
               throw new TriggerException("Workflow with name  " + name + " does not exist", USER);
             }
             name = workflow.getName();
-          } else if (lastDeployed.getType().equals(TriggerLastDeployedType.PIPELINE)) {
+          } else if (lastDeployed.getType() == TriggerLastDeployedType.PIPELINE) {
             Pipeline pipeline = pipelineService.getPipelineByName(appId, name);
             if (pipeline != null) {
               executionId = pipeline.getUuid();
@@ -489,7 +489,7 @@ public class WebhookTriggerDeploymentExecution {
       case GITHUB:
         GitHubPayloadSource gitHubPayloadSource = (GitHubPayloadSource) webhookCondition.getPayloadSource();
         boolean otherEventPresent = gitHubPayloadSource.getGitHubEventTypes().stream().anyMatch(
-            event -> event.getEventType().equals(OTHER) || event.getEventType().equals(ANY));
+            event -> event.getEventType() == OTHER || event.getEventType() == ANY);
 
         if (otherEventPresent) {
           return;
@@ -503,7 +503,7 @@ public class WebhookTriggerDeploymentExecution {
 
         WebhookEventType webhookEventType = WebhookEventType.find(gitHubEvent);
 
-        if (PULL_REQUEST.equals(webhookEventType)) {
+        if (PULL_REQUEST == webhookEventType) {
           Object prAction = payLoadMap.get("action");
 
           boolean actionExists = gitHubPayloadSource.getGitHubEventTypes().stream().anyMatch(event
@@ -526,7 +526,7 @@ public class WebhookTriggerDeploymentExecution {
         BitBucketPayloadSource bitBucketPayloadSource = (BitBucketPayloadSource) webhookCondition.getPayloadSource();
 
         boolean otherEventPresentInBitBucket =
-            bitBucketPayloadSource.getBitBucketEvents().stream().anyMatch(event -> event.getEventType().equals(OTHER));
+            bitBucketPayloadSource.getBitBucketEvents().stream().anyMatch(event -> event.getEventType() == OTHER);
 
         if (otherEventPresentInBitBucket) {
           return;
@@ -548,17 +548,17 @@ public class WebhookTriggerDeploymentExecution {
                    || (BitBucketEventType.containsAllEvent(bitBucketPayloadSource.getBitBucketEvents())))) {
           return;
         } else {
-          if (bitBucketEventType.getEventType().equals(PULL_REQUEST)
+          if (bitBucketEventType.getEventType() == PULL_REQUEST
               && (bitBucketPayloadSource.getBitBucketEvents().contains(PULL_REQUEST_ANY))) {
             return;
           }
 
-          if (bitBucketEventType.getEventType().equals(ISSUE)
+          if (bitBucketEventType.getEventType() == ISSUE
               && (bitBucketPayloadSource.getBitBucketEvents().contains(ISSUE_ANY))) {
             return;
           }
 
-          if (bitBucketEventType.getEventType().equals(PUSH)
+          if (bitBucketEventType.getEventType() == PUSH
               && (bitBucketPayloadSource.getBitBucketEvents().contains(PUSH_ANY))) {
             return;
           }

@@ -177,7 +177,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
           }
         }
       }
-      if (taskResult.getStatus().equals(DataCollectionTaskStatus.FAILURE)) {
+      if (taskResult.getStatus() == DataCollectionTaskStatus.FAILURE) {
         completed.set(true);
         taskResult.setErrorMessage("Error fetching cloud watch metrics for minute " + dataCollectionMinute);
         logger.error("Error fetching CloudWatch metrics for minute " + dataCollectionMinute);

@@ -49,7 +49,7 @@ public class BaseFile extends Base {
     final BaseFile other = (BaseFile) obj;
     return Objects.equals(this.fileUuid, other.fileUuid) && Objects.equals(this.name, other.name)
         && Objects.equals(this.fileName, other.fileName) && Objects.equals(this.mimeType, other.mimeType)
-        && Objects.equals(this.size, other.size) && Objects.equals(this.checksumType, other.checksumType)
+        && Objects.equals(this.size, other.size) && this.checksumType == other.checksumType
         && Objects.equals(this.checksum, other.checksum) && Objects.equals(this.accountId, other.accountId);
   }
 

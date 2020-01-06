@@ -756,7 +756,7 @@ public abstract class TerraformProvisionState extends State {
                              .build());
 
     if (executionContext.getOrchestrationWorkflowType() != null
-        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
+        && executionContext.getOrchestrationWorkflowType() == BUILD) {
       activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
     } else {
       Environment env = requireNonNull(((ExecutionContextImpl) executionContext).getEnv());

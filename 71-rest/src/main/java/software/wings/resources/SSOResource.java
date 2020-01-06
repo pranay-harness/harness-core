@@ -156,7 +156,7 @@ public class SSOResource {
     // Validate ldap settings against provided username password.
     LdapResponse response = ssoService.validateLdapAuthentication(
         settings, authenticationRequest.getEmail(), authenticationRequest.getPassword());
-    if (response.getStatus().equals(Status.FAILURE)) {
+    if (response.getStatus() == Status.FAILURE) {
       throw new InvalidRequestException(response.getMessage());
     }
 

@@ -125,7 +125,7 @@ public class WorkflowNotificationHelper {
       notification = aFailureNotification()
                          .withAccountId(app.getAccountId())
                          .withAppId(app.getUuid())
-                         .withEnvironmentId(BUILD.equals(context.getOrchestrationWorkflowType()) ? null : env.getUuid())
+                         .withEnvironmentId(BUILD == context.getOrchestrationWorkflowType() ? null : env.getUuid())
                          .withEntityId(context.getWorkflowExecutionId())
                          .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
                          .withEntityName("Deployment")
@@ -159,7 +159,7 @@ public class WorkflowNotificationHelper {
     Map<String, String> placeHolderValues = getPlaceholderValues(context, app, env, status, phaseSubWorkflow);
 
     Notification notification;
-    if (status.equals(SUCCESS) || status.equals(PAUSED)) {
+    if (status == SUCCESS || status == PAUSED) {
       notification = InformationNotification.builder()
                          .accountId(app.getAccountId())
                          .appId(app.getUuid())
@@ -168,7 +168,7 @@ public class WorkflowNotificationHelper {
                          .notificationTemplateId(WORKFLOW_NOTIFICATION.name())
                          .notificationTemplateVariables(placeHolderValues)
                          .build();
-    } else if (status.equals(FAILED)) {
+    } else if (status == FAILED) {
       notification = aFailureNotification()
                          .withAccountId(app.getAccountId())
                          .withAppId(app.getUuid())
@@ -206,7 +206,7 @@ public class WorkflowNotificationHelper {
         break;
 
       case PIPELINE:
-        if (approvalStateType.equals(ApprovalStateType.USER_GROUP)) {
+        if (approvalStateType == ApprovalStateType.USER_GROUP) {
           break;
         }
         UserGroup defaultUserGroup = userGroupService.getDefaultUserGroup(accountId);
@@ -251,7 +251,7 @@ public class WorkflowNotificationHelper {
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       List<NotificationRule> notificationRules = orchestrationWorkflow.getNotificationRules();
       for (NotificationRule notificationRule : notificationRules) {
-        boolean shouldNotify = executionScope.equals(notificationRule.getExecutionScope())
+        boolean shouldNotify = executionScope == notificationRule.getExecutionScope()
             && notificationRule.getConditions() != null && notificationRule.getConditions().contains(status);
 
         if (shouldNotify) {
@@ -383,7 +383,7 @@ public class WorkflowNotificationHelper {
     placeHolderValues.put("END_DATE", endTime);
     placeHolderValues.put("DURATION", getDurationString(startTs, endTs));
     placeHolderValues.put(
-        "ENV_NAME", BUILD.equals(context.getOrchestrationWorkflowType()) ? "no environment" : env.getName());
+        "ENV_NAME", BUILD == context.getOrchestrationWorkflowType() ? "no environment" : env.getName());
     if (phaseSubWorkflow != null) {
       placeHolderValues.put("PHASE_NAME", phaseSubWorkflow.getName() + " of ");
       placeHolderValues.put(
@@ -399,7 +399,7 @@ public class WorkflowNotificationHelper {
       String appId, String environmentId) {
     return NotificationMessageResolver.buildAbsoluteUrl(configuration,
         format("/account/%s/app/%s/env/%s/executions/%s/details", accountId, appId,
-            BUILD.equals(type) ? "build" : environmentId, workflowExecutionId));
+            BUILD == type ? "build" : environmentId, workflowExecutionId));
   }
 
   public String getArtifactsMessage(ExecutionContext context, WorkflowExecution workflowExecution, ExecutionScope scope,

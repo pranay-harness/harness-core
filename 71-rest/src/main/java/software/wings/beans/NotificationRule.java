@@ -200,7 +200,7 @@ public class NotificationRule {
     }
     final NotificationRule other = (NotificationRule) obj;
     return Objects.equals(this.uuid, other.uuid) && Objects.equals(this.conditions, other.conditions)
-        && Objects.equals(this.executionScope, other.executionScope)
+        && this.executionScope == other.executionScope
         && Objects.equals(this.notificationGroups, other.notificationGroups)
         && Objects.equals(this.batchNotifications, other.batchNotifications)
         && Objects.equals(this.active, other.active);

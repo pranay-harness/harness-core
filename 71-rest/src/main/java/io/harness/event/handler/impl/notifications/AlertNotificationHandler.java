@@ -117,8 +117,8 @@ public class AlertNotificationHandler implements EventHandler {
               .accountId(accountId)
               .notificationTemplateId(messageType.name())
               .notificationTemplateVariables(ImmutableMap.of(
-                  "alert_message", CLOSE_ALERT.equals(alertEventType) ? alert.getResolutionTitle() : alert.getTitle()))
-              .displayText(CLOSE_ALERT.equals(alertEventType) ? alert.getResolutionTitle() : alert.getTitle())
+                  "alert_message", CLOSE_ALERT == alertEventType ? alert.getResolutionTitle() : alert.getTitle()))
+              .displayText(CLOSE_ALERT == alertEventType ? alert.getResolutionTitle() : alert.getTitle())
               .eventType(alertEventType)
               .build();
 

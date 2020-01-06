@@ -404,7 +404,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
       OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
       if (orchestrationWorkflow != null) {
-        buildWorkflow = BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType());
+        buildWorkflow = BUILD == orchestrationWorkflow.getOrchestrationWorkflowType();
       }
       String envId = workflow.getEnvId();
       entityMap.put(EntityType.ENVIRONMENT.name(), envId);
@@ -765,7 +765,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (isEmpty(orchestrationWorkflow.getNotificationRules())) {
         createDefaultNotificationRule(workflow);
       }
-      if (!orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)
+      if (orchestrationWorkflow.getOrchestrationWorkflowType() != BUILD
           && orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
         if (isEmpty(canaryOrchestrationWorkflow.getFailureStrategies())) {
@@ -844,7 +844,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
       if (isNotEmpty(userVariables)) {
         for (Variable userVariable : userVariables) {
-          if (userVariable.getType().equals(VariableType.ARTIFACT)) {
+          if (userVariable.getType() == VariableType.ARTIFACT) {
             if (isNotEmpty(userVariable.getAllowedList())) {
               for (String artifactStreamId : userVariable.getAllowedList()) {
                 if (!linkedArtifactStreamIds.contains(artifactStreamId)) {
@@ -1485,7 +1485,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (isEmpty(phaseSteps)) {
       return;
     }
-    if (!(PhaseStepType.PROVISION_INFRASTRUCTURE.equals(phaseSteps.get(0).getPhaseStepType()))) {
+    if (PhaseStepType.PROVISION_INFRASTRUCTURE != phaseSteps.get(0).getPhaseStepType()) {
       return;
     }
     PhaseStep rollbackProvisionInfrastructure = generateRollbackProvisioners(
@@ -1497,7 +1497,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     rollbackPhaseSteps.addAll(
         rollbackWorkflowPhase.getPhaseSteps()
             .stream()
-            .filter(phaseStep -> !phaseStep.getPhaseStepType().equals(PhaseStepType.ROLLBACK_PROVISION_INFRASTRUCTURE))
+            .filter(phaseStep -> phaseStep.getPhaseStepType() != PhaseStepType.ROLLBACK_PROVISION_INFRASTRUCTURE)
             .collect(toList()));
     rollbackWorkflowPhase.getPhaseSteps().clear();
     rollbackWorkflowPhase.getPhaseSteps().addAll(rollbackPhaseSteps);
@@ -1543,7 +1543,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       infraMappingId = workflowPhase.getInfraMappingId();
     }
 
-    if (!orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
+    if (orchestrationWorkflow.getOrchestrationWorkflowType() != BUILD) {
       Service service = serviceResourceService.get(appId, workflowPhase.getServiceId(), false);
       if (service == null && !workflowPhase.checkServiceTemplatized()) {
         throw new InvalidRequestException("Service [" + workflowPhase.getServiceId() + "] does not exist", USER);
@@ -1560,7 +1560,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
           notNullCheck("InfraDefinition", infrastructureDefinition, USER);
           if (service.getDeploymentType() != null) {
-            if (!service.getDeploymentType().equals(infrastructureDefinition.getDeploymentType())) {
+            if (service.getDeploymentType() != infrastructureDefinition.getDeploymentType()) {
               throw new InvalidRequestException("Infrastructure Definition[" + infrastructureDefinition.getName()
                       + "] not compatible with Service [" + service.getName() + "]",
                   USER);
@@ -1629,7 +1629,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         break;
       }
     }
-    if (!BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType())) {
+    if (BUILD != orchestrationWorkflow.getOrchestrationWorkflowType()) {
       workflowServiceHelper.validateServiceCompatibility(appId, serviceId, oldServiceId);
       if (infraRefactor) {
         if (!workflowPhase.checkInfraDefinitionTemplatized()) {
@@ -1645,9 +1645,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       }
       // Propagate template expressions to workflow level
-      if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
-          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)
-          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
+      if (orchestrationWorkflow.getOrchestrationWorkflowType() == BASIC
+          || orchestrationWorkflow.getOrchestrationWorkflowType() == ROLLING
+          || orchestrationWorkflow.getOrchestrationWorkflowType() == BLUE_GREEN) {
         WorkflowServiceTemplateHelper.setTemplateExpresssionsFromPhase(workflow, workflowPhase, infraRefactor);
       } else {
         if (infraRefactor) {
@@ -2097,7 +2097,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           previousArtifactVariables.stream()
               .filter(previousArtifactVariable
                   -> artifactVariable.getName().equals(previousArtifactVariable.getName())
-                      && artifactVariable.getEntityType().equals(previousArtifactVariable.getEntityType())
+                      && artifactVariable.getEntityType() == previousArtifactVariable.getEntityType()
                       && artifactVariable.getEntityId().equals(previousArtifactVariable.getEntityId()))
               .findFirst()
               .orElse(null);
@@ -2404,7 +2404,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         // NOTE: If you add new State Type that needs artifact.. it should be listed down here
         artifactNeeded = true;
         break;
-      } else if (workflowPhase != null && HELM.equals(workflowPhase.getDeploymentType())
+      } else if (workflowPhase != null && HELM == workflowPhase.getDeploymentType()
           && StateType.HELM_DEPLOY.name().equals(step.getType())) {
         if (infraRefactor) {
           String infraDefinitionId = getInfraDefinitionId(workflowPhase, workflowVariables);
@@ -2476,7 +2476,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-    boolean isBuildWorkflow = BUILD.equals(canaryOrchestrationWorkflow.getOrchestrationWorkflowType());
+    boolean isBuildWorkflow = BUILD == canaryOrchestrationWorkflow.getOrchestrationWorkflowType();
     boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
 
     // Service cache.
@@ -2528,7 +2528,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<Variable> workflowVariables = canaryOrchestrationWorkflow.getUserVariables();
     Map<String, Variable> workflowArtifactVariableNamesMap =
         workflowVariables.stream()
-            .filter(variable -> variable.getType().equals(VariableType.ARTIFACT))
+            .filter(variable -> variable.getType() == VariableType.ARTIFACT)
             .collect(Collectors.toMap(Variable::getName, Function.identity()));
 
     // Filter out invalid workflow artifact variable names which are used while deployment/execution, but it are not
@@ -2602,7 +2602,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           ServiceVariable serviceVariable = variableNames.get(variableName);
           List<ArtifactVariable> overriddenArtifactVariables = new ArrayList<>();
           if (serviceVariable.getOverriddenServiceVariable() != null
-              && !serviceVariable.getEntityType().equals(EntityType.ENVIRONMENT)) {
+              && serviceVariable.getEntityType() != EntityType.ENVIRONMENT) {
             ServiceVariable overriddenServiceVariable = serviceVariable.getOverriddenServiceVariable();
             overriddenArtifactVariables.add(ArtifactVariable.builder()
                                                 .type(VariableType.ARTIFACT)
@@ -2615,7 +2615,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
           EntityType entityType = serviceVariable.getEntityType();
           String entityId = serviceVariable.getEntityId();
-          if (entityType.equals(EntityType.SERVICE_TEMPLATE)) {
+          if (entityType == EntityType.SERVICE_TEMPLATE) {
             entityType = EntityType.ENVIRONMENT;
             entityId = serviceVariable.getEnvId();
           }
@@ -2865,7 +2865,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           || awsLambdaArtifactNeededStateTypes.contains(step.getType())
           || pcfArtifactNeededStateTypes.contains(step.getType())) {
         updateDefaultArtifactVariablesNeeded(serviceArtifactVariableNames);
-      } else if (workflowPhase != null && HELM.equals(workflowPhase.getDeploymentType())
+      } else if (workflowPhase != null && HELM == workflowPhase.getDeploymentType()
           && StateType.HELM_DEPLOY.name().equals(step.getType())) {
         if (infraRefactor) {
           String infraDefinitionId = getInfraDefinitionId(workflowPhase, workflowVariables);
@@ -3013,9 +3013,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return;
     }
 
-    if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
-        || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)
-        || orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
+    if (orchestrationWorkflow.getOrchestrationWorkflowType() == BASIC
+        || orchestrationWorkflow.getOrchestrationWorkflowType() == ROLLING
+        || orchestrationWorkflow.getOrchestrationWorkflowType() == BLUE_GREEN) {
       if (!orchestrationWorkflow.isServiceTemplatized()) {
         notNullCheck("Invalid serviceId", workflow.getServiceId(), USER);
       }
@@ -3047,7 +3047,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void validateInfraMappingWithService(
       Workflow workflow, OrchestrationWorkflow orchestrationWorkflow, InfrastructureMapping infrastructureMapping) {
-    if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
+    if (orchestrationWorkflow.getOrchestrationWorkflowType() == ROLLING) {
       if (!(InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
               || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
                      infrastructureMapping.getInfraMappingType())
@@ -3055,7 +3055,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         throw new InvalidRequestException(
             "Requested Service/InfrastructureType is not supported using Rolling Deployment", USER);
       }
-    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType() == BLUE_GREEN) {
       if (!(InfrastructureMappingType.DIRECT_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
               || InfrastructureMappingType.GCP_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
               || InfrastructureMappingType.AZURE_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
@@ -3460,9 +3460,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private List<StepType> filterSelectNodesStep(List<StepType> stepTypesList, StepType filteredSelectNode) {
     List<StepType> stepTypes = new ArrayList<>();
     for (StepType stepType : stepTypesList) {
-      if (StepType.AWS_NODE_SELECT.equals(stepType) || StepType.DC_NODE_SELECT.equals(stepType)
-          || StepType.AZURE_NODE_SELECT.equals(stepType)) {
-        if (stepType.equals(filteredSelectNode)) {
+      if (StepType.AWS_NODE_SELECT == stepType || StepType.DC_NODE_SELECT == stepType
+          || StepType.AZURE_NODE_SELECT == stepType) {
+        if (stepType == filteredSelectNode) {
           stepTypes.add(stepType);
         }
       } else {

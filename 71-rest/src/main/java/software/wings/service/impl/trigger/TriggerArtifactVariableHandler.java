@@ -429,7 +429,7 @@ public class TriggerArtifactVariableHandler {
         List<Variable> variables =
             workflowService.readWorkflow(appId, entityId).getOrchestrationWorkflow().getUserVariables();
         boolean wfVariableExists = variables.stream().anyMatch(
-            variable -> variable.getName().equals(variableName) && variable.getType().equals(VariableType.ARTIFACT));
+            variable -> variable.getName().equals(variableName) && variable.getType() == VariableType.ARTIFACT);
         if (!wfVariableExists) {
           throw new WingsException("Variable name " + variableName + " does not exist ");
         }

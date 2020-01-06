@@ -107,7 +107,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     return command.getCommandUnits()
         .stream()
         .flatMap(commandUnit -> {
-          if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
+          if (CommandUnitType.COMMAND == commandUnit.getCommandUnitType()) {
             return getFlattenCommandUnitList((Command) commandUnit).stream();
           } else {
             return Stream.of(commandUnit);
@@ -134,7 +134,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.FAILURE;
 
     for (CommandUnit commandUnit : commandUnits) {
-      commandExecutionStatus = COMMAND.equals(commandUnit.getCommandUnitType())
+      commandExecutionStatus = COMMAND == commandUnit.getCommandUnitType()
           ? executeShellCommand(commandUnitExecutorService, (Command) commandUnit, context)
           : commandUnitExecutorService.execute(commandUnit, context);
       if (FAILURE == commandExecutionStatus) {

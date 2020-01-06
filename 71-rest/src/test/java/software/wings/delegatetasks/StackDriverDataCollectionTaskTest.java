@@ -259,7 +259,7 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
     assertThat(metricDataRecords.size()).isEqualTo(3);
     boolean hasHeartBeat = false, hasTxn1 = false, txn1Has1Metric = false, hasTxn2 = false, has2MetricsInTxn2 = false;
     for (NewRelicMetricDataRecord record : metricDataRecords) {
-      if (ClusterLevel.H0.equals(record.getLevel())) {
+      if (ClusterLevel.H0 == record.getLevel()) {
         hasHeartBeat = true;
       }
       if (record.getName().equals("TransactionName1")) {

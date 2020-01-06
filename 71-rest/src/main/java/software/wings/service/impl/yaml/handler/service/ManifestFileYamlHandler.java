@@ -164,9 +164,9 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
   private YamlType getYamlTypeForEnvOverrideAllServices(ApplicationManifest applicationManifest) {
     notNullCheck("ApplicationManifest can not be null", applicationManifest);
     YamlType yamlType;
-    if (AppManifestKind.VALUES.equals(applicationManifest.getKind())) {
+    if (AppManifestKind.VALUES == applicationManifest.getKind()) {
       yamlType = MANIFEST_FILE_VALUES_ENV_OVERRIDE;
-    } else if (AppManifestKind.PCF_OVERRIDE.equals(applicationManifest.getKind())) {
+    } else if (AppManifestKind.PCF_OVERRIDE == applicationManifest.getKind()) {
       yamlType = MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE;
     } else {
       throw new UnexpectedException("Invalid ApplicationManifestKind: " + applicationManifest.getKind());
@@ -177,9 +177,9 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
   private YamlType getYamlTypeForEnvServiceOverride(ApplicationManifest applicationManifest) {
     notNullCheck("ApplicationManifest can not be null", applicationManifest);
     YamlType yamlType;
-    if (AppManifestKind.VALUES.equals(applicationManifest.getKind())) {
+    if (AppManifestKind.VALUES == applicationManifest.getKind()) {
       yamlType = MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE;
-    } else if (AppManifestKind.PCF_OVERRIDE.equals(applicationManifest.getKind())) {
+    } else if (AppManifestKind.PCF_OVERRIDE == applicationManifest.getKind()) {
       yamlType = MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE;
     } else {
       throw new UnexpectedException("Invalid ApplicationManifestKind: " + applicationManifest.getKind());

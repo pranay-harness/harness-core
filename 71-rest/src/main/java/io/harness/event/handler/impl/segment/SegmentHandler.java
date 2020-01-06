@@ -147,7 +147,7 @@ public class SegmentHandler implements EventHandler {
     }
 
     try {
-      if (NEW_TRIAL_SIGNUP.equals(eventType) || JOIN_ACCOUNT_REQUEST.equals(eventType)) {
+      if (NEW_TRIAL_SIGNUP == eventType || JOIN_ACCOUNT_REQUEST == eventType) {
         String email = properties.get(EMAIL_ID);
         if (isEmpty(email)) {
           logger.error("User email is empty");

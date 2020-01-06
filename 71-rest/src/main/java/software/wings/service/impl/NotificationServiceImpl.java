@@ -125,8 +125,8 @@ public class NotificationServiceImpl implements NotificationService {
       placeHolderData.put("ENTITY_TYPE", approvalNotification.getEntityType().name());
       placeHolderData.put("ENTITY_NAME", approvalNotification.getEntityName());
       placeHolderData.put("ACTION_URL", actionUrl);
-      if (approvalNotification.getStage().equals(ApprovalStage.APPROVED)
-          || approvalNotification.getStage().equals(ApprovalStage.REJECTED)) {
+      if (approvalNotification.getStage() == ApprovalStage.APPROVED
+          || approvalNotification.getStage() == ApprovalStage.REJECTED) {
         notification.setNotificationTemplateId(ARTIFACT_APPROVAL_NOTIFICATION_STATUS.name());
         placeHolderData.put("NOTIFICATION_STATUS", approvalNotification.getStage().name().toLowerCase());
         placeHolderData.put("USER_NAME",

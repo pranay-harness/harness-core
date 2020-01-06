@@ -73,7 +73,7 @@ public class LDAPValidation extends AbstractSecretManagerValidation {
         logger.info("LTVF: Response is null, task id is: {}", delegateTaskId);
       }
 
-      if (response != null && response.getStatus().equals(Status.SUCCESS)) {
+      if (response != null && response.getStatus() == Status.SUCCESS) {
         logger.info("LTVF: Response status is: {}, task id is: {}", response.getStatus(), delegateTaskId);
         validated = true;
       }

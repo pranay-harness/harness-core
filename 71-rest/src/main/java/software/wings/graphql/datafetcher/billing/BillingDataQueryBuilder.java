@@ -283,7 +283,7 @@ public class BillingDataQueryBuilder {
     for (QLBillingDataFilter filter : filters) {
       Set<QLBillingDataFilterType> filterTypes = QLBillingDataFilter.getFilterTypes(filter);
       for (QLBillingDataFilterType type : filterTypes) {
-        if (type.getMetaDataFields().getFilterKind().equals(QLFilterKind.SIMPLE)) {
+        if (type.getMetaDataFields().getFilterKind() == QLFilterKind.SIMPLE) {
           decorateSimpleFilter(selectQuery, filter, type);
         } else {
           logger.error("Failed to apply filter :[{}]", filter);
@@ -400,7 +400,7 @@ public class BillingDataQueryBuilder {
   private void decorateQueryWithGroupBy(List<BillingDataMetaDataFields> fieldNames, SelectQuery selectQuery,
       List<QLCCMEntityGroupBy> groupBy, List<BillingDataMetaDataFields> groupByFields) {
     for (QLCCMEntityGroupBy aggregation : groupBy) {
-      if (aggregation.getAggregationKind().equals(QLAggregationKind.SIMPLE)) {
+      if (aggregation.getAggregationKind() == QLAggregationKind.SIMPLE) {
         decorateSimpleGroupBy(fieldNames, selectQuery, aggregation, groupByFields);
       }
     }

@@ -171,10 +171,10 @@ public class AzureHelperService {
     }
 
     AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderSetting);
-    if (DeploymentType.WINRM.equals(deploymentType)) {
+    if (DeploymentType.WINRM == deploymentType) {
       return listVmsByTagsAndResourceGroup(
           azureConfig, encryptedDataDetails, subscriptionId, resourceGroup, tagsMap, OSType.WINDOWS);
-    } else if (DeploymentType.SSH.equals(deploymentType)) {
+    } else if (DeploymentType.SSH == deploymentType) {
       return listVmsByTagsAndResourceGroup(
           azureConfig, encryptedDataDetails, subscriptionId, resourceGroup, tagsMap, OSType.LINUX);
     }
@@ -262,7 +262,7 @@ public class AzureHelperService {
                 .withAppId(azureInfrastructureMapping.getAppId())
                 .withEnvId(azureInfrastructureMapping.getEnvId())
                 .withHostConnAttr(azureInfrastructureMapping.getHostConnectionAttrs())
-                .withWinrmConnAttr(DeploymentType.WINRM.equals(deploymentType)
+                .withWinrmConnAttr(DeploymentType.WINRM == deploymentType
                         ? azureInfrastructureMapping.getWinRmConnectionAttributes()
                         : null)
                 .withInfraMappingId(azureInfrastructureMapping.getUuid())
@@ -297,7 +297,7 @@ public class AzureHelperService {
                 .withAppId(infrastructureDefinition.getAppId())
                 .withEnvId(infrastructureDefinition.getEnvId())
                 .withHostConnAttr(azureInstanceInfrastructure.getHostConnectionAttrs())
-                .withWinrmConnAttr(DeploymentType.WINRM.equals(deploymentType)
+                .withWinrmConnAttr(DeploymentType.WINRM == deploymentType
                         ? azureInstanceInfrastructure.getWinRmConnectionAttributes()
                         : null)
                 .withInfraMappingId(infrastructureDefinition.getUuid())

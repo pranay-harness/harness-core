@@ -57,7 +57,7 @@ public class APMCVServiceConfiguration extends CVConfiguration {
     }
     AtomicBoolean isAllThroughput = new AtomicBoolean(true);
     metricCollectionInfos.forEach(metricCollectionInfo -> {
-      if (!MetricType.THROUGHPUT.equals(metricCollectionInfo.getMetricType())) {
+      if (MetricType.THROUGHPUT != metricCollectionInfo.getMetricType()) {
         isAllThroughput.set(false);
         return;
       }
@@ -99,11 +99,11 @@ public class APMCVServiceConfiguration extends CVConfiguration {
     // First, basic validation. If there is atleast one error/Response time, there should be atleast one throughput.
     AtomicBoolean hasErrorOrTime = new AtomicBoolean(false), hasAtleastOneThroughput = new AtomicBoolean(false);
     metricCollectionInfos.forEach(metricCollectionInfo -> {
-      if (MetricType.THROUGHPUT.equals(metricCollectionInfo.getMetricType())) {
+      if (MetricType.THROUGHPUT == metricCollectionInfo.getMetricType()) {
         hasAtleastOneThroughput.set(true);
       }
-      if (MetricType.ERROR.equals(metricCollectionInfo.getMetricType())
-          || MetricType.RESP_TIME.equals(metricCollectionInfo.getMetricType())) {
+      if (MetricType.ERROR == metricCollectionInfo.getMetricType()
+          || MetricType.RESP_TIME == metricCollectionInfo.getMetricType()) {
         hasErrorOrTime.set(true);
       }
     });
@@ -134,11 +134,10 @@ public class APMCVServiceConfiguration extends CVConfiguration {
         hasAtleastOneThroughput.set(false);
 
         metricInfoList.forEach(metricInfo -> {
-          if (MetricType.THROUGHPUT.equals(metricInfo.getMetricType())) {
+          if (MetricType.THROUGHPUT == metricInfo.getMetricType()) {
             hasAtleastOneThroughput.set(true);
           }
-          if (MetricType.ERROR.equals(metricInfo.getMetricType())
-              || MetricType.RESP_TIME.equals(metricInfo.getMetricType())) {
+          if (MetricType.ERROR == metricInfo.getMetricType() || MetricType.RESP_TIME == metricInfo.getMetricType()) {
             hasErrorOrTime.set(true);
           }
         });

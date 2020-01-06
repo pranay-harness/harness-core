@@ -221,7 +221,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
     String key = wingsPersistence.save(artifact);
     Artifact savedArtifact = wingsPersistence.get(Artifact.class, key);
-    if (savedArtifact.getStatus().equals(QUEUED)) {
+    if (savedArtifact.getStatus() == QUEUED) {
       logger.info("Sending event to collect artifact {} ", savedArtifact.getUuid());
       collectQueue.send(aCollectEvent().withArtifact(savedArtifact).build());
     }
@@ -286,7 +286,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       if (appId != null && !appId.equals(GLOBAL_APP_ID)) {
         if (((NexusArtifactStream) artifactStream).getRepositoryType() == null) { // for backward compatibility
           artifact.setContentStatus(
-              getArtifactType(appId, artifactStream.getUuid()).equals(DOCKER) ? METADATA_ONLY : NOT_DOWNLOADED);
+              getArtifactType(appId, artifactStream.getUuid()) == DOCKER ? METADATA_ONLY : NOT_DOWNLOADED);
         } else if (((NexusArtifactStream) artifactStream).getRepositoryType().equals(RepositoryType.docker.name())) {
           artifact.setContentStatus(METADATA_ONLY);
         } else {
@@ -306,7 +306,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
     if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
       if (appId != null && !appId.equals(GLOBAL_APP_ID)) {
-        if (getArtifactType(appId, artifactStream.getUuid()).equals(DOCKER)) {
+        if (getArtifactType(appId, artifactStream.getUuid()) == DOCKER) {
           artifact.setContentStatus(METADATA_ONLY);
           artifact.setStatus(APPROVED);
           return;

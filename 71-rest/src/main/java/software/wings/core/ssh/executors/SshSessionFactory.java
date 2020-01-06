@@ -81,14 +81,14 @@ public class SshSessionFactory {
     JSch jsch = new JSch();
 
     Session session;
-    if (config.getAuthenticationScheme() != null && config.getAuthenticationScheme().equals(KERBEROS)) {
+    if (config.getAuthenticationScheme() != null && config.getAuthenticationScheme() == KERBEROS) {
       logCallback.saveExecutionLog("SSH using Kerberos Auth");
       logger.info("SSH using Kerberos Auth");
       generateTGT(config, logCallback);
 
       session = jsch.getSession(config.getKerberosConfig().getPrincipal(), config.getHost(), config.getPort());
       session.setConfig("PreferredAuthentications", "gssapi-with-mic");
-    } else if (config.getAccessType() != null && config.getAccessType().equals(USER_PASSWORD)) {
+    } else if (config.getAccessType() != null && config.getAccessType() == USER_PASSWORD) {
       logger.info("SSH using Username Password");
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
       byte[] password = EncryptionUtils.toBytes(config.getSshPassword(), Charsets.UTF_8);

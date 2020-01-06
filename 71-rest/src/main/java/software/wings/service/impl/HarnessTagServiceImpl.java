@@ -548,15 +548,15 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       String appId, String accountId, String entityId, EntityType entityType, Action action) {
     notNullCheck("appId cannot be null", appId);
 
-    if (EntityType.APPLICATION.equals(entityType)) {
+    if (EntityType.APPLICATION == entityType) {
       authorizeApplication(appId, accountId, action);
       return;
     }
 
-    if (EntityType.TRIGGER.equals(entityType) || (EntityType.DEPLOYMENT_TRIGGER.equals(entityType))) {
+    if (EntityType.TRIGGER == entityType || (EntityType.DEPLOYMENT_TRIGGER == entityType)) {
       // For Read action, we check if the user has access to App or not.
       // This is consistent with what is done in trigger resource list
-      if (Action.READ.equals(action)) {
+      if (Action.READ == action) {
         authorizeApplication(appId, accountId, action);
       } else {
         authorizeTriggers(appId, entityId, accountId);

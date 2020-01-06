@@ -592,19 +592,19 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   private void invalidateUserRelatedCacheIfNeeded(String accountId, YamlType yamlType, ChangeType changeType) {
-    if (ChangeType.ADD.equals(changeType) && rbacCreateYamlTypes.contains(yamlType)) {
-      if (yamlType.equals(YamlType.APPLICATION) || yamlType.equals(YamlType.ENVIRONMENT)) {
+    if (ChangeType.ADD == changeType && rbacCreateYamlTypes.contains(yamlType)) {
+      if (yamlType == YamlType.APPLICATION || yamlType == YamlType.ENVIRONMENT) {
         authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, true, true);
       } else {
         authService.evictUserPermissionCacheForAccount(accountId, true);
       }
-    } else if (ChangeType.MODIFY.equals(changeType) && rbacUpdateYamlTypes.contains(yamlType)) {
-      if (yamlType.equals(YamlType.ENVIRONMENT)) {
+    } else if (ChangeType.MODIFY == changeType && rbacUpdateYamlTypes.contains(yamlType)) {
+      if (yamlType == YamlType.ENVIRONMENT) {
         authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, true, true);
       } else {
         authService.evictUserPermissionCacheForAccount(accountId, true);
       }
-    } else if (ChangeType.DELETE.equals(changeType) && rbacDeleteYamlTypes.contains(yamlType)) {
+    } else if (ChangeType.DELETE == changeType && rbacDeleteYamlTypes.contains(yamlType)) {
       authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, true, true);
     }
   }
@@ -728,7 +728,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
                                    .findFirst();
 
     if (first.isPresent()) {
-      if (first.get().equals(TRIGGER) && isTriggerRefactor(accountId)) {
+      if (first.get() == TRIGGER && isTriggerRefactor(accountId)) {
         return DEPLOYMENT_TRIGGER;
       } else {
         return first.get();

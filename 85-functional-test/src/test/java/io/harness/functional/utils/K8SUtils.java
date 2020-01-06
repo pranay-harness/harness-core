@@ -95,8 +95,7 @@ public class K8SUtils {
         .atMost(i, TimeUnit.MINUTES)
         .pollInterval(5, TimeUnit.SECONDS)
         .until(()
-                   -> workflowExecutionService.getWorkflowExecution(appId, workflowExecution.getUuid())
-                          .getStatus()
-                          .equals(ExecutionStatus.SUCCESS));
+                   -> workflowExecutionService.getWorkflowExecution(appId, workflowExecution.getUuid()).getStatus()
+                == ExecutionStatus.SUCCESS);
   }
 }

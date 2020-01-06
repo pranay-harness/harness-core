@@ -40,7 +40,7 @@ public class AwsS3Task extends AbstractDelegateRunnableTask {
     AwsS3Request request = (AwsS3Request) parameters[0];
     try {
       AwsS3RequestType requestType = request.getRequestType();
-      if (LIST_BUCKET_NAMES.equals(requestType)) {
+      if (LIST_BUCKET_NAMES == requestType) {
         List<String> bucketNames =
             s3HelperServiceDelegate.listBucketNames(request.getAwsConfig(), request.getEncryptionDetails());
         return AwsS3ListBucketNamesResponse.builder().bucketNames(bucketNames).executionStatus(SUCCESS).build();

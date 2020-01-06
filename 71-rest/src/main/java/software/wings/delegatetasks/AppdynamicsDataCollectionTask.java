@@ -214,17 +214,16 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       for (AppdynamicsMetricData metricData : metricsData) {
         String[] appdynamicsPathPieces = metricData.getMetricPath().split(Pattern.quote("|"));
         String tierName = parseAppdynamicsInternalName(appdynamicsPathPieces, 2);
-        String nodeName = dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.PREDICTIVE)
+        String nodeName = dataCollectionInfo.getTimeSeriesMlAnalysisType() == TimeSeriesMlAnalysisType.PREDICTIVE
             ? tierName
             : appdynamicsPathPieces[5];
-        if (dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.COMPARATIVE)
+        if (dataCollectionInfo.getTimeSeriesMlAnalysisType() == TimeSeriesMlAnalysisType.COMPARATIVE
             && !dataCollectionInfo.getHosts().keySet().contains(nodeName)) {
           logger.info("skipping: {}", nodeName);
           continue;
         }
         String btName = parseAppdynamicsInternalName(appdynamicsPathPieces, 3);
-        String metricName =
-            dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.COMPARATIVE)
+        String metricName = dataCollectionInfo.getTimeSeriesMlAnalysisType() == TimeSeriesMlAnalysisType.COMPARATIVE
             ? parseAppdynamicsInternalName(appdynamicsPathPieces, 6)
             : parseAppdynamicsInternalName(appdynamicsPathPieces, 4);
 
@@ -282,7 +281,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
 
     private int getCollectionMinute(final long metricTimeStamp, boolean isHeartbeat) {
       boolean isPredictiveAnalysis =
-          dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.PREDICTIVE);
+          dataCollectionInfo.getTimeSeriesMlAnalysisType() == TimeSeriesMlAnalysisType.PREDICTIVE;
       long collectionStartTime = !isPredictiveAnalysis || is247Task
           ? dataCollectionInfo.getStartTime()
           : dataCollectionInfo.getStartTime() - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES);

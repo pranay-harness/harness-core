@@ -66,7 +66,7 @@ public class ProceedResponseHandler implements SlackActionHandler {
         workflowExecutionService
             .getStateExecutionData(slackApprovalParams.getAppId(), slackApprovalParams.getStateExecutionId())
             .getStatus();
-    if (currentStatus.equals(ExecutionStatus.PAUSED)) {
+    if (currentStatus == ExecutionStatus.PAUSED) {
       approve(slackApprovalParams.getAppId(), slackApprovalParams.getDeploymentId(),
           slackApprovalParams.getStateExecutionId(), details, workflowExecutionService);
       return slackPostRequest(createBody(displayText.toString(), true), responseUrl);

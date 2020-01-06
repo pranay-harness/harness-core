@@ -654,10 +654,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       Map<String, Object> variables, boolean adoptDelegateDecryption, int expressionFunctorToken) {
     final String variableName = renderExpression(serviceVariable.getName());
 
-    if (!variables.containsKey(variableName) && !Type.ARTIFACT.equals(serviceVariable.getType())) {
+    if (!variables.containsKey(variableName) && Type.ARTIFACT != serviceVariable.getType()) {
       if (serviceVariable.getType() == TEXT || encryptedFieldMode == MASKED) {
         variables.put(variableName, renderExpression(new String(serviceVariable.getValue())));
-      } else if (!Type.ARTIFACT.equals(serviceVariable.getType())) {
+      } else if (Type.ARTIFACT != serviceVariable.getType()) {
         if (isEmpty(serviceVariable.getAccountId())) {
           Application app = getApp();
           notNullCheck("app", app);
@@ -964,7 +964,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     Map<String, Object> variables = new HashMap<>();
     if (isNotEmpty(serviceVariables)) {
       serviceVariables.forEach(serviceVariable -> {
-        if (!Type.ARTIFACT.equals(serviceVariable.getType())) {
+        if (Type.ARTIFACT != serviceVariable.getType()) {
           String name = renderExpression(serviceVariable.getName());
           if (serviceVariable.isDecrypted()) {
             variables.put(name, SecretString.builder().value(new String(serviceVariable.getValue())).build());
@@ -1065,7 +1065,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     DeploymentType deploymentType =
         serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
 
-    if ((DeploymentType.KUBERNETES.equals(deploymentType)) || (DeploymentType.HELM.equals(deploymentType))) {
+    if ((DeploymentType.KUBERNETES == deploymentType) || (DeploymentType.HELM == deploymentType)) {
       String namespace = null;
 
       if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {

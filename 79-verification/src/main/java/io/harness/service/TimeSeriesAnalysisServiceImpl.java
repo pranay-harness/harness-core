@@ -415,8 +415,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
     return results.stream()
         .filter(dataRecord
-            -> nodes.contains(dataRecord.getHost()) && !ClusterLevel.H0.equals(dataRecord.getLevel())
-                && !ClusterLevel.HF.equals(dataRecord.getLevel()))
+            -> nodes.contains(dataRecord.getHost()) && ClusterLevel.H0 != dataRecord.getLevel()
+                && ClusterLevel.HF != dataRecord.getLevel())
         .collect(Collectors.toSet());
   }
 
@@ -438,8 +438,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     final PageResponse<NewRelicMetricDataRecord> results =
         dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
     return results.stream()
-        .filter(dataRecord
-            -> !ClusterLevel.H0.equals(dataRecord.getLevel()) && !ClusterLevel.HF.equals(dataRecord.getLevel()))
+        .filter(dataRecord -> ClusterLevel.H0 != dataRecord.getLevel() && ClusterLevel.HF != dataRecord.getLevel())
         .collect(Collectors.toSet());
   }
 
@@ -471,11 +470,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         results.getResponse()
             .stream()
             .filter(dataRecord
-                -> dataRecord.getStateType().equals(stateType) && dataRecord.getServiceId().equals(serviceId)
+                -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
                     && (dataRecord.getGroupName().equals(groupName)
                            || dataRecord.getGroupName().equals(DEFAULT_GROUP_NAME))
-                    && (!ClusterLevel.H0.equals(dataRecord.getLevel())
-                           && !ClusterLevel.HF.equals(dataRecord.getLevel())))
+                    && (ClusterLevel.H0 != dataRecord.getLevel() && ClusterLevel.HF != dataRecord.getLevel()))
             .collect(Collectors.toList());
     if (records.isEmpty()) {
       return -1;
@@ -513,10 +511,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
           results.getResponse()
               .stream()
               .filter(dataRecord
-                  -> dataRecord.getStateType().equals(stateType) && dataRecord.getServiceId().equals(serviceId)
+                  -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
 
-                      && (!ClusterLevel.H0.equals(dataRecord.getLevel())
-                             && !ClusterLevel.HF.equals(dataRecord.getLevel())))
+                      && (ClusterLevel.H0 != dataRecord.getLevel() && ClusterLevel.HF != dataRecord.getLevel()))
               .collect(Collectors.toList());
       if (!records.isEmpty()) {
         return successfulExecution;
@@ -596,8 +593,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     List<NewRelicMetricDataRecord> rv =
         results.stream()
             .filter(dataRecord
-                -> dataRecord.getStateType().equals(stateType) && dataRecord.getServiceId().equals(serviceId)
-                    && ClusterLevel.HF.equals(dataRecord.getLevel()))
+                -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
+                    && ClusterLevel.HF == dataRecord.getLevel())
             .collect(Collectors.toList());
 
     if (isEmpty(rv)) {
@@ -628,8 +625,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     List<NewRelicMetricDataRecord> rv =
         results.stream()
             .filter(dataRecord
-                -> dataRecord.getStateType().equals(stateType) && dataRecord.getServiceId().equals(serviceId)
-                    && ClusterLevel.H0.equals(dataRecord.getLevel()))
+                -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
+                    && ClusterLevel.H0 == dataRecord.getLevel())
             .collect(Collectors.toList());
 
     if (isEmpty(rv)) {
@@ -665,7 +662,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
 
     dataRecords.stream()
-        .filter(dataRecord -> ClusterLevel.H0.equals(dataRecord.getLevel()))
+        .filter(dataRecord -> ClusterLevel.H0 == dataRecord.getLevel())
         .forEach(dataRecord -> dataRecord.setLevel(ClusterLevel.HF));
     dataStoreService.save(NewRelicMetricDataRecord.class, dataRecords, false);
   }

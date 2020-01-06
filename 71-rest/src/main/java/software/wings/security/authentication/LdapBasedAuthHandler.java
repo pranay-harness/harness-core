@@ -80,7 +80,7 @@ public class LdapBasedAuthHandler implements AuthHandler {
         LdapResponse authenticationResponse =
             delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
                 .authenticate(settings, settingsEncryptedDataDetail, username, passwordEncryptedDataDetail);
-        if (authenticationResponse.getStatus().equals(Status.SUCCESS)) {
+        if (authenticationResponse.getStatus() == Status.SUCCESS) {
           return new AuthenticationResponse(user);
         }
         throw new WingsException(INVALID_CREDENTIAL, USER);

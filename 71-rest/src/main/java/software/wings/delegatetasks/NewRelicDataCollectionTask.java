@@ -554,7 +554,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       return rv;
     }
     private boolean isPredictiveAnalysis() {
-      return analysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE);
+      return analysisType == TimeSeriesMlAnalysisType.PREDICTIVE;
     }
   }
 }

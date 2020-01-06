@@ -321,7 +321,7 @@ public abstract class ExpressionBuilder {
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       Set<String> serviceVariableMentions = new HashSet<>();
       serviceVariables.forEach(serviceVariable -> {
-        if (ServiceVariable.Type.ARTIFACT.equals(serviceVariable.getType())) {
+        if (ServiceVariable.Type.ARTIFACT == serviceVariable.getType()) {
           String artifactMentions = "artifacts." + serviceVariable.getName();
           serviceVariableMentions.add(artifactMentions);
           for (String suffix : getArtifactExpressionSuffixes()) {
@@ -343,10 +343,10 @@ public abstract class ExpressionBuilder {
       String appId, PageRequest<ServiceTemplate> pageRequest, EntityType entityType) {
     List<ServiceTemplate> serviceTemplates = serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE);
     SortedSet<String> serviceVariables = new TreeSet<>();
-    if (SERVICE.equals(entityType)) {
+    if (SERVICE == entityType) {
       return getServiceVariables(
           appId, serviceTemplates.stream().map(ServiceTemplate::getServiceId).collect(toList()), SERVICE);
-    } else if (ENVIRONMENT.equals(entityType)) {
+    } else if (ENVIRONMENT == entityType) {
       serviceVariables.addAll(getServiceVariables(
           appId, serviceTemplates.stream().map(ServiceTemplate::getEnvId).collect(toList()), ENVIRONMENT));
     }

@@ -170,7 +170,7 @@ public class SetInfraDefinitionPipelines {
     List<Variable> infraUserVariables = new ArrayList<>();
     for (Variable userVariable : userVariables) {
       if (userVariable.obtainEntityType() != null
-          && userVariable.obtainEntityType().equals(EntityType.INFRASTRUCTURE_MAPPING)) {
+          && userVariable.obtainEntityType() == EntityType.INFRASTRUCTURE_MAPPING) {
         infraUserVariables.add(userVariable);
       }
     }

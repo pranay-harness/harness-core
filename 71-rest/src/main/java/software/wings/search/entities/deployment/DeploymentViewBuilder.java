@@ -72,15 +72,14 @@ class DeploymentViewBuilder {
   }
 
   private void setWorkflowInPipeline(WorkflowExecution workflowExecution, DeploymentView deploymentView) {
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)
+    if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION
         && workflowExecution.getPipelineExecutionId() != null) {
       deploymentView.setWorkflowInPipeline(true);
     }
   }
 
   private void setWorkflows(WorkflowExecution workflowExecution, DeploymentView deploymentView) {
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)
-        && workflowExecution.getWorkflowIds() != null) {
+    if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE && workflowExecution.getWorkflowIds() != null) {
       Set<EntityInfo> workflows = new HashSet<>();
       for (String workflowId : workflowExecution.getWorkflowIds()) {
         Workflow workflow = wingsPersistence.get(Workflow.class, workflowId);
@@ -90,7 +89,7 @@ class DeploymentViewBuilder {
         }
       }
       deploymentView.setWorkflows(workflows);
-    } else if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)
+    } else if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION
         && workflowExecution.getWorkflowId() != null) {
       Workflow workflow = wingsPersistence.get(Workflow.class, workflowExecution.getWorkflowId());
       if (workflow != null) {

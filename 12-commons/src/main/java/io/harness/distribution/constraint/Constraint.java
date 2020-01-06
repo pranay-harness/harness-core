@@ -74,7 +74,7 @@ public class Constraint {
   }
 
   public static int getUsedPermits(List<Consumer> consumers) {
-    return consumers.stream().filter(item -> item.getState().equals(ACTIVE)).mapToInt(Consumer::getPermits).sum();
+    return consumers.stream().filter(item -> item.getState() == ACTIVE).mapToInt(Consumer::getPermits).sum();
   }
 
   private boolean enoughPermits(int permits, int usedPermits) {
@@ -82,7 +82,7 @@ public class Constraint {
   }
 
   private boolean nonBlocked(List<Consumer> consumers) {
-    return consumers.stream().noneMatch(item -> item.getState().equals(BLOCKED));
+    return consumers.stream().noneMatch(item -> item.getState() == BLOCKED);
   }
 
   private void checkForBadBlock(Consumer consumer, List<Consumer> consumers, ConstraintRegistry registry)
@@ -133,7 +133,7 @@ public class Constraint {
       final Consumer consumer =
           Consumer.builder().id(consumerId).permits(permits).state(state).context(context).build();
 
-      if (BLOCKED.equals(state)) {
+      if (BLOCKED == state) {
         checkForBadBlock(consumer, consumers, registry);
       }
 

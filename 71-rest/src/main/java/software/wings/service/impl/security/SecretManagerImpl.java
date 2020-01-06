@@ -430,7 +430,7 @@ public class SecretManagerImpl implements SecretManager {
             // The encryption type will be set to LOCAL only if manager was able to decrypt.
             // If the decryption failed, we need to retain the kms encryption config, otherwise delegate task would
             // fail.
-            if (encryptedRecordData.getEncryptionType().equals(LOCAL)) {
+            if (encryptedRecordData.getEncryptionType() == LOCAL) {
               encryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
               logger.info("Replaced it with LOCAL encryption for secret {}", encryptedData.getUuid());
             }
@@ -1514,8 +1514,8 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   private boolean eligibleForCrudAudit(EncryptedData savedData) {
-    return SettingVariableTypes.CONFIG_FILE.equals(savedData.getType())
-        || SettingVariableTypes.SECRET_TEXT.equals(savedData.getType());
+    return SettingVariableTypes.CONFIG_FILE == savedData.getType()
+        || SettingVariableTypes.SECRET_TEXT == savedData.getType();
   }
 
   @Override

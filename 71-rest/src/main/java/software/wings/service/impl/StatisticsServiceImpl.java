@@ -60,7 +60,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
 
     Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType =
-        workflowExecutions.parallelStream().collect(groupingBy(wex -> PROD.equals(wex.getEnvType()) ? PROD : NON_PROD));
+        workflowExecutions.parallelStream().collect(groupingBy(wex -> PROD == wex.getEnvType() ? PROD : NON_PROD));
 
     deploymentStats.getStatsMap().put(
         PROD, getDeploymentStatisticsByEnvType(numOfDays, wflExecutionByEnvType.get(EnvironmentType.PROD)));
@@ -96,7 +96,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     allTopConsumers = allTopConsumers.stream().sorted(byCount).collect(toList());
 
     Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType =
-        workflowExecutions.parallelStream().collect(groupingBy(wex -> PROD.equals(wex.getEnvType()) ? PROD : NON_PROD));
+        workflowExecutions.parallelStream().collect(groupingBy(wex -> PROD == wex.getEnvType() ? PROD : NON_PROD));
 
     List<TopConsumer> prodTopConsumers = new ArrayList<>();
     getTopServicesDeployed(prodTopConsumers, wflExecutionByEnvType.get(PROD));
@@ -231,7 +231,7 @@ public class StatisticsServiceImpl implements StatisticsService {
           topConsumers.add(tempConsumer);
         }
         topConsumer = topConsumerMap.get(serviceId);
-        if (serviceExecutionStatus.equals(SUCCESS)) {
+        if (serviceExecutionStatus == SUCCESS) {
           topConsumer.setSuccessfulActivityCount(topConsumer.getSuccessfulActivityCount() + 1);
           topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
         } else {

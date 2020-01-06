@@ -130,9 +130,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       List<NewRelicMetricDataRecord> rv =
           results.stream()
               .filter(dataRecord
-                  -> dataRecord.getStateType().equals(stateType) && dataRecord.getServiceId().equals(serviceId)
-                      && !ClusterLevel.H0.equals(dataRecord.getLevel())
-                      && !ClusterLevel.HF.equals(dataRecord.getLevel()))
+                  -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
+                      && ClusterLevel.H0 != dataRecord.getLevel() && ClusterLevel.HF != dataRecord.getLevel())
               .collect(Collectors.toList());
 
       if (isNotEmpty(rv)) {
@@ -238,7 +237,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         boolean isPredictiveAnalysis = false;
         if (mlHostSummaryEntry.getValue().getTimeSeriesMlAnalysisType() != null) {
           isPredictiveAnalysis =
-              mlHostSummaryEntry.getValue().getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.PREDICTIVE);
+              mlHostSummaryEntry.getValue().getTimeSeriesMlAnalysisType() == TimeSeriesMlAnalysisType.PREDICTIVE;
         }
         hostAnalysisValues.add(
             NewRelicMetricHostAnalysisValue.builder()
@@ -401,7 +400,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       thresholds.forEach(threshold -> {
         if (isNotEmpty(threshold.getThresholds().getCustomThresholds())) {
           for (Threshold t : threshold.getThresholds().getCustomThresholds()) {
-            if (t.getComparisonType().equals(thresholdComparisonType)) {
+            if (t.getComparisonType() == thresholdComparisonType) {
               wingsPersistence.delete(threshold);
               return;
             }

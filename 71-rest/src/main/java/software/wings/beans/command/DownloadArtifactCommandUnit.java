@@ -187,7 +187,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
           metadata.put(ArtifactMetadataKeys.artifactFileName, fileInfo.getName());
           command = constructCommandStringForAzureArtifacts(artifactStreamAttributes, encryptionDetails, metadata);
           CommandExecutionStatus executionStatus = context.executeCommandString(command, false);
-          if (FAILURE.equals(executionStatus)) {
+          if (FAILURE == executionStatus) {
             return executionStatus;
           }
         }

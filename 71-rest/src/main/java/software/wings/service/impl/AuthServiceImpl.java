@@ -506,7 +506,7 @@ public class AuthServiceImpl implements AuthService {
           return true;
         }
 
-        if (permission.getEnvironmentType() != null && permission.getEnvironmentType().equals(envType)) {
+        if (permission.getEnvironmentType() != null && permission.getEnvironmentType() == envType) {
           return true;
         }
 
@@ -1134,7 +1134,7 @@ public class AuthServiceImpl implements AuthService {
       throw new WingsException(ACCESS_DENIED, USER);
     }
 
-    if (Action.UPDATE.equals(action)) {
+    if (Action.UPDATE == action) {
       AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
 
       if (accountPermissionSummary == null || isEmpty(accountPermissionSummary.getPermissions())

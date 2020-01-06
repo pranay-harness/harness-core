@@ -134,11 +134,11 @@ public class StateExecutionServiceImpl implements StateExecutionService {
                                  .fetch())) {
       for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
         StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
-        if (CurrentPhase.EXCLUDE.equals(curentPhase) && stateExecutionInstance.getDisplayName().equals(phaseName)) {
+        if (CurrentPhase.EXCLUDE == curentPhase && stateExecutionInstance.getDisplayName().equals(phaseName)) {
           return executionDataList;
         }
         executionDataList.add(stateExecutionData);
-        if (CurrentPhase.INCLUDE.equals(curentPhase) && stateExecutionInstance.getDisplayName().equals(phaseName)) {
+        if (CurrentPhase.INCLUDE == curentPhase && stateExecutionInstance.getDisplayName().equals(phaseName)) {
           return executionDataList;
         }
       }
@@ -161,11 +161,11 @@ public class StateExecutionServiceImpl implements StateExecutionService {
                                  .order(Sort.ascending(StateExecutionInstanceKeys.createdAt))
                                  .fetch())) {
       for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
-        if (CurrentPhase.EXCLUDE.equals(currentPhase) && stateExecutionInstance.getDisplayName().equals(phaseName)) {
+        if (CurrentPhase.EXCLUDE == currentPhase && stateExecutionInstance.getDisplayName().equals(phaseName)) {
           return instanceList;
         }
         instanceList.add(stateExecutionInstance);
-        if (CurrentPhase.INCLUDE.equals(currentPhase) && stateExecutionInstance.getDisplayName().equals(phaseName)) {
+        if (CurrentPhase.INCLUDE == currentPhase && stateExecutionInstance.getDisplayName().equals(phaseName)) {
           return instanceList;
         }
       }
@@ -296,13 +296,13 @@ public class StateExecutionServiceImpl implements StateExecutionService {
 
   @Nullable
   private PhaseElement fetchPhaseElement(@NotNull StateExecutionInstance stateExecutionInstance) {
-    PhaseElement phaseElement = (PhaseElement) stateExecutionInstance.getContextElements()
-                                    .stream()
-                                    .filter(ce
-                                        -> ContextElementType.PARAM.equals(ce.getElementType())
-                                            && PhaseElement.PHASE_PARAM.equals(ce.getName()))
-                                    .findFirst()
-                                    .orElse(null);
+    PhaseElement phaseElement =
+        (PhaseElement) stateExecutionInstance.getContextElements()
+            .stream()
+            .filter(
+                ce -> ContextElementType.PARAM == ce.getElementType() && PhaseElement.PHASE_PARAM.equals(ce.getName()))
+            .findFirst()
+            .orElse(null);
     if (phaseElement == null) {
       return null;
     }

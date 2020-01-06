@@ -81,7 +81,7 @@ public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
 
     Action action = null;
     ExecutionStatus executionStatus = ExecutionStatus.RUNNING;
-    if (SUCCESS.equals(commandExecutionResult.getStatus())) {
+    if (SUCCESS == commandExecutionResult.getStatus()) {
       Map<String, String> sweepingOutputEnvVariables =
           ((ShellExecutionData) commandExecutionResult.getCommandExecutionData()).getSweepingOutputEnvVariables();
 

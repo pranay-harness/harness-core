@@ -95,7 +95,7 @@ public class TemplateGenerator {
     }
     TemplateFolder parentFolder =
         templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SERVICE_COMMANDS, GLOBAL_APP_ID);
-    if (templates.equals(Templates.SERVICE_COMMAND_1)) {
+    if (templates == Templates.SERVICE_COMMAND_1) {
       SshCommandTemplate command1 =
           SshCommandTemplate.builder()
               .commandType(OTHER)
@@ -127,7 +127,7 @@ public class TemplateGenerator {
               .variables(Arrays.asList(aVariable().type(TEXT).name("var1").mandatory(true).build(),
                   aVariable().type(ARTIFACT).name("t_artifact1").mandatory(true).build()))
               .build());
-    } else if (templates.equals(Templates.SERVICE_COMMAND_2)) {
+    } else if (templates == Templates.SERVICE_COMMAND_2) {
       SshCommandTemplate command2 =
           SshCommandTemplate.builder()
               .commandType(OTHER)

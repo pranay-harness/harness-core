@@ -262,7 +262,7 @@ public class EnvState extends State {
                                               .allowedList(allowedList)
                                               .build();
 
-      if (EntityType.ENVIRONMENT.equals(entityType)) {
+      if (EntityType.ENVIRONMENT == entityType) {
         List<ArtifactVariable> overriddenArtifactVariables = new ArrayList<>();
         if (!StringUtils.isBlank(savElement.getServiceId())) {
           overriddenArtifactVariables.add(ArtifactVariable.builder()
@@ -279,7 +279,7 @@ public class EnvState extends State {
 
       // NOTE: collisions here should be fixed later as we some artifact variables might get filtered out because of
       // envId/serviceId resolved later.
-      if (EntityType.WORKFLOW.equals(entityType)) {
+      if (EntityType.WORKFLOW == entityType) {
         workflowVariablesMap.put(artifactVariable.getName(), artifactVariable);
       } else {
         artifactVariables.add(artifactVariable);

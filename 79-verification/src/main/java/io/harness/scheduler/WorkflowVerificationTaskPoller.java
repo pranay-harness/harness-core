@@ -76,8 +76,7 @@ public class WorkflowVerificationTaskPoller {
           verificationAnalysisTask = learningEngineService.getNextVerificationAnalysisTask(ServiceApiVersion.V1);
           logger.info("pulled analysis task {}", verificationAnalysisTask);
           schedulePredictiveDataCollectionCronJob(verificationAnalysisTask);
-          if (verificationAnalysisTask != null
-              && !PREDICTIVE.equals(verificationAnalysisTask.getComparisonStrategy())) {
+          if (verificationAnalysisTask != null && PREDICTIVE != verificationAnalysisTask.getComparisonStrategy()) {
             // for both Log and Metric
             logger.info("Scheduling Data collection cron");
             scheduleDataCollection(verificationAnalysisTask);
@@ -144,7 +143,7 @@ public class WorkflowVerificationTaskPoller {
   }
 
   private void schedulePredictiveDataCollectionCronJob(AnalysisContext context) {
-    if (context != null && PREDICTIVE.equals(context.getComparisonStrategy())) {
+    if (context != null && PREDICTIVE == context.getComparisonStrategy()) {
       String cvConfigUuid = context.getPredictiveCvConfigId();
       if (isNotEmpty(cvConfigUuid)) {
         return;

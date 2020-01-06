@@ -1046,7 +1046,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           service.getAppId(), service.getUuid(), INDEX_YAML, ApplicationManifest.class,
           applicationManifestPath.clone().add(INDEX_YAML), yamlGitSyncService, Type.APPLICATION_MANIFEST));
 
-      if (StoreType.Local.equals(applicationManifest.getStoreType())) {
+      if (StoreType.Local == applicationManifest.getStoreType()) {
         FolderNode manifestFileFolder =
             generateManifestFileFolderNode(accountId, service, applicationManifest, manifestFilePath);
         applicationManifestFolder.addChild(manifestFileFolder);
@@ -1446,7 +1446,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           env.getUuid(), INDEX_YAML, ApplicationManifest.class, valuesPath.clone().add(INDEX_YAML), yamlGitSyncService,
           Type.APPLICATION_MANIFEST));
 
-      if (StoreType.Local.equals(applicationManifest.getStoreType())) {
+      if (StoreType.Local == applicationManifest.getStoreType()) {
         List<ManifestFile> manifestFiles =
             applicationManifestService.getManifestFilesByAppManifestId(env.getAppId(), applicationManifest.getUuid());
 
@@ -1468,7 +1468,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           env.getUuid(), INDEX_YAML, ApplicationManifest.class, pcfOverridesPath.clone().add(INDEX_YAML),
           yamlGitSyncService, Type.APPLICATION_MANIFEST));
 
-      if (StoreType.Local.equals(applicationManifest.getStoreType())) {
+      if (StoreType.Local == applicationManifest.getStoreType()) {
         List<ManifestFile> manifestFiles =
             applicationManifestService.getManifestFilesByAppManifestId(env.getAppId(), applicationManifest.getUuid());
 
@@ -1956,7 +1956,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             .toString();
       case SERVICE:
         notNullCheck("Service not found", service);
-        boolean valuesYaml = AppManifestKind.VALUES.equals(applicationManifest.getKind());
+        boolean valuesYaml = AppManifestKind.VALUES == applicationManifest.getKind();
 
         StringBuilder builder = new StringBuilder(getRootPathByService(service, getRootPathByApp(application)))
                                     .append(PATH_DELIMITER)
@@ -1974,7 +1974,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private boolean isPcfOverrideAppManifest(ApplicationManifest applicationManifest) {
-    return AppManifestKind.PCF_OVERRIDE.equals(applicationManifest.getKind());
+    return AppManifestKind.PCF_OVERRIDE == applicationManifest.getKind();
   }
 
   @Override

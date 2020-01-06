@@ -131,7 +131,7 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
 
   public Map<String, String> getWorkflowVariables() {
     // TODO: This is temporary code till we migrate all the triggers
-    if (condition != null && WEBHOOK.equals(condition.getConditionType())) {
+    if (condition != null && WEBHOOK == condition.getConditionType()) {
       WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) condition;
       if (isNotEmpty(webHookTriggerCondition.getParameters())) {
         if (workflowVariables == null) {

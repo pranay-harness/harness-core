@@ -24,7 +24,7 @@ public class AwsAmiInfrastructureYamlHandler
   public Yaml toYaml(AwsAmiInfrastructure bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
     String spotinstCloudProviderName = null;
-    if (AmiDeploymentType.SPOTINST.equals(bean.getAmiDeploymentType())) {
+    if (AmiDeploymentType.SPOTINST == bean.getAmiDeploymentType()) {
       SettingAttribute spotinstCloudProvider = settingsService.get(bean.getSpotinstCloudProvider());
       notNullCheck(
           "SettingAttribute can't be found for Id:" + bean.getSpotinstCloudProvider(), spotinstCloudProvider, USER);
@@ -62,7 +62,7 @@ public class AwsAmiInfrastructureYamlHandler
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     notNullCheck(format("Cloud Provider with name %s does not exist", yaml.getCloudProviderName()), cloudProvider);
     String spotinstCloudProviderId = null;
-    if (AmiDeploymentType.SPOTINST.equals(yaml.getAmiDeploymentType())) {
+    if (AmiDeploymentType.SPOTINST == yaml.getAmiDeploymentType()) {
       SettingAttribute spotinstCloudProvider =
           settingsService.getSettingAttributeByName(accountId, yaml.getSpotinstCloudProviderName());
       notNullCheck("SettingAttribute can't be found for Name:" + yaml.getSpotinstCloudProviderName(),

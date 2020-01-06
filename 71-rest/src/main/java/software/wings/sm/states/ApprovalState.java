@@ -318,7 +318,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
                              .build());
 
     if (executionContext.getOrchestrationWorkflowType() != null
-        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
+        && executionContext.getOrchestrationWorkflowType() == BUILD) {
       activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
     } else {
       activityBuilder.environmentId(env != null ? env.getUuid() : ENVIRONMENT_ID)
@@ -391,7 +391,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     JiraExecutionData jiraExecutionData = jiraHelperService.fetchIssue(
         jiraApprovalParams, app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
 
-    if (jiraExecutionData.getExecutionStatus() != null && FAILED.equals(jiraExecutionData.getExecutionStatus())) {
+    if (jiraExecutionData.getExecutionStatus() != null && FAILED == jiraExecutionData.getExecutionStatus()) {
       return respondWithStatus(context, executionData, null,
           ExecutionResponse.builder()
               .executionStatus(FAILED)
@@ -569,7 +569,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     StringJoiner artifacts = new StringJoiner(", ");
 
     int tokenValidDuration = getTimeoutMillis();
-    boolean isPipeline = context.getWorkflowType().equals(WorkflowType.PIPELINE);
+    boolean isPipeline = context.getWorkflowType() == WorkflowType.PIPELINE;
     if (isPipeline) {
       Pipeline pipeline = pipelineService.readPipeline(context.getAppId(), context.getWorkflowId(), true);
       pausedStageName = getPipelineStageName(pipeline, getName());

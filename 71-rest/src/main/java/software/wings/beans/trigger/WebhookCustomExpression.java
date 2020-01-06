@@ -67,7 +67,7 @@ public enum WebhookCustomExpression {
       return null;
     }
     return Arrays.stream(WebhookCustomExpression.values())
-        .filter(webhookCustomExpression -> webhookCustomExpression.type.equals(WebhookSource.valueOf(webhookSource)))
+        .filter(webhookCustomExpression -> webhookCustomExpression.type == WebhookSource.valueOf(webhookSource))
         .collect(Collectors.toMap(WebhookCustomExpression::getDisplayName, WebhookCustomExpression::getValue));
   }
 }

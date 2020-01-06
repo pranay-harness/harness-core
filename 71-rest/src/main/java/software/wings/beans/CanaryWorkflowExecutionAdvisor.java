@@ -215,12 +215,12 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         }
 
       } else if (state.getStateType().equals(StateType.PHASE_STEP.name()) && state instanceof PhaseStepSubWorkflow
-          && ((PhaseStepSubWorkflow) state).getPhaseStepType().equals(PhaseStepType.ROLLBACK_PROVISIONERS)
+          && ((PhaseStepSubWorkflow) state).getPhaseStepType() == PhaseStepType.ROLLBACK_PROVISIONERS
           && executionEvent.getExecutionStatus() == SUCCESS) {
         rollbackProvisioners = true;
 
       } else if (state.getStateType().equals(StateType.PHASE_STEP.name()) && state instanceof PhaseStepSubWorkflow
-          && ((PhaseStepSubWorkflow) state).getPhaseStepType().equals(PRE_DEPLOYMENT)
+          && ((PhaseStepSubWorkflow) state).getPhaseStepType() == PRE_DEPLOYMENT
           && executionEvent.getExecutionStatus() == FAILED) {
         return getRollbackProvisionerAdviceIfNeeded(orchestrationWorkflow.getPreDeploymentSteps());
       } else if (!(executionEvent.getExecutionStatus() == FAILED || executionEvent.getExecutionStatus() == ERROR)) {

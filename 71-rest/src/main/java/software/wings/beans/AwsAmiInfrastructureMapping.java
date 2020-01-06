@@ -63,12 +63,12 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
   @Override
   public void applyProvisionerVariables(
       Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {
-    if (!AWS_ASG.equals(getAmiDeploymentType())) {
+    if (AWS_ASG != getAmiDeploymentType()) {
       // Should never happen
       throw new InvalidRequestException("Provisioning ONLY supported for AWS_ASG type AMI deployments");
     }
 
-    if (!featureFlagEnabled && !AWS_ASG_AMI.equals(nodeFilteringType)) {
+    if (!featureFlagEnabled && AWS_ASG_AMI != nodeFilteringType) {
       // Should never happen
       throw new InvalidRequestException(format("Unidentified: [%s] node filtering type", nodeFilteringType.name()));
     }

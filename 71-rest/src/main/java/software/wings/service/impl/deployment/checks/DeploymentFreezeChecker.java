@@ -108,7 +108,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
     boolean envTypesIsAll = false;
 
     if (!freezeConfig.getEnvironmentTypes().isEmpty()) {
-      envTypesIsAll = freezeConfig.getEnvironmentTypes().get(0).equals(EnvironmentType.ALL);
+      envTypesIsAll = freezeConfig.getEnvironmentTypes().get(0) == EnvironmentType.ALL;
     }
 
     if (envTypesIsAll) {

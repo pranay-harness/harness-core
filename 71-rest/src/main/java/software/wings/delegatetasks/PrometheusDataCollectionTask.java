@@ -268,7 +268,7 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
 
     private int fetchCollectionMinute() {
       boolean isPredictiveAnalysis =
-          dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.PREDICTIVE);
+          dataCollectionInfo.getTimeSeriesMlAnalysisType() == TimeSeriesMlAnalysisType.PREDICTIVE;
       int collectionMinute;
       if (is247Task) {
         collectionMinute = (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getStartTime())

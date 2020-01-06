@@ -21,7 +21,7 @@ public class ShellScriptFunctor implements ExpressionFunctor {
   }
 
   public String escape(String input) {
-    if (ScriptType.BASH.equals(scriptType)) {
+    if (ScriptType.BASH == scriptType) {
       return input.replace("'", "\\'")
           .replace("`", "\\`")
           .replace("$", "\\$")
@@ -31,7 +31,7 @@ public class ShellScriptFunctor implements ExpressionFunctor {
           .replace("|", "\\|")
           .replace(";", "\\;")
           .replace("\"", "\\\"");
-    } else if (ScriptType.POWERSHELL.equals(scriptType)) {
+    } else if (ScriptType.POWERSHELL == scriptType) {
       return "\"" + input.replace("\"", "`\"") + "\"";
     }
     return input;

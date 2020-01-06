@@ -321,7 +321,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
       if (isNotEmpty(responseMessageList)) {
         ResponseMessage responseMessage = responseMessageList.get(0);
-        if (!responseMessage.getCode().equals(ErrorCode.NO_APPS_ASSIGNED)) {
+        if (responseMessage.getCode() != ErrorCode.NO_APPS_ASSIGNED) {
           logger.error("Unable to get instance stats", exception);
         }
       }

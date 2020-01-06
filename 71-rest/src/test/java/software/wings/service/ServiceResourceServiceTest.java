@@ -2120,7 +2120,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
             COMMANDS.getDisplayName(), COPY.getDisplayName(), SCRIPTS.getDisplayName(), VERIFICATIONS.getDisplayName());
 
     List<CommandCategory> copyCategories =
-        commandCategories.stream().filter(commandCategory -> commandCategory.getType().equals(COPY)).collect(toList());
+        commandCategories.stream().filter(commandCategory -> commandCategory.getType() == COPY).collect(toList());
     assertThat(copyCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
     copyCategories.forEach(commandCategory -> {
       assertThat(commandCategory.getType()).isEqualTo(COPY);
@@ -2130,9 +2130,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
           .extracting(CommandCategory.CommandUnit::getType)
           .contains(COPY_CONFIGS, SCP);
     });
-    List<CommandCategory> scriptCategories = commandCategories.stream()
-                                                 .filter(commandCategory -> commandCategory.getType().equals(SCRIPTS))
-                                                 .collect(toList());
+    List<CommandCategory> scriptCategories =
+        commandCategories.stream().filter(commandCategory -> commandCategory.getType() == SCRIPTS).collect(toList());
     assertThat(scriptCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
     scriptCategories.forEach(commandCategory -> {
       assertThat(commandCategory.getType()).isEqualTo(SCRIPTS);
@@ -2144,9 +2143,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     });
 
     List<CommandCategory> commandCommandCategories =
-        commandCategories.stream()
-            .filter(commandCategory -> commandCategory.getType().equals(COMMANDS))
-            .collect(toList());
+        commandCategories.stream().filter(commandCategory -> commandCategory.getType() == COMMANDS).collect(toList());
     assertThat(commandCommandCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
     commandCommandCategories.forEach(commandCategory -> {
       assertThat(commandCategory.getType()).isEqualTo(COMMANDS);
@@ -2161,10 +2158,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
           .contains("START", "START2");
     });
 
-    List<CommandCategory> verifyCategories =
-        commandCategories.stream()
-            .filter(commandCategory -> commandCategory.getType().equals(VERIFICATIONS))
-            .collect(toList());
+    List<CommandCategory> verifyCategories = commandCategories.stream()
+                                                 .filter(commandCategory -> commandCategory.getType() == VERIFICATIONS)
+                                                 .collect(toList());
     assertThat(verifyCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
     verifyCategories.forEach(commandCategory -> {
       assertThat(commandCategory.getType()).isEqualTo(VERIFICATIONS);

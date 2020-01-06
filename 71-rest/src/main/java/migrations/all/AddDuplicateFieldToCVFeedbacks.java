@@ -102,8 +102,8 @@ public class AddDuplicateFieldToCVFeedbacks implements Migration {
                        .isDuplicate(false)
                        .build());
 
-    if (record.getLogMLFeedbackType().equals(LogMLFeedbackType.IGNORE_SERVICE)
-        || record.getLogMLFeedbackType().equals(LogMLFeedbackType.IGNORE_ALWAYS)) {
+    if (record.getLogMLFeedbackType() == LogMLFeedbackType.IGNORE_SERVICE
+        || record.getLogMLFeedbackType() == LogMLFeedbackType.IGNORE_ALWAYS) {
       // get all envs for the app and save those as duplicates
       List<String> envIds = environmentService.getEnvIdsByApp(record.getAppId());
       envIds.remove(envId);

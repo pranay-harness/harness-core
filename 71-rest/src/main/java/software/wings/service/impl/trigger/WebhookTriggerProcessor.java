@@ -104,7 +104,7 @@ public class WebhookTriggerProcessor {
     Condition condition = trigger.getCondition();
     if (condition instanceof WebhookCondition) {
       WebhookCondition webHookTriggerCondition = (WebhookCondition) condition;
-      if (webHookTriggerCondition.getPayloadSource().getType().equals(Type.GITHUB)) {
+      if (webHookTriggerCondition.getPayloadSource().getType() == Type.GITHUB) {
         GitHubPayloadSource gitHubPayloadSource = (GitHubPayloadSource) webHookTriggerCondition.getPayloadSource();
         return gitHubPayloadSource.getWebhookGitParam() != null;
       } else {

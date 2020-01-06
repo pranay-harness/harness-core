@@ -56,7 +56,7 @@ public class DockerArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
             appId, dockerArtifactStream, !dockerArtifactStream.isSyncFromGit());
       }
     } else {
-      if (changeContext.getYamlType().equals(YamlType.ARTIFACT_STREAM)) {
+      if (changeContext.getYamlType() == YamlType.ARTIFACT_STREAM) {
         String appId =
             yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
         String serviceId = yamlHelper.getServiceId(appId, changeContext.getChange().getFilePath());

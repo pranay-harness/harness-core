@@ -466,10 +466,10 @@ public class ServiceInstance extends Base {
         && Objects.equals(this.artifactStreamName, other.artifactStreamName)
         && Objects.equals(this.artifactId, other.artifactId) && Objects.equals(this.artifactName, other.artifactName)
         && Objects.equals(this.artifactDeployedOn, other.artifactDeployedOn)
-        && Objects.equals(this.artifactDeploymentStatus, other.artifactDeploymentStatus)
+        && this.artifactDeploymentStatus == other.artifactDeploymentStatus
         && Objects.equals(this.artifactDeploymentActivityId, other.artifactDeploymentActivityId)
         && Objects.equals(this.lastActivityId, other.lastActivityId)
-        && Objects.equals(this.lastActivityStatus, other.lastActivityStatus)
+        && this.lastActivityStatus == other.lastActivityStatus
         && Objects.equals(this.lastActivityCreatedAt, other.lastActivityCreatedAt)
         && Objects.equals(this.commandName, other.commandName) && Objects.equals(this.commandType, other.commandType)
         && Objects.equals(this.lastDeployedOn, other.lastDeployedOn);

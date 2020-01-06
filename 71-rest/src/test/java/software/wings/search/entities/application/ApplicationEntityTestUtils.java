@@ -30,7 +30,7 @@ public class ApplicationEntityTestUtils {
                              .uuid(application.getUuid())
                              .entityType(Application.class);
 
-    if (changeType.equals(ChangeType.UPDATE)) {
+    if (changeType == ChangeType.UPDATE) {
       changeEventBuilder = changeEventBuilder.changes(getApplicationChanges());
     }
     return changeEventBuilder.build();

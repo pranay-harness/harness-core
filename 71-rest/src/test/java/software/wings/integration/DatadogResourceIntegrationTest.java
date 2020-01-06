@@ -226,7 +226,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
               .podName("testHost")
               .workloadName("testHost")
               .build());
-      if (stateType.equals(StateType.DATA_DOG)) {
+      if (stateType == StateType.DATA_DOG) {
         dataDogSetupTestNodeData.setMetrics("docker.cpu.usage,docker.mem.rss");
         dataDogSetupTestNodeData.setDatadogServiceName("test");
       } else {
@@ -234,7 +234,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
         dataDogSetupTestNodeData.setHostNameField("pod");
       }
     } else {
-      if (stateType.equals(StateType.DATA_DOG)) {
+      if (stateType == StateType.DATA_DOG) {
         Map<String, String> dockerMetrics = new HashMap<>();
         dockerMetrics.put("cluster-name:harness-test", "docker.cpu.usage,docker.mem.rss");
         dataDogSetupTestNodeData.setDockerMetrics(dockerMetrics);

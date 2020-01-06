@@ -357,8 +357,8 @@ public class SettingValidationService {
 
   private void validateHostConnectionAttributes(HostConnectionAttributes hostConnectionAttributes) {
     if (hostConnectionAttributes.getAuthenticationScheme() != null
-        && hostConnectionAttributes.getAuthenticationScheme().equals(
-               HostConnectionAttributes.AuthenticationScheme.SSH_KEY)) {
+        && hostConnectionAttributes.getAuthenticationScheme()
+            == HostConnectionAttributes.AuthenticationScheme.SSH_KEY) {
       if (isEmpty(hostConnectionAttributes.getUserName())) {
         throw new InvalidRequestException("Username field is mandatory in SSH Configuration", USER);
       }
@@ -368,7 +368,7 @@ public class SettingValidationService {
         }
       } else {
         if (hostConnectionAttributes.getAccessType() != null
-            && hostConnectionAttributes.getAccessType().equals(HostConnectionAttributes.AccessType.USER_PASSWORD)) {
+            && hostConnectionAttributes.getAccessType() == HostConnectionAttributes.AccessType.USER_PASSWORD) {
           if (isEmpty(hostConnectionAttributes.getSshPassword())) {
             throw new InvalidRequestException("Password field is mandatory in SSH Configuration", USER);
           }
@@ -511,7 +511,7 @@ public class SettingValidationService {
                                          .build();
     }
 
-    if (CommandExecutionStatus.FAILURE.equals(repoConfigValidationResponse.getCommandExecutionStatus())) {
+    if (CommandExecutionStatus.FAILURE == repoConfigValidationResponse.getCommandExecutionStatus()) {
       logger.warn(repoConfigValidationResponse.getErrorMessage());
       throw new InvalidRequestException(repoConfigValidationResponse.getErrorMessage());
     }

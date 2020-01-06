@@ -164,7 +164,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
       List<LdapListGroupsResponse> ldapListGroupsResponses, LdapSettings ldapSettings) throws LdapException {
     Collection<LdapGroupResponse> ldapGroupResponse = new ArrayList<>();
     for (LdapListGroupsResponse ldapListGroupsResponse : ldapListGroupsResponses) {
-      if (LdapResponse.Status.SUCCESS.equals(ldapListGroupsResponse.getLdapResponse().getStatus())) {
+      if (LdapResponse.Status.SUCCESS == ldapListGroupsResponse.getLdapResponse().getStatus()) {
         helper.populateGroupSize(ldapListGroupsResponse.getSearchResult(), ldapSettings.getUserSettingsList());
         Collection<LdapEntry> entries = ldapListGroupsResponse.getSearchResult().getEntries();
         for (LdapEntry entry : entries) {
@@ -220,7 +220,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
       groupResponse.setUsers(userResponses);
       return groupResponse;
     } catch (LdapException e) {
-      if (e.getResultCode().equals(ResultCode.NO_SUCH_OBJECT)) {
+      if (e.getResultCode() == ResultCode.NO_SUCH_OBJECT) {
         logger.error("Ldap [{}] received while fetching group by dn: [{}] for Ldap Name: [{}]",
             e.getResultCode().toString(), dn, settings.getPublicSSOSettings().getDisplayName());
         return null;

@@ -123,17 +123,16 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     checkUserPermissions(serviceVariable);
 
     // TODO:: revisit. for environment envId can be specific
-    String envId =
-        serviceVariable.getEntityType().equals(SERVICE) || serviceVariable.getEntityType().equals(ENVIRONMENT)
+    String envId = serviceVariable.getEntityType() == SERVICE || serviceVariable.getEntityType() == ENVIRONMENT
         ? GLOBAL_ENV_ID
         : serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getTemplateId()).getEnvId();
     serviceVariable.setEnvId(envId);
     ServiceVariable savedServiceVariable = save(serviceVariable);
-    if (savedServiceVariable.getType().equals(ENCRYPTED_TEXT)) {
+    if (savedServiceVariable.getType() == ENCRYPTED_TEXT) {
       serviceVariable.setValue(SECRET_MASK.toCharArray());
     }
     if (savedServiceVariable.getOverriddenServiceVariable() != null
-        && savedServiceVariable.getOverriddenServiceVariable().getType().equals(ENCRYPTED_TEXT)) {
+        && savedServiceVariable.getOverriddenServiceVariable().getType() == ENCRYPTED_TEXT) {
       savedServiceVariable.getOverriddenServiceVariable().setValue(SECRET_MASK.toCharArray());
     }
     return savedServiceVariable;
@@ -207,11 +206,11 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     checkUserPermissions(serviceVariable);
 
     ServiceVariable savedServiceVariable = update(serviceVariable);
-    if (savedServiceVariable.getType().equals(ENCRYPTED_TEXT)) {
+    if (savedServiceVariable.getType() == ENCRYPTED_TEXT) {
       serviceVariable.setValue(SECRET_MASK.toCharArray());
     }
     if (savedServiceVariable.getOverriddenServiceVariable() != null
-        && savedServiceVariable.getOverriddenServiceVariable().getType().equals(ENCRYPTED_TEXT)) {
+        && savedServiceVariable.getOverriddenServiceVariable().getType() == ENCRYPTED_TEXT) {
       savedServiceVariable.getOverriddenServiceVariable().setValue(SECRET_MASK.toCharArray());
     }
     return savedServiceVariable;
@@ -229,7 +228,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     notNullCheck("Service variable", savedServiceVariable);
     if (serviceVariable.getName() != null) {
       if (savedServiceVariable.getName() != null && !savedServiceVariable.getName().equals(serviceVariable.getName())) {
-        if (savedServiceVariable.getType().equals(Type.ARTIFACT)) {
+        if (savedServiceVariable.getType() == Type.ARTIFACT) {
           throw new InvalidRequestException("Artifact variable name can not be changed.");
         } else {
           throw new InvalidRequestException("Service variable name can not be changed.");
@@ -529,7 +528,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   }
 
   private void checkValidEncryptedReference(@Valid ServiceVariable serviceVariable) {
-    if (serviceVariable.getType().equals(ENCRYPTED_TEXT)) {
+    if (serviceVariable.getType() == ENCRYPTED_TEXT) {
       Preconditions.checkNotNull(serviceVariable.getValue(), "value passed is null for " + serviceVariable);
       EncryptedData encryptedData =
           wingsPersistence.get(EncryptedData.class, String.valueOf(serviceVariable.getValue()));

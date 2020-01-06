@@ -728,7 +728,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       } else {
         fieldsToRemove.add("hostNameConvention");
       }
-      if (AmiDeploymentType.AWS_ASG.equals(savedAwsAmiInfrastructureMapping.getAmiDeploymentType())) {
+      if (AmiDeploymentType.AWS_ASG == savedAwsAmiInfrastructureMapping.getAmiDeploymentType()) {
         if (awsAmiInfrastructureMapping.getAutoScalingGroupName() != null) {
           keyValuePairs.put("autoScalingGroupName", awsAmiInfrastructureMapping.getAutoScalingGroupName());
         } else {
@@ -754,7 +754,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         } else {
           fieldsToRemove.add("stageTargetGroupArns");
         }
-      } else if (AmiDeploymentType.SPOTINST.equals(savedAwsAmiInfrastructureMapping.getAmiDeploymentType())) {
+      } else if (AmiDeploymentType.SPOTINST == savedAwsAmiInfrastructureMapping.getAmiDeploymentType()) {
         if (isNotEmpty(awsAmiInfrastructureMapping.getSpotinstCloudProvider())) {
           keyValuePairs.put(AwsAmiInfrastructureMappingKeys.spotinstCloudProvider,
               awsAmiInfrastructureMapping.getSpotinstCloudProvider());
@@ -957,7 +957,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     DeploymentType deploymentType =
         serviceResourceService.getDeploymentType(infraMapping, null, infraMapping.getServiceId());
-    if (!(SSH.equals(deploymentType) || WINRM.equals(deploymentType))) {
+    if (!(SSH == deploymentType || WINRM == deploymentType)) {
       throw new InvalidRequestException(
           "Deployment type must not be empty and must be one of SSH/WINRM for Azure Infra mapping.", USER);
     }
@@ -1126,7 +1126,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (isEmpty(infrastructureMapping.getRegion())) {
       throw new InvalidRequestException("Region is mandatory");
     }
-    if (AmiDeploymentType.AWS_ASG.equals(infrastructureMapping.getAmiDeploymentType())
+    if (AmiDeploymentType.AWS_ASG == infrastructureMapping.getAmiDeploymentType()
         && isEmpty(infrastructureMapping.getAutoScalingGroupName())) {
       throw new InvalidRequestException("Auto Scaling Group is mandatory");
     }
@@ -2234,7 +2234,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           infraTypes.put(PCF, asList(SettingVariableTypes.PCF));
           break;
         case SSH:
-          if (ArtifactType.DOCKER.equals(artifactType)) {
+          if (ArtifactType.DOCKER == artifactType) {
             infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
           } else {
             infraTypes.put(SSH,

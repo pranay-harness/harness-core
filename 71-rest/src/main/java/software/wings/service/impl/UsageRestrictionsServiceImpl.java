@@ -388,17 +388,16 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     filterTypes.forEach(filterType -> {
       switch (filterType) {
         case FilterType.PROD:
-          Set<String> prodEnvSet =
-              envList.stream()
-                  .filter(env -> ((Environment) env).getEnvironmentType().equals(EnvironmentType.PROD))
-                  .map(Base::getUuid)
-                  .collect(Collectors.toSet());
+          Set<String> prodEnvSet = envList.stream()
+                                       .filter(env -> ((Environment) env).getEnvironmentType() == EnvironmentType.PROD)
+                                       .map(Base::getUuid)
+                                       .collect(Collectors.toSet());
           envSet.addAll(prodEnvSet);
           break;
         case FilterType.NON_PROD:
           Set<String> nonProdEnvSet =
               envList.stream()
-                  .filter(env -> ((Environment) env).getEnvironmentType().equals(EnvironmentType.NON_PROD))
+                  .filter(env -> ((Environment) env).getEnvironmentType() == EnvironmentType.NON_PROD)
                   .map(Base::getUuid)
                   .collect(Collectors.toSet());
           envSet.addAll(nonProdEnvSet);

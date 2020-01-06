@@ -60,11 +60,11 @@ public class CommandHelper {
     for (CommandUnitType commandUnitType : CommandUnitType.values()) {
       StencilCategory stencilCategory = commandUnitType.getStencilCategory();
       CommandUnit commandUnitItem = CommandUnit.builder().name(commandUnitType.getName()).type(commandUnitType).build();
-      if (StencilCategory.SCRIPTS.equals(stencilCategory)) {
+      if (StencilCategory.SCRIPTS == stencilCategory) {
         scripts.add(commandUnitItem);
-      } else if (StencilCategory.COPY.equals(stencilCategory)) {
+      } else if (StencilCategory.COPY == stencilCategory) {
         copyUnits.add(commandUnitItem);
-      } else if (StencilCategory.VERIFICATIONS.equals(stencilCategory)) {
+      } else if (StencilCategory.VERIFICATIONS == stencilCategory) {
         verifications.add(commandUnitItem);
       }
     }

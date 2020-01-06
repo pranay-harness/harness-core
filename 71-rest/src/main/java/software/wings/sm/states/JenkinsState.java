@@ -398,7 +398,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     // Async response for START_TASK received, start POLL_TASK
     if (isNotEmpty(jenkinsExecutionResponse.getSubTaskType().name())
         && jenkinsExecutionResponse.getSubTaskType().name().equals(JenkinsSubTaskType.START_TASK.name())) {
-      if (!SUCCESS.equals(jenkinsExecutionResponse.getExecutionStatus())) {
+      if (SUCCESS != jenkinsExecutionResponse.getExecutionStatus()) {
         updateActivityStatus(jenkinsExecutionResponse.getActivityId(),
             ((ExecutionContextImpl) context).getApp().getUuid(), jenkinsExecutionResponse.getExecutionStatus());
         return ExecutionResponse.builder()
@@ -499,7 +499,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
                                                            .build());
 
     if (executionContext.getOrchestrationWorkflowType() != null
-        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
+        && executionContext.getOrchestrationWorkflowType() == BUILD) {
       activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
     } else {
       activityBuilder.environmentId(env.getUuid())

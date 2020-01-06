@@ -97,7 +97,7 @@ public class GitConfigHelperService {
 
       logger.info(GIT_YAML_LOG_PREFIX + "GitConfigValidation [{}]", gitCommandExecutionResponse);
 
-      if (gitCommandExecutionResponse.getGitCommandStatus().equals(GitCommandStatus.FAILURE)) {
+      if (gitCommandExecutionResponse.getGitCommandStatus() == GitCommandStatus.FAILURE) {
         throw new WingsException(ErrorCode.INVALID_CREDENTIAL).addParam("message", "Invalid git credentials.");
       }
     } catch (InterruptedException e) {

@@ -132,11 +132,11 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
         String apiKeyFromHeader = null;
         String apiKeyToken = null;
 
-        if (AuthType.API_KEY_HEADER.equals(authType)) {
+        if (AuthType.API_KEY_HEADER == authType) {
           apiKeyFromHeader = requestContext.getHeaderString(AuthenticationFilter.HARNESS_API_KEY_HEADER);
-        } else if (AuthType.AUTH_TOKEN_HEADER.equals(authType)) {
+        } else if (AuthType.AUTH_TOKEN_HEADER == authType) {
           apiKeyToken = extractToken(requestContext, PREFIX_API_KEY_TOKEN);
-        } else if (AuthType.AUTH_HEADER.equals(authType)) {
+        } else if (AuthType.AUTH_HEADER == authType) {
           apiKeyFromHeader = extractToken(requestContext, PREFIX_BEARER);
         }
 

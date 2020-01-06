@@ -66,11 +66,11 @@ public class YamlCloneServiceImpl implements YamlCloneService {
       Application application = appService.get(appId);
       directoryPath.add(application.getName());
 
-      if (EntityType.WORKFLOW.equals(EntityType.valueOf(entityType))) {
+      if (EntityType.WORKFLOW == EntityType.valueOf(entityType)) {
         return cloneWorkflowUsingYaml(accountId, appId, includeFiles, entiytId, newEntityName, directoryPath);
-      } else if (EntityType.PIPELINE.equals(EntityType.valueOf(entityType))) {
+      } else if (EntityType.PIPELINE == EntityType.valueOf(entityType)) {
         return clonePipelineUsingYaml(accountId, appId, includeFiles, entiytId, newEntityName, directoryPath);
-      } else if (EntityType.PROVISIONER.equals(EntityType.valueOf(entityType))) {
+      } else if (EntityType.PROVISIONER == EntityType.valueOf(entityType)) {
         return cloneProvisionerUsingYaml(accountId, appId, includeFiles, entiytId, newEntityName, directoryPath);
       }
     } catch (Exception e) {

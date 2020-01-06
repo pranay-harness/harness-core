@@ -80,7 +80,7 @@ public class GitCommandCallback implements NotifyCallback {
         GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) notifyResponseData;
         GitCommandResult gitCommandResult = gitCommandExecutionResponse.getGitCommandResult();
 
-        if (gitCommandExecutionResponse.getGitCommandStatus().equals(GitCommandStatus.FAILURE)) {
+        if (gitCommandExecutionResponse.getGitCommandStatus() == GitCommandStatus.FAILURE) {
           if (changeSetId != null) {
             logger.warn("Git Command failed [{}]", gitCommandExecutionResponse.getErrorMessage());
             yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
@@ -100,7 +100,7 @@ public class GitCommandCallback implements NotifyCallback {
         logger.info("Git command [type: {}] request completed with status [{}]", gitCommandResult.getGitCommandType(),
             gitCommandExecutionResponse.getGitCommandStatus());
 
-        if (gitCommandResult.getGitCommandType().equals(COMMIT_AND_PUSH)) {
+        if (gitCommandResult.getGitCommandType() == COMMIT_AND_PUSH) {
           GitCommitAndPushResult gitCommitAndPushResult = (GitCommitAndPushResult) gitCommandResult;
           YamlChangeSet yamlChangeSet = yamlChangeSetService.get(accountId, changeSetId);
           if (yamlChangeSet != null) {
@@ -117,7 +117,7 @@ public class GitCommandCallback implements NotifyCallback {
             }
             yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.getGitFileChanges(), false);
           }
-        } else if (gitCommandResult.getGitCommandType().equals(GitCommandType.DIFF)) {
+        } else if (gitCommandResult.getGitCommandType() == GitCommandType.DIFF) {
           GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
           gitChangeSetProcesser.processGitChangeSet(accountId, gitDiffResult);
         } else {
@@ -171,7 +171,7 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   protected void updateChangeSetFailureStatusSafely() {
-    if (isNotEmpty(changeSetId) && COMMIT_AND_PUSH.equals(gitCommandType)) {
+    if (isNotEmpty(changeSetId) && COMMIT_AND_PUSH == gitCommandType) {
       yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
     }
   }

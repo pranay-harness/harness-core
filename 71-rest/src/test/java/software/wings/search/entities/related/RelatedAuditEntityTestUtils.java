@@ -86,7 +86,7 @@ public class RelatedAuditEntityTestUtils {
                              .changeType(changeType)
                              .fullDocument(auditHeader);
 
-    if (changeType.equals(ChangeType.UPDATE)) {
+    if (changeType == ChangeType.UPDATE) {
       changeEventBuilder = changeEventBuilder.changes(getAuditHeaderChanges(appId, auditEntityId, operationType));
     }
     return changeEventBuilder.build();

@@ -78,7 +78,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         record = getLatestDeploymentReconRecord(accountId);
 
         if (record != null && !shouldPerformReconciliation(record, durationEndTs)) {
-          if (record.getReconciliationStatus().equals(ReconciliationStatus.IN_PROGRESS)) {
+          if (record.getReconciliationStatus() == ReconciliationStatus.IN_PROGRESS) {
             logger.info("Reconciliation is in progress, not running it again for accountID:[{}] in duration:[{}-{}]",
                 accountId, new Date(durationStartTs), new Date(durationEndTs));
           } else {
@@ -342,7 +342,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
   }
 
   protected boolean shouldPerformReconciliation(@NotNull DeploymentReconRecord record, Long durationEndTs) {
-    if (record.getReconciliationStatus().equals(ReconciliationStatus.IN_PROGRESS)) {
+    if (record.getReconciliationStatus() == ReconciliationStatus.IN_PROGRESS) {
       /***
        * If the latest record in db is older than COOL_DOWN_INTERVAL, mark that reconciliation as failed and move on.
        * This is to prevent a bad record from blocking all further reconciliations

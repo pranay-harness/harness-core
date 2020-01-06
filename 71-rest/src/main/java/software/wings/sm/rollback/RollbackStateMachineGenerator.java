@@ -111,6 +111,6 @@ public class RollbackStateMachineGenerator {
   }
 
   private boolean validForRollback(WorkflowExecution successfulExecution) {
-    return successfulExecution != null && ExecutionStatus.SUCCESS.equals(successfulExecution.getStatus());
+    return successfulExecution != null && ExecutionStatus.SUCCESS == successfulExecution.getStatus();
   }
 }

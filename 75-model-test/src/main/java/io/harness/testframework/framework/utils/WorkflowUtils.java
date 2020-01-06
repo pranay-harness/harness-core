@@ -25,7 +25,7 @@ public class WorkflowUtils {
     for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
       if (workflowPhase.getName().equalsIgnoreCase("Phase 1")) {
         for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
-          if (phaseStep.getPhaseStepType().equals(PhaseStepType.VERIFY_SERVICE)) {
+          if (phaseStep.getPhaseStepType() == PhaseStepType.VERIFY_SERVICE) {
             phaseStep.setSteps(Collections.singletonList(getHTTPNode("Test")));
             break;
           }
@@ -44,7 +44,7 @@ public class WorkflowUtils {
     for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
       if (workflowPhase.getName().equalsIgnoreCase("Phase 1")) {
         for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
-          if (phaseStep.getPhaseStepType().equals(PhaseStepType.VERIFY_SERVICE)) {
+          if (phaseStep.getPhaseStepType() == PhaseStepType.VERIFY_SERVICE) {
             phaseStep.setSteps(Collections.singletonList(getHTTPNode()));
           } else {
             phaseStep.setSteps(new ArrayList<>());

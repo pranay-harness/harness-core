@@ -298,7 +298,7 @@ public class K8sStateHelper {
   }
 
   private boolean doesValuesFileContainArtifact(ApplicationManifest applicationManifest) {
-    if (applicationManifest != null && StoreType.Local.equals(applicationManifest.getStoreType())) {
+    if (applicationManifest != null && StoreType.Local == applicationManifest.getStoreType()) {
       ManifestFile manifestFile =
           applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), values_filename);
       if (manifestFile != null) {
@@ -369,7 +369,7 @@ public class K8sStateHelper {
 
   private void updateManifestFileVariableNames(
       ApplicationManifest applicationManifest, Set<String> serviceArtifactVariableNames) {
-    if (applicationManifest != null && StoreType.Local.equals(applicationManifest.getStoreType())) {
+    if (applicationManifest != null && StoreType.Local == applicationManifest.getStoreType()) {
       ManifestFile manifestFile =
           applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), values_filename);
       if (manifestFile != null) {
@@ -693,8 +693,8 @@ public class K8sStateHelper {
   private boolean isValuesInGit(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
       ApplicationManifest applicationManifest = entry.getValue();
-      if (StoreType.Remote.equals(applicationManifest.getStoreType())
-          || StoreType.HelmSourceRepo.equals(applicationManifest.getStoreType())) {
+      if (StoreType.Remote == applicationManifest.getStoreType()
+          || StoreType.HelmSourceRepo == applicationManifest.getStoreType()) {
         return true;
       }
     }
@@ -708,11 +708,11 @@ public class K8sStateHelper {
     String appId = workflowStandardParams.getAppId();
     String activityId = getActivityId(context);
     GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) response.values().iterator().next();
-    ExecutionStatus executionStatus = executionResponse.getGitCommandStatus().equals(GitCommandStatus.SUCCESS)
+    ExecutionStatus executionStatus = executionResponse.getGitCommandStatus() == GitCommandStatus.SUCCESS
         ? ExecutionStatus.SUCCESS
         : ExecutionStatus.FAILED;
 
-    if (ExecutionStatus.FAILED.equals(executionStatus)) {
+    if (ExecutionStatus.FAILED == executionStatus) {
       activityService.updateStatus(activityId, appId, executionStatus);
       return ExecutionResponse.builder().executionStatus(executionStatus).build();
     }
@@ -754,7 +754,7 @@ public class K8sStateHelper {
 
   private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(ExecutionContext context, String activityId) {
     ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
-    if (!StoreType.HelmChartRepo.equals(applicationManifest.getStoreType())) {
+    if (StoreType.HelmChartRepo != applicationManifest.getStoreType()) {
       return null;
     }
 
@@ -774,11 +774,11 @@ public class K8sStateHelper {
     String appId = workflowStandardParams.getAppId();
     String activityId = getActivityId(context);
     HelmValuesFetchTaskResponse executionResponse = (HelmValuesFetchTaskResponse) response.values().iterator().next();
-    ExecutionStatus executionStatus =
-        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                             : ExecutionStatus.FAILED;
+    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
 
-    if (ExecutionStatus.FAILED.equals(executionStatus)) {
+    if (ExecutionStatus.FAILED == executionStatus) {
       activityService.updateStatus(activityId, appId, executionStatus);
       return ExecutionResponse.builder().executionStatus(executionStatus).build();
     }

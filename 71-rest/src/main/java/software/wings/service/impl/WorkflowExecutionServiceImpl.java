@@ -462,9 +462,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                    .variables(approvalDetails.getVariables())
                                                    .build();
 
-    if (approvalDetails.getAction().equals(APPROVE)) {
+    if (approvalDetails.getAction() == APPROVE) {
       executionData.setStatus(ExecutionStatus.SUCCESS);
-    } else if (approvalDetails.getAction().equals(REJECT)) {
+    } else if (approvalDetails.getAction() == REJECT) {
       executionData.setStatus(ExecutionStatus.REJECTED);
     }
 
@@ -490,14 +490,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     String workflowType = "";
 
     // Pipeline approval
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)) {
+    if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
       workflowType = "Pipeline";
       approvalStateExecutionData =
           fetchPipelineWaitingApprovalStateExecutionData(workflowExecution.getPipelineExecution(), approvalId);
     }
 
     // Workflow approval
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
+    if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION) {
       workflowType = "Workflow";
       approvalStateExecutionData =
           fetchWorkflowWaitingApprovalStateExecutionData(workflowExecution, stateExecutionId, approvalId);
@@ -522,8 +522,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (pe.getStateExecutionData() instanceof ApprovalStateExecutionData) {
         ApprovalStateExecutionData approvalStateExecutionData = (ApprovalStateExecutionData) pe.getStateExecutionData();
 
-        if (pe.getStatus().equals(ExecutionStatus.PAUSED)
-            && approvalStateExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
+        if (pe.getStatus() == ExecutionStatus.PAUSED && approvalStateExecutionData.getStatus() == ExecutionStatus.PAUSED
             && approvalId.equals(approvalStateExecutionData.getApprovalId())) {
           return approvalStateExecutionData;
         }
@@ -542,7 +541,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       ApprovalStateExecutionData approvalStateExecutionData =
           (ApprovalStateExecutionData) stateExecutionInstance.fetchStateExecutionData();
       // Check for Approval Id in PAUSED status
-      if (approvalStateExecutionData != null && approvalStateExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
+      if (approvalStateExecutionData != null && approvalStateExecutionData.getStatus() == ExecutionStatus.PAUSED
           && approvalStateExecutionData.getApprovalId().equals(approvalId)) {
         return approvalStateExecutionData;
       }
@@ -553,8 +552,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           ApprovalStateExecutionData approvalStateExecutionData =
               (ApprovalStateExecutionData) stateExecutionInstance.fetchStateExecutionData();
           // Check for Approval Id in PAUSED status
-          if (approvalStateExecutionData != null
-              && approvalStateExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
+          if (approvalStateExecutionData != null && approvalStateExecutionData.getStatus() == ExecutionStatus.PAUSED
               && approvalStateExecutionData.getApprovalId().equals(approvalId)) {
             return approvalStateExecutionData;
           }
@@ -1320,8 +1318,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private boolean shouldNotQueueWorkflow(WorkflowExecution workflowExecution, Workflow workflow) {
-    if (workflowExecution.getWorkflowType() != ORCHESTRATION
-        || BUILD.equals(workflowExecution.getOrchestrationType())) {
+    if (workflowExecution.getWorkflowType() != ORCHESTRATION || BUILD == workflowExecution.getOrchestrationType()) {
       return true;
     } else if (featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId())) {
       CanaryOrchestrationWorkflow orchestrationWorkflow =
@@ -3873,15 +3870,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public boolean getOnDemandRollbackAvailable(String appId, WorkflowExecution lastWE) {
-    if (!lastWE.getStatus().equals(SUCCESS)) {
+    if (lastWE.getStatus() != SUCCESS) {
       logger.info("On demand rollback not available for non successful executions {}", lastWE);
       return false;
     }
-    if (lastWE.getWorkflowType().equals(PIPELINE)) {
+    if (lastWE.getWorkflowType() == PIPELINE) {
       logger.info("On demand rollback not available for pipeline executions {}", lastWE);
       return false;
     }
-    if (!lastWE.getEnvType().equals(EnvironmentType.PROD)) {
+    if (lastWE.getEnvType() != EnvironmentType.PROD) {
       logger.info("On demand rollback not available for Non prod environments {}", lastWE);
       return false;
     }
