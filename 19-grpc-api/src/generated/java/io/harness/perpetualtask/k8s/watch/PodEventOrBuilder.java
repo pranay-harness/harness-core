@@ -8,15 +8,6 @@ public interface PodEventOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.k8s.watch.PodEvent)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string account_id = 1;</code>
-   */
-  java.lang.String getAccountId();
-  /**
-   * <code>string account_id = 1;</code>
-   */
-  com.google.protobuf.ByteString getAccountIdBytes();
-
-  /**
    * <code>string cloud_provider_id = 2;</code>
    */
   java.lang.String getCloudProviderId();

@@ -3,7 +3,7 @@ package io.harness.grpc.utils;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.DataFormatException;
 import lombok.experimental.UtilityClass;
 
 import java.text.ParseException;
@@ -45,7 +45,7 @@ public class HTimestamps {
     try {
       return Timestamps.parse(time);
     } catch (ParseException e) {
-      throw new WingsException(e);
+      throw new DataFormatException("Unparseable timestamp", e);
     }
   }
 }

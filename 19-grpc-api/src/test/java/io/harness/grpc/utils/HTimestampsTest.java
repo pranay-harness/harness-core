@@ -9,7 +9,7 @@ import com.google.protobuf.Timestamp;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.WingsException;
+import io.harness.exception.DataFormatException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -58,9 +58,9 @@ public class HTimestampsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testParseErrorThrowsWingsException() {
     String dateString = "2019/08/21T09:17:52.342Z";
-    assertThatExceptionOfType(WingsException.class)
+    assertThatExceptionOfType(DataFormatException.class)
         .isThrownBy(() -> HTimestamps.parse(dateString))
-        .withMessage("UNKNOWN_ERROR")
+        .withMessage("Unparseable timestamp")
         .withCauseInstanceOf(ParseException.class);
   }
 }

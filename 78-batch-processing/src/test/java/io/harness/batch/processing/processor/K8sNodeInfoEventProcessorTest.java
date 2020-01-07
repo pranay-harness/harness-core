@@ -125,7 +125,6 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
                             .setNodeUid(nodeUid)
                             .setNodeName(nodeName)
                             .setCloudProviderId(cloudProviderId)
-                            .setAccountId(accountId)
                             .setClusterId(clusterId)
                             .setClusterName(clusterName)
                             .setCreationTime(timestamp)
@@ -140,7 +139,6 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     NodeEvent nodeEvent = NodeEvent.newBuilder()
                               .setNodeUid(nodeUid)
                               .setCloudProviderId(cloudProviderId)
-                              .setAccountId(accountId)
                               .setType(eventType)
                               .setTimestamp(timestamp)
                               .build();

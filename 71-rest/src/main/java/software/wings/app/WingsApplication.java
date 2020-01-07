@@ -79,6 +79,7 @@ import io.harness.mongo.MongoModule;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
 import io.harness.perpetualtask.internal.RecentlyDisconnectedDelegateHandler;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.Store;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -505,6 +506,10 @@ public class WingsApplication extends Application<MainConfiguration> {
         && !configuration.getMongoConnectionFactory().getLocksUri().equals(
                configuration.getMongoConnectionFactory().getUri())) {
       persistence.register(LOCKS_STORE, configuration.getMongoConnectionFactory().getLocksUri());
+    }
+    if (isNotEmpty(configuration.getEventsMongo().getUri())
+        && !configuration.getEventsMongo().getUri().equals(configuration.getMongoConnectionFactory().getUri())) {
+      persistence.register(Store.builder().name("events").build(), configuration.getEventsMongo().getUri());
     }
     persistence.registerUserProvider(new ThreadLocalUserProvider());
   }

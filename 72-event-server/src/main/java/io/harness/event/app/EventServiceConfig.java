@@ -12,8 +12,8 @@ import java.util.List;
 @Data
 @Builder
 public class EventServiceConfig {
-  @JsonProperty("harness-mongo") private MongoConfig harnessMongo = MongoConfig.builder().build();
-  @JsonProperty("events-mongo") private MongoConfig eventsMongo = MongoConfig.builder().build();
+  @Builder.Default @JsonProperty("harness-mongo") private MongoConfig harnessMongo = MongoConfig.builder().build();
+  @Builder.Default @JsonProperty("events-mongo") private MongoConfig eventsMongo = MongoConfig.builder().build();
 
   @Singular private List<Connector> connectors;
 }

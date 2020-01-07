@@ -16,7 +16,6 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     super(builder);
   }
   private NodeInfo() {
-    accountId_ = "";
     cloudProviderId_ = "";
     nodeUid_ = "";
     nodeName_ = "";
@@ -47,12 +46,6 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
           case 0:
             done = true;
             break;
-          case 10: {
-            java.lang.String s = input.readStringRequireUtf8();
-
-            accountId_ = s;
-            break;
-          }
           case 18: {
             java.lang.String s = input.readStringRequireUtf8();
 
@@ -85,9 +78,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
             break;
           }
           case 50: {
-            if (!((mutable_bitField0_ & 0x00000020) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000010) != 0)) {
               labels_ = com.google.protobuf.MapField.newMapField(LabelsDefaultEntryHolder.defaultEntry);
-              mutable_bitField0_ |= 0x00000020;
+              mutable_bitField0_ |= 0x00000010;
             }
             com.google.protobuf.MapEntry<java.lang.String, java.lang.String> labels__ =
                 input.readMessage(LabelsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
@@ -95,10 +88,10 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
             break;
           }
           case 58: {
-            if (!((mutable_bitField0_ & 0x00000040) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000020) != 0)) {
               allocatableResource_ =
                   com.google.protobuf.MapField.newMapField(AllocatableResourceDefaultEntryHolder.defaultEntry);
-              mutable_bitField0_ |= 0x00000040;
+              mutable_bitField0_ |= 0x00000020;
             }
             com.google.protobuf.MapEntry<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity>
                 allocatableResource__ = input.readMessage(
@@ -169,36 +162,6 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
   }
 
   private int bitField0_;
-  public static final int ACCOUNT_ID_FIELD_NUMBER = 1;
-  private volatile java.lang.Object accountId_;
-  /**
-   * <code>string account_id = 1;</code>
-   */
-  public java.lang.String getAccountId() {
-    java.lang.Object ref = accountId_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      accountId_ = s;
-      return s;
-    }
-  }
-  /**
-   * <code>string account_id = 1;</code>
-   */
-  public com.google.protobuf.ByteString getAccountIdBytes() {
-    java.lang.Object ref = accountId_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-      accountId_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
-  }
-
   public static final int CLOUD_PROVIDER_ID_FIELD_NUMBER = 2;
   private volatile java.lang.Object cloudProviderId_;
   /**
@@ -565,9 +528,6 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (!getAccountIdBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, accountId_);
-    }
     if (!getCloudProviderIdBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 2, cloudProviderId_);
     }
@@ -603,9 +563,6 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return size;
 
     size = 0;
-    if (!getAccountIdBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, accountId_);
-    }
     if (!getCloudProviderIdBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, cloudProviderId_);
     }
@@ -660,8 +617,6 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
     io.harness.perpetualtask.k8s.watch.NodeInfo other = (io.harness.perpetualtask.k8s.watch.NodeInfo) obj;
 
-    if (!getAccountId().equals(other.getAccountId()))
-      return false;
     if (!getCloudProviderId().equals(other.getCloudProviderId()))
       return false;
     if (!getNodeUid().equals(other.getNodeUid()))
@@ -696,8 +651,6 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + ACCOUNT_ID_FIELD_NUMBER;
-    hash = (53 * hash) + getAccountId().hashCode();
     hash = (37 * hash) + CLOUD_PROVIDER_ID_FIELD_NUMBER;
     hash = (53 * hash) + getCloudProviderId().hashCode();
     hash = (37 * hash) + NODE_UID_FIELD_NUMBER;
@@ -857,8 +810,6 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      accountId_ = "";
-
       cloudProviderId_ = "";
 
       nodeUid_ = "";
@@ -911,7 +862,6 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       io.harness.perpetualtask.k8s.watch.NodeInfo result = new io.harness.perpetualtask.k8s.watch.NodeInfo(this);
       int from_bitField0_ = bitField0_;
       int to_bitField0_ = 0;
-      result.accountId_ = accountId_;
       result.cloudProviderId_ = cloudProviderId_;
       result.nodeUid_ = nodeUid_;
       result.nodeName_ = nodeName_;
@@ -970,10 +920,6 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     public Builder mergeFrom(io.harness.perpetualtask.k8s.watch.NodeInfo other) {
       if (other == io.harness.perpetualtask.k8s.watch.NodeInfo.getDefaultInstance())
         return this;
-      if (!other.getAccountId().isEmpty()) {
-        accountId_ = other.accountId_;
-        onChanged();
-      }
       if (!other.getCloudProviderId().isEmpty()) {
         cloudProviderId_ = other.cloudProviderId_;
         onChanged();
@@ -1030,68 +976,6 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     private int bitField0_;
-
-    private java.lang.Object accountId_ = "";
-    /**
-     * <code>string account_id = 1;</code>
-     */
-    public java.lang.String getAccountId() {
-      java.lang.Object ref = accountId_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        accountId_ = s;
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
-    }
-    /**
-     * <code>string account_id = 1;</code>
-     */
-    public com.google.protobuf.ByteString getAccountIdBytes() {
-      java.lang.Object ref = accountId_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-        accountId_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <code>string account_id = 1;</code>
-     */
-    public Builder setAccountId(java.lang.String value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-
-      accountId_ = value;
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string account_id = 1;</code>
-     */
-    public Builder clearAccountId() {
-      accountId_ = getDefaultInstance().getAccountId();
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string account_id = 1;</code>
-     */
-    public Builder setAccountIdBytes(com.google.protobuf.ByteString value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-      checkByteStringIsUtf8(value);
-
-      accountId_ = value;
-      onChanged();
-      return this;
-    }
 
     private java.lang.Object cloudProviderId_ = "";
     /**
