@@ -49,7 +49,7 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
     PumpExecutorOptions options = PumpExecutorOptions.builder()
                                       .interval(Duration.ofSeconds(10))
                                       .poolSize(5)
-                                      .name("Iterator-WorkflowExecutionMonitor")
+                                      .name("WorkflowExecutionMonitor")
                                       .build();
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(options, WorkflowExecution.class,
         MongoPersistenceIterator.<WorkflowExecution>builder()
