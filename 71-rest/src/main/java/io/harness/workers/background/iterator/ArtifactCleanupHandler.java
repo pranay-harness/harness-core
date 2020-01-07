@@ -21,7 +21,7 @@ import software.wings.beans.Account;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.service.impl.PermitServiceImpl;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ArtifactCleanupService;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -34,6 +34,7 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject @Named("AsyncArtifactCleanupService") private ArtifactCleanupService artifactCleanupServiceAsync;
+  @Inject ArtifactCollectionUtils artifactCollectionUtils;
 
   public void registerIterators(ScheduledThreadPoolExecutor artifactCollectionExecutor) {
     PersistenceIterator iterator = persistenceIteratorFactory.createIterator(ArtifactCleanupHandler.class,
@@ -68,11 +69,10 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
   private void executeInternal(ArtifactStream artifactStream) {
     String artifactStreamId = artifactStream.getUuid();
     try {
-      if (artifactStream.getFailedCronAttempts() > PermitServiceImpl.MAX_FAILED_ATTEMPTS) {
-        logger.info("Not running cleanup as artifact collection disabled disabled [type:{}]",
-            artifactStream.getArtifactStreamType());
+      if (artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, false)) {
         return;
       }
+
       artifactCleanupServiceAsync.cleanupArtifactsAsync(artifactStream);
     } catch (WingsException exception) {
       logger.warn("Failed to cleanup artifacts for artifact stream. Reason {}", exception.getMessage());

@@ -4,6 +4,7 @@ import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -30,6 +31,7 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import static software.wings.common.Constants.APP_ID_KEY;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
@@ -73,6 +75,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
@@ -409,6 +412,43 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void updateShouldWorkWithSameData() {
+    SettingAttribute settingAttribute = prepareSettingAttributeForUpdate();
+    settingsService.update(settingAttribute, true, false);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldUpdateWithoutUpdateConnectivity() {
+    SettingAttribute settingAttribute = prepareSettingAttributeForUpdate();
+
+    ArgumentCaptor<Map> fields = ArgumentCaptor.forClass(Map.class);
+    ArgumentCaptor<Set> fieldsToRemove = ArgumentCaptor.forClass(Set.class);
+
+    settingsService.update(settingAttribute, false, false);
+    verify(mockWingsPersistence).updateFields(any(), any(), fields.capture(), fieldsToRemove.capture());
+    assertThat(fields.getValue().get(SettingAttributeKeys.connectivityError)).isNull();
+    assertThat(fieldsToRemove.getValue()).contains(SettingAttributeKeys.connectivityError);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldUpdateWithoutUpdateConnectivityAndWithError() {
+    String errMsg = "err";
+    SettingAttribute settingAttribute = prepareSettingAttributeForUpdate();
+    settingAttribute.setConnectivityError("err");
+
+    ArgumentCaptor<Map> fields = ArgumentCaptor.forClass(Map.class);
+    ArgumentCaptor<Set> fieldsToRemove = ArgumentCaptor.forClass(Set.class);
+
+    settingsService.update(settingAttribute, false, false);
+    verify(mockWingsPersistence).updateFields(any(), any(), fields.capture(), fieldsToRemove.capture());
+    assertThat(fields.getValue().get(SettingAttributeKeys.connectivityError)).isEqualTo(errMsg);
+    assertThat(fieldsToRemove.getValue()).isNullOrEmpty();
+  }
+
+  private SettingAttribute prepareSettingAttributeForUpdate() {
     final String uuid = UUID.randomUUID().toString();
     SettingAttribute settingAttribute =
         aSettingAttribute()
@@ -425,8 +465,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     doReturn(settingAttribute).when(mockWingsPersistence).get(SettingAttribute.class, uuid);
     doReturn(settingAttribute).when(spyQuery).get();
-
-    settingsService.update(settingAttribute, false);
+    return settingAttribute;
   }
 
   @Test

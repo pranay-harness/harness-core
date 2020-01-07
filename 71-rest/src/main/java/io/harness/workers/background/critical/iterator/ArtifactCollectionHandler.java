@@ -28,6 +28,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.delegatetasks.buildsource.ArtifactStreamLogContext;
 import software.wings.service.impl.PermitServiceImpl;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.PermitService;
 
@@ -45,6 +46,7 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
   @Inject private PermitService permitService;
   @Inject private HarnessMetricRegistry harnessMetricRegistry;
   @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
   public void registerIterators(ScheduledThreadPoolExecutor artifactCollectionExecutor) {
     InstrumentedExecutorService instrumentedExecutorService = new InstrumentedExecutorService(
@@ -77,13 +79,11 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
 
   private void executeInternal(ArtifactStream artifactStream) {
     String artifactStreamId = artifactStream.getUuid();
-    if (artifactStream.getFailedCronAttempts() > PermitServiceImpl.MAX_FAILED_ATTEMPTS) {
-      logger.warn("ASYNC_ARTIFACT_CRON: Artifact collection disabled for artifactStream: due to too many failures [{}]",
-          artifactStream.getFailedCronAttempts());
-      return;
-    }
-
     try {
+      if (artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, true)) {
+        return;
+      }
+
       int leaseDuration = (int) (TimeUnit.MINUTES.toMillis(2)
           * PermitServiceImpl.getBackoffMultiplier(artifactStream.getFailedCronAttempts()));
       String permitId = permitService.acquirePermit(Permit.builder()

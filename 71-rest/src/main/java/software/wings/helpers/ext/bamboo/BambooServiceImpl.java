@@ -71,7 +71,10 @@ public class BambooServiceImpl implements BambooService {
     try {
       encryptionService.decrypt(bambooConfig, encryptionDetails);
       String bambooUrl = bambooConfig.getBambooUrl();
-      if (bambooUrl != null && !bambooUrl.endsWith("/")) {
+      if (bambooUrl == null) {
+        throw new InvalidArtifactServerException("Invalid Bamboo Server URL");
+      }
+      if (!bambooUrl.endsWith("/")) {
         bambooUrl = bambooUrl + "/";
       }
       Retrofit retrofit = new Retrofit.Builder()

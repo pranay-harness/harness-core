@@ -56,7 +56,11 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
 
   @ValidationGroups(Update.class) SettingAttribute update(@Valid SettingAttribute settingAttribute);
 
-  @ValidationGroups(Update.class) SettingAttribute update(@Valid SettingAttribute settingAttribute, boolean pushToGit);
+  @ValidationGroups(Update.class)
+  SettingAttribute update(@Valid SettingAttribute settingAttribute, boolean updateConnectivity);
+
+  @ValidationGroups(Update.class)
+  SettingAttribute update(@Valid SettingAttribute settingAttribute, boolean updateConnectivity, boolean pushToGit);
 
   /**
    * INTERNAL API only no usage restriction is checked. Only update the usage restrictions of the specified setting
