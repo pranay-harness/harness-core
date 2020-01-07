@@ -180,6 +180,8 @@ public class VerificationConstants {
   public static final String HEARTBEAT_METRIC_NAME = "Harness heartbeat metric";
   public static final String DUMMY_HOST_NAME = "dummy";
 
+  public static final String BUGSNAG_UI_DUMMY_HOST_NAME = "UI-NO-HOST";
+
   public static final String APPDYNAMICS_DEEPLINK_FORMAT =
       "#/location=METRIC_BROWSER&viewTree=true&axis=linear&showPoints=false&application={applicationId}"
       + "&timeRange=Custom_Time_Range.BETWEEN_TIMES.{endTimeMs}.{startTimeMs}.6&metrics=APPLICATION_COMPONENT.{metricString}";

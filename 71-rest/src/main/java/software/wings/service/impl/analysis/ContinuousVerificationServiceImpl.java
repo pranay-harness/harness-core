@@ -20,6 +20,7 @@ import static software.wings.beans.TaskType.STACKDRIVER_COLLECT_LOG_DATA;
 import static software.wings.beans.TaskType.SUMO_COLLECT_LOG_DATA;
 import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT;
 import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
+import static software.wings.common.VerificationConstants.BUGSNAG_UI_DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
@@ -1924,7 +1925,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .options(bugsnagConfig.optionsMap())
             .query(config.getQuery())
             .encryptedDataDetails(secretManager.getEncryptionDetails(bugsnagConfig, config.getAppId(), null))
-            .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+            .hosts(Sets.newHashSet(BUGSNAG_UI_DUMMY_HOST_NAME))
             .stateType(StateType.BUG_SNAG)
             .applicationId(config.getAppId())
             .serviceId(config.getServiceId())
