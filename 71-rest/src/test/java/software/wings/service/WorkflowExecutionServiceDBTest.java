@@ -13,7 +13,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
-import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
@@ -521,7 +520,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
         Host host =
             aHost().withEc2Instance(ec2Instance).withAppId(appId).withEnvId(envId).withHostName(generateUuid()).build();
         String hostId = wingsPersistence.save(host);
-        HostElement hostElement = aHostElement().hostName(generateUuid()).uuid(hostId).build();
+        HostElement hostElement = HostElement.builder().hostName(generateUuid()).uuid(hostId).build();
         instanceElements.add(
             anInstanceStatusSummary().withInstanceElement(anInstanceElement().host(hostElement).build()).build());
         hostElements.put(hostId, hostElement);

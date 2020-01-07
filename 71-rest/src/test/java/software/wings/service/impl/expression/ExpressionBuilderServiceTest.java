@@ -5,6 +5,7 @@ import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
@@ -63,6 +64,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -162,6 +164,8 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     when(serviceVariableService.list(envServiceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
         .thenReturn(aPageResponse().build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(Service.builder().name(generateUuid()).deploymentType(DeploymentType.KUBERNETES).build());
   }
 
   @Test

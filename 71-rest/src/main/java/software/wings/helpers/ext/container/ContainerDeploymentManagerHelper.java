@@ -2,7 +2,6 @@ package software.wings.helpers.ext.container;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
-import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
@@ -73,7 +72,7 @@ public class ContainerDeploymentManagerHelper {
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
     if (isNotEmpty(containerInfos)) {
       for (ContainerInfo containerInfo : containerInfos) {
-        HostElement hostElement = aHostElement()
+        HostElement hostElement = HostElement.builder()
                                       .hostName(containerInfo.getHostName())
                                       .ip(containerInfo.getIp())
                                       .ec2Instance(containerInfo.getEc2Instance())

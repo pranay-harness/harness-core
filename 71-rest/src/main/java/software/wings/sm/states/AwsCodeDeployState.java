@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
@@ -305,7 +304,7 @@ public class AwsCodeDeployState extends State {
           (CodeDeployCommandExecutionData) commandExecutionResult.getCommandExecutionData();
       List<InstanceElement> instanceElements = new ArrayList<>();
       commandExecutionData.getInstances().forEach(instance -> {
-        HostElement hostElement = aHostElement()
+        HostElement hostElement = HostElement.builder()
                                       .publicDns(instance.getPublicDnsName())
                                       .ip(instance.getPrivateIpAddress())
                                       .ec2Instance(instance)

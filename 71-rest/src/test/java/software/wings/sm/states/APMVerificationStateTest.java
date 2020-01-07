@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
@@ -32,6 +31,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.HostElement;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.sm.ExecutionContextImpl;
@@ -69,7 +69,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
     when(workflowStandardParameters.getElementType()).thenReturn(ContextElementType.STANDARD);
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
     context.pushContextElement(workflowStandardParameters);
-    context.pushContextElement(aHostElement().hostName("localhost").build());
+    context.pushContextElement(HostElement.builder().hostName("localhost").build());
   }
 
   @Test

@@ -136,6 +136,11 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             "Your license type does not support running this verification. Skipping Analysis");
       }
 
+      if (unresolvedHosts(analysisContext)) {
+        return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
+            "The expression " + hostnameTemplate + " could not be resolved for hosts");
+      }
+
       saveMetaDataForDashboard(analysisContext.getAccountId(), executionContext);
 
       Set<String> canaryNewHostNames = analysisContext.getTestNodes().keySet();

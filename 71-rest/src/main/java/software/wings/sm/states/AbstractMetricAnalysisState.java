@@ -120,6 +120,11 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             "Your license type does not support running this verification. Skipping Analysis");
       }
 
+      if (unresolvedHosts(analysisContext)) {
+        return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
+            "The expression " + hostnameTemplate + " could not be resolved for hosts");
+      }
+
       saveMetaDataForDashboard(analysisContext.getAccountId(), context);
 
       if (isDemoPath(analysisContext)) {

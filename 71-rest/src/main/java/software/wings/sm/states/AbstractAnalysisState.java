@@ -7,7 +7,6 @@ import static io.harness.govern.Switch.noop;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.AccountType.COMMUNITY;
 import static software.wings.beans.AccountType.ESSENTIALS;
@@ -332,7 +331,7 @@ public abstract class AbstractAnalysisState extends State {
               hosts.put(context.renderExpression(hostnameTemplate,
                             StateExecutionContext.builder()
                                 .contextElements(Lists.newArrayList(
-                                    aHostElement().hostName(pod.getName()).ip(pod.getPodIP()).build()))
+                                    HostElement.builder().hostName(pod.getName()).ip(pod.getPodIP()).build()))
                                 .build()),
                   DEFAULT_GROUP_NAME);
             }
@@ -386,14 +385,16 @@ public abstract class AbstractAnalysisState extends State {
         if (isEmpty(hostnameTemplate)) {
           hosts.put(serviceHost, DEFAULT_GROUP_NAME);
         } else {
-          hosts.put(context.renderExpression(hostnameTemplate,
-                        StateExecutionContext.builder()
-                            .contextElements(Lists.newArrayList(
-                                anInstanceElement()
-                                    .hostName(serviceHost)
-                                    .host(aHostElement().hostName(serviceHost).ip(podNameToIp.get(serviceHost)).build())
-                                    .build()))
-                            .build()),
+          hosts.put(
+              context.renderExpression(hostnameTemplate,
+                  StateExecutionContext.builder()
+                      .contextElements(Lists.newArrayList(
+                          anInstanceElement()
+                              .hostName(serviceHost)
+                              .host(
+                                  HostElement.builder().hostName(serviceHost).ip(podNameToIp.get(serviceHost)).build())
+                              .build()))
+                      .build()),
               DEFAULT_GROUP_NAME);
         }
       });
@@ -502,7 +503,7 @@ public abstract class AbstractAnalysisState extends State {
                                                             .hostName(containerInfo.getHostName())
                                                             .podName(containerInfo.getPodName())
                                                             .workloadName(containerInfo.getWorkloadName())
-                                                            .host(aHostElement()
+                                                            .host(HostElement.builder()
                                                                       .hostName(containerInfo.getHostName())
                                                                       .ip(containerInfo.getIp())
                                                                       .ec2Instance(containerInfo.getEc2Instance())
@@ -662,7 +663,8 @@ public abstract class AbstractAnalysisState extends State {
             } else {
               rv.put(context.renderExpression(hostnameTemplate,
                          StateExecutionContext.builder()
-                             .contextElements(Lists.newArrayList(aHostElement().hostName(pcfHostName).build()))
+                             .contextElements(Lists.newArrayList(
+                                 HostElement.builder().hostName(pcfHostName).pcfElement(pcfInstanceElement).build()))
                              .build()),
                   DEFAULT_GROUP_NAME);
             }
@@ -711,7 +713,7 @@ public abstract class AbstractAnalysisState extends State {
           } else {
             hosts.put(context.renderExpression(hostNameExpression,
                           StateExecutionContext.builder()
-                              .contextElements(Lists.newArrayList(aHostElement()
+                              .contextElements(Lists.newArrayList(HostElement.builder()
                                                                       .hostName(instance.getPrivateDnsName())
                                                                       .ip(instance.getPrivateIpAddress())
                                                                       .ec2Instance(instance)
@@ -882,7 +884,7 @@ public abstract class AbstractAnalysisState extends State {
     }
     getLogger().info("For {}, setting hostName as {}, ec2Instance as {} and publicDns as {}",
         context.getStateExecutionInstanceId(), host.getHostName(), host.getEc2Instance(), host.getPublicDns());
-    instanceElement.setHost(aHostElement()
+    instanceElement.setHost(HostElement.builder()
                                 .hostName(host.getHostName())
                                 .ec2Instance(host.getEc2Instance())
                                 .publicDns(host.getPublicDns())
@@ -947,6 +949,21 @@ public abstract class AbstractAnalysisState extends State {
     }
 
     return true;
+  }
+
+  protected boolean unresolvedHosts(AnalysisContext analysisContext) {
+    return unresolvedHosts(analysisContext.getTestNodes()) || unresolvedHosts(analysisContext.getControlNodes());
+  }
+
+  private boolean unresolvedHosts(Map<String, String> hostToGroupMap) {
+    return hostToGroupMap.entrySet().stream().anyMatch(entry -> {
+      String hostName = entry.getKey();
+      if (hostName.contains("${") && hostName.contains("}")) {
+        getLogger().info("{} is not resolved", hostName);
+        return true;
+      }
+      return false;
+    });
   }
 
   protected long dataCollectionStartTimestampMillis() {

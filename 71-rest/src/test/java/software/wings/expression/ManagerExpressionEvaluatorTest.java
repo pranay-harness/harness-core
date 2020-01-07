@@ -82,7 +82,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
     tag2.setValue("bar");
     ec2.setTags(asList(tag1, tag2));
 
-    HostElement host = HostElement.Builder.aHostElement().ec2Instance(ec2).build();
+    HostElement host = HostElement.builder().ec2Instance(ec2).build();
     Map<String, Object> map = ImmutableMap.<String, Object>builder().put("host", host).build();
 
     assertThat(expressionEvaluator.substitute("${host.ec2Instance.privateDnsName.split('\\.')[0]}", map))

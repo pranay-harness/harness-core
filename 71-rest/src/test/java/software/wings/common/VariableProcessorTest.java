@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
@@ -27,6 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.beans.ServiceVariable;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -76,7 +76,7 @@ public class VariableProcessorTest extends CategoryTest {
     InstanceElement instanceElement =
         anInstanceElement()
             .serviceTemplateElement(aServiceTemplateElement().withUuid(TEMPLATE_ID).build())
-            .host(aHostElement().uuid(HOST_ID).build())
+            .host(HostElement.builder().uuid(HOST_ID).build())
             .build();
 
     assertThat(variableProcessor.getVariables(new ArrayDeque<>(asList(workflowStandardParams, instanceElement)), null))

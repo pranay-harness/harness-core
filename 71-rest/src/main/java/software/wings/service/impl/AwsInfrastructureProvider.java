@@ -8,7 +8,6 @@ import static io.harness.govern.Switch.unhandled;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.HostConnectionType.PRIVATE_DNS;
 import static software.wings.beans.HostConnectionType.PUBLIC_DNS;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -121,7 +120,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
           && !awsInfrastructureMapping.getHostNameConvention().equals(
                  InfrastructureConstants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
         awsHosts.forEach(h -> {
-          HostElement hostElement = aHostElement().ec2Instance(h.getEc2Instance()).build();
+          HostElement hostElement = HostElement.builder().ec2Instance(h.getEc2Instance()).build();
 
           final Map<String, Object> contextMap = new HashMap<>();
           contextMap.put("host", hostElement);
@@ -204,7 +203,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
           && !awsInstanceInfrastructure.getHostNameConvention().equals(
                  InfrastructureConstants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
         awsHosts.forEach(h -> {
-          HostElement hostElement = aHostElement().ec2Instance(h.getEc2Instance()).build();
+          HostElement hostElement = HostElement.builder().ec2Instance(h.getEc2Instance()).build();
 
           final Map<String, Object> contextMap = new HashMap();
           contextMap.put("host", hostElement);
