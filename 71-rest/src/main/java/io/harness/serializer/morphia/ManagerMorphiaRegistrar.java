@@ -269,6 +269,7 @@ import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.beans.alert.NotificationRulesStatus;
 import software.wings.beans.alert.ResourceUsageApproachingLimitAlert;
 import software.wings.beans.alert.SSOSyncFailedAlert;
+import software.wings.beans.alert.SettingAttributeValidationFailedAlert;
 import software.wings.beans.alert.UsageLimitExceededAlert;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
@@ -1078,6 +1079,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.alert.ResourceUsageApproachingLimitAlert", ResourceUsageApproachingLimitAlert.class);
     w.put("beans.alert.SSOSyncFailedAlert", SSOSyncFailedAlert.class);
     w.put("beans.alert.UsageLimitExceededAlert", UsageLimitExceededAlert.class);
+    w.put("beans.alert.SettingAttributeValidationFailedAlert", SettingAttributeValidationFailedAlert.class);
     w.put("beans.APMVerificationConfig", APMVerificationConfig.class);
     w.put("beans.AppDynamicsConfig", AppDynamicsConfig.class);
     w.put("beans.artifact.ArtifactFile", ArtifactFile.class);

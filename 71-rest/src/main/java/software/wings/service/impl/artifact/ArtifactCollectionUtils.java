@@ -763,7 +763,7 @@ public class ArtifactCollectionUtils {
       return true;
     }
 
-    SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+    SettingAttribute settingAttribute = settingsService.getOnlyConnectivityError(artifactStream.getSettingId());
     if (settingAttribute == null) {
       throw new InvalidRequestException(
           format("%s: Invalid artifact stream setting: %s", prefix, artifactStream.getSettingId()));

@@ -1,0 +1,55 @@
+package software.wings.beans.alert;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.SettingAttribute.SettingCategory;
+
+import com.google.inject.Inject;
+
+import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Builder;
+import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.SettingAttribute;
+import software.wings.service.intfc.SettingsService;
+
+@Data
+@Builder
+public class SettingAttributeValidationFailedAlert implements AlertData {
+  @Inject @Transient @SchemaIgnore private SettingsService settingsService;
+
+  private String settingId;
+  private String settingCategory;
+  private String connectivityError;
+
+  @Override
+  public boolean matches(AlertData alertData) {
+    SettingAttributeValidationFailedAlert otherAlert = (SettingAttributeValidationFailedAlert) alertData;
+    return StringUtils.equals(otherAlert.getSettingId(), settingId);
+  }
+
+  @Override
+  public String buildTitle() {
+    StringBuilder title = new StringBuilder(128);
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    if (settingAttribute == null) {
+      title.append("Connector ");
+    } else {
+      if (settingAttribute.getCategory() == SettingCategory.CLOUD_PROVIDER) {
+        title.append("Cloud provider ");
+      } else {
+        title.append("Connector ");
+      }
+
+      title.append('[').append(settingAttribute.getName()).append("] ");
+    }
+
+    if (isBlank(connectivityError)) {
+      title.append("has invalid/expired credentials");
+    } else {
+      title.append("has a connectivity error: ").append(connectivityError);
+    }
+
+    return title.toString();
+  }
+}

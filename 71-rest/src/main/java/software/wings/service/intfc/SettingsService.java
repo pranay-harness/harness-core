@@ -52,6 +52,8 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
 
   SettingAttribute get(String varId);
 
+  SettingAttribute getOnlyConnectivityError(String settingId);
+
   SettingAttribute getSettingAttributeByName(String accountId, String settingAttributeName);
 
   @ValidationGroups(Update.class) SettingAttribute update(@Valid SettingAttribute settingAttribute);
@@ -120,4 +122,8 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
   String fetchAccountIdBySettingId(String settingId);
 
   UsageRestrictions getUsageRestrictionsForSettingId(String settingId);
+
+  void openConnectivityErrorAlert(String accountId, String settingId, String settingCategory, String connectivityError);
+
+  void closeConnectivityErrorAlert(String accountId, String settingId);
 }
