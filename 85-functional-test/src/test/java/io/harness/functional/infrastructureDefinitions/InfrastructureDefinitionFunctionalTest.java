@@ -1,6 +1,5 @@
 package io.harness.functional.infrastructureDefinitions;
 
-import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import com.google.common.collect.ImmutableMap;
@@ -108,23 +107,6 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
     Workflow workflow = workflowUtils.createCanarySshWorkflow("ec2-ssh-", service, infrastructureDefinition);
     workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
 
-    Artifact artifact = getArtifact(service, service.getAppId());
-    executeWorkflow(workflow, service, Arrays.asList(artifact), ImmutableMap.<String, String>builder().build());
-  }
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(FunctionalTests.class)
-  @Ignore("Enable once feature flag is enabled")
-  public void shouldCreateAndRunWinRmWorkflow() {
-    service = serviceGenerator.ensurePredefined(seed, owners, Services.WINDOWS_TEST);
-    resetCache(service.getAccountId());
-    infrastructureDefinition =
-        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.PHYSICAL_WINRM_TEST);
-    checkListHosts(infrastructureDefinition);
-    resetCache(service.getAccountId());
-    Workflow workflow = workflowUtils.createCanarySshWorkflow("phy-winrm-", service, infrastructureDefinition);
-    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
     Artifact artifact = getArtifact(service, service.getAppId());
     executeWorkflow(workflow, service, Arrays.asList(artifact), ImmutableMap.<String, String>builder().build());
   }
@@ -330,7 +312,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
 
   private Artifact getArtifact(Service service, String appId) {
     return ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
-        bearerToken, appId, service.getArtifactStreamIds().get(0));
+        bearerToken, appId, service.getArtifactStreamIds().get(0), 0);
   }
 
   private void checkScopedService(DeploymentType deploymentType, Service knownService) {

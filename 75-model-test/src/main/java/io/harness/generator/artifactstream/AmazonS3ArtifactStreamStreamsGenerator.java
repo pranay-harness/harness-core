@@ -1,6 +1,5 @@
 package io.harness.generator.artifactstream;
 
-import static java.util.Arrays.asList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -17,6 +16,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream.AmazonS3ArtifactStreamBuilder;
 import software.wings.beans.artifact.ArtifactStream;
+
+import java.util.Collections;
 
 @Singleton
 public class AmazonS3ArtifactStreamStreamsGenerator implements ArtifactStreamsGenerator {
@@ -42,7 +43,7 @@ public class AmazonS3ArtifactStreamStreamsGenerator implements ArtifactStreamsGe
             .name("harness-iis-app")
             .sourceName(settingAttribute.getName())
             .jobname("iis-app-example")
-            .artifactPaths(asList("todolist-v2.0.zip"))
+            .artifactPaths(Collections.singletonList("todolist-v*.zip"))
             .settingId(settingAttribute.getUuid())
             .build(),
         owners);

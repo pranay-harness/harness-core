@@ -122,7 +122,7 @@ public class PipelineExecutionTest extends AbstractFunctionalTest {
     assertThat(artifactStream).isNotNull();
 
     artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
-        bearerToken, application.getUuid(), artifactStream.getUuid());
+        bearerToken, application.getUuid(), artifactStream.getUuid(), 0);
   }
 
   public Workflow constructCanaryOrchestrationWorkflow() {

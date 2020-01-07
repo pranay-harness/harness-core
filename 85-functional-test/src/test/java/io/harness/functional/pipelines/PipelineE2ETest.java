@@ -132,7 +132,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
 
     artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
-        bearerToken, application.getUuid(), artifactStream.getUuid());
+        bearerToken, application.getUuid(), artifactStream.getUuid(), 0);
 
     logger.info("Modifying Workflow Phase to add HTTP command in Verify Step of Phase 1");
 

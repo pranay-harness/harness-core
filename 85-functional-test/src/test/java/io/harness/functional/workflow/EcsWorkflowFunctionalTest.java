@@ -130,7 +130,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
     assertThat(artifactStream).isNotNull();
 
     artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
-        bearerToken, application.getUuid(), artifactStream.getUuid());
+        bearerToken, application.getUuid(), artifactStream.getUuid(), 0);
   }
 
   @Test

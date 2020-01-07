@@ -139,7 +139,7 @@ public class PcfFunctionalTest extends AbstractFunctionalTest {
 
   private Artifact getArtifact(Service service, String appId) {
     return ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
-        bearerToken, appId, service.getArtifactStreamIds().get(0));
+        bearerToken, appId, service.getArtifactStreamIds().get(0), 0);
   }
 
   private ExecutionArgs prepareExecutionArgs(
