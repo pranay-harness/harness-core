@@ -78,7 +78,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
     assertThat(savedArtifactSteam).isNotNull();
 
     final Artifact collectedArtifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
-        bearerToken, application.getUuid(), savedArtifactSteam.getUuid());
+        bearerToken, application.getUuid(), savedArtifactSteam.getUuid(), 0);
     assertThat(collectedArtifact).isNotNull();
 
     assertThat(collectedArtifact.getArtifactStreamId()).isEqualTo(savedArtifactSteam.getUuid());
@@ -115,7 +115,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
     assertThat(savedArtifactSteam).isNotNull();
 
     final Artifact collectedArtifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
-        bearerToken, application.getUuid(), savedArtifactSteam.getUuid());
+        bearerToken, application.getUuid(), savedArtifactSteam.getUuid(), 0);
 
     assertThat(collectedArtifact.getArtifactStreamId()).isEqualTo(savedArtifactSteam.getUuid());
     assertThat(collectedArtifact.getStatus()).isEqualTo(Status.APPROVED);

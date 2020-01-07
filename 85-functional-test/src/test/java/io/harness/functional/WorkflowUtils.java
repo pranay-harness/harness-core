@@ -26,6 +26,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBAC
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.SETUP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.VERIFY_SERVICE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
+import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
@@ -230,31 +231,134 @@ public class WorkflowUtils {
                                     .build())
                        .build());
     phaseSteps.add(aPhaseStep(PhaseStepType.DISABLE_SERVICE, PhaseStepType.DISABLE_SERVICE.name()).build());
-    phaseSteps.add(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, PhaseStepType.DEPLOY_SERVICE.name()).build());
+    phaseSteps.add(
+        aPhaseStep(PhaseStepType.DEPLOY_SERVICE, PhaseStepType.DEPLOY_SERVICE.name())
+            .addStep(GraphNode.builder()
+                         .id(generateUuid())
+                         .type(COMMAND.name())
+                         .name("Install")
+                         .properties(ImmutableMap.<String, Object>builder().put("commandName", "Install").build())
+                         .rollback(false)
+                         .build())
+            .build());
     phaseSteps.add(aPhaseStep(PhaseStepType.ENABLE_SERVICE, PhaseStepType.ENABLE_SERVICE.name()).build());
     phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, PhaseStepType.VERIFY_SERVICE.name()).build());
     phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
-    Workflow workflow =
-        aWorkflow()
-            .name(name)
-            .appId(service.getAppId())
-            .serviceId(service.getUuid())
-            .envId(infrastructureDefinition.getEnvId())
-            .infraDefinitionId(infrastructureDefinition.getUuid())
-            .workflowType(WorkflowType.ORCHESTRATION)
-            .orchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
-                    .withWorkflowPhases(Arrays.asList(aWorkflowPhase()
-                                                          .serviceId(service.getUuid())
-                                                          .infraDefinitionId(infrastructureDefinition.getUuid())
-                                                          .phaseSteps(phaseSteps)
-                                                          .build()))
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    return aWorkflow()
+        .name(name)
+        .appId(service.getAppId())
+        .serviceId(service.getUuid())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
+            aCanaryOrchestrationWorkflow()
+                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                .withWorkflowPhases(Collections.singletonList(aWorkflowPhase()
+                                                                  .serviceId(service.getUuid())
+                                                                  .infraDefinitionId(infrastructureDefinition.getUuid())
+                                                                  .phaseSteps(phaseSteps)
+                                                                  .build()))
+                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                .build())
+        .build();
+  }
 
-    return workflow;
+  public Workflow createWinRMWorkflow(String name, Service service, InfrastructureDefinition infrastructureDefinition) {
+    name = Joiner.on(StringUtils.EMPTY).join(name, System.currentTimeMillis());
+    List<PhaseStep> phaseSteps = Lists.newArrayList();
+    phaseSteps.add(aPhaseStep(PhaseStepType.SELECT_NODE, PhaseStepType.SELECT_NODE.name())
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(AWS_NODE_SELECT.name())
+                                    .name(SELECT_NODES_CONSTANT)
+                                    .properties(ImmutableMap.<String, Object>builder()
+                                                    .put("instanceUnitType", "PERCENTAGE")
+                                                    .put("instanceCount", 100)
+                                                    .put("specificHosts", false)
+                                                    .build())
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.DISABLE_SERVICE, PhaseStepType.DISABLE_SERVICE.name()).build());
+    phaseSteps.add(
+        aPhaseStep(PhaseStepType.DEPLOY_SERVICE, PhaseStepType.DEPLOY_SERVICE.name())
+            .addStep(GraphNode.builder()
+                         .id(generateUuid())
+                         .type(COMMAND.name())
+                         .name("Install")
+                         .properties(ImmutableMap.<String, Object>builder().put("commandName", "Install").build())
+                         .rollback(false)
+                         .build())
+            .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.ENABLE_SERVICE, PhaseStepType.ENABLE_SERVICE.name()).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, PhaseStepType.VERIFY_SERVICE.name()).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
+    WorkflowPhase phase = aWorkflowPhase()
+                              .uuid(generateUuid())
+                              .serviceId(service.getUuid())
+                              .infraDefinitionId(infrastructureDefinition.getUuid())
+                              .phaseSteps(phaseSteps)
+                              .build();
+    Map<String, WorkflowPhase> rollbackMap = new HashMap<>();
+    rollbackMap.put(phase.getUuid(), obtainRollbackPhase(phase));
+    return aWorkflow()
+        .name(name)
+        .appId(service.getAppId())
+        .serviceId(service.getUuid())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .withWorkflowPhases(Collections.singletonList(phase))
+                                   .withRollbackWorkflowPhaseIdMap(rollbackMap)
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
+        .build();
+  }
+
+  public WorkflowPhase obtainRollbackPhase(WorkflowPhase workflowPhase) {
+    WorkflowPhaseBuilder rollbackPhaseBuilder = aWorkflowPhase()
+                                                    .name(ROLLBACK_PREFIX + workflowPhase.getName())
+                                                    .deploymentType(workflowPhase.getDeploymentType())
+                                                    .rollback(true)
+                                                    .phaseNameForRollback(workflowPhase.getName())
+                                                    .serviceId(workflowPhase.getServiceId())
+                                                    .computeProviderId(workflowPhase.getComputeProviderId())
+                                                    .infraMappingId(workflowPhase.getInfraMappingId())
+                                                    .infraMappingName(workflowPhase.getInfraMappingName())
+                                                    .infraDefinitionId(workflowPhase.getInfraDefinitionId());
+
+    return rollbackPhaseBuilder
+        .phaseSteps(asList(aPhaseStep(PhaseStepType.DISABLE_SERVICE, PhaseStepType.DISABLE_SERVICE.name())
+                               .withPhaseStepNameForRollback(PhaseStepType.ENABLE_SERVICE.name())
+                               .withStatusForRollback(SUCCESS)
+                               .withRollback(true)
+                               .build(),
+            aPhaseStep(PhaseStepType.DEPLOY_SERVICE, PhaseStepType.DEPLOY_SERVICE.name())
+                .addStep(GraphNode.builder()
+                             .id(generateUuid())
+                             .type(COMMAND.name())
+                             .name("Install")
+                             .properties(ImmutableMap.<String, Object>builder().put("commandName", "Install").build())
+                             .rollback(false)
+                             .build())
+                .withPhaseStepNameForRollback(PhaseStepType.DEPLOY_SERVICE.name())
+                .withStatusForRollback(SUCCESS)
+                .withRollback(true)
+                .build(),
+            aPhaseStep(PhaseStepType.ENABLE_SERVICE, PhaseStepType.ENABLE_SERVICE.name())
+                .withPhaseStepNameForRollback(PhaseStepType.DISABLE_SERVICE.name())
+                .withStatusForRollback(SUCCESS)
+                .withRollback(true)
+                .build(),
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                .withPhaseStepNameForRollback(PhaseStepType.DEPLOY_SERVICE.name())
+                .withStatusForRollback(SUCCESS)
+                .withRollback(true)
+                .build(),
+            aPhaseStep(PhaseStepType.WRAP_UP, PhaseStepType.WRAP_UP.name()).withRollback(true).build()))
+        .build();
   }
 
   public Workflow createPcfWorkflow(String name, Service service, InfrastructureDefinition infrastructureDefinition) {

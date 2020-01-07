@@ -101,6 +101,7 @@ public class SettingGenerator {
     AWS_SPOTINST_TEST_CLOUD_PROVIDER,
     SPOTINST_TEST_CLOUD_PROVIDER,
     DEV_TEST_CONNECTOR,
+    WINRM_DEV_TEST_CONNECTOR,
     HARNESS_JENKINS_CONNECTOR,
     GITHUB_TEST_CONNECTOR,
     TERRAFORM_CITY_GIT_REPO,
@@ -141,6 +142,8 @@ public class SettingGenerator {
         return ensureSpotinstTestCloudProvider(seed, owners);
       case DEV_TEST_CONNECTOR:
         return ensureDevTest(seed, owners);
+      case WINRM_DEV_TEST_CONNECTOR:
+        return ensureWinrmDevTest(seed, owners);
       case HARNESS_JENKINS_CONNECTOR:
         return ensureHarnessJenkins(seed, owners);
       case GITHUB_TEST_CONNECTOR:
@@ -364,9 +367,9 @@ public class SettingGenerator {
             .withAccountId(account.getUuid())
             .withValue(AwsConfig.builder()
                            .accessKey(/*scmSecret.decryptToString(new SecretName("aws_playground_access_key")*/
-                               "AKIAWQ5IKSASXD4MZRDS")
+                               "AKIAWQ5IKSAS2HMP3BPR")
                            .secretKey(/*scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")*/
-                               "oEK0x07A078PeCFGZlQKOzp8eL+qhpkG+uYooD6T".toCharArray())
+                               "GxqJiZAnh4TvijFP9T6Q38JjAmAAP+agP5KRHcYA".toCharArray())
                            .accountId(account.getUuid())
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
@@ -414,6 +417,28 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  private SettingAttribute ensureWinrmDevTest(Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SETTING)
+                                            .withName("Test Aws WinRM Connection")
+                                            .withAppId(GLOBAL_APP_ID)
+                                            .withEnvId(GLOBAL_ENV_ID)
+                                            .withAccountId(account.getUuid())
+                                            .withValue(WinRmConnectionAttributes.builder()
+                                                           .accountId(account.getUuid())
+                                                           .authenticationScheme(AuthenticationScheme.NTLM)
+                                                           .username("Administrator")
+                                                           .password("H@rnessH@rness".toCharArray())
+                                                           .port(5986)
+                                                           .useSSL(true)
+                                                           .skipCertChecks(true)
+                                                           .build())
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                            .build();
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 

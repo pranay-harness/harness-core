@@ -38,10 +38,10 @@ public class ArtifactRestUtils {
   }
 
   public static Artifact waitAndFetchArtifactByArtfactStream(
-      String bearerToken, String appId, String artifactStreamId) {
+      String bearerToken, String appId, String artifactStreamId, int artifactIndex) {
     Retry retry = new Retry(80, 10000);
     List<Artifact> artifacts = (List<Artifact>) retry.executeWithRetry(
         () -> fetchArtifactByArtifactStream(bearerToken, appId, artifactStreamId), new ArtifactMatcher(), null);
-    return artifacts.get(0);
+    return artifacts.get(artifactIndex);
   }
 }

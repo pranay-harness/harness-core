@@ -7,6 +7,7 @@ import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GCP_PLAYGROUND;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
 import static io.harness.generator.SettingGenerator.Settings.SPOTINST_TEST_CLOUD_PROVIDER;
+import static io.harness.generator.SettingGenerator.Settings.WINRM_DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTOR;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.SSH_DEPLOY_HOST;
 import static io.harness.govern.Switch.unhandled;
@@ -124,6 +125,7 @@ public class InfrastructureDefinitionGenerator {
     AWS_SSH_TEST,
     TERRAFORM_AWS_SSH_TEST,
     AWS_SSH_FUNCTIONAL_TEST,
+    AWS_WINRM_FUNCTIONAL_TEST,
     PHYSICAL_WINRM_TEST,
     PHYSICAL_SSH_TEST,
     AZURE_WINRM_TEST,
@@ -141,6 +143,8 @@ public class InfrastructureDefinitionGenerator {
     switch (infraType) {
       case AWS_SSH_TEST:
         return ensureAwsSsh(seed, owners);
+      case AWS_WINRM_FUNCTIONAL_TEST:
+        return ensureAwsWinrmFunctionalTest(seed, owners);
       case AWS_SSH_FUNCTIONAL_TEST:
         return ensureAwsSshFunctionalTest(seed, owners);
       case TERRAFORM_AWS_SSH_TEST:
@@ -388,6 +392,36 @@ public class InfrastructureDefinitionGenerator {
         seed, owners, Environments.FUNCTIONAL_TEST, Services.FUNCTIONAL_TEST, "Aws non prod - ssh workflow test");
   }
 
+  private InfrastructureDefinition ensureAwsWinrmFunctionalTest(Seed seed, Owners owners) {
+    return ensureAwsWinrmInfraDefinition(
+        seed, owners, Environments.FUNCTIONAL_TEST, Services.WINDOWS_TEST, "Aws WinRM InfraDef");
+  }
+
+  private InfrastructureDefinition ensureAwsWinrmInfraDefinition(
+      Seed seed, Owners owners, Environments environments, Services services, String name) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, environments);
+      owners.add(environment);
+    }
+
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, services);
+      owners.add(service);
+    }
+
+    final List<Tag> tags = Collections.singletonList(Tag.builder().key("role").value("rollback-ft").build());
+
+    final SettingAttribute awsTestSettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute windowsSettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, WINRM_DEV_TEST_CONNECTOR);
+
+    return ensureInfrastructureDefinition(createWinRMInfraDefinition(
+        owners, tags, awsTestSettingAttribute.getUuid(), windowsSettingAttribute.getUuid(), name));
+  }
+
   private InfrastructureDefinition ensureMultiArtifactAwsSshFunctionalTest(Randomizer.Seed seed, Owners owners) {
     return ensureAwsSshInfraDefinition(seed, owners, Environments.FUNCTIONAL_TEST,
         Services.MULTI_ARTIFACT_FUNCTIONAL_TEST, "Aws non prod - ssh workflow test-multi-artifact");
@@ -434,6 +468,29 @@ public class InfrastructureDefinitionGenerator {
     return InfrastructureDefinition.builder()
         .name(name)
         .deploymentType(DeploymentType.SSH)
+        .cloudProviderType(CloudProviderType.AWS)
+        .infrastructure(awsInstanceInfrastructure)
+        .build();
+  }
+
+  @NotNull
+  private InfrastructureDefinition createWinRMInfraDefinition(
+      Owners owners, List<Tag> tags, String awsTestSettingAttributeId, String devKeySettingAttributeId, String name) {
+    AwsInstanceInfrastructure awsInstanceInfrastructure =
+        AwsInstanceInfrastructure.builder()
+            .cloudProviderId(awsTestSettingAttributeId)
+            .hostConnectionAttrs(devKeySettingAttributeId)
+            .region("us-east-1")
+            .awsInstanceFilter(AwsInstanceFilter.builder().tags(tags).build())
+            .usePublicDns(true)
+            .hostConnectionType(HostConnectionType.PUBLIC_DNS.name())
+            .build();
+
+    return InfrastructureDefinition.builder()
+        .name(name)
+        .appId(owners.obtainApplication().getUuid())
+        .envId(owners.obtainEnvironment().getUuid())
+        .deploymentType(DeploymentType.WINRM)
         .cloudProviderType(CloudProviderType.AWS)
         .infrastructure(awsInstanceInfrastructure)
         .build();

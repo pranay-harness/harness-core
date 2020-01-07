@@ -47,7 +47,7 @@ public class ArtifactsFunctionalTest extends AbstractFunctionalTest {
     artifactStream = dockerArtifactStreamStreamsGenerator.ensureArtifactStream(seed, owners);
 
     ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
-        bearerToken, artifactStream.getAppId(), artifactStream.getUuid());
+        bearerToken, artifactStream.getAppId(), artifactStream.getUuid(), 0);
     ArtifactRestUtils.fetchArtifactByArtifactStream(bearerToken, artifactStream.getAppId(), artifactStream.getUuid());
 
     serviceId = artifactStream.getServiceId();

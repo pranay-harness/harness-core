@@ -82,7 +82,7 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
     resetCache(service.getAccountId());
 
     Artifact artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
-        bearerToken, appId, service.getArtifactStreamIds().get(0));
+        bearerToken, appId, service.getArtifactStreamIds().get(0), 0);
 
     AwsAsgGetRunningCountData runningCountData = InfrastructureDefinitionRestUtils.amiRunningInstances(
         bearerToken, accountId, appId, service.getUuid(), amiInfrastructureDefinition.getUuid());
@@ -144,7 +144,7 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
     resetCache(service.getAccountId());
 
     Artifact artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
-        bearerToken, appId, service.getArtifactStreamIds().get(0));
+        bearerToken, appId, service.getArtifactStreamIds().get(0), 0);
 
     final WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, appId, envId, bgWorkflow.getUuid(), ImmutableList.of(artifact));

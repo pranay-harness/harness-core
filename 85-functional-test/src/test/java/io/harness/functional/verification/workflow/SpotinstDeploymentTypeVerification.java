@@ -99,7 +99,7 @@ public class SpotinstDeploymentTypeVerification extends AbstractFunctionalTest {
     resetCache(accountId);
 
     Artifact artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
-        bearerToken, appId, service.getArtifactStreamIds().get(0));
+        bearerToken, appId, service.getArtifactStreamIds().get(0), 0);
 
     runWorkflow(bearerToken, appId, envId, canaryWorkflow.getUuid(), ImmutableList.of(artifact));
 

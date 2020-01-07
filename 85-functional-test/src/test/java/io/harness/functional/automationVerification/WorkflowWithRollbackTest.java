@@ -114,7 +114,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
     assertThat(updatedPhase2).isNotNull();
 
     Artifact artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
-        bearerToken, application.getUuid(), artifactStream.getUuid());
+        bearerToken, application.getUuid(), artifactStream.getUuid(), 0);
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());

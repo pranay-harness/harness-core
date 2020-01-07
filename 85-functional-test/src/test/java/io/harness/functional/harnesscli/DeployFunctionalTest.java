@@ -94,7 +94,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
     artifactStreamIds = service.getArtifactStreamIds();
     artifactStream = artifactStreamService.get(artifactStreamIds.get(0));
     artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
-        bearerToken, service.getAppId(), artifactStream.getUuid());
+        bearerToken, service.getAppId(), artifactStream.getUuid(), 0);
     artifacts = ArtifactRestUtils.fetchArtifactByArtifactStream(bearerToken, appId, artifactStream.getUuid());
     artifactId = artifact.getUuid();
     // TODO: Uncomment this along with the Removing Ignore when InfraDefs FF is turned ON
