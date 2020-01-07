@@ -13,9 +13,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
@@ -406,14 +404,9 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
           }
         }));
 
-        dataCollectionInfo.getHosts().forEach((hostName, groupName) -> {
-          if (!hosts.containsKey(hostName)) {
-            logger.error("No corresponding node found in appdynamics state {} for node {}, nodes from appdynamics {}",
-                dataCollectionInfo.getStateExecutionId(), hostName, nodes);
-            throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-                .addParam("reason", "No corresponding node found in appdynamics for " + hostName);
-          }
-        });
+        dataCollectionInfo.getHosts().forEach((hostName, groupName)
+                                                  -> Preconditions.checkState(hosts.containsKey(hostName),
+                                                      "No corresponding node found in appdynamics for " + hostName));
 
         Map<String, String> finalHosts = new HashMap<>();
         dataCollectionInfo.getHosts().forEach((hostName, groupName) -> finalHosts.put(hosts.get(hostName), groupName));
