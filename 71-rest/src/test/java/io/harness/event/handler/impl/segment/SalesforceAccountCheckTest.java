@@ -54,4 +54,14 @@ public class SalesforceAccountCheckTest extends WingsBaseTest {
     boolean isPresent = salesforceAccountCheck.isAccountPresentInSalesforce(account);
     assertThat(isPresent).isFalse();
   }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC3_testAccountPresentInSalesforce() {
+    Account account = new Account();
+    when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(false);
+    boolean isPresent = salesforceAccountCheck.isAccountPresentInSalesforce(account);
+    assertThat(isPresent).isFalse();
+  }
 }

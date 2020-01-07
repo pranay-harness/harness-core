@@ -3,6 +3,7 @@ package software.wings.security.authentication;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,9 +11,12 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.security.authentication.TwoFactorAuthenticationMechanism.TOTP;
@@ -35,6 +39,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
+import software.wings.beans.Event;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
 import software.wings.features.TwoFactorAuthenticationFeature;
@@ -42,6 +47,7 @@ import software.wings.features.api.PremiumFeature;
 import software.wings.licensing.LicenseService;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings.TwoFactorAuthenticationSettingsBuilder;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
@@ -61,6 +67,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Mock AuthenticationUtils authenticationUtils;
   @Inject private AccountService accountService;
   @Inject private LicenseService licenseService;
+  @Mock private AuditServiceHelper auditServiceHelper;
   @Inject @Named(TwoFactorAuthenticationFeature.FEATURE_NAME) private PremiumFeature twoFactorAuthenticationFeature;
 
   @Test
@@ -229,6 +236,8 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     // Should allow disable
     twoFactorAuthenticationManager.disableTwoFactorAuthentication(user);
     assertThat(updatedUser.isTwoFactorAuthenticationEnabled()).isFalse();
+    verify(auditServiceHelper, times(user.getAccounts().size()))
+        .reportForAuditingUsingAccountId(anyString(), eq(null), eq(user), eq(Event.Type.DISABLE_2FA));
   }
 
   @Test
@@ -258,10 +267,12 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     // Should allow disable
     twoFactorAuthenticationManager.disableTwoFactorAuthentication(user);
     assertThat(user.isTwoFactorAuthenticationEnabled()).isFalse();
+    verify(auditServiceHelper, times(user.getAccounts().size()))
+        .reportForAuditingUsingAccountId(anyString(), eq(null), eq(user), eq(Event.Type.DISABLE_2FA));
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForNoAccounts() {
     User user = getUser(true);

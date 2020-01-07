@@ -15,12 +15,14 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
+import software.wings.beans.Event;
 import software.wings.beans.User;
 import software.wings.features.TwoFactorAuthenticationFeature;
 import software.wings.features.api.AccountId;
 import software.wings.features.api.PremiumFeature;
 import software.wings.features.api.RestrictedApi;
 import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
@@ -35,6 +37,7 @@ public class TwoFactorAuthenticationManager {
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private AuditServiceHelper auditServiceHelper;
   @Inject @Named(TwoFactorAuthenticationFeature.FEATURE_NAME) private PremiumFeature twoFactorAuthenticationFeature;
 
   public TwoFactorAuthHandler getTwoFactorAuthHandler(TwoFactorAuthenticationMechanism mechanism) {
@@ -58,6 +61,11 @@ public class TwoFactorAuthenticationManager {
     }
 
     user = getTwoFactorAuthHandler(user.getTwoFactorAuthenticationMechanism()).authenticate(user, passcode);
+    if (user != null && user.getAccounts() != null) {
+      for (Account account : user.getAccounts()) {
+        auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.LOGIN);
+      }
+    }
     return authService.generateBearerTokenForUser(user);
   }
 
@@ -73,6 +81,10 @@ public class TwoFactorAuthenticationManager {
     getDefaultAccount(user).ifPresent(account -> checkIfOperationIsAllowed(account.getUuid()));
 
     settings.setTwoFactorAuthenticationEnabled(true);
+    if (user.getAccounts() != null) {
+      user.getAccounts().forEach(account
+          -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.ENABLE_2FA));
+    }
     return applyTwoFactorAuthenticationSettings(user, settings);
   }
 
@@ -86,6 +98,11 @@ public class TwoFactorAuthenticationManager {
       if (user.isTwoFactorAuthenticationEnabled() && user.getTwoFactorAuthenticationMechanism() != null) {
         logger.info("Disabling 2FA for User={}, tfEnabled={}, tfMechanism={}", user.getEmail(),
             user.isTwoFactorAuthenticationEnabled(), user.getTwoFactorAuthenticationMechanism());
+        if (user.getAccounts() != null) {
+          user.getAccounts().forEach(account
+              -> auditServiceHelper.reportForAuditingUsingAccountId(
+                  account.getUuid(), null, user, Event.Type.DISABLE_2FA));
+        }
         return getTwoFactorAuthHandler(user.getTwoFactorAuthenticationMechanism()).disableTwoFactorAuthentication(user);
       }
     } else {
@@ -167,8 +184,10 @@ public class TwoFactorAuthenticationManager {
 
   public boolean disableTwoFactorAuthentication(String accountId) {
     accountService.updateTwoFactorEnforceInfo(accountId, false);
-    userService.getUsersWithThisAsPrimaryAccount(accountId).forEach(u -> totpHandler.disableTwoFactorAuthentication(u));
-
+    userService.getUsersWithThisAsPrimaryAccount(accountId).forEach(user -> {
+      totpHandler.disableTwoFactorAuthentication(user);
+      auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.DISABLE_2FA);
+    });
     return true;
   }
 

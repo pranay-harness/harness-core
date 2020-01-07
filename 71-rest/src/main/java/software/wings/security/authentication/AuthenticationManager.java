@@ -30,6 +30,7 @@ import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AuthToken;
+import software.wings.beans.Event;
 import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.licensing.LicenseService;
@@ -41,6 +42,7 @@ import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountC
 import software.wings.security.authentication.recaptcha.MaxLoginAttemptExceededException;
 import software.wings.security.saml.SSORequest;
 import software.wings.security.saml.SamlClientService;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -76,6 +78,7 @@ public class AuthenticationManager {
   @Inject private LicenseService licenseService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private FailedLoginAttemptCountChecker failedLoginAttemptCountChecker;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   private static final String LOGIN_ERROR_CODE_INVALIDSSO = "#/login?errorCode=invalidsso";
   private static final String LOGIN_ERROR_CODE_SAMLTESTSUCCESS = "#/login?errorCode=samltestsuccess";
@@ -337,7 +340,10 @@ public class AuthenticationManager {
       } else {
         user = authHandler.authenticate(userName, password).getUser();
       }
-
+      if (user.getAccounts() != null) {
+        user.getAccounts().forEach(account
+            -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.LOGIN));
+      }
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
       } else {

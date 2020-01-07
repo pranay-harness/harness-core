@@ -100,6 +100,7 @@ import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.EmailVerificationToken.EmailVerificationTokenKeys;
 import software.wings.beans.EntityType;
+import software.wings.beans.Event;
 import software.wings.beans.Event.Type;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.MarketPlace;
@@ -1609,6 +1610,10 @@ public class UserServiceImpl implements UserService {
       updateOperations.set(UserKeys.name, user.getName());
     } else {
       updateOperations.unset(UserKeys.name);
+    }
+    if (user.getAccounts() != null) {
+      user.getAccounts().forEach(account
+          -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.UPDATE));
     }
     return applyUpdateOperations(user, updateOperations);
   }
