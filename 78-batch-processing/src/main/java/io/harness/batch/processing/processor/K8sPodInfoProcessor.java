@@ -1,5 +1,7 @@
 package io.harness.batch.processing.processor;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceState;
@@ -8,6 +10,7 @@ import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.processor.util.K8sResourceUtils;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
+import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.event.grpc.PublishedMessage;
@@ -29,6 +32,7 @@ import java.util.Optional;
 public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, InstanceInfo> {
   @Autowired private InstanceDataService instanceDataService;
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
+  @Autowired private WorkloadRepository workloadRepository;
   private static String POD = "pod";
 
   @Override
@@ -71,6 +75,8 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
     Map<String, String> labelsMap = podInfo.getLabelsMap();
     HarnessServiceInfo harnessServiceInfo = getHarnessServiceInfo(accountId, labelsMap);
 
+    workloadRepository.savePodWorkload(accountId, podInfo);
+
     return InstanceInfo.builder()
         .accountId(accountId)
         .settingId(podInfo.getCloudProviderId())
@@ -89,6 +95,7 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
         .build();
   }
 
+  @VisibleForTesting
   HarnessServiceInfo getHarnessServiceInfo(String accountId, Map<String, String> labelsMap) {
     if (labelsMap.containsKey(K8sCCMConstants.RELEASE_NAME)) {
       String releaseName = labelsMap.get(K8sCCMConstants.RELEASE_NAME);

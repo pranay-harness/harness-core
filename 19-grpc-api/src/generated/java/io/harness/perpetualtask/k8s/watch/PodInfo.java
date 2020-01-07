@@ -16,7 +16,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     super(builder);
   }
   private PodInfo() {
-    accountId_ = "";
     cloudProviderId_ = "";
     podUid_ = "";
     podName_ = "";
@@ -49,12 +48,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
           case 0:
             done = true;
             break;
-          case 10: {
-            java.lang.String s = input.readStringRequireUtf8();
-
-            accountId_ = s;
-            break;
-          }
           case 18: {
             java.lang.String s = input.readStringRequireUtf8();
 
@@ -112,9 +105,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             break;
           }
           case 74: {
-            if (!((mutable_bitField0_ & 0x00000100) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000080) != 0)) {
               labels_ = com.google.protobuf.MapField.newMapField(LabelsDefaultEntryHolder.defaultEntry);
-              mutable_bitField0_ |= 0x00000100;
+              mutable_bitField0_ |= 0x00000080;
             }
             com.google.protobuf.MapEntry<java.lang.String, java.lang.String> labels__ =
                 input.readMessage(LabelsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
@@ -135,9 +128,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             break;
           }
           case 98: {
-            if (!((mutable_bitField0_ & 0x00000400) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000200) != 0)) {
               containers_ = new java.util.ArrayList<io.harness.perpetualtask.k8s.watch.Container>();
-              mutable_bitField0_ |= 0x00000400;
+              mutable_bitField0_ |= 0x00000200;
             }
             containers_.add(
                 input.readMessage(io.harness.perpetualtask.k8s.watch.Container.parser(), extensionRegistry));
@@ -168,7 +161,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     } catch (java.io.IOException e) {
       throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
     } finally {
-      if (((mutable_bitField0_ & 0x00000400) != 0)) {
+      if (((mutable_bitField0_ & 0x00000200) != 0)) {
         containers_ = java.util.Collections.unmodifiableList(containers_);
       }
       this.unknownFields = unknownFields.build();
@@ -200,36 +193,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
   }
 
   private int bitField0_;
-  public static final int ACCOUNT_ID_FIELD_NUMBER = 1;
-  private volatile java.lang.Object accountId_;
-  /**
-   * <code>string account_id = 1;</code>
-   */
-  public java.lang.String getAccountId() {
-    java.lang.Object ref = accountId_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      accountId_ = s;
-      return s;
-    }
-  }
-  /**
-   * <code>string account_id = 1;</code>
-   */
-  public com.google.protobuf.ByteString getAccountIdBytes() {
-    java.lang.Object ref = accountId_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-      accountId_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
-  }
-
   public static final int CLOUD_PROVIDER_ID_FIELD_NUMBER = 2;
   private volatile java.lang.Object cloudProviderId_;
   /**
@@ -637,9 +600,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (!getAccountIdBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, accountId_);
-    }
     if (!getCloudProviderIdBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 2, cloudProviderId_);
     }
@@ -685,9 +645,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return size;
 
     size = 0;
-    if (!getAccountIdBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, accountId_);
-    }
     if (!getCloudProviderIdBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, cloudProviderId_);
     }
@@ -744,8 +701,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
     io.harness.perpetualtask.k8s.watch.PodInfo other = (io.harness.perpetualtask.k8s.watch.PodInfo) obj;
 
-    if (!getAccountId().equals(other.getAccountId()))
-      return false;
     if (!getCloudProviderId().equals(other.getCloudProviderId()))
       return false;
     if (!getPodUid().equals(other.getPodUid()))
@@ -794,8 +749,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + ACCOUNT_ID_FIELD_NUMBER;
-    hash = (53 * hash) + getAccountId().hashCode();
     hash = (37 * hash) + CLOUD_PROVIDER_ID_FIELD_NUMBER;
     hash = (53 * hash) + getCloudProviderId().hashCode();
     hash = (37 * hash) + POD_UID_FIELD_NUMBER;
@@ -962,8 +915,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      accountId_ = "";
-
       cloudProviderId_ = "";
 
       podUid_ = "";
@@ -995,7 +946,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
       if (containersBuilder_ == null) {
         containers_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000400);
+        bitField0_ = (bitField0_ & ~0x00000200);
       } else {
         containersBuilder_.clear();
       }
@@ -1035,7 +986,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       io.harness.perpetualtask.k8s.watch.PodInfo result = new io.harness.perpetualtask.k8s.watch.PodInfo(this);
       int from_bitField0_ = bitField0_;
       int to_bitField0_ = 0;
-      result.accountId_ = accountId_;
       result.cloudProviderId_ = cloudProviderId_;
       result.podUid_ = podUid_;
       result.podName_ = podName_;
@@ -1059,9 +1009,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
         result.topLevelOwner_ = topLevelOwnerBuilder_.build();
       }
       if (containersBuilder_ == null) {
-        if (((bitField0_ & 0x00000400) != 0)) {
+        if (((bitField0_ & 0x00000200) != 0)) {
           containers_ = java.util.Collections.unmodifiableList(containers_);
-          bitField0_ = (bitField0_ & ~0x00000400);
+          bitField0_ = (bitField0_ & ~0x00000200);
         }
         result.containers_ = containers_;
       } else {
@@ -1112,10 +1062,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     public Builder mergeFrom(io.harness.perpetualtask.k8s.watch.PodInfo other) {
       if (other == io.harness.perpetualtask.k8s.watch.PodInfo.getDefaultInstance())
         return this;
-      if (!other.getAccountId().isEmpty()) {
-        accountId_ = other.accountId_;
-        onChanged();
-      }
       if (!other.getCloudProviderId().isEmpty()) {
         cloudProviderId_ = other.cloudProviderId_;
         onChanged();
@@ -1150,7 +1096,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
         if (!other.containers_.isEmpty()) {
           if (containers_.isEmpty()) {
             containers_ = other.containers_;
-            bitField0_ = (bitField0_ & ~0x00000400);
+            bitField0_ = (bitField0_ & ~0x00000200);
           } else {
             ensureContainersIsMutable();
             containers_.addAll(other.containers_);
@@ -1163,7 +1109,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             containersBuilder_.dispose();
             containersBuilder_ = null;
             containers_ = other.containers_;
-            bitField0_ = (bitField0_ & ~0x00000400);
+            bitField0_ = (bitField0_ & ~0x00000200);
             containersBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ? getContainersFieldBuilder() : null;
           } else {
@@ -1206,68 +1152,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     private int bitField0_;
-
-    private java.lang.Object accountId_ = "";
-    /**
-     * <code>string account_id = 1;</code>
-     */
-    public java.lang.String getAccountId() {
-      java.lang.Object ref = accountId_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        accountId_ = s;
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
-    }
-    /**
-     * <code>string account_id = 1;</code>
-     */
-    public com.google.protobuf.ByteString getAccountIdBytes() {
-      java.lang.Object ref = accountId_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-        accountId_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <code>string account_id = 1;</code>
-     */
-    public Builder setAccountId(java.lang.String value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-
-      accountId_ = value;
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string account_id = 1;</code>
-     */
-    public Builder clearAccountId() {
-      accountId_ = getDefaultInstance().getAccountId();
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string account_id = 1;</code>
-     */
-    public Builder setAccountIdBytes(com.google.protobuf.ByteString value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-      checkByteStringIsUtf8(value);
-
-      accountId_ = value;
-      onChanged();
-      return this;
-    }
 
     private java.lang.Object cloudProviderId_ = "";
     /**
@@ -2070,9 +1954,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     private java.util.List<io.harness.perpetualtask.k8s.watch.Container> containers_ =
         java.util.Collections.emptyList();
     private void ensureContainersIsMutable() {
-      if (!((bitField0_ & 0x00000400) != 0)) {
+      if (!((bitField0_ & 0x00000200) != 0)) {
         containers_ = new java.util.ArrayList<io.harness.perpetualtask.k8s.watch.Container>(containers_);
-        bitField0_ |= 0x00000400;
+        bitField0_ |= 0x00000200;
       }
     }
 
@@ -2216,7 +2100,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     public Builder clearContainers() {
       if (containersBuilder_ == null) {
         containers_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000400);
+        bitField0_ = (bitField0_ & ~0x00000200);
         onChanged();
       } else {
         containersBuilder_.clear();
@@ -2290,7 +2174,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             new com.google.protobuf.RepeatedFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Container,
                 io.harness.perpetualtask.k8s.watch.Container.Builder,
                 io.harness.perpetualtask.k8s.watch.ContainerOrBuilder>(
-                containers_, ((bitField0_ & 0x00000400) != 0), getParentForChildren(), isClean());
+                containers_, ((bitField0_ & 0x00000200) != 0), getParentForChildren(), isClean());
         containers_ = null;
       }
       return containersBuilder_;

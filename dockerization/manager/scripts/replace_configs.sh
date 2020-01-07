@@ -50,6 +50,12 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
+if [[ "" != "$EVENTS_MONGO_URI" ]]; then
+  yq write -i $CONFIG_FILE events-mongo.uri "$EVENTS_MONGO_URI"
+else
+  yq delete -i $CONFIG_FILE events-mongo
+fi
+
 if [[ "" != "$ELASTICSEARCH_URI" ]]; then
   yq write -i $CONFIG_FILE elasticsearch.uri "$ELASTICSEARCH_URI"
 fi

@@ -3,6 +3,7 @@ package io.harness.batch.processing.processor;
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.protobuf.Any;
@@ -15,6 +16,7 @@ import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
+import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.category.element.UnitTests;
@@ -25,6 +27,7 @@ import io.harness.perpetualtask.k8s.watch.PodEvent.EventType;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
 import io.harness.perpetualtask.k8s.watch.Resource;
 import io.harness.perpetualtask.k8s.watch.Resource.Quantity;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -47,6 +50,8 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   @InjectMocks private K8sPodInfoProcessor k8sPodInfoProcessor;
   @Mock private InstanceDataService instanceDataService;
   @Mock private CloudToHarnessMappingService cloudToHarnessMappingService;
+  @Mock private HPersistence hPersistence;
+  @Mock private WorkloadRepository workloadRepository;
 
   private static final String POD_UID = "pod_uid";
   private static final String NAMESPACE = "namespace";
@@ -110,9 +115,9 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M"));
     requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M"));
     Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).build();
-    PublishedMessage k8sNodeEventMessage = getK8sPodInfoMessage(POD_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
+    PublishedMessage k8sPodInfoMessage = getK8sPodInfoMessage(POD_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
         CLUSTER_ID, CLUSTER_NAME, NAMESPACE, label, resource, START_TIMESTAMP);
-    InstanceInfo instanceInfo = k8sPodInfoProcessor.process(k8sNodeEventMessage);
+    InstanceInfo instanceInfo = k8sPodInfoProcessor.process(k8sPodInfoMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
     Map<String, String> metaData = instanceInfo.getMetaData();
     assertThat(instanceInfo).isNotNull();
@@ -127,6 +132,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
         .isEqualTo(String.valueOf((double) MEMORY_AMOUNT));
     assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_CPU))
         .isEqualTo(String.valueOf((double) CPU_AMOUNT));
+    verify(workloadRepository).savePodWorkload(ACCOUNT_ID, (PodInfo) k8sPodInfoMessage.getMessage());
   }
 
   @Test
@@ -165,7 +171,6 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
                            .setPodUid(podUid)
                            .setNodeName(nodeName)
                            .setCloudProviderId(cloudProviderId)
-                           .setAccountId(accountId)
                            .setClusterId(clusterId)
                            .setClusterName(clusterName)
                            .setNamespace(namespace)
@@ -186,7 +191,6 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     PodEvent podEvent = PodEvent.newBuilder()
                             .setPodUid(PodUid)
                             .setCloudProviderId(cloudProviderId)
-                            .setAccountId(accountId)
                             .setType(eventType)
                             .setTimestamp(timestamp)
                             .build();

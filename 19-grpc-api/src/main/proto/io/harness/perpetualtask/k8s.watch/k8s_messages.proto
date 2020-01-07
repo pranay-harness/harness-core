@@ -29,7 +29,6 @@ message Owner {
 }
 
 message PodInfo {
-  string account_id = 1;
   string cloud_provider_id = 2;
   string pod_uid = 3;
   string pod_name = 4;
@@ -46,7 +45,6 @@ message PodInfo {
 }
 
 message PodEvent {
-  string account_id = 1;
   string cloud_provider_id = 2;
   string pod_uid = 3;
   enum EventType {
@@ -59,7 +57,6 @@ message PodEvent {
 }
 
 message NodeInfo {
-  string account_id = 1;
   string cloud_provider_id = 2;
   string node_uid = 3;
   string node_name = 4;
@@ -72,7 +69,6 @@ message NodeInfo {
 }
 
 message NodeEvent {
-  string account_id = 1;
   string cloud_provider_id = 2;
   string node_uid = 3;
   enum EventType {

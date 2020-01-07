@@ -241,7 +241,7 @@ public class K8sWorkloadUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void testWorkLoadForDeployment() throws Exception {
+  public void testWorkloadForDeployment() throws Exception {
     Pod pod1 = server.getClient().pods().inNamespace("ns1").withName("pod1").get();
     assertThat(K8sWorkloadUtils.getTopLevelOwner(server.getClient(), pod1))
         .isEqualTo(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
@@ -254,7 +254,7 @@ public class K8sWorkloadUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void testWorkLoadForDaemonSet() throws Exception {
+  public void testWorkloadForDaemonSet() throws Exception {
     Pod pod2 = server.getClient().pods().inNamespace("ns1").withName("pod2").get();
     assertThat(K8sWorkloadUtils.getTopLevelOwner(server.getClient(), pod2))
         .isEqualTo(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
@@ -267,7 +267,7 @@ public class K8sWorkloadUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void testWorkLoadIndependentPod() throws Exception {
+  public void testWorkloadIndependentPod() throws Exception {
     Pod pod3 = server.getClient().pods().inNamespace("ns1").withName("pod3").get();
     assertThat(K8sWorkloadUtils.getTopLevelOwner(server.getClient(), pod3))
         .isEqualTo(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
@@ -280,7 +280,7 @@ public class K8sWorkloadUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void testWorkLoadForCronJob() throws Exception {
+  public void testWorkloadForCronJob() throws Exception {
     Pod pod4 = server.getClient().pods().inNamespace("ns1").withName("pod4").get();
     assertThat(K8sWorkloadUtils.getTopLevelOwner(server.getClient(), pod4))
         .isEqualTo(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
@@ -293,7 +293,7 @@ public class K8sWorkloadUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void testWorkLoadForStatefulSet() throws Exception {
+  public void testWorkloadForStatefulSet() throws Exception {
     Pod pod5 = server.getClient().pods().inNamespace("ns1").withName("pod5").get();
     assertThat(K8sWorkloadUtils.getTopLevelOwner(server.getClient(), pod5))
         .isEqualTo(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
@@ -306,7 +306,7 @@ public class K8sWorkloadUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void testWorkLoadForJob() throws Exception {
+  public void testWorkloadForJob() throws Exception {
     Pod pod4 = server.getClient().pods().inNamespace("ns1").withName("pod6").get();
     assertThat(K8sWorkloadUtils.getTopLevelOwner(server.getClient(), pod4))
         .isEqualTo(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()

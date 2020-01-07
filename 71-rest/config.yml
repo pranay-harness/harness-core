@@ -174,6 +174,9 @@ mongo:
   #uri: mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness
   #locksUri: mongodb://localhost:27017/impermanent
 
+events-mongo:
+  uri: mongodb://localhost:27017/events
+
 searchEnabled: false
 
 elasticsearch:

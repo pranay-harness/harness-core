@@ -8,7 +8,7 @@ import com.google.protobuf.Message;
 
 import io.harness.annotation.StoreIn;
 import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
-import io.harness.exception.WingsException;
+import io.harness.exception.DataFormatException;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -72,7 +72,7 @@ public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidA
       @SuppressWarnings("unchecked") Class<? extends Message> clazz = (Class<? extends Message>) Class.forName(type);
       this.message = any.unpack(clazz);
     } catch (ClassNotFoundException | InvalidProtocolBufferException e) {
-      throw new WingsException("Unable to parse message for type: " + type, e);
+      throw new DataFormatException("Unable to parse message for type: " + type, e);
     }
   }
 }
