@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeValidate;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.equalCheck;
@@ -92,6 +93,9 @@ import software.wings.beans.StringValue;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.alert.AlertData;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.SettingAttributeValidationFailedAlert;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
@@ -105,6 +109,7 @@ import software.wings.features.api.UsageLimitedFeature;
 import software.wings.prune.PruneEvent;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -181,6 +186,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private WorkflowService workflowService;
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
+  @Inject private AlertService alertService;
 
   @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
 
@@ -634,6 +640,14 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
+  public SettingAttribute getOnlyConnectivityError(String settingId) {
+    return wingsPersistence.createQuery(SettingAttribute.class, excludeAuthority)
+        .project(SettingAttributeKeys.connectivityError, true)
+        .filter(SettingAttributeKeys.uuid, settingId)
+        .get();
+  }
+
+  @Override
   public SettingAttribute getSettingAttributeByName(String accountId, String settingAttributeName) {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .filter(SettingAttributeKeys.name, settingAttributeName)
@@ -699,12 +713,16 @@ public class SettingsServiceImpl implements SettingsService {
 
     Set<String> fieldsToRemove;
     if (updateConnectivity) {
+      closeConnectivityErrorAlert(settingAttribute.getAccountId(), settingAttribute.getUuid());
       fieldsToRemove = Collections.singleton(SettingAttributeKeys.connectivityError);
     } else {
       String connErr = settingAttribute.getConnectivityError();
       if (isBlank(connErr)) {
+        closeConnectivityErrorAlert(settingAttribute.getAccountId(), settingAttribute.getUuid());
         fieldsToRemove = Collections.singleton(SettingAttributeKeys.connectivityError);
       } else {
+        openConnectivityErrorAlert(settingAttribute.getAccountId(), settingAttribute.getUuid(),
+            settingAttribute.getCategory().name(), connErr);
         fieldsToRemove = Collections.emptySet();
         fields.put(SettingAttributeKeys.connectivityError, connErr);
       }
@@ -811,6 +829,8 @@ public class SettingsServiceImpl implements SettingsService {
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       pruneQueue.send(new PruneEvent(SettingAttribute.class, appId, settingAttribute.getUuid()));
     }
+
+    closeConnectivityErrorAlert(accountId, settingAttribute.getUuid());
     boolean deleted = wingsPersistence.delete(settingAttribute);
 
     try {
@@ -1270,5 +1290,23 @@ public class SettingsServiceImpl implements SettingsService {
         }
       }
     }
+  }
+
+  @Override
+  public void openConnectivityErrorAlert(
+      String accountId, String settingId, String settingCategory, String connectivityError) {
+    AlertData alertData = SettingAttributeValidationFailedAlert.builder()
+                              .settingId(settingId)
+                              .settingCategory(settingCategory)
+                              .connectivityError(connectivityError)
+                              .build();
+    alertService.closeAllAlerts(accountId, null, AlertType.SETTING_ATTRIBUTE_VALIDATION_FAILED, alertData);
+    alertService.openAlert(accountId, null, AlertType.SETTING_ATTRIBUTE_VALIDATION_FAILED, alertData);
+  }
+
+  @Override
+  public void closeConnectivityErrorAlert(String accountId, String settingId) {
+    AlertData alertData = SettingAttributeValidationFailedAlert.builder().settingId(settingId).build();
+    alertService.closeAllAlerts(accountId, null, AlertType.SETTING_ATTRIBUTE_VALIDATION_FAILED, alertData);
   }
 }

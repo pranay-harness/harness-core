@@ -39,7 +39,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldSkipArtifactStreamIterationForInvalidSetting() {
-    when(settingsService.get(SETTING_ID)).thenReturn(null);
+    when(settingsService.getOnlyConnectivityError(SETTING_ID)).thenReturn(null);
     ArtifactStream artifactStream = DockerArtifactStream.builder().settingId(SETTING_ID).build();
 
     artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, true);
@@ -49,7 +49,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldSkipArtifactStreamIterationForConnectivityError() {
-    when(settingsService.get(SETTING_ID))
+    when(settingsService.getOnlyConnectivityError(SETTING_ID))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withConnectivityError("err").build());
     ArtifactStream artifactStream = DockerArtifactStream.builder().settingId(SETTING_ID).build();
 
@@ -61,7 +61,8 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldNotSkipArtifactStreamIterationForConnectivityError() {
-    when(settingsService.get(SETTING_ID)).thenReturn(SettingAttribute.Builder.aSettingAttribute().build());
+    when(settingsService.getOnlyConnectivityError(SETTING_ID))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute().build());
     ArtifactStream artifactStream = DockerArtifactStream.builder().settingId(SETTING_ID).build();
 
     assertThat(artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, true)).isFalse();

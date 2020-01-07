@@ -29,6 +29,7 @@ public enum AlertType {
   INSTANCE_USAGE_APPROACHING_LIMIT(Setup, Warning, InstanceUsageLimitAlert.class),
   RESOURCE_USAGE_APPROACHING_LIMIT(Setup, Warning, ResourceUsageApproachingLimitAlert.class),
   DEPLOYMENT_RATE_APPROACHING_LIMIT(Setup, Warning, DeploymentRateApproachingLimitAlert.class),
+  SETTING_ATTRIBUTE_VALIDATION_FAILED(Setup, Warning, SettingAttributeValidationFailedAlert.class),
   ARTIFACT_COLLECTION_FAILED(Setup, Error, ArtifactCollectionFailedAlert.class),
   CONTINUOUS_VERIFICATION_ALERT(ContinuousVerification, Error, ContinuousVerificationAlertData.class),
   CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT(
