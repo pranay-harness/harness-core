@@ -31,7 +31,7 @@ public class ApplicationDataFetcher extends AbstractObjectDataFetcher<QLApplicat
     }
 
     final QLApplicationBuilder builder = QLApplication.builder();
-    ApplicationController.populateApplication(application, builder);
+    ApplicationController.populateQLApplication(application, builder);
     return builder.build();
   }
 }

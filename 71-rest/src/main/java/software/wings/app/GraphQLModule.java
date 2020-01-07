@@ -22,6 +22,7 @@ import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.datafetcher.application.ApplicationConnectionDataFetcher;
+import software.wings.graphql.datafetcher.application.ApplicationCreatorDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationStatsDataFetcher;
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataFetcher;
@@ -77,6 +78,7 @@ import software.wings.graphql.datafetcher.workflow.WorkflowConnectionDataFetcher
 import software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowStatsDataFetcher;
 import software.wings.graphql.directive.DataFetcherDirective;
+import software.wings.graphql.instrumentation.QLAuditInstrumentation;
 import software.wings.graphql.provider.GraphQLProvider;
 import software.wings.graphql.provider.QueryLanguageProvider;
 
@@ -105,8 +107,10 @@ public class GraphQLModule extends AbstractModule {
     bind(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}).to(GraphQLProvider.class).asEagerSingleton();
     bind(DataFetcherDirective.class).asEagerSingleton();
     bind(DataLoaderRegistryHelper.class).asEagerSingleton();
+    bind(QLAuditInstrumentation.class).asEagerSingleton();
     bind(DataFetcherDirective.class).in(Scopes.SINGLETON);
     bind(DataLoaderRegistryHelper.class).in(Scopes.SINGLETON);
+    bind(QLAuditInstrumentation.class).in(Scopes.SINGLETON);
 
     // DATA FETCHERS ARE NOT SINGLETON AS THEY CAN HAVE DIFFERENT CONTEXT MAP
     bindDataFetchers();
@@ -180,6 +184,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingStatsFilterValuesDataFetcher.class);
+    bindDataFetcherWithAnnotation(ApplicationCreatorDataFetcher.class);
   }
 
   @NotNull

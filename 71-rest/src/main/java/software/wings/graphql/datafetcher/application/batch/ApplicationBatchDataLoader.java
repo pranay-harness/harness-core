@@ -52,7 +52,7 @@ public class ApplicationBatchDataLoader implements MappedBatchLoader<String, QLA
     return applicationList.stream()
         .map(a -> {
           final QLApplicationBuilder builder = QLApplication.builder();
-          ApplicationController.populateApplication(a, builder);
+          ApplicationController.populateQLApplication(a, builder);
           return builder.build();
         })
         .collect(Collectors.toMap(QLApplication::getId, Function.identity()));

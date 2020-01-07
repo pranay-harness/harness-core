@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import graphql.GraphQL;
+import graphql.execution.instrumentation.ChainedInstrumentation;
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation;
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions;
 import graphql.schema.GraphQLSchema;
@@ -15,6 +16,7 @@ import graphql.schema.idl.TypeDefinitionRegistry;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import software.wings.graphql.directive.DataFetcherDirective;
+import software.wings.graphql.instrumentation.QLAuditInstrumentation;
 import software.wings.graphql.instrumentation.QueryDepthInstrumentation;
 import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.scalar.LongScalar;
@@ -25,6 +27,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 @Singleton
@@ -39,6 +42,7 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   @Inject private TypeResolverManager typeResolverManager;
   @Inject private DataFetcherDirective dataFetcherDirective;
   @Inject FeatureFlagService featureFlagService;
+  @Inject QLAuditInstrumentation qlAuditInstrumentation;
 
   @Inject
   public void init() {
@@ -72,13 +76,13 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
     DataLoaderDispatcherInstrumentation dispatcherInstrumentation = new DataLoaderDispatcherInstrumentation(options);
 
     return GraphQL.newGraphQL(graphQLSchema)
-        .instrumentation(dispatcherInstrumentation)
-        .instrumentation(new QueryDepthInstrumentation())
+        .instrumentation(new ChainedInstrumentation(
+            Arrays.asList(dispatcherInstrumentation, new QueryDepthInstrumentation(), qlAuditInstrumentation)))
         .build();
   }
 
   private void loadSchemaForEnv(
-      String schemaPathForEnv, TypeDefinitionRegistry typeDefinitionRegistry, SchemaParser schemaParser) {
+      final String schemaPathForEnv, TypeDefinitionRegistry typeDefinitionRegistry, final SchemaParser schemaParser) {
     Reflections reflections = new Reflections(schemaPathForEnv, new ResourcesScanner());
     reflections.getResources(GRAPHQL_FILE_PATTERN)
         .forEach(resource -> typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(resource))));

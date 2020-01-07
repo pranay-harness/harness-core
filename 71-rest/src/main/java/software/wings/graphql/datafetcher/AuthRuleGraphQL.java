@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.graphql.utils.GraphQLConstants.APP_ID_ARG;
+import static software.wings.graphql.utils.GraphQLConstants.CREATE_APPLICATION_API_PATH;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -85,6 +86,9 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     } else if (dataFetcher instanceof AbstractBatchDataFetcher) {
       fetchMethod = "load";
       parameterTypes = new Class[] {java.lang.Object.class, DataLoader.class};
+    } else if (dataFetcher instanceof BaseMutatorDataFetcher) {
+      fetchMethod = "mutateAndFetch";
+      parameterTypes = new Class[] {java.lang.Object.class, MutationContext.class};
     } else {
       fetchMethod = "fetch";
       parameterTypes = new Class[] {java.lang.Object.class, String.class};
@@ -100,7 +104,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     return authRule;
   }
 
-  public DataFetcher<?> instrumentDataFetcher(
+  public DataFetcher instrumentDataFetcher(
       BaseDataFetcher dataFetcher, DataFetchingEnvironment environment, Class<T> returnDataClass) {
     Object contextObj = environment.getContext();
 
@@ -328,5 +332,13 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     }
 
     return userRequestContextBuilder.build();
+  }
+
+  public <I, O> void handlePostMutation(MutationContext mutationContext, I parameter, O mutationResult) {
+    final DataFetchingEnvironment dataFetchingEnvironment = mutationContext.getDataFetchingEnvironment();
+
+    if (CREATE_APPLICATION_API_PATH.equals(dataFetchingEnvironment.getField().getName())) {
+      authService.evictUserPermissionAndRestrictionCacheForAccount(mutationContext.getAccountId(), true, true);
+    }
   }
 }
