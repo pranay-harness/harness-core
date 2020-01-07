@@ -91,7 +91,7 @@ public class EmailStateTest extends WingsBaseTest {
 
     context.pushContextElement(workflowStandardParams);
 
-    HostElement host = new HostElement();
+    HostElement host = HostElement.builder().build();
     host.setHostName("app123.application.com");
     context.pushContextElement(host);
 

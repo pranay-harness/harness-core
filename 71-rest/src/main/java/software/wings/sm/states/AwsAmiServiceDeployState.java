@@ -9,7 +9,6 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
@@ -537,7 +536,7 @@ public class AwsAmiServiceDeployState extends State {
                           .withServiceTemplateId(serviceTemplateId)
                           .build();
           Host savedHost = hostService.saveHost(host);
-          HostElement hostElement = aHostElement()
+          HostElement hostElement = HostElement.builder()
                                         .uuid(savedHost.getUuid())
                                         .publicDns(instance.getPublicDnsName())
                                         .ip(instance.getPrivateIpAddress())

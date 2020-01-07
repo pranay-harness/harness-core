@@ -50,7 +50,7 @@ public class HostExpressionProcessor implements ExpressionProcessor {
    * @return the applicationHost element
    */
   static HostElement convertToHostElement(Host applicationHost) {
-    HostElement element = new HostElement();
+    HostElement element = HostElement.builder().build();
     MapperUtils.mapObject(applicationHost, element);
     return element;
   }

@@ -20,7 +20,6 @@ import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.PHASE;
@@ -36,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
+import software.wings.api.HostElement;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
@@ -102,7 +102,7 @@ public class GraphRendererTest extends WingsBaseTest {
                                              .displayName("install on host1")
                                              .uuid("host1")
                                              .stateType(COMMAND.name())
-                                             .contextElement(aHostElement().hostName("host1").build())
+                                             .contextElement(HostElement.builder().hostName("host1").build())
                                              .contextTransition(true)
                                              .status(SUCCESS)
                                              .parentInstanceId(repeat.getUuid())
@@ -112,7 +112,7 @@ public class GraphRendererTest extends WingsBaseTest {
                                              .displayName("install on host 2")
                                              .uuid("host2")
                                              .stateType(COMMAND.name())
-                                             .contextElement(aHostElement().hostName("host2").build())
+                                             .contextElement(HostElement.builder().hostName("host2").build())
                                              .contextTransition(true)
                                              .status(SUCCESS)
                                              .parentInstanceId(repeat.getUuid())

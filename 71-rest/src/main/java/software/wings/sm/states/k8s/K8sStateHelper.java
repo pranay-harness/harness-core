@@ -12,7 +12,6 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
@@ -44,6 +43,7 @@ import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.tuple.Pair;
+import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
@@ -681,7 +681,7 @@ public class K8sStateHelper {
         .map(podDetails -> {
           return anInstanceElement()
               .uuid(podDetails.getName())
-              .host(aHostElement().hostName(podDetails.getName()).ip(podDetails.getPodIP()).build())
+              .host(HostElement.builder().hostName(podDetails.getName()).ip(podDetails.getPodIP()).build())
               .hostName(podDetails.getName())
               .displayName(podDetails.getName())
               .podName(podDetails.getName())

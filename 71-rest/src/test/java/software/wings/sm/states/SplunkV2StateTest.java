@@ -199,6 +199,54 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  public void comparePreviousNodeNameNotResolved() {
+    splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS.name());
+    splunkState.setHostnameTemplate("${some-expression}");
+    SplunkV2State spyState = spy(splunkState);
+    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
+    doReturn(new HashMap<>(Collections.singletonMap("${some-expression}", DEFAULT_GROUP_NAME)))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
+        .when(spyState)
+        .getLastExecutionNodes(executionContext);
+    doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
+    doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
+    Logger activityLogger = mock(Logger.class);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
+    ExecutionResponse response = spyState.execute(executionContext);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(response.getErrorMessage())
+        .isEqualTo("The expression ${some-expression} could not be resolved for hosts");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void compareCurrentNodeNameNotResolved() {
+    splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
+    splunkState.setHostnameTemplate("${some-expression}");
+    SplunkV2State spyState = spy(splunkState);
+    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
+    doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(new HashMap<>(Collections.singletonMap("${some-expression}", DEFAULT_GROUP_NAME)))
+        .when(spyState)
+        .getLastExecutionNodes(executionContext);
+    doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
+    doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
+    Logger activityLogger = mock(Logger.class);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
+    ExecutionResponse response = spyState.execute(executionContext);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(response.getErrorMessage())
+        .isEqualTo("The expression ${some-expression} could not be resolved for hosts");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
   public void testTriggerCollection() throws ParseException, IllegalAccessException {
     assertThat(wingsPersistence.createQuery(DelegateTask.class).count()).isEqualTo(0);
     SplunkConfig splunkConfig = SplunkConfig.builder()

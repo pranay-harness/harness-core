@@ -252,8 +252,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
             .workflowId(workflowId)
             .toTime(toTime)
             .fromTime(toTime - TimeUnit.MINUTES.toMillis(120))
-            .instanceElement(
-                anInstanceElement().host(HostElement.Builder.aHostElement().hostName(node.getHost()).build()).build())
+            .instanceElement(anInstanceElement().host(HostElement.builder().hostName(node.getHost()).build()).build())
             .build();
 
     target = client.target(API_BASE + "/newrelic/node-data?settingId=" + newRelicConfigId + "&accountId=" + accountId);

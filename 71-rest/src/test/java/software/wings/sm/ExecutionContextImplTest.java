@@ -246,7 +246,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     st.setServiceElement(ServiceElement.builder().uuid(generateUuid()).name("svc2").build());
     context.pushContextElement(st);
 
-    HostElement host = new HostElement();
+    HostElement host = HostElement.builder().build();
     host.setUuid(generateUuid());
     host.setHostName("host1");
     context.pushContextElement(host);

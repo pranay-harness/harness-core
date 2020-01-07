@@ -116,6 +116,7 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
     expressions.addAll(getExpressions(appId, entityId));
     expressions.addAll(serviceExpressionBuilder.getDynamicExpressions(appId, serviceId));
     expressions.addAll(serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, serviceId, ENVIRONMENT));
+    expressions.addAll(serviceExpressionBuilder.getContinuousVerificationVariables(appId, serviceId));
     return expressions;
   }
 

@@ -14,7 +14,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -56,6 +55,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.HostElement;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
@@ -153,7 +153,7 @@ public class HttpStateTest extends WingsBaseTest {
     when(workflowStandardParams.getElementType()).thenReturn(ContextElementType.STANDARD);
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
     context.pushContextElement(workflowStandardParams);
-    context.pushContextElement(aHostElement().hostName("localhost").build());
+    context.pushContextElement(HostElement.builder().hostName("localhost").build());
 
     EmbeddedUser currentUser = EmbeddedUser.builder().name("test").email("test@harness.io").build();
     workflowStandardParams.setCurrentUser(currentUser);
@@ -395,7 +395,7 @@ public class HttpStateTest extends WingsBaseTest {
 
     context.pushContextElement(
         anInstanceElement()
-            .host(aHostElement().hostName("localhost").build())
+            .host(HostElement.builder().hostName("localhost").build())
             .serviceTemplateElement(
                 aServiceTemplateElement()
                     .withName(TEMPLATE_NAME)
@@ -585,7 +585,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailOnConnectTimeout() {
-    context.pushContextElement(aHostElement().hostName("www.google.com").build());
+    context.pushContextElement(HostElement.builder().hostName("www.google.com").build());
 
     ExecutionResponse response =
         getHttpState(httpStateBuilder.but().withUrl("http://${host.hostName}:81/health/status"), context)

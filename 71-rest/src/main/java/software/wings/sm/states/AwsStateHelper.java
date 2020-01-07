@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 
@@ -53,7 +52,7 @@ public class AwsStateHelper {
                                 .withServiceTemplateId(serviceTemplateHelper.fetchServiceTemplateId(infraMapping))
                                 .build();
                 Host savedHost = hostService.saveHost(host);
-                HostElement hostElement = aHostElement()
+                HostElement hostElement = HostElement.builder()
                                               .uuid(savedHost.getUuid())
                                               .publicDns(instance.getPublicDnsName())
                                               .ip(instance.getPrivateIpAddress())

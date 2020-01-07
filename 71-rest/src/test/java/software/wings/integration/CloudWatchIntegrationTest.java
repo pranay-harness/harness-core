@@ -6,7 +6,6 @@ import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -33,6 +32,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
+import software.wings.api.HostElement;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -236,7 +236,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
                 .displayName("8cec1e1b0d16")
                 .hostName("testHost")
                 .dockerId("8cec1e1b0d16")
-                .host(aHostElement()
+                .host(HostElement.builder()
                           .uuid("8cec1e1b0d16")
                           .hostName("testHost")
                           .ip("1.1.1.1")
