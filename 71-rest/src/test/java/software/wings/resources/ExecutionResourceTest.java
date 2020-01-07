@@ -3,7 +3,7 @@ package software.wings.resources;
 import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -77,7 +77,7 @@ public class ExecutionResourceTest extends CategoryTest {
    * Test find by name.
    */
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testListExecutions() {

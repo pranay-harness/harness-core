@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -76,7 +76,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("Unit tests should not access external resources")
   public void getJobs() {
@@ -85,7 +85,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("Unit tests should not access external resources")
   public void getPlans() {
@@ -94,7 +94,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("Unit tests should not access external resources")
   public void getPlansWithType() {
@@ -106,7 +106,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("Unit tests should not access external resources")
   public void getArtifactPaths() {
@@ -117,7 +117,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("Unit tests should not access external resources")
   public void getBuilds() {
@@ -136,7 +136,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("Unit tests should not access external resources")
   public void getLastSuccessfulBuild() {

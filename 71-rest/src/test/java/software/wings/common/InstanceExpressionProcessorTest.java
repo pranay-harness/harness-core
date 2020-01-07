@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
-import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -147,7 +146,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should return instances.
    */
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("Ignoring as instance without any filter is disabled")
   public void shouldReturnInstances() {
@@ -601,7 +600,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should fetch context element.
    */
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldFetchInstanceElements() {
