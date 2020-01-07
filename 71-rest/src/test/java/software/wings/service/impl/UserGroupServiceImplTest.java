@@ -437,7 +437,6 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   public void shouldUpdateNotificationSettings() {
     UserGroup ug = builder().accountId(accountId).name("some-name").build();
     UserGroup saved = userGroupService.save(ug);
-
     UserGroup fetchedGroup = userGroupService.get(accountId, saved.getUuid(), false);
     assertThat(fetchedGroup).isNotNull();
     assertThat(fetchedGroup.getNotificationSettings()).isNotNull();

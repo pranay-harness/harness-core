@@ -169,7 +169,11 @@ public class Event {
     /**
      * Delete type.
      */
-    DELETE
+    DELETE,
+    LOCK,
+    UNLOCK,
+    RESET_PASSWORD,
+    ACCEPTED_INVITE
   }
 
   /**

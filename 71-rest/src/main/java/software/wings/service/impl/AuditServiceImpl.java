@@ -410,6 +410,10 @@ public class AuditServiceImpl implements AuditService {
       UuidAccess entityToQuery;
       switch (type) {
         case CREATE:
+        case LOCK:
+        case UNLOCK:
+        case RESET_PASSWORD:
+        case ACCEPTED_INVITE:
         case UPDATE:
           entityToQuery = (UuidAccess) newEntity;
           break;
@@ -426,6 +430,10 @@ public class AuditServiceImpl implements AuditService {
       EntityAuditRecord record = builder.build();
       updateEntityNameCacheIfRequired(oldEntity, newEntity, record);
       switch (type) {
+        case LOCK:
+        case UNLOCK:
+        case RESET_PASSWORD:
+        case ACCEPTED_INVITE:
         case CREATE: {
           saveEntityYamlForAudit(newEntity, record, accountId);
           resourceLookupService.saveResourceLookupRecordIfNeeded(record, accountId);

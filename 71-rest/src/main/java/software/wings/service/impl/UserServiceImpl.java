@@ -100,6 +100,7 @@ import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.EmailVerificationToken.EmailVerificationTokenKeys;
 import software.wings.beans.EntityType;
+import software.wings.beans.Event.Type;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.MarketPlace;
 import software.wings.beans.Role;
@@ -237,6 +238,7 @@ public class UserServiceImpl implements UserService {
   @Inject private GcpProcurementService gcpProcurementService;
   @Inject private SignupService signupService;
   @Inject private SignupSpamChecker spamChecker;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -682,6 +684,7 @@ public class UserServiceImpl implements UserService {
         .map(email -> {
           UserInvite userInviteClone = KryoUtils.clone(userInvite);
           userInviteClone.setEmail(email.trim());
+          auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userInviteClone, Type.CREATE);
           return inviteUser(userInviteClone);
         })
         .collect(toList());
@@ -1059,6 +1062,10 @@ public class UserServiceImpl implements UserService {
     existingInvite.setCompleted(true);
 
     eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), existingUser);
+    if (userInvite.getAccountId() != null) {
+      auditServiceHelper.reportForAuditingUsingAccountId(
+          userInvite.getAccountId(), null, userInvite, Type.ACCEPTED_INVITE);
+    }
     return existingInvite;
   }
 
@@ -1109,6 +1116,7 @@ public class UserServiceImpl implements UserService {
                     .build();
 
     completeSignup(user, userInvite, getTrialLicense());
+
     return authenticationManager.defaultLoginUsingPasswordHash(userInvite.getEmail(), userInvite.getPasswordHash());
   }
 
@@ -1270,6 +1278,10 @@ public class UserServiceImpl implements UserService {
     saveUserAndUserGroups(user, email, account, accountAdminGroups);
 
     eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
+    if (userInvite.getAccountId() != null) {
+      auditServiceHelper.reportForAuditingUsingAccountId(
+          userInvite.getAccountId(), null, userInvite, Type.ACCEPTED_INVITE);
+    }
     return userInvite;
   }
 
@@ -1441,6 +1453,10 @@ public class UserServiceImpl implements UserService {
                          .withClaim("email", email)
                          .sign(algorithm);
       sendResetPasswordEmail(user, token);
+      if (user.getAccounts() != null) {
+        user.getAccounts().forEach(account
+            -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Type.RESET_PASSWORD));
+      }
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new GeneralException(EXC_MSG_RESET_PASS_LINK_NOT_GEN);
     }
@@ -1700,6 +1716,7 @@ public class UserServiceImpl implements UserService {
     UpdateOperations<User> operations = wingsPersistence.createUpdateOperations(User.class);
     setUnset(operations, UserKeys.userLocked, false);
     setUnset(operations, UserKeys.userLockoutInfo, new UserLockoutInfo());
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Type.UNLOCK);
     return applyUpdateOperations(user, operations);
   }
 
@@ -1847,6 +1864,7 @@ public class UserServiceImpl implements UserService {
 
       evictUserFromCache(userId);
     });
+    auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, user);
   }
 
   /* (non-Javadoc)

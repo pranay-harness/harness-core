@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
@@ -114,6 +115,7 @@ import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
+import software.wings.beans.Event.Type;
 import software.wings.beans.MarketPlace;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
@@ -131,6 +133,7 @@ import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AwsMarketPlaceApiHandlerImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.UserServiceLimitChecker;
@@ -206,6 +209,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private LoginSettingsService loginSettingsService;
   @Mock private BlackListedDomainChecker blackListedDomainChecker;
   @Mock private EventPublishHelper eventPublishHelper;
+  @Mock private AuditServiceHelper auditServiceHelper;
   @Spy @InjectMocks private SignupServiceImpl signupService;
 
   /**
@@ -610,6 +614,7 @@ public class UserServiceTest extends WingsBaseTest {
     userService.delete(ACCOUNT_ID, USER_ID);
     verify(wingsPersistence).delete(User.class, USER_ID);
     verify(cache).remove(USER_ID);
+    verify(auditServiceHelper, times(1)).reportDeleteForAuditingUsingAccountId(eq(ACCOUNT_ID), any(User.class));
   }
 
   /**
@@ -737,6 +742,8 @@ public class UserServiceTest extends WingsBaseTest {
     verify(wingsPersistence).getWithAppId(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID);
     verify(wingsPersistence).saveAndGet(eq(User.class), any(User.class));
     verify(cache).remove(USER_ID);
+    verify(auditServiceHelper, times(userInvite.getEmails().size()))
+        .reportForAuditingUsingAccountId(eq(ACCOUNT_ID), eq(null), any(UserInvite.class), eq(Type.CREATE));
 
     // verify the outgoing email template
     verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
@@ -759,7 +766,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should invite new user - mixed case email.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldInviteNewUserMixedCaseEmail() throws EmailException, TemplateException, IOException {
     String mixedEmail = "UseR@wings.software ";
@@ -785,6 +792,8 @@ public class UserServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence).saveAndGet(eq(User.class), userArgumentCaptor.capture());
     assertThat(userArgumentCaptor.getValue()).hasFieldOrPropertyWithValue("email", mixedEmail.trim().toLowerCase());
+    verify(auditServiceHelper, times(userInvite.getEmails().size()))
+        .reportForAuditingUsingAccountId(eq(ACCOUNT_ID), eq(null), any(UserInvite.class), eq(Type.CREATE));
   }
 
   @Test
