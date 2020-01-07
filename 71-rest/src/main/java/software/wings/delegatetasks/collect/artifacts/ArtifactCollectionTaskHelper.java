@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactFile;
@@ -32,11 +33,15 @@ import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
+import software.wings.helpers.ext.jenkins.Jenkins;
+import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,11 +53,16 @@ import java.util.Optional;
 @Singleton
 @Slf4j
 public class ArtifactCollectionTaskHelper {
+  private static final String ARTIFACT_STRING = "artifact/";
+  private static final String ARTIFACT_FILE_SIZE_MESSAGE = "Getting artifact file size for artifact: ";
+  private static final String ON_DELEGATE = " on delegate";
   @Inject private DelegateFileManager delegateFileManager;
   @Inject private AmazonS3Service amazonS3Service;
   @Inject private DelegateLogService logService;
   @Inject private ArtifactoryService artifactoryService;
   @Inject private AzureArtifactsService azureArtifactsService;
+  @Inject private EncryptionService encryptionService;
+  @Inject private JenkinsUtils jenkinsUtil;
 
   public void addDataToResponse(Pair<String, InputStream> fileInfo, String artifactPath, ListNotifyResponseData res,
       String delegateId, String taskId, String accountId) throws FileNotFoundException {
@@ -91,7 +101,7 @@ public class ArtifactCollectionTaskHelper {
   public Pair<String, InputStream> downloadArtifactAtRuntime(ArtifactStreamAttributes artifactStreamAttributes,
       String accountId, String appId, String activityId, String commandUnitName, String hostName) {
     Map<String, String> metadata = artifactStreamAttributes.getMetadata();
-    Pair<String, InputStream> pair;
+    Pair<String, InputStream> pair = null;
     ArtifactStreamType artifactStreamType =
         ArtifactStreamType.valueOf(artifactStreamAttributes.getArtifactStreamType());
     switch (artifactStreamType) {
@@ -140,6 +150,36 @@ public class ArtifactCollectionTaskHelper {
               FAILURE, accountId, appId, activityId, commandUnitName, hostName);
         }
         return pair;
+      case JENKINS:
+        logger.info("Downloading artifact [{}] from JENKINS at path :[{}] on delegate",
+            metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));
+        saveExecutionLog("Metadata only option set for JENKINS. Starting download of artifact: "
+                + metadata.get(ArtifactMetadataKeys.artifactFileName) + ON_DELEGATE,
+            RUNNING, accountId, appId, activityId, commandUnitName, hostName);
+        JenkinsConfig jenkinsConfig = (JenkinsConfig) artifactStreamAttributes.getServerSetting().getValue();
+        encryptionService.decrypt(jenkinsConfig, artifactStreamAttributes.getArtifactServerEncryptedDataDetails());
+        Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
+
+        try {
+          String artifactPathRegex =
+              metadata.get(ArtifactMetadataKeys.artifactPath)
+                  .substring(metadata.get(ArtifactMetadataKeys.artifactPath).lastIndexOf(ARTIFACT_STRING)
+                      + ARTIFACT_STRING.length());
+          pair = jenkins.downloadArtifact(
+              artifactStreamAttributes.getJobName(), metadata.get(ArtifactMetadataKeys.buildNo), artifactPathRegex);
+          if (pair != null) {
+            saveExecutionLog("JENKINS: Download complete for artifact: "
+                    + metadata.get(ArtifactMetadataKeys.artifactFileName) + ON_DELEGATE,
+                RUNNING, accountId, appId, activityId, commandUnitName, hostName);
+          } else {
+            saveExecutionLog("JENKINS: Download failed for artifact: "
+                    + metadata.get(ArtifactMetadataKeys.artifactFileName) + ON_DELEGATE,
+                FAILURE, accountId, appId, activityId, commandUnitName, hostName);
+          }
+        } catch (IOException | URISyntaxException e) {
+          logger.warn("Artifact download failed", e);
+        }
+        return pair;
       case AZURE_ARTIFACTS:
         logger.info("Downloading artifact [{}] from azure artifacts with version: [{}]",
             metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.version));
@@ -177,12 +217,12 @@ public class ArtifactCollectionTaskHelper {
             artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
             metadata.get(ArtifactMetadataKeys.bucketName), metadata.get(ArtifactMetadataKeys.key));
       case ARTIFACTORY:
-        logger.info("Getting artifact file size for artifact: " + metadata.get(ArtifactMetadataKeys.artifactPath));
+        logger.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactPath));
         return artifactoryService.getFileSize(
             (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue(),
             artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), artifactStreamAttributes.getMetadata());
       case AZURE_ARTIFACTS:
-        logger.info("Getting artifact file size for artifact: " + metadata.get(ArtifactMetadataKeys.version));
+        logger.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.version));
         if (!metadata.containsKey(ArtifactMetadataKeys.artifactFileName)
             || isBlank(metadata.get(ArtifactMetadataKeys.artifactFileName))) {
           throw new InvalidArgumentsException(ImmutablePair.of(ArtifactMetadataKeys.artifactFileName, "not found"));
@@ -206,6 +246,21 @@ public class ArtifactCollectionTaskHelper {
         }
 
         return optional.get().getSize();
+      case JENKINS:
+        if (!metadata.containsKey(ArtifactMetadataKeys.artifactFileName)
+            || isBlank(metadata.get(ArtifactMetadataKeys.artifactFileName))) {
+          throw new InvalidArgumentsException(ImmutablePair.of(ArtifactMetadataKeys.artifactFileName, "not found"));
+        }
+        logger.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactFileName));
+        JenkinsConfig jenkinsConfig = (JenkinsConfig) artifactStreamAttributes.getServerSetting().getValue();
+        encryptionService.decrypt(jenkinsConfig, artifactStreamAttributes.getArtifactServerEncryptedDataDetails());
+        Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
+        String artifactPathRegex =
+            metadata.get(ArtifactMetadataKeys.artifactPath)
+                .substring(metadata.get(ArtifactMetadataKeys.artifactPath).lastIndexOf(ARTIFACT_STRING)
+                    + ARTIFACT_STRING.length());
+        return jenkins.getFileSize(
+            artifactStreamAttributes.getJobName(), metadata.get(ArtifactMetadataKeys.buildNo), artifactPathRegex);
       default:
         throw new UnknownArtifactStreamTypeException(artifactStreamType.name());
     }

@@ -147,4 +147,6 @@ public interface Jenkins {
   boolean isRunning();
 
   Map<String, String> getEnvVars(String buildUrl);
+
+  long getFileSize(String jobName, String buildNo, String artifactPath);
 }

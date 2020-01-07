@@ -1,17 +1,22 @@
 package software.wings.delegatetasks.collect.artifacts;
 
+import static io.harness.delegate.beans.artifact.ArtifactFileMetadata.builder;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 
@@ -29,6 +34,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -37,6 +43,8 @@ import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
+import software.wings.helpers.ext.jenkins.Jenkins;
+import software.wings.service.impl.jenkins.JenkinsUtils;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -44,6 +52,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -57,6 +66,8 @@ public class ArtifactCollectionTaskHelperTest extends WingsBaseTest {
 
   @Inject @InjectMocks private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
   @Mock private AzureArtifactsService azureArtifactsService;
+  @Mock private Jenkins jenkins;
+  @Mock private JenkinsUtils jenkinsUtils;
 
   @Test
   @Owner(developers = GARVIT)
@@ -135,6 +146,62 @@ public class ArtifactCollectionTaskHelperTest extends WingsBaseTest {
         .thenReturn(Arrays.asList(
             new AzureArtifactsPackageFileInfo("random1", 4), new AzureArtifactsPackageFileInfo("random2", 16)));
     getArtifactFileSize(fileName);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldDownloadJenkinsArtifactAtRuntime() throws IOException, URISyntaxException {
+    String fileName = "file.war";
+    String fileUrl = "https://www.somejenkins/artifact/file.war";
+    String content = "file content";
+    InputStream inputStream = new ByteArrayInputStream(content.getBytes());
+    when(jenkinsUtils.getJenkins(any())).thenReturn(jenkins);
+    when(jenkins.downloadArtifact(anyString(), anyString(), anyString()))
+        .thenReturn(ImmutablePair.of(fileName, inputStream));
+
+    Pair<String, InputStream> pair = artifactCollectionTaskHelper.downloadArtifactAtRuntime(
+        ArtifactStreamAttributes.builder()
+            .artifactStreamType(ArtifactStreamType.JENKINS.name())
+            .metadataOnly(true)
+            .metadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "1", ArtifactMetadataKeys.artifactFileName,
+                fileName, ArtifactMetadataKeys.artifactPath, fileUrl))
+            .artifactFileMetadata(asList(builder().fileName(fileName).url(fileUrl).build()))
+            .serverSetting(aSettingAttribute().withValue(JenkinsConfig.builder().build()).build())
+            .artifactStreamId(ARTIFACT_STREAM_ID)
+            .jobName("scheduler")
+            .artifactPaths(asList("file.war"))
+            .artifactServerEncryptedDataDetails(Collections.emptyList())
+            .build(),
+        ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME);
+
+    assertThat(pair).isNotNull();
+    assertThat(pair.getLeft()).isEqualTo(fileName);
+    assertThat(pair.getRight()).isNotNull();
+    assertThat(convertInputStreamToString(pair.getRight())).isEqualTo(content);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetJenkinsArtifactsFileSize() {
+    String fileName = "file.war";
+    when(jenkinsUtils.getJenkins(any())).thenReturn(jenkins);
+    when(jenkins.getFileSize(anyString(), anyString(), anyString())).thenReturn(1234L);
+
+    long size = artifactCollectionTaskHelper.getArtifactFileSize(
+        ArtifactStreamAttributes.builder()
+            .artifactStreamType(ArtifactStreamType.JENKINS.name())
+            .metadataOnly(true)
+            .metadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "1", ArtifactMetadataKeys.artifactFileName,
+                fileName, ArtifactMetadataKeys.artifactPath, "https://www.somejenkins/artifact/file.war"))
+            .serverSetting(aSettingAttribute().withValue(JenkinsConfig.builder().build()).build())
+            .artifactStreamId(ARTIFACT_STREAM_ID)
+            .jobName("scheduler")
+            .artifactPaths(asList("file.war"))
+            .artifactServerEncryptedDataDetails(Collections.emptyList())
+            .build());
+    assertThat(size).isEqualTo(1234L);
   }
 
   private Long getArtifactFileSize(String fileName) {
