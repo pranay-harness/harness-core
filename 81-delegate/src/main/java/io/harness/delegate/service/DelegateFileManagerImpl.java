@@ -27,7 +27,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import retrofit2.Response;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.common.Constants;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
@@ -54,6 +54,8 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class DelegateFileManagerImpl implements DelegateFileManager {
   private static final int DEFAULT_MAX_CACHED_ARTIFACT = 2;
+  private static final long ARTIFACT_FILE_SIZE_LIMIT = 4L * 1024L * 1024L * 1024L; // 4GB
+
   private ManagerClientV2 managerClient;
   private DelegateConfiguration delegateConfiguration;
 
@@ -115,11 +117,17 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
       String appId, String activityId, String commandUnitName, String hostName) throws IOException, ExecutionException {
     Map<String, String> metadata = artifactStreamAttributes.getMetadata();
     String artifactFileSize = metadata.get(ArtifactMetadataKeys.artifactFileSize);
-    if (Long.parseLong(artifactFileSize) > Constants.ARTIFACT_FILE_SIZE_LIMIT) {
+    if (Long.parseLong(artifactFileSize) > ARTIFACT_FILE_SIZE_LIMIT) {
       throw new InvalidRequestException("Artifact file size exceeds 4GB. Not downloading file.");
     }
     String buildNo = metadata.get(ArtifactMetadataKeys.buildNo);
-    String key = "_" + artifactStreamAttributes.getArtifactStreamId() + "-" + buildNo;
+    String key;
+    if (ArtifactStreamType.JENKINS.name().equals(artifactStreamAttributes.getArtifactStreamType())) {
+      key = "_" + artifactStreamAttributes.getArtifactStreamId() + "-" + buildNo + "-"
+          + metadata.get(ArtifactMetadataKeys.artifactFileName);
+    } else {
+      key = "_" + artifactStreamAttributes.getArtifactStreamId() + "-" + buildNo;
+    }
     synchronized (fileIdLocks.get(key)) {
       File file = new File(ARTIFACT_REPO_BASE_DIR, key);
       logger.info("check if artifact:[{}] exists at location: [{}]", key, file.getAbsolutePath());
@@ -131,6 +139,9 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
 
       Pair<String, InputStream> pair = artifactCollectionTaskHelper.downloadArtifactAtRuntime(
           artifactStreamAttributes, accountId, appId, activityId, commandUnitName, hostName);
+      if (pair == null) {
+        throw new InvalidRequestException("File couldn't be downloaded");
+      }
       logger.info("Input stream acquired for file:[{}]. Saving locally", key);
       File downloadedFile = new File(ARTIFACT_REPO_TMP_DIR, key);
       FileUtils.copyInputStreamToFile(pair.getRight(), downloadedFile);

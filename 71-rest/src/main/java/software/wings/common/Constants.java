@@ -147,7 +147,6 @@ public interface Constants {
   String ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM = "ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM";
 
   String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";
-  long ARTIFACT_FILE_SIZE_LIMIT = 4L * 1024L * 1024L * 1024L; // 4GB
 
   /**
    * Quartz job detail key names

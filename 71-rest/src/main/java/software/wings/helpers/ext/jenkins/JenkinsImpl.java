@@ -47,6 +47,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.impl.client.HttpClientBuilder;
 import software.wings.common.BuildDetailsComparator;
+import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails.BuildStatus;
 
 import java.io.IOException;
@@ -341,6 +342,24 @@ public class JenkinsImpl implements Jenkins {
   }
 
   public BuildDetails getBuildDetails(BuildWithDetails buildWithDetails, List<String> artifactPaths) {
+    List<ArtifactFileMetadata> artifactFileMetadata = getArtifactFileMetadata(buildWithDetails, artifactPaths);
+    BuildDetails buildDetails = aBuildDetails()
+                                    .withNumber(String.valueOf(buildWithDetails.getNumber()))
+                                    .withRevision(extractRevision(buildWithDetails))
+                                    .withDescription(buildWithDetails.getDescription())
+                                    .withBuildDisplayName(buildWithDetails.getDisplayName())
+                                    .withBuildUrl(buildWithDetails.getUrl())
+                                    .withBuildFullDisplayName(buildWithDetails.getFullDisplayName())
+                                    .withStatus(BuildStatus.valueOf(buildWithDetails.getResult().name()))
+                                    .withUiDisplayName("Build# " + buildWithDetails.getNumber())
+                                    .withArtifactDownloadMetadata(artifactFileMetadata)
+                                    .build();
+    populateBuildParams(buildWithDetails, buildDetails);
+    return buildDetails;
+  }
+
+  private List<ArtifactFileMetadata> getArtifactFileMetadata(
+      BuildWithDetails buildWithDetails, List<String> artifactPaths) {
     List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
     if (isNotEmpty(artifactPaths)) {
       List<Artifact> buildArtifacts = buildWithDetails.getArtifacts();
@@ -363,19 +382,7 @@ public class JenkinsImpl implements Jenkins {
         }
       }
     }
-    BuildDetails buildDetails = aBuildDetails()
-                                    .withNumber(String.valueOf(buildWithDetails.getNumber()))
-                                    .withRevision(extractRevision(buildWithDetails))
-                                    .withDescription(buildWithDetails.getDescription())
-                                    .withBuildDisplayName(buildWithDetails.getDisplayName())
-                                    .withBuildUrl(buildWithDetails.getUrl())
-                                    .withBuildFullDisplayName(buildWithDetails.getFullDisplayName())
-                                    .withStatus(BuildStatus.valueOf(buildWithDetails.getResult().name()))
-                                    .withUiDisplayName("Build# " + buildWithDetails.getNumber())
-                                    .withArtifactDownloadMetadata(artifactFileMetadata)
-                                    .build();
-    populateBuildParams(buildWithDetails, buildDetails);
-    return buildDetails;
+    return artifactFileMetadata;
   }
 
   public void populateBuildParams(BuildWithDetails buildWithDetails, BuildDetails buildDetails) {
@@ -647,5 +654,34 @@ public class JenkinsImpl implements Jenkins {
       logger.warn("Installing trust managers");
     }
     return builder;
+  }
+
+  public long getFileSize(String jobName, String buildNo, String artifactPath) {
+    long size;
+    try {
+      Pair<String, InputStream> fileInfo = downloadArtifact(jobName, buildNo, artifactPath);
+      if (fileInfo == null) {
+        throw new InvalidArtifactServerException(format("Failed to get file size for artifact: %s", artifactPath));
+      }
+      size = getInputStreamSize(fileInfo.getRight());
+      fileInfo.getRight().close();
+    } catch (IOException | URISyntaxException e) {
+      throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), e);
+    }
+    logger.info(format("Computed file size: [%d] bytes for artifact Path: %s", size, artifactPath));
+    return size;
+  }
+
+  static long getInputStreamSize(InputStream inputStream) throws IOException {
+    long size = 0;
+    int chunk;
+    byte[] buffer = new byte[1024];
+    while ((chunk = inputStream.read(buffer)) != -1) {
+      size += chunk;
+      if (size > Integer.MAX_VALUE) {
+        return -1;
+      }
+    }
+    return size;
   }
 }

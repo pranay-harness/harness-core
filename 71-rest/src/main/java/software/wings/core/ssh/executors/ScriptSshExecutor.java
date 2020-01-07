@@ -490,11 +490,11 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
         out.flush();
 
         if (checkAck(in) != 0) {
-          saveExecutionLogError("File transfer failed");
+          saveExecutionLogError("File transfer to " + config.getHost() + ":" + remoteFilePath + " failed");
           return commandExecutionStatus;
         }
         commandExecutionStatus = SUCCESS;
-        saveExecutionLog("File successfully transferred");
+        saveExecutionLog("File successfully transferred to " + config.getHost() + ":" + remoteFilePath);
         channel.disconnect();
       }
     } catch (IOException | ExecutionException | JSchException ex) {

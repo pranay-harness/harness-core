@@ -343,4 +343,12 @@ public class JenkinsTest extends CategoryTest {
         .extracting("value")
         .contains("release");
   }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldTestGetFileSize() {
+    long size = jenkins.getFileSize("scheduler", "57", "build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar");
+    assertThat(size).isGreaterThan(0);
+  }
 }

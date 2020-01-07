@@ -9,6 +9,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.beans.Log.LogLevel.WARN;
 import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFACTS;
 
 import com.google.common.base.MoreObjects;
@@ -19,6 +20,7 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -29,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.AppContainer;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -38,7 +41,10 @@ import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
+import software.wings.helpers.ext.jenkins.Jenkins;
+import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -57,8 +63,11 @@ import java.util.stream.Stream;
 @JsonTypeName("SCP")
 @Slf4j
 public class ScpCommandUnit extends SshCommandUnit {
+  private static final String ARTIFACT_STRING = "artifact/";
   @Inject @Transient private transient DelegateLogService delegateLogService;
   @Inject @Transient private AzureArtifactsService azureArtifactsService;
+  @Inject @Transient private EncryptionService encryptionService;
+  @Inject @Transient private JenkinsUtils jenkinsUtil;
 
   @Attributes(title = "Source")
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)
@@ -110,7 +119,7 @@ public class ScpCommandUnit extends SshCommandUnit {
                 context.getHost() == null ? null : context.getHost().getPublicDns());
           } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.ARTIFACTORY.name())) {
             if (isArtifactTypeAllowedForArtifactory(artifactStreamAttributes.getArtifactType())) {
-              if (artifactStreamAttributes.isCopyArtifactEnabledForArtifactory()) {
+              if (artifactStreamAttributes.isCopyArtifactEnabled()) {
                 return context.copyFiles(destinationDirectoryPath, artifactStreamAttributes, context.getAccountId(),
                     context.getAppId(), context.getActivityId(), getName(),
                     context.getHost() == null ? null : context.getHost().getPublicDns());
@@ -147,6 +156,44 @@ public class ScpCommandUnit extends SshCommandUnit {
               if (FAILURE == executionStatus) {
                 return executionStatus;
               }
+            }
+            return SUCCESS;
+          } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.JENKINS.name())) {
+            if (artifactStreamAttributes.isCopyArtifactEnabled()) {
+              if (isEmpty(artifactStreamAttributes.getArtifactFileMetadata())) {
+                saveExecutionLog(context, WARN, "There are no artifacts to copy");
+                return SUCCESS;
+              }
+              Map<String, String> metadata = artifactStreamAttributes.getMetadata();
+              if (metadata == null) {
+                throw new InvalidRequestException(
+                    "No metadata found for artifact stream. Cannot proceed with copy artifact");
+              }
+              JenkinsConfig jenkinsConfig = (JenkinsConfig) artifactStreamAttributes.getServerSetting().getValue();
+              encryptionService.decrypt(
+                  jenkinsConfig, artifactStreamAttributes.getArtifactServerEncryptedDataDetails());
+              Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
+
+              for (ArtifactFileMetadata artifactFileMetadata : artifactStreamAttributes.getArtifactFileMetadata()) {
+                metadata.put(ArtifactMetadataKeys.artifactFileName, artifactFileMetadata.getFileName());
+                metadata.put(ArtifactMetadataKeys.artifactPath, artifactFileMetadata.getUrl());
+                String artifactPathRegex = artifactFileMetadata.getUrl().substring(
+                    artifactFileMetadata.getUrl().lastIndexOf(ARTIFACT_STRING) + ARTIFACT_STRING.length());
+                metadata.put(ArtifactMetadataKeys.artifactFileSize,
+                    String.valueOf(jenkins.getFileSize(artifactStreamAttributes.getJobName(),
+                        metadata.get(ArtifactMetadataKeys.buildNo), artifactPathRegex)));
+                artifactStreamAttributes.setMetadata(metadata);
+                CommandExecutionStatus executionStatus = context.copyFiles(destinationDirectoryPath,
+                    artifactStreamAttributes, context.getAccountId(), context.getAppId(), context.getActivityId(),
+                    getName(), context.getHost() == null ? null : context.getHost().getPublicDns());
+                if (FAILURE == executionStatus) {
+                  saveExecutionLog(context, ERROR,
+                      format("Copy Artifact failed for artifact %s", artifactFileMetadata.getFileName()));
+                  return executionStatus;
+                }
+              }
+            } else {
+              logger.info("Feature flag for copy artifact for Jenkins not enabled.");
             }
             return SUCCESS;
           } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.CUSTOM.name())) {

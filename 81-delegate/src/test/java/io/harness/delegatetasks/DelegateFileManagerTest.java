@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
 import io.harness.CategoryTest;
@@ -27,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -62,6 +64,8 @@ public class DelegateFileManagerTest extends CategoryTest {
   private static final String ARTIFACT_FILE_NAME = "ARTIFACT_FILE_NAME";
   private static final String ARTIFACT_STREAM_ID_S3 = "ARTIFACT_STREAM_ID_S3";
   private static final String ARTIFACT_STREAM_ID_ARTIFACTORY = "ARTIFACT_STREAM_ID_ARTIFACTORY";
+  private static final String ARTIFACT_STREAM_ID_JENKINS = "ARTIFACT_STREAM_ID_JENKINS";
+  private static final String JENKINS_FILE_NAME = "file.war";
   private static final String ARTIFACT_PATH = "ARTIFACT_PATH";
   private static final String BUCKET_NAME = "BUCKET_NAME";
   private static final String BUILD_NO = "BUILD_NO";
@@ -107,6 +111,18 @@ public class DelegateFileManagerTest extends CategoryTest {
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 
+  private ArtifactStreamAttributes artifactStreamAttributesForJenkins =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.JENKINS.name())
+          .metadataOnly(true)
+          .metadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, BUILD_NO, ArtifactMetadataKeys.artifactFileName,
+              JENKINS_FILE_NAME, ArtifactMetadataKeys.artifactFileSize, "1233"))
+          .serverSetting(aSettingAttribute().withValue(JenkinsConfig.builder().build()).build())
+          .artifactStreamId(ARTIFACT_STREAM_ID_JENKINS)
+          .jobName("scheduler")
+          .artifactPaths(Collections.singletonList(JENKINS_FILE_NAME))
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .build();
   @Test
   @Owner(developers = AADITI)
   @Repeat(times = 3, successes = 1)
@@ -152,6 +168,26 @@ public class DelegateFileManagerTest extends CategoryTest {
     when(artifactCollectionTaskHelper.getArtifactFileSize(any(ArtifactStreamAttributes.class))).thenReturn(1234L);
     Long size = delegateFileManager.getArtifactFileSize(artifactStreamAttributesForS3);
     assertThat(size.longValue()).isEqualTo(1234L);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testDownloadArtifactAtRuntimeForJenkins() throws IOException, ExecutionException {
+    String fileContent = "test";
+    InputStream is = new ByteArrayInputStream(fileContent.getBytes(Charset.defaultCharset()));
+    Pair<String, InputStream> pair = new ImmutablePair<>(fileContent, is);
+    when(artifactCollectionTaskHelper.downloadArtifactAtRuntime(
+             artifactStreamAttributesForJenkins, ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME))
+        .thenReturn(pair);
+    delegateFileManager.downloadArtifactAtRuntime(
+        artifactStreamAttributesForJenkins, ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME);
+    String text = Files.toString(
+        new File(ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_JENKINS + "-" + BUILD_NO + "-" + JENKINS_FILE_NAME),
+        Charsets.UTF_8);
+    assertThat(text).isEqualTo(fileContent);
+    FileUtils.deleteQuietly(FileUtils.getFile(
+        ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_JENKINS + "-" + BUILD_NO + "-" + JENKINS_FILE_NAME));
   }
 
   private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {

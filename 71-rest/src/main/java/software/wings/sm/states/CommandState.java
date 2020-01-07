@@ -591,7 +591,7 @@ public class CommandState extends State {
     artifactStreamAttributes.setArtifactFileMetadata(artifact.getArtifactFileMetadata());
 
     if (featureFlagService.isEnabled(FeatureName.COPY_ARTIFACT, accountId)) {
-      artifactStreamAttributes.setCopyArtifactEnabledForArtifactory(true);
+      artifactStreamAttributes.setCopyArtifactEnabled(true);
     }
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
     commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
@@ -640,7 +640,7 @@ public class CommandState extends State {
         artifactStreamAttributes.setArtifactFileMetadata(artifact.getArtifactFileMetadata());
 
         if (featureFlagService.isEnabled(FeatureName.COPY_ARTIFACT, accountId)) {
-          artifactStreamAttributes.setCopyArtifactEnabledForArtifactory(true);
+          artifactStreamAttributes.setCopyArtifactEnabled(true);
         }
         artifactStreamAttributes.setArtifactType(service.getArtifactType());
         artifactStreamAttributesMap.put(artifact.getUuid(), artifactStreamAttributes);
