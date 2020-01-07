@@ -15,6 +15,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.passay.PasswordData;
 import software.wings.beans.Account;
+import software.wings.beans.Event.Type;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.User;
@@ -22,6 +23,7 @@ import software.wings.beans.User.UserKeys;
 import software.wings.beans.loginSettings.LoginSettings.LoginSettingKeys;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.notifications.UserGroupBasedDispatcher;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
@@ -48,6 +50,7 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
   @Inject UserService userService;
   @Inject UserGroupBasedDispatcher userGroupBasedDispatcher;
   @Inject UserGroupService userGroupService;
+  @Inject AuditServiceHelper auditServiceHelper;
 
   private PasswordStrengthPolicy getDefaultPasswordStrengthPolicy() {
     return PasswordStrengthPolicy.builder().enabled(false).build();
@@ -206,6 +209,10 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
           createUserLockoutInfoInstance(newCountOfFailedLoginAttempts, System.currentTimeMillis());
       updateUserLockoutOperations(operations, true, userLockoutInfo);
       sendNotifications(user, userLockoutPolicy);
+      if (user.getAccounts() != null) {
+        user.getAccounts().forEach(
+            account -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Type.LOCK));
+      }
     } else {
       logger.info("Unlocking user: {}, current lock state = {}", user.getUuid(), user.isUserLocked());
       UserLockoutInfo userLockoutInfo =

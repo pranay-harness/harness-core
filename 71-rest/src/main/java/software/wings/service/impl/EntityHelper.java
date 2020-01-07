@@ -52,6 +52,8 @@ import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.User;
+import software.wings.beans.UserInvite;
 import software.wings.beans.Workflow;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -141,6 +143,22 @@ public class EntityHelper {
       entityName = whitelist.getFilter();
       affectedResourceId = whitelist.getUuid();
       affectedResourceName = whitelist.getFilter();
+      affectedResourceType = entityType;
+      affectedResourceOperation = type.name();
+    } else if (entity instanceof User) {
+      User user = (User) entity;
+      entityType = EntityType.USER.name();
+      entityName = user.getName();
+      affectedResourceId = user.getUuid();
+      affectedResourceName = user.getName();
+      affectedResourceType = entityType;
+      affectedResourceOperation = type.name();
+    } else if (entity instanceof UserInvite) {
+      UserInvite userInvite = (UserInvite) entity;
+      entityType = EntityType.USER_INVITE.name();
+      entityName = userInvite.getEmail();
+      affectedResourceId = userInvite.getUuid();
+      affectedResourceName = userInvite.getEmail();
       affectedResourceType = entityType;
       affectedResourceOperation = type.name();
     } else if (entity instanceof Pipeline) {
