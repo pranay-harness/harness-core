@@ -6,6 +6,17 @@ extend type Query {
   applications(limit: Int!, offset: Int): ApplicationConnection @dataFetcher(name: applicationConnection)
 }
 
+#extend type Mutation {
+#  createApplication(application: ApplicationInput!): Application @dataFetcher(name: applicationCreator)
+#  updateApplication(applicationId: String!, application: ApplicationInput!): Application @dataFetcher(name: applicationMutator)
+#  deleteApplication(applicationId: String!): Application @dataFetcher(name: applicationMutator)
+#}
+
+input ApplicationInput {
+  name: String
+  description: String
+}
+
 type Application {
   id: String
   name: String

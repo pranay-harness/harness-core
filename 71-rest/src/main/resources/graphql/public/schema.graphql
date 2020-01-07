@@ -6,9 +6,11 @@ directive @dataFetcher(
 
 schema {
   query: Query
+  mutation: Mutation
 }
 
 type Query
+type Mutation
 
 enum NumericOperator {
   EQUALS

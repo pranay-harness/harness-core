@@ -2,9 +2,10 @@ package software.wings.resources.graphql;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static software.wings.graphql.utils.GraphQLConstants.GRAPHQL_QUERY_STRING;
+import static software.wings.graphql.utils.GraphQLConstants.HTTP_SERVLET_REQUEST;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -13,6 +14,7 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLContext;
+import graphql.GraphQLContext.Builder;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import io.swagger.annotations.Api;
@@ -38,7 +40,9 @@ import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.FeatureFlagService;
 
+import java.util.HashMap;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
@@ -47,6 +51,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 @Api("/graphql")
@@ -82,13 +87,13 @@ public class GraphQLResource {
   @POST
   @Consumes(MediaType.TEXT_PLAIN)
   @ExternalFacingApiAuth
-  public Map<String, Object> execute(
-      @HeaderParam(API_KEY_HEADER) String apiKey, @QueryParam("accountId") String accountId, String query) {
+  public Map<String, Object> execute(@HeaderParam(API_KEY_HEADER) String apiKey,
+      @QueryParam("accountId") String accountId, String query, @Context HttpServletRequest httpServletRequest) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       logger.info("Executing graphql query");
       GraphQLQuery graphQLQuery = new GraphQLQuery();
       graphQLQuery.setQuery(query);
-      return executeExternal(accountId, apiKey, graphQLQuery);
+      return executeExternal(accountId, apiKey, graphQLQuery, httpServletRequest);
     }
   }
 
@@ -104,10 +109,11 @@ public class GraphQLResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ExternalFacingApiAuth
   public Map<String, Object> execute(@HeaderParam(API_KEY_HEADER) String apiKey,
-      @QueryParam("accountId") String accountId, GraphQLQuery graphQLQuery) {
+      @QueryParam("accountId") String accountId, GraphQLQuery graphQLQuery,
+      @Context HttpServletRequest httpServletRequest) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       logger.info("Executing graphql query");
-      return executeExternal(accountId, apiKey, graphQLQuery);
+      return executeExternal(accountId, apiKey, graphQLQuery, httpServletRequest);
     }
   }
 
@@ -115,10 +121,10 @@ public class GraphQLResource {
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   @POST
   @Consumes(MediaType.TEXT_PLAIN)
-  public Map<String, Object> execute(String query) {
+  public Map<String, Object> execute(String query, @Context HttpServletRequest httpServletRequest) {
     GraphQLQuery graphQLQuery = new GraphQLQuery();
     graphQLQuery.setQuery(query);
-    return executeInternal(graphQLQuery);
+    return executeInternal(graphQLQuery, httpServletRequest);
   }
 
   /**
@@ -133,12 +139,12 @@ public class GraphQLResource {
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
-  public Map<String, Object> execute(GraphQLQuery graphQLQuery) {
-    return executeInternal(graphQLQuery);
+  public Map<String, Object> execute(GraphQLQuery graphQLQuery, @Context HttpServletRequest httpServletRequest) {
+    return executeInternal(graphQLQuery, httpServletRequest);
   }
 
   private Map<String, Object> executeExternal(
-      String accountIdFromQueryParam, String apiKey, GraphQLQuery graphQLQuery) {
+      String accountIdFromQueryParam, String apiKey, GraphQLQuery graphQLQuery, HttpServletRequest httpServletRequest) {
     String accountId;
     boolean hasUserContext = false;
     UserRequestContext userRequestContext = null;
@@ -177,8 +183,10 @@ public class GraphQLResource {
         graphQL = publicGraphQL;
       }
       if (hasUserContext) {
-        executionResult = graphQL.execute(getExecutionInput(userRequestContext.getUserPermissionInfo(),
-            userRequestContext.getUserRestrictionInfo(), accountId, graphQLQuery, dataLoaderRegistryHelper));
+        final Builder contextBuilder =
+            populateContextBuilder(GraphQLContext.newContext(), userRequestContext.getUserPermissionInfo(),
+                userRequestContext.getUserRestrictionInfo(), accountId, httpServletRequest, graphQLQuery.getQuery());
+        executionResult = graphQL.execute(getExecutionInput(contextBuilder, graphQLQuery, dataLoaderRegistryHelper));
       } else {
         ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
         if (apiKeyEntry == null) {
@@ -187,8 +195,9 @@ public class GraphQLResource {
           UserPermissionInfo apiKeyPermissions = apiKeyService.getApiKeyPermissions(apiKeyEntry, accountId);
           UserRestrictionInfo apiKeyRestrictions =
               apiKeyService.getApiKeyRestrictions(apiKeyEntry, apiKeyPermissions, accountId);
-          executionResult = graphQL.execute(getExecutionInput(
-              apiKeyPermissions, apiKeyRestrictions, accountId, graphQLQuery, dataLoaderRegistryHelper));
+          final Builder contextBuilder = populateContextBuilder(GraphQLContext.newContext(), apiKeyPermissions,
+              apiKeyRestrictions, accountId, httpServletRequest, graphQLQuery.getQuery());
+          executionResult = graphQL.execute(getExecutionInput(contextBuilder, graphQLQuery, dataLoaderRegistryHelper));
         }
       }
     } catch (WebApplicationException e) {
@@ -207,7 +216,7 @@ public class GraphQLResource {
     throw graphQLUtils.getException(errorMsg, ex);
   }
 
-  private Map<String, Object> executeInternal(GraphQLQuery graphQLQuery) {
+  private Map<String, Object> executeInternal(GraphQLQuery graphQLQuery, HttpServletRequest httpServletRequest) {
     String accountId;
     boolean hasUserContext;
     UserRequestContext userRequestContext;
@@ -224,8 +233,10 @@ public class GraphQLResource {
     try {
       GraphQL graphQL = privateGraphQL;
       if (hasUserContext && userRequestContext != null) {
-        executionResult = graphQL.execute(getExecutionInput(userRequestContext.getUserPermissionInfo(),
-            userRequestContext.getUserRestrictionInfo(), accountId, graphQLQuery, dataLoaderRegistryHelper));
+        final Builder contextBuilder =
+            populateContextBuilder(GraphQLContext.newContext(), userRequestContext.getUserPermissionInfo(),
+                userRequestContext.getUserRestrictionInfo(), accountId, httpServletRequest, graphQLQuery.getQuery());
+        executionResult = graphQL.execute(getExecutionInput(contextBuilder, graphQLQuery, dataLoaderRegistryHelper));
       } else {
         throw graphQLUtils.getInvalidTokenException();
       }
@@ -236,15 +247,21 @@ public class GraphQLResource {
     return executionResult.toSpecification();
   }
 
-  private ExecutionInput getExecutionInput(UserPermissionInfo permissionInfo, UserRestrictionInfo restrictionInfo,
-      String accountId, GraphQLQuery graphQLQuery, DataLoaderRegistryHelper dataLoaderRegistryHelper) {
+  private ExecutionInput getExecutionInput(GraphQLContext.Builder contextBuilder, GraphQLQuery graphQLQuery,
+      DataLoaderRegistryHelper dataLoaderRegistryHelper) {
     return ExecutionInput.newExecutionInput()
         .query(graphQLQuery.getQuery())
-        .variables(graphQLQuery.getVariables() == null ? Maps.newHashMap() : graphQLQuery.getVariables())
+        .variables(graphQLQuery.getVariables() == null ? new HashMap<>() : graphQLQuery.getVariables())
         .operationName(graphQLQuery.getOperationName())
         .dataLoaderRegistry(dataLoaderRegistryHelper.getDataLoaderRegistry())
-        .context(GraphQLContext.newContext().of(
-            "accountId", accountId, "permissions", permissionInfo, "restrictions", restrictionInfo))
+        .context(contextBuilder)
         .build();
+  }
+
+  private GraphQLContext.Builder populateContextBuilder(GraphQLContext.Builder builder,
+      UserPermissionInfo permissionInfo, UserRestrictionInfo restrictionInfo, String accountId,
+      HttpServletRequest httpServletRequest, String graphqlQueryString) {
+    return builder.of("accountId", accountId, "permissions", permissionInfo, "restrictions", restrictionInfo,
+        HTTP_SERVLET_REQUEST, httpServletRequest, GRAPHQL_QUERY_STRING, graphqlQueryString);
   }
 }

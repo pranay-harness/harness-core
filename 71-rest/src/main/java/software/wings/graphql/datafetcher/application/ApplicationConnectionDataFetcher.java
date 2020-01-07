@@ -32,7 +32,7 @@ public class ApplicationConnectionDataFetcher
     QLApplicationConnectionBuilder connectionBuilder = QLApplicationConnection.builder();
     connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, application -> {
       QLApplicationBuilder builder = QLApplication.builder();
-      ApplicationController.populateApplication(application, builder);
+      ApplicationController.populateQLApplication(application, builder);
       connectionBuilder.node(builder.build());
     }));
     return connectionBuilder.build();
