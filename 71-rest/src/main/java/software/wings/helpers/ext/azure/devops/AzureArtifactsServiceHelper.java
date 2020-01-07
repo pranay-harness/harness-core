@@ -131,6 +131,8 @@ public class AzureArtifactsServiceHelper {
       Response<T> response = call.execute();
       validateResponse(response);
       return response.body();
+    } catch (InvalidArtifactServerException ex) {
+      throw ex;
     } catch (Exception e) {
       throw new InvalidArtifactServerException("Authentication failed for Azure Artifacts server", e);
     }

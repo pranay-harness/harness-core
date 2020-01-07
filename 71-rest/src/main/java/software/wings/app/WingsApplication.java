@@ -100,6 +100,7 @@ import io.harness.workers.background.critical.iterator.ResourceConstraintBackupH
 import io.harness.workers.background.critical.iterator.WorkflowExecutionMonitorHandler;
 import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 import io.harness.workers.background.iterator.InstanceSyncHandler;
+import io.harness.workers.background.iterator.SettingAttributeValidateConnectivityHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.coursera.metrics.datadog.DatadogReporter;
 import org.coursera.metrics.datadog.transport.HttpTransport;
@@ -673,6 +674,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(UsageMetricsHandler.class).registerIterators();
     injector.getInstance(ResourceConstraintBackupHandler.class).registerIterators();
     injector.getInstance(WorkflowExecutionMonitorHandler.class).registerIterators();
+    injector.getInstance(SettingAttributeValidateConnectivityHandler.class).registerIterators();
 
     if (injector.getInstance(FeatureFlagService.class).isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
       logger.info("Initializing Perpetual Task Assignor..");

@@ -55,6 +55,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptionType;
 import lombok.Data;
@@ -68,6 +69,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.artifact.ArtifactStreamSummary;
@@ -99,7 +101,7 @@ import javax.validation.Valid;
 @FieldNameConstants(innerTypeName = "SettingAttributeKeys")
 @Entity(value = "settingAttributes")
 @HarnessEntity(exportable = true)
-public class SettingAttribute extends Base implements NameAccess {
+public class SettingAttribute extends Base implements NameAccess, PersistentRegularIterable {
   public static final String CATEGORY_KEY = "category";
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";
@@ -117,9 +119,22 @@ public class SettingAttribute extends Base implements NameAccess {
   private transient List<ArtifactStreamSummary> artifactStreams;
   private boolean sample;
 
+  @Indexed private Long nextIteration;
+  private String connectivityError;
+
   @SchemaIgnore @Transient private transient EncryptionType encryptionType;
 
   @SchemaIgnore @Transient private transient String encryptedBy;
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return nextIteration;
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, Long nextIteration) {
+    this.nextIteration = nextIteration;
+  }
 
   public enum SettingCategory {
     CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, KUBERNETES_CLUSTER, PCF, SPOT_INST)),
@@ -165,6 +180,7 @@ public class SettingAttribute extends Base implements NameAccess {
     private long lastUpdatedAt;
     private UsageRestrictions usageRestrictions;
     private boolean sample;
+    private String connectivityError;
 
     private Builder() {}
 
@@ -248,6 +264,11 @@ public class SettingAttribute extends Base implements NameAccess {
       return this;
     }
 
+    public Builder withConnectivityError(String connectivityError) {
+      this.connectivityError = connectivityError;
+      return this;
+    }
+
     public Builder but() {
       return aSettingAttribute()
           .withEnvId(envId)
@@ -284,6 +305,7 @@ public class SettingAttribute extends Base implements NameAccess {
       settingAttribute.setUsageRestrictions(usageRestrictions);
       settingAttribute.setValidationAttributes(connectivityValidationAttributes);
       settingAttribute.setSample(sample);
+      settingAttribute.setConnectivityError(connectivityError);
       return settingAttribute;
     }
   }
@@ -309,5 +331,6 @@ public class SettingAttribute extends Base implements NameAccess {
     public static final String createdAt = "createdAt";
     public static final String uuid = "uuid";
     public static final String accountId = "accountId";
+    public static final String valueType = SettingAttributeKeys.value + ".type";
   }
 }

@@ -82,6 +82,7 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.PermitServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -748,6 +749,32 @@ public class ArtifactCollectionUtils {
       return artifactStreamAttributes.getRepositoryType() == null
           || !artifactStreamAttributes.getRepositoryType().equals(RepositoryType.docker.name());
     }
+    return false;
+  }
+
+  public boolean skipArtifactStreamIteration(ArtifactStream artifactStream, boolean isCollection) {
+    String prefix = isCollection ? "ASYNC_ARTIFACT_CRON" : "ASYNC_ARTIFACT_CLEANUP_CRON";
+    String action = isCollection ? "collection" : "cleanup";
+    if (artifactStream.getFailedCronAttempts() > PermitServiceImpl.MAX_FAILED_ATTEMPTS) {
+      logger.warn(
+          "{}: Artifact {} disabled for artifactStream due to too many failures, type: {}, id: {}, failed count: {}",
+          prefix, action, artifactStream.getArtifactStreamType(), artifactStream.getUuid(),
+          artifactStream.getFailedCronAttempts());
+      return true;
+    }
+
+    SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+    if (settingAttribute == null) {
+      throw new InvalidRequestException(
+          format("%s: Invalid artifact stream setting: %s", prefix, artifactStream.getSettingId()));
+    }
+    if (isNotBlank(settingAttribute.getConnectivityError())) {
+      logger.info("{}: Skipping {} for artifact stream: {}, because of connectivity error in setting: {} and error: {}",
+          prefix, action, artifactStream.getUuid(), artifactStream.getSettingId(),
+          settingAttribute.getConnectivityError());
+      return true;
+    }
+
     return false;
   }
 }

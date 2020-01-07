@@ -657,7 +657,7 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
-  public SettingAttribute update(SettingAttribute settingAttribute, boolean pushToGit) {
+  public SettingAttribute update(SettingAttribute settingAttribute, boolean updateConnectivity, boolean pushToGit) {
     SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
     SettingAttribute prevSettingAttribute = existingSetting;
 
@@ -675,7 +675,10 @@ public class SettingsServiceImpl implements SettingsService {
     autoGenerateFieldsIfRequired(settingAttribute);
 
     resetUnchangedEncryptedFields(existingSetting, settingAttribute);
-    settingValidationService.validate(settingAttribute);
+
+    if (updateConnectivity || isBlank(settingAttribute.getConnectivityError())) {
+      settingValidationService.validate(settingAttribute);
+    }
 
     SettingAttribute savedSettingAttributes = get(settingAttribute.getUuid());
 
@@ -693,7 +696,21 @@ public class SettingsServiceImpl implements SettingsService {
       }
       fields.put("value", settingAttribute.getValue());
     }
-    wingsPersistence.updateFields(SettingAttribute.class, settingAttribute.getUuid(), fields.build());
+
+    Set<String> fieldsToRemove;
+    if (updateConnectivity) {
+      fieldsToRemove = Collections.singleton(SettingAttributeKeys.connectivityError);
+    } else {
+      String connErr = settingAttribute.getConnectivityError();
+      if (isBlank(connErr)) {
+        fieldsToRemove = Collections.singleton(SettingAttributeKeys.connectivityError);
+      } else {
+        fieldsToRemove = Collections.emptySet();
+        fields.put(SettingAttributeKeys.connectivityError, connErr);
+      }
+    }
+
+    wingsPersistence.updateFields(SettingAttribute.class, settingAttribute.getUuid(), fields.build(), fieldsToRemove);
 
     SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
     if (!shouldBeSynced(settingAttribute, true)) {
@@ -760,7 +777,12 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public SettingAttribute update(SettingAttribute settingAttribute) {
-    return update(settingAttribute, true);
+    return update(settingAttribute, true, true);
+  }
+
+  @Override
+  public SettingAttribute update(SettingAttribute settingAttribute, boolean updateConnectivity) {
+    return update(settingAttribute, updateConnectivity, true);
   }
 
   /* (non-Javadoc)

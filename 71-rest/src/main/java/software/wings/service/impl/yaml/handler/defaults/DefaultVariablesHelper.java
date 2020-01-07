@@ -123,7 +123,7 @@ public class DefaultVariablesHelper {
           if (settingValue != null) {
             StringValue stringValue = (StringValue) settingValue;
             stringValue.setValue(defaultVar.getValue());
-            settingsService.update(settingAttribute, false);
+            settingsService.update(settingAttribute, true, false);
           }
         }
       }
