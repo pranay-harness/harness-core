@@ -173,7 +173,10 @@ public class Event {
     LOCK,
     UNLOCK,
     RESET_PASSWORD,
-    ACCEPTED_INVITE
+    ACCEPTED_INVITE,
+    ENABLE_2FA,
+    DISABLE_2FA,
+    LOGIN
   }
 
   /**

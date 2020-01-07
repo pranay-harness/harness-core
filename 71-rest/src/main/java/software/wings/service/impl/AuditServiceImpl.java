@@ -409,6 +409,9 @@ public class AuditServiceImpl implements AuditService {
 
       UuidAccess entityToQuery;
       switch (type) {
+        case ENABLE_2FA:
+        case DISABLE_2FA:
+        case LOGIN:
         case CREATE:
         case LOCK:
         case UNLOCK:
@@ -434,6 +437,9 @@ public class AuditServiceImpl implements AuditService {
         case UNLOCK:
         case RESET_PASSWORD:
         case ACCEPTED_INVITE:
+        case ENABLE_2FA:
+        case DISABLE_2FA:
+        case LOGIN:
         case CREATE: {
           saveEntityYamlForAudit(newEntity, record, accountId);
           resourceLookupService.saveResourceLookupRecordIfNeeded(record, accountId);

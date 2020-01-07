@@ -59,7 +59,7 @@ public class LoginRateLimitFilter implements ContainerRequestFilter {
   private boolean isLoginOrLoginTypeApi(ContainerRequestContext requestContext) {
     return requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/users/login")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/users/logintype")
-        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/user/login")
+        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/users/user/login")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/identity/user/login");
   }
 }
