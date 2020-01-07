@@ -108,6 +108,25 @@ public class DatadogLogState extends AbstractLogAnalysisState {
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
+  public void setHostnameField(String hostnameField) {
+    this.hostnameField = hostnameField;
+  }
+
+  public String getHostnameField() {
+    return hostnameField;
+  }
+
+  @Attributes(required = false, title = "Expression for Host/Container name")
+  @Override
+  public String getHostnameTemplate() {
+    return hostnameTemplate;
+  }
+
+  @Override
+  public void setHostnameTemplate(String hostnameTemplate) {
+    this.hostnameTemplate = hostnameTemplate;
+  }
+
   @Override
   public String getHostnameField(ExecutionContext executionContext) {
     if (hostnameField != null) {
