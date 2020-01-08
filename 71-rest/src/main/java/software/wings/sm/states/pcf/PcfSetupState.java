@@ -219,7 +219,7 @@ public class PcfSetupState extends State {
     restoreStateDataAfterGitFetchIfNeeded(pcfSetupStateExecutionData);
 
     if (olderActiveVersionCountToKeep == null) {
-      olderActiveVersionCountToKeep = Integer.valueOf(3);
+      olderActiveVersionCountToKeep = 3;
     }
 
     if (olderActiveVersionCountToKeep <= 0) {

@@ -126,6 +126,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                                               .routeMaps(Arrays.asList("ab.rc", "ab.ty/asd"))
                                               .timeoutIntervalInMin(5)
                                               .releaseNamePrefix("a_s_e")
+                                              .olderActiveVersionCountToKeep(2)
                                               .maxCount(2)
                                               .build();
 

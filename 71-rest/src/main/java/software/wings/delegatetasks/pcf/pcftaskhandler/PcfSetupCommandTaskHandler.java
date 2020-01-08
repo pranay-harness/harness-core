@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -361,15 +360,14 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     // We will keep most recent one as is, and downsize olderActiveVersionCountToKeep - 1
     // apps to 0, so they will be deleted in next deployment.
     if (isNotEmpty(appsWithNonZeroInstances) && appsWithNonZeroInstances.size() > 1) {
-      int appsDownsizedCount = 0;
-      for (int index = appsWithNonZeroInstances.size() - 2; index >= 0; index--) {
+      int lastIndexToDelete = appsWithNonZeroInstances.size() - olderActiveVersionCountToKeep - 1;
+      for (int index = 0; index < appsWithNonZeroInstances.size() - 1; index++) {
         ApplicationSummary applicationSummary = appsWithNonZeroInstances.get(index);
-        if (appsDownsizedCount < olderActiveVersionCountToKeep - 1) {
+        if (index <= lastIndexToDelete) {
+          deleteApplication(applicationSummary, pcfRequestConfig, appsDeleted, executionLogCallback);
+        } else {
           downsizeApplicationToZero(applicationSummary, pcfRequestConfig, pcfCommandSetupRequest,
               appAutoscalarRequestData, executionLogCallback);
-          appsDownsizedCount++;
-        } else {
-          deleteApplication(applicationSummary, pcfRequestConfig, appsDeleted, executionLogCallback);
         }
       }
     }
