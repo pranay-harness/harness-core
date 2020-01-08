@@ -31,6 +31,7 @@ import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.concurrency.ConcurrentExecutionResponse;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
+import software.wings.beans.execution.WorkflowExecutionInfo;
 import software.wings.beans.trigger.Trigger;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.WorkflowExecutionUpdate;
@@ -233,4 +234,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   boolean getOnDemandRollbackAvailable(String appId, WorkflowExecution lastSuccessfulWE);
 
   boolean checkIfOnDemand(String appId, String workflowExecutionId);
+
+  WorkflowExecutionInfo getWorkflowExecutionInfo(String workflowExecutionId);
 }

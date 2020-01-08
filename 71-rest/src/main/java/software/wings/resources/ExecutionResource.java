@@ -46,6 +46,7 @@ import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.concurrency.ConcurrentExecutionResponse;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
+import software.wings.beans.execution.WorkflowExecutionInfo;
 import software.wings.features.DeploymentHistoryFeature;
 import software.wings.features.api.RestrictedFeature;
 import software.wings.security.PermissionAttribute;
@@ -54,6 +55,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
@@ -603,5 +605,18 @@ public class ExecutionResource {
       return new RestResponse<>();
     }
     return new RestResponse<>(workflowExecutionService.getNodeSubGraphs(appId, workflowExecutionId, selectedNodes));
+  }
+
+  @GET
+  @Path("info/{workflowExecutionId}")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<WorkflowExecutionInfo> getWorkflowExecutionInfo(
+      @PathParam("workflowExecutionId") String workflowExecutionId) {
+    if (isEmpty(workflowExecutionId)) {
+      throw new InvalidRequestException("workflowExecutionId is required", USER);
+    }
+    return new RestResponse<>(workflowExecutionService.getWorkflowExecutionInfo(workflowExecutionId));
   }
 }

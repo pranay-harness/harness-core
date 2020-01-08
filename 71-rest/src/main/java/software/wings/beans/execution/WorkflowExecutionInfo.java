@@ -8,5 +8,9 @@ import lombok.Value;
 public class WorkflowExecutionInfo {
   String name;
   String executionId;
-  private long startTs;
+  private Long startTs;
+  RollbackWorkflowExecutionInfo rollbackWorkflowExecutionInfo;
+  String accountId;
+  String appId;
+  String workflowId;
 }
