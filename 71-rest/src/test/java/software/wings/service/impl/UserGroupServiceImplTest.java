@@ -17,6 +17,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -58,6 +59,7 @@ import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
+import software.wings.beans.Event.Type;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
@@ -95,6 +97,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private EmailNotificationService emailNotificationService;
   @Mock private LimitCheckerFactory limitCheckerFactory;
+  @Mock private AuditServiceHelper auditServiceHelper;
 
   private Account account = Account.Builder.anAccount()
                                 .withAccountName(ACCOUNT_NAME)
@@ -447,6 +450,9 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     fetchedGroup = userGroupService.get(accountId, fetchedGroup.getUuid(), false);
     assertThat(fetchedGroup.getNotificationSettings()).isNotNull();
     assertThat(fetchedGroup.getNotificationSettings()).isEqualTo(settings);
+    verify(auditServiceHelper, times(1))
+        .reportForAuditingUsingAccountId(
+            eq(accountId), eq(null), any(UserGroup.class), eq(Type.UPDATE_NOTIFICATION_SETTING));
   }
 
   @Test

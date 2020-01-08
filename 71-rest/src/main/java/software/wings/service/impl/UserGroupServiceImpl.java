@@ -45,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.EntityType;
+import software.wings.beans.Event.Type;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
 import software.wings.beans.notification.NotificationSettings;
@@ -103,6 +104,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private PagerDutyService pagerDutyService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private UserGroupDeleteEventHandler userGroupDeleteEventHandler;
+  @Inject private AuditServiceHelper auditServiceHelper;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject @Named(RbacFeature.FEATURE_NAME) private UsageLimitedFeature rbacFeature;
 
@@ -123,6 +125,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     notNullCheck("account", account);
     loadUsers(savedUserGroup, account);
     evictUserPermissionInfoCacheForUserGroup(savedUserGroup);
+    auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, userGroup, Type.CREATE);
+    logger.info("Auditing creation of new userGroup={} and account={}", userGroup.getName(), account.getAccountName());
     eventPublishHelper.publishSetupRbacEvent(userGroup.getAccountId(), savedUserGroup.getUuid(), EntityType.USER_GROUP);
     return savedUserGroup;
   }
@@ -312,7 +316,9 @@ public class UserGroupServiceImpl implements UserGroupService {
       log.error("No user group found. groupId={}, accountId={}", groupId, accountId);
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "No user group found");
     }
-
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, updatedGroup, Type.UPDATE_NOTIFICATION_SETTING);
+    logger.info(
+        "Auditing update in notification setting for userGroup={} in account={}", updatedGroup.getName(), accountId);
     return updatedGroup;
   }
 
@@ -385,6 +391,13 @@ public class UserGroupServiceImpl implements UserGroupService {
     setUnset(operations, "accountPermissions", userGroup.getAccountPermissions());
     UserGroup updatedUserGroup = update(userGroup, operations);
     evictUserPermissionInfoCacheForUserGroup(updatedUserGroup);
+    userGroup = wingsPersistence.get(UserGroup.class, userGroup.getUuid());
+    if (userGroup.getAccountId() != null) {
+      auditServiceHelper.reportForAuditingUsingAccountId(
+          userGroup.getAccountId(), userGroup, updatedUserGroup, Type.MODIFY_PERMISSIONS);
+      logger.info("Auditing modification of permissions for userGroup={} in account={}", updatedUserGroup.getName(),
+          userGroup.getAccountId());
+    }
     return updatedUserGroup;
   }
 
@@ -435,6 +448,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (deleted) {
       evictUserPermissionInfoCacheForUserGroup(userGroup);
       executors.submit(() -> userGroupDeleteEventHandler.handleUserGroupDelete(accountId, userGroupId));
+      auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, userGroup);
+      logger.info("Auditing deletion of userGroupId={} and accountId={}", userGroup.getUuid(), accountId);
     }
     return deleted;
   }
@@ -573,6 +588,9 @@ public class UserGroupServiceImpl implements UserGroupService {
       LdapGroupSyncJob.add(jobScheduler, accountId, ssoId);
     }
 
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, group, Type.LINK_SSO);
+    logger.info("Auditing link to SSO Group for groupId={}", group.getUuid());
+
     return savedGroup;
   }
 
@@ -596,6 +614,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     group.setLinkedSsoType(null);
     group.setLinkedSsoId(null);
     group.setSsoGroupId(null);
+
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, group, Type.UNLINK_SSO);
+    logger.info("Auditing unlink from SSO Group for groupId={}", group.getUuid());
 
     return save(group);
   }

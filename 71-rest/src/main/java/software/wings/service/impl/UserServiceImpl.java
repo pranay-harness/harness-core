@@ -685,7 +685,6 @@ public class UserServiceImpl implements UserService {
         .map(email -> {
           UserInvite userInviteClone = KryoUtils.clone(userInvite);
           userInviteClone.setEmail(email.trim());
-          auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userInviteClone, Type.CREATE);
           return inviteUser(userInviteClone);
         })
         .collect(toList());
@@ -787,6 +786,9 @@ public class UserServiceImpl implements UserService {
 
     logger.info("Invited user {} to join existing account {} with id {}", userInvite.getEmail(),
         userInvite.getAccountName(), userInvite.getAccountId());
+
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userInvite, Type.CREATE);
+    logger.info("Auditing userInvite={} for account={}", userInvite.getEmail(), account.getUuid());
 
     eventPublishHelper.publishUserInviteFromAccountEvent(accountId, userInvite.getEmail());
     return wingsPersistence.getWithAppId(UserInvite.class, userInvite.getAppId(), inviteId);
@@ -1066,6 +1068,8 @@ public class UserServiceImpl implements UserService {
     if (userInvite.getAccountId() != null) {
       auditServiceHelper.reportForAuditingUsingAccountId(
           userInvite.getAccountId(), null, userInvite, Type.ACCEPTED_INVITE);
+      logger.info("Auditing accepted invite for userInvite={} in account={}", userInvite.getName(),
+          userInvite.getAccountName());
     }
     return existingInvite;
   }
@@ -1282,6 +1286,8 @@ public class UserServiceImpl implements UserService {
     if (userInvite.getAccountId() != null) {
       auditServiceHelper.reportForAuditingUsingAccountId(
           userInvite.getAccountId(), null, userInvite, Type.ACCEPTED_INVITE);
+      logger.info(
+          "Auditing accepted invite for userInvite={} in account={}", userInvite.getName(), account.getAccountName());
     }
     return userInvite;
   }
@@ -1455,8 +1461,11 @@ public class UserServiceImpl implements UserService {
                          .sign(algorithm);
       sendResetPasswordEmail(user, token);
       if (user.getAccounts() != null) {
-        user.getAccounts().forEach(account
-            -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Type.RESET_PASSWORD));
+        user.getAccounts().forEach(account -> {
+          auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Type.RESET_PASSWORD);
+          logger.info(
+              "Auditing resetting passowrd for user={} in account={}", user.getName(), account.getAccountName());
+        });
       }
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new GeneralException(EXC_MSG_RESET_PASS_LINK_NOT_GEN);
@@ -1612,8 +1621,11 @@ public class UserServiceImpl implements UserService {
       updateOperations.unset(UserKeys.name);
     }
     if (user.getAccounts() != null) {
-      user.getAccounts().forEach(account
-          -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.UPDATE));
+      user.getAccounts().forEach(account -> {
+        auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.UPDATE);
+        logger.info(
+            "Auditing update of User Profile for user={} in account={}", user.getName(), account.getAccountName());
+      });
     }
     return applyUpdateOperations(user, updateOperations);
   }
@@ -1722,6 +1734,7 @@ public class UserServiceImpl implements UserService {
     setUnset(operations, UserKeys.userLocked, false);
     setUnset(operations, UserKeys.userLockoutInfo, new UserLockoutInfo());
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Type.UNLOCK);
+    logger.info("Auditing unlocking of user={} in account={}", user.getName(), accountId);
     return applyUpdateOperations(user, operations);
   }
 
@@ -1870,6 +1883,7 @@ public class UserServiceImpl implements UserService {
       evictUserFromCache(userId);
     });
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, user);
+    logger.info("Auditing deletion of user={} in account={}", user.getName(), accountId);
   }
 
   /* (non-Javadoc)

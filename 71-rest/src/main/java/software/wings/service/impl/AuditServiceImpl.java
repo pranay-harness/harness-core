@@ -412,6 +412,10 @@ public class AuditServiceImpl implements AuditService {
         case ENABLE_2FA:
         case DISABLE_2FA:
         case LOGIN:
+        case LINK_SSO:
+        case UNLINK_SSO:
+        case MODIFY_PERMISSIONS:
+        case UPDATE_NOTIFICATION_SETTING:
         case CREATE:
         case LOCK:
         case UNLOCK:
@@ -440,6 +444,10 @@ public class AuditServiceImpl implements AuditService {
         case ENABLE_2FA:
         case DISABLE_2FA:
         case LOGIN:
+        case LINK_SSO:
+        case UNLINK_SSO:
+        case MODIFY_PERMISSIONS:
+        case UPDATE_NOTIFICATION_SETTING:
         case CREATE: {
           saveEntityYamlForAudit(newEntity, record, accountId);
           resourceLookupService.saveResourceLookupRecordIfNeeded(record, accountId);
