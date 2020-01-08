@@ -3,6 +3,7 @@ package software.wings.service.impl.analysis;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.threading.Morpheus.sleep;
@@ -32,6 +33,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertCategory;
 import software.wings.api.ExecutionDataValue;
+import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
@@ -49,14 +51,17 @@ import software.wings.sm.StateExecutionInstance.Builder;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
+import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class ContinuousVerificationServiceTest extends WingsBaseTest {
@@ -455,6 +460,84 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testNotificationLogs() {
+    LogsCVConfiguration logCvConfig = createLogCvConfig();
+
+    final String logCvConfigId = wingsPersistence.save(logCvConfig);
+
+    wingsPersistence.save(
+        new AlertNotificationRule(accountId, AlertCategory.ContinuousVerification, null, Sets.newHashSet()));
+
+    Set<String> logCvHosts = new HashSet<>();
+    logCvHosts.add("Dummy Host");
+    continuousVerificationService.openAlert(logCvConfigId,
+        ContinuousVerificationAlertData.builder()
+            .cvConfiguration(logCvConfig)
+            .analysisStartTime(15)
+            .analysisEndTime(30)
+            .riskScore(0.6)
+            .hosts(logCvHosts)
+            .logAnomaly("Error: Test Message")
+            .mlAnalysisType(MLAnalysisType.LOG_ML)
+            .accountId(accountId)
+            .build());
+
+    waitForAlertEvent(1);
+    List<GenericEvent> genericEvents = wingsPersistence.createQuery(GenericEvent.class, excludeAuthority).asList();
+    assertThat(genericEvents.size()).isEqualTo(1);
+    GenericEvent genericEvent = genericEvents.get(0);
+    assertThat(genericEvent.getEvent().getEventType()).isEqualTo(EventType.OPEN_ALERT);
+
+    alertNotificationHandler.handleEvent(genericEvent.getEvent());
+    assertThat(notifications.size()).isEqualTo(1);
+    assertThat(notifications.get(0).getEventType()).isEqualTo(EventType.OPEN_ALERT);
+    assertThat(((InformationNotification) notifications.get(0)).getDisplayText().contains("Tag")).isFalse();
+    assertThat(((InformationNotification) notifications.get(0)).getDisplayText().contains("Hosts: [Dummy Host]"))
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testNotificationLogsV2() {
+    LogsCVConfiguration logCvConfig = createLogCvConfig();
+    logCvConfig.set247LogsV2(true);
+
+    final String logCvConfigId = wingsPersistence.save(logCvConfig);
+
+    wingsPersistence.save(
+        new AlertNotificationRule(accountId, AlertCategory.ContinuousVerification, null, Sets.newHashSet()));
+
+    Set<String> logCvHosts = new HashSet<>();
+    logCvHosts.add("Dummy Host");
+    continuousVerificationService.openAlert(logCvConfigId,
+        ContinuousVerificationAlertData.builder()
+            .cvConfiguration(logCvConfig)
+            .analysisStartTime(15)
+            .analysisEndTime(30)
+            .riskScore(0.6)
+            .tag("unknown")
+            .logAnomaly("Error: Test Message")
+            .mlAnalysisType(MLAnalysisType.LOG_ML)
+            .accountId(accountId)
+            .build());
+
+    waitForAlertEvent(1);
+    List<GenericEvent> genericEvents = wingsPersistence.createQuery(GenericEvent.class, excludeAuthority).asList();
+    assertThat(genericEvents.size()).isEqualTo(1);
+    GenericEvent genericEvent = genericEvents.get(0);
+    assertThat(genericEvent.getEvent().getEventType()).isEqualTo(EventType.OPEN_ALERT);
+
+    alertNotificationHandler.handleEvent(genericEvent.getEvent());
+    assertThat(notifications.size()).isEqualTo(1);
+    assertThat(notifications.get(0).getEventType()).isEqualTo(EventType.OPEN_ALERT);
+    assertThat(((InformationNotification) notifications.get(0)).getDisplayText().contains("Tag: unknown")).isTrue();
+    assertThat(((InformationNotification) notifications.get(0)).getDisplayText().contains("Hosts")).isFalse();
+  }
+
+  @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testNotification() throws IOException {
@@ -525,5 +608,19 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
     cvConfiguration.setName(generateUuid());
     cvConfiguration.setAccountId(accountId);
     return cvConfiguration;
+  }
+
+  private LogsCVConfiguration createLogCvConfig() {
+    final LogsCVConfiguration logCvConfiguration = new LogsCVConfiguration();
+    logCvConfiguration.setAppId(appId);
+    logCvConfiguration.setEnvId(envId);
+    logCvConfiguration.setServiceId(serviceId);
+    logCvConfiguration.setAlertEnabled(false);
+    logCvConfiguration.setAlertThreshold(0.5);
+    logCvConfiguration.setName(generateUuid());
+    logCvConfiguration.setAccountId(accountId);
+    logCvConfiguration.setBaselineStartMinute(1);
+    logCvConfiguration.setBaselineEndMinute(15);
+    return logCvConfiguration;
   }
 }

@@ -12,6 +12,7 @@ import software.wings.alerts.AlertStatus;
 import software.wings.beans.alert.AlertData;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.log.LogsCVConfiguration;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -31,6 +32,7 @@ public class ContinuousVerificationAlertData implements AlertData {
   private MLAnalysisType mlAnalysisType;
   private AlertStatus alertStatus;
   private String logAnomaly;
+  private String tag;
   private Set<String> hosts;
   private String portalUrl;
   private String accountId;
@@ -98,7 +100,12 @@ public class ContinuousVerificationAlertData implements AlertData {
         }
         break;
       case LOG_ML:
-        sb.append("\nHosts: ").append(hosts);
+        LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
+        if (logsCVConfiguration.is247LogsV2()) {
+          sb.append("\nTag: ").append(tag);
+        } else {
+          sb.append("\nHosts: ").append(hosts);
+        }
         sb.append("\nLog Message: ").append(logAnomaly);
         break;
       default:

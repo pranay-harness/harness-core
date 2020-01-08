@@ -75,6 +75,7 @@ import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask.LearningEngineExperimentalAnalysisTaskKeys;
+import software.wings.service.impl.splunk.LogAnalysisResult;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
 import software.wings.service.intfc.DataStoreService;
@@ -635,6 +636,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       mlAnalysisResponse.setStateType(analysisContext.getStateType());
     }
     Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = mlAnalysisResponse.getUnknown_clusters();
+    Map<Integer, LogAnalysisResult> logAnalysisResultMap = mlAnalysisResponse.getLog_analysis_result();
     mlAnalysisResponse.compressLogAnalysisRecord();
     mlAnalysisResponse.setCvConfigId(cvConfigId);
     mlAnalysisResponse.setAppId(appId);
@@ -653,6 +655,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         == null) {
       wingsPersistence.save(mlAnalysisResponse);
       mlAnalysisResponse.setUnknown_clusters(unknownClusters);
+      mlAnalysisResponse.setLog_analysis_result(logAnalysisResultMap);
       continuousVerificationService.triggerLogAnalysisAlertIfNecessary(cvConfigId, mlAnalysisResponse, analysisMinute);
     }
 
