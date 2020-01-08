@@ -210,8 +210,10 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
       updateUserLockoutOperations(operations, true, userLockoutInfo);
       sendNotifications(user, userLockoutPolicy);
       if (user.getAccounts() != null) {
-        user.getAccounts().forEach(
-            account -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Type.LOCK));
+        user.getAccounts().forEach(account -> {
+          auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Type.LOCK);
+          logger.info("Auditing locking of user={} in account={}", user.getName(), account.getAccountName());
+        });
       }
     } else {
       logger.info("Unlocking user: {}, current lock state = {}", user.getUuid(), user.isUserLocked());

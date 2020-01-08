@@ -170,13 +170,50 @@ public class Event {
      * Delete type.
      */
     DELETE,
+    /**
+     * Lock type.
+     */
     LOCK,
+    /**
+     * Unlock type.
+     */
     UNLOCK,
+    /**
+     * Reset Password type.
+     */
     RESET_PASSWORD,
+    /**
+     * Accepted Invite type.
+     */
     ACCEPTED_INVITE,
+    /**
+     * Enable 2FA type.
+     */
     ENABLE_2FA,
+    /**
+     * Disable 2FA type.
+     */
     DISABLE_2FA,
-    LOGIN
+    /**
+     * Login type.
+     */
+    LOGIN,
+    /**
+     * Link SSO type.
+     */
+    LINK_SSO,
+    /**
+     * Unlink SSO type.
+     */
+    UNLINK_SSO,
+    /**
+     * Update Notification Setting type.
+     */
+    UPDATE_NOTIFICATION_SETTING,
+    /**
+     * Update Notification Setting type.
+     */
+    MODIFY_PERMISSIONS
   }
 
   /**

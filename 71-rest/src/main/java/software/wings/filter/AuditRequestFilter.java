@@ -127,6 +127,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     return requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/users/login")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/users/user/login")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/users/two-factor-login")
+        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/users/sso-redirect-login")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/identity/user/login");
   }
 

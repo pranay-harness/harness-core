@@ -64,6 +64,7 @@ public class TwoFactorAuthenticationManager {
     if (user != null && user.getAccounts() != null) {
       for (Account account : user.getAccounts()) {
         auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.LOGIN);
+        logger.info("Auditing login for user={} in account={}", user.getName(), account.getAccountName());
       }
     }
     return authService.generateBearerTokenForUser(user);
@@ -82,8 +83,10 @@ public class TwoFactorAuthenticationManager {
 
     settings.setTwoFactorAuthenticationEnabled(true);
     if (user.getAccounts() != null) {
-      user.getAccounts().forEach(account
-          -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.ENABLE_2FA));
+      user.getAccounts().forEach(account -> {
+        auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.ENABLE_2FA);
+        logger.info("Auditing enabling of 2FA for user={} in account={}", user.getName(), account.getAccountName());
+      });
     }
     return applyTwoFactorAuthenticationSettings(user, settings);
   }
@@ -99,9 +102,11 @@ public class TwoFactorAuthenticationManager {
         logger.info("Disabling 2FA for User={}, tfEnabled={}, tfMechanism={}", user.getEmail(),
             user.isTwoFactorAuthenticationEnabled(), user.getTwoFactorAuthenticationMechanism());
         if (user.getAccounts() != null) {
-          user.getAccounts().forEach(account
-              -> auditServiceHelper.reportForAuditingUsingAccountId(
-                  account.getUuid(), null, user, Event.Type.DISABLE_2FA));
+          user.getAccounts().forEach(account -> {
+            auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.DISABLE_2FA);
+            logger.info(
+                "Auditing disabling of 2FA for user={} in account={}", user.getName(), account.getAccountName());
+          });
         }
         return getTwoFactorAuthHandler(user.getTwoFactorAuthenticationMechanism()).disableTwoFactorAuthentication(user);
       }
@@ -187,6 +192,7 @@ public class TwoFactorAuthenticationManager {
     userService.getUsersWithThisAsPrimaryAccount(accountId).forEach(user -> {
       totpHandler.disableTwoFactorAuthentication(user);
       auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.DISABLE_2FA);
+      logger.info("Auditing disabling of 2FA for user={} in accountId={}", user.getName(), accountId);
     });
     return true;
   }

@@ -341,8 +341,10 @@ public class AuthenticationManager {
         user = authHandler.authenticate(userName, password).getUser();
       }
       if (user.getAccounts() != null) {
-        user.getAccounts().forEach(account
-            -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.LOGIN));
+        user.getAccounts().forEach(account -> {
+          auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.LOGIN);
+          logger.info("Auditing login for user={} in account={}", user.getUuid(), account.getAccountName());
+        });
       }
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
@@ -386,6 +388,12 @@ public class AuthenticationManager {
       User user = userService.verifyJWTToken(jwtSecret, JWT_CATEGORY.SSO_REDIRECT);
       if (user == null) {
         throw new WingsException(USER_DOES_NOT_EXIST);
+      }
+      if (user.getAccounts() != null) {
+        user.getAccounts().forEach(account -> {
+          auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.LOGIN);
+          logger.info("Auditing login for user={} in account={}", user.getName(), account.getUuid());
+        });
       }
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
