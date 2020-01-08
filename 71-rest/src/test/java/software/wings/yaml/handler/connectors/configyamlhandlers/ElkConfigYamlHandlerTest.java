@@ -1,6 +1,8 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -62,6 +64,24 @@ public class ElkConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerT
     // 1. Create elk verification provider record
     SettingAttribute settingAttributeSaved = createElkVerificationProvider(elkProviderName);
     testFailureScenario(generateSettingValueYamlConfig(elkProviderName, settingAttributeSaved));
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testNullValidationType() {
+    String accountId = generateUuid();
+    String appId = generateUuid();
+    ElkConfig config = ElkConfig.builder().elkUrl(url).accountId(accountId).validationType(null).build();
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(config);
+    ElkConfig.Yaml yaml = yamlHandler.toYaml(attribute, appId);
+
+    assertThat(yaml).isNotNull();
+    assertThat(yaml.getElkUrl()).isEqualTo(url);
+    assertThat(yaml.getUsername()).isNull();
+    assertThat(yaml.getValidationType()).isNull();
+    assertThat(yaml.getPassword()).isNull();
   }
 
   private SettingAttribute createElkVerificationProvider(String elkProviderName) {
