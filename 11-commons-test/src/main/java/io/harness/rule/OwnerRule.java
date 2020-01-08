@@ -120,7 +120,6 @@ public class OwnerRule implements TestRule {
       ImmutableMap.<String, DevInfo>builder()
           .put(AADITI, defaultDevInfo(AADITI).slack("UCFPUNRAQ").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(ABHINAV, DevInfo.builder().email("abhinav.singh@harness.io").slack("UQQPR8M6Y").build())
-          .put(ADWAIT, DevInfo.builder().email("adwait.bhandare@harness.io").slack("U8PL7JRMG").build())
           .put(AMAN, DevInfo.builder().email("aman.singh@harness.io").slack("UDJG47CHF").build())
           .put(ANKIT, defaultDevInfo(ANKIT).slack("UF76W0NN5").team(PLATFORM).build())
           .put(ANSHUL, defaultDevInfo(ANSHUL).slack("UASUA3E65").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
@@ -157,6 +156,12 @@ public class OwnerRule implements TestRule {
           .put(ROHITKARELIA, DevInfo.builder().email("rohit.karelia@harness.io").slack("UP48HU3T9").build())
           .put(RUSHABH, DevInfo.builder().email("rushabh@harness.io").slack("U8M736D36").build())
           .put(SATYAM, DevInfo.builder().email("satyam.shanker@harness.io").slack("U9Z3R0GL8").build())
+          .put(ADWAIT,
+              defaultDevInfo(ADWAIT)
+                  .email("adwait.bhandare@harness.io")
+                  .slack("U8PL7JRMG")
+                  .team(CONTINUOUS_DEPLOYMENT_PLATFORM)
+                  .build())
           .put(SHASWAT, DevInfo.builder().email("shaswat.deep@harness.io").slack("UL9J5EH7A").build())
           .put(SHUBHANSHU, DevInfo.builder().email("shubhanshu.verma@harness.io").slack("UKLTRSAN9").build())
           .put(SOWMYA,

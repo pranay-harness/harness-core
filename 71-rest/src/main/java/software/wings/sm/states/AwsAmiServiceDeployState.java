@@ -507,9 +507,6 @@ public class AwsAmiServiceDeployState extends State {
 
       instanceElements.addAll(generateInstanceElements(amiServiceDeployResponse.getInstancesAdded(), context,
           phaseElement, infrastructureMapping, serviceTemplateKey, serviceTemplateId, true));
-
-      instanceElements.addAll(generateInstanceElements(amiServiceDeployResponse.getInstancesExisting(), context,
-          phaseElement, infrastructureMapping, serviceTemplateKey, serviceTemplateId, false));
     }
 
     return instanceElements;

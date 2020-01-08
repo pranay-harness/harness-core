@@ -552,6 +552,7 @@ public class EcsStateHelper {
     containerElement.setPrevAutoscalarsAlreadyRemoved(true);
   }
 
+  // This will be used later to add existing containerInfos as well.
   private void setNewInstanceFlag(
       List<InstanceElement> instanceElements, boolean flag, List<InstanceElement> finalInstanceElements) {
     if (isNotEmpty(instanceElements)) {
@@ -574,8 +575,6 @@ public class EcsStateHelper {
       EcsServiceDeployResponse deployResponse = (EcsServiceDeployResponse) executionResponse.getEcsCommandResponse();
       List<InstanceStatusSummary> instanceStatusSummaries =
           containerDeploymentHelper.getInstanceStatusSummaries(context, deployResponse.getContainerInfos());
-      List<InstanceStatusSummary> prevInstanceStatusSummaries =
-          containerDeploymentHelper.getInstanceStatusSummaries(context, deployResponse.getPreviousContainerInfos());
       executionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
 
       if (!rollback) {
@@ -586,9 +585,7 @@ public class EcsStateHelper {
       List<InstanceElement> instanceElements =
           instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
       setNewInstanceFlag(instanceElements, true, finalInstanceElements);
-      List<InstanceElement> prevInstanceElements =
-          prevInstanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
-      setNewInstanceFlag(prevInstanceElements, false, finalInstanceElements);
+
       InstanceElementListParam listParam =
           InstanceElementListParam.builder().instanceElements(finalInstanceElements).build();
 

@@ -22,6 +22,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElementListParam;
+import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
@@ -62,6 +63,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PcfDeployState extends State {
@@ -333,11 +335,18 @@ public class PcfDeployState extends State {
                                      .build());
     }
 
-    InstanceElementListParam instanceElementListParam =
-        InstanceElementListParam.builder()
-            .instanceElements(emptyList())
-            .pcfInstanceElements(pcfDeployCommandResponse.getPcfInstanceElements())
-            .build();
+    // For now, only use newInstances. Do not use existing instances. It will be done as a part of separate story
+    List<PcfInstanceElement> pcfInstanceElements = isEmpty(pcfDeployCommandResponse.getPcfInstanceElements())
+        ? emptyList()
+        : pcfDeployCommandResponse.getPcfInstanceElements()
+              .stream()
+              .filter(pcfInstanceElement -> pcfInstanceElement.isNewInstance())
+              .collect(Collectors.toList());
+
+    InstanceElementListParam instanceElementListParam = InstanceElementListParam.builder()
+                                                            .instanceElements(emptyList())
+                                                            .pcfInstanceElements(pcfInstanceElements)
+                                                            .build();
 
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)
