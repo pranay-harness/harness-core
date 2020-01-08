@@ -156,7 +156,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     verify(billingDataService).create(instanceBillingDataArgumentCaptor.capture());
     InstanceBillingData instanceBillingData = instanceBillingDataArgumentCaptor.getValue();
     assertThat(instanceBillingData.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(instanceBillingData.getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(instanceBillingData.getClusterId()).isEqualTo(null);
     assertThat(instanceBillingData.getClusterName()).isEqualTo(CLUSTER_NAME);
     assertThat(instanceBillingData.getBillingAmount()).isEqualTo(BigDecimal.ONE);
     assertThat(instanceBillingData.getIdleCost()).isEqualTo(BigDecimal.ZERO);

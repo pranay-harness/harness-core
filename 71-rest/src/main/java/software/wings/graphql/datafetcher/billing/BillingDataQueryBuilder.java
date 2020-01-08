@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import com.google.inject.Inject;
 
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.Converter;
@@ -15,10 +18,13 @@ import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.fabric8.utils.Lists;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.EntityType;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataQueryMetadataBuilder;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.ResultType;
+import software.wings.graphql.datafetcher.tag.TagHelper;
 import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLAggregationKind;
 import software.wings.graphql.schema.type.aggregation.QLFilterKind;
@@ -28,6 +34,8 @@ import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilterType;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagType;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortType;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
@@ -49,6 +57,7 @@ public class BillingDataQueryBuilder {
   private BillingDataTableSchema schema = new BillingDataTableSchema();
   private static final String DEFAULT_TIME_ZONE = "America/Los_Angeles";
   private static final String STANDARD_TIME_ZONE = "GMT";
+  @Inject TagHelper tagHelper;
 
   protected BillingDataQueryMetadata formQuery(String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
@@ -72,6 +81,7 @@ public class BillingDataQueryBuilder {
     selectQuery.addCustomFromTable(schema.getBillingDataTable());
 
     if (!Lists.isNullOrEmpty(filters)) {
+      filters = processFilterForTags(accountId, filters);
       decorateQueryWithFilters(selectQuery, filters);
     }
 
@@ -121,6 +131,7 @@ public class BillingDataQueryBuilder {
     }
 
     if (!Lists.isNullOrEmpty(filters)) {
+      filters = processFilterForTags(accountId, filters);
       decorateQueryWithFilters(selectQuery, filters);
     }
 
@@ -156,6 +167,7 @@ public class BillingDataQueryBuilder {
     selectQuery.addCustomFromTable(schema.getBillingDataTable());
 
     if (!Lists.isNullOrEmpty(filters)) {
+      filters = processFilterForTags(accountId, filters);
       decorateQueryWithFilters(selectQuery, filters);
     }
 
@@ -382,8 +394,8 @@ public class BillingDataQueryBuilder {
         return schema.getCloudServiceName();
       case LaunchType:
         return schema.getLaunchType();
-      case InstanceId:
-        return schema.getInstanceId();
+      case TaskId:
+        return schema.getTaskId();
       case InstanceType:
         return schema.getInstanceType();
       case WorkloadName:
@@ -434,8 +446,8 @@ public class BillingDataQueryBuilder {
       case CloudServiceName:
         groupBy = schema.getCloudServiceName();
         break;
-      case InstanceId:
-        groupBy = schema.getInstanceId();
+      case TaskId:
+        groupBy = schema.getTaskId();
         break;
       case LaunchType:
         groupBy = schema.getLaunchType();
@@ -574,15 +586,18 @@ public class BillingDataQueryBuilder {
       instanceTypeValues.add("ECS_TASK_FARGATE");
       instanceTypeValues.add("ECS_CONTAINER_INSTANCE");
       instanceTypeValues.add("K8S_NODE");
-
-      QLBillingDataFilter instanceTypeFilter = QLBillingDataFilter.builder()
-                                                   .instanceType(QLIdFilter.builder()
-                                                                     .operator(QLIdOperator.EQUALS)
-                                                                     .values(instanceTypeValues.toArray(new String[0]))
-                                                                     .build())
-                                                   .build();
-      filters.add(instanceTypeFilter);
+      addInstanceTypeFilter(filters, instanceTypeValues);
     }
+  }
+
+  private void addInstanceTypeFilter(List<QLBillingDataFilter> filters, List<String> instanceTypeValues) {
+    QLBillingDataFilter instanceTypeFilter = QLBillingDataFilter.builder()
+                                                 .instanceType(QLIdFilter.builder()
+                                                                   .operator(QLIdOperator.EQUALS)
+                                                                   .values(instanceTypeValues.toArray(new String[0]))
+                                                                   .build())
+                                                 .build();
+    filters.add(instanceTypeFilter);
   }
 
   private boolean isInstanceTypeFilterPresent(List<QLBillingDataFilter> filters) {
@@ -677,5 +692,70 @@ public class BillingDataQueryBuilder {
 
   protected double getRoundedDoublePercentageValue(BigDecimal value) {
     return Math.round(value.doubleValue() * 10000D) / 100D;
+  }
+
+  private List<QLBillingDataFilter> processFilterForTags(String accountId, List<QLBillingDataFilter> filters) {
+    List<QLBillingDataFilter> newList = new ArrayList<>();
+    for (QLBillingDataFilter filter : filters) {
+      Set<QLBillingDataFilterType> filterTypes = QLBillingDataFilter.getFilterTypes(filter);
+      for (QLBillingDataFilterType type : filterTypes) {
+        if (type == QLBillingDataFilterType.Tag) {
+          QLBillingDataTagFilter tagFilter = filter.getTag();
+
+          if (tagFilter != null) {
+            Set<String> entityIds = tagHelper.getEntityIdsFromTags(
+                accountId, tagFilter.getTags(), getEntityType(tagFilter.getEntityType()));
+            if (isNotEmpty(entityIds)) {
+              switch (tagFilter.getEntityType()) {
+                case APPLICATION:
+                  newList.add(QLBillingDataFilter.builder()
+                                  .application(QLIdFilter.builder()
+                                                   .operator(QLIdOperator.IN)
+                                                   .values(entityIds.toArray(new String[0]))
+                                                   .build())
+                                  .build());
+                  break;
+                case SERVICE:
+                  newList.add(QLBillingDataFilter.builder()
+                                  .service(QLIdFilter.builder()
+                                               .operator(QLIdOperator.IN)
+                                               .values(entityIds.toArray(new String[0]))
+                                               .build())
+                                  .build());
+                  break;
+                case ENVIRONMENT:
+                  newList.add(QLBillingDataFilter.builder()
+                                  .environment(QLIdFilter.builder()
+                                                   .operator(QLIdOperator.IN)
+                                                   .values(entityIds.toArray(new String[0]))
+                                                   .build())
+                                  .build());
+                  break;
+                default:
+                  logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
+                  throw new InvalidRequestException("Error while compiling query", WingsException.USER);
+              }
+            }
+          }
+        } else {
+          newList.add(filter);
+        }
+      }
+    }
+    return newList;
+  }
+
+  public EntityType getEntityType(QLBillingDataTagType entityType) {
+    switch (entityType) {
+      case APPLICATION:
+        return EntityType.APPLICATION;
+      case SERVICE:
+        return EntityType.SERVICE;
+      case ENVIRONMENT:
+        return EntityType.ENVIRONMENT;
+      default:
+        logger.error("Unsupported entity type {} for tag ", entityType);
+        throw new InvalidRequestException("Unsupported entity type " + entityType);
+    }
   }
 }

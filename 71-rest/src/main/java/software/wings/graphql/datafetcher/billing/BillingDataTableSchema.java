@@ -59,6 +59,7 @@ public class BillingDataTableSchema {
   DbColumn cpuUnitSeconds;
   DbColumn memoryMbSeconds;
   DbColumn cloudServiceName;
+  DbColumn taskId;
   DbColumn namespace;
   DbColumn idleCost;
   DbColumn cpuIdleCost;
@@ -99,6 +100,7 @@ public class BillingDataTableSchema {
     cpuUnitSeconds = billingDataTable.addColumn("cpuunitseconds", doubleType, null);
     memoryMbSeconds = billingDataTable.addColumn("memorymbseconds", doubleType, null);
     cloudServiceName = billingDataTable.addColumn("cloudServiceName", "text", null);
+    taskId = billingDataTable.addColumn("taskId", "text", null);
     namespace = billingDataTable.addColumn("namespace", "text", null);
     idleCost = billingDataTable.addColumn("idlecost", doubleType, null);
     cpuIdleCost = billingDataTable.addColumn("cpuidlecost", doubleType, null);

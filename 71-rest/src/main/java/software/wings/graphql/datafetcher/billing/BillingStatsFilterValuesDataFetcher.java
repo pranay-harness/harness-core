@@ -78,7 +78,7 @@ public class BillingStatsFilterValuesDataFetcher
     Set<String> cloudServiceNames = new HashSet<>();
     Set<String> workloadNames = new HashSet<>();
     Set<String> launchTypes = new HashSet<>();
-    Set<String> instanceIds = new HashSet<>();
+    Set<String> taskIds = new HashSet<>();
     Set<String> namespaces = new HashSet<>();
     Set<String> applicationIds = new HashSet<>();
     Set<String> environmentIds = new HashSet<>();
@@ -94,8 +94,8 @@ public class BillingStatsFilterValuesDataFetcher
           case LAUNCHTYPE:
             launchTypes.add(resultSet.getString(field.getFieldName()));
             break;
-          case INSTANCEID:
-            instanceIds.add(resultSet.getString(field.getFieldName()));
+          case TASKID:
+            taskIds.add(resultSet.getString(field.getFieldName()));
             break;
           case CLUSTERID:
             clusters.add(QLEntityData.builder()
@@ -129,7 +129,7 @@ public class BillingStatsFilterValuesDataFetcher
     }
 
     filterValuesDataBuilder.cloudServiceNames(getEntity(BillingDataMetaDataFields.CLOUDSERVICENAME, cloudServiceNames))
-        .instanceIds(getEntity(BillingDataMetaDataFields.INSTANCEID, instanceIds))
+        .taskIds(getEntity(BillingDataMetaDataFields.TASKID, taskIds))
         .launchTypes(getEntity(BillingDataMetaDataFields.LAUNCHTYPE, launchTypes))
         .clusters(clusters)
         .namespaces(getEntity(BillingDataMetaDataFields.NAMESPACE, namespaces))

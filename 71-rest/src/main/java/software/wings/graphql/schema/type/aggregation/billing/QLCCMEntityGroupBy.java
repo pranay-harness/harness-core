@@ -10,7 +10,7 @@ public enum QLCCMEntityGroupBy {
   Region(QLAggregationKind.SIMPLE),
   Environment(QLAggregationKind.SIMPLE),
   CloudServiceName(QLAggregationKind.SIMPLE),
-  InstanceId(QLAggregationKind.SIMPLE),
+  TaskId(QLAggregationKind.SIMPLE),
   LaunchType(QLAggregationKind.SIMPLE),
   WorkloadName(QLAggregationKind.SIMPLE),
   WorkloadType(QLAggregationKind.SIMPLE),

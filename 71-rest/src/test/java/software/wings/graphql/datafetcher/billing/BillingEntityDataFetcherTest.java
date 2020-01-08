@@ -21,21 +21,26 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
+import software.wings.beans.EntityType;
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
+import software.wings.graphql.datafetcher.tag.TagHelper;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagType;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortType;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableListData;
+import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import software.wings.security.UserThreadLocal;
 
 import java.math.BigDecimal;
@@ -47,11 +52,15 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;
+  @Mock TagHelper tagHelper;
+  @InjectMocks BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject @InjectMocks BillingStatsEntityDataFetcher billingStatsEntityDataFetcher;
 
   @Mock Statement statement;
@@ -314,6 +323,68 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getAvgMemoryUtilization()).isEqualTo(40.0);
   }
 
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingEntitySeriesDataFetcherWithTagFilters() {
+    List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeTagFilter("Tag-App", "App", QLBillingDataTagType.APPLICATION));
+    filters.add(makeTagFilter("Tag-Service", "Service", QLBillingDataTagType.SERVICE));
+    filters.add(makeTagFilter("Tag-Env", "Env", QLBillingDataTagType.ENVIRONMENT));
+
+    Set<String> applicationValues = new HashSet<>();
+    applicationValues.add(APP1_ID_ACCOUNT1);
+    Set<String> serviceValues = new HashSet<>();
+    serviceValues.add(SERVICE1_ID_APP1_ACCOUNT1);
+    Set<String> environmentValues = new HashSet<>();
+    environmentValues.add(ENV1_ID_APP1_ACCOUNT1);
+
+    when(tagHelper.getEntityIdsFromTags(ACCOUNT1_ID, filters.get(0).getTag().getTags(), EntityType.APPLICATION))
+        .thenReturn(applicationValues);
+    when(tagHelper.getEntityIdsFromTags(ACCOUNT1_ID, filters.get(1).getTag().getTags(), EntityType.SERVICE))
+        .thenReturn(serviceValues);
+    when(tagHelper.getEntityIdsFromTags(ACCOUNT1_ID, filters.get(2).getTag().getTags(), EntityType.ENVIRONMENT))
+        .thenReturn(environmentValues);
+    List<QLCCMGroupBy> groupBy = Collections.emptyList();
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+
+    QLEntityTableListData data = (QLEntityTableListData) billingStatsEntityDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, null);
+
+    billingDataQueryBuilder.formQuery(
+        ACCOUNT1_ID, filters, Collections.emptyList(), Collections.emptyList(), null, null);
+
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(filters.get(0).getTag().getOperator()).isEqualTo(QLIdOperator.IN);
+    assertThat(filters.get(0).getTag().getEntityType()).isEqualTo(QLBillingDataTagType.APPLICATION);
+    assertThat(filters.get(0).getTag().getTags().get(0).getName()).isEqualTo("Tag-App");
+    assertThat(filters.get(0).getTag().getTags().get(0).getValue()).isEqualTo("App");
+    assertThat(filters.get(1).getTag().getOperator()).isEqualTo(QLIdOperator.IN);
+    assertThat(filters.get(1).getTag().getEntityType()).isEqualTo(QLBillingDataTagType.SERVICE);
+    assertThat(filters.get(1).getTag().getTags().get(0).getName()).isEqualTo("Tag-Service");
+    assertThat(filters.get(1).getTag().getTags().get(0).getValue()).isEqualTo("Service");
+    assertThat(filters.get(2).getTag().getOperator()).isEqualTo(QLIdOperator.IN);
+    assertThat(filters.get(2).getTag().getEntityType()).isEqualTo(QLBillingDataTagType.ENVIRONMENT);
+    assertThat(filters.get(2).getTag().getTags().get(0).getName()).isEqualTo("Tag-Env");
+    assertThat(filters.get(2).getTag().getTags().get(0).getValue()).isEqualTo("Env");
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getWorkloadName()).isEqualTo("Total");
+    assertThat(data.getData().get(0).getRegion()).isEqualTo(BillingStatsDefaultKeys.REGION);
+    assertThat(data.getData().get(0).getWorkloadType()).isEqualTo(BillingStatsDefaultKeys.WORKLOADTYPE);
+    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(BillingStatsDefaultKeys.IDLECOST);
+    assertThat(data.getData().get(0).getTrendType()).isEqualTo(BillingStatsDefaultKeys.TRENDTYPE);
+    assertThat(data.getData().get(0).getClusterType()).isEqualTo(BillingStatsDefaultKeys.CLUSTERTYPE);
+    assertThat(data.getData().get(0).getClusterId()).isEqualTo(BillingStatsDefaultKeys.CLUSTERID);
+    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(BillingStatsDefaultKeys.IDLECOST);
+    assertThat(data.getData().get(0).getCpuIdleCost()).isEqualTo(BillingStatsDefaultKeys.CPUIDLECOST);
+    assertThat(data.getData().get(0).getMemoryIdleCost()).isEqualTo(BillingStatsDefaultKeys.MEMORYIDLECOST);
+    assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
+  }
+
   public QLBillingSortCriteria makeDescByTimeSortingCriteria() {
     return QLBillingSortCriteria.builder().sortOrder(QLSortOrder.DESCENDING).sortType(QLBillingSortType.Time).build();
   }
@@ -433,6 +504,28 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     return QLBillingDataFilter.builder().namespace(namespaceFilter).build();
   }
 
+  public QLBillingDataFilter makeApplicationFilter(String[] values) {
+    QLIdFilter applicationFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().application(applicationFilter).build();
+  }
+
+  public QLBillingDataFilter makeServiceFilter(String[] values) {
+    QLIdFilter serviceFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().service(serviceFilter).build();
+  }
+
+  public QLBillingDataFilter makeEnvironmentFilter(String[] values) {
+    QLIdFilter environmentFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().environment(environmentFilter).build();
+  }
+
+  public QLBillingDataFilter makeTagFilter(String tagName, String tagValue, QLBillingDataTagType entityType) {
+    List<QLTagInput> tagInput = Arrays.asList(QLTagInput.builder().name(tagName).value(tagValue).build());
+    return QLBillingDataFilter.builder()
+        .tag(QLBillingDataTagFilter.builder().tags(tagInput).entityType(entityType).build())
+        .build();
+  }
+
   private void mockResultSet() throws SQLException {
     Connection connection = mock(Connection.class);
     statement = mock(Statement.class);
@@ -454,6 +547,8 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getDouble("AVGCPUUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.4);
     when(resultSet.getDouble("AVGMEMORYUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.4);
     when(resultSet.getString("APPID")).thenAnswer((Answer<String>) invocation -> APP1_ID_ACCOUNT1);
+    when(resultSet.getString("SERVICEID")).thenAnswer((Answer<String>) invocation -> SERVICE1_ID_APP1_ACCOUNT1);
+    when(resultSet.getString("ENVID")).thenAnswer((Answer<String>) invocation -> ENV1_ID_APP1_ACCOUNT1);
     when(resultSet.getString("WORKLOADNAME")).thenAnswer((Answer<String>) invocation -> WORKLOAD_NAME_ACCOUNT1);
     when(resultSet.getString("WORKLOADTYPE")).thenAnswer((Answer<String>) invocation -> WORKLOAD_TYPE_ACCOUNT1);
     when(resultSet.getString("CLUSTERTYPE")).thenAnswer((Answer<String>) invocation -> CLUSTER_TYPE1);

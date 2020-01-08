@@ -57,7 +57,7 @@ enum CCMEntityGroupBy {
   Environment
   Region
   CloudServiceName
-  InstanceId
+  TaskId
   LaunchType
   WorkloadName
   WorkloadType
@@ -120,7 +120,7 @@ type BillingEntityData {
 
 type BillingFilterDataPoint {
   cloudServiceNames: [EntityData]
-  instanceIds: [EntityData]
+  taskIds: [EntityData]
   launchTypes: [EntityData]
   workloadNames: [EntityData]
   namespaces: [EntityData]
@@ -188,10 +188,22 @@ input CCMFilter {
   cluster: IdFilter
   cloudServiceName: IdFilter
   launchType: IdFilter
-  instanceId: IdFilter
+  taskId: IdFilter
   namespace: IdFilter
   workloadName: IdFilter
   endTime: TimeFilter
   startTime: TimeFilter
   cloudProvider: IdFilter
+  tag: BillingDataTagFilter
+}
+
+input BillingDataTagFilter {
+  entityType: BillingDataTagType
+  tags: [TagInput]
+}
+
+enum BillingDataTagType {
+  APPLICATION
+  SERVICE
+  ENVIRONMENT
 }

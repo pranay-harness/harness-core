@@ -9,6 +9,7 @@ import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
+import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -50,11 +51,15 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
           billingCalculationService.getInstanceBillingAmount(instanceData, utilizationData, startTime, endTime);
       logger.info("Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmountBreakup());
       HarnessServiceInfo harnessServiceInfo = getHarnessServiceInfo(instanceData);
+      String settingId =
+          (instanceData.getInstanceType() == InstanceType.EC2_INSTANCE) ? null : instanceData.getSettingId();
+      String clusterId =
+          (instanceData.getInstanceType() == InstanceType.EC2_INSTANCE) ? null : instanceData.getClusterId();
       InstanceBillingData instanceBillingData =
           InstanceBillingData.builder()
               .accountId(instanceData.getAccountId())
-              .settingId(instanceData.getSettingId())
-              .clusterId(instanceData.getClusterId())
+              .settingId(settingId)
+              .clusterId(clusterId)
               .instanceType(instanceData.getInstanceType().toString())
               .billingAccountId("BILLING_ACCOUNT_ID")
               .startTimestamp(startTime.toEpochMilli())

@@ -12,11 +12,12 @@ public enum QLBillingDataFilterType {
   Cluster(BillingDataMetaDataFields.CLUSTERID),
   CloudServiceName(BillingDataMetaDataFields.CLOUDSERVICENAME),
   LaunchType(BillingDataMetaDataFields.LAUNCHTYPE),
-  InstanceId(BillingDataMetaDataFields.INSTANCEID),
+  TaskId(BillingDataMetaDataFields.TASKID),
   InstanceType(BillingDataMetaDataFields.INSTANCETYPE),
   WorkloadName(BillingDataMetaDataFields.WORKLOADNAME),
   Namespace(BillingDataMetaDataFields.NAMESPACE),
-  CloudProvider(BillingDataMetaDataFields.CLOUDPROVIDERID);
+  CloudProvider(BillingDataMetaDataFields.CLOUDPROVIDERID),
+  Tag(null);
 
   private QLDataType dataType;
   private BillingDataMetaDataFields metaDataFields;

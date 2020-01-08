@@ -39,7 +39,7 @@ public class QLBillingStatsHelper {
         return getCloudProviderName(entityId);
       case REGION:
       case CLOUDSERVICENAME:
-      case INSTANCEID:
+      case TASKID:
       case LAUNCHTYPE:
       case WORKLOADNAME:
       case WORKLOADTYPE:

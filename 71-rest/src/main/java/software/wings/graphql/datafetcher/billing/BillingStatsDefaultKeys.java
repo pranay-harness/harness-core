@@ -13,14 +13,14 @@ public class BillingStatsDefaultKeys {
   public static final Double COSTTREND = 0.0;
   public static final String TRENDTYPE = "Increasing";
   public static final String REGION = "-";
-  public static final String LAUNCHTYPE = "Default_LaunchType";
-  public static final String CLOUDSERVICENAME = "Default_Service";
+  public static final String LAUNCHTYPE = "Total";
+  public static final String CLOUDSERVICENAME = "Total";
   public static final String WORKLOADNAME = "Total";
   public static final String WORKLOADTYPE = "Default_WorkloadType";
   public static final String NAMESPACE = "Total";
   public static final String CLUSTERTYPE = "Default_ClusterType";
   public static final String CLUSTERID = "Default_ClusterId";
-  public static final String INSTANCEID = "Default_InstanceId";
+  public static final String TASKID = "Total";
   public static final int TOTALWORKLOADS = 0;
   public static final int TOTALNAMESPACES = 0;
   public static final double MAXCPUUTILIZATION = 1.0;

@@ -22,13 +22,14 @@ public class QLBillingDataFilter implements EntityFilter {
   private QLIdFilter cluster;
   private QLIdFilter cloudServiceName;
   private QLIdFilter launchType;
-  private QLIdFilter instanceId;
+  private QLIdFilter taskId;
   private QLIdFilter instanceType;
   private QLIdFilter namespace;
   private QLIdFilter workloadName;
   private QLIdFilter cloudProvider;
   private QLTimeFilter endTime;
   private QLTimeFilter startTime;
+  private QLBillingDataTagFilter tag;
 
   public static Set<QLBillingDataFilterType> getFilterTypes(QLBillingDataFilter filter) {
     Set<QLBillingDataFilterType> filterTypes = new HashSet<>();
@@ -56,8 +57,8 @@ public class QLBillingDataFilter implements EntityFilter {
     if (filter.getLaunchType() != null) {
       filterTypes.add(QLBillingDataFilterType.LaunchType);
     }
-    if (filter.getInstanceId() != null) {
-      filterTypes.add(QLBillingDataFilterType.InstanceId);
+    if (filter.getTaskId() != null) {
+      filterTypes.add(QLBillingDataFilterType.TaskId);
     }
     if (filter.getInstanceType() != null) {
       filterTypes.add(QLBillingDataFilterType.InstanceType);
@@ -67,6 +68,9 @@ public class QLBillingDataFilter implements EntityFilter {
     }
     if (filter.getWorkloadName() != null) {
       filterTypes.add(QLBillingDataFilterType.WorkloadName);
+    }
+    if (filter.getTag() != null) {
+      filterTypes.add(QLBillingDataFilterType.Tag);
     }
     if (filter.getCloudProvider() != null) {
       filterTypes.add(QLBillingDataFilterType.CloudProvider);
@@ -92,14 +96,16 @@ public class QLBillingDataFilter implements EntityFilter {
         return filter.getCloudServiceName();
       case LaunchType:
         return filter.getLaunchType();
-      case InstanceId:
-        return filter.getInstanceId();
+      case TaskId:
+        return filter.getTaskId();
       case InstanceType:
         return filter.getInstanceType();
       case Namespace:
         return filter.getNamespace();
       case WorkloadName:
         return filter.getWorkloadName();
+      case Tag:
+        return filter.getTag();
       case CloudProvider:
         return filter.getCloudProvider();
       default:
