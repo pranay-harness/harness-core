@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static io.fabric8.utils.Lists.isNullOrEmpty;
+import static io.harness.beans.ExecutionStatus.ERROR;
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.NEW;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.PAUSING;
@@ -17,6 +19,7 @@ import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SearchFilter.Operator.LT_EQ;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
+import static io.harness.beans.SortOrder.Builder.aSortOrder;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
@@ -77,7 +80,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
@@ -184,7 +186,10 @@ import software.wings.beans.concurrency.ConcurrentExecutionResponse;
 import software.wings.beans.concurrency.ConcurrentExecutionResponse.ConcurrentExecutionResponseBuilder;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
+import software.wings.beans.execution.RollbackType;
+import software.wings.beans.execution.RollbackWorkflowExecutionInfo;
 import software.wings.beans.execution.WorkflowExecutionInfo;
+import software.wings.beans.execution.WorkflowExecutionInfo.WorkflowExecutionInfoBuilder;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.trigger.Trigger;
 import software.wings.common.cache.MongoStore;
@@ -3588,7 +3593,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter(WorkflowExecutionKeys.envIds, Operator.IN, Arrays.asList(envId))
             .withLimit(String.valueOf(pageLimit))
             .withOffset(String.valueOf(pageOffset))
-            .addOrder(SortOrder.Builder.aSortOrder().withField(WorkflowExecutionKeys.createdAt, OrderType.DESC).build())
+            .addOrder(aSortOrder().withField(WorkflowExecutionKeys.createdAt, OrderType.DESC).build())
             .build();
 
     return wingsPersistence.query(WorkflowExecution.class, pageRequest);
@@ -3900,5 +3905,67 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 || DeploymentType.WINRM == infrastructureDefinition.getDeploymentType())
                && featureFlagService.isEnabled(
                       SSH_WINRM_SO, appService.getAccountIdByAppId(infrastructureDefinition.getAppId())));
+  }
+
+  @Override
+  public WorkflowExecutionInfo getWorkflowExecutionInfo(String workflowExecutionId) {
+    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
+    if (workflowExecution == null) {
+      throw new InvalidRequestException("Couldn't find a workflow Execution with Id: " + workflowExecutionId, USER);
+    }
+
+    WorkflowExecutionInfoBuilder workflowExecutionInfoBuilder = WorkflowExecutionInfo.builder()
+                                                                    .accountId(workflowExecution.getAccountId())
+                                                                    .name(workflowExecution.getName())
+                                                                    .appId(workflowExecution.getAppId())
+                                                                    .executionId(workflowExecutionId)
+                                                                    .workflowId(workflowExecution.getWorkflowId())
+                                                                    .startTs(workflowExecution.getStartTs());
+
+    if (workflowExecution.getRollbackStartTs() != null) {
+      ExecutionInterrupt executionInterrupt =
+          wingsPersistence.createQuery(ExecutionInterrupt.class)
+              .filter(ExecutionInterruptKeys.appId, workflowExecution.getAppId())
+              .filter(ExecutionInterruptKeys.executionUuid, workflowExecutionId)
+              .filter(ExecutionInterruptKeys.executionInterruptType, String.valueOf(ExecutionInterruptType.ROLLBACK))
+              .order(Sort.descending(ExecutionInterruptKeys.createdAt))
+              .get();
+
+      RollbackType rollbackType;
+      String rollbackStateExecutionId = null;
+      if (executionInterrupt != null) {
+        rollbackType = RollbackType.MANUAL;
+        rollbackStateExecutionId = executionInterrupt.getStateExecutionInstanceId();
+      } else {
+        rollbackType = RollbackType.AUTO;
+        Query<StateExecutionInstance> query =
+            wingsPersistence.createQuery(StateExecutionInstance.class)
+                .filter(StateExecutionInstanceKeys.appId, workflowExecution.getAppId())
+                .filter(StateExecutionInstanceKeys.executionUuid, workflowExecutionId)
+                .field(StateExecutionInstanceKeys.status)
+                .in(Arrays.asList(FAILED, ERROR))
+                .order(Sort.descending(StateExecutionInstanceKeys.createdAt))
+                .project(StateExecutionInstanceKeys.uuid, true)
+                .project(StateExecutionInstanceKeys.stateName, true)
+                .project(StateExecutionInstanceKeys.status, true);
+
+        StateExecutionInstance failedInstance = query.get();
+        if (failedInstance != null) {
+          rollbackStateExecutionId = failedInstance.getUuid();
+        }
+      }
+
+      RollbackWorkflowExecutionInfo rollbackWorkflowExecutionInfo =
+          RollbackWorkflowExecutionInfo.builder()
+              .rollbackStartTs(workflowExecution.getRollbackStartTs())
+              .rollbackDuration(workflowExecution.getRollbackDuration())
+              .rollbackType(rollbackType)
+              .rollbackStateExecutionId(rollbackStateExecutionId)
+              .build();
+
+      workflowExecutionInfoBuilder.rollbackWorkflowExecutionInfo(rollbackWorkflowExecutionInfo);
+    }
+
+    return workflowExecutionInfoBuilder.build();
   }
 }

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -19,7 +20,11 @@ import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.execution.RollbackType.AUTO;
+import static software.wings.beans.execution.RollbackType.MANUAL;
+import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -57,6 +62,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.execution.WorkflowExecutionInfo;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
@@ -66,6 +72,8 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExecutionInterrupt;
+import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.RollbackConfirmation;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
@@ -344,5 +352,73 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
     WorkflowExecution rollbackExecution = createNewWorkflowExecution(true);
     wingsPersistence.save(rollbackExecution);
     assertThat(workflowExecutionService.checkIfOnDemand(APP_ID, rollbackExecution.getUuid())).isTrue();
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testGetWorkflowExecutionInfoAutomaticRollback() {
+    WorkflowExecution autoExecution = createNewWorkflowExecution(false);
+    autoExecution.setRollbackDuration(1L);
+    autoExecution.setRollbackStartTs(2L);
+
+    wingsPersistence.save(autoExecution);
+
+    StateExecutionInstance stateExecutionInstance = createStateExecutionInstance(autoExecution.getUuid());
+    wingsPersistence.save(stateExecutionInstance);
+
+    WorkflowExecutionInfo info = workflowExecutionService.getWorkflowExecutionInfo(autoExecution.getUuid());
+    assertThat(info).isNotNull();
+    assertThat(info.getExecutionId()).isEqualTo(autoExecution.getUuid());
+    assertThat(info.getRollbackWorkflowExecutionInfo()).isNotNull();
+    assertThat(info.getRollbackWorkflowExecutionInfo().getRollbackType()).isEqualTo(AUTO);
+    assertThat(info.getRollbackWorkflowExecutionInfo().getRollbackStateExecutionId()).isEqualTo("test-uuid");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testGetWorkflowExecutionInfoRunning() {
+    WorkflowExecution autoExecution = createNewWorkflowExecution(false);
+    wingsPersistence.save(autoExecution);
+
+    StateExecutionInstance stateExecutionInstance = createStateExecutionInstance(autoExecution.getUuid());
+    wingsPersistence.save(stateExecutionInstance);
+
+    WorkflowExecutionInfo info = workflowExecutionService.getWorkflowExecutionInfo(autoExecution.getUuid());
+    assertThat(info).isNotNull();
+    assertThat(info.getExecutionId()).isEqualTo(autoExecution.getUuid());
+    assertThat(info.getRollbackWorkflowExecutionInfo()).isNull();
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testGetWorkflowExecutionInfoManualRollback() {
+    WorkflowExecution autoExecution = createNewWorkflowExecution(false);
+    autoExecution.setRollbackDuration(1L);
+    autoExecution.setRollbackStartTs(2L);
+
+    wingsPersistence.save(autoExecution);
+
+    ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
+                                                .executionInterruptType(ExecutionInterruptType.ROLLBACK)
+                                                .executionUuid(autoExecution.getUuid())
+                                                .appId(APP_ID)
+                                                .createdAt(1L)
+                                                .stateExecutionInstanceId("test-uuid")
+                                                .build();
+    wingsPersistence.save(executionInterrupt);
+
+    WorkflowExecutionInfo info = workflowExecutionService.getWorkflowExecutionInfo(autoExecution.getUuid());
+    assertThat(info).isNotNull();
+    assertThat(info.getExecutionId()).isEqualTo(autoExecution.getUuid());
+    assertThat(info.getRollbackWorkflowExecutionInfo()).isNotNull();
+    assertThat(info.getRollbackWorkflowExecutionInfo().getRollbackType()).isEqualTo(MANUAL);
+    assertThat(info.getRollbackWorkflowExecutionInfo().getRollbackStateExecutionId()).isEqualTo("test-uuid");
+  }
+
+  private StateExecutionInstance createStateExecutionInstance(String executionId) {
+    return aStateExecutionInstance().status(FAILED).uuid("test-uuid").appId(APP_ID).executionUuid(executionId).build();
   }
 }
