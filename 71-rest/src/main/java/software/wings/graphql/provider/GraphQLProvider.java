@@ -76,8 +76,9 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
     DataLoaderDispatcherInstrumentation dispatcherInstrumentation = new DataLoaderDispatcherInstrumentation(options);
 
     return GraphQL.newGraphQL(graphQLSchema)
-        .instrumentation(new ChainedInstrumentation(
-            Arrays.asList(dispatcherInstrumentation, new QueryDepthInstrumentation(), qlAuditInstrumentation)))
+        .instrumentation(dispatcherInstrumentation)
+        .instrumentation(
+            new ChainedInstrumentation(Arrays.asList(new QueryDepthInstrumentation(), qlAuditInstrumentation)))
         .build();
   }
 

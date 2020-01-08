@@ -24,25 +24,24 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import software.wings.beans.Application;
-import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.AuthRuleGraphQL;
 import software.wings.graphql.datafetcher.BaseDataFetcher;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.mutation.QLCreateApplicationParameters;
+import software.wings.graphql.schema.mutation.application.QLCreateApplicationParameters;
 import software.wings.graphql.schema.type.QLApplication;
 import software.wings.service.intfc.AppService;
 
-public class ApplicationCreatorDataFetcherTest extends CategoryTest {
+public class CreateApplicationDataFetcherTest extends CategoryTest {
   @Mock AuthRuleGraphQL authRuleInstrumentation;
   @Mock DataFetcherUtils utils;
-  @Mock WingsPersistence wingsPersistence;
   @Mock AppService appService;
   @InjectMocks
   @Spy
-  ApplicationCreatorDataFetcher applicationCreatorDataFetcher = new ApplicationCreatorDataFetcher(appService);
+  CreateApplicationDataFetcher createApplicationDataFetcher = new CreateApplicationDataFetcher(appService);
 
   @Before
+
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
   }
@@ -64,7 +63,7 @@ public class ApplicationCreatorDataFetcherTest extends CategoryTest {
                                              .build();
     doReturn(savedApplication).when(appService).save(any(Application.class));
 
-    final QLApplication qlApplication = applicationCreatorDataFetcher.get(dataFetchingEnvironment);
+    final QLApplication qlApplication = createApplicationDataFetcher.get(dataFetchingEnvironment);
 
     ArgumentCaptor<Application> applicationArgumentCaptor = ArgumentCaptor.forClass(Application.class);
     verify(appService, times(1)).save(applicationArgumentCaptor.capture());

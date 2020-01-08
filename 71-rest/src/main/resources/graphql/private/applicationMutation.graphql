@@ -1,0 +1,15 @@
+extend type Mutation {
+  createApplication(application: ApplicationInput!): Application @dataFetcher(name: createApplication)
+  updateApplication(applicationId: String!, application: ApplicationInput!): Application
+    @dataFetcher(name: updateApplication)
+  deleteApplication(applicationId: String!): DeleteApplicationResult @dataFetcher(name: deleteApplication)
+}
+
+input ApplicationInput {
+  name: String
+  description: String
+}
+
+type DeleteApplicationResult {
+  success: Boolean
+}

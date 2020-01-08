@@ -22,9 +22,11 @@ import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.datafetcher.application.ApplicationConnectionDataFetcher;
-import software.wings.graphql.datafetcher.application.ApplicationCreatorDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationStatsDataFetcher;
+import software.wings.graphql.datafetcher.application.CreateApplicationDataFetcher;
+import software.wings.graphql.datafetcher.application.DeleteApplicationDataFetcher;
+import software.wings.graphql.datafetcher.application.UpdateApplicationDataFetcher;
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataFetcher;
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataLoader;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
@@ -184,7 +186,9 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingStatsFilterValuesDataFetcher.class);
-    bindDataFetcherWithAnnotation(ApplicationCreatorDataFetcher.class);
+    bindDataFetcherWithAnnotation(CreateApplicationDataFetcher.class);
+    bindDataFetcherWithAnnotation(UpdateApplicationDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeleteApplicationDataFetcher.class);
   }
 
   @NotNull
