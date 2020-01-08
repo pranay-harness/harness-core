@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.EntityType;
 import software.wings.beans.User;
+import software.wings.beans.User.UserKeys;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
@@ -152,7 +153,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private void loadUsersForUserGroups(List<UserGroup> userGroups, Account account) {
-    PageRequest<User> req = aPageRequest().addFilter("accounts", Operator.HAS, account).build();
+    PageRequest<User> req = aPageRequest().addFilter(UserKeys.accounts, Operator.HAS, account).build();
     PageResponse<User> res = userService.list(req, false);
     List<User> allUsersList = res.getResponse();
     if (isEmpty(allUsersList)) {
@@ -258,7 +259,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (userGroup.getMemberIds() != null) {
       PageRequest<User> req = aPageRequest()
                                   .addFilter(ID_KEY, Operator.IN, userGroup.getMemberIds().toArray())
-                                  .addFilter("accounts", Operator.IN, account)
+                                  .addFilter(UserKeys.accounts, Operator.IN, account)
                                   .build();
 
       PageResponse<User> res = userService.list(req, false);

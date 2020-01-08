@@ -26,7 +26,6 @@ public class SetLastLoginTimeToAllUsers implements Migration {
     try (HIterator<User> users = new HIterator<>(wingsPersistence.createQuery(User.class).fetch())) {
       for (User user : users) {
         try {
-          user = users.next();
           user.setLastLogin(currentTime);
           userService.update(user);
         } catch (Exception ex) {

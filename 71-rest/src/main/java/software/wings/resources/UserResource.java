@@ -46,6 +46,7 @@ import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LoginRequest;
 import software.wings.beans.User;
+import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.loginSettings.PasswordSource;
@@ -176,7 +177,7 @@ public class UserResource {
       @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("details") @DefaultValue("true") boolean loadUserGroups) {
     Account account = accountService.get(accountId);
-    pageRequest.addFilter("accounts", Operator.HAS, account);
+    pageRequest.addFilter(UserKeys.accounts, Operator.HAS, account);
     PageResponse<User> pageResponse = userService.list(pageRequest, loadUserGroups);
     List<User> userList = pageResponse.getResponse();
     if (isNotEmpty(userList)) {
