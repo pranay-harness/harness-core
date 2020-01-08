@@ -23,4 +23,5 @@ public class TimeSeriesMLMetricSummary {
   private double predictability;
   private long last_seen_time;
   private double txn_relative_risk;
+  private boolean should_fail_fast;
 }

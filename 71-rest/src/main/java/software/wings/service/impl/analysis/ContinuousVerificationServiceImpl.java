@@ -761,6 +761,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       if (unit.getScoreList() != null) {
         mergedUnit.updateOverallScore(unit.getOverallScore());
       }
+      if (unit.getKeyTransactionScoreList() != null) {
+        mergedUnit.updateKeyTransactionScore(unit.getKeyTransactionScore());
+      }
     });
 
     return mergedUnit;
@@ -849,6 +852,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .build();
 
         heatMapUnit.updateOverallScore(record.getOverallMetricScores());
+        heatMapUnit.updateKeyTransactionScores(record.getKeyTransactionMetricScores());
         sortedUnitsFromDB.add(heatMapUnit);
       });
     }

@@ -39,6 +39,9 @@ public class HeatMapUnit implements Comparable<HeatMapUnit> {
   @Builder.Default private double overallScore = -1;
   private List<Double> scoreList;
 
+  @Builder.Default private double keyTransactionScore = -1;
+  private List<Double> keyTransactionScoreList;
+
   @Override
   public int compareTo(@NotNull HeatMapUnit o) {
     return (int) (this.startTime - o.startTime);
@@ -63,15 +66,33 @@ public class HeatMapUnit implements Comparable<HeatMapUnit> {
     }
   }
 
-  public void updateOverallScore(Map<String, Double> overallMetricScores) {
-    if (isNotEmpty(overallMetricScores)) {
-      if (scoreList == null) {
-        scoreList = new ArrayList<>();
+  public void updateKeyTransactionScores(Map<String, Map<String, Double>> keyTransactionMetricScores) {
+    if (isNotEmpty(keyTransactionMetricScores)) {
+      if (keyTransactionScoreList == null) {
+        keyTransactionScoreList = new ArrayList<>();
       }
-      scoreList.add(Collections.max(overallMetricScores.values()));
-      overallScore = scoreList.stream().mapToDouble(val -> val).average().orElse(0.0);
-      updateRisksInUnit();
+      keyTransactionMetricScores.forEach((transaction, metricScores) -> {
+        keyTransactionScore = updateScores(metricScores, keyTransactionScoreList);
+      });
     }
+  }
+
+  private double updateScores(Map<String, Double> metricScores, List<Double> scoreListToUpdate) {
+    if (isNotEmpty(metricScores)) {
+      if (scoreListToUpdate == null) {
+        scoreListToUpdate = new ArrayList<>();
+      }
+      scoreListToUpdate.add(Collections.max(metricScores.values()));
+      return scoreListToUpdate.stream().mapToDouble(val -> val).average().orElse(0.0);
+    }
+    return -1;
+  }
+  public void updateOverallScore(Map<String, Double> overallMetricScores) {
+    if (scoreList == null) {
+      scoreList = new ArrayList<>();
+    }
+    overallScore = updateScores(overallMetricScores, scoreList);
+    updateRisksInUnit();
   }
 
   public void updateOverallScore(Double overallMetricScore) {
@@ -81,6 +102,14 @@ public class HeatMapUnit implements Comparable<HeatMapUnit> {
     scoreList.add(overallMetricScore);
     overallScore = scoreList.stream().mapToDouble(val -> val).average().orElse(0.0);
     updateRisksInUnit();
+  }
+
+  public void updateKeyTransactionScore(Double keyTransactionScore) {
+    if (keyTransactionScoreList == null) {
+      keyTransactionScoreList = new ArrayList<>();
+    }
+    keyTransactionScoreList.add(keyTransactionScore);
+    this.keyTransactionScore = keyTransactionScoreList.stream().mapToDouble(val -> val).average().orElse(0.0);
   }
 
   public void updateRisksInUnit() {

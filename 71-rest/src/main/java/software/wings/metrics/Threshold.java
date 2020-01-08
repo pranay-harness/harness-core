@@ -16,4 +16,7 @@ public class Threshold {
   private ThresholdType thresholdType;
   private ThresholdComparisonType comparisonType;
   private double ml;
+  private TimeSeriesCustomThresholdType customThresholdType = TimeSeriesCustomThresholdType.ACCEPTABLE;
+  // the thresholdCriteria will be present for Anomalous thresholds.
+  private TimeSeriesCustomThresholdCriteria thresholdCriteria;
 }

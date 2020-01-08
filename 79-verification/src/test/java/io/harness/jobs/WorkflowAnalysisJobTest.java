@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -38,6 +39,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.quartz.JobDataMap;
@@ -49,6 +51,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
@@ -56,6 +59,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
+import software.wings.verification.VerificationDataAnalysisResponse;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -147,6 +151,10 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
         .thenReturn(featureFlagRestMock);
     when(verificationManagerClient.isFeatureEnabled(FeatureName.LOGML_NEURAL_NET, accountId))
         .thenReturn(featureFlagRestMock);
+
+    final Call<RestResponse<List<String>>> managerVersionsCall = mock(Call.class);
+    when(managerVersionsCall.execute()).thenReturn(Response.success(new RestResponse<>(null)));
+    when(verificationManagerClient.getListOfPublishedVersions(accountId)).thenReturn(managerVersionsCall);
 
     final Call<RestResponse<Boolean>> stateValidRestMock = mock(Call.class);
     when(stateValidRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
@@ -295,6 +303,37 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
                                                 .get();
     assertThat(analysisContext.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
     verifyTimeSeriesQueuedTasks();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTimeSeriesAnalysisJobFailFast() throws Exception {
+    FieldUtils.writeField(managerClientHelper, "managerClient", verificationManagerClient, true);
+
+    final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
+    when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON, accountId))
+        .thenReturn(featureFlagRestMock);
+    // save an analysis record with the fail fast as true
+    TimeSeriesMLAnalysisRecord mlAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
+    mlAnalysisRecord.setShouldFailFast(true);
+    mlAnalysisRecord.setFailFastErrorMsg("Failed due to the transaction T1 and metricName M1");
+    mlAnalysisRecord.setStateExecutionId(stateExecutionId);
+    mlAnalysisRecord.setAppId(appId);
+    wingsPersistence.save(mlAnalysisRecord);
+    when(timeSeriesAnalysisService.getFailFastAnalysisRecord(appId, stateExecutionId)).thenReturn(mlAnalysisRecord);
+    when(verificationManagerClient.sendNotifyForVerificationState(any(), any(), any())).thenReturn(featureFlagRestMock);
+
+    workflowTimeSeriesAnalysisJob.handle(timeSeriesAnalysisContext);
+    final AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+                                                .filter(AnalysisContextKeys.stateType, StateType.APP_DYNAMICS)
+                                                .get();
+    assertThat(analysisContext.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
+    ArgumentCaptor<VerificationDataAnalysisResponse> taskCaptor =
+        ArgumentCaptor.forClass(VerificationDataAnalysisResponse.class);
+    verify(verificationManagerClient).sendNotifyForVerificationState(anyMap(), anyString(), taskCaptor.capture());
+    assertThat(taskCaptor.getValue().getExecutionStatus().name()).isEqualTo(ExecutionStatus.SUCCESS.name());
   }
 
   @Test

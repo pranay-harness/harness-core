@@ -34,6 +34,7 @@ import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
@@ -355,6 +356,17 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
           logger.info("for {} state is no longer valid", context.getStateExecutionId());
           learningEngineService.markJobStatus(context, ExecutionStatus.SUCCESS);
           completeCron = true;
+          return;
+        }
+
+        // Check if we should fail fast based on the previous analysis.
+        TimeSeriesMLAnalysisRecord failFastRecord =
+            analysisService.getFailFastAnalysisRecord(context.getAppId(), context.getStateExecutionId());
+        if (failFastRecord != null && failFastRecord.isShouldFailFast()) {
+          logger.info("The analysis for state {} is going to fail fast due to {}", context.getStateExecutionId(),
+              failFastRecord.getFailFastErrorMsg());
+          completeCron = true;
+          error = false;
           return;
         }
 

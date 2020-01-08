@@ -125,6 +125,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
       Set<String> host, long logCollectionMinute, ClusterLevel fromLevel, ClusterLevel toLevel) {
+    logger.info("For {} bumping cluster level  from {} to {} for minute {}", stateExecutionId, fromLevel, toLevel,
+        logCollectionMinute);
     Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
                                      .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId)
                                      .filter(LogDataRecordKeys.clusterLevel, fromLevel)
