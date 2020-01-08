@@ -118,4 +118,10 @@ public interface BambooService {
    */
   Status getBuildResultStatus(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String buildResultKey);
+
+  long getFileSize(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String artifactFileName,
+      String artifactFilePath);
+
+  Pair<String, InputStream> downloadArtifact(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
+      String artifactFileName, String artifactFilePath);
 }

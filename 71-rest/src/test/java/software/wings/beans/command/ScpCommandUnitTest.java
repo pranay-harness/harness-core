@@ -28,6 +28,7 @@ import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -37,6 +38,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Log;
 import software.wings.beans.SettingAttribute;
@@ -53,6 +55,7 @@ import software.wings.core.BaseScriptExecutor;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
+import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
@@ -60,6 +63,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.WingsTestConstants;
 
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -78,6 +82,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @Mock JenkinsUtils jenkinsUtils;
   @Mock Jenkins jenkins;
   @Mock DelegateLogService delegateLogService;
+  @Mock BambooService bambooService;
 
   private SettingAttribute awsSetting =
       aSettingAttribute()
@@ -107,6 +112,15 @@ public class ScpCommandUnitTest extends WingsBaseTest {
                                                               .jenkinsUrl(WingsTestConstants.HARNESS_JENKINS)
                                                               .username("admin")
                                                               .password("dummy123!".toCharArray())
+                                                              .build())
+                                               .build();
+
+  private SettingAttribute bambooSetting = aSettingAttribute()
+                                               .withUuid(SETTING_ID)
+                                               .withValue(BambooConfig.builder()
+                                                              .bambooUrl("http://localhost:9095/")
+                                                              .username("admin")
+                                                              .password("admin".toCharArray())
                                                               .build())
                                                .build();
 
@@ -203,6 +217,37 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .copyArtifactEnabled(false)
           .build();
 
+  private ArtifactStreamAttributes bambooStreamAttributes =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.BAMBOO.name())
+          .jobName("TOD-TOD")
+          .artifactPaths(Arrays.asList("artifacts/todolist.tar"))
+          .metadataOnly(true)
+          .metadata(mockMetadata(ArtifactStreamType.BAMBOO))
+          .artifactFileMetadata(
+              Arrays.asList(ArtifactFileMetadata.builder()
+                                .fileName("todolist.tar")
+                                .url("http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar")
+                                .build(),
+                  ArtifactFileMetadata.builder()
+                      .fileName("todolist.war")
+                      .url("http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war")
+                      .build()))
+          .serverSetting(bambooSetting)
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .artifactStreamId(ARTIFACT_STREAM_ID)
+          .copyArtifactEnabled(true)
+          .build();
+
+  private ArtifactStreamAttributes bambooStreamAttributesFFOff =
+      ArtifactStreamAttributes.builder()
+          .metadataOnly(true)
+          .artifactStreamType(ArtifactStreamType.BAMBOO.name())
+          .jobName("TOD-TOD")
+          .artifactPaths(Arrays.asList("artifacts/todolist.tar"))
+          .copyArtifactEnabled(false)
+          .build();
+
   @InjectMocks
   private ShellCommandExecutionContext contextForS3 = new ShellCommandExecutionContext(
       aCommandExecutionContext().withArtifactStreamAttributes(artifactStreamAttributesForS3).build());
@@ -226,6 +271,18 @@ public class ScpCommandUnitTest extends WingsBaseTest {
       new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .withArtifactStreamAttributes(artifactStreamAttributesForAzureArtifacts)
                                            .withMetadata(mockMetadata(ArtifactStreamType.AZURE_ARTIFACTS))
+                                           .build());
+  @InjectMocks
+  ShellCommandExecutionContext contextForBambooArtifacts =
+      new ShellCommandExecutionContext(aCommandExecutionContext()
+                                           .withArtifactStreamAttributes(bambooStreamAttributes)
+                                           .withMetadata(mockMetadata(ArtifactStreamType.BAMBOO))
+                                           .build());
+  @InjectMocks
+  ShellCommandExecutionContext contextForBambooFFOff =
+      new ShellCommandExecutionContext(aCommandExecutionContext()
+                                           .withArtifactStreamAttributes(bambooStreamAttributesFFOff)
+                                           .withMetadata(mockMetadata(ArtifactStreamType.BAMBOO))
                                            .build());
 
   @InjectMocks
@@ -302,9 +359,6 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldNotDownloadArtifactFromArtifactoryIfFeatureFlagDisabled() {
-    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
-             anyString(), anyString()))
-        .thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForArtifactoryFeatureFlagDisabled);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
@@ -360,6 +414,34 @@ public class ScpCommandUnitTest extends WingsBaseTest {
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
 
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldDownloadArtifactFromBambooIfMetadataOnly() {
+    when(bambooService.getFileSize(any(), any(), eq("todolist.tar"),
+             eq("http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar")))
+        .thenReturn(1234L);
+    when(bambooService.getFileSize(any(), any(), eq("todolist.war"),
+             eq("http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war")))
+        .thenReturn(345L);
+    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
+             anyString(), anyString()))
+        .thenReturn(CommandExecutionStatus.SUCCESS);
+    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
+             anyString(), anyString()))
+        .thenReturn(CommandExecutionStatus.SUCCESS);
+    CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForBambooArtifacts);
+    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotDownloadArtifactFromBambooIfFeatureFlagDisabled() {
+    CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForBambooFFOff);
+    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
+  }
+
   private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {
     Map<String, String> map = new HashMap<>();
     switch (artifactStreamType) {
@@ -384,6 +466,9 @@ public class ScpCommandUnitTest extends WingsBaseTest {
         break;
       case JENKINS:
         map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
+        break;
+      case BAMBOO:
+        map.put(ArtifactMetadataKeys.buildNo, "11");
         break;
       default:
         break;

@@ -122,7 +122,8 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
     }
     String buildNo = metadata.get(ArtifactMetadataKeys.buildNo);
     String key;
-    if (ArtifactStreamType.JENKINS.name().equals(artifactStreamAttributes.getArtifactStreamType())) {
+    if (ArtifactStreamType.JENKINS.name().equals(artifactStreamAttributes.getArtifactStreamType())
+        || ArtifactStreamType.BAMBOO.name().equals(artifactStreamAttributes.getArtifactStreamType())) {
       key = "_" + artifactStreamAttributes.getArtifactStreamId() + "-" + buildNo + "-"
           + metadata.get(ArtifactMetadataKeys.artifactFileName);
     } else {

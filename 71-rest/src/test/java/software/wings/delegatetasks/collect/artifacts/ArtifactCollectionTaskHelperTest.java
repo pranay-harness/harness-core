@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -34,6 +35,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -43,6 +45,7 @@ import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
+import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 
@@ -68,6 +71,25 @@ public class ArtifactCollectionTaskHelperTest extends WingsBaseTest {
   @Mock private AzureArtifactsService azureArtifactsService;
   @Mock private Jenkins jenkins;
   @Mock private JenkinsUtils jenkinsUtils;
+  @Mock private BambooService bambooService;
+
+  private static final String BAMBOO_FILE_NAME = "todolist.tar";
+  private static final String BAMBOO_FILE_PATH =
+      "http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar";
+  private static final ArtifactStreamAttributes BAMBOO_ARTIFACT_STREAM_ATTRIBUTES =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.BAMBOO.name())
+          .jobName("TOD-TOD")
+          .artifactPaths(Arrays.asList("artifacts/todolist.tar"))
+          .metadataOnly(true)
+          .metadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "11", ArtifactMetadataKeys.artifactFileName,
+              BAMBOO_FILE_NAME, ArtifactMetadataKeys.artifactPath, BAMBOO_FILE_PATH))
+          .artifactFileMetadata(
+              Arrays.asList(ArtifactFileMetadata.builder().fileName(BAMBOO_FILE_NAME).url(BAMBOO_FILE_PATH).build()))
+          .serverSetting(aSettingAttribute().withValue(BambooConfig.builder().build()).build())
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .artifactStreamId(ARTIFACT_STREAM_ID)
+          .build();
 
   @Test
   @Owner(developers = GARVIT)
@@ -202,6 +224,33 @@ public class ArtifactCollectionTaskHelperTest extends WingsBaseTest {
             .artifactServerEncryptedDataDetails(Collections.emptyList())
             .build());
     assertThat(size).isEqualTo(1234L);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetBambooArtifactsFileSize() {
+    when(bambooService.getFileSize(any(), any(), eq(BAMBOO_FILE_NAME), eq(BAMBOO_FILE_PATH))).thenReturn(1234L);
+    long size = artifactCollectionTaskHelper.getArtifactFileSize(BAMBOO_ARTIFACT_STREAM_ATTRIBUTES);
+    assertThat(size).isEqualTo(1234L);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldDownloadBambooArtifactAtRuntime() {
+    String content = "file content";
+    InputStream inputStream = new ByteArrayInputStream(content.getBytes());
+    when(bambooService.downloadArtifact(any(), any(), anyString(), anyString()))
+        .thenReturn(ImmutablePair.of(BAMBOO_FILE_NAME, inputStream));
+
+    Pair<String, InputStream> pair = artifactCollectionTaskHelper.downloadArtifactAtRuntime(
+        BAMBOO_ARTIFACT_STREAM_ATTRIBUTES, ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME);
+
+    assertThat(pair).isNotNull();
+    assertThat(pair.getLeft()).isEqualTo(BAMBOO_FILE_NAME);
+    assertThat(pair.getRight()).isNotNull();
+    assertThat(convertInputStreamToString(pair.getRight())).isEqualTo(content);
   }
 
   private Long getArtifactFileSize(String fileName) {
