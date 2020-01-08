@@ -960,6 +960,31 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     assertThat(keyTxns.getKeyTransactions().containsAll(Arrays.asList("transaction1"))).isTrue();
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testRemoveFromKeyTransactionsOnlyOne() throws Exception {
+    StackDriverMetricCVConfiguration cvConfiguration = createStackDriverConfig(accountId);
+    String cvConfigId = generateUuid();
+    cvConfiguration.setUuid(cvConfigId);
+    wingsPersistence.save(cvConfiguration);
+    boolean saved =
+        cvConfigurationService.saveKeyTransactionsForCVConfiguration(cvConfigId, Arrays.asList("transaction1"));
+    assertThat(saved).isTrue();
+    TimeSeriesKeyTransactions keyTxns = cvConfigurationService.getKeyTransactionsForCVConfiguration(cvConfigId);
+    assertThat(keyTxns).isNotNull();
+    assertThat(keyTxns.getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(keyTxns.getKeyTransactions().size()).isEqualTo(1);
+    assertThat(keyTxns.getKeyTransactions().containsAll(Arrays.asList("transaction1"))).isTrue();
+    saved =
+        cvConfigurationService.removeFromKeyTransactionsForCVConfiguration(cvConfigId, Arrays.asList("transaction1"));
+
+    assertThat(saved).isTrue();
+    TimeSeriesKeyTransactions transactions =
+        wingsPersistence.createQuery(TimeSeriesKeyTransactions.class).filter("cvConfigId", cvConfigId).get();
+    assertThat(transactions).isNull();
+  }
+
   private APMCVServiceConfiguration createAPMCVConfig(boolean enabled24x7) {
     APMCVServiceConfiguration apmcvServiceConfiguration = new APMCVServiceConfiguration();
     apmcvServiceConfiguration.setName("APM config");

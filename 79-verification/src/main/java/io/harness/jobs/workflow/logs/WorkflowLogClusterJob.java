@@ -145,7 +145,8 @@ public class WorkflowLogClusterJob implements Job, MongoPersistenceIterator.Hand
                 boolean hasDataRecords = analysisService.hasDataRecords(log.getQuery(), context.getAppId(),
                     context.getStateExecutionId(), context.getStateType(), Sets.newHashSet(log.getHost()),
                     ClusterLevel.L0, log.getLogCollectionMinute());
-
+                logger.info("In WorkflowLogClusterJob For {} hasDataRecords is {}", context.getStateExecutionId(),
+                    hasDataRecords);
                 LogRequest logRequest = LogRequest.builder()
                                             .query(log.getQuery())
                                             .applicationId(context.getAppId())

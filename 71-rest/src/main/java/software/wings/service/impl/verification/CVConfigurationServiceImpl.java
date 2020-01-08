@@ -1163,8 +1163,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     if (keyTransactionsForConfig != null) {
       logger.info("Removing {} from the keytransactions list for cvConfigId: {}", keyTransaction, cvConfigId);
       keyTransactionsForConfig.getKeyTransactions().removeAll(keyTransaction);
+      if (isEmpty(keyTransactionsForConfig.getKeyTransactions())) {
+        wingsPersistence.delete(keyTransactionsForConfig);
+      } else {
+        wingsPersistence.save(keyTransactionsForConfig);
+      }
     }
-    wingsPersistence.save(keyTransactionsForConfig);
     return true;
   }
 

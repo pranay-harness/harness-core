@@ -186,11 +186,13 @@ public class WorkflowLogAnalysisJob implements Job, Handler<AnalysisContext> {
           long logAnalysisClusteringTestMinute =
               analysisService.getCollectionMinuteForLevel(context.getQuery(), context.getAppId(),
                   context.getStateExecutionId(), context.getStateType(), ClusterLevel.L1, getCollectedNodes());
+          logger.info("For {} logAnalysisClusteringTestMinute is {}", context.getStateExecutionId(),
+              logAnalysisClusteringTestMinute);
           if (logAnalysisClusteringTestMinute != -1) {
             boolean hasTestRecords =
                 analysisService.hasDataRecords(context.getQuery(), context.getAppId(), context.getStateExecutionId(),
                     context.getStateType(), getCollectedNodes(), ClusterLevel.L1, logAnalysisClusteringTestMinute);
-
+            logger.info("For {} hasTestRecords is {}", context.getStateExecutionId(), hasTestRecords);
             if (hasTestRecords) {
               preProcess(logAnalysisClusteringTestMinute, context.getQuery(), getCollectedNodes());
             } else {
@@ -203,6 +205,7 @@ public class WorkflowLogAnalysisJob implements Job, Handler<AnalysisContext> {
           logAnalysisMinute = analysisService.getCollectionMinuteForLevel(context.getQuery(), context.getAppId(),
               context.getStateExecutionId(), context.getStateType(), ClusterLevel.L2, getCollectedNodes());
           if (logAnalysisMinute != -1) {
+            logger.info("For {} logAnalysisMinute is {}", context.getStateExecutionId(), logAnalysisMinute);
             if (learningEngineService.hasAnalysisTimedOut(
                     context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionId())) {
               learningEngineService.markStatus(context.getWorkflowExecutionId(), context.getStateExecutionId(),

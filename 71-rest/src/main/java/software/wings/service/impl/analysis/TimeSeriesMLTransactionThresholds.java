@@ -32,6 +32,8 @@ import software.wings.sm.StateType;
 public class TimeSeriesMLTransactionThresholds extends Base {
   @NotEmpty private String serviceId;
 
+  @NotEmpty private String workflowId;
+
   @NotEmpty private StateType stateType;
 
   @NotEmpty private String groupName;

@@ -87,6 +87,8 @@ public interface TimeSeriesAnalysisService {
 
   long getLastCVAnalysisMinute(String appId, String cvConfigId);
 
+  TimeSeriesMLAnalysisRecord getFailFastAnalysisRecord(String appId, String stateExecutionId);
+
   Set<NewRelicMetricDataRecord> getMetricRecords(
       String cvConfigId, int analysisStartMinute, int analysisEndMinute, String tag, String accountId);
 

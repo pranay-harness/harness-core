@@ -11,6 +11,7 @@ import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.utils.Misc.replaceDotWithUnicode;
 import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -355,6 +356,22 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       }
       cumulativeSums.compressMetricSums();
       wingsPersistence.saveIgnoringDuplicateKeys(Arrays.asList(cumulativeSums));
+    }
+    // encode the dots in keyTxnData
+    if (isNotEmpty(mlAnalysisResponse.getKeyTransactionMetricScores())) {
+      List<String> transactionNamesToRemove = new ArrayList<>();
+      mlAnalysisResponse.getKeyTransactionMetricScores().forEach((transaction, metricMap) -> {
+        if (transaction.contains(".")) {
+          transactionNamesToRemove.add(transaction);
+        }
+      });
+      if (isNotEmpty(transactionNamesToRemove)) {
+        transactionNamesToRemove.forEach(transactionName -> {
+          mlAnalysisResponse.getKeyTransactionMetricScores().put(replaceDotWithUnicode(transactionName),
+              mlAnalysisResponse.getKeyTransactionMetricScores().get(transactionName));
+          mlAnalysisResponse.getKeyTransactionMetricScores().remove(transactionName);
+        });
+      }
     }
     wingsPersistence.save(mlAnalysisResponse);
     wingsPersistence.save(riskSummary);
@@ -868,6 +885,16 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .order(Sort.descending(MetricAnalysisRecordKeys.analysisMinute))
             .get();
     return newRelicMetricAnalysisRecord == null ? -1 : newRelicMetricAnalysisRecord.getAnalysisMinute();
+  }
+
+  @Override
+  public TimeSeriesMLAnalysisRecord getFailFastAnalysisRecord(String appId, String stateExecutionId) {
+    return wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+        .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+        .project(MetricAnalysisRecordKeys.shouldFailFast, true)
+        .project(MetricAnalysisRecordKeys.failFastErrorMsg, true)
+        .order(Sort.descending(MetricAnalysisRecordKeys.analysisMinute))
+        .get();
   }
 
   @Override

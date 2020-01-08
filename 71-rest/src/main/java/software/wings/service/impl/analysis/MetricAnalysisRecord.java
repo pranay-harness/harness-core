@@ -57,6 +57,8 @@ public class MetricAnalysisRecord extends Base implements Comparable<MetricAnaly
 
   private Map<String, Double> overallMetricScores;
 
+  private Map<String, Map<String, Double>> keyTransactionMetricScores;
+
   private byte[] transactionsCompressedJson;
 
   @Transient private Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies;
@@ -70,6 +72,10 @@ public class MetricAnalysisRecord extends Base implements Comparable<MetricAnaly
   private int aggregatedRisk = -1;
 
   private String tag;
+
+  private boolean shouldFailFast;
+
+  private String failFastErrorMsg;
 
   @JsonIgnore
   @SchemaIgnore
