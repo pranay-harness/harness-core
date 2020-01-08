@@ -12,6 +12,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Function.identity;
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -228,6 +229,10 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     return response;
   }
 
+  private String decryptKey(ApiKeyEntry apiKeyEntry) {
+    return new String(getSimpleEncryption(apiKeyEntry.getAccountId()).decryptChars(apiKeyEntry.getEncryptedKey()));
+  }
+
   @Override
   public ApiKeyEntry get(String uuid, String accountId) {
     ApiKeyEntry entry = wingsPersistence.createQuery(ApiKeyEntry.class)
@@ -419,8 +424,10 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public void evictAndRebuildPermissionsAndRestrictions(String accountId, boolean rebuild) {
-    PageResponse pageResponse = list(PageRequestBuilder.aPageRequest().build(), accountId, false, true);
-    List<ApiKeyEntry> apiKeyEntryList = pageResponse.getResponse();
+    final List<ApiKeyEntry> apiKeyEntryList = emptyIfNull(
+        wingsPersistence.createQuery(ApiKeyEntry.class).filter(ApiKeyEntryKeys.accountId, accountId).asList());
+    apiKeyEntryList.forEach(apiKeyEntry -> apiKeyEntry.setDecryptedKey(decryptKey(apiKeyEntry)));
+
     evictAndRebuildPermissionsAndRestrictions(accountId, rebuild, apiKeyEntryList);
   }
 

@@ -15,6 +15,7 @@ public interface ApiKeyService extends OwnedByAccount {
       PageRequest<ApiKeyEntry> request, String accountId, boolean loadUserGroups, boolean decrypt);
   ApiKeyEntry generate(@NotEmpty String accountId, ApiKeyEntry apiKeyEntry);
   void delete(String accountId, @NotEmpty String uuid);
+
   ApiKeyEntry get(@NotEmpty String uuid, @NotEmpty String accountId);
   void validate(@NotEmpty String key, @NotEmpty String accountId);
   String getAccountIdFromApiKey(String apiKey);

@@ -39,5 +39,7 @@ enum DataFetcherEnum {
   workflow
   workflowConnection
   workflowStats
-  applicationCreator
+  createApplication
+  updateApplication
+  deleteApplication
 }
