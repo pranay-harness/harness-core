@@ -5,6 +5,10 @@ import static software.wings.beans.Account.Builder.anAccount;
 import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
+import io.harness.ccm.cluster.ClusterRecordService;
+import io.harness.ccm.cluster.entities.Cluster;
+import io.harness.ccm.cluster.entities.ClusterRecord;
+import io.harness.ccm.cluster.entities.EcsCluster;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -87,6 +91,7 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
   public static final String PIPELINE1 = "PIPELINE1";
   public static final String REGION1 = "REGION1";
   public static final String CLUSTER1_ID = "CLUSTER1_ID";
+  public static final String CLUSTER2_ID = "5e144cbfececcf83f5b29cd5";
   public static final String CLUSTER1_NAME = "CLUSTER1_NAME";
   public static final String LAUNCH_TYPE1 = "LAUNCH_TYPE1";
   public static final String CLUSTER_TYPE1 = "CLUSTER_TYPE1";
@@ -114,6 +119,7 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
   @Inject WorkflowService workflowService;
   @Inject PipelineService pipelineService;
   @Inject WorkflowExecutionService workflowExecutionService;
+  @Inject ClusterRecordService clusterRecordService;
   @Inject protected TestUtils testUtils;
 
   public Account createAccount(String accountId, LicenseInfo licenseInfo) {
@@ -213,5 +219,13 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
                                          .withCategory(SettingCategory.CLOUD_PROVIDER)
                                          .build();
     settingsService.save(cloudProvider, false);
+  }
+
+  public void createClusterRecord(
+      String accountId, String clusterName, String clusterId, String cloudProviderId, String region) {
+    Cluster cluster =
+        EcsCluster.builder().clusterName(clusterName).cloudProviderId(cloudProviderId).region(region).build();
+    clusterRecordService.upsert(
+        ClusterRecord.builder().cluster(cluster).accountId(accountId).uuid(clusterId).createdAt(1L).build());
   }
 }

@@ -1,0 +1,19 @@
+extend type Query {
+  # Get details about a Cluster.
+  cluster(clusterId: String!): Cluster @dataFetcher(name: cluster)
+
+  # Get details about Clusters.
+  clusters(limit: Int!, offset: Int): ClusterConnection @dataFetcher(name: clusterConnection)
+}
+
+type Cluster {
+  id: String
+  name: String
+  cloudProviderId: String
+  clusterType: String
+}
+
+type ClusterConnection {
+  pageInfo: PageInfo
+  nodes: [Cluster]
+}

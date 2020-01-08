@@ -11,6 +11,8 @@ enum DataFetcherEnum {
   cloudProvider
   cloudProviderConnection
   cloudProviderStats
+  cluster
+  clusterConnection
   connector
   connectorConnection
   connectorStats

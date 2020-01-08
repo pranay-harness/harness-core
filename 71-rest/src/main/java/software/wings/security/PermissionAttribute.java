@@ -222,7 +222,9 @@ public class PermissionAttribute {
 
     CUSTOM_DASHBOARD(ACCOUNT),
 
-    BUDGET(PermissionType.LOGGED_IN);
+    BUDGET(PermissionType.LOGGED_IN),
+
+    CLUSTERRECORD(ACCOUNT);
 
     private ImmutableMap<Action, PermissionType> actionPermissionScopeMap;
 
