@@ -38,12 +38,14 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.Jenkins;
+import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.EncryptionService;
@@ -71,6 +73,7 @@ public class ScpCommandUnit extends SshCommandUnit {
   @Inject @Transient private EncryptionService encryptionService;
   @Inject @Transient private JenkinsUtils jenkinsUtil;
   @Inject @Transient private BambooService bambooService;
+  @Inject @Transient private NexusService nexusService;
 
   @Attributes(title = "Source")
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)
@@ -230,6 +233,39 @@ public class ScpCommandUnit extends SshCommandUnit {
               }
             } else {
               logger.info("Feature flag for copy artifact for Bamboo not enabled.");
+            }
+            return SUCCESS;
+          } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.NEXUS.name())) {
+            if (artifactStreamAttributes.isCopyArtifactEnabled()) {
+              if (isEmpty(artifactStreamAttributes.getArtifactFileMetadata())) {
+                saveExecutionLog(context, WARN, "There are no artifacts to copy");
+                return SUCCESS;
+              }
+              Map<String, String> metadata = artifactStreamAttributes.getMetadata();
+              if (metadata == null) {
+                throw new InvalidRequestException(
+                    "No metadata found for artifact stream. Cannot proceed with copy artifact");
+              }
+              NexusConfig nexusConfig = (NexusConfig) artifactStreamAttributes.getServerSetting().getValue();
+              for (ArtifactFileMetadata artifactFileMetadata : artifactStreamAttributes.getArtifactFileMetadata()) {
+                metadata.put(ArtifactMetadataKeys.artifactFileName, artifactFileMetadata.getFileName());
+                metadata.put(ArtifactMetadataKeys.artifactPath, artifactFileMetadata.getUrl());
+                metadata.put(ArtifactMetadataKeys.artifactFileSize,
+                    String.valueOf(nexusService.getFileSize(nexusConfig,
+                        artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
+                        artifactFileMetadata.getFileName(), artifactFileMetadata.getUrl())));
+                artifactStreamAttributes.setMetadata(metadata);
+                CommandExecutionStatus executionStatus = context.copyFiles(destinationDirectoryPath,
+                    artifactStreamAttributes, context.getAccountId(), context.getAppId(), context.getActivityId(),
+                    getName(), context.getHost() == null ? null : context.getHost().getPublicDns());
+                if (FAILURE == executionStatus) {
+                  saveExecutionLog(context, ERROR,
+                      format("Copy Artifact failed for artifact %s", artifactFileMetadata.getFileName()));
+                  return executionStatus;
+                }
+              }
+            } else {
+              logger.info("Feature flag for copy artifact for Nexus not enabled.");
             }
             return SUCCESS;
           } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.CUSTOM.name())) {

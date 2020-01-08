@@ -138,4 +138,10 @@ public interface NexusService {
    */
   boolean existsVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
       String groupId, String artifactName, String extension, String classifier);
+
+  Pair<String, InputStream> downloadArtifactByUrl(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String artifactName, String artifactUrl);
+
+  long getFileSize(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String artifactName, String artifactUrl);
 }

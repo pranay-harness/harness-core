@@ -41,12 +41,14 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
+import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.Jenkins;
+import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 
 import java.io.BufferedReader;
@@ -72,6 +74,7 @@ public class ArtifactCollectionTaskHelperTest extends WingsBaseTest {
   @Mock private Jenkins jenkins;
   @Mock private JenkinsUtils jenkinsUtils;
   @Mock private BambooService bambooService;
+  @Mock private NexusService nexusService;
 
   private static final String BAMBOO_FILE_NAME = "todolist.tar";
   private static final String BAMBOO_FILE_PATH =
@@ -89,6 +92,26 @@ public class ArtifactCollectionTaskHelperTest extends WingsBaseTest {
           .serverSetting(aSettingAttribute().withValue(BambooConfig.builder().build()).build())
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .artifactStreamId(ARTIFACT_STREAM_ID)
+          .build();
+
+  private static final String NEXUS2_FILE_NAME = "todolist.tar";
+  private static final String NEXUS2_FILE_PATH =
+      "http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar";
+
+  private static final ArtifactStreamAttributes artifactStreamAttributesForNexus =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.NEXUS.name())
+          .metadataOnly(true)
+          .metadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "11", ArtifactMetadataKeys.artifactFileName,
+              NEXUS2_FILE_NAME, ArtifactMetadataKeys.artifactPath, NEXUS2_FILE_PATH,
+              ArtifactMetadataKeys.artifactFileSize, "1233"))
+          .artifactFileMetadata(asList(builder().fileName("todolist-7.0.war").url(NEXUS2_FILE_PATH).build()))
+          .serverSetting(aSettingAttribute().withValue(NexusConfig.builder().build()).build())
+          .artifactStreamId(ARTIFACT_STREAM_ID)
+          .jobName("releases")
+          .groupId("io.harness.test")
+          .artifactName("todolist")
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 
   @Test
@@ -251,6 +274,33 @@ public class ArtifactCollectionTaskHelperTest extends WingsBaseTest {
     assertThat(pair.getLeft()).isEqualTo(BAMBOO_FILE_NAME);
     assertThat(pair.getRight()).isNotNull();
     assertThat(convertInputStreamToString(pair.getRight())).isEqualTo(content);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldDownloadNexusArtifactAtRuntime() {
+    String content = "file content";
+    InputStream inputStream = new ByteArrayInputStream(content.getBytes());
+    when(nexusService.downloadArtifactByUrl(any(), any(), anyString(), anyString()))
+        .thenReturn(ImmutablePair.of(NEXUS2_FILE_NAME, inputStream));
+
+    Pair<String, InputStream> pair = artifactCollectionTaskHelper.downloadArtifactAtRuntime(
+        artifactStreamAttributesForNexus, ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME);
+
+    assertThat(pair).isNotNull();
+    assertThat(pair.getLeft()).isEqualTo(NEXUS2_FILE_NAME);
+    assertThat(pair.getRight()).isNotNull();
+    assertThat(convertInputStreamToString(pair.getRight())).isEqualTo(content);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetNexusArtifactsFileSize() {
+    when(nexusService.getFileSize(any(), any(), eq(NEXUS2_FILE_NAME), eq(NEXUS2_FILE_PATH))).thenReturn(1234L);
+    long size = artifactCollectionTaskHelper.getArtifactFileSize(artifactStreamAttributesForNexus);
+    assertThat(size).isEqualTo(1234L);
   }
 
   private Long getArtifactFileSize(String fileName) {
