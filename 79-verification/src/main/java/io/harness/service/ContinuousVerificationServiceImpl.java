@@ -76,6 +76,7 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.impl.newrelic.MLExperiments.MLExperimentsKeys;
+import software.wings.service.impl.splunk.LogAnalysisResult;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -1856,20 +1857,43 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     logger.info("triggering alerts for {} with unknown clusters {}", cvConfigId,
         mlAnalysisResponse.getUnknown_clusters().size());
 
-    mlAnalysisResponse.getUnknown_clusters().forEach((clusterLabel, analysisClusterMap) -> {
-      if (isNotEmpty(analysisClusterMap)) {
-        final SplunkAnalysisCluster splunkAnalysisCluster = analysisClusterMap.entrySet().iterator().next().getValue();
-        verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlert(cvConfigId,
-            ContinuousVerificationAlertData.builder()
-                .mlAnalysisType(MLAnalysisType.LOG_ML)
-                .logAnomaly(splunkAnalysisCluster.getText())
-                .hosts(analysisClusterMap.keySet())
-                .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
-                .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
-                .riskScore(1.0)
-                .build()));
-      }
-    });
+    LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
+
+    if (logsCVConfiguration.is247LogsV2()) {
+      Map<Integer, LogAnalysisResult> logAnalysisResult = mlAnalysisResponse.getLog_analysis_result();
+
+      mlAnalysisResponse.getUnknown_clusters().forEach((clusterLabel, analysisClusterMap) -> {
+        if (isNotEmpty(analysisClusterMap)) {
+          final SplunkAnalysisCluster splunkAnalysisCluster =
+              analysisClusterMap.entrySet().iterator().next().getValue();
+          verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlert(cvConfigId,
+              ContinuousVerificationAlertData.builder()
+                  .mlAnalysisType(MLAnalysisType.LOG_ML)
+                  .logAnomaly(splunkAnalysisCluster.getText())
+                  .tag(logAnalysisResult.get(splunkAnalysisCluster.getCluster_label()).getTag())
+                  .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
+                  .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
+                  .riskScore(1.0)
+                  .build()));
+        }
+      });
+    } else {
+      mlAnalysisResponse.getUnknown_clusters().forEach((clusterLabel, analysisClusterMap) -> {
+        if (isNotEmpty(analysisClusterMap)) {
+          final SplunkAnalysisCluster splunkAnalysisCluster =
+              analysisClusterMap.entrySet().iterator().next().getValue();
+          verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlert(cvConfigId,
+              ContinuousVerificationAlertData.builder()
+                  .mlAnalysisType(MLAnalysisType.LOG_ML)
+                  .logAnomaly(splunkAnalysisCluster.getText())
+                  .hosts(analysisClusterMap.keySet())
+                  .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
+                  .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
+                  .riskScore(1.0)
+                  .build()));
+        }
+      });
+    }
   }
 
   @Override
