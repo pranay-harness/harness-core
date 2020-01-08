@@ -28,6 +28,7 @@ import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.grpc.GrpcServerConfig;
+import io.harness.lock.redis.RedisConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
@@ -103,6 +104,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
   @JsonProperty("salesforceConfig") private SalesforceConfig salesforceConfig = SalesforceConfig.builder().build();
   @JsonProperty("datadogConfig") private DatadogConfig datadogConfig;
+  @JsonProperty("redisConfig") private RedisConfig redisConfig;
   @JsonProperty("defaultSalesContacts") private DefaultSalesContacts defaultSalesContacts;
   @JsonProperty("githubConfig") private GithubConfig githubConfig;
   @JsonProperty("linkedinConfig") private LinkedinConfig linkedinConfig;

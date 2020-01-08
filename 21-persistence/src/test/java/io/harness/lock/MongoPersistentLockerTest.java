@@ -21,6 +21,8 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
+import io.harness.lock.mongo.AcquiredDistributedLock;
+import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -34,10 +36,10 @@ import java.time.Duration;
 /**
  * The Class PersistentLockerTest.
  */
-public class PersistentLockerTest extends PersistenceTest {
+public class MongoPersistentLockerTest extends PersistenceTest {
   @Mock private DistributedLockSvc distributedLockSvc;
 
-  @Inject @InjectMocks private PersistentLocker persistentLocker;
+  @Inject @InjectMocks private MongoPersistentLocker mongoPersistentLocker;
 
   @Test
   @Owner(developers = GEORGE)
@@ -55,7 +57,7 @@ public class PersistentLockerTest extends PersistenceTest {
     when(distributedLock.isLocked()).thenReturn(true);
     when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
 
-    try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
+    try (AcquiredLock lock = mongoPersistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
     }
 
     InOrder inOrder = inOrder(distributedLock);
@@ -72,7 +74,7 @@ public class PersistentLockerTest extends PersistenceTest {
     when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
 
     boolean body = false;
-    try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
+    try (AcquiredLock lock = mongoPersistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
       body = true;
     } catch (RuntimeException ex) {
       assertThat(ex.getMessage()).isEqualTo("Failed to acquire distributed lock for io.harness.lock.AcquiredLock-cba");
@@ -94,7 +96,7 @@ public class PersistentLockerTest extends PersistenceTest {
     when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
 
     boolean body = false;
-    try (AcquiredLock lock = persistentLocker.tryToAcquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
+    try (AcquiredLock lock = mongoPersistentLocker.tryToAcquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
       assertThat(lock).isNull();
       body = true;
     }
@@ -125,7 +127,7 @@ public class PersistentLockerTest extends PersistenceTest {
     Logger logger = mock(Logger.class);
     setStaticFieldValue(AcquiredDistributedLock.class, "logger", logger);
 
-    try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", timeout)) {
+    try (AcquiredLock lock = mongoPersistentLocker.acquireLock(AcquiredLock.class, "cba", timeout)) {
     }
 
     verify(logger).error(matches("attempt to release lock that is not currently locked"), any(Throwable.class));
@@ -142,7 +144,7 @@ public class PersistentLockerTest extends PersistenceTest {
     Logger mockLogger = mock(Logger.class);
     setStaticFieldValue(MessageManager.class, "logger", mockLogger);
 
-    try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
+    try (AcquiredLock lock = mongoPersistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
     } catch (WingsException exception) {
       mockLogger.error("", exception);
     }
@@ -168,7 +170,7 @@ public class PersistentLockerTest extends PersistenceTest {
 
     Logger mockLogger = mock(Logger.class);
 
-    try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", timeout)) {
+    try (AcquiredLock lock = mongoPersistentLocker.acquireLock(AcquiredLock.class, "cba", timeout)) {
       Thread.sleep(10);
     } catch (WingsException exception) {
       mockLogger.error("", exception);

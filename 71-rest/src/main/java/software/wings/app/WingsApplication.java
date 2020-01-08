@@ -4,7 +4,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static com.google.inject.matcher.Matchers.not;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.lock.PersistentLocker.LOCKS_STORE;
+import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
@@ -68,8 +68,9 @@ import io.harness.grpc.GrpcServerConfig;
 import io.harness.grpc.GrpcServiceConfigurationModule;
 import io.harness.health.HealthService;
 import io.harness.lock.AcquiredLock;
-import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
+import io.harness.lock.mongo.ManageDistributedLockSvc;
+import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
@@ -254,7 +255,6 @@ public class WingsApplication extends Application<MainConfiguration> {
   @Override
   public void run(final MainConfiguration configuration, Environment environment) throws Exception {
     logger.info("Starting app ...");
-
     logger.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
@@ -497,7 +497,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     if (!injector.getInstance(FeatureFlagService.class).isGlobalEnabled(GLOBAL_DISABLE_HEALTH_CHECK)) {
       healthService.registerMonitor(injector.getInstance(HPersistence.class));
-      healthService.registerMonitor(injector.getInstance(PersistentLocker.class));
+      // abcd
+      healthService.registerMonitor(injector.getInstance(MongoPersistentLocker.class));
     }
   }
 

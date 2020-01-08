@@ -42,6 +42,10 @@ import io.harness.limits.counter.service.CounterService;
 import io.harness.limits.counter.service.CounterServiceImpl;
 import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
+import io.harness.lock.PersistentLocker;
+import io.harness.lock.mongo.MongoPersistentLocker;
+import io.harness.lock.redis.RedisConfig;
+import io.harness.lock.redis.RedisPersistentLocker;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
@@ -57,6 +61,7 @@ import io.harness.time.TimeModule;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.version.VersionModule;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.DataStorageMode;
@@ -561,6 +566,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Rishi
  */
+@Slf4j
 public class WingsModule extends DependencyModule {
   private MainConfiguration configuration;
 
@@ -587,6 +593,23 @@ public class WingsModule extends DependencyModule {
     bind(QueueController.class).to(ConfigurationController.class);
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
+
+    RedisConfig redisConfig = configuration.getRedisConfig();
+    if (redisConfig != null && redisConfig.isEnabled()) {
+      try {
+        logger.info("Initializing Redis Locker");
+        bind(PersistentLocker.class).toInstance(new RedisPersistentLocker(redisConfig));
+        logger.info("Initialized Redis Locker");
+      } catch (Exception ex) {
+        logger.error("Exception while initializing Redis Locker. Switching back to Mongo", ex);
+        bind(PersistentLocker.class).to(MongoPersistentLocker.class);
+      }
+    } else {
+      logger.info("Initializing Mongo Locker");
+      bind(PersistentLocker.class).to(MongoPersistentLocker.class);
+      logger.info("Initialized Mongo Locker");
+    }
+
     bind(AppService.class).to(AppServiceImpl.class);
     bind(HarnessSampleAppService.class).to(HarnessSampleAppServiceImpl.class);
     bind(ApplicationManifestService.class).to(ApplicationManifestServiceImpl.class);

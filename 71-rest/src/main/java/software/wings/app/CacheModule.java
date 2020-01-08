@@ -109,7 +109,7 @@ public class CacheModule extends AbstractModule {
     }
 
     hazelcastInstance = Hazelcast.getOrCreateHazelcastInstance(config);
-
+    System.setProperty("javax.cache.spi.CachingProvider", "com.hazelcast.cache.HazelcastCachingProvider");
     Properties properties = new Properties();
     properties.setProperty(HazelcastCachingProvider.HAZELCAST_INSTANCE_NAME, "wings-hazelcast");
     CachingProvider provider = Caching.getCachingProvider();

@@ -1,11 +1,10 @@
 package io.harness.lock;
 
-import com.deftlabs.lock.mongo.DistributedLock;
-
 import java.io.Closeable;
+import java.util.concurrent.locks.Lock;
 
-public interface AcquiredLock extends Closeable {
-  DistributedLock getLock();
+public interface AcquiredLock<T extends Lock> extends Closeable {
+  T getLock();
   void release();
   @Override void close();
 }

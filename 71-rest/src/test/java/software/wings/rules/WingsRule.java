@@ -157,6 +157,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
    */
   protected void before(List<Annotation> annotations, boolean doesExtendBaseIntegrationTest, String testName)
       throws Throwable {
+    System.setProperty("javax.cache.spi.CachingProvider", "com.hazelcast.cache.HazelcastCachingProvider");
     initializeLogging();
     forceMaintenance(false);
     MongoClient mongoClient;

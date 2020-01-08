@@ -4,14 +4,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import io.harness.lock.Locker;
 import io.harness.lock.PersistentLocker;
-import io.harness.lock.PersistentNoopLocker;
+import io.harness.lock.noop.PersistentNoopLocker;
 import lombok.Getter;
 
 @Singleton
 public class BackgroundSchedulerLocker {
-  @Getter private Locker locker;
+  @Getter private PersistentLocker locker;
 
   @Inject
   public BackgroundSchedulerLocker(

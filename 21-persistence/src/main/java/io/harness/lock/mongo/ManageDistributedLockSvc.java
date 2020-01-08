@@ -1,4 +1,4 @@
-package io.harness.lock;
+package io.harness.lock.mongo;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.dropwizard.lifecycle.Managed;

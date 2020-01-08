@@ -241,6 +241,14 @@ if [[ "" != "$DATADOG_APIKEY" ]]; then
   yq write -i $CONFIG_FILE datadogConfig.apiKey "$DATADOG_APIKEY"
 fi
 
+if [[ "" != "$REDIS_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE redisConfig.enabled "$REDIS_ENABLED"
+fi
+
+if [[ "" != "$REDIS_URL" ]]; then
+  yq write -i $CONFIG_FILE redisConfig.url "$REDIS_URL"
+fi
+
 if [[ "" != "$DELEGATE_DOCKER_IMAGE" ]]; then
   yq write -i $CONFIG_FILE portal.delegateDockerImage "$DELEGATE_DOCKER_IMAGE"
 fi

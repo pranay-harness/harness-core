@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.lock.AcquiredLock;
-import io.harness.lock.Locker;
+import io.harness.lock.PersistentLocker;
 import io.harness.rule.Owner;
 import io.harness.scheduler.BackgroundSchedulerLocker;
 import org.junit.Before;
@@ -44,7 +44,7 @@ public class InstanceStatsCollectorJobTest extends CategoryTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_createStats() {
-    final Locker locker = mock(Locker.class);
+    final PersistentLocker locker = mock(PersistentLocker.class);
     doReturn(locker).when(persistentLocker).getLocker();
     doReturn(mock(AcquiredLock.class))
         .when(locker)
@@ -60,7 +60,7 @@ public class InstanceStatsCollectorJobTest extends CategoryTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_createStats_disabled() {
-    final Locker locker = mock(Locker.class);
+    final PersistentLocker locker = mock(PersistentLocker.class);
     doReturn(locker).when(persistentLocker).getLocker();
     doReturn(mock(AcquiredLock.class))
         .when(locker)
@@ -75,7 +75,7 @@ public class InstanceStatsCollectorJobTest extends CategoryTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_createStats_nolock() {
-    final Locker locker = mock(Locker.class);
+    final PersistentLocker locker = mock(PersistentLocker.class);
     doReturn(locker).when(persistentLocker).getLocker();
     doReturn(null).when(locker).tryToAcquireLock(any(Class.class), anyString(), any(Duration.class));
     doReturn(true).when(statsCollector).createStats(anyString());

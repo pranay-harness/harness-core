@@ -1,7 +1,7 @@
 package io.harness.lock;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.lock.PersistentLocker.LOCKS_STORE;
+import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.threading.Morpheus.sleep;
@@ -18,6 +18,7 @@ import com.mongodb.DBObject;
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.rule.RealMongo;
@@ -32,10 +33,10 @@ import java.time.Duration;
  * The Class PersistentLockerTest.
  */
 @Slf4j
-public class PersistentLockerDBTest extends PersistenceTest {
+public class MongoPersistentLockerDBTest extends PersistenceTest {
   @Inject private DistributedLockSvc distributedLockSvc;
   @Inject private HPersistence persistence;
-  @Inject private PersistentLocker persistentLocker;
+  @Inject private MongoPersistentLocker mongoPersistentLocker;
 
   private DBObject getDbLock(String uuid) {
     final DBCollection locks = persistence.getCollection(LOCKS_STORE, "locks");
@@ -47,15 +48,15 @@ public class PersistentLockerDBTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void testAcquireLockDoLock() {
     String uuid = generateUuid();
-    try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
+    try (AcquiredLock lock = mongoPersistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
     }
 
     DBObject dbLock = getDbLock(uuid);
     assertThat(dbLock).isNotNull();
 
     boolean damage = false;
-    try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
-      persistentLocker.destroy(lock);
+    try (AcquiredLock lock = mongoPersistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
+      mongoPersistentLocker.destroy(lock);
       damage = true;
     } catch (WingsException exception) {
       // Do nothing. This is just to suppress the exception
@@ -72,7 +73,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void testAcquireEphemeralLock() {
     String uuid = generateUuid();
-    try (AcquiredLock lock = persistentLocker.acquireEphemeralLock(uuid, Duration.ofSeconds(1))) {
+    try (AcquiredLock lock = mongoPersistentLocker.acquireEphemeralLock(uuid, Duration.ofSeconds(1))) {
     } catch (WingsException exception) {
       // Do nothing. This is just to suppress the exception
     }
@@ -89,7 +90,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
     String uuid = generateUuid();
 
     Concurrent.test(10, i -> {
-      try (AcquiredLock lock = persistentLocker.acquireEphemeralLock(uuid, Duration.ofSeconds(1))) {
+      try (AcquiredLock lock = mongoPersistentLocker.acquireEphemeralLock(uuid, Duration.ofSeconds(1))) {
       } catch (WingsException exception) {
         // Do nothing. This is just to suppress the exception
       }
@@ -102,13 +103,13 @@ public class PersistentLockerDBTest extends PersistenceTest {
   public void testAcquireLockAfterDestroy() {
     assertThatCode(() -> {
       String uuid = generateUuid();
-      try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
-        persistentLocker.destroy(lock);
+      try (AcquiredLock lock = mongoPersistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
+        mongoPersistentLocker.destroy(lock);
       } catch (WingsException exception) {
         // Do nothing. This is just to suppress the exception
       }
 
-      try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
+      try (AcquiredLock lock = mongoPersistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
       }
     })
         .doesNotThrowAnyException();
@@ -121,7 +122,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
     assertThatCode(() -> {
       String uuid = generateUuid();
       try (AcquiredLock outer =
-               persistentLocker.tryToAcquireEphemeralLock(AcquiredLock.class, "foo", Duration.ofSeconds(1))) {
+               mongoPersistentLocker.tryToAcquireEphemeralLock(AcquiredLock.class, "foo", Duration.ofSeconds(1))) {
       }
     })
         .doesNotThrowAnyException();
@@ -132,9 +133,10 @@ public class PersistentLockerDBTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void testTryToAcquireLock() {
     String uuid = generateUuid();
-    try (AcquiredLock outer = persistentLocker.tryToAcquireLock(AcquiredLock.class, uuid, Duration.ofSeconds(1))) {
+    try (AcquiredLock outer = mongoPersistentLocker.tryToAcquireLock(AcquiredLock.class, uuid, Duration.ofSeconds(1))) {
       assertThat(outer).isNotNull();
-      try (AcquiredLock inner = persistentLocker.tryToAcquireLock(AcquiredLock.class, uuid, Duration.ofSeconds(1))) {
+      try (AcquiredLock inner =
+               mongoPersistentLocker.tryToAcquireLock(AcquiredLock.class, uuid, Duration.ofSeconds(1))) {
         assertThat(inner).isNull();
       }
     }
@@ -151,7 +153,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
 
       @Override
       public void run() {
-        try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMillis(1))) {
+        try (AcquiredLock lock = mongoPersistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMillis(1))) {
           sleep(Duration.ofMillis(5));
           synchronized (this) {
             locked = true;
@@ -182,7 +184,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
     }
 
     boolean great = false;
-    try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMillis(100))) {
+    try (AcquiredLock lock = mongoPersistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMillis(100))) {
       great = true;
     }
     sleep(Duration.ofMillis(5));
