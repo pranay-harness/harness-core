@@ -182,7 +182,7 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ANUBHAW)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldDownloadArtifact() throws FileNotFoundException {
     wireMockRule.stubFor(get(urlEqualTo("/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar"))
@@ -205,5 +205,16 @@ public class BambooServiceTest extends WingsBaseTest {
     verify(artifactCollectionTaskHelper, times(1))
         .addDataToResponse(any(), eq("http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar"),
             any(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetArtifactFileSize() {
+    wireMockRule.stubFor(get(urlEqualTo("/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar"))
+                             .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4})));
+    long size = bambooService.getFileSize(bambooConfig, null, "todolist.tar",
+        "http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar");
+    assertThat(size).isEqualTo(4);
   }
 }

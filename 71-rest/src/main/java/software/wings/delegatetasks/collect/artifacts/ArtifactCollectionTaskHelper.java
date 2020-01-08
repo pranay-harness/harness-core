@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.UnknownArtifactStreamTypeException;
 import io.harness.waiter.ListNotifyResponseData;
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -33,6 +35,7 @@ import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
+import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -63,6 +66,7 @@ public class ArtifactCollectionTaskHelper {
   @Inject private AzureArtifactsService azureArtifactsService;
   @Inject private EncryptionService encryptionService;
   @Inject private JenkinsUtils jenkinsUtil;
+  @Inject private BambooService bambooService;
 
   public void addDataToResponse(Pair<String, InputStream> fileInfo, String artifactPath, ListNotifyResponseData res,
       String delegateId, String taskId, String accountId) throws FileNotFoundException {
@@ -199,6 +203,30 @@ public class ArtifactCollectionTaskHelper {
               FAILURE, accountId, appId, activityId, commandUnitName, hostName);
         }
         return pair;
+      case BAMBOO:
+        logger.info("Downloading artifact [{}] from BAMBOO at path :[{}] on delegate",
+            metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));
+        saveExecutionLog("Metadata only option set for BAMBOO. Starting download of artifact: "
+                + metadata.get(ArtifactMetadataKeys.artifactFileName) + ON_DELEGATE,
+            RUNNING, accountId, appId, activityId, commandUnitName, hostName);
+
+        try {
+          pair = bambooService.downloadArtifact((BambooConfig) artifactStreamAttributes.getServerSetting().getValue(),
+              artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
+              metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));
+          if (pair != null) {
+            saveExecutionLog("BAMBOO: Download complete for artifact: "
+                    + metadata.get(ArtifactMetadataKeys.artifactFileName) + ON_DELEGATE,
+                RUNNING, accountId, appId, activityId, commandUnitName, hostName);
+          } else {
+            saveExecutionLog("BAMBOO: Download failed for artifact: "
+                    + metadata.get(ArtifactMetadataKeys.artifactFileName) + ON_DELEGATE,
+                FAILURE, accountId, appId, activityId, commandUnitName, hostName);
+          }
+        } catch (ArtifactServerException e) {
+          logger.warn("Artifact download failed", e);
+        }
+        return pair;
       default:
         throw new UnknownArtifactStreamTypeException(artifactStreamType.name());
     }
@@ -261,6 +289,15 @@ public class ArtifactCollectionTaskHelper {
                     + ARTIFACT_STRING.length());
         return jenkins.getFileSize(
             artifactStreamAttributes.getJobName(), metadata.get(ArtifactMetadataKeys.buildNo), artifactPathRegex);
+      case BAMBOO:
+        if (!metadata.containsKey(ArtifactMetadataKeys.artifactFileName)
+            || isBlank(metadata.get(ArtifactMetadataKeys.artifactFileName))) {
+          throw new InvalidArgumentsException(ImmutablePair.of(ArtifactMetadataKeys.artifactFileName, "not found"));
+        }
+        logger.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactFileName));
+        return bambooService.getFileSize((BambooConfig) artifactStreamAttributes.getServerSetting().getValue(),
+            artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
+            metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));
       default:
         throw new UnknownArtifactStreamTypeException(artifactStreamType.name());
     }

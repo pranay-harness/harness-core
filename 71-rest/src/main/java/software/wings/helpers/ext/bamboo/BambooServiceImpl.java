@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -23,6 +24,7 @@ import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.stream.StreamUtils;
 import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
@@ -544,15 +546,25 @@ public class BambooServiceImpl implements BambooService {
       ListNotifyResponseData notifyResponseData) {
     String link = artifactFileMetadata.getUrl();
     try {
-      URL url = new URL(link);
-      URLConnection uc = url.openConnection();
-      uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig, encryptionDetails));
-      logger.info("Downloading artifact from url {}", link);
       artifactCollectionTaskHelper.addDataToResponse(
-          ImmutablePair.of(artifactFileMetadata.getFileName(), uc.getInputStream()), link, notifyResponseData,
-          delegateId, taskId, accountId);
+          downloadArtifact(bambooConfig, encryptionDetails, artifactFileMetadata.getFileName(), link), link,
+          notifyResponseData, delegateId, taskId, accountId);
     } catch (IOException e) {
       String msg = "Failed to download the artifact from url [" + link + "]";
+      throw new ArtifactServerException(msg, e);
+    }
+  }
+
+  public Pair<String, InputStream> downloadArtifact(BambooConfig bambooConfig,
+      List<EncryptedDataDetail> encryptionDetails, String artifactFileName, String artifactFilePath) {
+    logger.info("Downloading artifact from url {}", artifactFilePath);
+    try {
+      URL url = new URL(artifactFilePath);
+      URLConnection uc = url.openConnection();
+      uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig, encryptionDetails));
+      return ImmutablePair.of(artifactFileName, uc.getInputStream());
+    } catch (IOException e) {
+      String msg = "Failed to download the artifact from url [" + artifactFilePath + "]";
       throw new ArtifactServerException(msg, e);
     }
   }
@@ -628,5 +640,24 @@ public class BambooServiceImpl implements BambooService {
       });
     }
     return jobKeys;
+  }
+
+  public long getFileSize(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
+      String artifactFileName, String artifactFilePath) {
+    logger.info("Getting file size for artifact at path {}", artifactFilePath);
+    long size;
+    Pair<String, InputStream> pair =
+        downloadArtifact(bambooConfig, encryptionDetails, artifactFileName, artifactFilePath);
+    if (pair == null) {
+      throw new InvalidArtifactServerException(format("Failed to get file size for artifact: %s", artifactFilePath));
+    }
+    try {
+      size = StreamUtils.getInputStreamSize(pair.getRight());
+      pair.getRight().close();
+    } catch (IOException e) {
+      throw new InvalidArtifactServerException(getMessage(e), e);
+    }
+    logger.info(format("Computed file size: [%d] bytes for artifact Path: %s", size, artifactFilePath));
+    return size;
   }
 }

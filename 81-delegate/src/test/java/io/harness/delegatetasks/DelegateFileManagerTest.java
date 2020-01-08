@@ -12,6 +12,7 @@ import com.google.common.io.Files;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.service.DelegateFileManagerImpl;
 import io.harness.managerclient.ManagerClientV2;
@@ -28,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -41,6 +43,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,6 +69,10 @@ public class DelegateFileManagerTest extends CategoryTest {
   private static final String ARTIFACT_STREAM_ID_ARTIFACTORY = "ARTIFACT_STREAM_ID_ARTIFACTORY";
   private static final String ARTIFACT_STREAM_ID_JENKINS = "ARTIFACT_STREAM_ID_JENKINS";
   private static final String JENKINS_FILE_NAME = "file.war";
+  private static final String ARTIFACT_STREAM_ID_BAMBOO = "ARTIFACT_STREAM_ID_BAMBOO";
+  private static final String BAMBOO_FILE_NAME = "todolist.tar";
+  private static final String BAMBOO_FILE_PATH =
+      "http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar";
   private static final String ARTIFACT_PATH = "ARTIFACT_PATH";
   private static final String BUCKET_NAME = "BUCKET_NAME";
   private static final String BUILD_NO = "BUILD_NO";
@@ -123,6 +130,32 @@ public class DelegateFileManagerTest extends CategoryTest {
           .artifactPaths(Collections.singletonList(JENKINS_FILE_NAME))
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
+
+  private SettingAttribute bambooSetting = aSettingAttribute()
+                                               .withUuid(SETTING_ID)
+                                               .withValue(BambooConfig.builder()
+                                                              .bambooUrl("http://localhost:9095/")
+                                                              .username("admin")
+                                                              .password("admin".toCharArray())
+                                                              .build())
+                                               .build();
+
+  private ArtifactStreamAttributes bambooStreamAttributes =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.BAMBOO.name())
+          .jobName("TOD-TOD")
+          .artifactPaths(Arrays.asList("artifacts/todolist.tar"))
+          .metadataOnly(true)
+          .metadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, BUILD_NO, ArtifactMetadataKeys.artifactFileName,
+              BAMBOO_FILE_NAME, ArtifactMetadataKeys.artifactFileSize, "1233", ArtifactMetadataKeys.artifactPath,
+              BAMBOO_FILE_PATH))
+          .artifactFileMetadata(
+              Arrays.asList(ArtifactFileMetadata.builder().fileName(BAMBOO_FILE_NAME).url(BAMBOO_FILE_PATH).build()))
+          .serverSetting(bambooSetting)
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .artifactStreamId(ARTIFACT_STREAM_ID_BAMBOO)
+          .build();
+
   @Test
   @Owner(developers = AADITI)
   @Repeat(times = 3, successes = 1)
@@ -188,6 +221,26 @@ public class DelegateFileManagerTest extends CategoryTest {
     assertThat(text).isEqualTo(fileContent);
     FileUtils.deleteQuietly(FileUtils.getFile(
         ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_JENKINS + "-" + BUILD_NO + "-" + JENKINS_FILE_NAME));
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testDownloadArtifactAtRuntimeForBamboo() throws IOException, ExecutionException {
+    String fileContent = "testBamboo";
+    InputStream is = new ByteArrayInputStream(fileContent.getBytes(Charset.defaultCharset()));
+    Pair<String, InputStream> pair = new ImmutablePair<>(fileContent, is);
+    when(artifactCollectionTaskHelper.downloadArtifactAtRuntime(
+             bambooStreamAttributes, ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME))
+        .thenReturn(pair);
+    delegateFileManager.downloadArtifactAtRuntime(
+        bambooStreamAttributes, ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME);
+    String text = Files.toString(
+        new File(ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_BAMBOO + "-" + BUILD_NO + "-" + BAMBOO_FILE_NAME),
+        Charsets.UTF_8);
+    assertThat(text).isEqualTo(fileContent);
+    FileUtils.deleteQuietly(FileUtils.getFile(
+        ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_BAMBOO + "-" + BUILD_NO + "-" + BAMBOO_FILE_NAME));
   }
 
   private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {

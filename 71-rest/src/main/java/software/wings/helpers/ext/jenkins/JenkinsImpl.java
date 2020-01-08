@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.stream.StreamUtils.getInputStreamSize;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -669,19 +670,6 @@ public class JenkinsImpl implements Jenkins {
       throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), e);
     }
     logger.info(format("Computed file size: [%d] bytes for artifact Path: %s", size, artifactPath));
-    return size;
-  }
-
-  static long getInputStreamSize(InputStream inputStream) throws IOException {
-    long size = 0;
-    int chunk;
-    byte[] buffer = new byte[1024];
-    while ((chunk = inputStream.read(buffer)) != -1) {
-      size += chunk;
-      if (size > Integer.MAX_VALUE) {
-        return -1;
-      }
-    }
     return size;
   }
 }
