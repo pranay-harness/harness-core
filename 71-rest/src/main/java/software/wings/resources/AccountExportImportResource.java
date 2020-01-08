@@ -229,7 +229,8 @@ public class AccountExportImportResource {
     // 3. Export all users
     String userCollectionName = getCollectionName(User.class);
     if (isExportable(toBeExported, userCollectionName)) {
-      DBObject accountsFilter = new BasicDBObject("accounts", new BasicDBObject("$in", new String[] {accountId}));
+      DBObject accountsFilter =
+          new BasicDBObject(UserKeys.accounts, new BasicDBObject("$in", new String[] {accountId}));
       List<String> users = mongoExportImport.exportRecords(accountsFilter, userCollectionName);
       exportToStream(zipOutputStream, fileOutputStream, users, userCollectionName);
     }

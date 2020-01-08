@@ -548,7 +548,7 @@ public class UserServiceImpl implements UserService {
     if (isNotEmpty(email)) {
       user = wingsPersistence.createQuery(User.class)
                  .filter(UserKeys.email, email.trim().toLowerCase())
-                 .field("accounts")
+                 .field(UserKeys.accounts)
                  .hasThisOne(accountId)
                  .get();
       loadSupportAccounts(user);
@@ -1533,7 +1533,7 @@ public class UserServiceImpl implements UserService {
   public boolean overrideTwoFactorforAccount(String accountId, boolean adminOverrideTwoFactorEnabled) {
     try {
       Query<User> updateQuery = wingsPersistence.createQuery(User.class);
-      updateQuery.filter("accounts", accountId);
+      updateQuery.filter(UserKeys.accounts, accountId);
       if (updateQuery.count() > 0) {
         for (User u : updateQuery) {
           // Look for user who has only 1 account
@@ -1764,7 +1764,7 @@ public class UserServiceImpl implements UserService {
     String accountId = null;
     SearchFilter searchFilter = pageRequest.getFilters()
                                     .stream()
-                                    .filter(filter -> filter.getFieldName().equals("accounts"))
+                                    .filter(filter -> filter.getFieldName().equals(UserKeys.accounts))
                                     .findFirst()
                                     .orElse(null);
 
@@ -1861,7 +1861,7 @@ public class UserServiceImpl implements UserService {
 
       UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class)
                                             .set("roles", user.getRoles())
-                                            .set("accounts", user.getAccounts());
+                                            .set(UserKeys.accounts, user.getAccounts());
       Query<User> updateQuery = wingsPersistence.createQuery(User.class).filter(ID_KEY, userId);
       wingsPersistence.update(updateQuery, updateOp);
 
@@ -2115,7 +2115,7 @@ public class UserServiceImpl implements UserService {
       updateOperations.addToSet("roles", roles);
     }
     if (account != null) {
-      updateOperations.addToSet("accounts", account);
+      updateOperations.addToSet(UserKeys.accounts, account);
     }
     wingsPersistence.update(wingsPersistence.createQuery(User.class)
                                 .filter(UserKeys.email, existingUser.getEmail())
@@ -2278,7 +2278,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public List<User> getUsersOfAccount(String accountId) {
     Account account = accountService.get(accountId);
-    PageRequest<User> pageRequest = aPageRequest().addFilter("accounts", HAS, account).build();
+    PageRequest<User> pageRequest = aPageRequest().addFilter(UserKeys.accounts, HAS, account).build();
     PageResponse<User> pageResponse = wingsPersistence.query(User.class, pageRequest);
     return pageResponse.getResponse();
   }

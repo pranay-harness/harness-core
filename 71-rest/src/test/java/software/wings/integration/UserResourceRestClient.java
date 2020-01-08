@@ -38,6 +38,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.mindrot.jbcrypt.BCrypt;
 import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.beans.User.UserKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.RoleService;
@@ -145,7 +146,7 @@ public class UserResourceRestClient {
       if (isEmpty(user.getAccounts())
           || !user.getAccounts().stream().anyMatch(account1 -> finalAccount.getUuid().equals(account1.getUuid()))) {
         wingsPersistence.update(
-            user, wingsPersistence.createUpdateOperations(User.class).addToSet("accounts", account));
+            user, wingsPersistence.createUpdateOperations(User.class).addToSet(UserKeys.accounts, account));
       }
     }
 

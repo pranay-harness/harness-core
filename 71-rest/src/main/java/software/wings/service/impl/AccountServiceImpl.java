@@ -90,6 +90,7 @@ import software.wings.beans.SystemCatalog;
 import software.wings.beans.TechStack;
 import software.wings.beans.UrlInfo;
 import software.wings.beans.User;
+import software.wings.beans.User.UserKeys;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.sso.LdapSettings;
@@ -838,7 +839,7 @@ public class AccountServiceImpl implements AccountService {
 
   private void setUserStatusInAccount(String accountId, boolean enable) {
     Query<User> query =
-        wingsPersistence.createQuery(User.class, excludeAuthority).field("accounts").contains(accountId);
+        wingsPersistence.createQuery(User.class, excludeAuthority).field(UserKeys.accounts).contains(accountId);
     int count = 0;
     try (HIterator<User> records = new HIterator<>(query.fetch())) {
       for (User user : records) {

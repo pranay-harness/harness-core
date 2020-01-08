@@ -49,6 +49,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.TechStack;
 import software.wings.beans.User;
+import software.wings.beans.User.UserKeys;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -288,7 +289,7 @@ public class EventPublishHelper {
     } else if (EntityType.USER == entityType) {
       Account account = accountService.getFromCache(accountId);
       PageRequest<User> pageRequest = aPageRequest()
-                                          .addFilter("accounts", Operator.IN, account)
+                                          .addFilter(UserKeys.accounts, Operator.IN, account)
                                           .addFilter("createdBy.email", Operator.EQ, userEmail)
                                           .addOrder(User.CREATED_AT_KEY, OrderType.ASC)
                                           .withLimit("10")
