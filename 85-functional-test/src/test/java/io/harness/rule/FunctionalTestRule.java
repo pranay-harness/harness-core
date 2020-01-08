@@ -187,6 +187,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
 
   @Override
   public void initialize(Injector injector, List<Module> modules) {
+    System.setProperty("javax.cache.spi.CachingProvider", "com.hazelcast.cache.HazelcastCachingProvider");
     for (Module module : modules) {
       if (module instanceof ServersModule) {
         for (Closeable server : ((ServersModule) module).servers(injector)) {

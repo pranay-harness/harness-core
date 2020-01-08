@@ -1,8 +1,11 @@
-package io.harness.lock;
+package io.harness.lock.noop;
+
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 
 import java.time.Duration;
 
-public class PersistentNoopLocker implements Locker {
+public class PersistentNoopLocker implements PersistentLocker {
   @Override
   public AcquiredLock acquireLock(String name, Duration timeout) {
     return new AcquiredNoopLock();

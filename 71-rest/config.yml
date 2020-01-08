@@ -79,6 +79,10 @@ datadogConfig:
   enabled: false #datadogConfigEnable
   apiKey: "datadog_api_key"
 
+redisConfig:
+  enabled: false #redisConfigEnable
+  url: "redis_url"
+
 githubConfig:
   clientId: githubClientId
   clientSecret: githubClientSecret

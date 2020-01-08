@@ -13,11 +13,13 @@ import software.wings.graphql.schema.type.QLApplication;
 import software.wings.graphql.schema.type.QLApplication.QLApplicationBuilder;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AppService;
 
 @Slf4j
 public class ApplicationDataFetcher extends AbstractObjectDataFetcher<QLApplication, QLApplicationQueryParameters> {
   public static final String APP_DOES_NOT_EXIST_MSG = "Application does not exist";
   @Inject HPersistence persistence;
+  @Inject AppService appService;
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)

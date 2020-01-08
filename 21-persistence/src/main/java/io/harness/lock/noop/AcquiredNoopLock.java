@@ -1,12 +1,14 @@
-package io.harness.lock;
+package io.harness.lock.noop;
 
-import com.deftlabs.lock.mongo.DistributedLock;
+import io.harness.lock.AcquiredLock;
 import lombok.Builder;
+
+import java.util.concurrent.locks.Lock;
 
 @Builder
 public class AcquiredNoopLock implements AcquiredLock {
   @Override
-  public DistributedLock getLock() {
+  public Lock getLock() {
     return null;
   }
 
