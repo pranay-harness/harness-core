@@ -302,7 +302,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     String[] instanceIdValues = new String[] {INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1};
 
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeInstanceIdEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters = Collections.singletonList(makeInstanceIdFilter(instanceIdValues));
+    List<QLBillingDataFilter> filters = Collections.singletonList(makeTaskIdFilter(instanceIdValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
@@ -316,7 +316,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId())
         .isEqualTo(INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
-    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("INSTANCEID");
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("TASKID");
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
   }
 
@@ -566,7 +566,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   private QLCCMGroupBy makeInstanceIdEntityGroupBy() {
-    QLCCMEntityGroupBy instanceIdGroupBy = QLCCMEntityGroupBy.InstanceId;
+    QLCCMEntityGroupBy instanceIdGroupBy = QLCCMEntityGroupBy.TaskId;
     return QLCCMGroupBy.builder().entityGroupBy(instanceIdGroupBy).build();
   }
 
@@ -595,9 +595,9 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     return QLBillingDataFilter.builder().application(applicationFilter).build();
   }
 
-  private QLBillingDataFilter makeInstanceIdFilter(String[] values) {
+  private QLBillingDataFilter makeTaskIdFilter(String[] values) {
     QLIdFilter instanceIdFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
-    return QLBillingDataFilter.builder().instanceId(instanceIdFilter).build();
+    return QLBillingDataFilter.builder().taskId(instanceIdFilter).build();
   }
 
   private QLBillingDataFilter makeLaunchTypeFilter(String[] values) {
@@ -683,7 +683,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getDouble("AVGMEMORYTILIZATION"))
         .thenAnswer((Answer<Double>) invocation -> AVGMEMORYTILIZATION_VALUE);
 
-    when(resultSet.getString("INSTANCEID"))
+    when(resultSet.getString("TASKID"))
         .thenAnswer((Answer<String>) invocation -> INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
     when(resultSet.getTimestamp("STARTTIME", utils.getDefaultCalendar())).thenAnswer((Answer<Timestamp>) invocation -> {
       calendar[0] = calendar[0] + 3600000;

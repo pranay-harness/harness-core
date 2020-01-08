@@ -18,7 +18,7 @@ import java.util.List;
 public class QLFilterValuesData implements QLData {
   List<QLEntityData> cloudServiceNames;
   List<QLEntityData> launchTypes;
-  List<QLEntityData> instanceIds;
+  List<QLEntityData> taskIds;
   List<QLEntityData> namespaces;
   List<QLEntityData> workloadNames;
   List<QLEntityData> cloudProviders;

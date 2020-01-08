@@ -120,7 +120,7 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
           case APPID:
           case SERVICEID:
           case CLUSTERNAME:
-          case INSTANCEID:
+          case TASKID:
           case CLOUDPROVIDERID:
           case ENVID:
             type = field.getFieldName();
