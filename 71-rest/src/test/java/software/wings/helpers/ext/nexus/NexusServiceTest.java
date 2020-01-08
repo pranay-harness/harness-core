@@ -24,6 +24,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.waiter.ListNotifyResponseData;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,6 +45,9 @@ import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.RepositoryFormat;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1391,5 +1396,61 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThatThrownBy(() -> nexusService.isRunning(config, null))
         .isInstanceOf(WingsException.class)
         .hasMessageContaining("INVALID_ARTIFACT_SERVER");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void getArtifactFileSizeForNexus2xMavenArtifact() {
+    wireMockRule.stubFor(get(urlEqualTo("/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war"))
+                             .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4, 5})));
+    long size = nexusService.getFileSize(nexusConfig, null, "myartifact-1.0.war",
+        "http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war");
+    assertThat(size).isEqualTo(5);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void getArtifactFileSizeForNexus3xMavenArtifact() {
+    wireMockRule3.stubFor(get(urlEqualTo("/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war"))
+                              .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4})));
+    long size = nexusService.getFileSize(nexusThreeConfig, null, "myartifact-1.0.war",
+        "http://localhost:8883/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war");
+    assertThat(size).isEqualTo(4);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldDownloadNexus2xMavenArtifactByUrl() throws IOException {
+    String content = "file content";
+    String fileName = "rest-client-3.0.jar";
+    wireMockRule.stubFor(get(
+        urlEqualTo(
+            "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar&c=sources"))
+                             .willReturn(aResponse().withBody(content.getBytes())));
+    Pair<String, InputStream> pair = nexusService.downloadArtifactByUrl(nexusConfig, null, fileName,
+        "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar&c=sources");
+    assertThat(pair).isNotNull();
+    assertThat(pair.getKey()).isEqualTo(fileName);
+    String text = IOUtils.toString(pair.getRight(), StandardCharsets.UTF_8.name());
+    assertThat(text).isEqualTo(content);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldDownloadNexus3xMavenArtifactByUrl() throws IOException {
+    String content = "file content";
+    String fileName = "myartifact-1.0.jar";
+    wireMockRule3.stubFor(get(urlEqualTo("/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.jar"))
+                              .willReturn(aResponse().withBody(content.getBytes())));
+    Pair<String, InputStream> pair = nexusService.downloadArtifactByUrl(nexusThreeConfig, null, fileName,
+        "http://localhost:8883/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.jar");
+    assertThat(pair).isNotNull();
+    assertThat(pair.getKey()).isEqualTo(fileName);
+    String text = IOUtils.toString(pair.getRight(), StandardCharsets.UTF_8.name());
+    assertThat(text).isEqualTo(content);
   }
 }

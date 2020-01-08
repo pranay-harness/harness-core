@@ -368,4 +368,26 @@ public class NexusServiceImpl implements NexusService {
       }
     }
   }
+
+  @Override
+  public Pair<String, InputStream> downloadArtifactByUrl(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String artifactName, String artifactUrl) {
+    boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
+    if (isNexusTwo) {
+      return nexusTwoService.downloadArtifactByUrl(nexusConfig, encryptionDetails, artifactName, artifactUrl);
+    } else {
+      return nexusThreeService.downloadArtifactByUrl(nexusConfig, encryptionDetails, artifactName, artifactUrl);
+    }
+  }
+
+  @Override
+  public long getFileSize(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String artifactName, String artifactUrl) {
+    boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
+    if (isNexusTwo) {
+      return nexusTwoService.getFileSize(nexusConfig, encryptionDetails, artifactName, artifactUrl);
+    } else {
+      return nexusThreeService.getFileSize(nexusConfig, encryptionDetails, artifactName, artifactUrl);
+    }
+  }
 }

@@ -1,6 +1,8 @@
 package io.harness.delegatetasks;
 
+import static io.harness.delegate.beans.artifact.ArtifactFileMetadata.builder;
 import static io.harness.rule.OwnerRule.AADITI;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -36,6 +38,7 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 
 import java.io.ByteArrayInputStream;
@@ -73,6 +76,7 @@ public class DelegateFileManagerTest extends CategoryTest {
   private static final String BAMBOO_FILE_NAME = "todolist.tar";
   private static final String BAMBOO_FILE_PATH =
       "http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar";
+  private static final String ARTIFACT_STREAM_ID_NEXUS = "ARTIFACT_STREAM_ID_NEXUS";
   private static final String ARTIFACT_PATH = "ARTIFACT_PATH";
   private static final String BUCKET_NAME = "BUCKET_NAME";
   private static final String BUILD_NO = "BUILD_NO";
@@ -154,6 +158,26 @@ public class DelegateFileManagerTest extends CategoryTest {
           .serverSetting(bambooSetting)
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .artifactStreamId(ARTIFACT_STREAM_ID_BAMBOO)
+          .build();
+
+  private static final String NEXUS2_FILE_NAME = "todolist.tar";
+  private static final String NEXUS2_FILE_PATH =
+      "http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar";
+
+  private ArtifactStreamAttributes artifactStreamAttributesForNexus =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.NEXUS.name())
+          .metadataOnly(true)
+          .metadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "11", ArtifactMetadataKeys.artifactFileName,
+              NEXUS2_FILE_NAME, ArtifactMetadataKeys.artifactPath, NEXUS2_FILE_PATH,
+              ArtifactMetadataKeys.artifactFileSize, "1233"))
+          .artifactFileMetadata(asList(builder().fileName("todolist-7.0.war").url(NEXUS2_FILE_PATH).build()))
+          .serverSetting(aSettingAttribute().withValue(NexusConfig.builder().build()).build())
+          .artifactStreamId(ARTIFACT_STREAM_ID_NEXUS)
+          .jobName("releases")
+          .groupId("io.harness.test")
+          .artifactName("todolist")
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 
   @Test
@@ -241,6 +265,25 @@ public class DelegateFileManagerTest extends CategoryTest {
     assertThat(text).isEqualTo(fileContent);
     FileUtils.deleteQuietly(FileUtils.getFile(
         ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_BAMBOO + "-" + BUILD_NO + "-" + BAMBOO_FILE_NAME));
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testDownloadArtifactAtRuntimeForNexus() throws IOException, ExecutionException {
+    String fileContent = "testNexus";
+    InputStream is = new ByteArrayInputStream(fileContent.getBytes(Charset.defaultCharset()));
+    Pair<String, InputStream> pair = new ImmutablePair<>(fileContent, is);
+    when(artifactCollectionTaskHelper.downloadArtifactAtRuntime(
+             artifactStreamAttributesForNexus, ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME))
+        .thenReturn(pair);
+    delegateFileManager.downloadArtifactAtRuntime(
+        artifactStreamAttributesForNexus, ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME);
+    String text = Files.toString(
+        new File(ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_NEXUS + "-11-" + NEXUS2_FILE_NAME), Charsets.UTF_8);
+    assertThat(text).isEqualTo(fileContent);
+    FileUtils.deleteQuietly(
+        FileUtils.getFile(ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_NEXUS + "-11-" + NEXUS2_FILE_NAME));
   }
 
   private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {

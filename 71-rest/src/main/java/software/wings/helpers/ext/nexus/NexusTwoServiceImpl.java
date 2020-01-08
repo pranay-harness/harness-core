@@ -3,6 +3,7 @@ package software.wings.helpers.ext.nexus;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.quietSleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -25,6 +26,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.stream.StreamUtils;
 import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
@@ -44,6 +46,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.AlphanumComparator;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
+import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.artifactory.FolderPath;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeNode;
@@ -589,30 +592,15 @@ public class NexusTwoServiceImpl {
     return null;
   }
 
-  @SuppressWarnings({"squid:S3510"})
   private void downloadArtifactByUrl(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String delegateId, String taskId, String accountId, ListNotifyResponseData notifyResponseData,
       String artifactName, String artifactUrl) {
+    Pair<String, InputStream> pair = downloadArtifactByUrl(nexusConfig, encryptionDetails, artifactName, artifactUrl);
     try {
-      if (nexusConfig.hasCredentials()) {
-        encryptionService.decrypt(nexusConfig, encryptionDetails);
-        Authenticator.setDefault(new MyAuthenticator(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
-      }
-      URL url = new URL(artifactUrl);
-      URLConnection conn = url.openConnection();
-      if (conn instanceof HttpsURLConnection) {
-        HttpsURLConnection conn1 = (HttpsURLConnection) url.openConnection();
-        conn1.setHostnameVerifier((hostname, session) -> true);
-        conn1.setSSLSocketFactory(Http.getSslContext().getSocketFactory());
-        artifactCollectionTaskHelper.addDataToResponse(ImmutablePair.of(artifactName, conn1.getInputStream()),
-            artifactUrl, notifyResponseData, delegateId, taskId, accountId);
-      } else {
-        artifactCollectionTaskHelper.addDataToResponse(ImmutablePair.of(artifactName, conn.getInputStream()),
-            artifactUrl, notifyResponseData, delegateId, taskId, accountId);
-      }
-
-    } catch (IOException ex) {
-      throw new InvalidRequestException(ExceptionUtils.getMessage(ex), ex);
+      artifactCollectionTaskHelper.addDataToResponse(
+          pair, artifactUrl, notifyResponseData, delegateId, taskId, accountId);
+    } catch (IOException e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -803,6 +791,48 @@ public class NexusTwoServiceImpl {
       encryptionService.decrypt(nexusConfig, encryptionDetails);
     }
     return getRetrofit(getBaseUrl(nexusConfig), JacksonConverterFactory.create()).create(NexusRestClient.class);
+  }
+
+  @SuppressWarnings({"squid:S3510"})
+  public Pair<String, InputStream> downloadArtifactByUrl(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String artifactName, String artifactUrl) {
+    try {
+      if (nexusConfig.hasCredentials()) {
+        encryptionService.decrypt(nexusConfig, encryptionDetails);
+        Authenticator.setDefault(new NexusThreeServiceImpl.MyAuthenticator(
+            nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
+      }
+      URL url = new URL(artifactUrl);
+      URLConnection conn = url.openConnection();
+      if (conn instanceof HttpsURLConnection) {
+        HttpsURLConnection conn1 = (HttpsURLConnection) url.openConnection();
+        conn1.setHostnameVerifier((hostname, session) -> true);
+        conn1.setSSLSocketFactory(Http.getSslContext().getSocketFactory());
+        return ImmutablePair.of(artifactName, conn1.getInputStream());
+      } else {
+        return ImmutablePair.of(artifactName, conn.getInputStream());
+      }
+    } catch (IOException ex) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(ex), ex);
+    }
+  }
+
+  public long getFileSize(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String artifactName, String artifactUrl) {
+    logger.info("Getting file size for artifact at path {}", artifactUrl);
+    long size;
+    Pair<String, InputStream> pair = downloadArtifactByUrl(nexusConfig, encryptionDetails, artifactName, artifactUrl);
+    if (pair == null) {
+      throw new InvalidArtifactServerException(format("Failed to get file size for artifact: %s", artifactUrl));
+    }
+    try {
+      size = StreamUtils.getInputStreamSize(pair.getRight());
+      pair.getRight().close();
+    } catch (IOException e) {
+      throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), e);
+    }
+    logger.info(format("Computed file size [%d] bytes for artifact Path: %s", size, artifactUrl));
+    return size;
   }
 
   static class MyAuthenticator extends Authenticator {

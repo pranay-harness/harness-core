@@ -48,6 +48,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
@@ -57,6 +58,7 @@ import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.Jenkins;
+import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
@@ -75,6 +77,9 @@ public class ScpCommandUnitTest extends WingsBaseTest {
       "http://localhost:8089/job/scheduler-svn/75/artifact/build/libs/docker-scheduler-1.0-SNAPSHOT-sources.jar";
   private static final String JENKINS_ARTIFACT_FILENAME_1 = "docker-scheduler-1.0-SNAPSHOT-all.jar";
   private static final String JENKINS_ARTIFACT_FILENAME_2 = "docker-scheduler-1.0-SNAPSHOT-sources.jar";
+  private static final String NEXUS_URL =
+      "https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war";
+
   @InjectMocks private ScpCommandUnit scpCommandUnit = new ScpCommandUnit();
   @Mock BaseScriptExecutor baseExecutor;
   @Mock AzureArtifactsService azureArtifactsService;
@@ -83,6 +88,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @Mock Jenkins jenkins;
   @Mock DelegateLogService delegateLogService;
   @Mock BambooService bambooService;
+  @Mock NexusService nexusService;
 
   private SettingAttribute awsSetting =
       aSettingAttribute()
@@ -123,6 +129,15 @@ public class ScpCommandUnitTest extends WingsBaseTest {
                                                               .password("admin".toCharArray())
                                                               .build())
                                                .build();
+
+  private SettingAttribute nexusSetting = aSettingAttribute()
+                                              .withUuid(SETTING_ID)
+                                              .withValue(NexusConfig.builder()
+                                                             .nexusUrl(WingsTestConstants.HARNESS_NEXUS)
+                                                             .username("admin")
+                                                             .password("dummy123!".toCharArray())
+                                                             .build())
+                                              .build();
 
   private ArtifactStreamAttributes artifactStreamAttributesForS3 =
       ArtifactStreamAttributes.builder()
@@ -210,6 +225,13 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .copyArtifactEnabled(true)
           .build();
 
+  private ArtifactStreamAttributes artifactStreamAttributesForNexusFFOff =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.NEXUS.name())
+          .metadataOnly(true)
+          .copyArtifactEnabled(false)
+          .build();
+
   private ArtifactStreamAttributes artifactStreamAttributesForJenkinsFFOff =
       ArtifactStreamAttributes.builder()
           .artifactStreamType(ArtifactStreamType.JENKINS.name())
@@ -246,6 +268,20 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .jobName("TOD-TOD")
           .artifactPaths(Arrays.asList("artifacts/todolist.tar"))
           .copyArtifactEnabled(false)
+          .build();
+
+  private ArtifactStreamAttributes artifactStreamAttributesForNexus =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.NEXUS.name())
+          .metadataOnly(true)
+          .metadata(mockMetadata(ArtifactStreamType.NEXUS))
+          .artifactFileMetadata(asList(builder().fileName("todolist-7.0.war").url(NEXUS_URL).build()))
+          .serverSetting(nexusSetting)
+          .artifactStreamId(ARTIFACT_STREAM_ID)
+          .jobName("releases")
+          .groupId("io.harness.test")
+          .artifactName("todolist")
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 
   @InjectMocks
@@ -310,6 +346,20 @@ public class ScpCommandUnitTest extends WingsBaseTest {
                                            .build());
 
   public ScpCommandUnitTest() throws URISyntaxException {}
+
+  @InjectMocks
+  ShellCommandExecutionContext contextForNexusArtifacts =
+      new ShellCommandExecutionContext(aCommandExecutionContext()
+                                           .withArtifactStreamAttributes(artifactStreamAttributesForNexus)
+                                           .withMetadata(mockMetadata(ArtifactStreamType.NEXUS))
+                                           .build());
+
+  @InjectMocks
+  ShellCommandExecutionContext contextForNexusFFOff =
+      new ShellCommandExecutionContext(aCommandExecutionContext()
+                                           .withArtifactStreamAttributes(artifactStreamAttributesForNexusFFOff)
+                                           .withMetadata(mockMetadata(ArtifactStreamType.NEXUS))
+                                           .build());
 
   /**
    * Sets up mocks.
@@ -442,6 +492,26 @@ public class ScpCommandUnitTest extends WingsBaseTest {
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
 
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldDownloadArtifactFromNexusIfMetadataOnly() {
+    when(nexusService.getFileSize(any(), any(), eq("todolist.tar"), eq(NEXUS_URL))).thenReturn(1234L);
+    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
+             anyString(), anyString()))
+        .thenReturn(CommandExecutionStatus.SUCCESS);
+    CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForNexusArtifacts);
+    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotDownloadArtifactFromNexusIfFeatureFlagDisabled() {
+    CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForNexusFFOff);
+    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
+  }
+
   private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {
     Map<String, String> map = new HashMap<>();
     switch (artifactStreamType) {
@@ -469,6 +539,9 @@ public class ScpCommandUnitTest extends WingsBaseTest {
         break;
       case BAMBOO:
         map.put(ArtifactMetadataKeys.buildNo, "11");
+        break;
+      case NEXUS:
+        map.put(ArtifactMetadataKeys.buildNo, "7.0");
         break;
       default:
         break;

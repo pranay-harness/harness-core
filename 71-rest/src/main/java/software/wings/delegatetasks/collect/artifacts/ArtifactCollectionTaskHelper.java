@@ -27,6 +27,7 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
@@ -37,6 +38,7 @@ import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.Jenkins;
+import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.EncryptionService;
@@ -67,6 +69,7 @@ public class ArtifactCollectionTaskHelper {
   @Inject private EncryptionService encryptionService;
   @Inject private JenkinsUtils jenkinsUtil;
   @Inject private BambooService bambooService;
+  @Inject private NexusService nexusService;
 
   public void addDataToResponse(Pair<String, InputStream> fileInfo, String artifactPath, ListNotifyResponseData res,
       String delegateId, String taskId, String accountId) throws FileNotFoundException {
@@ -227,6 +230,25 @@ public class ArtifactCollectionTaskHelper {
           logger.warn("Artifact download failed", e);
         }
         return pair;
+      case NEXUS:
+        logger.info("Downloading artifact [{}] from Nexus with version: [{}] on delegate",
+            metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.version));
+        saveExecutionLog("Metadata only option set for NEXUS. Starting download of artifact: "
+                + metadata.get(ArtifactMetadataKeys.artifactFileName) + ON_DELEGATE,
+            RUNNING, accountId, appId, activityId, commandUnitName, hostName);
+        pair = nexusService.downloadArtifactByUrl((NexusConfig) artifactStreamAttributes.getServerSetting().getValue(),
+            artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
+            metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));
+        if (pair != null) {
+          saveExecutionLog("NEXUS: Download complete for artifact: "
+                  + metadata.get(ArtifactMetadataKeys.artifactFileName) + ON_DELEGATE,
+              RUNNING, accountId, appId, activityId, commandUnitName, hostName);
+        } else {
+          saveExecutionLog("NEXUS: Download failed for artifact: " + metadata.get(ArtifactMetadataKeys.artifactFileName)
+                  + ON_DELEGATE,
+              FAILURE, accountId, appId, activityId, commandUnitName, hostName);
+        }
+        return pair;
       default:
         throw new UnknownArtifactStreamTypeException(artifactStreamType.name());
     }
@@ -296,6 +318,15 @@ public class ArtifactCollectionTaskHelper {
         }
         logger.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactFileName));
         return bambooService.getFileSize((BambooConfig) artifactStreamAttributes.getServerSetting().getValue(),
+            artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
+            metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));
+      case NEXUS:
+        if (!metadata.containsKey(ArtifactMetadataKeys.artifactFileName)
+            || isBlank(metadata.get(ArtifactMetadataKeys.artifactFileName))) {
+          throw new InvalidArgumentsException(ImmutablePair.of(ArtifactMetadataKeys.artifactFileName, "not found"));
+        }
+        logger.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactFileName));
+        return nexusService.getFileSize((NexusConfig) artifactStreamAttributes.getServerSetting().getValue(),
             artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
             metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));
       default:
