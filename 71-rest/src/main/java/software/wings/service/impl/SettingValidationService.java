@@ -319,6 +319,11 @@ public class SettingValidationService {
   }
 
   private void validateKubernetesClusterConfig(SettingAttribute settingAttribute) {
+    if (settingAttribute.getValue() instanceof KubernetesClusterConfig
+        && ((KubernetesClusterConfig) settingAttribute.getValue()).isSkipValidation()) {
+      return;
+    }
+
     String namespace = "default";
 
     SyncTaskContext syncTaskContext =
