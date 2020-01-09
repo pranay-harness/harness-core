@@ -43,6 +43,8 @@ public interface SecretManager extends OwnedByAccount {
 
   EncryptionType getEncryptionType(String accountId);
 
+  EncryptionType getEncryptionBySecretManagerId(String kmsId, String accountId);
+
   void maskEncryptedFields(EncryptableSetting object);
 
   void resetUnchangedEncryptedFields(EncryptableSetting sourceObject, EncryptableSetting destinationObject);
@@ -87,7 +89,8 @@ public interface SecretManager extends OwnedByAccount {
 
   EncryptedData getSecretByName(String accountId, String name);
 
-  String saveSecret(String accountId, String name, String value, String path, UsageRestrictions usageRestrictions);
+  String saveSecret(
+      String accountId, String kmsId, String name, String value, String path, UsageRestrictions usageRestrictions);
 
   List<String> importSecrets(String accountId, List<SecretText> secretTexts);
 
@@ -106,7 +109,7 @@ public interface SecretManager extends OwnedByAccount {
 
   boolean deleteSecretUsingUuid(String uuId);
 
-  String saveFile(String accountId, String name, long fileSize, UsageRestrictions usageRestrictions,
+  String saveFile(String accountId, String kmsId, String name, long fileSize, UsageRestrictions usageRestrictions,
       BoundedInputStream inputStream);
 
   File getFile(String accountId, String uuId, File readInto);

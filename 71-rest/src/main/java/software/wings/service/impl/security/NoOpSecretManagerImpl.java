@@ -39,6 +39,11 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public EncryptionType getEncryptionBySecretManagerId(String kmsId, String accountId) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public void maskEncryptedFields(EncryptableSetting object) {
     throw new UnsupportedOperationException();
   }
@@ -146,7 +151,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
 
   @Override
   public String saveSecret(
-      String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
+      String accountId, String kmsId, String name, String value, String path, UsageRestrictions usageRestrictions) {
     throw new UnsupportedOperationException();
   }
 
@@ -183,8 +188,8 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String saveFile(String accountId, String name, long fileSize, UsageRestrictions usageRestrictions,
-      BoundedInputStream inputStream) {
+  public String saveFile(String accountId, String kmsId, String name, long fileSize,
+      UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
     throw new UnsupportedOperationException();
   }
 

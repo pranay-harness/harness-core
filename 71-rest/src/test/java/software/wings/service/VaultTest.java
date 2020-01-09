@@ -961,7 +961,7 @@ public class VaultTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
+    String secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
@@ -986,7 +986,7 @@ public class VaultTest extends WingsBaseTest {
 
     secretName = UUID.randomUUID().toString();
     secretValue = UUID.randomUUID().toString();
-    secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
+    secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", "newName");
@@ -1024,7 +1024,7 @@ public class VaultTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
+    String secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
 
     String serviceId = wingsPersistence.save(Service.builder().name(UUID.randomUUID().toString()).build());
     String serviceTemplateId =
@@ -1330,8 +1330,8 @@ public class VaultTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-    String secretFileId = secretManager.saveFile(
-        accountId, secretName, fileToSave.length(), null, new BoundedInputStream(new FileInputStream(fileToSave)));
+    String secretFileId = secretManager.saveFile(accountId, kmsId, secretName, fileToSave.length(), null,
+        new BoundedInputStream(new FileInputStream(fileToSave)));
 
     String encryptedUuid = wingsPersistence.createQuery(EncryptedData.class)
                                .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -1544,7 +1544,7 @@ public class VaultTest extends WingsBaseTest {
     vaultService.saveVaultConfig(accountId, KryoUtils.clone(vaultConfig));
 
     String secretName = UUID.randomUUID().toString();
-    secretManager.saveSecret(accountId, secretName, "MySecret", null, new UsageRestrictions());
+    secretManager.saveSecret(accountId, kmsId, secretName, "MySecret", null, new UsageRestrictions());
 
     PageRequest<EncryptedData> pageRequest =
         aPageRequest()
