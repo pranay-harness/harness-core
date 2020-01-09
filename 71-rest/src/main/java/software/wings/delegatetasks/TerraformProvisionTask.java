@@ -27,6 +27,7 @@ import io.harness.filesystem.FileIo;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.NullInputStream;
@@ -169,11 +170,9 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
-    String gitConnectorSpecificDirectory =
-        resolveScriptDirectory(gitClientHelper.getRepoDirectory(gitOperationContext), parameters.getScriptPath());
-    String scriptDirectory;
+    String workingDir = resolveWorkingDir(parameters.getAccountId(), parameters.getEntityId());
     try {
-      scriptDirectory = copyFilesToProvisionerSpecificDirectory(gitConnectorSpecificDirectory, parameters);
+      copyFilesToWorkingDirectory(gitClientHelper.getRepoDirectory(gitOperationContext), workingDir);
     } catch (Exception ex) {
       logger.error("Exception in processing git copying files to provisioner specific directory", ex);
       return TerraformExecutionData.builder()
@@ -181,6 +180,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
+    String scriptDirectory = resolveScriptDirectory(workingDir, parameters.getScriptPath());
     logger.info("Script Directory: " + scriptDirectory);
     saveExecutionLog(parameters, format("Script Directory: [%s]", scriptDirectory), CommandExecutionStatus.RUNNING);
 
@@ -440,19 +440,19 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   Copies Files from the directory common to the git connector to a directory specific to the app
   and provisioner
    */
-  private String copyFilesToProvisionerSpecificDirectory(
-      String gitConnectorSpecificDirectory, TerraformProvisionParameters parameters) throws IOException {
-    String workingDir = TF_WORKING_DIR.replace("${ACCOUNT_ID}", parameters.getAccountId())
-                            .replace("${ENTITY_ID}", parameters.getEntityId());
-    String provisionerSpecificDirectory = resolveScriptDirectory(workingDir, parameters.getScriptPath());
-    File dest = new File(provisionerSpecificDirectory);
-    File src = new File(gitConnectorSpecificDirectory);
+  private void copyFilesToWorkingDirectory(String sourceDir, String destinationDir) throws IOException {
+    File dest = new File(destinationDir);
+    File src = new File(sourceDir);
     if (FileIo.checkIfFileExist(dest.getPath())) {
       FileUtils.cleanDirectory(dest);
     }
     FileUtils.copyDirectory(src, dest);
     FileIo.waitForDirectoryToBeAccessibleOutOfProcess(dest.getPath(), 10);
-    return dest.getPath();
+  }
+
+  @NonNull
+  private String resolveWorkingDir(String accountId, String entityId) {
+    return TF_WORKING_DIR.replace("${ACCOUNT_ID}", accountId).replace("${ENTITY_ID}", entityId);
   }
 
   @VisibleForTesting
@@ -616,9 +616,9 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return null;
   }
 
-  private String resolveScriptDirectory(String repoPath, String scriptPath) {
+  private String resolveScriptDirectory(String workingDir, String scriptPath) {
     return Paths
-        .get(Paths.get(System.getProperty(USER_DIR_KEY)).toString(), repoPath, scriptPath == null ? "" : scriptPath)
+        .get(Paths.get(System.getProperty(USER_DIR_KEY)).toString(), workingDir, scriptPath == null ? "" : scriptPath)
         .toString();
   }
 
