@@ -51,6 +51,8 @@ public class ChangeSetGenerator {
                                         .entityId("entityId")
                                         .entityName("entityName")
                                         .entityType("entityName")
+                                        .entityNewYamlRecordId("oldYamlId")
+                                        .entityOldYamlRecordId("newYamlId")
                                         .build();
 
     auditHeader.setEntityAuditRecords(new LinkedList<>(Arrays.asList(auditRecord)));
@@ -60,6 +62,7 @@ public class ChangeSetGenerator {
   public AuditHeader ensureUserChangeSetTest(Randomizer.Seed seed, OwnerManager.Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     AuditHeader auditHeader = new AuditHeader();
+    auditHeader.setUuid("changeSetId");
     auditHeader.setCreatedBy(owners.obtainUser());
     auditHeader.setAccountId(account.getUuid());
 
@@ -69,6 +72,7 @@ public class ChangeSetGenerator {
   public AuditHeader ensureGitChangeSetTest(Randomizer.Seed seed, OwnerManager.Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     AuditHeader auditHeader = new AuditHeader();
+    auditHeader.setUuid("changeSetId");
     auditHeader.setCreatedBy(getGitUser());
     auditHeader.setAccountId(account.getUuid());
 
