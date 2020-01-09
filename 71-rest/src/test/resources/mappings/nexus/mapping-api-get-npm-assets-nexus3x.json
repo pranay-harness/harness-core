@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/nexus/service/rest/v1/search/assets?repository=npm-test&name=npm-app1&version=1.0.0"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/nexus/body-get-npm-assets-nexus3x.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

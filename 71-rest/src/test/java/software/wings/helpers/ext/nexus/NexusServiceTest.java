@@ -1276,7 +1276,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  public void shouldFileNotFoundDownloadArtifactNPMNexus3() {
+  public void shouldNotDownloadArtifactNPMNexus3() {
     ArtifactStreamAttributes artifactStreamAttributes =
         ArtifactStreamAttributes.builder().repositoryFormat(RepositoryFormat.npm.name()).build();
     Map<String, String> artifactMetadata = new HashMap<>();
@@ -1284,19 +1284,15 @@ public class NexusServiceTest extends WingsBaseTest {
     artifactMetadata.put(ArtifactMetadataKeys.nexusPackageName, "npm-app1");
     artifactMetadata.put(ArtifactMetadataKeys.buildNo, "1.0.0");
 
-    DelegateFile delegateFile = DelegateFile.Builder.aDelegateFile().withFileId("FILE_ID").build();
-    when(delegateFileManager.upload(any(), any())).thenReturn(delegateFile);
     ListNotifyResponseData listNotifyResponseData = new ListNotifyResponseData();
     nexusService.downloadArtifacts(
         nexusThreeConfig, null, artifactStreamAttributes, artifactMetadata, null, null, null, listNotifyResponseData);
-    assertThat(((ArtifactFile) listNotifyResponseData.getData().get(0)).getFileUuid()).isEqualTo("FILE_ID");
-    assertThat(((ArtifactFile) listNotifyResponseData.getData().get(0)).getName()).isEqualTo("npm-app1-1.0.0.tgz");
   }
 
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  public void shouldFileNotFoundDownloadArtifactMavenNexus3() {
+  public void shouldNotDownloadArtifactMavenNexus3() {
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
                                                             .repositoryFormat(RepositoryFormat.maven.name())
                                                             .jobName("maven-releases")
@@ -1306,13 +1302,9 @@ public class NexusServiceTest extends WingsBaseTest {
     Map<String, String> artifactMetadata = new HashMap<>();
     artifactMetadata.put(ArtifactMetadataKeys.buildNo, "1.0");
 
-    DelegateFile delegateFile = DelegateFile.Builder.aDelegateFile().withFileId("FILE_ID").build();
-    when(delegateFileManager.upload(any(), any())).thenReturn(delegateFile);
     ListNotifyResponseData listNotifyResponseData = new ListNotifyResponseData();
     nexusService.downloadArtifacts(
         nexusThreeConfig, null, artifactStreamAttributes, artifactMetadata, null, null, null, listNotifyResponseData);
-    assertThat(((ArtifactFile) listNotifyResponseData.getData().get(0)).getFileUuid()).isEqualTo("FILE_ID");
-    assertThat(((ArtifactFile) listNotifyResponseData.getData().get(0)).getName()).isEqualTo("myartifact-1.0.war");
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -1328,13 +1320,9 @@ public class NexusServiceTest extends WingsBaseTest {
         ArtifactMetadataKeys.url, "http://localhost:8881/nexus/content/repositories/npmjs/abbrev/-/abbrev-1.0.3.tgz");
     artifactMetadata.put(ArtifactMetadataKeys.buildNo, "1.0.3");
 
-    DelegateFile delegateFile = DelegateFile.Builder.aDelegateFile().withFileId("FILE_ID").build();
-    when(delegateFileManager.upload(any(), any())).thenReturn(delegateFile);
     ListNotifyResponseData listNotifyResponseData = new ListNotifyResponseData();
     nexusService.downloadArtifacts(
         nexusConfig, null, artifactStreamAttributes, artifactMetadata, null, null, null, listNotifyResponseData);
-    assertThat(((ArtifactFile) listNotifyResponseData.getData().get(0)).getFileUuid()).isEqualTo("FILE_ID");
-    assertThat(((ArtifactFile) listNotifyResponseData.getData().get(0)).getName()).isEqualTo("abbrev-1.0.3.tgz");
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -1349,14 +1337,9 @@ public class NexusServiceTest extends WingsBaseTest {
     Map<String, String> artifactMetadata = new HashMap<>();
     artifactMetadata.put(ArtifactMetadataKeys.buildNo, "1.0.0.18279");
 
-    DelegateFile delegateFile = DelegateFile.Builder.aDelegateFile().withFileId("FILE_ID").build();
-    when(delegateFileManager.upload(any(), any())).thenReturn(delegateFile);
     ListNotifyResponseData listNotifyResponseData = new ListNotifyResponseData();
     nexusService.downloadArtifacts(
         nexusConfig, null, artifactStreamAttributes, artifactMetadata, null, null, null, listNotifyResponseData);
-    assertThat(((ArtifactFile) listNotifyResponseData.getData().get(0)).getFileUuid()).isEqualTo("FILE_ID");
-    assertThat(((ArtifactFile) listNotifyResponseData.getData().get(0)).getName())
-        .isEqualTo("NuGet.Sample.Package-1.0.0.18279.nupkg");
   }
 
   @Test(expected = InvalidArtifactServerException.class)
@@ -1452,5 +1435,30 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(pair.getKey()).isEqualTo(fileName);
     String text = IOUtils.toString(pair.getRight(), StandardCharsets.UTF_8.name());
     assertThat(text).isEqualTo(content);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldDownloadNexus3xNPMArtifact() throws IOException {
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
+                                                            .repositoryFormat(RepositoryFormat.npm.name())
+                                                            .repositoryName("npm-test")
+                                                            .nexusPackageName("npm-app1")
+                                                            .build();
+    Map<String, String> artifactMetadata = new HashMap<>();
+    artifactMetadata.put(ArtifactMetadataKeys.buildNo, "1.0.0");
+    artifactMetadata.put(ArtifactMetadataKeys.nexusPackageName, "npm-app1");
+    artifactMetadata.put(ArtifactMetadataKeys.repositoryName, "npm-test");
+    String content = "file content";
+    String fileName = "npm-app1-1.0.0.tgz";
+    ListNotifyResponseData listNotifyResponseData = new ListNotifyResponseData();
+    DelegateFile delegateFile = DelegateFile.Builder.aDelegateFile().withFileId("npm-app1-1.0.0.tgz").build();
+    when(delegateFileManager.upload(any(), any())).thenReturn(delegateFile);
+    wireMockRule3.stubFor(get(urlEqualTo("/nexus/repository/npm-test/npm-app1/-/npm-app1-1.0.0.tgz"))
+                              .willReturn(aResponse().withBody(content.getBytes())));
+    nexusService.downloadArtifacts(
+        nexusThreeConfig, null, artifactStreamAttributes, artifactMetadata, null, null, null, listNotifyResponseData);
+    assertThat(listNotifyResponseData.getData().size()).isGreaterThan(0);
   }
 }

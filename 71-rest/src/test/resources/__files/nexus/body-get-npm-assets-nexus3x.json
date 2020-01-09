@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "downloadUrl": "http://localhost:8883/nexus/repository/npm-test/npm-app1/-/npm-app1-1.0.0.tgz",
+      "path": "npm-app1/-/npm-app1-1.0.0.tgz",
+      "id": "bnBtLXRlc3Q6OTEyZDBmZTdiODE5MjM5MjY2MTI1MTBiOGYyMTQ0NGI",
+      "repository": "npm-test",
+      "format": "npm",
+      "checksum": {
+        "sha1": "1a65e4a52b3e8387bfc5e47cf0544d4d7360df31",
+        "sha256": "392a08fb25d6d9ba75ef2ec104332dbc6fccee12ffa4d8da13b5070de85deea6",
+        "sha512": "cb8b62a94d5d3675ea1edd9398df8ee4278b6972fcde9f117fc033c493faeb4b8e26872f6345fab34ff20ad7e926234f171e4997f4df7bfce2245846c0fc348c",
+        "md5": "7fe206f8706959d8772c9c9c9cf23aba"
+      }
+    }
+  ],
+  "continuationToken": null
+}
