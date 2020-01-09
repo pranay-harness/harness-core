@@ -63,6 +63,7 @@ public class OwnerRule implements TestRule {
   public static final String CONTINUOUS_VERIFICATION = "CV";
   public static final String CONTINUOUS_EFFICIENCY = "CE";
   public static final String DEVELOPER_EXPERIENCE = "DX";
+  public static final String SWAT = "SWAT";
 
   public static final String AADITI = "aaditi.joag";
   public static final String ABHINAV = "abhinav.singh";
@@ -125,7 +126,7 @@ public class OwnerRule implements TestRule {
           .put(ANSHUL, defaultDevInfo(ANSHUL).slack("UASUA3E65").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(ANUBHAW, defaultDevInfo(ANUBHAW).slack("U0Z1U0HNW").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(AVMOHAN, defaultDevInfo(AVMOHAN).slack("UK72UTBJR").team(CONTINUOUS_EFFICIENCY).build())
-          .put(BRETT, DevInfo.builder().email("brett@harness.io").slack("U40VBHCGH").build())
+          .put(BRETT, defaultDevInfo(BRETT).slack("U40VBHCGH").team(SWAT).build())
           .put(DEEPAK, DevInfo.builder().email("deepak.patankar@harness.io").slack("UK9EKBKQS").build())
           .put(DINESH, DevInfo.builder().email("dinesh.garg@harness.io").slack("UQ0DMQG11").build())
           .put(GARVIT, defaultDevInfo(GARVIT).slack("UHH98EXDK").team(CONTINUOUS_DEPLOYMENT_CORE).build())
