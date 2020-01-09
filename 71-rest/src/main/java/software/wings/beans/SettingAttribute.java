@@ -90,11 +90,13 @@ import javax.validation.Valid;
       fields = { @Field("accountId")
                  , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") })
   ,
-      @Index(options = @IndexOptions(name = "acctCatTypeIdx"),
-          fields = { @Field("accountId")
-                     , @Field("category"), @Field("value.type") }),
-      @Index(options = @IndexOptions(name = "acctValTypeIdx"), fields = { @Field("accountId")
-                                                                          , @Field("value.type") })
+      @Index(options = @IndexOptions(name = "acctCatTypeIdx"), fields = {
+        @Field("accountId"), @Field("category"), @Field("value.type")
+      }), @Index(options = @IndexOptions(name = "acctValTypeIdx"), fields = {
+        @Field("accountId"), @Field("value.type")
+      }), @Index(options = @IndexOptions(name = "value.type_1_nextIteration_1"), fields = {
+        @Field("value.type"), @Field("nextIteration")
+      })
 })
 @Data
 @EqualsAndHashCode(callSuper = false)
