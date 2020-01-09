@@ -205,32 +205,32 @@ if [[ "" != "$SEGMENT_APIKEY" ]]; then
   yq write -i $CONFIG_FILE segmentConfig.apiKey "$SEGMENT_APIKEY"
 fi
 
-if [[ "" != "SALESFORCE_USERNAME" ]]; then
-  yq write -i $CONFIG_FILE salesforceConfig.userName "SALESFORCE_USERNAME"
+if [[ "" != "$SALESFORCE_USERNAME" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.userName "$SALESFORCE_USERNAME"
 fi
 
-if [[ "" != "SALESFORCE_PASSWORD" ]]; then
-  yq write -i $CONFIG_FILE salesforceConfig.password "SALESFORCE_PASSWORD"
+if [[ "" != "$SALESFORCE_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.password "$SALESFORCE_PASSWORD"
 fi
 
-if [[ "" != "SALESFORCE_CONSUMERKEY" ]]; then
-  yq write -i $CONFIG_FILE salesforceConfig.consumerKey "SALESFORCE_CONSUMERKEY"
+if [[ "" != "$SALESFORCE_CONSUMER_KEY" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.consumerKey "$SALESFORCE_CONSUMER_KEY"
 fi
 
-if [[ "" != "SALESFORCE_CONSUMERSECRET" ]]; then
-  yq write -i $CONFIG_FILE salesforceConfig.consumerSecret "SALESFORCE_CONSUMERSECRET"
+if [[ "" != "$SALESFORCE_CONSUMER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.consumerSecret "$SALESFORCE_CONSUMER_SECRET"
 fi
 
-if [[ "" != "SALESFORCE_GRANTTYPE" ]]; then
-  yq write -i $CONFIG_FILE salesforceConfig.grantType "SALESFORCE_GRANTTYPE"
+if [[ "" != "$SALESFORCE_GRANT_TYPE" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.grantType "$SALESFORCE_GRANT_TYPE"
 fi
 
-if [[ "" != "SALESFORCE_LOGININSTANCEDOMAIN" ]]; then
-  yq write -i $CONFIG_FILE salesforceConfig.loginInstanceDomain "SALESFORCE_LOGININSTANCEDOMAIN"
+if [[ "" != "$SALESFORCE_LOGIN_INSTANCE_DOMAIN" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.loginInstanceDomain "$SALESFORCE_LOGIN_INSTANCE_DOMAIN"
 fi
 
-if [[ "" != "SALESFORCE_APIVERSION" ]]; then
-  yq write -i $CONFIG_FILE salesforceConfig.apiVersion "SALESFORCE_APIVERSION"
+if [[ "" != "$SALESFORCE_API_VERSION" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.apiVersion "$SALESFORCE_API_VERSION"
 fi
 
 if [[ "" != "$DATADOG_ENABLED" ]]; then
