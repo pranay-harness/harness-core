@@ -1382,7 +1382,7 @@ public class PcfClientImpl implements PcfClient {
     String path = null;
     int indexForPath = routeToCreate.indexOf(PCF_ROUTE_PATH_SEPARATOR);
     if (indexForPath != -1) {
-      path = routeToCreate.substring(indexForPath + 1);
+      path = routeToCreate.substring(indexForPath);
     }
 
     createRouteMap(pcfRequestConfig, hostName, domainNameUsed, path, false, false, null);
@@ -1403,7 +1403,7 @@ public class PcfClientImpl implements PcfClient {
     return new StringBuilder()
         .append(StringUtils.isBlank(route.getHost()) ? EMPTY : route.getHost() + ".")
         .append(route.getDomain())
-        .append(StringUtils.isBlank(route.getPath()) ? EMPTY : "/" + route.getPath())
+        .append(StringUtils.isBlank(route.getPath()) ? EMPTY : route.getPath())
         .append(StringUtils.isBlank(route.getPort()) ? EMPTY : ":" + Integer.parseInt(route.getPort()))
         .toString();
   }

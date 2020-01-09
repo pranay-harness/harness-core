@@ -55,6 +55,9 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
 
       String validationErrorMsg = pcfDeploymentManager.checkConnectivity(pcfConfig);
       validated = !validationErrorMsg.toLowerCase().contains(CONNECTION_TIMED_OUT);
+      if (!validated) {
+        printWarning("Failed to verify PCF Connectivity");
+      }
     } catch (Exception e) {
       String errorMsg = new StringBuilder(64)
                             .append("Failed to Decrypt pcfConfig, ")
@@ -76,22 +79,35 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
               .build());
 
       validated = response.isValidated();
+      if (!validated) {
+        printWarning("CF CLI check failed. Could not find CF CLI installed");
+      }
     }
 
     if (validated && needToCheckAppAutoscalarPluginInstall(commandRequest)) {
       try {
         validated = pcfDeploymentManager.checkIfAppAutoscalarInstalled();
+        if (!validated) {
+          printWarning(new StringBuilder("Could not find App Autoscalar plugin installed. ")
+                           .append("CF PLUGIN HOME Used: ")
+                           .append(pcfDeploymentManager.resolvePcfPluginHome())
+                           .toString());
+        }
       } catch (Exception e) {
         logger.error("Failed to Validate App-Autoscalar Plugin installed");
         validated = false;
       }
     }
     if (!validated) {
-      logger.warn("This delegate failed to verify Pivotal connectivity");
+      logger.warn("This delegate failed to verify Pivotal Task Execution");
     }
 
     return singletonList(
         DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(validated).build());
+  }
+
+  private void printWarning(String message) {
+    logger.warn(message);
   }
 
   @VisibleForTesting

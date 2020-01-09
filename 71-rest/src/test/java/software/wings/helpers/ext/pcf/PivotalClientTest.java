@@ -10,6 +10,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
 import static org.mockito.Matchers.any;
@@ -76,9 +77,11 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -238,7 +241,7 @@ public class PivotalClientTest extends WingsBaseTest {
   public void testGetAllRoutesForSpace() throws Exception {
     Route route1 = Route.builder().application("app").host("stage").domain("harness.io").id("1").space("space").build();
     Route route2 =
-        Route.builder().application("app").host("qa").domain("harness.io").path("api").id("2").space("space").build();
+        Route.builder().application("app").host("qa").domain("harness.io").path("/api").id("2").space("space").build();
 
     Flux<Route> result = Flux.create(sink -> {
       sink.next(route1);
@@ -259,7 +262,7 @@ public class PivotalClientTest extends WingsBaseTest {
   public void testGetRoutesMapsByName() throws Exception {
     Route route1 = Route.builder().application("app").host("stage").domain("harness.io").id("1").space("space").build();
     Route route2 =
-        Route.builder().application("app").host("qa").domain("harness.io").path("api").id("2").space("space").build();
+        Route.builder().application("app").host("qa").domain("harness.io").path("/api").id("2").space("space").build();
 
     Flux<Route> result = Flux.create(sink -> {
       sink.next(route1);
@@ -283,7 +286,7 @@ public class PivotalClientTest extends WingsBaseTest {
     Route route_1 =
         Route.builder().application("app").host("stage").domain("harness.io").id("1").space("space").build();
     Route route_2 =
-        Route.builder().application("app").host("qa").domain("harness.io").path("api").id("2").space("space").build();
+        Route.builder().application("app").host("qa").domain("harness.io").path("/api").id("2").space("space").build();
 
     Flux<Route> routeResult = Flux.create(sink -> {
       sink.next(route_1);
@@ -638,7 +641,7 @@ public class PivotalClientTest extends WingsBaseTest {
 
     routes.clear();
     routes.add(path2);
-    Route route1 = Route.builder().id("id").host("myapp").domain("cfapps.io").path("path").space(space).build();
+    Route route1 = Route.builder().id("id").host("myapp").domain("cfapps.io").path("/path").space(space).build();
     routeToBeCreated = pcfClient.findRoutesNeedToBeCreated(routes, Arrays.asList(route1));
     assertThat(routeToBeCreated).isNotNull();
     assertThat(routeToBeCreated).isEmpty();
@@ -665,7 +668,7 @@ public class PivotalClientTest extends WingsBaseTest {
     PcfClientImpl pcfClient1 = spy(PcfClientImpl.class);
     String space = "space1";
     Route route = Route.builder().id("id").host("myapp").domain("cfapps.io").space(space).build();
-    Route route1 = Route.builder().id("id").host("myapp").domain("cfapps.io").path("path").space(space).build();
+    Route route1 = Route.builder().id("id").host("myapp").domain("cfapps.io").path("/path").space(space).build();
 
     doReturn(Arrays.asList(route, route1)).when(pcfClient1).getRouteMapsByNames(anyList(), any());
     doNothing().when(pcfClient1).mapRouteMapForApp(any(), any());
@@ -700,7 +703,7 @@ public class PivotalClientTest extends WingsBaseTest {
             anyBoolean(), anyInt());
     assertThat(hostCaptor.getValue()).isEqualTo("myapp2");
     assertThat(domainCaptor.getValue()).isEqualTo("cfapps.io");
-    assertThat(pathCaptor.getValue()).isEqualTo("P1");
+    assertThat(pathCaptor.getValue()).isEqualTo("/P1");
   }
 
   @Test
@@ -1058,5 +1061,57 @@ public class PivotalClientTest extends WingsBaseTest {
     } catch (PivotalClientApiException e) {
       assertThat(e.getCause().getMessage()).contains("Failed to login");
     }
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void test_createRouteFromPath() throws Exception {
+    PcfClientImpl clientImpl = spy(PcfClientImpl.class);
+    ExecutionLogCallback logger = mock(ExecutionLogCallback.class);
+    doNothing().when(logger).saveExecutionLog(anyString());
+
+    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    Set<String> domains = new HashSet<>();
+    domains.add("apps.io");
+
+    try {
+      clientImpl.createRouteFromPath("app1.cfapps1.io", pcfRequestConfig, domains);
+      fail("Exception was expected");
+    } catch (Exception e) {
+      assertThat(e instanceof PivotalClientApiException).isTrue();
+      assertThat(e.getMessage().contains("used domain not present in this space")).isTrue();
+    }
+
+    doNothing()
+        .when(clientImpl)
+        .createRouteMap(any(), anyString(), anyString(), anyString(), anyBoolean(), anyBoolean(), anyInt());
+    clientImpl.createRouteFromPath("app1.apps.io", pcfRequestConfig, domains);
+    ArgumentCaptor<String> hostCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> domainCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> pathCaptor = ArgumentCaptor.forClass(String.class);
+
+    verify(clientImpl)
+        .createRouteMap(any(), hostCaptor.capture(), domainCaptor.capture(), pathCaptor.capture(), anyBoolean(),
+            anyBoolean(), anyInt());
+    assertThat(hostCaptor.getValue()).isEqualTo("app1");
+    assertThat(domainCaptor.getValue()).isEqualTo("apps.io");
+    assertThat(isBlank(pathCaptor.getValue())).isTrue();
+
+    reset(clientImpl);
+    doNothing()
+        .when(clientImpl)
+        .createRouteMap(any(), anyString(), anyString(), anyString(), anyBoolean(), anyBoolean(), anyInt());
+    clientImpl.createRouteFromPath("app1.apps.io/inside/display.jsp", pcfRequestConfig, domains);
+    hostCaptor = ArgumentCaptor.forClass(String.class);
+    domainCaptor = ArgumentCaptor.forClass(String.class);
+    pathCaptor = ArgumentCaptor.forClass(String.class);
+
+    verify(clientImpl)
+        .createRouteMap(any(), hostCaptor.capture(), domainCaptor.capture(), pathCaptor.capture(), anyBoolean(),
+            anyBoolean(), anyInt());
+    assertThat(hostCaptor.getValue()).isEqualTo("app1");
+    assertThat(domainCaptor.getValue()).isEqualTo("apps.io");
+    assertThat(pathCaptor.getValue()).isEqualTo("/inside/display.jsp");
   }
 }
