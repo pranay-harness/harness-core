@@ -36,6 +36,7 @@ import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,6 +69,8 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   Workflow readWorkflowWithoutServices(@NotNull String appId, @NotNull String workflowId, boolean infraRefactor);
 
   Workflow readWorkflowWithoutOrchestration(@NotNull String appId, @NotNull String workflowId);
+
+  List<Workflow> listWorkflowsWithoutOrchestration(Collection<String> workflowIds);
 
   Workflow readWorkflowByName(String appId, String workflowName);
 

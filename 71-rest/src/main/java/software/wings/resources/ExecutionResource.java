@@ -191,7 +191,7 @@ public class ExecutionResource {
       @QueryParam("envId") String envId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
     PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, Action.EXECUTE);
     List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
-    if (pipelineId != null && executionArgs.getWorkflowType() == WorkflowType.PIPELINE) {
+    if (pipelineId != null && executionArgs != null && executionArgs.getWorkflowType() == WorkflowType.PIPELINE) {
       executionArgs.setPipelineId(pipelineId);
       authHandler.authorize(permissionAttributeList, asList(appId), pipelineId);
     } else {
