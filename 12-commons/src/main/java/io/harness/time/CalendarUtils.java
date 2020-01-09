@@ -26,7 +26,7 @@ public class CalendarUtils {
    * @return calendar instance for a timezone
    */
   public static Calendar getCalendar(String timeZone, long epochTime) {
-    TimeZone userTimeZone = TimeZone.getTimeZone(timeZone);
+    TimeZone userTimeZone = TimeZone.getTimeZone(timeZone != null ? timeZone : "UTC");
     long timezoneAlteredTime = epochTime - userTimeZone.getRawOffset();
     Calendar calendar = Calendar.getInstance(userTimeZone);
     calendar.setTimeInMillis(timezoneAlteredTime);
