@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -1061,9 +1062,8 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
-  @RealMongo
   public void saveAndUpdateFile() throws IOException, IllegalAccessException {
     doNothing().when(yamlPushService).pushYamlChangeSet(anyString(), any(), any(), any(), anyBoolean(), anyBoolean());
     final long seed = System.currentTimeMillis();
@@ -1076,7 +1076,7 @@ public class SecretTextTest extends WingsBaseTest {
     when(httpServletRequest.getContentLengthLong()).thenReturn(fileToSave.length());
     String secretFileId =
         secretManagementResource
-            .saveFile(httpServletRequest, accountId, secretName, new FileInputStream(fileToSave), null)
+            .saveFile(httpServletRequest, accountId, kmsId, secretName, new FileInputStream(fileToSave), null)
             .getResource();
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
@@ -1173,7 +1173,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     String newSecretFileId =
         secretManagementResource
-            .saveFile(httpServletRequest, accountId, secretName, new FileInputStream(fileToSave), null)
+            .saveFile(httpServletRequest, accountId, kmsId, secretName, new FileInputStream(fileToSave), null)
             .getResource();
     configFile.setEncryptedFileId(newSecretFileId);
     configService.update(configFile, null);
@@ -1184,7 +1184,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void multipleFileRefrence() throws IOException {
@@ -1195,8 +1195,8 @@ public class SecretTextTest extends WingsBaseTest {
     String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
 
-    String secretFileId = secretManager.saveFile(
-        accountId, secretName, fileToSave.length(), null, new BoundedInputStream(new FileInputStream(fileToSave)));
+    String secretFileId = secretManager.saveFile(accountId, kmsId, secretName, fileToSave.length(), null,
+        new BoundedInputStream(new FileInputStream(fileToSave)));
 
     Query<EncryptedData> dataQuery = wingsPersistence.createQuery(EncryptedData.class)
                                          .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -1290,8 +1290,8 @@ public class SecretTextTest extends WingsBaseTest {
 
     String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-    String secretFileId = secretManager.saveFile(
-        accountId, secretName, fileToSave.length(), null, new BoundedInputStream(new FileInputStream(fileToSave)));
+    String secretFileId = secretManager.saveFile(accountId, kmsId, secretName, fileToSave.length(), null,
+        new BoundedInputStream(new FileInputStream(fileToSave)));
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -1379,8 +1379,8 @@ public class SecretTextTest extends WingsBaseTest {
 
     String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-    String secretFileId = secretManager.saveFile(
-        accountId, secretName, fileToSave.length(), null, new BoundedInputStream(new FileInputStream(fileToSave)));
+    String secretFileId = secretManager.saveFile(accountId, null, secretName, fileToSave.length(), null,
+        new BoundedInputStream(new FileInputStream(fileToSave)));
 
     Query<EncryptedData> encrDataQuery = wingsPersistence.createQuery(EncryptedData.class)
                                              .filter(EncryptedDataKeys.type, CONFIG_FILE)

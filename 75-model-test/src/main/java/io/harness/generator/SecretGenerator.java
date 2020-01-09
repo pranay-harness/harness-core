@@ -23,7 +23,7 @@ public class SecretGenerator {
       return encryptedData.getUuid();
     }
 
-    return secretManager.saveSecret(
+    return secretManager.saveSecretUsingLocalMode(
         accountId, name.getValue(), scmSecret.decryptToString(name), null, getAllAppAllEnvUsageRestrictions());
   }
 

@@ -203,6 +203,11 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public EncryptionType getEncryptionBySecretManagerId(String kmsId, String accountId) {
+    return secretManagerConfigService.getEncryptionBySecretManagerId(kmsId, accountId);
+  }
+
+  @Override
   public List<SecretManagerConfig> listSecretManagers(String accountId) {
     return secretManagerConfigService.listSecretManagers(accountId, true);
   }
@@ -1227,8 +1232,8 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public String saveSecret(
-      String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
-    return upsertSecretInternal(accountId, null, name, value, path, usageRestrictions);
+      String accountId, String kmsId, String name, String value, String path, UsageRestrictions usageRestrictions) {
+    return upsertSecretInternal(accountId, kmsId, null, name, value, path, usageRestrictions);
   }
 
   @Override
@@ -1269,8 +1274,8 @@ public class SecretManagerImpl implements SecretManager {
     List<String> secretIds = new ArrayList<>();
     for (SecretText secretText : secretTexts) {
       try {
-        String secretId = upsertSecretInternal(accountId, null, secretText.getName(), secretText.getValue(),
-            secretText.getPath(), secretText.getUsageRestrictions());
+        String secretId = upsertSecretInternal(accountId, secretText.getKmsId(), null, secretText.getName(),
+            secretText.getValue(), secretText.getPath(), secretText.getUsageRestrictions());
         secretIds.add(secretId);
         logger.info("Imported secret '{}' successfully with uid: {}", secretText.getName(), secretId);
       } catch (WingsException e) {
@@ -1283,7 +1288,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public String saveSecretUsingLocalMode(
       String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
-    return upsertSecretInternal(accountId, null, name, value, path, EncryptionType.LOCAL, usageRestrictions);
+    return upsertSecretInternal(accountId, null, null, name, value, path, EncryptionType.LOCAL, usageRestrictions);
   }
 
   @Override
@@ -1357,13 +1362,13 @@ public class SecretManagerImpl implements SecretManager {
   public boolean updateSecret(
       String accountId, String uuId, String name, String value, String path, UsageRestrictions usageRestrictions) {
     String encryptedDataId =
-        upsertSecretInternal(accountId, uuId, name, value, path, getEncryptionType(accountId), usageRestrictions);
+        upsertSecretInternal(accountId, null, uuId, name, value, path, getEncryptionType(accountId), usageRestrictions);
     return encryptedDataId != null;
   }
 
-  private String upsertSecretInternal(
-      String accountId, String uuid, String name, String value, String path, UsageRestrictions usageRestrictions) {
-    return upsertSecretInternal(accountId, uuid, name, value, path, null, usageRestrictions);
+  private String upsertSecretInternal(String accountId, String kmsId, String uuid, String name, String value,
+      String path, UsageRestrictions usageRestrictions) {
+    return upsertSecretInternal(accountId, kmsId, uuid, name, value, path, null, usageRestrictions);
   }
 
   /**
@@ -1374,9 +1379,10 @@ public class SecretManagerImpl implements SecretManager {
    * <p>
    * It will return the generated UUID in a INSERT operation, and return null in the UPDATE operation if the record
    * doesn't exist.
+   * If the kmsId is null, we will use harness Key Store.
    */
-  private String upsertSecretInternal(String accountId, String uuid, String name, String value, String path,
-      EncryptionType encryptionType, UsageRestrictions usageRestrictions) {
+  private String upsertSecretInternal(String accountId, String kmsId, String uuid, String name, String value,
+      String path, EncryptionType encryptionType, UsageRestrictions usageRestrictions) {
     String auditMessage;
     String encryptedDataId;
 
@@ -1389,14 +1395,28 @@ public class SecretManagerImpl implements SecretManager {
     if (isEmpty(uuid)) {
       // INSERT use case
       usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, usageRestrictions);
-
-      if (encryptionType == null) {
+      // If kmsId is null and encryptionType is also null then use account level encryption, this case won't happen
+      // because we are always sending encryption type or ksmID.
+      if (kmsId == null && encryptionType != LOCAL) {
         encryptionType = getEncryptionType(accountId);
       }
+      // For each secret we are finding the encryption type sent by the UI
+      if (encryptionType == null) {
+        encryptionType = getEncryptionBySecretManagerId(kmsId, accountId);
+      }
       validateSecretPath(encryptionType, path);
-
+      EncryptedData encrypted = EncryptedData.builder()
+                                    .name(name)
+                                    .path(path)
+                                    .accountId(accountId)
+                                    .type(SettingVariableTypes.SECRET_TEXT)
+                                    .encryptionType(encryptionType)
+                                    .kmsId(kmsId)
+                                    .enabled(true)
+                                    .parentIds(new HashSet<>())
+                                    .build();
       EncryptedData encryptedData =
-          encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue, path, null, name, usageRestrictions);
+          encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue, path, encrypted, name, usageRestrictions);
       encryptedData.addSearchTag(name);
       try {
         encryptedDataId = wingsPersistence.save(encryptedData);
@@ -1658,9 +1678,9 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String saveFile(String accountId, String name, long fileSize, UsageRestrictions usageRestrictions,
-      BoundedInputStream inputStream) {
-    return upsertFileInternal(accountId, name, null, fileSize, usageRestrictions, inputStream);
+  public String saveFile(String accountId, String kmsId, String name, long fileSize,
+      UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
+    return upsertFileInternal(accountId, kmsId, name, null, fileSize, usageRestrictions, inputStream);
   }
 
   @Override
@@ -1767,7 +1787,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public boolean updateFile(String accountId, String name, String uuid, long fileSize,
       UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
-    String recordId = upsertFileInternal(accountId, name, uuid, fileSize, usageRestrictions, inputStream);
+    String recordId = upsertFileInternal(accountId, null, name, uuid, fileSize, usageRestrictions, inputStream);
     return isNotEmpty(recordId);
   }
 
@@ -1777,7 +1797,7 @@ public class SecretManagerImpl implements SecretManager {
    * use case in which we would like to preserve the 'uuid' field while importing the exported encrypted keys from other
    * system.
    */
-  private String upsertFileInternal(String accountId, String name, String uuid, long fileSize,
+  private String upsertFileInternal(String accountId, String kmsId, String name, String uuid, long fileSize,
       UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
     if (isEmpty(name)) {
       throw new SecretManagementException(ErrorCode.FILE_INTEGRITY_CHECK_FAILED, null, USER, null);
@@ -1815,7 +1835,14 @@ public class SecretManagerImpl implements SecretManager {
 
     if (encryptedData == null) {
       // INSERT in UPSERT case, get the system default encryption type.
-      encryptionType = getEncryptionType(accountId);
+      // If kmsId is null, the encryption should be LOCAL and not account default ?
+      if (kmsId == null) {
+        encryptionType = getEncryptionType(accountId);
+      } else if (kmsId.equals(accountId)) {
+        encryptionType = LOCAL;
+      } else {
+        encryptionType = getEncryptionBySecretManagerId(kmsId, accountId);
+      }
       usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, usageRestrictions);
     } else {
       // UPDATE in UPSERT case
@@ -1839,7 +1866,7 @@ public class SecretManagerImpl implements SecretManager {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, e, USER);
     }
 
-    String kmsId = update ? encryptedData.getKmsId() : null;
+    kmsId = update ? encryptedData.getKmsId() : kmsId;
     EncryptionConfig encryptionConfig;
     EncryptedData newEncryptedFile = null;
     // HAR-9736: Update of encrypted file may not pick a new file for upload and no need to encrypt empty file.

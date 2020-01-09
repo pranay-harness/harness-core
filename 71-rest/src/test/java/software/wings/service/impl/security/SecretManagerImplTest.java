@@ -1,9 +1,11 @@
 package software.wings.service.impl.security;
 
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,6 +32,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HarnessUserGroupService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.GcpKmsService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
@@ -47,9 +50,12 @@ public class SecretManagerImplTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private HarnessUserGroupService harnessUserGroupService;
   @Mock private FileService fileService;
+  @Mock private UsageRestrictionsService usageRestrictionsService;
   @Inject @InjectMocks private KmsService kmsService;
   @Inject @InjectMocks private GcpSecretsManagerService gcpSecretsManagerService;
   @Inject @InjectMocks private SecretManager secretManager;
+  private String secretName = "secretName";
+  private String secretValue = "secretValue";
 
   @Before
   public void setup() {
@@ -88,9 +94,6 @@ public class SecretManagerImplTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testEncrypt_GCPKMS() {
-    String secretName = "secretName";
-    String secretValue = "secretValue";
-
     EncryptedData encryptedData = EncryptedData.builder()
                                       .accountId(account.getUuid())
                                       .enabled(true)
@@ -231,5 +234,42 @@ public class SecretManagerImplTest extends WingsBaseTest {
         account.getUuid(), EncryptionType.GCP_KMS, gcpKmsConfig.getUuid(), EncryptionType.KMS, "kmsConfigId");
 
     assertThat(transitionEventsCreated).isTrue();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void test_saveSecret() {
+    EncryptedData encryptedData = EncryptedData.builder()
+                                      .accountId(account.getUuid())
+                                      .enabled(true)
+                                      .kmsId(gcpKmsConfig.getUuid())
+                                      .encryptionType(EncryptionType.GCP_KMS)
+                                      .encryptionKey("Dummy Key")
+                                      .encryptedValue("Dummy Value".toCharArray())
+                                      .base64Encoded(false)
+                                      .name("Dummy record")
+                                      .type(SettingVariableTypes.GCP_KMS)
+                                      .build();
+
+    doNothing().when(usageRestrictionsService).validateUsageRestrictionsOnEntitySave(any(), any());
+    when(gcpKmsService.encrypt(
+             eq(secretValue), eq(account.getUuid()), any(GcpKmsConfig.class), any(EncryptedData.class)))
+        .thenReturn(encryptedData);
+    String secretId =
+        secretManager.saveSecret(account.getUuid(), gcpKmsConfig.getUuid(), secretName, secretValue, null, null);
+    assertThat(secretId).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void test_saveSecretLocal() {
+    doNothing().when(usageRestrictionsService).validateUsageRestrictionsOnEntitySave(any(), any());
+    Account newAccount = getAccount(AccountType.PAID);
+    newAccount.setLocalEncryptionEnabled(true);
+    String accountId = wingsPersistence.save(newAccount);
+    String secretId = secretManager.saveSecretUsingLocalMode(accountId, secretName, secretValue, null, null);
+    assertThat(secretId).isNotNull();
   }
 }

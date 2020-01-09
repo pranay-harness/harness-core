@@ -42,6 +42,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -140,8 +141,8 @@ public class SecretManagementResource {
   public RestResponse<String> saveSecret(@QueryParam("accountId") final String accountId, @Body SecretText secretText) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       logger.info("Adding a secret");
-      return new RestResponse<>(secretManager.saveSecret(accountId, secretText.getName(), secretText.getValue(),
-          secretText.getPath(), secretText.getUsageRestrictions()));
+      return new RestResponse<>(secretManager.saveSecret(accountId, secretText.getKmsId(), secretText.getName(),
+          secretText.getValue(), secretText.getPath(), secretText.getUsageRestrictions()));
     }
   }
 
@@ -183,10 +184,10 @@ public class SecretManagementResource {
   @Consumes(MULTIPART_FORM_DATA)
   @ExceptionMetered
   public RestResponse<String> saveFile(@Context HttpServletRequest request,
-      @QueryParam("accountId") final String accountId, @FormDataParam("name") final String name,
-      @FormDataParam("file") InputStream uploadedInputStream,
+      @QueryParam("accountId") final String accountId, @Nullable @FormDataParam("kmsId") final String kmsId,
+      @FormDataParam("name") final String name, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("usageRestrictions") final String usageRestrictionsString) {
-    return new RestResponse<>(secretManager.saveFile(accountId, name, request.getContentLengthLong(),
+    return new RestResponse<>(secretManager.saveFile(accountId, kmsId, name, request.getContentLengthLong(),
         usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString),
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit())));
   }

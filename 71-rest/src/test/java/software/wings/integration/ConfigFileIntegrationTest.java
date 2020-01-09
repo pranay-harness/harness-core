@@ -16,6 +16,7 @@ import static software.wings.integration.IntegrationTestUtils.randomInt;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.KMS_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
@@ -82,6 +83,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   private Service service;
   private Environment env;
   private String fileName;
+  private String kmsId;
   private ConfigFile configFile, newConfigFile;
   private ServiceTemplate serviceTemplate;
 
@@ -91,6 +93,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
     super.setUp();
     FieldUtils.writeField(configService, "secretManager", secretManager, true);
     loginAdminUser();
+    kmsId = KMS_ID;
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(delegateService);
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -252,8 +255,8 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
     String secretName = UUID.randomUUID().toString();
     InputStream inputStream = IOUtils.toInputStream(INPUT_TEXT, "ISO-8859-1");
-    String secretFileId = secretManager.saveFile(
-        accountId, secretName, configFile.getSize(), null, new BoundedInputStream(new BoundedInputStream(inputStream)));
+    String secretFileId = secretManager.saveFile(accountId, kmsId, secretName, configFile.getSize(), null,
+        new BoundedInputStream(new BoundedInputStream(inputStream)));
 
     configFile.setAppId(service.getAppId());
     configFile.setName(fileName);
@@ -293,8 +296,8 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   public void shouldSaveEncryptedServiceConfigFile() throws IOException {
     String secretName = UUID.randomUUID().toString();
     InputStream inputStream = IOUtils.toInputStream(INPUT_TEXT, "ISO-8859-1");
-    String secretFileId = secretManager.saveFile(
-        accountId, secretName, configFile.getSize(), null, new BoundedInputStream(new BoundedInputStream(inputStream)));
+    String secretFileId = secretManager.saveFile(accountId, kmsId, secretName, configFile.getSize(), null,
+        new BoundedInputStream(new BoundedInputStream(inputStream)));
 
     ConfigFile appConfigFile = getConfigFile();
     appConfigFile.setTemplateId(DEFAULT_TEMPLATE_ID);

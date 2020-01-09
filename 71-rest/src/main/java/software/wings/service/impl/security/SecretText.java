@@ -16,4 +16,5 @@ public class SecretText {
   private String value;
   private String path;
   private UsageRestrictions usageRestrictions;
+  private String kmsId;
 }
