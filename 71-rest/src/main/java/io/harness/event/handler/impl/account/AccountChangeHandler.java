@@ -184,5 +184,9 @@ public class AccountChangeHandler implements EventHandler {
     segmentHelper.enqueue(groupMessageBuilder.enableIntegration(SegmentHandler.Keys.SALESFORCE,
         featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, accountId)
             && salesforceAccountCheck.isAccountPresentInSalesforce(account)));
+    logger.info("Group call sent to Salesforce is={} for accountId={} , accountName={}",
+        featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, accountId)
+            && salesforceAccountCheck.isAccountPresentInSalesforce(account),
+        account.getUuid(), account.getAccountName());
   }
 }
