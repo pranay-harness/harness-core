@@ -3,6 +3,7 @@ package software.wings.audit;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.AccountAccess;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -60,7 +61,7 @@ import java.util.List;
 @Entity(value = "audits", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 
-public class AuditHeader extends Base {
+public class AuditHeader extends Base implements AccountAccess {
   /**
    * The Remote user.
    */
