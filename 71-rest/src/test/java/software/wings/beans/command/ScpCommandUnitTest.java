@@ -281,6 +281,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .jobName("releases")
           .groupId("io.harness.test")
           .artifactName("todolist")
+          .copyArtifactEnabled(true)
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 
