@@ -361,86 +361,108 @@ FORM_FIELD_TO_ENTITY_TYPE:
       value: CF_AWS_CONFIG_ID
 
 TASK_TYPES:
-    - name: Command
-      value: COMMAND
-    - name: HTTP Verification
-      value: HTTP
-    - name: Host Validation
-      value: HOST_VALIDATION
-    - name: Jenkins
-      value: JENKINS
-    - name: Bamboo
-      value: BAMBOO
-    - name: Nexus
-      value: NEXUS
-    - name: Artifactory
-      value: ARTIFACTORY
-    - name: Amazon S3
-      value: S3
-    - name: Docker Hub
-      value: DOCKER
-    - name: Amazon EC2 Container Registry
+    - name: Amazon EC2 Container Registry (ECR)
       value: ECR
-    - name: Google Container Registry
-      value: GCR
-    - name: Azure Container Registry
-      value: ACR
-    - name: Google Cloud Storage
-      value: GCS
-    - name: AppDynamics
-      value: APPDYNAMICS
-    - name: Splunk
-      value: SPLUNK
-    - name: Elk
-      value: ELK
-    - name: Logz
-      value: LOGZ
-    - name: New Relic
-      value: NEWRELIC
-    - name: Sumo Logic
-      value: SUMO
-    - name: Key Management Service
-      value: KMS
-    - name: Git
-      value: GIT
-    - name: Container
-      value: CONTAINER
     - name: Amazon Machine Image (AMI)
       value: AMI
-    - name: Helm
-      value: HELM
-    - name: Shell Script
-      value: SCRIPT
-    - name: Dynatrace
-      value: DYNA_TRACE
-    - name: Prometheus
-      value: PROMETHEUS
+    - name: Amazon S3
+      value: S3
+    - name: Amazon Web Services (AWS)
+      value: AWS
+    - name: APM
+      value: APM
+    - name: AppDynamics
+      value: APPDYNAMICS
+    - name: Artifactory
+      value: ARTIFACTORY
+    - name: Azure Container Registry
+      value: ACR
+    - name: Bamboo
+      value: BAMBOO
+    - name: Build Source
+      value: BUILD_SOURCE
+    - name: Cloud Formation
+      value: CLOUD_FORMATION
     - name: CloudWatch
       value: CLOUD_WATCH
     - name: Collaboration Provider
       value: COLLABORATION_PROVIDER
-    - name: Pivotal Cloud Foundry (PCF)
-      value: PCF
-    - name: APM
-      value: APM
-    - name: LOG
-      value: LOG
-    - name: Cloud Formation
-      value: CLOUD_FORMATION
-    - name: Terraform
-      value: TERRAFORM
-    - name: Lightweight Directory Access Protocol (LDAP)
-      value: LDAP
-    - name: Slack Notifications
-      value: SLACK
-    - name: Amazon Web Services (AWS)
-      value: AWS
-    - name: Trigger
-      value: TRIGGER
+    - name: Command
+      value: COMMAND
     - name: Connectivity Validation
       value: CONNECTIVITY_VALIDATION
+    - name: Container
+      value: CONTAINER
+    - name: Custom Artifact Source
+      value: CUSTOM
+    - name: Custom Log Collection and Bugsnag
+      value: LOG
+    - name: Docker Hub
+      value: DOCKER
+    - name: Dynatrace
+      value: DYNA_TRACE
+    - name: Elk
+      value: ELK
+    - name: Git
+      value: GIT
+    - name: Google Cloud Storage
+      value: GCS
+    - name: Google Container Registry
+      value: GCR
+    - name: Helm
+      value: HELM
+    - name: Helm Repo Config Validation
+      value: HELM_REPO_CONFIG_VALIDATION
+    - name: Helm Values Fetch
+      value: HELM_VALUES_FETCH_TASK
+    - name: Host Validation
+      value: HOST_VALIDATION
+    - name: HTTP Verification
+      value: HTTP
+    - name: Jenkins
+      value: JENKINS
+    - name: Jira
+      value: JIRA
+    - name: Key Management Service
+      value: KMS
+    - name: Kubernetes
+      value: K8S
+    - name: Lightweight Directory Access Protocol (LDAP)
+      value: LDAP
+    - name: Logz
+      value: LOGZ
+    - name: New Relic
+      value: NEWRELIC
+    - name: Nexus
+      value: NEXUS
+    - name: Pivotal Cloud Foundry (PCF)
+      value: PCF
+    - name: Prometheus
+      value: PROMETHEUS
     - name: Service Guard
       value: GUARD_24x7
+    - name: ServiceNow
+      value: SERVICENOW
+    - name: SFTP
+      value: SFTP
+    - name: Shell Script
+      value: SCRIPT
+    - name: Shell Script Provision
+      value: SHELL_SCRIPT_PROVISION
+    - name: Slack Notifications
+      value: SLACK
+    - name: SMB
+      value: SMB
+    - name: Splunk
+      value: SPLUNK
+    - name: SpotInst
+      value: SPOTINST
+    - name: Sumo Logic
+      value: SUMO
+    - name: Terraform
+      value: TERRAFORM
+    - name: Trigger
+      value: TRIGGER
 
 EXECUTION_STATUS:
     - name: Aborted
