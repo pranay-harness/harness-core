@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
@@ -45,14 +46,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.User;
@@ -85,10 +90,12 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.WorkflowFilter;
 import software.wings.service.impl.UserGroupServiceImpl;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
@@ -96,6 +103,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -142,6 +150,8 @@ public class AuthHandler {
   @Inject private DashboardAuthHandler dashboardAuthHandler;
   @Inject private ApiKeyService apiKeyService;
   @Inject private HarnessApiKeyService harnessApiKeyService;
+  @Inject private WorkflowServiceHelper workflowServiceHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   public UserPermissionInfo evaluateUserPermissionInfo(String accountId, List<UserGroup> userGroups, User user) {
     UserPermissionInfoBuilder userPermissionInfoBuilder = UserPermissionInfo.builder().accountId(accountId);
@@ -164,7 +174,7 @@ public class AuthHandler {
 
     // Filter and assign permissions
     Map<String, AppPermissionSummary> appPermissionMap =
-        populateAppPermissions(userGroups, permissionTypeAppIdEntityMap, allAppIds);
+        populateAppPermissions(accountId, userGroups, permissionTypeAppIdEntityMap, allAppIds);
 
     userPermissionInfoBuilder.appPermissionMapInternal(appPermissionMap)
         .accountPermissionSummary(accountPermissionSummaryBuilder.build());
@@ -181,7 +191,7 @@ public class AuthHandler {
     return userPermissionInfo;
   }
 
-  private Map<String, AppPermissionSummary> populateAppPermissions(List<UserGroup> userGroups,
+  private Map<String, AppPermissionSummary> populateAppPermissions(String accountId, List<UserGroup> userGroups,
       Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap, HashSet<String> allAppIds) {
     Map<String, AppPermissionSummary> appPermissionMap = new HashMap<>();
     Multimap<String, Action> envActionMapForPipeline = HashMultimap.create();
@@ -192,6 +202,7 @@ public class AuthHandler {
       if (isEmpty(appPermissions)) {
         return;
       }
+
       appPermissions.forEach(appPermission -> {
         if (isEmpty(appPermission.getActions())) {
           logger.error("Actions empty for apps: {}", appPermission.getAppFilter());
@@ -208,23 +219,24 @@ public class AuthHandler {
                 appPermission.getActions());
           });
 
-          attachPipelinePermission(envActionMapForPipeline, appPermissionMap, permissionTypeAppIdEntityMap, appIds,
-              PIPELINE, null, appPermission.getActions());
+          attachPipelinePermission(accountId, envActionMapForPipeline, appPermissionMap, permissionTypeAppIdEntityMap,
+              appIds, PIPELINE, null, appPermission.getActions());
 
-          attachPipelinePermission(envActionMapForDeployment, appPermissionMap, permissionTypeAppIdEntityMap, appIds,
-              DEPLOYMENT, null, appPermission.getActions());
+          attachPipelinePermission(accountId, envActionMapForDeployment, appPermissionMap, permissionTypeAppIdEntityMap,
+              appIds, DEPLOYMENT, null, appPermission.getActions());
 
         } else {
           if (permissionType == PIPELINE) {
-            attachPipelinePermission(envActionMapForPipeline, appPermissionMap, permissionTypeAppIdEntityMap, appIds,
-                permissionType, appPermission.getEntityFilter(), appPermission.getActions());
+            attachPipelinePermission(accountId, envActionMapForPipeline, appPermissionMap, permissionTypeAppIdEntityMap,
+                appIds, permissionType, appPermission.getEntityFilter(), appPermission.getActions());
           } else {
             attachPermission(appPermissionMap, permissionTypeAppIdEntityMap, appIds, permissionType,
                 appPermission.getEntityFilter(), appPermission.getActions());
 
             if (permissionType == DEPLOYMENT) {
-              attachPipelinePermission(envActionMapForDeployment, appPermissionMap, permissionTypeAppIdEntityMap,
-                  appIds, permissionType, appPermission.getEntityFilter(), appPermission.getActions());
+              attachPipelinePermission(accountId, envActionMapForDeployment, appPermissionMap,
+                  permissionTypeAppIdEntityMap, appIds, permissionType, appPermission.getEntityFilter(),
+                  appPermission.getActions());
             }
           }
         }
@@ -468,7 +480,33 @@ public class AuthHandler {
     return existingEntityIdSet;
   }
 
-  private void attachPipelinePermission(Multimap<String, Action> envActionMap,
+  private Map<String, Workflow> prepareWorkflowCacheFromEntityMap(
+      String appId, Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap) {
+    // Try to create a workflow cache using permissionTypeAppIdEntityMap.
+    Map<String, Workflow> workflowCache = new HashMap<>();
+    if (isEmpty(permissionTypeAppIdEntityMap)) {
+      return workflowCache;
+    }
+
+    Map<String, List<Base>> appIdWorkflowsMap = permissionTypeAppIdEntityMap.get(WORKFLOW);
+    if (isNotEmpty(appIdWorkflowsMap)) {
+      List<Base> workflowList = appIdWorkflowsMap.get(appId);
+      if (isNotEmpty(workflowList)) {
+        for (Base entity : workflowList) {
+          if (!(entity instanceof Workflow)) {
+            continue;
+          }
+
+          Workflow workflow = (Workflow) entity;
+          workflowCache.put(workflow.getUuid(), workflow);
+        }
+      }
+    }
+
+    return workflowCache;
+  }
+
+  private void attachPipelinePermission(String accountId, Multimap<String, Action> envActionMap,
       Map<String, AppPermissionSummary> appPermissionMap,
       Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap, Set<String> appIds,
       PermissionType permissionType, Filter entityFilter, Set<Action> actions) {
@@ -481,6 +519,7 @@ public class AuthHandler {
         appPermissionMap.put(appId, appPermissionSummary);
       }
 
+      Map<String, Workflow> workflowCache = prepareWorkflowCacheFromEntityMap(appId, permissionTypeAppIdEntityMap);
       SetView<Action> intersection = Sets.intersection(fixedEntityActions, actions);
       Set<Action> entityActions = new HashSet<>(intersection);
       AppPermissionSummary finalAppPermissionSummary = appPermissionSummary;
@@ -509,8 +548,9 @@ public class AuthHandler {
             finalAppPermissionSummary.setPipelineUpdatePermissionsForEnvs(updatedEnvIdSet);
           }
 
-          pipelineIdActionMap = getPipelineIdsByFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
-              permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions);
+          pipelineIdActionMap = getPipelineIdsByFilter(accountId, permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
+              permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions,
+              workflowCache);
 
           Map<Action, Set<String>> actionEntityIdMap =
               buildActionPipelineMap(finalAppPermissionSummary.getPipelinePermissions(), pipelineIdActionMap);
@@ -522,8 +562,9 @@ public class AuthHandler {
             break;
           }
 
-          pipelineIdActionMap = getPipelineIdsByFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
-              permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions);
+          pipelineIdActionMap = getPipelineIdsByFilter(accountId, permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
+              permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions,
+              workflowCache);
 
           actionEntityIdMap =
               buildActionPipelineMap(finalAppPermissionSummary.getDeploymentPermissions(), pipelineIdActionMap);
@@ -539,6 +580,13 @@ public class AuthHandler {
   private Map<PermissionType, Map<String, List<Base>>> fetchRequiredEntities(
       String accountId, Map<PermissionType, Set<String>> permissionTypeAppIdSetMap) {
     Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap = new HashMap<>();
+    if ((permissionTypeAppIdSetMap.containsKey(PIPELINE) || permissionTypeAppIdSetMap.containsKey(DEPLOYMENT))
+        && !permissionTypeAppIdSetMap.containsKey(WORKFLOW)) {
+      // Read workflows in case the WORKFLOW permission type is not present but the PIPELINE or DEPLOYMENT permission is
+      // present.
+      permissionTypeAppIdEntityMap.put(WORKFLOW, getAppIdWorkflowMap(accountId));
+    }
+
     permissionTypeAppIdSetMap.keySet().forEach(permissionType -> {
       switch (permissionType) {
         case SERVICE: {
@@ -717,11 +765,6 @@ public class AuthHandler {
     if (user != null && user.getUserRequestContext() != null) {
       setEntityIdFilter(requiredPermissionAttributes, user.getUserRequestContext(), appIds);
     }
-  }
-
-  public void setAppIdFilter(UserRequestContext userRequestContext, Set<String> appIds) {
-    userRequestContext.setAppIdFilterRequired(true);
-    userRequestContext.setAppIds(appIds);
   }
 
   public boolean authorize(
@@ -1094,10 +1137,115 @@ public class AuthHandler {
     return workflowFilter;
   }
 
-  private Multimap<String, Action> getPipelineIdsByFilter(List<Base> pipelines, List<Base> environments,
+  private Map<String, Workflow> fillWorkflowCache(Map<String, Workflow> workflowCache, List<Base> pipelines) {
+    Set<String> newWorkflowIds = new HashSet<>();
+    // Find all new workflow ids that are not present in the cache but present in the list of pipelines.
+    pipelines.forEach(p -> {
+      Pipeline pipeline = (Pipeline) p;
+      if (pipeline.getPipelineStages() == null) {
+        return;
+      }
+
+      pipeline.getPipelineStages().forEach(pipelineStage -> {
+        if (pipelineStage == null || pipelineStage.getPipelineStageElements() == null) {
+          return;
+        }
+
+        pipelineStage.getPipelineStageElements().forEach(pipelineStageElement -> {
+          final Map<String, Object> pipelineStageElementProperties = pipelineStageElement.getProperties();
+          if (pipelineStageElementProperties == null
+              || pipelineStageElementProperties.get(EnvStateKeys.workflowId) == null) {
+            return;
+          }
+
+          String workflowId = (String) pipelineStageElement.getProperties().get(EnvStateKeys.workflowId);
+          if (workflowCache == null || !workflowCache.containsKey(workflowId)) {
+            newWorkflowIds.add(workflowId);
+          }
+        });
+      });
+    });
+
+    // Return if no new workflow ids found. Cache has all the needed workflows.
+    Map<String, Workflow> finalWorkflowCache = (workflowCache == null) ? new HashMap<>() : workflowCache;
+    if (isEmpty(newWorkflowIds)) {
+      return finalWorkflowCache;
+    }
+
+    // Fetch all the workflows in batch.
+    List<Workflow> workflows = workflowService.listWorkflowsWithoutOrchestration(newWorkflowIds);
+    if (isEmpty(workflows)) {
+      return finalWorkflowCache;
+    }
+
+    // Update the workflowCache and return.
+    for (Workflow workflow : workflows) {
+      finalWorkflowCache.put(workflow.getUuid(), workflow);
+    }
+    return finalWorkflowCache;
+  }
+
+  private Multimap<String, Action> getPipelineIdsByFilter(String accountId, List<Base> pipelines,
+      List<Base> environments, EnvFilter envFilter, Multimap<String, Action> envActionMap,
+      Set<Action> entityActionsFromCurrentPermission, Map<String, Workflow> workflowCache) {
+    if (!featureFlagService.isEnabled(FeatureName.PIPELINE_RBAC, accountId)) {
+      return getPipelineIdsByFilterFFOff(
+          pipelines, environments, envFilter, envActionMap, entityActionsFromCurrentPermission);
+    }
+
+    Multimap<String, Action> pipelineActionMap = HashMultimap.create();
+    if (isEmpty(pipelines)) {
+      return pipelineActionMap;
+    }
+
+    Set<String> envIds;
+    if (isNotEmpty(environments)) {
+      envIds = getEnvIdsByFilter(environments, envFilter);
+      envIds.forEach(envId -> envActionMap.putAll(envId, entityActionsFromCurrentPermission));
+    } else {
+      envIds = Collections.emptySet();
+    }
+
+    final Map<String, Workflow> finalWorkflowCache = fillWorkflowCache(workflowCache, pipelines);
+    Set<String> envIdsFromOtherPermissions = envActionMap.keySet();
+    pipelines.forEach(p -> {
+      Set<Action> entityActions = new HashSet<>(entityActionsFromCurrentPermission);
+      boolean match;
+      Pipeline pipeline = (Pipeline) p;
+      if (pipeline.getPipelineStages() == null) {
+        match = true;
+      } else {
+        match = pipeline.getPipelineStages().stream().allMatch(pipelineStage
+            -> pipelineStage != null && pipelineStage.getPipelineStageElements() != null
+                && pipelineStage.getPipelineStageElements().stream().allMatch(pipelineStageElement -> {
+                     Pair<String, Boolean> pair = resolveEnvIdForPipelineStageElement(
+                         pipeline.getAppId(), pipelineStageElement, finalWorkflowCache);
+                     String envId = pair.getLeft();
+                     if (isBlank(envId)) {
+                       return pair.getRight();
+                     }
+
+                     if (envIds.contains(envId)) {
+                       return true;
+                     } else if (envIdsFromOtherPermissions.contains(envId)) {
+                       entityActions.retainAll(envActionMap.get(envId));
+                       return true;
+                     }
+
+                     return false;
+                   }));
+      }
+
+      if (match) {
+        pipelineActionMap.putAll(pipeline.getUuid(), entityActions);
+      }
+    });
+    return pipelineActionMap;
+  }
+
+  private Multimap<String, Action> getPipelineIdsByFilterFFOff(List<Base> pipelines, List<Base> environments,
       EnvFilter envFilter, Multimap<String, Action> envActionMap, Set<Action> entityActionsFromCurrentPermission) {
     Multimap<String, Action> pipelineActionMap = HashMultimap.create();
-
     if (isEmpty(pipelines)) {
       return pipelineActionMap;
     }
@@ -1158,6 +1306,30 @@ public class AuthHandler {
   }
 
   public boolean checkIfPipelineHasOnlyGivenEnvs(Pipeline pipeline, Set<String> allowedEnvIds) {
+    if (!featureFlagService.isEnabled(FeatureName.PIPELINE_RBAC, pipeline.getAccountId())) {
+      return checkIfPipelineHasOnlyGivenEnvsFFOff(pipeline, allowedEnvIds);
+    }
+
+    if (isEmpty(pipeline.getPipelineStages())) {
+      return true;
+    }
+
+    Map<String, Workflow> workflowCache = fillWorkflowCache(new HashMap<>(), Collections.singletonList(pipeline));
+    return pipeline.getPipelineStages().stream().allMatch(pipelineStage
+        -> pipelineStage != null && pipelineStage.getPipelineStageElements() != null
+            && pipelineStage.getPipelineStageElements().stream().allMatch(pipelineStageElement -> {
+                 Pair<String, Boolean> pair =
+                     resolveEnvIdForPipelineStageElement(pipeline.getAppId(), pipelineStageElement, workflowCache);
+                 String envId = pair.getLeft();
+                 if (isBlank(envId)) {
+                   return pair.getRight();
+                 }
+
+                 return isNotEmpty(allowedEnvIds) && allowedEnvIds.contains(envId);
+               }));
+  }
+
+  public boolean checkIfPipelineHasOnlyGivenEnvsFFOff(Pipeline pipeline, Set<String> allowedEnvIds) {
     if (pipeline.getPipelineStages() == null) {
       return true;
     }
@@ -1194,6 +1366,42 @@ public class AuthHandler {
 
                  return false;
                }));
+  }
+
+  private Pair<String, Boolean> resolveEnvIdForPipelineStageElement(
+      String appId, PipelineStageElement pipelineStageElement, Map<String, Workflow> workflowCache) {
+    if (pipelineStageElement.getType().equals(StateType.APPROVAL.name())) {
+      return ImmutablePair.of(null, Boolean.TRUE);
+    }
+
+    final Map<String, Object> pipelineStageElementProperties = pipelineStageElement.getProperties();
+    if (pipelineStageElementProperties == null || pipelineStageElementProperties.get(EnvStateKeys.workflowId) == null) {
+      return ImmutablePair.of(null, Boolean.FALSE);
+    }
+
+    String envId = resolveEnvId(appId, pipelineStageElement, workflowCache);
+    if (envId == null || ManagerExpressionEvaluator.matchesVariablePattern(envId)) {
+      return ImmutablePair.of(null, Boolean.TRUE);
+    }
+
+    return ImmutablePair.of(envId, Boolean.FALSE);
+  }
+
+  private String resolveEnvId(
+      String appId, PipelineStageElement pipelineStageElement, Map<String, Workflow> workflowCache) {
+    String workflowId = (String) pipelineStageElement.getProperties().get(EnvStateKeys.workflowId);
+    Workflow workflow;
+    if (workflowCache.containsKey(workflowId)) {
+      workflow = workflowCache.get(workflowId);
+    } else {
+      logger.info("Workflow not found in cache: {}", workflowId);
+      workflow = workflowService.readWorkflowWithoutOrchestration(appId, workflowId);
+      if (workflow == null) {
+        return null;
+      }
+      workflowCache.put(workflowId, workflow);
+    }
+    return workflowServiceHelper.obtainEnvIdWithoutOrchestration(workflow, pipelineStageElement.getWorkflowVariables());
   }
 
   public boolean isEnvTemplatized(Workflow workflow) {

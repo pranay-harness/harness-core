@@ -21,6 +21,7 @@ import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
@@ -232,6 +233,7 @@ import software.wings.stencils.WorkflowStepType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -668,6 +670,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .filter(WorkflowKeys.appId, appId)
         .filter(WorkflowKeys.uuid, workflowId)
         .get();
+  }
+
+  @Override
+  public List<Workflow> listWorkflowsWithoutOrchestration(Collection<String> workflowIds) {
+    return wingsPersistence.createQuery(Workflow.class, excludeAuthority)
+        .project(WorkflowKeys.orchestration, false)
+        .field(WorkflowKeys.uuid)
+        .in(workflowIds)
+        .asList();
   }
 
   @Override

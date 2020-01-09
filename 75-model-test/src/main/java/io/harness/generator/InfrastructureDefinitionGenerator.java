@@ -135,7 +135,9 @@ public class InfrastructureDefinitionGenerator {
     K8S_CANARY_TEST,
     K8S_BLUE_GREEN_TEST,
     MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST,
-    AZURE_HELM
+    AZURE_HELM,
+    PIPELINE_RBAC_QA_AWS_SSH_TEST,
+    PIPELINE_RBAC_PROD_AWS_SSH_TEST,
   }
 
   public InfrastructureDefinition ensurePredefined(
@@ -167,6 +169,10 @@ public class InfrastructureDefinitionGenerator {
         return ensureMultiArtifactAwsSshFunctionalTest(seed, owners);
       case AZURE_HELM:
         return ensureAzureHelmInfraDef(seed, owners);
+      case PIPELINE_RBAC_QA_AWS_SSH_TEST:
+        return ensurePipelineRbacQaK8sTest(seed, owners);
+      case PIPELINE_RBAC_PROD_AWS_SSH_TEST:
+        return ensurePipelineRbacProdK8sTest(seed, owners);
       default:
         unhandled(infraType);
     }
@@ -278,6 +284,11 @@ public class InfrastructureDefinitionGenerator {
       owners.add(environment);
     }
 
+    return ensureK8sTest(seed, owners, environment, namespace);
+  }
+
+  private InfrastructureDefinition ensureK8sTest(
+      Randomizer.Seed seed, Owners owners, Environment environment, String namespace) {
     ApplicationManifest applicationManifest =
         applicationManifestService.getByEnvId(environment.getAppId(), environment.getUuid(), AppManifestKind.VALUES);
 
@@ -425,6 +436,16 @@ public class InfrastructureDefinitionGenerator {
   private InfrastructureDefinition ensureMultiArtifactAwsSshFunctionalTest(Randomizer.Seed seed, Owners owners) {
     return ensureAwsSshInfraDefinition(seed, owners, Environments.FUNCTIONAL_TEST,
         Services.MULTI_ARTIFACT_FUNCTIONAL_TEST, "Aws non prod - ssh workflow test-multi-artifact");
+  }
+
+  private InfrastructureDefinition ensurePipelineRbacQaK8sTest(Randomizer.Seed seed, Owners owners) {
+    Environment environment = environmentGenerator.ensurePredefined(seed, owners, Environments.PIPELINE_RBAC_QA_TEST);
+    return ensureK8sTest(seed, owners, environment, "fn-test-pipeline-rbac-qa");
+  }
+
+  private InfrastructureDefinition ensurePipelineRbacProdK8sTest(Randomizer.Seed seed, Owners owners) {
+    Environment environment = environmentGenerator.ensurePredefined(seed, owners, Environments.PIPELINE_RBAC_PROD_TEST);
+    return ensureK8sTest(seed, owners, environment, "fn-test-pipeline-prod-prod");
   }
 
   private InfrastructureDefinition ensureAwsSshInfraDefinition(
