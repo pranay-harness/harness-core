@@ -16,6 +16,9 @@ import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
 import software.wings.graphql.schema.type.aggregation.QLStackedData;
 import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesData;
+import software.wings.graphql.schema.type.audit.QLApiKeyChangeSet;
+import software.wings.graphql.schema.type.audit.QLGitChangeSet;
+import software.wings.graphql.schema.type.audit.QLUserChangeSet;
 import software.wings.graphql.schema.type.cloudProvider.QLAwsCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLAzureCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
@@ -78,6 +81,7 @@ public class TypeResolverManager {
     public static final String Instance = "Instance";
     public static final String Outcome = "Outcome";
     public static final String PhysicalInstance = "PhysicalInstance";
+    public static final String ChangeSet = "ChangeSet";
   }
 
   @UtilityClass
@@ -138,6 +142,9 @@ public class TypeResolverManager {
     public static final String GCSHelmRepoConnector = "GCSHelmRepoConnector";
     public static final String HttpHelmRepoConnector = "HttpHelmRepoConnector";
     public static final String AmazonS3HelmRepoConnector = "AmazonS3HelmRepoConnector";
+    public static final String UserChangeSet = "UserChangeSet";
+    public static final String GitChangeSet = "GitChangeSet";
+    public static final String ApiKeyChangeSet = "ApiKeyChangeSet";
   }
 
   /**
@@ -237,6 +244,12 @@ public class TypeResolverManager {
                     .put(QLTimeSeriesData.class, TypeResolverManagerTypes.TimeSeriesData)
                     .put(QLStackedTimeSeriesData.class, TypeResolverManagerTypes.StackedTimeSeriesData)
                     .build()))
+        .put(TypeResolverManagerUnifaces.ChangeSet,
+            getResultTypeResolver(ImmutableMap.<Class, String>builder()
+                                      .put(QLUserChangeSet.class, TypeResolverManagerTypes.UserChangeSet)
+                                      .put(QLGitChangeSet.class, TypeResolverManagerTypes.GitChangeSet)
+                                      .put(QLApiKeyChangeSet.class, TypeResolverManagerTypes.ApiKeyChangeSet)
+                                      .build()))
         .build();
   }
 

@@ -394,7 +394,9 @@ public enum ErrorCode {
 
   DEPLOYMENT_GOVERNANCE_ERROR,
 
-  BATCH_PROCESSING_ERROR;
+  BATCH_PROCESSING_ERROR,
+
+  GRAPHQL_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;

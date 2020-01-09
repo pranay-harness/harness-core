@@ -41,6 +41,8 @@ enum DataFetcherEnum {
   workflow
   workflowConnection
   workflowStats
+  changeSetConnection
+  changeContentConnection
   createApplication
   updateApplication
   deleteApplication
