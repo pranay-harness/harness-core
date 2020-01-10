@@ -10,11 +10,11 @@ import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
+import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.Resource;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -32,9 +33,9 @@ import org.springframework.batch.core.JobParameters;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -47,6 +48,7 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
 
   private final String SETTINGID = "SETTING_ID_" + this.getClass().getSimpleName();
   private final String INSTANCEID = "INSTANCEID" + this.getClass().getSimpleName();
+  private final String INSTANCEID1 = "INSTANCEID1" + this.getClass().getSimpleName();
   private final String ACCOUNTID = "ACCOUNTID" + this.getClass().getSimpleName();
   private final String INSTANCETYPE = K8S_POD;
   private final double CPUMAX = 2;
@@ -59,13 +61,15 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
   private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
   private final long END_TIME_MILLIS = NOW.toEpochMilli();
 
+  @Captor private ArgumentCaptor<List<InstanceUtilizationData>> instanceUtilizationDataArgumentCaptor;
+
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
-    when(instanceDataService.fetchInstanceDataWithName(ACCOUNTID, SETTINGID, INSTANCEID, START_TIME_MILLIS))
-        .thenReturn(InstanceData.builder()
+    when(instanceDataService.fetchPrunedInstanceDataWithName(ACCOUNTID, SETTINGID, INSTANCEID, START_TIME_MILLIS))
+        .thenReturn(PrunedInstanceData.builder()
                         .instanceId(INSTANCEID)
                         .totalResource(Resource.builder().cpuUnits(CPUTOTAL).memoryMb(MEMORYTOTAL).build())
                         .build());
@@ -91,11 +95,9 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
         .when(k8sUtilizationGranularDataService.getAggregatedUtilizationData(
             Collections.singletonList(INSTANCEID), START_TIME_MILLIS, END_TIME_MILLIS))
         .thenReturn(aggregatedDataMap);
-    k8sUtilizationMetricsWriter.write(Collections.singletonList(Arrays.asList(INSTANCEID)));
-    ArgumentCaptor<InstanceUtilizationData> instanceUtilizationDataArgumentCaptor =
-        ArgumentCaptor.forClass(InstanceUtilizationData.class);
+    k8sUtilizationMetricsWriter.write(Collections.singletonList(Collections.singletonList(INSTANCEID)));
     verify(utilizationDataService).create(instanceUtilizationDataArgumentCaptor.capture());
-    InstanceUtilizationData instanceUtilizationData = instanceUtilizationDataArgumentCaptor.getValue();
+    InstanceUtilizationData instanceUtilizationData = instanceUtilizationDataArgumentCaptor.getValue().get(0);
     assertThat(instanceUtilizationData.getInstanceId()).isEqualTo(INSTANCEID);
     assertThat(instanceUtilizationData.getInstanceType()).isEqualTo(INSTANCETYPE);
     assertThat(instanceUtilizationData.getSettingId()).isEqualTo(SETTINGID);
@@ -109,14 +111,14 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void shouldWriteK8sUtilizationMetricsWhenResourceIsZero() {
-    when(instanceDataService.fetchInstanceDataWithName(ACCOUNTID, SETTINGID, INSTANCEID, START_TIME_MILLIS))
-        .thenReturn(InstanceData.builder()
-                        .instanceId(INSTANCEID)
+    when(instanceDataService.fetchPrunedInstanceDataWithName(ACCOUNTID, SETTINGID, INSTANCEID1, START_TIME_MILLIS))
+        .thenReturn(PrunedInstanceData.builder()
+                        .instanceId(INSTANCEID1)
                         .totalResource(Resource.builder().cpuUnits(0.0).memoryMb(0.0).build())
                         .build());
 
     Map<String, InstanceUtilizationData> aggregatedDataMap = new HashMap<>();
-    aggregatedDataMap.put(INSTANCEID,
+    aggregatedDataMap.put(INSTANCEID1,
         InstanceUtilizationData.builder()
             .accountId(ACCOUNTID)
             .settingId(SETTINGID)
@@ -129,14 +131,12 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
             .build());
     Mockito
         .when(k8sUtilizationGranularDataService.getAggregatedUtilizationData(
-            Collections.singletonList(INSTANCEID), START_TIME_MILLIS, END_TIME_MILLIS))
+            Collections.singletonList(INSTANCEID1), START_TIME_MILLIS, END_TIME_MILLIS))
         .thenReturn(aggregatedDataMap);
-    k8sUtilizationMetricsWriter.write(Collections.singletonList(Arrays.asList(INSTANCEID)));
-    ArgumentCaptor<InstanceUtilizationData> instanceUtilizationDataArgumentCaptor =
-        ArgumentCaptor.forClass(InstanceUtilizationData.class);
+    k8sUtilizationMetricsWriter.write(Collections.singletonList(Collections.singletonList(INSTANCEID1)));
     verify(utilizationDataService).create(instanceUtilizationDataArgumentCaptor.capture());
-    InstanceUtilizationData instanceUtilizationData = instanceUtilizationDataArgumentCaptor.getValue();
-    assertThat(instanceUtilizationData.getInstanceId()).isEqualTo(INSTANCEID);
+    InstanceUtilizationData instanceUtilizationData = instanceUtilizationDataArgumentCaptor.getValue().get(0);
+    assertThat(instanceUtilizationData.getInstanceId()).isEqualTo(INSTANCEID1);
     assertThat(instanceUtilizationData.getInstanceType()).isEqualTo(INSTANCETYPE);
     assertThat(instanceUtilizationData.getSettingId()).isEqualTo(SETTINGID);
     assertThat(instanceUtilizationData.getCpuUtilizationAvg()).isEqualTo(1);

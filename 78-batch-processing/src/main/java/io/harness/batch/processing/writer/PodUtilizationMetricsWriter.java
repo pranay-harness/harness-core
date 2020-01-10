@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -25,6 +26,7 @@ public class PodUtilizationMetricsWriter extends EventWriter implements ItemWrit
   @Override
   public void write(List<? extends PublishedMessage> publishedMessages) {
     logger.info("Published batch size is PodUtilizationMetricsWriter {} ", publishedMessages.size());
+    List<K8sGranularUtilizationData> k8sGranularUtilizationDataList = new ArrayList<>();
     publishedMessages.stream()
         .filter(publishedMessage -> publishedMessage.getType().equals(EventTypeConstants.POD_UTILIZATION))
         .forEach(publishedMessage -> {
@@ -55,7 +57,8 @@ public class PodUtilizationMetricsWriter extends EventWriter implements ItemWrit
                   .memory(memoryMb)
                   .build();
 
-          k8sUtilizationGranularDataService.create(k8sGranularUtilizationData);
+          k8sGranularUtilizationDataList.add(k8sGranularUtilizationData);
         });
+    k8sUtilizationGranularDataService.create(k8sGranularUtilizationDataList);
   }
 }

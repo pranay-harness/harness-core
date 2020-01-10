@@ -35,13 +35,14 @@ public class UtilizationDataServiceImpl {
   @Autowired private DataFetcherUtils utils;
 
   private static final int MAX_RETRY_COUNT = 5;
+  private static final int BATCH_SIZE = 500;
 
   static final String INSERT_STATEMENT =
       "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, ACCOUNTID, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTANCEID, INSTANCETYPE, SETTINGID, MAXCPUVALUE, MAXMEMORYVALUE, AVGCPUVALUE, AVGMEMORYVALUE ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
   private static final String UTILIZATION_DATA_QUERY =
       "SELECT MAX(MAXCPU) as MAXCPUUTILIZATION, MAX(MAXMEMORY) as MAXMEMORYUTILIZATION, AVG(AVGCPU) as AVGCPUUTILIZATION, AVG(AVGMEMORY) as AVGMEMORYUTILIZATION, MAX(MAXCPUVALUE) as MAXCPUVALUE, MAX(MAXMEMORYVALUE) as MAXMEMORYVALUE, AVG(AVGCPUVALUE) as AVGCPUVALUE, AVG(AVGMEMORYVALUE) as AVGMEMORYVALUE, INSTANCEID FROM UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY INSTANCEID;";
 
-  public boolean create(InstanceUtilizationData instanceUtilizationData) {
+  public boolean create(List<InstanceUtilizationData> instanceUtilizationDataList) {
     boolean successfulInsert = false;
     if (timeScaleDBService.isValid()) {
       long startTime = System.currentTimeMillis();
@@ -49,20 +50,27 @@ public class UtilizationDataServiceImpl {
       while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
              PreparedStatement statement = dbConnection.prepareStatement(INSERT_STATEMENT)) {
-          updateInsertStatement(statement, instanceUtilizationData);
-          statement.execute();
-          successfulInsert = true;
+          int index = 0;
+          for (InstanceUtilizationData instanceUtilizationData : instanceUtilizationDataList) {
+            updateInsertStatement(statement, instanceUtilizationData);
+            statement.addBatch();
+            index++;
 
+            if (index % BATCH_SIZE == 0 || index == instanceUtilizationDataList.size()) {
+              statement.executeBatch();
+            }
+          }
+          successfulInsert = true;
         } catch (SQLException e) {
           logger.info(
-              "Failed to save instance Utilization data,[{}],retryCount=[{}]", instanceUtilizationData, retryCount);
+              "Failed to save instance Utilization data,[{}],retryCount=[{}]", instanceUtilizationDataList, retryCount);
           retryCount++;
         } finally {
           logger.info("Total time=[{}]", System.currentTimeMillis() - startTime);
         }
       }
     } else {
-      logger.info("Not processing instance Utilization data:[{}]", instanceUtilizationData);
+      logger.info("Not processing instance Utilization data:[{}]", instanceUtilizationDataList);
     }
     return successfulInsert;
   }

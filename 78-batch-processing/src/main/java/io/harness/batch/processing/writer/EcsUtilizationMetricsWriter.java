@@ -29,6 +29,8 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
   @Override
   public void write(List<? extends PublishedMessage> publishedMessages) {
     logger.info("Published batch size is EcsUtilizationMetricsWriter {} ", publishedMessages.size());
+    List<InstanceUtilizationData> instanceUtilizationDataList = new ArrayList<>();
+
     publishedMessages.stream()
         .filter(publishedMessage -> publishedMessage.getType().equals(EventTypeConstants.ECS_UTILIZATION))
         .forEach(publishedMessage -> {
@@ -114,9 +116,10 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
                     .endTimestamp(startTime + oneHourMillis)
                     .build();
 
-            utilizationDataService.create(utilizationData);
+            instanceUtilizationDataList.add(utilizationData);
           }
         });
+    utilizationDataService.create(instanceUtilizationDataList);
   }
 
   private double getScaledUtilValue(double value) {

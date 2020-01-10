@@ -4,7 +4,6 @@ import static io.harness.batch.processing.ccm.UtilizationInstanceType.ECS_CLUSTE
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
@@ -22,11 +21,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -43,11 +44,12 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
   private final String STATISTIC2 = "Average";
   private final String INVALID_STATISTIC = "invalid_statistic";
   private final String INVALID_METRIC = "invalid_metric";
-  private final String METRIC = "MemoryUtilization";
   String SETTING_ID = "SETTING_ID";
 
   private final String INSTANCEID = TEST_SERVICE_ARN;
   private final String INSTANCETYPE = UtilizationInstanceType.ECS_SERVICE;
+
+  @Captor private ArgumentCaptor<List<InstanceUtilizationData>> instanceUtilizationDataArgumentCaptor;
 
   @Test
   @Owner(developers = ROHIT)
@@ -56,11 +58,9 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
     PublishedMessage ecsUtilizationMetricsMessages = getEcsUtilizationMetricsMessage(
         TEST_ACCOUNT_ID, TEST_CLUSTER_NAME, TEST_CLUSTER_ARN, TEST_SERVICE_NAME, TEST_SERVICE_ARN, SETTING_ID);
 
-    ecsUtilizationMetricsWriter.write(Arrays.asList(ecsUtilizationMetricsMessages));
-    ArgumentCaptor<InstanceUtilizationData> instanceUtilizationDataArgumentCaptor =
-        ArgumentCaptor.forClass(InstanceUtilizationData.class);
-    verify(utilizationDataService, times(2)).create(instanceUtilizationDataArgumentCaptor.capture());
-    List<InstanceUtilizationData> instanceUtilizationDataList = instanceUtilizationDataArgumentCaptor.getAllValues();
+    ecsUtilizationMetricsWriter.write(Collections.singletonList(ecsUtilizationMetricsMessages));
+    verify(utilizationDataService).create(instanceUtilizationDataArgumentCaptor.capture());
+    List<InstanceUtilizationData> instanceUtilizationDataList = instanceUtilizationDataArgumentCaptor.getValue();
     InstanceUtilizationData instanceUtilizationDataPoint0 = instanceUtilizationDataList.get(0);
     assertThat(instanceUtilizationDataPoint0.getInstanceId()).isEqualTo(INSTANCEID);
     assertThat(instanceUtilizationDataPoint0.getInstanceType()).isEqualTo(INSTANCETYPE);
@@ -95,7 +95,7 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
       assertThatExceptionOfType(InvalidRequestException.class)
           .isThrownBy(()
                           -> ecsUtilizationMetricsWriter.write(
-                              Arrays.asList(getPublishedMessage(TEST_ACCOUNT_ID, ecsUtilization))));
+                              Collections.singletonList(getPublishedMessage(TEST_ACCOUNT_ID, ecsUtilization))));
     }
   }
 
@@ -105,15 +105,13 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
   public void clusterInstanceTypeTest() {
     PublishedMessage ecsUtilizationMetricsMessages =
         getEcsUtilizationMetricsMessage(TEST_ACCOUNT_ID, TEST_CLUSTER_NAME, TEST_CLUSTER_ARN, "", "", SETTING_ID);
-    ecsUtilizationMetricsWriter.write(Arrays.asList(ecsUtilizationMetricsMessages));
-    ArgumentCaptor<InstanceUtilizationData> instanceUtilizationDataArgumentCaptor =
-        ArgumentCaptor.forClass(InstanceUtilizationData.class);
-    verify(utilizationDataService, times(2)).create(instanceUtilizationDataArgumentCaptor.capture());
-    InstanceUtilizationData instanceUtilizationData = instanceUtilizationDataArgumentCaptor.getValue();
+    ecsUtilizationMetricsWriter.write(Collections.singletonList(ecsUtilizationMetricsMessages));
+    verify(utilizationDataService).create(instanceUtilizationDataArgumentCaptor.capture());
+    InstanceUtilizationData instanceUtilizationData = instanceUtilizationDataArgumentCaptor.getValue().get(0);
     assertThat(instanceUtilizationData.getInstanceType()).isEqualTo(ECS_CLUSTER);
   }
 
-  EcsUtilization getInvalidStatisticEcsUtilization() {
+  private EcsUtilization getInvalidStatisticEcsUtilization() {
     return EcsUtilization.newBuilder()
         .setClusterArn(TEST_CLUSTER_ARN)
         .setClusterName(TEST_CLUSTER_NAME)
@@ -123,7 +121,7 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
         .build();
   }
 
-  EcsUtilization getInvalidMetricNameEcsUtilization(String metricStatistic) {
+  private EcsUtilization getInvalidMetricNameEcsUtilization(String metricStatistic) {
     return EcsUtilization.newBuilder()
         .setClusterArn(TEST_CLUSTER_ARN)
         .setClusterName(TEST_CLUSTER_NAME)
