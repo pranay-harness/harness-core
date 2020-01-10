@@ -381,6 +381,7 @@ import javax.validation.ConstraintViolationException;
 @Slf4j
 @Listeners(GeneralNotifyEventListener.class)
 public class WorkflowServiceTest extends WingsBaseTest {
+  private static final String CLONE = " - (clone)";
   private static String envId = generateUuid();
 
   @Inject private WingsPersistence wingsPersistence;
@@ -632,6 +633,49 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
 
     CloneMetadata cloneMetadata = constructCloneMetadata(workflow2);
+    workflowService.cloneWorkflow(APP_ID, workflow2, cloneMetadata);
+  }
+
+  /**
+   * Should fail Clone workflow with invalid name within the same application
+   */
+  @Test(expected = ConstraintViolationException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotCloneWorkflowIfInvalidName() {
+    Workflow workflow2 = workflowService.createWorkflow(constructCanaryWorkflowWithPhase());
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
+
+    workflowService.cloneWorkflow(
+        APP_ID, workflow2, CloneMetadata.builder().workflow(aWorkflow().name(WORKFLOW_NAME + CLONE).build()).build());
+  }
+
+  /**
+   * Should fail Clone workflow with invalid name across applications
+   */
+  @Test(expected = ConstraintViolationException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotCloneWorkflowAcrossAppsIfInvalidName() {
+    when(serviceResourceService.getWithDetails(TARGET_APP_ID, TARGET_SERVICE_ID))
+        .thenReturn(Service.builder().uuid(TARGET_SERVICE_ID).artifactType(WAR).build());
+    when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID, false))
+        .thenReturn(Service.builder().uuid(TARGET_SERVICE_ID).artifactType(WAR).build());
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    Workflow workflow1 = constructCanaryWorkflowWithPhase();
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow1);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
+    workflow2.setName(WORKFLOW_NAME + CLONE);
+    CloneMetadata cloneMetadata = constructCloneMetadata(workflow2);
+
     workflowService.cloneWorkflow(APP_ID, workflow2, cloneMetadata);
   }
 
