@@ -40,7 +40,7 @@ public class EcsContainerTaskTest extends CategoryTest {
 
     assertThat(taskDefinition).isNotNull();
     assertThat(taskDefinition.getContainerDefinitions()).hasSize(1);
-    assertThat(taskDefinition.getCpu()).isEqualTo("256.0");
+    assertThat(taskDefinition.getCpu()).isEqualTo("256");
     assertThat(taskDefinition.getMemory()).isEqualTo("1024");
     assertThat(taskDefinition.getExecutionRoleArn()).isEqualTo(EXEC_ROLE);
 
@@ -59,7 +59,7 @@ public class EcsContainerTaskTest extends CategoryTest {
 
     assertThat(taskDefinition).isNotNull();
     assertThat(taskDefinition.getContainerDefinitions()).hasSize(1);
-    assertThat(taskDefinition.getCpu()).isEqualTo("256.0");
+    assertThat(taskDefinition.getCpu()).isEqualTo("256");
     assertThat(taskDefinition.getMemory()).isEqualTo("1024");
     assertThat(taskDefinition.getExecutionRoleArn()).isEqualTo("");
 
@@ -104,7 +104,7 @@ public class EcsContainerTaskTest extends CategoryTest {
 
     assertThat(taskDefinition).isNotNull();
     assertThat(taskDefinition.getContainerDefinitions()).hasSize(1);
-    assertThat(taskDefinition.getCpu()).isEqualTo("256.0");
+    assertThat(taskDefinition.getCpu()).isEqualTo("256");
     assertThat(taskDefinition.getExecutionRoleArn()).isEqualTo(EXEC_ROLE);
 
     com.amazonaws.services.ecs.model.ContainerDefinition containerDefinitionAws =
@@ -122,7 +122,7 @@ public class EcsContainerTaskTest extends CategoryTest {
 
     assertThat(taskDefinition).isNotNull();
     assertThat(taskDefinition.getContainerDefinitions()).hasSize(1);
-    assertThat(taskDefinition.getCpu()).isEqualTo("256.0");
+    assertThat(taskDefinition.getCpu()).isEqualTo("256");
     assertThat(taskDefinition.getExecutionRoleArn()).isEqualTo("");
 
     containerDefinitionAws = taskDefinition.getContainerDefinitions().get(0);

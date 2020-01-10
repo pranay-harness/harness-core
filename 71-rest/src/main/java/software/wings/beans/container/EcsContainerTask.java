@@ -233,7 +233,7 @@ public class EcsContainerTask extends ContainerTask {
                      .stream()
                      .filter(def -> def.getCpu() != null)
                      .findFirst()
-                     .map(cd -> cd.getCpu().toString())
+                     .map(cd -> Integer.toString(cd.getCpu().intValue()))
                      .orElse(null))
         .withMemory(getContainerDefinitions()
                         .stream()
