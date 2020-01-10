@@ -278,12 +278,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
 
-          if (code == 0 && !parameters.isRunPlanOnly()) {
-            command = "terraform output";
-            commandToLog = command;
-            saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING);
-            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
-          }
           break;
         }
         case DESTROY: {
