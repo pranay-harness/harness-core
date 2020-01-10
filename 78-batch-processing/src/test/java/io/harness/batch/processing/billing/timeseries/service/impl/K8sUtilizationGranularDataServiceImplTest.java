@@ -109,22 +109,21 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void testCreateBillingData() throws SQLException {
+  public void testCreateK8sGranularUtilizationData() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
-    when(statement.execute()).thenReturn(true);
     K8sGranularUtilizationData k8sGranularUtilizationData = K8sGranularUtilizationData();
-    boolean insert = k8sUtilizationGranularDataService.create(k8sGranularUtilizationData);
+    boolean insert = k8sUtilizationGranularDataService.create(Collections.singletonList(k8sGranularUtilizationData));
     assertThat(insert).isTrue();
   }
 
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void testNullCreateBillingData() throws SQLException {
+  public void testNullCreateK8sGranularUtilizationData() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
-    when(statement.execute()).thenThrow(new SQLException());
+    when(statement.executeBatch()).thenThrow(new SQLException());
     K8sGranularUtilizationData k8sGranularUtilizationData = K8sGranularUtilizationData();
-    boolean insert = k8sUtilizationGranularDataService.create(k8sGranularUtilizationData);
+    boolean insert = k8sUtilizationGranularDataService.create(Collections.singletonList(k8sGranularUtilizationData));
     assertThat(insert).isFalse();
   }
 
@@ -134,7 +133,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
   public void testInvalidDBService() {
     when(timeScaleDBService.isValid()).thenReturn(false);
     K8sGranularUtilizationData k8sGranularUtilizationData = K8sGranularUtilizationData();
-    boolean insert = k8sUtilizationGranularDataService.create(k8sGranularUtilizationData);
+    boolean insert = k8sUtilizationGranularDataService.create(Collections.singletonList(k8sGranularUtilizationData));
     assertThat(insert).isFalse();
   }
 

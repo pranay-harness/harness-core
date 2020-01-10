@@ -21,11 +21,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class NodeUtilizationMetricsWriterTest extends CategoryTest implements EcsEventGenerator {
@@ -42,16 +44,16 @@ public class NodeUtilizationMetricsWriterTest extends CategoryTest implements Ec
   private final long CPU = 2 * 1_000_000_000L;
   private final long MEMORY = 1024 * (1 << 20);
 
+  @Captor private ArgumentCaptor<List<K8sGranularUtilizationData>> K8sGranularUtilizationDataArgumentCaptor;
+
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void shouldWriteNodeUtilizationMetrics() {
     PublishedMessage nodeUtilizationMetricsMessages = getNodeUtilizationMetricsMessages();
-    nodeUtilizationMetricsWriter.write(Arrays.asList(nodeUtilizationMetricsMessages));
-    ArgumentCaptor<K8sGranularUtilizationData> K8sGranularUtilizationDataArgumentCaptor =
-        ArgumentCaptor.forClass(K8sGranularUtilizationData.class);
+    nodeUtilizationMetricsWriter.write(Collections.singletonList(nodeUtilizationMetricsMessages));
     verify(k8sUtilizationGranularDataService).create(K8sGranularUtilizationDataArgumentCaptor.capture());
-    K8sGranularUtilizationData k8sGranularUtilizationData = K8sGranularUtilizationDataArgumentCaptor.getValue();
+    K8sGranularUtilizationData k8sGranularUtilizationData = K8sGranularUtilizationDataArgumentCaptor.getValue().get(0);
     assertThat(k8sGranularUtilizationData.getCpu()).isEqualTo(2048);
     assertThat(k8sGranularUtilizationData.getMemory()).isEqualTo(1024);
     assertThat(k8sGranularUtilizationData.getStartTimestamp()).isEqualTo(START_TIME_STAMP * 1000);
@@ -61,7 +63,7 @@ public class NodeUtilizationMetricsWriterTest extends CategoryTest implements Ec
     assertThat(k8sGranularUtilizationData.getSettingId()).isEqualTo(SETTINGID);
   }
 
-  PublishedMessage getNodeUtilizationMetricsMessages() {
+  private PublishedMessage getNodeUtilizationMetricsMessages() {
     NodeMetric nodeMetric = NodeMetric.newBuilder()
                                 .setName(INSTANCEID)
                                 .setCloudProviderId(SETTINGID)

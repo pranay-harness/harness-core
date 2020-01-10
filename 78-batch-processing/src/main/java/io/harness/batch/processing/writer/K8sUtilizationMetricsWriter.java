@@ -4,10 +4,10 @@ import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
 
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
+import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
-import io.harness.batch.processing.entities.InstanceData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
@@ -15,6 +15,7 @@ import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +37,8 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
     long startDate = Long.parseLong(parameters.getString(CCMJobConstants.JOB_START_DATE));
     long endDate = Long.parseLong(parameters.getString(CCMJobConstants.JOB_END_DATE));
     logger.info("Published batch size is K8sUtilizationMetricsWriter {} ", lists.size());
+    List<InstanceUtilizationData> instanceUtilizationDataList = new ArrayList<>();
+
     lists.forEach(list -> Lists.partition(list, BATCH_SIZE).forEach(instanceIdsBatch -> {
       Map<String, InstanceUtilizationData> aggregatedUtilizationData =
           k8sUtilizationGranularDataService.getAggregatedUtilizationData(instanceIdsBatch, startDate, endDate);
@@ -46,9 +49,8 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
         String settingId = instanceUtilizationData.getSettingId();
         String instanceId = entry.getKey();
 
-        // TODO(Rohit) cache data
-        InstanceData instanceData =
-            instanceDataService.fetchInstanceDataWithName(accountId, settingId, instanceId, startDate);
+        PrunedInstanceData instanceData =
+            instanceDataService.fetchPrunedInstanceDataWithName(accountId, settingId, instanceId, startDate);
         // Initialisation to 100% Utilisation
         double cpuAvgPercentage = 1;
         double cpuMaxPercentage = 1;
@@ -85,9 +87,9 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
         instanceUtilizationData.setStartTimestamp(startDate);
         instanceUtilizationData.setEndTimestamp(endDate);
 
-        // TODO(Rohit) batch this
-        utilizationDataService.create(instanceUtilizationData);
+        instanceUtilizationDataList.add(instanceUtilizationData);
       }
     }));
+    utilizationDataService.create(instanceUtilizationDataList);
   }
 }

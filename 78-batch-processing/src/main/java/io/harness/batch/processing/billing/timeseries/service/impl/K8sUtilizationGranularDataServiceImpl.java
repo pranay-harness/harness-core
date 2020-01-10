@@ -31,6 +31,7 @@ public class K8sUtilizationGranularDataServiceImpl {
   @Autowired private DataFetcherUtils utils;
 
   private static final int MAX_RETRY_COUNT = 5;
+  private static final int BATCH_SIZE = 500;
   static final String INSERT_STATEMENT =
       "INSERT INTO KUBERNETES_UTILIZATION_DATA (STARTTIME, ENDTIME, CPU, MEMORY, INSTANCEID, INSTANCETYPE, SETTINGID, ACCOUNTID) VALUES (?,?,?,?,?,?,?,?)";
   static final String SELECT_DISTINCT_INSTANCEID =
@@ -40,7 +41,7 @@ public class K8sUtilizationGranularDataServiceImpl {
       + " SETTINGID, INSTANCEID,  INSTANCETYPE, ACCOUNTID FROM KUBERNETES_UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' "
       + " GROUP BY ACCOUNTID, INSTANCEID, SETTINGID, INSTANCETYPE ";
 
-  public boolean create(K8sGranularUtilizationData k8sGranularUtilizationData) {
+  public boolean create(List<K8sGranularUtilizationData> k8sGranularUtilizationDataList) {
     boolean successfulInsert = false;
     if (timeScaleDBService.isValid()) {
       long startTime = System.currentTimeMillis();
@@ -48,20 +49,27 @@ public class K8sUtilizationGranularDataServiceImpl {
       while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
              PreparedStatement statement = dbConnection.prepareStatement(INSERT_STATEMENT)) {
-          updateInsertStatement(statement, k8sGranularUtilizationData);
-          statement.execute();
-          successfulInsert = true;
+          int index = 0;
+          for (K8sGranularUtilizationData k8sGranularUtilizationData : k8sGranularUtilizationDataList) {
+            updateInsertStatement(statement, k8sGranularUtilizationData);
+            statement.addBatch();
+            index++;
 
+            if (index % BATCH_SIZE == 0 || index == k8sGranularUtilizationDataList.size()) {
+              statement.executeBatch();
+            }
+          }
+          successfulInsert = true;
         } catch (SQLException e) {
           logger.info(
-              "Failed to save instance Utilization data,[{}],retryCount=[{}]", k8sGranularUtilizationData, retryCount);
+              "Failed to save K8s Utilization data,[{}],retryCount=[{}]", k8sGranularUtilizationDataList, retryCount);
           retryCount++;
         } finally {
           logger.info("Total time=[{}]", System.currentTimeMillis() - startTime);
         }
       }
     } else {
-      logger.info("Not processing instance Utilization data:[{}]", k8sGranularUtilizationData);
+      logger.info("Not processing K8s Utilization data:[{}]", k8sGranularUtilizationDataList);
     }
     return successfulInsert;
   }

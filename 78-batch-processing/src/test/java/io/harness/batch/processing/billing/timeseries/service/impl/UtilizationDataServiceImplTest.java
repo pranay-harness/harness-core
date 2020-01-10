@@ -37,6 +37,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,22 +80,21 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void testCreateBillingData() throws SQLException {
+  public void testCreateInstanceUtilizationData() {
     when(timeScaleDBService.isValid()).thenReturn(true);
-    when(statement.execute()).thenReturn(true);
     InstanceUtilizationData instanceUtilizationData = instanceUtilizationData();
-    boolean insert = utilizationDataService.create(instanceUtilizationData);
+    boolean insert = utilizationDataService.create(Collections.singletonList(instanceUtilizationData));
     assertThat(insert).isTrue();
   }
 
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void testNullCreateBillingData() throws SQLException {
+  public void testNullCreateInstanceUtilizationData() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
-    when(statement.execute()).thenThrow(new SQLException());
+    when(statement.executeBatch()).thenThrow(new SQLException());
     InstanceUtilizationData instanceUtilizationData = instanceUtilizationData();
-    boolean insert = utilizationDataService.create(instanceUtilizationData);
+    boolean insert = utilizationDataService.create(Collections.singletonList(instanceUtilizationData));
     assertThat(insert).isFalse();
   }
 
@@ -104,7 +104,7 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
   public void testInvalidDBService() {
     when(timeScaleDBService.isValid()).thenReturn(false);
     InstanceUtilizationData instanceUtilizationData = instanceUtilizationData();
-    boolean insert = utilizationDataService.create(instanceUtilizationData);
+    boolean insert = utilizationDataService.create(Collections.singletonList(instanceUtilizationData));
     assertThat(insert).isFalse();
   }
 
