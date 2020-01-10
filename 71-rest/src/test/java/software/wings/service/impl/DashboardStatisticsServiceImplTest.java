@@ -191,9 +191,9 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   public void init() {
     saveInstancesToDB();
     user = User.Builder.anUser()
-               .withName(USER_NAME)
-               .withUuid(USER_ID)
-               .withAccounts(asList(Account.Builder.anAccount().withUuid(ACCOUNT_1_ID).build(),
+               .name(USER_NAME)
+               .uuid(USER_ID)
+               .accounts(asList(Account.Builder.anAccount().withUuid(ACCOUNT_1_ID).build(),
                    Account.Builder.anAccount().withUuid(ACCOUNT_2_ID).build()))
                .build();
 

@@ -135,7 +135,7 @@ public class AzureSignupHandlerTest extends WingsBaseTest {
     when(signupService.getUserInviteByEmail(EMAIL)).thenReturn(existingUserInvite);
 
     when(userService.completePaidSignupAndSignIn(userInviteCaptor.capture()))
-        .thenReturn(User.Builder.anUser().withEmail(EMAIL).build());
+        .thenReturn(User.Builder.anUser().email(EMAIL).build());
     when(signupService.getEmail(anyString())).thenReturn(EMAIL);
     User user = azureMarketplaceSignupHandler.completeSignup(null, "randomToken");
     assertThat(String.valueOf(user.getEmail())).isEqualTo(EMAIL);

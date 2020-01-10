@@ -1085,11 +1085,11 @@ public class UserResource {
 
       userInvite.setUuid(inviteId);
       User user = User.Builder.anUser()
-                      .withEmail(userInvite.getEmail())
-                      .withName(userInvite.getName())
-                      .withPassword(userInvite.getPassword())
-                      .withAccountName(accountName)
-                      .withCompanyName(companyName)
+                      .email(userInvite.getEmail())
+                      .name(userInvite.getName())
+                      .password(userInvite.getPassword())
+                      .accountName(accountName)
+                      .companyName(companyName)
                       .build();
 
       User savedUser = userService.completeMarketPlaceSignup(user, userInvite, marketPlaceType);

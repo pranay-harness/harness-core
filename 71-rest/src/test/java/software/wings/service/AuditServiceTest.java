@@ -120,7 +120,7 @@ public class AuditServiceTest extends WingsBaseTest {
     AuditHeader header = createAuditHeader();
     assertThat(header).isNotNull();
     assertThat(header.getRemoteUser()).isNull();
-    User user = User.Builder.anUser().withUuid(generateUuid()).withName("abc").build();
+    User user = User.Builder.anUser().uuid(generateUuid()).name("abc").build();
     auditService.updateUser(header, user);
     AuditHeader header2 = auditService.read(header.getAppId(), header.getUuid());
     assertThat(header2).isNotNull();

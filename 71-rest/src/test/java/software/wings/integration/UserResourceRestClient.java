@@ -128,7 +128,7 @@ public class UserResourceRestClient {
     User user = wingsPersistence.createQuery(User.class).filter(User.EMAIL_KEY, adminUserEmail).get();
 
     if (user == null) {
-      user = anUser().withEmail(adminUserEmail).withName(adminUserName).withPassword(adminPassword).build();
+      user = anUser().email(adminUserEmail).name(adminUserName).password(adminPassword).build();
       user.setAppId(GLOBAL_APP_ID);
       user.getAccounts().add(account);
       user.setEmailVerified(true);

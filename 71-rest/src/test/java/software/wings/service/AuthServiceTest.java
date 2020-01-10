@@ -100,8 +100,7 @@ public class AuthServiceTest extends WingsBaseTest {
   @Mock PortalConfig portalConfig;
   @Inject MainConfiguration mainConfiguration;
   @Inject @InjectMocks private AuthService authService;
-  private Builder userBuilder =
-      anUser().withAppId(APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD);
+  private Builder userBuilder = anUser().appId(APP_ID).email(USER_EMAIL).name(USER_NAME).password(PASSWORD);
   private String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
 
   /**
@@ -113,7 +112,7 @@ public class AuthServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {
     on(mainConfiguration).set("portal", portalConfig);
     when(cacheManager.getUserCache()).thenReturn(userCache);
-    when(userCache.get(USER_ID)).thenReturn(User.Builder.anUser().withUuid(USER_ID).build());
+    when(userCache.get(USER_ID)).thenReturn(User.Builder.anUser().uuid(USER_ID).build());
 
     when(cache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 86400000L));
     when(cache.get(AuthToken.class, EXPIRED_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 0L));
@@ -167,7 +166,7 @@ public class AuthServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldAuthorizeWithAccountAdminAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.ACCOUNT_ADMIN).build();
-    User user = userBuilder.but().withRoles(asList(role)).build();
+    User user = userBuilder.but().roles(asList(role)).build();
     String appId = null;
     authService.authorize(
         ACCOUNT_ID, appId, null, user, asList(new PermissionAttribute(ResourceType.USER, Action.READ)), null);
@@ -179,7 +178,7 @@ public class AuthServiceTest extends WingsBaseTest {
   public void shouldDenyWithoutAccountAdminAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.APPLICATION_ADMIN).build();
     role.onLoad();
-    User user = userBuilder.but().withRoles(asList(role)).build();
+    User user = userBuilder.but().roles(asList(role)).build();
     String appId = null;
     assertThatThrownBy(()
                            -> authService.authorize(ACCOUNT_ID, appId, null, user,
@@ -194,7 +193,7 @@ public class AuthServiceTest extends WingsBaseTest {
   public void shouldAuthorizeWithAppAdminAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.APPLICATION_ADMIN).withAppId(APP_ID).build();
     role.onLoad();
-    User user = userBuilder.but().withRoles(asList(role)).build();
+    User user = userBuilder.but().roles(asList(role)).build();
     authService.authorize(
         ACCOUNT_ID, APP_ID, null, user, asList(new PermissionAttribute(ResourceType.ARTIFACT, Action.UPDATE)), null);
   }
@@ -205,7 +204,7 @@ public class AuthServiceTest extends WingsBaseTest {
   public void shouldAuthorizeReadWithEnvAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.NON_PROD_SUPPORT).withAppId(APP_ID).build();
     role.onLoad();
-    User user = userBuilder.but().withRoles(asList(role)).build();
+    User user = userBuilder.but().roles(asList(role)).build();
     authService.authorize(
         ACCOUNT_ID, APP_ID, ENV_ID, user, asList(new PermissionAttribute(ResourceType.APPLICATION, Action.READ)), null);
   }
@@ -216,7 +215,7 @@ public class AuthServiceTest extends WingsBaseTest {
   public void shouldDenyWithDiffAppAdminAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.APPLICATION_ADMIN).withAppId("APP_ID2").build();
     role.onLoad();
-    User user = userBuilder.but().withRoles(asList(role)).build();
+    User user = userBuilder.but().roles(asList(role)).build();
     assertThatThrownBy(()
                            -> authService.authorize(ACCOUNT_ID, APP_ID, null, user,
                                asList(new PermissionAttribute(ResourceType.APPLICATION, Action.READ)), null))
@@ -230,7 +229,7 @@ public class AuthServiceTest extends WingsBaseTest {
   public void shouldDenyWriteWithEnvAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.NON_PROD_SUPPORT).withAppId(APP_ID).build();
     role.onLoad();
-    User user = userBuilder.but().withRoles(asList(role)).build();
+    User user = userBuilder.but().roles(asList(role)).build();
     assertThatThrownBy(()
                            -> authService.authorize(ACCOUNT_ID, APP_ID, ENV_ID, user,
                                asList(new PermissionAttribute(ResourceType.APPLICATION, Action.UPDATE)), null))
@@ -296,11 +295,8 @@ public class AuthServiceTest extends WingsBaseTest {
   public void testGenerateBearerTokenWithJWTToken() throws UnsupportedEncodingException {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
     Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
-    User mockUser = Builder.anUser()
-                        .withUuid(USER_ID)
-                        .withEmail("admin@harness.io")
-                        .withAccounts(Arrays.asList(mockAccount))
-                        .build();
+    User mockUser =
+        Builder.anUser().uuid(USER_ID).email("admin@harness.io").accounts(Arrays.asList(mockAccount)).build();
     mockUser.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
     mockUser.setUuid("kmpySmUISimoRrJL6NL73w");
     when(userCache.get(USER_ID)).thenReturn(mockUser);
@@ -331,11 +327,8 @@ public class AuthServiceTest extends WingsBaseTest {
   public void testGenerateBearerTokenWithoutJWTToken() {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
     Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
-    User mockUser = Builder.anUser()
-                        .withUuid(USER_ID)
-                        .withEmail("admin@harness.io")
-                        .withAccounts(Arrays.asList(mockAccount))
-                        .build();
+    User mockUser =
+        Builder.anUser().uuid(USER_ID).email("admin@harness.io").accounts(Arrays.asList(mockAccount)).build();
     mockUser.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
     mockUser.setUuid("kmpySmUISimoRrJL6NL73w");
     when(userCache.get(USER_ID)).thenReturn(mockUser);
@@ -354,8 +347,7 @@ public class AuthServiceTest extends WingsBaseTest {
   public void shouldSendSegmentTrackEvent() throws IllegalAccessException {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
     Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").withUuid(ACCOUNT_ID).build();
-    User mockUser =
-        Builder.anUser().withUuid(USER_ID).withEmail("admin@abcd.io").withAccounts(Arrays.asList(mockAccount)).build();
+    User mockUser = Builder.anUser().uuid(USER_ID).email("admin@abcd.io").accounts(Arrays.asList(mockAccount)).build();
     mockUser.setLastAccountId(ACCOUNT_ID);
     when(userCache.get(USER_ID)).thenReturn(mockUser);
 

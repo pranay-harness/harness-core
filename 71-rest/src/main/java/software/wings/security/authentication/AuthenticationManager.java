@@ -262,15 +262,15 @@ public class AuthenticationManager {
   public User generate2faJWTToken(User user) {
     String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.MULTIFACTOR_AUTH);
     return User.Builder.anUser()
-        .withUuid(user.getUuid())
-        .withEmail(user.getEmail())
-        .withName(user.getName())
-        .withTwoFactorAuthenticationMechanism(user.getTwoFactorAuthenticationMechanism())
-        .withTwoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
-        .withTwoFactorJwtToken(jwtToken)
-        .withAccounts(user.getAccounts())
-        .withSupportAccounts(user.getSupportAccounts())
-        .withDefaultAccountId(user.getDefaultAccountId())
+        .uuid(user.getUuid())
+        .email(user.getEmail())
+        .name(user.getName())
+        .twoFactorAuthenticationMechanism(user.getTwoFactorAuthenticationMechanism())
+        .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
+        .twoFactorJwtToken(jwtToken)
+        .accounts(user.getAccounts())
+        .supportAccounts(user.getSupportAccounts())
+        .defaultAccountId(user.getDefaultAccountId())
         .build();
   }
 

@@ -424,7 +424,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private FieldEnd fieldEnd;
 
   private Service service = Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).artifactType(WAR).build();
-  private User user = User.Builder.anUser().withUuid("invalid").withEmail("invalid@abcd.com").build();
+  private User user = User.Builder.anUser().uuid("invalid").email("invalid@abcd.com").build();
 
   /**
    * Sets mocks.

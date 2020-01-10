@@ -66,7 +66,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   private String workflowId;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
-  private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
+  private final User user = User.Builder.anUser().email(userEmail).name(userName).build();
 
   @Before
   public void setUp() {

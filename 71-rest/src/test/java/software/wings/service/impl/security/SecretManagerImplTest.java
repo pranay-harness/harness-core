@@ -65,11 +65,11 @@ public class SecretManagerImplTest extends WingsBaseTest {
     List<Account> accounts = new ArrayList<>();
     accounts.add(account);
     User user = User.Builder.anUser()
-                    .withUuid("uuid")
-                    .withName("Hello")
-                    .withUuid(UUIDGenerator.generateUuid())
-                    .withEmail("hello@harness.io")
-                    .withAccounts(accounts)
+                    .uuid("uuid")
+                    .name("Hello")
+                    .uuid(UUIDGenerator.generateUuid())
+                    .email("hello@harness.io")
+                    .accounts(accounts)
                     .build();
     UserThreadLocal.set(user);
 

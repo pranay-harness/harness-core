@@ -80,10 +80,10 @@ public class GcpKmsServiceTest extends WingsBaseTest {
     List<Account> accounts = new ArrayList<>();
     accounts.add(account);
     User user = User.Builder.anUser()
-                    .withName("Hello")
-                    .withUuid(UUIDGenerator.generateUuid())
-                    .withEmail("hello@harness.io")
-                    .withAccounts(accounts)
+                    .name("Hello")
+                    .uuid(UUIDGenerator.generateUuid())
+                    .email("hello@harness.io")
+                    .accounts(accounts)
                     .build();
     UserThreadLocal.set(user);
 

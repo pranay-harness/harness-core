@@ -644,7 +644,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
       assertThat(filteredSettingAttributesByType)
           .containsExactlyInAnyOrder(settingAttributeList.toArray(new SettingAttribute[0]));
 
-      User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
+      User user = User.Builder.anUser().name(USER_NAME).uuid(USER_ID).build();
 
       Map<String, AppPermissionSummaryForUI> appPermissionsMap = Maps.newHashMap();
 

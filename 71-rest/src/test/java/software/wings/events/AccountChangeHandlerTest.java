@@ -130,7 +130,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       EventData eventData = EventData.builder().eventInfo(accountEntityEvent).build();
       Event event = Event.builder().eventData(eventData).eventType(eventType).build();
 
-      User newUser = User.Builder.anUser().withEmail("admin@harness.io").withAccounts(Arrays.asList(account)).build();
+      User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
       when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(true);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(true);
@@ -165,7 +165,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       EventData eventData = EventData.builder().eventInfo(accountEntityEvent).build();
       Event event = Event.builder().eventData(eventData).eventType(eventType).build();
 
-      User newUser = User.Builder.anUser().withEmail("admin@harness.io").withAccounts(Arrays.asList(account)).build();
+      User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
       when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(false);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(true);
@@ -200,7 +200,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       EventData eventData = EventData.builder().eventInfo(accountEntityEvent).build();
       Event event = Event.builder().eventData(eventData).eventType(eventType).build();
 
-      User newUser = User.Builder.anUser().withEmail("admin@harness.io").withAccounts(Arrays.asList(account)).build();
+      User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
       when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(true);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(false);
@@ -235,7 +235,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       EventData eventData = EventData.builder().eventInfo(accountEntityEvent).build();
       Event event = Event.builder().eventData(eventData).eventType(eventType).build();
 
-      User newUser = User.Builder.anUser().withEmail("admin@harness.io").withAccounts(Arrays.asList(account)).build();
+      User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
       when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(false);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(false);

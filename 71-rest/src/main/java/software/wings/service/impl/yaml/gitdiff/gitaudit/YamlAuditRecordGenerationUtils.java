@@ -52,7 +52,7 @@ public class YamlAuditRecordGenerationUtils {
                                  .gitCommitId(gitDiffResult.getCommitId())
                                  .repoUrl(gitDiffResult.getRepoName())
                                  .build())
-        .withRemoteUser(anUser().withName("GIT_SYNC").withUuid("GIT").build())
+        .withRemoteUser(anUser().name("GIT_SYNC").uuid("GIT").build())
         .withRequestMethod(HttpMethod.POST)
         .withRequestTime(System.currentTimeMillis())
         .withUrl("setup-as-code/yaml/webhook");

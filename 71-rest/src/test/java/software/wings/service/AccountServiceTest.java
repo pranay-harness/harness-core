@@ -225,8 +225,8 @@ public class AccountServiceTest extends WingsBaseTest {
             .build());
     when(configuration.getTechStackLinks()).thenReturn(techStacksLinkMap);
     when(userService.getUsersOfAccount(any()))
-        .thenReturn(Arrays.asList(
-            User.Builder.anUser().withUuid("userId1").withName("name1").withEmail("user1@harness.io").build()));
+        .thenReturn(
+            Arrays.asList(User.Builder.anUser().uuid("userId1").name("name1").email("user1@harness.io").build()));
     return accountService.save(anAccount()
                                    .withCompanyName(HARNESS_NAME)
                                    .withAccountName(HARNESS_NAME)

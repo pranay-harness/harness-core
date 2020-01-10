@@ -299,15 +299,15 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
     WebTarget target = client.target(API_BASE + "/users");
     RestResponse<User> response = target.request().post(
         entity(anUser()
-                   .withName(name)
-                   .withEmail(email)
-                   .withPassword(pwd.toCharArray())
-                   .withRoles(wingsPersistence
-                                  .query(Role.class,
-                                      aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
-                                  .getResponse())
-                   .withAccountName(accountName)
-                   .withCompanyName(companyName)
+                   .name(name)
+                   .email(email)
+                   .password(pwd.toCharArray())
+                   .roles(wingsPersistence
+                              .query(Role.class,
+                                  aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
+                              .getResponse())
+                   .accountName(accountName)
+                   .companyName(companyName)
                    .build(),
             APPLICATION_JSON),
         new GenericType<RestResponse<User>>() {});

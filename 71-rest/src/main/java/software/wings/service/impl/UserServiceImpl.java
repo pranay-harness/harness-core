@@ -737,13 +737,13 @@ public class UserServiceImpl implements UserService {
       AuthenticationMechanism currentAuthenticationMechanism = account.getAuthenticationMechanism();
       boolean emailVerified = currentAuthenticationMechanism != AuthenticationMechanism.USER_PASSWORD;
       user = anUser()
-                 .withAccounts(Lists.newArrayList(account))
-                 .withEmail(userInvite.getEmail().trim().toLowerCase())
-                 .withName(userInvite.getName().trim())
-                 .withRoles(userInvite.getRoles())
-                 .withAppId(GLOBAL_APP_ID)
-                 .withEmailVerified(emailVerified)
-                 .withImported(userInvite.getImportedByScim())
+                 .accounts(Lists.newArrayList(account))
+                 .email(userInvite.getEmail().trim().toLowerCase())
+                 .name(userInvite.getName().trim())
+                 .roles(userInvite.getRoles())
+                 .appId(GLOBAL_APP_ID)
+                 .emailVerified(emailVerified)
+                 .imported(userInvite.getImportedByScim())
                  .build();
       user = save(user, accountId);
       // Invitation email should sent only in case of USER_PASSWORD authentication mechanism. Because only in that case
@@ -1095,11 +1095,11 @@ public class UserServiceImpl implements UserService {
     String companyName = userInvite.getCompanyName();
 
     User user = Builder.anUser()
-                    .withEmail(userInvite.getEmail())
-                    .withName(userInvite.getName())
-                    .withPasswordHash(userInvite.getPasswordHash())
-                    .withAccountName(accountName)
-                    .withCompanyName(companyName != null ? companyName : accountName)
+                    .email(userInvite.getEmail())
+                    .name(userInvite.getName())
+                    .passwordHash(userInvite.getPasswordHash())
+                    .accountName(accountName)
+                    .companyName(companyName != null ? companyName : accountName)
                     .build();
 
     completeSignup(user, userInvite, getDefaultPaidLicense());
@@ -1112,12 +1112,12 @@ public class UserServiceImpl implements UserService {
     String companyName = userInvite.getCompanyName();
 
     User user = Builder.anUser()
-                    .withEmail(userInvite.getEmail())
-                    .withName(userInvite.getName())
-                    .withPasswordHash(userInvite.getPasswordHash())
-                    .withAccountName(accountName)
-                    .withCompanyName(companyName != null ? companyName : accountName)
-                    .withUtmInfo(userInvite.getUtmInfo())
+                    .email(userInvite.getEmail())
+                    .name(userInvite.getName())
+                    .passwordHash(userInvite.getPasswordHash())
+                    .accountName(accountName)
+                    .companyName(companyName != null ? companyName : accountName)
+                    .utmInfo(userInvite.getUtmInfo())
                     .build();
 
     completeSignup(user, userInvite, getTrialLicense());
@@ -1355,13 +1355,13 @@ public class UserServiceImpl implements UserService {
     String email = userInfo.getEmail();
     final String companyName = accountService.suggestAccountName(userInfo.getName());
     return Builder.anUser()
-        .withEmail(email)
-        .withName(userInfo.getName())
-        .withAccountName(companyName)
-        .withCompanyName(companyName)
-        .withEmailVerified(true)
-        .withOauthProvider(oauthProvider)
-        .withUtmInfo(userInfo.getUtmInfo())
+        .email(email)
+        .name(userInfo.getName())
+        .accountName(companyName)
+        .companyName(companyName)
+        .emailVerified(true)
+        .oauthProvider(oauthProvider)
+        .utmInfo(userInfo.getUtmInfo())
         .build();
   }
 

@@ -90,7 +90,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   private void setUserRequestContext() {
-    User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
+    User user = User.Builder.anUser().name(USER_NAME).uuid(USER_ID).build();
     user.setUserRequestContext(UserRequestContext.builder().accountId(ACCOUNT_ID).build());
     UserThreadLocal.set(user);
   }

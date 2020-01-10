@@ -173,7 +173,7 @@ public class KmsTest extends WingsBaseTest {
   private final int numOfEncryptedValsForKms = 3;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
-  private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
+  private final User user = User.Builder.anUser().email(userEmail).name(userName).build();
   private String userId;
   private String accountId;
   private String kmsId;
@@ -728,7 +728,7 @@ public class KmsTest extends WingsBaseTest {
 
     ((AppDynamicsConfig) savedAttribute.getValue()).setUsername(UUID.randomUUID().toString());
     ((AppDynamicsConfig) savedAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
-    User user1 = User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName("user1").build();
+    User user1 = User.Builder.anUser().email(UUID.randomUUID().toString()).name("user1").build();
     wingsPersistence.save(user1);
     UserThreadLocal.set(user1);
     wingsPersistence.save(savedAttribute);
@@ -891,7 +891,7 @@ public class KmsTest extends WingsBaseTest {
 
     ((AppDynamicsConfig) savedAttribute.getValue()).setUsername(UUID.randomUUID().toString());
     ((AppDynamicsConfig) savedAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
-    User user1 = User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName("user1").build();
+    User user1 = User.Builder.anUser().email(UUID.randomUUID().toString()).name("user1").build();
     wingsPersistence.save(user1);
     UserThreadLocal.set(user1);
     wingsPersistence.save(savedAttribute);
@@ -992,8 +992,7 @@ public class KmsTest extends WingsBaseTest {
     keyValuePairs.put("appId", updatedAppId);
     keyValuePairs.put("value", newAppDynamicsConfig);
 
-    User user1 =
-        User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName(UUID.randomUUID().toString()).build();
+    User user1 = User.Builder.anUser().email(UUID.randomUUID().toString()).name(UUID.randomUUID().toString()).build();
     wingsPersistence.save(user1);
     UserThreadLocal.set(user1);
     wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);
@@ -1037,8 +1036,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(1);
     assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(numOfEncryptedValsForKms + 1);
 
-    User user2 =
-        User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName(UUID.randomUUID().toString()).build();
+    User user2 = User.Builder.anUser().email(UUID.randomUUID().toString()).name(UUID.randomUUID().toString()).build();
     wingsPersistence.save(user2);
     UserThreadLocal.set(user2);
     wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);
@@ -1254,7 +1252,7 @@ public class KmsTest extends WingsBaseTest {
     UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTest.getUserPermissionInfo(
         ImmutableList.of(appId), ImmutableList.of(envId), ImmutableSet.of(Action.UPDATE));
 
-    User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
+    User user = User.Builder.anUser().name(USER_NAME).uuid(USER_ID).build();
     user.setUserRequestContext(
         UserRequestContext.builder().appIds(ImmutableSet.of(appId)).userPermissionInfo(userPermissionInfo).build());
     UserThreadLocal.set(user);
@@ -1284,7 +1282,7 @@ public class KmsTest extends WingsBaseTest {
     UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTest.getUserPermissionInfo(
         ImmutableList.of(appId), ImmutableList.of(envId), ImmutableSet.of(Action.UPDATE, Action.CREATE, Action.READ));
 
-    User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
+    User user = User.Builder.anUser().name(USER_NAME).uuid(USER_ID).build();
     UsageRestrictions restrictionsFromUserPermissionsForRead =
         UsageRestrictions.builder().appEnvRestrictions(ImmutableSet.of(appEnvRestrictionBuilder.build())).build();
 
@@ -1756,9 +1754,9 @@ public class KmsTest extends WingsBaseTest {
     when(secretsManagementFeature.isAvailableForAccount(accountId)).thenReturn(true);
 
     User user = User.Builder.anUser()
-                    .withAccounts(Collections.singletonList(account))
-                    .withEmail(UUID.randomUUID().toString())
-                    .withName(UUID.randomUUID().toString())
+                    .accounts(Collections.singletonList(account))
+                    .email(UUID.randomUUID().toString())
+                    .name(UUID.randomUUID().toString())
                     .build();
     wingsPersistence.save(user);
 

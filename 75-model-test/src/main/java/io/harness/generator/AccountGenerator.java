@@ -316,19 +316,19 @@ public class AccountGenerator {
 
   public User ensureUser(String uuid, String userName, String email, char[] password, Account account) {
     User user = anUser()
-                    .withUuid(uuid)
-                    .withName(userName)
-                    .withEmail(email)
-                    .withPassword(password)
-                    .withRoles(wingsPersistence
-                                   .query(Role.class,
-                                       aPageRequest()
-                                           .addFilter("accountId", EQ, account.getUuid())
-                                           .addFilter("roleType", EQ, RoleType.ACCOUNT_ADMIN)
-                                           .build())
-                                   .getResponse())
-                    .withAccountName(account.getAccountName())
-                    .withCompanyName(account.getCompanyName())
+                    .uuid(uuid)
+                    .name(userName)
+                    .email(email)
+                    .password(password)
+                    .roles(wingsPersistence
+                               .query(Role.class,
+                                   aPageRequest()
+                                       .addFilter("accountId", EQ, account.getUuid())
+                                       .addFilter("roleType", EQ, RoleType.ACCOUNT_ADMIN)
+                                       .build())
+                               .getResponse())
+                    .accountName(account.getAccountName())
+                    .companyName(account.getCompanyName())
                     .build();
 
     User newUser = userService.registerNewUser(user, account);

@@ -58,14 +58,14 @@ public class TestUtils {
 
   public User createUser(Account account) {
     return anUser()
-        .withUuid(generateUuid())
-        .withAppId(APP_ID)
-        .withEmail(USER_EMAIL)
-        .withName(USER_NAME)
-        .withPassword(PASSWORD)
-        .withAccountName(ACCOUNT_NAME)
-        .withCompanyName(COMPANY_NAME)
-        .withAccounts(Lists.newArrayList(account))
+        .uuid(generateUuid())
+        .appId(APP_ID)
+        .email(USER_EMAIL)
+        .name(USER_NAME)
+        .password(PASSWORD)
+        .accountName(ACCOUNT_NAME)
+        .companyName(COMPANY_NAME)
+        .accounts(Lists.newArrayList(account))
         .build();
   }
 }
