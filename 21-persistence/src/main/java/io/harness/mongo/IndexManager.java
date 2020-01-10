@@ -173,7 +173,7 @@ public class IndexManager {
     }
   }
 
-  public static void ensureIndex(AdvancedDatastore primaryDatastore, Morphia morphia) {
+  public static void ensureIndex(AdvancedDatastore datastore, Morphia morphia) {
     // Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
     // There is no way to override this behavior.
     // https://github.com/mongodb/morphia/issues/706
@@ -186,7 +186,7 @@ public class IndexManager {
         return;
       }
 
-      final DBCollection collection = primaryDatastore.getCollection(mc.getClazz());
+      final DBCollection collection = datastore.getCollection(mc.getClazz());
       try (AutoLogContext ignore = new CollectionLogContext(collection.getName(), OVERRIDE_ERROR)) {
         if (processedCollections.contains(collection.getName())) {
           return;
@@ -252,7 +252,7 @@ public class IndexManager {
         // verification service
         "timeSeriesAnomaliesRecords", "timeSeriesCumulativeSums");
 
-    final List<String> obsoleteCollections = primaryDatastore.getDB()
+    final List<String> obsoleteCollections = datastore.getDB()
                                                  .getCollectionNames()
                                                  .stream()
                                                  .filter(name -> !processedCollections.contains(name))
