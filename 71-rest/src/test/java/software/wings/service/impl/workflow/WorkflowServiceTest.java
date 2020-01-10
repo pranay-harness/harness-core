@@ -2392,6 +2392,20 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow).isNotNull().hasFieldOrPropertyWithValue("userVariables", userVariables);
   }
 
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldFetchInfraDefVariables() {
+    List<Variable> variables =
+        newArrayList(aVariable().entityType(EntityType.INFRASTRUCTURE_DEFINITION).name("name1").value("value1").build(),
+            aVariable().entityType(SERVICE).name("name2").value("value2").build());
+
+    List<Variable> infraDefVariables = workflowServiceTemplateHelper.getInfraDefCompleteWorkflowVariables(variables);
+
+    assertThat(infraDefVariables).hasSize(1);
+    assertThat(infraDefVariables.get(0).getName()).isEqualTo("name1");
+  }
+
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
