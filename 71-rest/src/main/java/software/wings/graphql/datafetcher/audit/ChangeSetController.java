@@ -1,13 +1,19 @@
 package software.wings.graphql.datafetcher.audit;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.exception.GraphQLException;
+import io.harness.exception.WingsException;
+import software.wings.audit.ApiKeyAuditDetails;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditSource;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.GitAuditDetails;
 import software.wings.graphql.datafetcher.user.UserController;
+import software.wings.graphql.schema.type.audit.QLApiKeyChangeSet;
+import software.wings.graphql.schema.type.audit.QLApiKeyChangeSet.QLApiKeyChangeSetBuilder;
 import software.wings.graphql.schema.type.audit.QLChangeDetails;
 import software.wings.graphql.schema.type.audit.QLChangeSet;
 import software.wings.graphql.schema.type.audit.QLGitChangeSet;
@@ -15,6 +21,7 @@ import software.wings.graphql.schema.type.audit.QLGitChangeSet.QLGitChangeSetBui
 import software.wings.graphql.schema.type.audit.QLRequestInfo;
 import software.wings.graphql.schema.type.audit.QLUserChangeSet;
 import software.wings.graphql.schema.type.audit.QLUserChangeSet.QLUserChangeSetBuilder;
+import software.wings.service.impl.yaml.gitdiff.gitaudit.YamlAuditRecordGenerationUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,8 +29,8 @@ import javax.validation.constraints.NotNull;
 
 @Singleton
 public class ChangeSetController {
+  @Inject YamlAuditRecordGenerationUtils yamlAuditRecordGenerationUtils;
   public QLChangeSet populateChangeSet(@NotNull AuditHeader audit) {
-    // TODO  how to determine which implementation of ChangeSet interface to return (which source?)
     AuditSource type = getAuditSource(audit);
     switch (type) {
       case USER:
@@ -34,17 +41,32 @@ public class ChangeSetController {
         final QLGitChangeSetBuilder gitChangeSetBuilder = QLGitChangeSet.builder();
         populateGitChangeSet(audit, gitChangeSetBuilder);
         return gitChangeSetBuilder.build();
+      case APIKEY:
+        final QLApiKeyChangeSetBuilder apiKeyChangeSetBuilder = QLApiKeyChangeSet.builder();
+        populateApiKeyChangeSet(audit, apiKeyChangeSetBuilder);
+        return apiKeyChangeSetBuilder.build();
       default:
-        return null;
+        throw new GraphQLException(
+            String.format("Unsupported changeSet type found for changeSetId: %d", audit.getUuid()),
+            WingsException.USER_SRE);
     }
   }
 
+  /**
+   * Determines the source of Audit creation -> from UI - through user / git / from apiKey through GraphQL
+   * @param audit
+   * @return
+   */
   private AuditSource getAuditSource(@NotNull AuditHeader audit) {
-    EmbeddedUser createdBy = audit.getCreatedBy();
-    if (createdBy != null && "GIT_SYNC".equals(createdBy.getName()) && "GIT".equals(createdBy.getUuid())) {
+    if (yamlAuditRecordGenerationUtils.verifyGitAsSourceForAuditTrail(audit.getCreatedBy())) {
       return AuditSource.GIT;
-    } else {
+    } else if (verifyApiKeyAsSourceForAuditTrail(audit.getApiKeyAuditDetails())) {
+      return AuditSource.APIKEY;
+    } else if (verifyUserAsSourceForAuditTrail(audit.getCreatedBy())) {
       return AuditSource.USER;
+    } else {
+      throw new GraphQLException(
+          String.format("No valid source found for changeSetId: %d", audit.getUuid()), WingsException.USER_SRE);
     }
   }
 
@@ -64,6 +86,15 @@ public class ChangeSetController {
         .request(populateChangeSetWithRequestInfo(audit))
         .failureStatusMsg(audit.getFailureStatusMsg());
     populateGitChangeSetWithGitAuditDetails(builder, audit.getGitAuditDetails());
+  }
+
+  private void populateApiKeyChangeSet(@NotNull AuditHeader audit, QLApiKeyChangeSetBuilder builder) {
+    builder.id(audit.getUuid())
+        .changes(populateChangeSetWithDetails(audit.getEntityAuditRecords()))
+        .triggeredAt(audit.getLastUpdatedAt())
+        .request(populateChangeSetWithRequestInfo(audit))
+        .failureStatusMsg(audit.getFailureStatusMsg())
+        .apiKeyId(audit.getApiKeyAuditDetails() != null ? audit.getApiKeyAuditDetails().getApiKeyId() : null);
   }
 
   private void populateGitChangeSetWithGitAuditDetails(QLGitChangeSetBuilder builder, GitAuditDetails gitAuditDetails) {
@@ -110,5 +141,13 @@ public class ChangeSetController {
                    .createdAt(entityAuditRecord.getCreatedAt())
                    .build())
         .collect(Collectors.toList());
+  }
+
+  private boolean verifyApiKeyAsSourceForAuditTrail(ApiKeyAuditDetails apiKeyAuditDetails) {
+    return apiKeyAuditDetails != null && apiKeyAuditDetails.getApiKeyId() != null;
+  }
+
+  private boolean verifyUserAsSourceForAuditTrail(EmbeddedUser user) {
+    return user != null && user.getEmail() != null && user.getName() != null && user.getUuid() != null;
   }
 }

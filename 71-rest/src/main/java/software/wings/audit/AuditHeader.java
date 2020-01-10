@@ -101,6 +101,7 @@ public class AuditHeader extends Base implements AccountAccess {
   @Getter @Setter @Indexed private String accountId;
   @Getter @Setter private GitAuditDetails gitAuditDetails;
   @Getter @Setter private List<EntityAuditRecord> entityAuditRecords;
+  @Getter @Setter private ApiKeyAuditDetails apiKeyAuditDetails;
 
   /**
    * Gets query params.
@@ -477,6 +478,7 @@ public class AuditHeader extends Base implements AccountAccess {
     private GitAuditDetails gitAuditDetails;
     private List<EntityAuditRecord> entityAuditRecords;
     private String failureStatusMsg;
+    private ApiKeyAuditDetails apiKeyAuditDetails;
 
     private Builder() {}
 
@@ -765,6 +767,11 @@ public class AuditHeader extends Base implements AccountAccess {
       return this;
     }
 
+    public Builder withApiKeyAuditDetails(ApiKeyAuditDetails apiKeyAuditDetails) {
+      this.apiKeyAuditDetails = apiKeyAuditDetails;
+      return this;
+    }
+
     /**
      * Builds the.
      *
@@ -801,6 +808,7 @@ public class AuditHeader extends Base implements AccountAccess {
       auditHeader.setLastUpdatedAt(lastUpdatedAt);
       auditHeader.setGitAuditDetails(gitAuditDetails);
       auditHeader.setFailureStatusMsg(failureStatusMsg);
+      auditHeader.setApiKeyAuditDetails(apiKeyAuditDetails);
       return auditHeader;
     }
   }

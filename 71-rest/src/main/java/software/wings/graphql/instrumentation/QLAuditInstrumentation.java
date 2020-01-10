@@ -22,6 +22,7 @@ import io.harness.network.Localhost;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import software.wings.audit.ApiKeyAuditDetails;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.Builder;
 import software.wings.audit.AuditHeader.RequestType;
@@ -89,7 +90,8 @@ public class QLAuditInstrumentation extends SimpleInstrumentation {
         .withRemoteHostName(httpServletRequest.getRemoteHost())
         .withRemoteIpAddress(httpServletRequest.getRemoteAddr())
         .withLocalHostName(Localhost.getLocalHostName())
-        .withLocalIpAddress(Localhost.getLocalHostAddress());
+        .withLocalIpAddress(Localhost.getLocalHostAddress())
+        .withApiKeyAuditDetails(getApiKeyAuditDetails(httpServletRequest.getHeader(API_KEY_HEADER), accountId));
   }
 
   private String getQueryParams(HttpServletRequest httpServletRequest) {
@@ -140,7 +142,9 @@ public class QLAuditInstrumentation extends SimpleInstrumentation {
     if (headerNames != null) {
       while (headerNames.hasMoreElements()) {
         final String headerName = headerNames.nextElement();
-        queryStringList.add(headerToString(headerName, httpServletRequest.getHeader(headerName), accountId));
+        if (!shouldFilterHeader(headerName)) {
+          queryStringList.add(headerToString(headerName, httpServletRequest.getHeader(headerName), accountId));
+        }
       }
     }
     return String.join(",", queryStringList);
@@ -149,16 +153,24 @@ public class QLAuditInstrumentation extends SimpleInstrumentation {
   private String headerToString(final String headerName, final String headerValue, final String accountId) {
     String finalHeaderName = headerName;
     String finalHeaderValue = headerValue;
-    if (API_KEY_HEADER.equalsIgnoreCase(headerName)) {
-      finalHeaderName = "API_KEY_UUID";
-      finalHeaderValue = "null";
-      final ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(headerValue, accountId, false);
-      if (apiKeyEntry != null) {
-        finalHeaderValue = apiKeyEntry.getUuid();
-      }
-    } else if ("Authorization".equalsIgnoreCase(headerName)) {
+    if ("Authorization".equalsIgnoreCase(headerName)) {
       finalHeaderValue = "********";
     }
     return finalHeaderName + "=" + finalHeaderValue;
+  }
+
+  private ApiKeyAuditDetails getApiKeyAuditDetails(final String headerValue, final String accountId) {
+    if (EmptyPredicate.isEmpty(headerValue)) {
+      return null;
+    }
+    final ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(headerValue, accountId, false);
+    if (apiKeyEntry != null) {
+      return ApiKeyAuditDetails.builder().apiKeyId(apiKeyEntry.getUuid()).build();
+    }
+    return null;
+  }
+
+  private boolean shouldFilterHeader(final String headerName) {
+    return API_KEY_HEADER.equalsIgnoreCase(headerName);
   }
 }

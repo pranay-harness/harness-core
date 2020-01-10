@@ -54,6 +54,15 @@ type GitChangeSet implements ChangeSet {
   repoUrl: String
 }
 
+type ApiKeyChangeSet implements ChangeSet {
+  id: String
+  changes: [ChangeDetails]
+  triggeredAt: DateTime
+  request: RequestInfo
+  failureStatusMsg: String
+  apiKeyId: String
+}
+
 type RequestInfo {
   url: String
   resourcePath: String

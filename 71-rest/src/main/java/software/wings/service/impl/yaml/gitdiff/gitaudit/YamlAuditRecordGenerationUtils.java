@@ -60,6 +60,10 @@ public class YamlAuditRecordGenerationUtils {
     return auditHelper.create(builder.build());
   }
 
+  public boolean verifyGitAsSourceForAuditTrail(EmbeddedUser createdBy) {
+    return createdBy != null && "GIT_SYNC".equals(createdBy.getName()) && "GIT".equals(createdBy.getUuid());
+  }
+
   public void finalizeAuditRecord(
       String accountId, GitDiffResult gitDiffResult, Map<String, ChangeWithErrorMsg> changeWithErrorMsgs) {
     AuditGlobalContextData auditGlobalContextData =
