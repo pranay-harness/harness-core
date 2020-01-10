@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
@@ -30,6 +31,7 @@ import software.wings.beans.ArtifactVariable;
 import software.wings.beans.DeploymentTriggerExecutionArgs;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
@@ -45,6 +47,7 @@ import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.GitHubPayloadSource;
 import software.wings.beans.trigger.PayloadSource.Type;
 import software.wings.beans.trigger.PipelineAction;
+import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerExecution;
 import software.wings.beans.trigger.TriggerExecution.Status;
 import software.wings.beans.trigger.WebhookCondition;
@@ -56,6 +59,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
@@ -94,6 +98,7 @@ public class TriggerDeploymentExecution {
   @Inject private transient ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private transient ArtifactService artifactService;
   @Inject private transient TriggerArtifactVariableHandler triggerArtifactVariableHandler;
+  @Inject private FeatureFlagService featureFlagService;
 
   public WorkflowExecution triggerDeployment(List<ArtifactVariable> artifactVariables,
       Map<String, String> webhookParameters, DeploymentTrigger deploymentTrigger, TriggerExecution triggerExecution) {
@@ -207,7 +212,8 @@ public class TriggerDeploymentExecution {
     PipelineAction pipelineAction = (PipelineAction) trigger.getAction();
     logger.info(
         "Triggering  execution of appId {} with  pipeline id {}", trigger.getAppId(), pipelineAction.getPipelineId());
-    resolveTriggerPipelineVariables(trigger, executionArgs);
+    boolean infraDefEnabled = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, trigger.getAccountId());
+    resolveTriggerPipelineVariables(trigger, executionArgs, infraDefEnabled);
     if (checkFileContentOptionSelected(trigger)) {
       workflowExecution = webhookTriggerPipelineExecution(trigger, triggerExecution, executionArgs);
     } else {
@@ -222,7 +228,8 @@ public class TriggerDeploymentExecution {
       DeploymentTrigger trigger, TriggerExecution triggerExecution, ExecutionArgs executionArgs) {
     logger.info("Check file content option selected. Invoking delegate task to verify the file content.");
     // Harsh TODO add webhook condition
-    TriggerExecution lastTriggerExecution = webhookTriggerProcessor.fetchLastExecutionForContentChanged(null);
+    TriggerExecution lastTriggerExecution =
+        webhookTriggerProcessor.fetchLastExecutionForContentChanged(Trigger.builder().build());
     if (lastTriggerExecution == null) {
       triggerExecution.setExecutionArgs(executionArgs);
       triggerExecution.setStatus(Status.SUCCESS);
@@ -250,14 +257,16 @@ public class TriggerDeploymentExecution {
     return false;
   }
 
-  private void resolveTriggerPipelineVariables(DeploymentTrigger deploymentTrigger, ExecutionArgs executionArgs) {
+  private void resolveTriggerPipelineVariables(
+      DeploymentTrigger deploymentTrigger, ExecutionArgs executionArgs, boolean infraDefEnabled) {
     PipelineAction pipelineAction = (PipelineAction) deploymentTrigger.getAction();
     Pipeline pipeline =
         pipelineService.readPipeline(deploymentTrigger.getAppId(), pipelineAction.getPipelineId(), true);
     notNullCheck("Pipeline was deleted or does not exist", pipeline, USER);
 
     List<Variable> pipelineVariables = pipeline.getPipelineVariables();
-    Map<String, String> triggerPipelineVariableValues = overrideTriggerVariables(deploymentTrigger, executionArgs);
+    Map<String, String> triggerPipelineVariableValues =
+        overrideTriggerVariables(deploymentTrigger, executionArgs, infraDefEnabled);
 
     String envId = null;
     String templatizedEnvName = getTemplatizedEnvVariableName(pipelineVariables);
@@ -277,16 +286,15 @@ public class TriggerDeploymentExecution {
     }
 
     resolveServices(deploymentTrigger.getAppId(), triggerPipelineVariableValues, pipelineVariables);
-    resolveServiceInfrastructures(
-        deploymentTrigger.getAppId(), triggerPipelineVariableValues, envId, pipelineVariables);
-    resolveInfraDefinitions(deploymentTrigger.getAppId(), triggerPipelineVariableValues, envId, pipelineVariables);
+
+    if (infraDefEnabled) {
+      resolveInfraDefinitions(deploymentTrigger.getAppId(), triggerPipelineVariableValues, envId, pipelineVariables);
+    } else {
+      resolveServiceInfrastructures(
+          deploymentTrigger.getAppId(), triggerPipelineVariableValues, envId, pipelineVariables);
+    }
 
     executionArgs.setWorkflowVariables(triggerPipelineVariableValues);
-
-    if (pipeline.isHasBuildWorkflow() || pipeline.isEnvParameterized()) {
-      // TODO: Once artifact needed serviceIds implemented for templated pipeline then this logic has to be modified
-      return;
-    }
 
     DeploymentMetadata deploymentMetadata = pipelineService.fetchDeploymentMetadata(
         deploymentTrigger.getAppId(), pipeline, null, null, Include.ARTIFACT_SERVICE);
@@ -418,7 +426,7 @@ public class TriggerDeploymentExecution {
   }
 
   private Map<String, String> overrideTriggerVariables(
-      DeploymentTrigger deploymentTrigger, ExecutionArgs executionArgs) {
+      DeploymentTrigger deploymentTrigger, ExecutionArgs executionArgs, boolean infraDefEnabled) {
     // Workflow variables come from Webhook
     Map<String, String> webhookVariableValues =
         executionArgs.getWorkflowVariables() == null ? new HashMap<>() : executionArgs.getWorkflowVariables();
@@ -453,7 +461,13 @@ public class TriggerDeploymentExecution {
 
     for (Entry<String, String> entry : webhookVariableValues.entrySet()) {
       if (isNotEmpty(entry.getValue())) {
-        triggerWorkflowVariableValues.put(entry.getKey(), entry.getValue());
+        if (infraDefEnabled && entry.getKey().startsWith("ServiceInfra")) {
+          String infraMappingVarName = entry.getKey();
+          String infraDefVarName = infraMappingVarName.replace("ServiceInfra", "InfraDefinition");
+          triggerWorkflowVariableValues.put(infraDefVarName, entry.getValue());
+        } else {
+          triggerWorkflowVariableValues.put(entry.getKey(), entry.getValue());
+        }
       }
     }
     triggerWorkflowVariableValues = triggerWorkflowVariableValues.entrySet()
@@ -473,9 +487,11 @@ public class TriggerDeploymentExecution {
     Workflow workflow = workflowService.readWorkflow(deploymentTrigger.getAppId(), workflowAction.getWorkflowId());
     notNullCheck("Workflow was deleted", workflow, USER);
     notNullCheck("Orchestration Workflow not present", workflow.getOrchestrationWorkflow(), USER);
+    boolean infraDefEnabled = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, workflow.getAccountId());
 
     List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-    Map<String, String> triggerWorkflowVariableValues = overrideTriggerVariables(deploymentTrigger, executionArgs);
+    Map<String, String> triggerWorkflowVariableValues =
+        overrideTriggerVariables(deploymentTrigger, executionArgs, infraDefEnabled);
 
     String envId = null;
     if (BUILD == workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()) {
@@ -487,7 +503,12 @@ public class TriggerDeploymentExecution {
       resolveServiceInfrastructures(
           deploymentTrigger.getAppId(), triggerWorkflowVariableValues, envId, workflowVariables);
 
-      resolveInfraDefinitions(deploymentTrigger.getAppId(), triggerWorkflowVariableValues, envId, workflowVariables);
+      if (infraDefEnabled) {
+        resolveInfraDefinitions(deploymentTrigger.getAppId(), triggerWorkflowVariableValues, envId, workflowVariables);
+      } else {
+        resolveServiceInfrastructures(
+            deploymentTrigger.getAppId(), triggerWorkflowVariableValues, envId, workflowVariables);
+      }
 
       /* Fetch the deployment data to find out the required entity types */
       DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
@@ -572,23 +593,58 @@ public class TriggerDeploymentExecution {
     return envId;
   }
 
-  private void resolveInfraDefinitions(
+  void resolveInfraDefinitions(
       String appId, Map<String, String> triggerWorkflowVariableValues, String envId, List<Variable> variables) {
-    for (String infraDefVarName : WorkflowServiceTemplateHelper.getInfraDefinitionWorkflowVariables(variables)) {
-      String infraDefIdOrName = triggerWorkflowVariableValues.get(infraDefVarName);
-      notNullCheck(
-          "There is no corresponding Workflow Variable associated to Infra Definition", infraDefIdOrName, USER);
-      logger.error("Checking  Infra Definition {} can be found by id first.", infraDefIdOrName);
-      InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefIdOrName);
-      if (infrastructureDefinition == null) {
-        logger.error("InfraDefinition does not exist by Id, checking if infra definition {} can be found by name.",
-            infraDefIdOrName);
-        infrastructureDefinition = infrastructureDefinitionService.getInfraDefByName(appId, envId, infraDefIdOrName);
+    for (Variable variable : WorkflowServiceTemplateHelper.getInfraDefCompleteWorkflowVariables(variables)) {
+      String infraEnvId = null;
+      if (isNotEmpty(variable.getMetadata()) && variable.getMetadata().get(Variable.ENV_ID) != null) {
+        infraEnvId = variable.getMetadata().get(Variable.ENV_ID).toString();
+      } else {
+        infraEnvId = envId;
       }
-      notNullCheck(
-          "InfraStructure Definition [" + infraDefIdOrName + "] does not exist", infrastructureDefinition, USER);
-      triggerWorkflowVariableValues.put(infraDefVarName, infrastructureDefinition.getUuid());
+
+      String infraDefVarName = variable.getName();
+      String infraDefIdOrName = triggerWorkflowVariableValues.get(infraDefVarName);
+      if (isEmpty(infraDefVarName) || matchesVariablePattern(infraDefIdOrName)) {
+        String infraMappingVarName = infraDefVarName.replace("InfraDefinition", "ServiceInfra");
+        String infraMappingIdOrName = triggerWorkflowVariableValues.get(infraMappingVarName);
+        InfrastructureMapping infrastructureMapping = getInfrastructureMapping(appId, infraEnvId, infraMappingIdOrName);
+        notNullCheck(
+            "Service Infrastructure [" + infraMappingIdOrName + "] does not exist", infrastructureMapping, USER);
+        triggerWorkflowVariableValues.put(infraDefVarName, infrastructureMapping.getInfrastructureDefinitionId());
+      } else {
+        InfrastructureDefinition infrastructureDefinition =
+            getInfrastructureDefinition(appId, infraEnvId, infraDefIdOrName);
+        if (infrastructureDefinition == null) {
+          InfrastructureMapping infrastructureMapping = getInfrastructureMapping(appId, infraEnvId, infraDefIdOrName);
+          notNullCheck("Service Infrastructure [" + infraDefIdOrName + "] does not exist", infrastructureMapping, USER);
+          triggerWorkflowVariableValues.put(infraDefVarName, infrastructureMapping.getInfrastructureDefinitionId());
+        } else {
+          triggerWorkflowVariableValues.put(infraDefVarName, infrastructureDefinition.getUuid());
+        }
+      }
     }
+  }
+
+  public InfrastructureDefinition getInfrastructureDefinition(String appId, String envId, String infraDefIdOrName) {
+    InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefIdOrName);
+    if (infrastructureDefinition == null) {
+      logger.info("InfraDefinition does not exist by Id, checking if infra definition {} can be found by name.",
+          infraDefIdOrName);
+      infrastructureDefinition = infrastructureDefinitionService.getInfraDefByName(appId, envId, infraDefIdOrName);
+    }
+    return infrastructureDefinition;
+  }
+
+  public InfrastructureMapping getInfrastructureMapping(String appId, String envId, String infraDefIdOrName) {
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraDefIdOrName);
+    if (infrastructureMapping == null) {
+      logger.info(
+          "Service Infrastructure does not exist by Id, checking if service infrastructure {} can be found by name.",
+          infraDefIdOrName);
+      infrastructureMapping = infrastructureMappingService.getInfraMappingByName(appId, envId, infraDefIdOrName);
+    }
+    return infrastructureMapping;
   }
 
   private void resolveServiceInfrastructures(

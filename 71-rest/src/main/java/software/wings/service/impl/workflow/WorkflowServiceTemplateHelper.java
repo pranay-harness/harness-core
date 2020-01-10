@@ -481,6 +481,17 @@ public class WorkflowServiceTemplateHelper {
         .collect(toList());
   }
 
+  public static List<Variable> getInfraDefCompleteWorkflowVariables(List<Variable> variables) {
+    if (isEmpty(variables)) {
+      return new ArrayList<>();
+    }
+    return variables.stream()
+        .filter(
+            variable -> variable.obtainEntityType() != null && variable.obtainEntityType() == INFRASTRUCTURE_DEFINITION)
+        .distinct()
+        .collect(toList());
+  }
+
   public static List<String> getServiceWorkflowVariables(List<Variable> variables) {
     if (isEmpty(variables)) {
       return new ArrayList<>();
