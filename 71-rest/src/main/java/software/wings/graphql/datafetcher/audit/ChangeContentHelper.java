@@ -1,16 +1,15 @@
 package software.wings.graphql.datafetcher.audit;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.graphql.datafetcher.AccountThreadLocal;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.intfc.ApiKeyService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,22 +19,14 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class ChangeContentHelper {
-  @Inject private static SegmentHandler segmentHandler;
-  @Inject private static ApiKeyService apiKeyService;
+  @Inject private SegmentHandler segmentHandler;
 
   public void reportAuditTrailExportToSegment() {
-    // TODO where to get api key from?
-    String accountId = apiKeyService.getAccountIdFromApiKey("apiKey");
-    if (accountId == null) {
-      return;
-    }
-    if (isNotEmpty(UserThreadLocal.get().getAccounts())) {
-      List<Account> accounts = UserThreadLocal.get()
-                                   .getAccounts()
-                                   .stream()
-                                   .filter(acct -> accountId.equals(acct.getUuid()))
-                                   .collect(Collectors.toList());
-      if (isNotEmpty(accounts)) {
+    final String accountId = AccountThreadLocal.get();
+    List<Account> accounts = UserThreadLocal.get().getAccounts();
+    if (EmptyPredicate.isNotEmpty(accounts)) {
+      accounts.stream().filter(account -> accountId.equals(account.getUuid())).collect(Collectors.toList());
+      if (EmptyPredicate.isNotEmpty(accounts)) {
         Account account = accounts.get(0);
         User user = UserThreadLocal.get().getPublicUser();
         Map<String, String> properties = new HashMap<String, String>() {
@@ -45,7 +36,7 @@ public class ChangeContentHelper {
           }
         };
         Map<String, Boolean> integrations = new HashMap<String, Boolean>() {
-          { put(SegmentHandler.Keys.GROUP_ID, Boolean.TRUE); }
+          { put(SegmentHandler.Keys.NATERO, Boolean.TRUE); }
         };
         try {
           segmentHandler.reportTrackEvent(account, "Audit Trail exported", user, properties, integrations);

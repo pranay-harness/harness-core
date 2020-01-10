@@ -41,7 +41,7 @@ public class ChangeContentConnectionDataFetcher
         } else { // get yaml diff for a specific changeSetId and all resourceIds under it
           changeContentController.populateChangeContent(changeSetId, connectionBuilder, pageQueryParameters);
         }
-        //        changeContentHelper.reportAuditTrailExportToSegment();
+        changeContentHelper.reportAuditTrailExportToSegment();
         return connectionBuilder.build();
       } else {
         throw new GraphQLException("Query supports only one filter at a time", WingsException.SRE);
