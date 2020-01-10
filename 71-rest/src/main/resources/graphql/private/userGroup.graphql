@@ -1,0 +1,4 @@
+extend type Mutation {
+  updateUserGroupPermissions(userGroupId: String!, permissions: Permissions!): UserGroupPermissions
+    @dataFetcher(name: userGroupUpdatePermissions)
+}

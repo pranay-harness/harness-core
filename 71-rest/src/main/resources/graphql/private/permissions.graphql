@@ -1,0 +1,27 @@
+input Permissions {
+  accountPermissions: [AccountPermissionType]
+  appPermissions: [ApplicationPermissionsInput]
+}
+
+type UserGroupPermissions {
+  accountPermissions: [AccountPermissionType]
+  appPermissions: [ApplicationPermissions]
+}
+
+enum Actions {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  EXECUTE
+}
+
+enum AccountPermissionType {
+  CREATE_AND_DELETE_APPLICATION
+  READ_USERS_AND_GROUPS
+  MANAGE_USERS_AND_GROUPS
+  MANAGE_TEMPLATE_LIBRARY
+  ADMINISTER_OTHER_ACCOUNT_FUNCTIONS
+  VIEW_AUDITS
+  MANAGE_TAGS
+}

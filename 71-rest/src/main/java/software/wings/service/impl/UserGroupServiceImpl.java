@@ -49,6 +49,8 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
 import software.wings.beans.notification.NotificationSettings;
+import software.wings.beans.security.AccountPermissions;
+import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.beans.sso.SSOSettings;
@@ -381,6 +383,19 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     members.forEach(groupMembers::remove);
     return updateMembers(userGroup, sendNotification);
+  }
+
+  @Override
+  public UserGroup setUserGroupPermissions(
+      String accountId, String userGroupId, AccountPermissions accountPermissions, Set<AppPermission> appPermissions) {
+    UserGroup userGroup = get(accountId, userGroupId);
+    checkImplicitPermissions(userGroup);
+    UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
+    setUnset(operations, "appPermissions", appPermissions);
+    setUnset(operations, "accountPermissions", accountPermissions);
+    UserGroup updatedUserGroup = update(userGroup, operations);
+    evictUserPermissionInfoCacheForUserGroup(updatedUserGroup);
+    return updatedUserGroup;
   }
 
   @Override
