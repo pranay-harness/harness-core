@@ -199,7 +199,8 @@ public class AuditYamlHelperForFailedChanges {
     }
 
     // As we reached here, This seems to be some nested Service or Environment level entity
-    return handleServiceOrEnvNestedEntities(auditRequestData).build();
+    EntityAuditRecordBuilder entityAuditRecordBuilder = handleServiceOrEnvNestedEntities(auditRequestData);
+    return entityAuditRecordBuilder != null ? entityAuditRecordBuilder.build() : null;
   }
 
   private EntityAuditRecordBuilder handleServiceOrEnvNestedEntities(GitAuditDataWrapper auditRequestData) {

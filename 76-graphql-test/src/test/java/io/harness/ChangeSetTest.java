@@ -17,12 +17,14 @@ import lombok.Data;
 import lombok.Singular;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.audit.ApiKeyAuditDetails;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.GitAuditDetails;
 import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.QLUser;
 import software.wings.graphql.schema.type.aggregation.audit.QLTimeUnit;
+import software.wings.graphql.schema.type.audit.QLApiKeyChangeSet;
 import software.wings.graphql.schema.type.audit.QLChangeDetails;
 import software.wings.graphql.schema.type.audit.QLChangeSet;
 import software.wings.graphql.schema.type.audit.QLGitChangeSet;
@@ -215,6 +217,42 @@ resourceType
     assertThat(pageInfo.getTotal()).isEqualTo(1);
   }
 
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testQueryForApiKeyChangeSet() {
+    final Randomizer.Seed seed = new Randomizer.Seed(0);
+    final OwnerManager.Owners owners = ownerManager.create();
+    owners.add(EmbeddedUser.builder().uuid(generateUuid()).email("email").name("name").build());
+    final AuditHeader auditHeader = changeSetGenerator.ensureGitChangeSetTest(seed, owners);
+
+    String changeSetQueryPattern = $.GQL(/*
+    {
+    audits(limit:1){
+      nodes{
+        id
+        ... on ApiKeyChangeSet{
+          apiKeyId
+        }
+      }
+    }
+  }
+  */ ChangeSetTest.class);
+
+    String query = String.format(changeSetQueryPattern, 1);
+
+    QLChangeSetConnectionApiKeyImpl changeSetConnection =
+        qlExecute(QLChangeSetConnectionApiKeyImpl.class, query, auditHeader.getAccountId());
+    assertThat(changeSetConnection.getNodes().size()).isEqualTo(1);
+    verifyPageInfo(changeSetConnection.getPageInfo());
+    QLApiKeyChangeSet apiKeyChangeSet = changeSetConnection.getNodes().get(0);
+    verifyChangeSet(apiKeyChangeSet, auditHeader);
+    if (auditHeader.getApiKeyAuditDetails() != null) {
+      ApiKeyAuditDetails c = auditHeader.getApiKeyAuditDetails();
+      assertThat(apiKeyChangeSet.getApiKeyId()).isEqualTo(apiKeyChangeSet.getApiKeyId());
+    }
+  }
+
   /**
    * Verify common attributes of different implementations of QLChangeSet
    * @param changeSet
@@ -260,5 +298,11 @@ resourceType
   private static class QLChangeSetConnectionGitImpl {
     private QLPageInfo pageInfo;
     @Singular private List<QLGitChangeSet> nodes;
+  }
+
+  @Data
+  private static class QLChangeSetConnectionApiKeyImpl {
+    private QLPageInfo pageInfo;
+    @Singular private List<QLApiKeyChangeSet> nodes;
   }
 }

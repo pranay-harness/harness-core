@@ -32,6 +32,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import software.wings.audit.ApiKeyAuditDetails;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.common.AuditHelper;
@@ -98,8 +99,12 @@ public class QLAuditInstrumentationTest extends CategoryTest {
     verify(auditHelper, times(1)).create(auditHeaderArgumentCaptor.capture());
     final AuditHeader capturedAuditHeader = auditHeaderArgumentCaptor.getValue();
     final String headerString = capturedAuditHeader.getHeaderString();
-    assertThat(headerString).contains("API_KEY_UUID=api_key_uuid_value", "Authorization=********");
+    final ApiKeyAuditDetails apiKeyAuditDetails = capturedAuditHeader.getApiKeyAuditDetails();
+    assertThat(headerString).contains("Authorization=********");
     assertThat(headerString).doesNotContain("api_key_value", "Bearer 12njdjksbkn");
+    if (apiKeyAuditDetails != null) {
+      assertThat(apiKeyAuditDetails.getApiKeyId()).isEqualTo("api_key_uuid_value");
+    }
     doReturn(auditHeader).when(auditHelper).get();
     doNothing().when(auditHelper).finalizeAudit(any(AuditHeader.class), any());
     executionResultInstrumentationContext.onCompleted(

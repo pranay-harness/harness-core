@@ -1,3 +1,3 @@
 package software.wings.audit;
 
-public enum AuditSource { USER, GIT }
+public enum AuditSource { USER, GIT, APIKEY }
