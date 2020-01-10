@@ -134,7 +134,8 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   GraphNode updateGraphNode(
       @NotNull String appId, @NotNull String workflowId, @NotNull String subworkflowId, GraphNode node);
 
-  Workflow cloneWorkflow(String appId, Workflow originalWorkflow, Workflow workflow);
+  @ValidationGroups(Create.class)
+  Workflow cloneWorkflow(String appId, Workflow originalWorkflow, @Valid Workflow workflow);
 
   Workflow updateWorkflow(String appId, String workflowId, Integer defaultVersion);
 

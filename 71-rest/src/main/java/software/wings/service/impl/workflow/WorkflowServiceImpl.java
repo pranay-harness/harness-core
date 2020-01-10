@@ -1781,7 +1781,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public Workflow cloneWorkflow(String appId, Workflow originalWorkflow, Workflow workflow) {
+  @ValidationGroups(Create.class)
+  public Workflow cloneWorkflow(String appId, Workflow originalWorkflow, @Valid Workflow workflow) {
     String accountId = appService.getAccountIdByAppId(workflow.getAppId());
 
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
