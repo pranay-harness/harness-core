@@ -34,16 +34,12 @@ public class ApplicationReadyListener {
   }
 
   @EventListener(ApplicationReadyEvent.class)
-  public void onApplicationReady() {
-    ensureTimescaleConnectivity();
-    ensureIndexForEventsStore();
-  }
-
-  private void ensureTimescaleConnectivity() {
+  void ensureTimescaleConnectivity() {
     verify(timeScaleDBService.isValid(), "Unable to connect to timescale db");
   }
 
-  private void ensureIndexForEventsStore() {
+  @EventListener(ApplicationReadyEvent.class)
+  void ensureIndexForEventsStore() {
     Reflections reflections = new Reflections("software.wings", "io.harness");
     Set<Class> classes = reflections.getSubTypesOf(PersistentEntity.class)
                              .stream()
