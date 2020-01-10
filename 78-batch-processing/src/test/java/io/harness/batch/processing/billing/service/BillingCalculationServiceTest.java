@@ -62,7 +62,9 @@ public class BillingCalculationServiceTest extends CategoryTest {
   private final double DEFAULT_INSTANCE_MEMORY = 60;
   private final double DEFAULT_INSTANCE_PRICE = 1.60;
   private final double CPU_UTILIZATION = 0.5;
+  private final double CPU_UTILIZATION_HIGH = 1.5;
   private final double MEMORY_UTILIZATION = 0.5;
+  private final double MEMORY_UTILIZATION_HIGH = 1.5;
 
   @Test
   @Owner(developers = HITESH)
@@ -227,7 +229,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     InstanceData instanceData = getInstance(
         instanceResource, metaData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP, InstanceType.ECS_TASK_EC2);
     BillingAmountBreakup billingAmountForResource = billingCalculationService.getBillingAmountForResource(
-        instanceData, new BigDecimal(200), instanceResource.getCpuUnits(), instanceResource.getMemoryMb());
+        instanceData, BigDecimal.valueOf(200), instanceResource.getCpuUnits(), instanceResource.getMemoryMb());
     assertThat(billingAmountForResource.getBillingAmount()).isEqualTo(new BigDecimal("75.000"));
   }
 
@@ -240,13 +242,17 @@ public class BillingCalculationServiceTest extends CategoryTest {
     addParentResource(metaData, 1024, 1024);
     InstanceData instanceData = getInstance(
         instanceResource, metaData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP, InstanceType.ECS_TASK_EC2);
-    BigDecimal billingAmount = new BigDecimal(200);
+    BigDecimal billingAmount = BigDecimal.valueOf(200);
+    BigDecimal cpuBillingAmount = BigDecimal.valueOf(100);
+    BigDecimal memoryBillingAmount = BigDecimal.valueOf(100);
+    BillingAmountBreakup billingAmountBreakup =
+        new BillingAmountBreakup(billingAmount, cpuBillingAmount, memoryBillingAmount);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     IdleCostData idleCost =
-        billingCalculationService.getIdleCostForResource(billingAmount, utilizationData, instanceData);
-    assertThat(idleCost.getIdleCost()).isEqualTo(new BigDecimal("100.0"));
-    assertThat(idleCost.getMemoryIdleCost()).isEqualTo(new BigDecimal("50.0"));
-    assertThat(idleCost.getCpuIdleCost()).isEqualTo(new BigDecimal("50.0"));
+        billingCalculationService.getIdleCostForResource(billingAmountBreakup, utilizationData, instanceData);
+    assertThat(idleCost.getIdleCost()).isEqualTo(BigDecimal.valueOf(100.0));
+    assertThat(idleCost.getMemoryIdleCost()).isEqualTo(BigDecimal.valueOf(50.0));
+    assertThat(idleCost.getCpuIdleCost()).isEqualTo(BigDecimal.valueOf(50.0));
   }
 
   @Test
@@ -268,8 +274,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
     assertThat(billingAmount.getBillingAmountBreakup().getCpuBillingAmount()).isEqualTo(new BigDecimal("30.0000"));
     assertThat(billingAmount.getBillingAmountBreakup().getMemoryBillingAmount()).isEqualTo(new BigDecimal("60.000"));
     assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("45.0"));
-    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("22.5"));
-    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("22.5"));
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("15.0"));
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("30.0"));
     assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(ONE_DAY_SECONDS.doubleValue());
     assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(256.0 * ONE_DAY_SECONDS);
     assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(512.0 * ONE_DAY_SECONDS);
@@ -286,15 +292,15 @@ public class BillingCalculationServiceTest extends CategoryTest {
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
     InstanceData instanceData = getInstance(
         instanceResource, metaData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP, InstanceType.K8S_POD);
-    UtilizationData utilizationData = getUtilizationWithValues(CPU_UTILIZATION, MEMORY_UTILIZATION, 256, 512);
+    UtilizationData utilizationData = getUtilizationWithValues(CPU_UTILIZATION_HIGH, MEMORY_UTILIZATION_HIGH, 256, 512);
     BillingData billingAmount =
         billingCalculationService.getBillingAmount(instanceData, utilizationData, pricingData, ONE_DAY_SECONDS);
     assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("90.0000"));
     assertThat(billingAmount.getBillingAmountBreakup().getCpuBillingAmount()).isEqualTo(new BigDecimal("30.0000"));
     assertThat(billingAmount.getBillingAmountBreakup().getMemoryBillingAmount()).isEqualTo(new BigDecimal("60.000"));
-    assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("45.0"));
-    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("22.5"));
-    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("22.5"));
+    assertThat(billingAmount.getIdleCostData().getIdleCost().doubleValue()).isEqualTo(0.0);
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost().doubleValue()).isEqualTo(0.0);
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost().doubleValue()).isEqualTo(0.0);
     assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(ONE_DAY_SECONDS.doubleValue());
     assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(256.0 * ONE_DAY_SECONDS);
     assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(512.0 * ONE_DAY_SECONDS);

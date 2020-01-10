@@ -3,6 +3,7 @@ package io.harness.batch.processing.billing.service;
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.CostAttribution;
+import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -43,10 +44,10 @@ public class BillingCalculationService {
       cpuUnit = instanceData.getTotalResource().getCpuUnits();
       memoryMb = instanceData.getTotalResource().getMemoryMb();
       if (instanceData.getMetaData().get(InstanceMetaDataConstants.CLUSTER_TYPE).equals(ClusterType.K8S.name())) {
-        if (cpuUnit == 0) {
+        if (utilizationData.getAvgCpuUtilizationValue() > cpuUnit) {
           cpuUnit = utilizationData.getAvgCpuUtilizationValue();
         }
-        if (memoryMb == 0) {
+        if (utilizationData.getAvgMemoryUtilizationValue() > memoryMb) {
           memoryMb = utilizationData.getAvgMemoryUtilizationValue();
         }
       }
@@ -58,8 +59,8 @@ public class BillingCalculationService {
     BillingAmountBreakup billingAmountForResource =
         getBillingAmountForResource(instanceData, billingAmount, cpuUnit, memoryMb);
     return new BillingData(billingAmountForResource,
-        getIdleCostForResource(billingAmountForResource.getBillingAmount(), utilizationData, instanceData),
-        instanceActiveSeconds, cpuUnit * instanceActiveSeconds, memoryMb * instanceActiveSeconds);
+        getIdleCostForResource(billingAmountForResource, utilizationData, instanceData), instanceActiveSeconds,
+        cpuUnit * instanceActiveSeconds, memoryMb * instanceActiveSeconds);
   }
 
   BillingAmountBreakup getBillingAmountForResource(
@@ -87,14 +88,20 @@ public class BillingCalculationService {
   }
 
   IdleCostData getIdleCostForResource(
-      BigDecimal billingDataForResource, UtilizationData utilizationData, InstanceData instanceData) {
-    if (instanceData.getInstanceType().toString().equals("ECS_TASK_FARGATE") || utilizationData == null) {
+      BillingAmountBreakup billingDataForResource, UtilizationData utilizationData, InstanceData instanceData) {
+    if (instanceData.getInstanceType() == InstanceType.ECS_TASK_FARGATE || utilizationData == null) {
       return new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
     }
-    double billingAmount = billingDataForResource.doubleValue();
-    BigDecimal cpuIdleCost = BigDecimal.valueOf(billingAmount * ((1 - utilizationData.getMaxCpuUtilization()) / 2));
-    BigDecimal memoryIdleCost =
-        BigDecimal.valueOf(billingAmount * ((1 - utilizationData.getMaxMemoryUtilization()) / 2));
+    BigDecimal cpuIdleCost = BigDecimal.ZERO;
+    BigDecimal memoryIdleCost = BigDecimal.ZERO;
+    if (utilizationData.getAvgCpuUtilization() < 1) {
+      cpuIdleCost = BigDecimal.valueOf(
+          billingDataForResource.getCpuBillingAmount().doubleValue() * (1 - utilizationData.getAvgCpuUtilization()));
+    }
+    if (utilizationData.getAvgMemoryUtilization() < 1) {
+      memoryIdleCost = BigDecimal.valueOf(billingDataForResource.getMemoryBillingAmount().doubleValue()
+          * (1 - utilizationData.getAvgMemoryUtilization()));
+    }
     BigDecimal idleCost = BigDecimal.valueOf(cpuIdleCost.doubleValue() + memoryIdleCost.doubleValue());
     return new IdleCostData(idleCost, cpuIdleCost, memoryIdleCost);
   }
