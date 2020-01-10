@@ -39,7 +39,7 @@ public class ChangeSetConnectionDataFetcher
       final QLChangeSet changeSet = changeSetController.populateChangeSet(audit);
       connectionBuilder.node(changeSet);
     }));
-    //    changeContentHelper.reportAuditTrailExportToSegment();
+    changeContentHelper.reportAuditTrailExportToSegment();
     return connectionBuilder.build();
   }
 

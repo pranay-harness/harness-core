@@ -177,6 +177,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
             emptyAppIdsInReq, httpMethod, appIdsFromRequest, false, isAccountLevelPermissions, isScopedToApp);
     user.setUserRequestContext(userRequestContext);
     UserThreadLocal.set(user);
+    AccountThreadLocal.set(accountId);
 
     if (isAccountLevelPermissions) {
       authHandler.authorizeAccountPermission(userRequestContext, permissionAttributes);
