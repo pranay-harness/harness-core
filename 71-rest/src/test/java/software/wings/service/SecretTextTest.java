@@ -142,7 +142,7 @@ public class SecretTextTest extends WingsBaseTest {
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
-  private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
+  private final User user = User.Builder.anUser().email(userEmail).name(userName).build();
   private String accountId;
   private String appId;
   private String workflowExecutionId;

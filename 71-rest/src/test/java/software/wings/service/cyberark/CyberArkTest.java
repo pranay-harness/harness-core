@@ -87,7 +87,7 @@ public class CyberArkTest extends WingsBaseTest {
   private final int numOfEncryptedValsForCyberKms = 3;
   private final String userEmail = "mark.lu@harness.io";
   private final String userName = "mark.lu";
-  private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
+  private final User user = User.Builder.anUser().email(userEmail).name(userName).build();
   private String userId;
   private String accountId;
   private String kmsId;

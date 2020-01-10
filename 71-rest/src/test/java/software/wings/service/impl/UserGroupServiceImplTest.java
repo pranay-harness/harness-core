@@ -118,13 +118,13 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                                 .build();
 
   private User user = anUser()
-                          .withUuid(generateUuid())
-                          .withAppId(APP_ID)
-                          .withEmail(USER_EMAIL)
-                          .withName(USER_NAME)
-                          .withPassword(PASSWORD)
-                          .withAccountName(ACCOUNT_NAME)
-                          .withCompanyName(COMPANY_NAME)
+                          .uuid(generateUuid())
+                          .appId(APP_ID)
+                          .email(USER_EMAIL)
+                          .name(USER_NAME)
+                          .password(PASSWORD)
+                          .accountName(ACCOUNT_NAME)
+                          .companyName(COMPANY_NAME)
                           .build();
 
   @Inject private WingsPersistence wingsPersistence;
@@ -363,7 +363,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldUpdateUserGroup() throws IOException {
-    try (UserThreadLocal.Guard guard = userGuard(anUser().withUuid(generateUuid()).build())) {
+    try (UserThreadLocal.Guard guard = userGuard(anUser().uuid(generateUuid()).build())) {
       ArgumentCaptor<EmailData> emailDataArgumentCaptor = ArgumentCaptor.forClass(EmailData.class);
       when(accountService.get(ACCOUNT_ID)).thenReturn(account);
 
@@ -514,23 +514,23 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       UserGroup userGroup1 =
           builder().accountId(ACCOUNT_ID).name("USER_GROUP1").appPermissions(Sets.newHashSet(appPermission)).build();
       User user1 = anUser()
-                       .withAppId(APP_ID)
-                       .withEmail("user1@wings.software")
-                       .withName(USER_NAME)
-                       .withPassword(PASSWORD)
-                       .withAccountName(ACCOUNT_NAME)
-                       .withCompanyName(COMPANY_NAME)
-                       .withAccounts(Lists.newArrayList(account))
+                       .appId(APP_ID)
+                       .email("user1@wings.software")
+                       .name(USER_NAME)
+                       .password(PASSWORD)
+                       .accountName(ACCOUNT_NAME)
+                       .companyName(COMPANY_NAME)
+                       .accounts(Lists.newArrayList(account))
                        .build();
 
       User user2 = anUser()
-                       .withAppId(APP_ID)
-                       .withEmail("user2@wings.software")
-                       .withName(USER_NAME)
-                       .withPassword(PASSWORD)
-                       .withAccountName(ACCOUNT_NAME)
-                       .withCompanyName(COMPANY_NAME)
-                       .withAccounts(Lists.newArrayList(account))
+                       .appId(APP_ID)
+                       .email("user2@wings.software")
+                       .name(USER_NAME)
+                       .password(PASSWORD)
+                       .accountName(ACCOUNT_NAME)
+                       .companyName(COMPANY_NAME)
+                       .accounts(Lists.newArrayList(account))
                        .build();
 
       userGroup1 = userGroupService.save(userGroup1);
@@ -656,13 +656,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                           .withAccountName(ACCOUNT_NAME)
                           .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
                           .build();
-    return anUser()
-        .withUuid(userId)
-        .withAppId(APP_ID)
-        .withEmailVerified(true)
-        .withEmail(USER_EMAIL)
-        .withAccounts(asList(account))
-        .build();
+    return anUser().uuid(userId).appId(APP_ID).emailVerified(true).email(USER_EMAIL).accounts(asList(account)).build();
   }
 
   private UserGroup createUserGroup(List<String> memberIds) {

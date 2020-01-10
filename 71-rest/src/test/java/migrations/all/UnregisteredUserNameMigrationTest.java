@@ -29,7 +29,7 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
 
   private void prepareTest(long count, String name) {
     LongStream.range(0, 10)
-        .mapToObj(i -> Builder.anUser().withName(name).withEmail("testEmail" + i + "@test.com").build())
+        .mapToObj(i -> Builder.anUser().name(name).email("testEmail" + i + "@test.com").build())
         .forEach(user -> wingsPersistence.save(user));
   }
 

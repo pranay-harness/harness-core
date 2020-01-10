@@ -80,7 +80,7 @@ public class MarketoHandlerTest extends WingsBaseTest {
 
       EventData eventData = EventData.builder().properties(properties).build();
       Event event = Event.builder().eventData(eventData).eventType(eventType).build();
-      User newUser = User.Builder.anUser().withEmail("admin@harness.io").withAccounts(Arrays.asList(account)).build();
+      User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
       when(userService.update(any(User.class))).thenReturn(newUser);
       when(accountService.get(anyString())).thenReturn(account);

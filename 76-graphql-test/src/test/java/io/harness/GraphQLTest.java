@@ -46,7 +46,7 @@ public abstract class GraphQLTest extends CategoryTest implements GraphQLTestMix
 
   @Override
   public ExecutionInput getExecutionInput(String query, String accountId) {
-    User user = User.Builder.anUser().withUuid("user1Id").build();
+    User user = User.Builder.anUser().uuid("user1Id").build();
     UserGroup userGroup = authHandler.buildDefaultAdminUserGroup(accountId, user);
     UserPermissionInfo userPermissionInfo =
         authHandler.evaluateUserPermissionInfo(accountId, Arrays.asList(userGroup), user);

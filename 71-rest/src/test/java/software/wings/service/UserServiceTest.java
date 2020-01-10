@@ -164,8 +164,7 @@ import javax.cache.Cache;
  * Created by anubhaw on 3/9/16.
  */
 public class UserServiceTest extends WingsBaseTest {
-  private final User.Builder userBuilder =
-      anUser().withAppId(APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD);
+  private final User.Builder userBuilder = anUser().appId(APP_ID).email(USER_EMAIL).name(USER_NAME).password(PASSWORD);
 
   /**
    * The Update operations.
@@ -267,12 +266,12 @@ public class UserServiceTest extends WingsBaseTest {
                                   .build();
     String token = marketPlaceService.getMarketPlaceToken(marketPlace, testInvite);
 
-    User savedUser = userBuilder.withUuid(USER_ID)
-                         .withEmail(USER_EMAIL)
-                         .withEmailVerified(false)
-                         .withCompanyName(COMPANY_NAME)
-                         .withAccountName(ACCOUNT_NAME)
-                         .withPasswordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
+    User savedUser = userBuilder.uuid(USER_ID)
+                         .email(USER_EMAIL)
+                         .emailVerified(false)
+                         .companyName(COMPANY_NAME)
+                         .accountName(ACCOUNT_NAME)
+                         .passwordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
                          .build();
 
     try {
@@ -338,11 +337,11 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldRegisterNewUser() {
-    User savedUser = userBuilder.withUuid(USER_ID)
-                         .withEmailVerified(false)
-                         .withCompanyName(COMPANY_NAME)
-                         .withAccountName(ACCOUNT_NAME)
-                         .withPasswordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
+    User savedUser = userBuilder.uuid(USER_ID)
+                         .emailVerified(false)
+                         .companyName(COMPANY_NAME)
+                         .accountName(ACCOUNT_NAME)
+                         .passwordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
                          .build();
     Account account = Account.Builder.anAccount()
                           .withAccountName(ACCOUNT_NAME)
@@ -466,12 +465,12 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldRegisterExistingUser() {
-    User existingUser = userBuilder.withUuid(generateUuid()).build();
-    User savedUser = userBuilder.withUuid(USER_ID)
-                         .withEmailVerified(false)
-                         .withCompanyName(COMPANY_NAME)
-                         .withAccountName(ACCOUNT_NAME)
-                         .withPasswordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
+    User existingUser = userBuilder.uuid(generateUuid()).build();
+    User savedUser = userBuilder.uuid(USER_ID)
+                         .emailVerified(false)
+                         .companyName(COMPANY_NAME)
+                         .accountName(ACCOUNT_NAME)
+                         .passwordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
                          .build();
     Account account = Account.Builder.anAccount()
                           .withAccountName(ACCOUNT_NAME)
@@ -525,8 +524,7 @@ public class UserServiceTest extends WingsBaseTest {
   public void shouldUpdateUser() {
     List<Role> roles = Lists.newArrayList(
         aRole().withUuid(generateUuid()).withRoleType(RoleType.APPLICATION_ADMIN).withAppId(generateUuid()).build());
-    User user =
-        anUser().withAppId(APP_ID).withUuid(USER_ID).withEmail(USER_EMAIL).withName(USER_NAME).withRoles(roles).build();
+    User user = anUser().appId(APP_ID).uuid(USER_ID).email(USER_EMAIL).name(USER_NAME).roles(roles).build();
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.set("name", USER_NAME);
     updateOperations.set("roles", roles);
@@ -544,7 +542,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void shouldUpdateUserProfile() {
-    User user = anUser().withAppId(APP_ID).withUuid(USER_ID).withAppId(APP_ID).withName(USER_NAME).build();
+    User user = anUser().appId(APP_ID).uuid(USER_ID).appId(APP_ID).name(USER_NAME).build();
     userService.updateUserProfile(user);
     verify(updateOperations).set(UserKeys.name, USER_NAME);
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
@@ -558,7 +556,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void shouldUpdateUserProfileWithoutName() {
-    User user = anUser().withAppId(APP_ID).withUuid(USER_ID).withAppId(APP_ID).build();
+    User user = anUser().appId(APP_ID).uuid(USER_ID).appId(APP_ID).build();
     userService.updateUserProfile(user);
     verify(updateOperations).unset(UserKeys.name);
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
@@ -573,7 +571,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void addEventToUserMarketoCampaigns() {
     EventType eventType = EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
-    User user = anUser().withAppId(APP_ID).withUuid(USER_ID).withAppId(APP_ID).build();
+    User user = anUser().appId(APP_ID).uuid(USER_ID).appId(APP_ID).build();
     doReturn(user).when(cache).get(any(String.class));
     userService.addEventToUserMarketoCampaigns(user.getUuid(), eventType);
     verify(updateOperations).set(UserKeys.reportedMarketoCampaigns, Sets.newHashSet(eventType.name()));
@@ -609,7 +607,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldDeleteUser() {
-    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.uuid(USER_ID).build());
     when(wingsPersistence.delete(User.class, USER_ID)).thenReturn(true);
     userService.delete(ACCOUNT_ID, USER_ID);
     verify(wingsPersistence).delete(User.class, USER_ID);
@@ -624,10 +622,10 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldFetchUser() {
-    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.uuid(USER_ID).build());
     User user = userService.get(USER_ID);
     verify(wingsPersistence).get(User.class, USER_ID);
-    assertThat(user).isEqualTo(userBuilder.withUuid(USER_ID).build());
+    assertThat(user).isEqualTo(userBuilder.uuid(USER_ID).build());
   }
 
   /**
@@ -682,7 +680,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldAddRole() {
-    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.uuid(USER_ID).build());
     when(roleService.get(ROLE_ID)).thenReturn(aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
 
     userService.addRole(USER_ID, ROLE_ID);
@@ -700,7 +698,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldRevokeRole() {
-    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.uuid(USER_ID).build());
     when(roleService.get(ROLE_ID)).thenReturn(aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
 
     userService.revokeRole(USER_ID, ROLE_ID);
@@ -734,8 +732,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
-    when(wingsPersistence.saveAndGet(eq(User.class), any(User.class)))
-        .thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(userBuilder.uuid(USER_ID).build());
 
     userService.inviteUsers(userInvite);
     verify(wingsPersistence).save(any(UserInvite.class));
@@ -785,8 +782,7 @@ public class UserServiceTest extends WingsBaseTest {
                         .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
                         .build());
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
-    when(wingsPersistence.saveAndGet(eq(User.class), any(User.class)))
-        .thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(userBuilder.uuid(USER_ID).build());
 
     userService.inviteUsers(userInvite);
 
@@ -815,8 +811,7 @@ public class UserServiceTest extends WingsBaseTest {
                         .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
                         .build());
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
-    when(wingsPersistence.saveAndGet(eq(User.class), any(User.class)))
-        .thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(userBuilder.uuid(USER_ID).build());
 
     try {
       userService.inviteUsers(userInvite);
@@ -844,7 +839,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
-    when(query.get()).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(query.get()).thenReturn(userBuilder.uuid(USER_ID).build());
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
 
     userService.inviteUsers(userInvite);
@@ -864,7 +859,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldOverrideTwoFactorForUser() {
-    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.uuid(USER_ID).build());
     when(wingsPersistence.get(Account.class, ACCOUNT_ID))
         .thenReturn(Account.Builder.anAccount().withUuid(ACCOUNT_ID).build());
     // userService.overrideTwoFactorforAccount(ACCOUNT_ID, true);
@@ -877,11 +872,11 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldCompleteInvite() {
-    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.uuid(USER_ID).build());
     when(accountService.get(ACCOUNT_ID)).thenReturn(Account.Builder.anAccount().withUuid(ACCOUNT_ID).build());
     when(userInviteQuery.get())
         .thenReturn(anUserInvite().withUuid(USER_INVITE_ID).withAccountId(ACCOUNT_ID).withEmail(USER_EMAIL).build());
-    when(query.get()).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(query.get()).thenReturn(userBuilder.uuid(USER_ID).build());
     when(loginSettingsService.verifyPasswordStrength(Mockito.any(Account.class), Mockito.any(char[].class)))
         .thenReturn(true);
 
@@ -903,7 +898,7 @@ public class UserServiceTest extends WingsBaseTest {
   public void shouldGetAccountRole() {
     List<Role> roles =
         asList(aRole().withUuid(generateUuid()).withRoleType(RoleType.ACCOUNT_ADMIN).withAccountId(ACCOUNT_ID).build());
-    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).withRoles(roles).build());
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.uuid(USER_ID).roles(roles).build());
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(Account.Builder.anAccount().withUuid(ACCOUNT_ID).withAccountName(ACCOUNT_NAME).build());
 
@@ -933,7 +928,7 @@ public class UserServiceTest extends WingsBaseTest {
                                   .withAccountId(ACCOUNT_ID)
                                   .withAllApps(true)
                                   .build());
-    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).withRoles(roles).build());
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.uuid(USER_ID).roles(roles).build());
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(Account.Builder.anAccount().withUuid(ACCOUNT_ID).withAccountName(ACCOUNT_NAME).build());
 
@@ -959,7 +954,7 @@ public class UserServiceTest extends WingsBaseTest {
   public void shouldGetApplicationRole() {
     List<Role> roles =
         asList(aRole().withUuid(generateUuid()).withRoleType(RoleType.ACCOUNT_ADMIN).withAccountId(ACCOUNT_ID).build());
-    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).withRoles(roles).build());
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.uuid(USER_ID).roles(roles).build());
     when(appService.get(APP_ID)).thenReturn(anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build());
 
     ApplicationRole applicationRole = userService.getUserApplicationRole(USER_ID, APP_ID);
@@ -988,7 +983,7 @@ public class UserServiceTest extends WingsBaseTest {
   public void shouldSendResetPasswordEmail() throws EmailException, TemplateException, IOException {
     ArrayList<Account> accounts = new ArrayList<>();
     accounts.add(new Account());
-    when(query.get()).thenReturn(userBuilder.withUuid(USER_ID).withAccounts(accounts).build());
+    when(query.get()).thenReturn(userBuilder.uuid(USER_ID).accounts(accounts).build());
     when(configuration.getPortal().getJwtPasswordSecret()).thenReturn("SECRET");
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     userService.resetPassword(USER_EMAIL);
@@ -1009,8 +1004,7 @@ public class UserServiceTest extends WingsBaseTest {
   public void shouldJoinAccount() {
     ArrayList<Account> accounts = new ArrayList<>();
     accounts.add(new Account());
-    when(query.get())
-        .thenReturn(userBuilder.withUuid(USER_ID).withEmail(NEW_USER_EMAIL).withAccounts(accounts).build());
+    when(query.get()).thenReturn(userBuilder.uuid(USER_ID).email(NEW_USER_EMAIL).accounts(accounts).build());
     when(configuration.getPortal().getJwtPasswordSecret()).thenReturn("SECRET");
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(configuration.isTrialRegistrationAllowed()).thenReturn(true);
@@ -1041,7 +1035,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldUpdatePassword() throws UnsupportedEncodingException {
-    when(query.get()).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(query.get()).thenReturn(userBuilder.uuid(USER_ID).build());
     when(configuration.getPortal().getJwtPasswordSecret()).thenReturn("SECRET");
     Algorithm algorithm = Algorithm.HMAC256("SECRET");
     String token = JWT.create()
@@ -1055,7 +1049,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     verify(query, times(1)).filter("email", USER_EMAIL);
     verify(authService).invalidateAllTokensForUser(USER_ID);
-    verify(wingsPersistence).update(eq(userBuilder.withUuid(USER_ID).build()), any(UpdateOperations.class));
+    verify(wingsPersistence).update(eq(userBuilder.uuid(USER_ID).build()), any(UpdateOperations.class));
     verify(updateOperations).set(eq("passwordHash"), anyString());
     verify(updateOperations).set(eq("passwordChangedAt"), anyLong());
   }
@@ -1075,7 +1069,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(accountService.save(any(Account.class), false)).thenReturn(account);
     when(roleService.getAccountAdminRole(ACCOUNT_ID)).thenReturn(aRole().build());
     when(updateOperations.addToSet(any(), any())).thenReturn(updateOperations);
-    User user = anUser().withUuid(USER_ID).withEmail(USER_EMAIL).build();
+    User user = anUser().uuid(USER_ID).email(USER_EMAIL).build();
     Account created = userService.addAccount(account, user, true);
     assertThat(created).isEqualTo(account);
     verify(accountService).exists(eq(ACCOUNT_NAME));
@@ -1118,11 +1112,11 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void resendInvitationEmail() {
-    User user = userBuilder.withUuid(USER_ID)
-                    .withEmailVerified(false)
-                    .withCompanyName(COMPANY_NAME)
-                    .withAccountName(ACCOUNT_NAME)
-                    .withPasswordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
+    User user = userBuilder.uuid(USER_ID)
+                    .emailVerified(false)
+                    .companyName(COMPANY_NAME)
+                    .accountName(ACCOUNT_NAME)
+                    .passwordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
                     .build();
     UserInvite userInvite =
         anUserInvite().withAppId(GLOBAL_APP_ID).withAccountId(ACCOUNT_ID).withEmail(USER_EMAIL).build();
@@ -1156,12 +1150,12 @@ public class UserServiceTest extends WingsBaseTest {
                           .withUuid(ACCOUNT_ID)
                           .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
                           .build();
-    User user = userBuilder.withUuid(USER_ID)
-                    .withEmailVerified(false)
-                    .withCompanyName(COMPANY_NAME)
-                    .withAccountName(ACCOUNT_NAME)
-                    .withPasswordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
-                    .withAccounts(Arrays.asList(account))
+    User user = userBuilder.uuid(USER_ID)
+                    .emailVerified(false)
+                    .companyName(COMPANY_NAME)
+                    .accountName(ACCOUNT_NAME)
+                    .passwordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
+                    .accounts(Arrays.asList(account))
                     .build();
 
     assertThat(userService.isUserVerified(user)).isFalse();

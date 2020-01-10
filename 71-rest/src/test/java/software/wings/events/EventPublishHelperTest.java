@@ -204,13 +204,13 @@ public class EventPublishHelperTest extends WingsBaseTest {
       eventPublishHelper.publishSetupRbacEvent(ACCOUNT_ID, USER_ID, EntityType.USER);
       verify(eventPublisher, never()).publishEvent(any(Event.class));
 
-      User user = User.Builder.anUser().withUuid("invalid").withEmail("invalid@abcd.com").build();
+      User user = User.Builder.anUser().uuid("invalid").email("invalid@abcd.com").build();
       when(userService.list(any(PageRequest.class), anyBoolean()))
           .thenReturn(PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(user)).withTotal(1).build());
       eventPublishHelper.publishSetupRbacEvent(ACCOUNT_ID, USER_ID, EntityType.USER);
       verify(eventPublisher, never()).publishEvent(any(Event.class));
 
-      user = User.Builder.anUser().withUuid(USER_ID).withEmail("valid@abcd.com").build();
+      user = User.Builder.anUser().uuid(USER_ID).email("valid@abcd.com").build();
       when(userService.list(any(PageRequest.class), anyBoolean()))
           .thenReturn(PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(user)).withTotal(1).build());
       eventPublishHelper.publishSetupRbacEvent(ACCOUNT_ID, USER_ID, EntityType.USER);
@@ -305,7 +305,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   public void testConfirmUserRegistrationEvent() {
     UserThreadLocal.set(user);
     try {
-      User newUser = User.Builder.anUser().withEmail("abcd@abcd.com").build();
+      User newUser = User.Builder.anUser().email("abcd@abcd.com").build();
       eventPublishHelper.publishUserRegistrationCompletionEvent(ACCOUNT_ID, newUser);
       verify(eventPublisher, times(1)).publishEvent(any(Event.class));
     } finally {

@@ -111,7 +111,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
-  private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
+  private final User user = User.Builder.anUser().email(userEmail).name(userName).build();
 
   @Parameters
   public static Collection<Object[]> data() {

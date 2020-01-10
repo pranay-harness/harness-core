@@ -386,12 +386,12 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     final String companyName = "some company" + System.currentTimeMillis();
     WebTarget target = client.target(API_BASE + "/users");
     RestResponse<User> response = target.request().post(entity(anUser()
-                                                                   .withName(name)
-                                                                   .withEmail(email)
-                                                                   .withPassword(pwd)
-                                                                   .withRoles(getAccountAdminRoles())
-                                                                   .withAccountName(accountName)
-                                                                   .withCompanyName(companyName)
+                                                                   .name(name)
+                                                                   .email(email)
+                                                                   .password(pwd)
+                                                                   .roles(getAccountAdminRoles())
+                                                                   .accountName(accountName)
+                                                                   .companyName(companyName)
                                                                    .build(),
                                                             APPLICATION_JSON),
         new GenericType<RestResponse<User>>() {});
@@ -470,12 +470,12 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     RestResponse<User> response = null;
     try {
       response = target.request().post(entity(anUser()
-                                                  .withName(name)
-                                                  .withEmail(email)
-                                                  .withPassword(pwd)
-                                                  .withRoles(getAccountAdminRoles())
-                                                  .withAccountName(accountName)
-                                                  .withCompanyName(companyName)
+                                                  .name(name)
+                                                  .email(email)
+                                                  .password(pwd)
+                                                  .roles(getAccountAdminRoles())
+                                                  .accountName(accountName)
+                                                  .companyName(companyName)
                                                   .build(),
                                            APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});
@@ -506,12 +506,12 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     try {
       RestResponse<User> response = target.request().post(entity(anUser()
-                                                                     .withName(name)
-                                                                     .withEmail(email)
-                                                                     .withPassword(pwd)
-                                                                     .withRoles(getAccountAdminRoles())
-                                                                     .withAccountName(accountName)
-                                                                     .withCompanyName(companyName)
+                                                                     .name(name)
+                                                                     .email(email)
+                                                                     .password(pwd)
+                                                                     .roles(getAccountAdminRoles())
+                                                                     .accountName(accountName)
+                                                                     .companyName(companyName)
                                                                      .build(),
                                                               APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});
@@ -539,12 +539,12 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     try {
       RestResponse<User> response = target.request().post(entity(anUser()
-                                                                     .withName(name)
-                                                                     .withEmail(email)
-                                                                     .withPassword(pwd)
-                                                                     .withRoles(getAccountAdminRoles())
-                                                                     .withAccountName(accountName)
-                                                                     .withCompanyName(companyName)
+                                                                     .name(name)
+                                                                     .email(email)
+                                                                     .password(pwd)
+                                                                     .roles(getAccountAdminRoles())
+                                                                     .accountName(accountName)
+                                                                     .companyName(companyName)
                                                                      .build(),
                                                               APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});
@@ -572,12 +572,12 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     try {
       RestResponse<User> response = target.request().post(entity(anUser()
-                                                                     .withName(name)
-                                                                     .withEmail(email)
-                                                                     .withPassword(pwd)
-                                                                     .withRoles(getAccountAdminRoles())
-                                                                     .withAccountName(accountName)
-                                                                     .withCompanyName(companyName)
+                                                                     .name(name)
+                                                                     .email(email)
+                                                                     .password(pwd)
+                                                                     .roles(getAccountAdminRoles())
+                                                                     .accountName(accountName)
+                                                                     .companyName(companyName)
                                                                      .build(),
                                                               APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});

@@ -141,7 +141,7 @@ public class VaultTest extends WingsBaseTest {
   @Mock private GlobalEncryptDecryptClient globalEncryptDecryptClient;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "UTKARSH";
-  private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
+  private final User user = User.Builder.anUser().email(userEmail).name(userName).build();
   private String accountId;
   private String appId;
   private String workflowExecutionId;
@@ -703,7 +703,7 @@ public class VaultTest extends WingsBaseTest {
 
     ((AppDynamicsConfig) savedAttribute.getValue()).setUsername(UUID.randomUUID().toString());
     ((AppDynamicsConfig) savedAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
-    User user1 = User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName("user1").build();
+    User user1 = User.Builder.anUser().email(UUID.randomUUID().toString()).name("user1").build();
     wingsPersistence.save(user1);
     UserThreadLocal.set(user1);
     wingsPersistence.save(savedAttribute);
@@ -734,7 +734,7 @@ public class VaultTest extends WingsBaseTest {
     assertThat(secretChangeLog.getUser().getName()).isEqualTo(user.getName());
     assertThat(secretChangeLog.getDescription()).isEqualTo("Created");
 
-    User user2 = User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName("user2").build();
+    User user2 = User.Builder.anUser().email(UUID.randomUUID().toString()).name("user2").build();
     wingsPersistence.save(user2);
     UserThreadLocal.set(user2);
 
@@ -870,8 +870,7 @@ public class VaultTest extends WingsBaseTest {
     keyValuePairs.put("appId", updatedAppId);
     keyValuePairs.put("value", newAppDynamicsConfig);
 
-    User user1 =
-        User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName(UUID.randomUUID().toString()).build();
+    User user1 = User.Builder.anUser().email(UUID.randomUUID().toString()).name(UUID.randomUUID().toString()).build();
     wingsPersistence.save(user1);
     UserThreadLocal.set(user1);
     wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);
@@ -911,8 +910,7 @@ public class VaultTest extends WingsBaseTest {
     assertThat(wingsPersistence.createQuery(SettingAttribute.class, excludeAuthority).count()).isEqualTo(1);
     assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(numOfEncRecords + 1);
 
-    User user2 =
-        User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName(UUID.randomUUID().toString()).build();
+    User user2 = User.Builder.anUser().email(UUID.randomUUID().toString()).name(UUID.randomUUID().toString()).build();
     wingsPersistence.save(user2);
     UserThreadLocal.set(user2);
     wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);

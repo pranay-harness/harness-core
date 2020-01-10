@@ -65,8 +65,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetPreference() throws IOException {
-    try (UserThreadLocal.Guard guard =
-             userGuard(User.Builder.anUser().withUuid("USER_ID").withName("USER_ID").build())) {
+    try (UserThreadLocal.Guard guard = userGuard(User.Builder.anUser().uuid("USER_ID").name("USER_ID").build())) {
       Preference deployPref = new DeploymentPreference();
       when(preferenceService.get(ACCOUNT_ID, USER_ID, PREFERENCE_ID)).thenReturn(deployPref);
 
@@ -88,8 +87,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldListPreference() throws IOException {
-    try (UserThreadLocal.Guard guard =
-             userGuard(User.Builder.anUser().withUuid("USER_ID").withName("USER_ID").build())) {
+    try (UserThreadLocal.Guard guard = userGuard(User.Builder.anUser().uuid("USER_ID").name("USER_ID").build())) {
       Preference deployPref = new DeploymentPreference();
       deployPref.setUuid(PREFERENCE_ID);
       PageResponse<Preference> pageResponse = new PageResponse<>();
@@ -111,8 +109,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCreatePreference() throws IOException {
-    try (UserThreadLocal.Guard guard =
-             userGuard(User.Builder.anUser().withUuid("USER_ID").withName("USER_ID").build())) {
+    try (UserThreadLocal.Guard guard = userGuard(User.Builder.anUser().uuid("USER_ID").name("USER_ID").build())) {
       DeploymentPreference deployPref = new DeploymentPreference();
       deployPref.setUuid(ID_KEY);
       deployPref.setAccountId(ACCOUNT_ID);
@@ -143,7 +140,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
     deployPref.setAccountId(ACCOUNT_ID);
     deployPref.setUserId(USER_ID);
     when(preferenceService.update(any(), any(), any(), any())).thenReturn(deployPref);
-    User user = User.Builder.anUser().withUuid(UUID.randomUUID().toString()).withName("USER_ID").build();
+    User user = User.Builder.anUser().uuid(UUID.randomUUID().toString()).name("USER_ID").build();
     UserThreadLocal.set(user);
 
     RestResponse<DeploymentPreference> restResponse =
@@ -165,7 +162,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
     Preference deployPref = new DeploymentPreference();
     deployPref.setUuid(ID_KEY);
 
-    User user = User.Builder.anUser().withUuid(UUID.randomUUID().toString()).withName("USER_ID").build();
+    User user = User.Builder.anUser().uuid(UUID.randomUUID().toString()).name("USER_ID").build();
     UserThreadLocal.set(user);
 
     Response restResponse =

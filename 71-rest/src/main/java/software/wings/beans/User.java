@@ -45,7 +45,6 @@ import javax.security.auth.Subject;
 public class User extends Base implements Principal {
   public static final String EMAIL_KEY = "email";
   public static final String ROLES_KEY = "roles";
-  public static final String EMAIL_VERIFIED_KEY = "emailVerified";
 
   @NotEmpty private String name;
 
@@ -667,194 +666,193 @@ public class User extends Base implements Principal {
       return new Builder();
     }
 
-    public Builder withPasswordExpired(boolean passwordExpired) {
+    public Builder passwordExpired(boolean passwordExpired) {
       this.passwordExpired = passwordExpired;
       return this;
     }
 
-    public Builder withUserLocked(boolean userLocked) {
+    public Builder userLocked(boolean userLocked) {
       this.userLocked = userLocked;
       return this;
     }
 
-    public Builder withName(String name) {
+    public Builder name(String name) {
       this.name = name;
       return this;
     }
 
-    public Builder withEmail(String email) {
+    public Builder email(String email) {
       this.email = email;
       return this;
     }
 
-    public Builder withPasswordHash(String passwordHash) {
+    public Builder passwordHash(String passwordHash) {
       this.passwordHash = passwordHash;
       return this;
     }
 
-    public Builder withCompanyName(String companyName) {
+    public Builder companyName(String companyName) {
       this.companyName = companyName;
       return this;
     }
 
-    public Builder withAccountName(String accountName) {
+    public Builder accountName(String accountName) {
       this.accountName = accountName;
       return this;
     }
 
-    public Builder withRoles(List<Role> roles) {
+    public Builder roles(List<Role> roles) {
       this.roles = roles;
       return this;
     }
 
-    public Builder withUserGroups(List<UserGroup> userGroups) {
+    public Builder userGroups(List<UserGroup> userGroups) {
       this.userGroups = userGroups;
       return this;
     }
 
-    public Builder withAccounts(List<Account> accounts) {
+    public Builder accounts(List<Account> accounts) {
       this.accounts = accounts;
       return this;
     }
 
-    public Builder withSupportAccounts(List<Account> supportAccounts) {
+    public Builder supportAccounts(List<Account> supportAccounts) {
       this.supportAccounts = supportAccounts;
       return this;
     }
 
-    public Builder withDefaultAccountId(String accountId) {
+    public Builder defaultAccountId(String accountId) {
       this.defaultAccountId = accountId;
       return this;
     }
 
-    public Builder withLastLogin(long lastLogin) {
+    public Builder lastLogin(long lastLogin) {
       this.lastLogin = lastLogin;
       return this;
     }
 
-    public Builder withPassword(char[] password) {
+    public Builder password(char[] password) {
       this.password = password == null ? null : password.clone();
       return this;
     }
 
-    public Builder withToken(String token) {
+    public Builder token(String token) {
       this.token = token;
       return this;
     }
 
-    public Builder withEmailVerified(boolean emailVerified) {
+    public Builder emailVerified(boolean emailVerified) {
       this.emailVerified = emailVerified;
       return this;
     }
 
-    public Builder withFirstLogin(boolean firstLogin) {
+    public Builder firstLogin(boolean firstLogin) {
       this.firstLogin = firstLogin;
       return this;
     }
 
-    public Builder withStatsFetchedOn(long statsFetchedOn) {
+    public Builder statsFetchedOn(long statsFetchedOn) {
       this.statsFetchedOn = statsFetchedOn;
       return this;
     }
 
-    public Builder withUuid(String uuid) {
+    public Builder uuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public Builder withAppId(String appId) {
+    public Builder appId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
+    public Builder createdBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public Builder withCreatedAt(long createdAt) {
+    public Builder createdAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+    public Builder lastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder lastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    public Builder withTwoFactorAuthenticationEnabled(boolean twoFactorAuthenticationEnabled) {
+    public Builder twoFactorAuthenticationEnabled(boolean twoFactorAuthenticationEnabled) {
       this.twoFactorAuthenticationEnabled = twoFactorAuthenticationEnabled;
       return this;
     }
 
-    public Builder withTwoFactorAuthenticationMechanism(
-        TwoFactorAuthenticationMechanism twoFactorAuthenticationMechanism) {
+    public Builder twoFactorAuthenticationMechanism(TwoFactorAuthenticationMechanism twoFactorAuthenticationMechanism) {
       this.twoFactorAuthenticationMechanism = twoFactorAuthenticationMechanism;
       return this;
     }
 
-    public Builder withTotpSecretKey(String totpSecretKey) {
+    public Builder totpSecretKey(String totpSecretKey) {
       this.totpSecretKey = totpSecretKey;
       return this;
     }
 
-    public Builder withTwoFactorJwtToken(String twoFactorJwtToken) {
+    public Builder twoFactorJwtToken(String twoFactorJwtToken) {
       this.twoFactorJwtToken = twoFactorJwtToken;
       return this;
     }
 
-    public Builder withOauthProvider(String oauthProvider) {
+    public Builder oauthProvider(String oauthProvider) {
       this.oauthProvider = oauthProvider;
       return this;
     }
 
-    public Builder withImported(boolean imported) {
+    public Builder imported(boolean imported) {
       this.imported = imported;
       return this;
     }
 
-    public Builder withUtmInfo(UtmInfo utmInfo) {
+    public Builder utmInfo(UtmInfo utmInfo) {
       this.utmInfo = utmInfo;
       return this;
     }
 
     public Builder but() {
       return anUser()
-          .withName(name)
-          .withEmail(email)
-          .withPasswordHash(passwordHash)
-          .withCompanyName(companyName)
-          .withRoles(roles)
-          .withUserGroups(userGroups)
-          .withAccounts(accounts)
-          .withSupportAccounts(supportAccounts)
-          .withDefaultAccountId(defaultAccountId)
-          .withLastLogin(lastLogin)
-          .withPassword(password)
-          .withToken(token)
-          .withEmailVerified(emailVerified)
-          .withFirstLogin(firstLogin)
-          .withStatsFetchedOn(statsFetchedOn)
-          .withUuid(uuid)
-          .withAccountName(accountName)
-          .withAppId(appId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withTwoFactorAuthenticationEnabled(twoFactorAuthenticationEnabled)
-          .withTwoFactorAuthenticationMechanism(twoFactorAuthenticationMechanism)
-          .withTotpSecretKey(totpSecretKey)
-          .withTwoFactorJwtToken(twoFactorJwtToken)
-          .withPasswordExpired(passwordExpired)
-          .withOauthProvider(oauthProvider)
-          .withUtmInfo(utmInfo)
-          .withImported(imported);
+          .name(name)
+          .email(email)
+          .passwordHash(passwordHash)
+          .companyName(companyName)
+          .roles(roles)
+          .userGroups(userGroups)
+          .accounts(accounts)
+          .supportAccounts(supportAccounts)
+          .defaultAccountId(defaultAccountId)
+          .lastLogin(lastLogin)
+          .password(password)
+          .token(token)
+          .emailVerified(emailVerified)
+          .firstLogin(firstLogin)
+          .statsFetchedOn(statsFetchedOn)
+          .uuid(uuid)
+          .accountName(accountName)
+          .appId(appId)
+          .createdBy(createdBy)
+          .createdAt(createdAt)
+          .lastUpdatedBy(lastUpdatedBy)
+          .lastUpdatedAt(lastUpdatedAt)
+          .twoFactorAuthenticationEnabled(twoFactorAuthenticationEnabled)
+          .twoFactorAuthenticationMechanism(twoFactorAuthenticationMechanism)
+          .totpSecretKey(totpSecretKey)
+          .twoFactorJwtToken(twoFactorJwtToken)
+          .passwordExpired(passwordExpired)
+          .oauthProvider(oauthProvider)
+          .utmInfo(utmInfo)
+          .imported(imported);
     }
 
     public User build() {

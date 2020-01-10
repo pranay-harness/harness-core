@@ -1028,7 +1028,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     UserPermissionInfo userPermissionInfo = getUserPermissionInfo(appIds, envIds, actions);
 
     UserRestrictionInfoBuilder restrictionInfoBuilder = UserRestrictionInfo.builder();
-    User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
+    User user = User.Builder.anUser().name(USER_NAME).uuid(USER_ID).build();
 
     if (isAccountAdmin) {
       AccountPermissionSummary accountPermissionSummary =

@@ -69,7 +69,7 @@ public class GovernanceConfigServiceTest extends BaseIntegrationTest {
   }
 
   private void setUserRequestContext() {
-    User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
+    User user = User.Builder.anUser().name(USER_NAME).uuid(USER_ID).build();
     user.setUserRequestContext(UserRequestContext.builder().accountId(accountId).build());
     UserThreadLocal.set(user);
   }

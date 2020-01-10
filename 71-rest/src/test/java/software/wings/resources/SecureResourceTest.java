@@ -243,16 +243,15 @@ public class SecureResourceTest extends CategoryTest {
           .build();
 
   private final Account account = Account.Builder.anAccount().withUuid(ACCOUNT_ID).build();
-  private User user =
-      anUser()
-          .withUuid(USER_ID)
-          .withAppId(GLOBAL_APP_ID)
-          .withEmail(USER_EMAIL)
-          .withName(USER_NAME)
-          .withPassword(PASSWORD)
-          .withAccounts(Lists.newArrayList(account))
-          .withRoles(asList(aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.ACCOUNT_ADMIN).build()))
-          .build();
+  private User user = anUser()
+                          .uuid(USER_ID)
+                          .appId(GLOBAL_APP_ID)
+                          .email(USER_EMAIL)
+                          .name(USER_NAME)
+                          .password(PASSWORD)
+                          .accounts(Lists.newArrayList(account))
+                          .roles(asList(aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.ACCOUNT_ADMIN).build()))
+                          .build();
   private UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder().accountId(ACCOUNT_ID).build();
 
   /**
