@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.UJJAWAL;
@@ -26,7 +27,14 @@ import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER
 import static software.wings.beans.security.UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.builder;
 import static software.wings.security.EnvFilter.FilterType.PROD;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
+import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
+import static software.wings.security.PermissionAttribute.PermissionType.TAG_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 import static software.wings.security.UserThreadLocal.userGuard;
 import static software.wings.service.impl.UserServiceImpl.ADD_GROUP_EMAIL_TEMPLATE_NAME;
 import static software.wings.service.impl.UserServiceImpl.INVITE_EMAIL_TEMPLATE_NAME;
@@ -64,6 +72,7 @@ import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.notification.SlackNotificationSetting;
+import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
@@ -88,6 +97,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
@@ -432,6 +443,27 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
           == 1)
           .isFalse();
     }
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void shouldUpdateTheUserGroupPermissions() {
+    GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+    AppPermission appPermission =
+        AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
+    UserGroup ug = builder().accountId(accountId).name("some-name").build();
+    UserGroup saved = userGroupService.save(ug);
+    List<PermissionType> permissionTypeList = Arrays.asList(APPLICATION_CREATE_DELETE, USER_PERMISSION_READ,
+        USER_PERMISSION_MANAGEMENT, TEMPLATE_MANAGEMENT, ACCOUNT_MANAGEMENT, AUDIT_VIEWER, TAG_MANAGEMENT);
+    Set<PermissionType> allPermissions = new HashSet<>(permissionTypeList);
+    AccountPermissions accountPermissions = AccountPermissions.builder().permissions(allPermissions).build();
+    Set<AppPermission> appPermissions = new HashSet<>();
+    appPermissions.add(appPermission);
+    UserGroup updatedUserGroup =
+        userGroupService.setUserGroupPermissions(accountId, saved.getUuid(), accountPermissions, appPermissions);
+    assertThat(Objects.deepEquals(updatedUserGroup.getAccountPermissions(), accountPermissions)).isTrue();
+    assertThat(Objects.deepEquals(updatedUserGroup.getAppPermissions(), appPermissions)).isTrue();
   }
 
   @Test

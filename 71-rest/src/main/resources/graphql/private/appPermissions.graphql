@@ -1,0 +1,128 @@
+input ApplicationPermissionsInput {
+  permissionType: AppPermissionType
+  applications: AppFilterInput
+  services: ServicePermissionFilterInput
+  environments: EnvPermissionFilterInput
+  workflows: WorkflowPermissionFilterInput
+  deployments: DeploymentPermissionFilterInput
+  pipelines: PipelinePermissionFilterInput
+  provisioners: ProvisionerPermissionFilterInput
+  actions: [Actions]
+}
+
+type ApplicationPermissions {
+  permissionType: AppPermissionType
+  applications: AppFilter
+  actions: [Actions]
+  services: ServicePermissionFilter
+  environments: EnvPermissionFilter
+  workflows: WorkflowPermissionFilter
+  deployments: DeploymentPermissionFilter
+  pipelines: PipelinePermissionFilter
+  provisioners: ProvisionerPermissionFilter
+}
+
+enum AppPermissionType {
+  ALL
+  ENV
+  SERVICE
+  WORKFLOW
+  PIPELINE
+  DEPLOYMENT
+  PROVISIONER
+}
+
+enum FilterType {
+  ALL
+}
+
+input AppFilterInput {
+  filterType: FilterType
+  appIds: [String]
+}
+
+type AppFilter {
+  filterType: FilterType
+  appIds: [String]
+}
+
+input ServicePermissionFilterInput {
+  filterType: FilterType
+  serviceIds: [String]
+}
+
+type ServicePermissionFilter {
+  filterType: FilterType
+  serviceIds: [String]
+}
+
+enum EnvFilterType {
+  PRODUCTION_ENVIRONMENTS
+  NON_PRODUCTION_ENVIRONMENTS
+}
+
+type EnvPermissionFilter {
+  filterTypes: [EnvFilterType]
+  envIds: [String]
+}
+
+input EnvPermissionFilterInput {
+  filterTypes: [EnvFilterType]
+  envIds: [String]
+}
+
+enum WorkflowPermissionFilterType {
+  PRODUCTION_WORKFLOWS
+  NON_PRODUCTION_WORKFLOWS
+  WORKFLOW_TEMPLATES
+}
+
+type WorkflowPermissionFilter {
+  filterTypes: [WorkflowPermissionFilterType]
+  envIds: [String]
+}
+
+input WorkflowPermissionFilterInput {
+  filterTypes: [WorkflowPermissionFilterType]
+  envIds: [String]
+}
+
+enum DeploymentPermissionFilterType {
+  PRODUCTION_ENVIRONMENTS
+  NON_PRODUCTION_ENVIRONMENTS
+}
+
+input DeploymentPermissionFilterInput {
+  filterTypes: [DeploymentPermissionFilterType]
+  envIds: [String]
+}
+
+type DeploymentPermissionFilter {
+  filterTypes: [DeploymentPermissionFilterType]
+  envIds: [String]
+}
+
+enum PipelinePermissionFilterType {
+  PRODUCTION_PIPELINES
+  NON_PRODUCTION_PIPELINES
+}
+
+input PipelinePermissionFilterInput {
+  filterTypes: [PipelinePermissionFilterType]
+  envIds: [String]
+}
+
+type PipelinePermissionFilter {
+  filterTypes: [PipelinePermissionFilterType]
+  envIds: [String]
+}
+
+input ProvisionerPermissionFilterInput {
+  filterType: FilterType
+  provisionerIds: [String]
+}
+
+type ProvisionerPermissionFilter {
+  filterType: FilterType
+  provisionerIds: [String]
+}

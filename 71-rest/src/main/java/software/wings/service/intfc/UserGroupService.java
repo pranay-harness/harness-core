@@ -6,12 +6,15 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
+import software.wings.beans.security.AccountPermissions;
+import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOType;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
@@ -97,6 +100,13 @@ public interface UserGroupService extends OwnedByAccount {
    */
   UserGroup removeMembers(UserGroup userGroup, Collection<User> members, boolean sendNotification);
 
+  /**
+   * Update UserGroup Permissions.
+   *
+   * @return the userGroup
+   */
+  UserGroup setUserGroupPermissions(
+      String accountId, String userGroupId, AccountPermissions accountPermissions, Set<AppPermission> appPermission);
   /**
    * Update Overview.
    *
