@@ -12,7 +12,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
@@ -35,13 +34,10 @@ public class SalesforceApiCheck {
   private static final String INSTANCE_URL = "instance_url";
   private static final String ACCESS_TOKEN = "access_token";
   private static final String AUTHORIZATION = "Authorization";
-  private static final int CONNECTION_TIMEOUT = 10000;
-  private static final int CONNECTION_REQUEST_TIMEOUT = 10000;
   private static final int MAX_RETRIES = 3;
 
   Header prettyPrintHeader = new BasicHeader("X-PrettyPrint", "1");
   HttpClient httpClient;
-  RequestConfig requestConfig;
   SalesforceConfig salesforceConfig;
   String loginUrl;
 
@@ -49,10 +45,6 @@ public class SalesforceApiCheck {
   public SalesforceApiCheck(SalesforceConfig salesforceConfig) {
     this.salesforceConfig = salesforceConfig;
     this.loginUrl = getLoginUrl();
-    this.requestConfig = RequestConfig.custom()
-                             .setConnectTimeout(CONNECTION_TIMEOUT)
-                             .setConnectionRequestTimeout(CONNECTION_REQUEST_TIMEOUT)
-                             .build();
     this.httpClient = HttpClientBuilder.create().build();
   }
 
@@ -72,30 +64,33 @@ public class SalesforceApiCheck {
 
   private String login() throws LoginException {
     HttpPost httpPost = new HttpPost(loginUrl);
-    httpPost.setConfig(requestConfig);
     HttpResponse response = null;
     try {
-      response = httpClient.execute(httpPost);
-    } catch (ClientProtocolException cpe) {
-      logger.error("Error when connecting to Salesforce with userName={}", salesforceConfig.getUserName());
-    } catch (IOException ioe) {
-      logger.error("Error in connecting to Salesforce with userName={}", salesforceConfig.getUserName());
-    }
+      try {
+        response = httpClient.execute(httpPost);
+      } catch (ClientProtocolException cpe) {
+        logger.error("Error when connecting to Salesforce with userName={}", salesforceConfig.getUserName(), cpe);
+      } catch (IOException ioe) {
+        logger.error("Error in connecting to Salesforce with userName={}", salesforceConfig.getUserName(), ioe);
+      }
 
-    if (response == null) {
-      logger.error("Login Response is null with given credentials in Salesforce");
-      return null;
+      if (response == null) {
+        logger.error("Login Response is null with given credentials in Salesforce");
+        return null;
+      }
+      if (response.getStatusLine() != null && response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+        logger.info("Successfully logged in to Salesforce, with userName={}", salesforceConfig.getUserName());
+      }
+      String responseString = null;
+      try {
+        responseString = EntityUtils.toString(response.getEntity());
+      } catch (IOException ioe) {
+        logger.error("Could not convert Http response to EntityUtils String, where response is {}", response, ioe);
+      }
+      return responseString;
+    } finally {
+      httpPost.releaseConnection();
     }
-    if (response.getStatusLine() != null && response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-      logger.info("Successfully logged in to Salesforce, with userName={}", salesforceConfig.getUserName());
-    }
-    String responseString = null;
-    try {
-      responseString = EntityUtils.toString(response.getEntity());
-    } catch (IOException ioe) {
-      logger.error("Could not convert Http response to EntityUtils String, where response is {}", response);
-    }
-    return responseString;
   }
 
   private String getLoginResponse() {
@@ -103,16 +98,15 @@ public class SalesforceApiCheck {
     try {
       loginResponse = login();
     } catch (LoginException le) {
-      logger.error("Could not login to Salesforce with given userName={}", salesforceConfig.getUserName());
+      logger.error("Could not login to Salesforce with given userName={}", salesforceConfig.getUserName(), le);
     }
     return loginResponse;
   }
 
-  private HttpResponse querySalesforce(String queryString) {
+  private String querySalesforce(String queryString) {
     HttpResponse response = null;
-    String uri = null;
     int count = 0;
-    String loginResponseString = null;
+    String loginResponseString;
 
     while (true) {
       loginResponseString = getLoginResponse();
@@ -125,69 +119,82 @@ public class SalesforceApiCheck {
       }
     }
 
+    JSONObject json = new JSONObject(loginResponseString);
+    String baseUri = json.getString(INSTANCE_URL) + REST_ENDPOINT + "/v" + salesforceConfig.getApiVersion() + "/query";
+
+    String uri = new URIBuilder().setPath(baseUri).setCustomQuery(queryString).toString();
+    HttpGet httpGet = new HttpGet(uri);
+    Header oauthHeader = new BasicHeader(AUTHORIZATION, "OAuth " + json.getString(ACCESS_TOKEN));
+
+    httpGet.addHeader(oauthHeader);
+    httpGet.addHeader(prettyPrintHeader);
+
     try {
-      JSONObject json = new JSONObject(loginResponseString);
-      String baseUri = json.getString(INSTANCE_URL) + REST_ENDPOINT + "/v" + salesforceConfig.getApiVersion();
+      try {
+        response = httpClient.execute(httpGet);
 
-      uri = new URIBuilder().setPath(baseUri).setCustomQuery(queryString).toString();
-      HttpGet httpGet = new HttpGet(uri);
-      httpGet.setConfig(requestConfig);
-      Header oauthHeader = new BasicHeader(AUTHORIZATION, "OAuth " + json.getString(ACCESS_TOKEN));
+        int statusCode = response.getStatusLine().getStatusCode();
 
-      httpGet.addHeader(oauthHeader);
-      httpGet.addHeader(prettyPrintHeader);
-
-      response = httpClient.execute(httpGet);
-
-      int statusCode = response.getStatusLine().getStatusCode();
-
-      if (statusCode == 200) {
-        logger.info("Successfully queried Salesforce with query={}", queryString);
-        return response;
+        if (statusCode == 200) {
+          logger.info("Successfully queried Salesforce with query={}", queryString);
+        }
+      } catch (JSONException je) {
+        logger.error("Error in Jsonifying Http Response {}", loginResponseString, je);
+      } catch (IOException ioe) {
+        logger.error("Could not connect to Salesforce with URI {}", uri, ioe);
       }
-    } catch (JSONException je) {
-      logger.error("Error in Jsonifying Http Response {}", loginResponseString);
-    } catch (IOException ioe) {
-      logger.error("Could not connect to Salesforce with URI {}", uri);
+      String responseString = null;
+      try {
+        if (response != null) {
+          responseString = EntityUtils.toString(response.getEntity());
+        }
+      } catch (IOException ioe) {
+        logger.error("Error while converting response={} to String", response, ioe);
+      }
+      return responseString;
+    } finally {
+      httpGet.releaseConnection();
     }
-    return response;
   }
 
-  private boolean isFoundInSalesforce(String queryString) {
+  private String retryQueryResponse(String queryString) {
     int count = 0;
-    HttpResponse httpResponse = null;
+    String responseString;
 
     while (true) {
-      httpResponse = querySalesforce(queryString);
+      responseString = querySalesforce(queryString);
       count++;
-      if (httpResponse != null && httpResponse.getStatusLine() != null
-          && httpResponse.getStatusLine().getStatusCode() == 200) {
-        break;
+      if (responseString != null) {
+        return responseString;
       }
       if (count >= MAX_RETRIES) {
         logger.error("Response from Salesforce is null");
-        return false;
+        return null;
       }
     }
+  }
 
+  private boolean isFoundInSalesforce(String queryString) {
+    String responseString = retryQueryResponse(queryString);
+    if (responseString != null && responseString.length() == 0) {
+      return false;
+    }
+
+    JSONObject jsonObject = new JSONObject(responseString);
     try {
-      String responseString = EntityUtils.toString(httpResponse.getEntity());
-      try {
-        JSONObject jsonObject = new JSONObject(responseString);
-        if (jsonObject.has("totalSize")) {
-          if ((Integer) jsonObject.get("totalSize") > 0) {
-            logger.info("The account has been found in Salesforce, with response={}", jsonObject);
-            return true;
-          } else {
-            logger.info("The account was not found in Salesforce when sending group calls to Segment");
-            return false;
-          }
+      if (jsonObject.has("totalSize")) {
+        if ((Integer) jsonObject.get("totalSize") > 0) {
+          logger.info("The account has been found in Salesforce, with response={}", jsonObject);
+          return true;
+        } else {
+          logger.info("The account was not found in Salesforce when sending group calls to Segment");
+          return false;
         }
-      } catch (JSONException je) {
-        logger.error("Error while jsonifying responseString={}", responseString);
+      } else {
+        logger.warn("Json object doesn't have field 'totalSize', response={}", jsonObject);
       }
-    } catch (IOException ioe) {
-      logger.error("Error while converting response={} to String", httpResponse);
+    } catch (JSONException je) {
+      logger.error("Error while jsonifying responseString={}", responseString, je);
     }
     return false;
   }
@@ -201,7 +208,6 @@ public class SalesforceApiCheck {
   }
 
   private String createSOQLQuery(Account account) {
-    return "/query?q="
-        + String.format("select+id+,+name+from+account+where+Harness_Account_ID__c='%1$s'", account.getUuid());
+    return "q=" + String.format("select+id+,+name+from+account+where+Harness_Account_ID__c='%1$s'", account.getUuid());
   }
 }
