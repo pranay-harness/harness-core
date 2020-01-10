@@ -47,7 +47,7 @@ public class ChangeSetController {
         return apiKeyChangeSetBuilder.build();
       default:
         throw new GraphQLException(
-            String.format("Unsupported changeSet type found for changeSetId: %d", audit.getUuid()),
+            String.format("Unsupported changeSet type found for changeSetId: %s", audit.getUuid()),
             WingsException.USER_SRE);
     }
   }
@@ -66,7 +66,7 @@ public class ChangeSetController {
       return AuditSource.USER;
     } else {
       throw new GraphQLException(
-          String.format("No valid source found for changeSetId: %d", audit.getUuid()), WingsException.USER_SRE);
+          String.format("No valid source found for changeSetId: %s", audit.getUuid()), WingsException.USER_SRE);
     }
   }
 
