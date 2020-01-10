@@ -69,8 +69,6 @@ public class SalesforceApiCheckTest extends WingsBaseTest {
                                       .setSocketTimeout(SOCKET_TIMEOUT)
                                       .build();
 
-    FieldUtils.writeField(salesforceApiCheck, "requestConfig", requestConfig, true);
-
     httpPostResponse = Mockito.mock(HttpResponse.class);
     httpGetResponse = Mockito.mock(HttpResponse.class);
     statusLine = Mockito.mock(StatusLine.class);
