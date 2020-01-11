@@ -15,7 +15,7 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
-import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
 import software.wings.settings.SettingValue;
 
 import java.util.List;

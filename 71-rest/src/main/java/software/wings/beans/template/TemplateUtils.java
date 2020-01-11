@@ -9,7 +9,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.serializer.KryoUtils;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact;
-import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 
 import java.util.HashMap;

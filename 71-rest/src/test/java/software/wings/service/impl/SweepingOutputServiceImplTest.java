@@ -21,8 +21,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
-import software.wings.service.intfc.SweepingOutputService;
-import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 
 public class SweepingOutputServiceImplTest extends WingsBaseTest {
   private static final String SWEEPING_OUTPUT_NAME = "SWEEPING_OUTPUT_NAME";

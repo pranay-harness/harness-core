@@ -26,8 +26,8 @@ import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
 import software.wings.beans.infrastructure.Host;
-import software.wings.service.intfc.SweepingOutputService;
-import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 
 import java.util.HashMap;
 import java.util.Map;

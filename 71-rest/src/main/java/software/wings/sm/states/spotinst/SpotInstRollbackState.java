@@ -18,8 +18,8 @@ import software.wings.beans.InstanceUnitType;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
 import software.wings.service.impl.spotinst.SpotinstAllPhaseRollbackData;
-import software.wings.service.intfc.SweepingOutputService;
-import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 

@@ -20,7 +20,7 @@ import software.wings.beans.VariableType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 
 import java.util.ArrayList;
 import java.util.HashMap;

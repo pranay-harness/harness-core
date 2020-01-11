@@ -144,7 +144,7 @@ public class HttpStateTest extends WingsBaseTest {
     stateExecutionMap.put("healthCheck1", HttpStateExecutionData.builder().build());
     stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
 
-    when(workflowStandardParams.getApp()).thenReturn(anApplication().uuid(APP_ID).name(APP_NAME).build());
+    when(workflowStandardParams.fetchRequiredApp()).thenReturn(anApplication().uuid(APP_ID).name(APP_NAME).build());
     when(workflowStandardParams.getEnv())
         .thenReturn(anEnvironment().uuid(ENV_ID).name(ENV_NAME).environmentType(EnvironmentType.NON_PROD).build());
     when(workflowStandardParams.getAppId()).thenReturn(APP_ID);

@@ -70,8 +70,10 @@ public class JenkinsStateTest extends CategoryTest {
   public void setUp() throws Exception {
     jenkinsState.setJenkinsConfigId(SETTING_ID);
     jenkinsState.setJobName("testjob");
-    when(executionContext.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
+    when(executionContext.fetchRequiredApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
+    when(executionContext.getAppId()).thenReturn(APP_ID);
     when(executionContext.getEnv()).thenReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).build());
+    when(executionContext.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).build());
     when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);
     when(executionContext.getGlobalSettingValue(ACCOUNT_ID, SETTING_ID))
         .thenReturn(JenkinsConfig.builder()

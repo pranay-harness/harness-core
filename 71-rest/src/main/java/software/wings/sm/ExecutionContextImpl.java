@@ -98,11 +98,11 @@ import software.wings.service.intfc.ServiceTemplateService.EncryptedFieldCompute
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.SweepingOutputService;
-import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
-import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContextImpl.ServiceVariables.ServiceVariablesBuilder;
 
