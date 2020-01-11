@@ -9,8 +9,8 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import software.wings.exception.SweepingOutputException;
-import software.wings.service.intfc.SweepingOutputService;
-import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 
 @Value
 @Builder

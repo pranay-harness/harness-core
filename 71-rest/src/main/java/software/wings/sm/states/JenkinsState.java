@@ -53,8 +53,8 @@ import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -220,7 +220,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
         ? null
         : workflowStandardParams.getEnv().getUuid();
 
-    String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
+    String accountId = ((ExecutionContextImpl) context).fetchRequiredApp().getAccountId();
 
     JenkinsConfig jenkinsConfig = (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId);
     if (jenkinsConfig == null) {
@@ -294,9 +294,9 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
       JenkinsTaskParams jenkinsTaskParams, String envId, String infrastructureMappingId) {
     return DelegateTask.builder()
         .async(true)
-        .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
+        .accountId(((ExecutionContextImpl) context).fetchRequiredApp().getAccountId())
         .waitId(activityId)
-        .appId(((ExecutionContextImpl) context).getApp().getAppId())
+        .appId(((ExecutionContextImpl) context).fetchRequiredApp().getAppId())
         .data(TaskData.builder()
                   .taskType(getTaskType().name())
                   .parameters(new Object[] {jenkinsTaskParams})
@@ -322,7 +322,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
 
     String infrastructureMappingId = context.fetchInfraMappingId();
 
-    String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
+    String accountId = ((ExecutionContextImpl) context).fetchRequiredApp().getAccountId();
     JenkinsConfig jenkinsConfig = (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId);
     if (jenkinsConfig == null) {
       logger.warn("JenkinsConfig Id {} does not exist. It might have been deleted", jenkinsConfigId);
@@ -399,8 +399,8 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     if (isNotEmpty(jenkinsExecutionResponse.getSubTaskType().name())
         && jenkinsExecutionResponse.getSubTaskType().name().equals(JenkinsSubTaskType.START_TASK.name())) {
       if (SUCCESS != jenkinsExecutionResponse.getExecutionStatus()) {
-        updateActivityStatus(jenkinsExecutionResponse.getActivityId(),
-            ((ExecutionContextImpl) context).getApp().getUuid(), jenkinsExecutionResponse.getExecutionStatus());
+        updateActivityStatus(jenkinsExecutionResponse.getActivityId(), ((ExecutionContextImpl) context).getAppId(),
+            jenkinsExecutionResponse.getExecutionStatus());
         return ExecutionResponse.builder()
             .executionStatus(jenkinsExecutionResponse.getExecutionStatus())
             .stateExecutionData(jenkinsExecutionData)
@@ -409,15 +409,15 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
       }
       if (isNotEmpty(jenkinsExecutionResponse.getQueuedBuildUrl())) {
         // Set time taken for Start Task
-        updateActivityStatus(
-            jenkinsExecutionResponse.getActivityId(), ((ExecutionContextImpl) context).getApp().getUuid(), RUNNING);
+        updateActivityStatus(jenkinsExecutionResponse.getActivityId(),
+            ((ExecutionContextImpl) context).fetchRequiredApp().getUuid(), RUNNING);
         jenkinsExecutionResponse.setTimeElapsed(System.currentTimeMillis() - jenkinsExecutionData.getStartTs());
         return startJenkinsPollTask(context, response);
       } else {
         // Can not start POLL_TASK
         logger.error("Jenkins Queued Build URL is empty and could not start POLL_TASK", USER);
-        updateActivityStatus(
-            jenkinsExecutionResponse.getActivityId(), ((ExecutionContextImpl) context).getApp().getUuid(), FAILED);
+        updateActivityStatus(jenkinsExecutionResponse.getActivityId(),
+            ((ExecutionContextImpl) context).fetchRequiredApp().getUuid(), FAILED);
         return ExecutionResponse.builder()
             .executionStatus(FAILED)
             .stateExecutionData(jenkinsExecutionData)
@@ -426,7 +426,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
       }
     } else {
       updateActivityStatus(jenkinsExecutionResponse.getActivityId(),
-          ((ExecutionContextImpl) context).getApp().getUuid(), jenkinsExecutionResponse.getExecutionStatus());
+          ((ExecutionContextImpl) context).fetchRequiredApp().getUuid(), jenkinsExecutionResponse.getExecutionStatus());
     }
 
     handleSweepingOutput(sweepingOutputService, context, jenkinsExecutionData);
@@ -472,8 +472,8 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
   }
 
   protected String createActivity(ExecutionContext executionContext) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
-    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    Application app = ((ExecutionContextImpl) executionContext).fetchRequiredApp();
+    Environment env = ((ExecutionContextImpl) executionContext).fetchRequiredEnvironment();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);

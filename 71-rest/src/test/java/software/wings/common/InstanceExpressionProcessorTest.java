@@ -66,7 +66,8 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
@@ -235,8 +236,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(context.getEnv()).thenReturn(env);
     when(context.getAccountId()).thenReturn(ACCOUNT_ID);
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
-    when(context.prepareSweepingOutputInquiryBuilder())
-        .thenReturn(SweepingOutputService.SweepingOutputInquiry.builder());
+    when(context.prepareSweepingOutputInquiryBuilder()).thenReturn(SweepingOutputInquiry.builder());
 
     String instance1 = generateUuid();
     String instance2 = generateUuid();
@@ -347,8 +347,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(context.getEnv()).thenReturn(env);
     when(context.getAccountId()).thenReturn(ACCOUNT_ID);
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
-    when(context.prepareSweepingOutputInquiryBuilder())
-        .thenReturn(SweepingOutputService.SweepingOutputInquiry.builder());
+    when(context.prepareSweepingOutputInquiryBuilder()).thenReturn(SweepingOutputInquiry.builder());
 
     String instance1 = generateUuid();
     String instance2 = generateUuid();

@@ -27,6 +27,7 @@ import software.wings.sm.WorkflowStandardParams;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -52,10 +53,11 @@ public class ActivityHelperService {
 
   public ActivityBuilder getActivityBuilder(ExecutionContext executionContext, Type activityType, String commandName,
       String commandUnitType, List<CommandUnit> commandUnits, Artifact artifact) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
+    Application app = ((ExecutionContextImpl) executionContext).fetchRequiredApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
-    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+    WorkflowStandardParams workflowStandardParams =
+        Objects.requireNonNull(executionContext.getContextElement(ContextElementType.STANDARD));
 
     ActivityBuilder activityBuilder =
         Activity.builder()

@@ -63,8 +63,8 @@ import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -214,7 +214,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     final ExecutionResponse executionResponse = executionResponseBuilder.build();
 
     updateActivityStatus(
-        activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionResponse.getExecutionStatus());
+        activityId, ((ExecutionContextImpl) context).getAppId(), executionResponse.getExecutionStatus());
 
     if (saveSweepingOutputToContext) {
       handleSweepingOutput(sweepingOutputService, context,

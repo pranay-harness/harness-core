@@ -30,8 +30,8 @@ import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -106,7 +106,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
     ServiceNowConfig config = getSnowConfig(serviceNowCreateUpdateParams.getSnowConnectorId());
     renderExpressions(context, serviceNowCreateUpdateParams);
 
-    String accountId = executionContext.getApp().getAccountId();
+    String accountId = executionContext.fetchRequiredApp().getAccountId();
     ServiceNowTaskParameters serviceNowTaskParameters;
     if (serviceNowCreateUpdateParams.getAction() == ServiceNowAction.IMPORT_SET) {
       if (!isJSONValid(serviceNowCreateUpdateParams.getJsonBody())) {
@@ -143,7 +143,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
                                     .async(true)
                                     .accountId(accountId)
                                     .waitId(activityId)
-                                    .appId(executionContext.getApp().getAppId())
+                                    .appId(executionContext.fetchRequiredApp().getAppId())
                                     .data(TaskData.builder()
                                               .taskType(SERVICENOW_ASYNC.name())
                                               .parameters(new Object[] {serviceNowTaskParameters})

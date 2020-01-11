@@ -18,7 +18,7 @@ import io.harness.serializer.KryoUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
-import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 
 public class SweepingOutputServiceTest extends WingsBaseTest {
   @Inject SweepingOutputService sweepingOutputService;

@@ -8,6 +8,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
+import io.harness.context.ContextElementType;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -22,6 +23,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.simpleframework.xml.Transient;
+import software.wings.api.PhaseElement;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
 import java.time.OffsetDateTime;
@@ -31,6 +33,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Represents State Machine Instance.
@@ -127,6 +130,21 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
 
   public StateExecutionData fetchStateExecutionData() {
     return stateExecutionMap.get(displayName);
+  }
+
+  @Nullable
+  public PhaseElement fetchPhaseElement() {
+    PhaseElement phaseElement =
+        (PhaseElement) this.getContextElements()
+            .stream()
+            .filter(
+                ce -> ContextElementType.PARAM == ce.getElementType() && PhaseElement.PHASE_PARAM.equals(ce.getName()))
+            .findFirst()
+            .orElse(null);
+    if (phaseElement == null) {
+      return null;
+    }
+    return phaseElement;
   }
 
   /**

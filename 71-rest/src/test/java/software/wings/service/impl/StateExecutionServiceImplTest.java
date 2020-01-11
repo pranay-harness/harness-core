@@ -28,7 +28,8 @@ import software.wings.api.SelectNodeStepExecutionSummary;
 import software.wings.beans.ServiceInstance;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionInstance;
@@ -241,7 +242,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
 
     doReturn(phaseExecutionSummary)
         .when(sweepingOutputService)
-        .findSweepingOutput(SweepingOutputServiceImpl.SweepingOutputInquiry.builder()
+        .findSweepingOutput(SweepingOutputInquiry.builder()
                                 .appId(APP_ID)
                                 .name(PhaseExecutionSummary.SWEEPING_OUTPUT_NAME + phaseName)
                                 .workflowExecutionId(workflowExecutionId)

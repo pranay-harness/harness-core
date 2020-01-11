@@ -25,8 +25,9 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.StateExecutionService;
-import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiryController;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionData;
@@ -265,25 +266,15 @@ public class StateExecutionServiceImpl implements StateExecutionService {
   @VisibleForTesting
   PhaseExecutionSummary getPhaseExecutionSummarySweepingOutput(@NotNull StateExecutionInstance stateExecutionInstance) {
     return (PhaseExecutionSummary) sweepingOutputService.findSweepingOutput(
-        SweepingOutputService.SweepingOutputInquiry.builder()
-            .appId(stateExecutionInstance.getAppId())
-            .name(PhaseExecutionSummary.SWEEPING_OUTPUT_NAME + stateExecutionInstance.getDisplayName().trim())
-            .workflowExecutionId(stateExecutionInstance.getExecutionUuid())
-            .stateExecutionId(stateExecutionInstance.getUuid())
-            .phaseExecutionId(getPhaseExecutionId(stateExecutionInstance))
-            .build());
+        SweepingOutputInquiryController.obtainFromStateExecutionInstance(
+            stateExecutionInstance, PhaseExecutionSummary.SWEEPING_OUTPUT_NAME));
   }
 
   @VisibleForTesting
   PhaseExecutionData getPhaseExecutionDataSweepingOutput(@NotNull StateExecutionInstance stateExecutionInstance) {
     return (PhaseExecutionData) sweepingOutputService.findSweepingOutput(
-        SweepingOutputService.SweepingOutputInquiry.builder()
-            .appId(stateExecutionInstance.getAppId())
-            .name(PhaseExecutionData.SWEEPING_OUTPUT_NAME + stateExecutionInstance.getDisplayName().trim())
-            .workflowExecutionId(stateExecutionInstance.getExecutionUuid())
-            .stateExecutionId(stateExecutionInstance.getUuid())
-            .phaseExecutionId(getPhaseExecutionId(stateExecutionInstance))
-            .build());
+        SweepingOutputInquiryController.obtainFromStateExecutionInstance(
+            stateExecutionInstance, PhaseExecutionData.SWEEPING_OUTPUT_NAME));
   }
 
   @Nullable

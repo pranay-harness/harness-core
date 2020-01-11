@@ -4,8 +4,8 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.expression.LateBindingValue;
 import io.harness.serializer.KryoUtils;
 import lombok.Builder;
-import software.wings.service.intfc.SweepingOutputService;
-import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 
 @Builder
 public class SweepingOutputValue implements LateBindingValue {

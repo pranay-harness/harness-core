@@ -71,8 +71,8 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionContext;
@@ -111,6 +111,8 @@ public class ShellScriptStateTest extends CategoryTest {
     shellScriptState.setSweepingOutputName("test");
     shellScriptState.setSweepingOutputScope(PIPELINE);
     when(executionContext.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
+    when(executionContext.fetchRequiredApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
+    when(executionContext.getAppId()).thenReturn(APP_ID);
     when(executionContext.getEnv()).thenReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).build());
     HostConnectionAttributes hostConnectionAttributes =
         aHostConnectionAttributes()

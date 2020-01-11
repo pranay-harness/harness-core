@@ -19,7 +19,8 @@ import org.mongodb.morphia.query.CriteriaContainerImpl;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 
 import javax.validation.executable.ValidateOnExecution;
 
@@ -77,6 +78,11 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
                                                     .filter(SweepingOutputKeys.appId, sweepingOutputInquiry.getAppId())
                                                     .filter(SweepingOutputKeys.name, sweepingOutputInquiry.getName());
 
+    addFilters(sweepingOutputInquiry, query);
+    return query.get();
+  }
+
+  private void addFilters(SweepingOutputInquiry sweepingOutputInquiry, Query<SweepingOutputInstance> query) {
     final CriteriaContainerImpl workflowCriteria =
         query.criteria(SweepingOutputKeys.workflowExecutionIds).equal(sweepingOutputInquiry.getWorkflowExecutionId());
     final CriteriaContainerImpl phaseCriteria =
@@ -91,7 +97,6 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
     } else {
       query.or(workflowCriteria, phaseCriteria, stateCriteria);
     }
-    return query.get();
   }
 
   public static SweepingOutputInstanceBuilder prepareSweepingOutputBuilder(String appId, String pipelineExecutionId,

@@ -49,9 +49,9 @@ import software.wings.beans.VariableType;
 import software.wings.beans.template.TemplateUtils;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.ActivityHelperService;
-import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -350,9 +350,9 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
     final DelegateTask delegateTask = DelegateTask.builder()
                                           .async(true)
-                                          .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                          .accountId(((ExecutionContextImpl) context).fetchRequiredApp().getAccountId())
                                           .waitId(activityId)
-                                          .appId(((ExecutionContextImpl) context).getApp().getAppId())
+                                          .appId(((ExecutionContextImpl) context).fetchRequiredApp().getAppId())
                                           .data(TaskData.builder()
                                                     .taskType(getTaskType().name())
                                                     .parameters(new Object[] {httpTaskParameters})
@@ -431,8 +431,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
     final ExecutionResponse executionResponse = executionResponseBuilder.build();
 
-    updateActivityStatus(
-        activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionResponse.getExecutionStatus());
+    updateActivityStatus(activityId, ((ExecutionContextImpl) context).fetchRequiredApp().getUuid(),
+        executionResponse.getExecutionStatus());
 
     return executionResponse;
   }

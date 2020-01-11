@@ -40,8 +40,8 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
