@@ -1,8 +1,9 @@
 extend type Query {
-  #Get a list of audits. This returns paginated data.
+  #Get a list of changeSets.This returns paginated data.
   audits(filters: [ChangeSetFilter], limit: Int!, offset: Int): ChangeSetConnection
     @dataFetcher(name: changeSetConnection)
-  #Get yaml diff for an audit (and a specific resource within the audit)
+  #Get difference in terms of YAML for a changeSet
+  #(and a specific resource within the changeSet).This returns paginated data.
   auditChangeContent(filters: [ChangeContentFilter], limit: Int!, offset: Int): ChangeContentConnection
     @dataFetcher(name: changeContentConnection)
 }
@@ -12,7 +13,9 @@ type ChangeContentList {
 }
 
 input ChangeContentFilter {
+  #Unique ID of a changeSet
   changeSetId: String!
+  #Unique ID of dependent or child resource, e.g.Environment, Services, etc.
   resourceId: String
 }
 
@@ -27,71 +30,124 @@ type ChangeContentConnection {
 }
 
 interface ChangeSet {
+  #Unique ID of a changeSet
   id: String
+  #List of all changeDetails
   changes: [ChangeDetails]
+  #Timestamp when changeSet was triggered
   triggeredAt: DateTime
+  #HTTP request that triggered the changeSet
   request: RequestInfo
+  #Failure message
   failureStatusMsg: String
 }
 
+#If changeSet got triggered by User action
 type UserChangeSet implements ChangeSet {
+  #Unique ID of a changeSet
   id: String
+  #List of all changeDetails
   changes: [ChangeDetails]
+  #Timestamp when changeSet was triggered
   triggeredAt: DateTime
+  #HTTP request that triggered the changeSet
   request: RequestInfo
+  #Failure message
   failureStatusMsg: String
+  #User who triggered the changeSet
   triggeredBy: User
 }
 
+#If changeSet got triggered by Git action
 type GitChangeSet implements ChangeSet {
+  #Unique ID of a changeSet
   id: String
+  #List of all changeDetails
   changes: [ChangeDetails]
+  #Timestamp when changeSet was triggered
   triggeredAt: DateTime
+  #HTTP request that triggered the changeSet
   request: RequestInfo
+  #Failure message
   failureStatusMsg: String
+  #Git author who triggered the changeSet
   author: String
+  #Git commit ID that triggered the changeSet
   gitCommitId: String
+  #Git repository URL that triggered the changeSet
   repoUrl: String
 }
 
+#If changeSet got triggered by GraphQL mutation(through API key)
 type ApiKeyChangeSet implements ChangeSet {
+  #Unique ID of a changeSet
   id: String
+  #List of all changeDetails
   changes: [ChangeDetails]
+  #Timestamp when changeSet was triggered
   triggeredAt: DateTime
+  #HTTP request that triggered the changeSet
   request: RequestInfo
+  #Failure message
   failureStatusMsg: String
+  #API key id
   apiKeyId: String
 }
 
 type RequestInfo {
+  #Request URL
   url: String
+  #Resource endpoint
   resourcePath: String
+  #HTTP Request method
   requestMethod: String
+  #Response status code
   responseStatusCode: Number
+  #IP Address of request source
   remoteIpAddress: String
 }
 
+#Trigger of changeSet may have several changes in child or dependent resources,
+#each of them is captured as changeDetails instance.
 type ChangeDetails {
+  #Unique ID of dependent or child resource, e.g., Environment, Services, etc.
   resourceId: String
+  #Resource type
   resourceType: String
+  #Resource name
   resourceName: String
+  #Create / Update / Delete operation
   operationType: String
+  #Indicator of successful processing of the event that caused this changeSet
   failure: Boolean
+  #Application ID
   appId: String
+  #Application name
   appName: String
+  #Unique ID of parent resource, e.g., Application
   parentResourceId: String
+  #Parent resource name
   parentResourceName: String
+  #Parent resource type
   parentResourceType: String
+  #Create / Update / Delete operation on parent resource
   parentResourceOperation: String
+  #Timestamp of changeDetails creation
   createdAt: DateTime
 }
 
 type ChangeContent {
+  #Unique ID of a changeSet
   changeSetId: String
+  #Unique ID of a resource, e.g.Application, Environment
   resourceId: String
+  #Old YAML content before the changeSet got triggered
   oldYaml: String
+  #Old YAML path before the changeSet got triggered
   oldYamlPath: String
+  #New YAML content after the changeSet got triggered
   newYaml: String
+  #New YAML path after the changeSet got triggered
   newYamlPath: String
 }
 
