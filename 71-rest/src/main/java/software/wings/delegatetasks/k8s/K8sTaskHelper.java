@@ -23,6 +23,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogColor.Gray;
@@ -128,8 +130,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Singleton
@@ -372,13 +374,24 @@ public class K8sTaskHelper {
     final String eventInfoFormat = "%-7s: %-" + maxResourceNameLength + "s   %s";
     final String statusFormat = "%n%-7s: %-" + maxResourceNameLength + "s   %s";
 
-    GetCommand getEventsCommand =
-        client.get().resources("events").allNamespaces(true).output(eventWithNamespaceOutputFormat).watchOnly(true);
-    executionLogCallback.saveExecutionLog(GetCommand.getPrintableCommand(getEventsCommand.command()) + "\n");
+    Set<String> namespaces = resourceIds.stream().map(KubernetesResourceId::getNamespace).collect(toSet());
+    namespaces.add(namespace);
+    List<GetCommand> getEventCommands = namespaces.stream()
+                                            .map(ns
+                                                -> client.get()
+                                                       .resources("events")
+                                                       .namespace(ns)
+                                                       .output(eventWithNamespaceOutputFormat)
+                                                       .watchOnly(true))
+                                            .collect(toList());
+
+    for (GetCommand cmd : getEventCommands) {
+      executionLogCallback.saveExecutionLog(GetCommand.getPrintableCommand(cmd.command()) + "\n");
+    }
 
     boolean success = false;
 
-    StartedProcess eventWatchProcess = null;
+    List<StartedProcess> eventWatchProcesses = new ArrayList<>();
     try (LogOutputStream watchInfoStream =
              new LogOutputStream() {
                @Override
@@ -392,10 +405,9 @@ public class K8sTaskHelper {
                                  && line.contains(kubernetesResourceId.getName()))
                          .findFirst();
 
-                 if (filteredResourceId.isPresent()) {
-                   executionLogCallback.saveExecutionLog(
-                       format(eventInfoFormat, "Event", filteredResourceId.get().getName(), line), INFO);
-                 }
+                 filteredResourceId.ifPresent(kubernetesResourceId
+                     -> executionLogCallback.saveExecutionLog(
+                         format(eventInfoFormat, "Event", kubernetesResourceId.getName(), line), INFO));
                }
              };
          LogOutputStream watchErrorStream =
@@ -405,8 +417,10 @@ public class K8sTaskHelper {
                  executionLogCallback.saveExecutionLog(format(eventErrorFormat, "Event", line), ERROR);
                }
              }) {
-      eventWatchProcess = getEventsCommand.executeInBackground(
-          k8sDelegateTaskParams.getWorkingDirectory(), watchInfoStream, watchErrorStream);
+      for (GetCommand getEventsCommand : getEventCommands) {
+        eventWatchProcesses.add(getEventsCommand.executeInBackground(
+            k8sDelegateTaskParams.getWorkingDirectory(), watchInfoStream, watchErrorStream));
+      }
 
       for (KubernetesResourceId kubernetesResourceId : resourceIds) {
         if (Kind.Job.name().equals(kubernetesResourceId.getKind())) {
@@ -428,12 +442,11 @@ public class K8sTaskHelper {
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
       return false;
     } finally {
-      if (eventWatchProcess != null) {
+      for (StartedProcess eventWatchProcess : eventWatchProcesses) {
         eventWatchProcess.getProcess().destroyForcibly().waitFor();
       }
       if (success) {
         executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
-
       } else {
         executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
       }
@@ -809,7 +822,7 @@ public class K8sTaskHelper {
       }
     }
 
-    return result.stream().sorted(new KubernetesResourceComparer()).collect(Collectors.toList());
+    return result.stream().sorted(new KubernetesResourceComparer()).collect(toList());
   }
 
   public void setNamespaceToKubernetesResourcesIfRequired(
@@ -1016,9 +1029,9 @@ public class K8sTaskHelper {
                                                    .name(container.getName())
                                                    .image(container.getImage())
                                                    .build())
-                                        .collect(Collectors.toList()))
+                                        .collect(toList()))
                      .build())
-          .collect(Collectors.toList());
+          .collect(toList());
     }, 10, TimeUnit.SECONDS, true);
   }
 
@@ -1238,7 +1251,7 @@ public class K8sTaskHelper {
             .filter(
                 kubernetesResource -> kubernetesResource.getResourceId().getKind().equals(Kind.DestinationRule.name()))
             .filter(KubernetesResource::isManaged)
-            .collect(Collectors.toList());
+            .collect(toList());
 
     if (isEmpty(destinationRuleResources)) {
       return null;
@@ -1286,7 +1299,7 @@ public class K8sTaskHelper {
             .filter(
                 kubernetesResource -> kubernetesResource.getResourceId().getKind().equals(Kind.VirtualService.name()))
             .filter(KubernetesResource::isManaged)
-            .collect(Collectors.toList());
+            .collect(toList());
 
     if (isEmpty(virtualServiceResources)) {
       return null;
