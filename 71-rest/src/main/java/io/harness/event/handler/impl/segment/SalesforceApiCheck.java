@@ -85,7 +85,8 @@ public class SalesforceApiCheck {
       try {
         responseString = EntityUtils.toString(response.getEntity());
       } catch (IOException ioe) {
-        logger.error("Could not convert Http response to EntityUtils String, where response is {}", response, ioe);
+        logger.error(
+            "Could not convert Salesforce Http response to EntityUtils String, where response is {}", response, ioe);
       }
       return responseString;
     } finally {
@@ -125,21 +126,18 @@ public class SalesforceApiCheck {
     String uri = new URIBuilder().setPath(baseUri).setCustomQuery(queryString).toString();
     HttpGet httpGet = new HttpGet(uri);
     Header oauthHeader = new BasicHeader(AUTHORIZATION, "OAuth " + json.getString(ACCESS_TOKEN));
-
     httpGet.addHeader(oauthHeader);
     httpGet.addHeader(prettyPrintHeader);
 
     try {
       try {
         response = httpClient.execute(httpGet);
-
         int statusCode = response.getStatusLine().getStatusCode();
-
         if (statusCode == 200) {
           logger.info("Successfully queried Salesforce with query={}", queryString);
         }
       } catch (JSONException je) {
-        logger.error("Error in Jsonifying Http Response {}", loginResponseString, je);
+        logger.error("Error in Jsonifying Salesforce Http Response {}", loginResponseString, je);
       } catch (IOException ioe) {
         logger.error("Could not connect to Salesforce with URI {}", uri, ioe);
       }
@@ -149,7 +147,7 @@ public class SalesforceApiCheck {
           responseString = EntityUtils.toString(response.getEntity());
         }
       } catch (IOException ioe) {
-        logger.error("Error while converting response={} to String", response, ioe);
+        logger.error("Error while converting Salesforce response={} to String", response, ioe);
       }
       return responseString;
     } finally {
@@ -176,6 +174,7 @@ public class SalesforceApiCheck {
 
   private boolean isFoundInSalesforce(String queryString) {
     String responseString = retryQueryResponse(queryString);
+
     if (responseString != null && responseString.length() == 0) {
       return false;
     }
@@ -184,17 +183,17 @@ public class SalesforceApiCheck {
     try {
       if (jsonObject.has("totalSize")) {
         if ((Integer) jsonObject.get("totalSize") > 0) {
-          logger.info("The account has been found in Salesforce, with response={}", jsonObject);
+          logger.info("The account was found in Salesforce, with response={}", jsonObject);
           return true;
         } else {
           logger.info("The account was not found in Salesforce when sending group calls to Segment");
           return false;
         }
       } else {
-        logger.warn("Json object doesn't have field 'totalSize', response={}", jsonObject);
+        logger.warn("Salesforce Json object doesn't have field 'totalSize', response={}", jsonObject);
       }
     } catch (JSONException je) {
-      logger.error("Error while jsonifying responseString={}", responseString, je);
+      logger.error("Error while jsonifying Salesforce responseString={}", responseString, je);
     }
     return false;
   }
