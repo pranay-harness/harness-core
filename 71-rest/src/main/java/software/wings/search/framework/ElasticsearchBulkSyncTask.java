@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.Future;
 
 /**
  * The task responsible for carrying out the bulk sync
@@ -156,7 +155,7 @@ public class ElasticsearchBulkSyncTask {
     cleanupFailedBulkMigrationJobs();
 
     logger.info("Initializing change listeners for search entities for bulk sync.");
-    Future<?> f = elasticsearchSyncHelper.startChangeListeners(getChangeSubscriber());
+    elasticsearchSyncHelper.startChangeListeners(getChangeSubscriber());
 
     logger.info("Getting the entities that have to bulk synced");
     Set<SearchEntity<?>> entitiesToBulkSync = getEntitiesToBulkSync(searchEntities);
@@ -173,7 +172,6 @@ public class ElasticsearchBulkSyncTask {
 
     logger.info("Calling change tracker to close change listeners after bulk sync was completed");
     elasticsearchSyncHelper.stopChangeListeners();
-    f.cancel(true);
 
     if (hasMigrationSucceeded) {
       hasMigrationSucceeded = cleanupSuccessfulBulkMigrationJobs(entitiesToBulkSync);

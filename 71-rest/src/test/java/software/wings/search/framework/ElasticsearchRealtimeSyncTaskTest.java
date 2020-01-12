@@ -13,7 +13,6 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -38,13 +37,12 @@ import java.util.concurrent.TimeoutException;
 public class ElasticsearchRealtimeSyncTaskTest extends WingsBaseTest {
   private final ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
   @Mock private ElasticsearchSyncHelper elasticsearchSyncHelper;
-  @Mock private ElasticsearchChangeEventProcessor elasticsearchChangeEventProcessor;
+  @Mock private ChangeEventProcessor changeEventProcessor;
   @Inject @InjectMocks private ElasticsearchRealtimeSyncTask elasticsearchRealtimeSyncTask;
 
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
-  @Ignore("Todo: Flaky on jenkins. Will fix and remove ignore")
   public void testRealtimeSyncProcess() throws InterruptedException, ExecutionException, TimeoutException {
     String token = "token";
     String uuid = "uuid";
@@ -57,44 +55,33 @@ public class ElasticsearchRealtimeSyncTaskTest extends WingsBaseTest {
     Queue<ChangeEvent<?>> changeEvents = new LinkedList<>();
     changeEvents.add(changeEvent1);
 
-    Future f = threadPoolExecutor.submit(() -> {
+    doAnswer(invocationOnMock -> {
+      ChangeSubscriber<?> changeSubscriber = invocationOnMock.getArgumentAt(0, ChangeSubscriber.class);
+      changeSubscriber.onChange(changeEvent);
+      latch.countDown();
+      return null;
+    })
+        .when(elasticsearchSyncHelper)
+        .startChangeListeners(any());
+
+    when(elasticsearchSyncHelper.checkIfAnyChangeListenerIsAlive()).thenReturn(true);
+
+    Future realTimeSyncFuture = threadPoolExecutor.submit(() -> {
       try {
-        Thread.sleep(Long.MAX_VALUE);
+        elasticsearchRealtimeSyncTask.run(changeEvents);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       }
     });
 
-    doAnswer(invocationOnMock -> {
-      ChangeSubscriber<?> changeSubscriber = invocationOnMock.getArgumentAt(0, ChangeSubscriber.class);
-      changeSubscriber.onChange(changeEvent);
-      latch.countDown();
-      return f;
-    })
-        .when(elasticsearchSyncHelper)
-        .startChangeListeners(any());
-
-    doAnswer(invocationOnMock -> {
-      f.cancel(true);
-      return null;
-    })
-        .when(elasticsearchSyncHelper)
-        .stopChangeListeners();
-
-    when(elasticsearchChangeEventProcessor.processChange(any())).thenReturn(true);
-
-    Future realTimeSyncFuture = threadPoolExecutor.submit(() -> { elasticsearchRealtimeSyncTask.run(changeEvents); });
-
     assertThat(realTimeSyncFuture.isDone()).isFalse();
-    assertThat(f.isDone()).isFalse();
 
     latch.await(10000, TimeUnit.SECONDS);
     verify(elasticsearchSyncHelper, times(1)).startChangeListeners(any());
-    verify(elasticsearchChangeEventProcessor, times(2)).processChange(any());
+    verify(changeEventProcessor, times(2)).processChangeEvent(any());
 
     elasticsearchRealtimeSyncTask.stop();
     realTimeSyncFuture.get(10000, TimeUnit.SECONDS);
     verify(elasticsearchSyncHelper, times(2)).stopChangeListeners();
-    assertThat(f.isDone()).isTrue();
   }
 }

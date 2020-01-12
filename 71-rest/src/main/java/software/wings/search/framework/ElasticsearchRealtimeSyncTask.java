@@ -7,9 +7,6 @@ import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeSubscriber;
 
 import java.util.Queue;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 /**
  * This job performs realtime sync of the changes
@@ -21,47 +18,40 @@ import java.util.concurrent.Future;
 @Slf4j
 public class ElasticsearchRealtimeSyncTask {
   @Inject private ElasticsearchSyncHelper elasticsearchSyncHelper;
-  @Inject private ElasticsearchChangeEventProcessor elasticsearchChangeEventProcessor;
-  private Future<?> changeListenersFuture;
+  @Inject private ChangeEventProcessor changeEventProcessor;
 
   private void processChanges(Queue<ChangeEvent<?>> changeEvents) {
     while (!changeEvents.isEmpty()) {
       ChangeEvent<?> changeEvent = changeEvents.poll();
-      elasticsearchChangeEventProcessor.processChange(changeEvent);
+      changeEventProcessor.processChangeEvent(changeEvent);
     }
   }
 
   private ChangeSubscriber<?> getChangeSubscriber() {
     return changeEvent -> {
-      boolean isRunningSuccessfully = elasticsearchChangeEventProcessor.processChange(changeEvent);
+      boolean isRunningSuccessfully = changeEventProcessor.processChangeEvent(changeEvent);
       if (!isRunningSuccessfully) {
         stop();
       }
     };
   }
 
-  public boolean run(Queue<ChangeEvent<?>> pendingChangeEvents) {
+  public boolean run(Queue<ChangeEvent<?>> pendingChangeEvents) throws InterruptedException {
     logger.info("Initializing change listeners for search entities");
-    try {
-      processChanges(pendingChangeEvents);
-      changeListenersFuture = elasticsearchSyncHelper.startChangeListeners(getChangeSubscriber());
-      changeListenersFuture.get();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      logger.error("Realtime sync interrupted. stopping change listeners", e);
-    } catch (CancellationException e) {
-      logger.error("Realtime sync stopped due to changeListeners being cancelled", e);
-    } catch (ExecutionException e) {
-      logger.error("Error occured during realtime sync", e);
-    } finally {
-      stop();
+    processChanges(pendingChangeEvents);
+    elasticsearchSyncHelper.startChangeListeners(getChangeSubscriber());
+    changeEventProcessor.startProcessingChangeEvents();
+    boolean isAlive = true;
+    while (!Thread.currentThread().isInterrupted() && isAlive) {
+      Thread.sleep(2000);
+      isAlive = elasticsearchSyncHelper.checkIfAnyChangeListenerIsAlive();
+      isAlive = isAlive && changeEventProcessor.isAlive();
     }
     return false;
   }
 
   public void stop() {
     elasticsearchSyncHelper.stopChangeListeners();
-    elasticsearchChangeEventProcessor.shutdown();
-    changeListenersFuture.cancel(true);
+    changeEventProcessor.shutdown();
   }
 }

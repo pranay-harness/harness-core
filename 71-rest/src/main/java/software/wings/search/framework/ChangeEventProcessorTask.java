@@ -1,7 +1,6 @@
 package software.wings.search.framework;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
 
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
@@ -17,19 +16,50 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
-class ElasticsearchChangeEventProcessor {
-  @Inject private Set<SearchEntity<?>> searchEntities;
-  @Inject private WingsPersistence wingsPersistence;
-  @Inject private ChangeEventMetricsTracker changeEventMetricsTracker;
-  private ExecutorService executorService =
-      Executors.newFixedThreadPool(10, new ThreadFactoryBuilder().setNameFormat("change-processor-%d").build());
+public class ChangeEventProcessorTask implements Runnable {
+  private ExecutorService executorService;
+  private Set<SearchEntity<?>> searchEntities;
+  private WingsPersistence wingsPersistence;
+  private ChangeEventMetricsTracker changeEventMetricsTracker;
+  private BlockingQueue<ChangeEvent<?>> changeEventQueue;
+
+  ChangeEventProcessorTask(Set<SearchEntity<?>> searchEntities, WingsPersistence wingsPersistence,
+      ChangeEventMetricsTracker changeEventMetricsTracker, BlockingQueue<ChangeEvent<?>> changeEventQueue) {
+    this.searchEntities = searchEntities;
+    this.wingsPersistence = wingsPersistence;
+    this.changeEventMetricsTracker = changeEventMetricsTracker;
+    this.changeEventQueue = changeEventQueue;
+  }
+
+  public void run() {
+    executorService =
+        Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("change-processor-%d").build());
+    try {
+      boolean isRunningSuccessfully = true;
+      while (isRunningSuccessfully) {
+        logger.info("Search change event blocking queue size {}", changeEventQueue.size());
+        ChangeEvent<?> changeEvent = changeEventQueue.poll(Integer.MAX_VALUE, TimeUnit.MINUTES);
+        if (changeEvent != null) {
+          isRunningSuccessfully = processChange(changeEvent);
+        }
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      logger.error("ChangeEvent processor interrupted");
+    } finally {
+      logger.info("Shutting down search consumer service");
+      executorService.shutdownNow();
+    }
+  }
 
   private boolean saveSearchSourceEntitySyncStateToken(Class<? extends PersistentEntity> sourceClass, String token) {
     String sourceClassName = sourceClass.getCanonicalName();
@@ -56,7 +86,7 @@ class ElasticsearchChangeEventProcessor {
     return () -> changeHandler.handleChange(changeEvent);
   }
 
-  boolean processChange(ChangeEvent<?> changeEvent) {
+  private boolean processChange(ChangeEvent<?> changeEvent) {
     Instant start = Instant.now();
     Class<? extends PersistentEntity> sourceClass = changeEvent.getEntityType();
     List<Future<Boolean>> processChangeEventTaskFutures = new ArrayList<>();
@@ -99,9 +129,5 @@ class ElasticsearchChangeEventProcessor {
     logger.info("No. of change Events processed: {}", changeEventMetricsTracker.getNumChangeEvents());
 
     return isSaved;
-  }
-
-  void shutdown() {
-    executorService.shutdownNow();
   }
 }

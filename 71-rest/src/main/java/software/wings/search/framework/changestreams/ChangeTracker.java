@@ -22,7 +22,6 @@ import com.mongodb.session.ClientSession;
 import io.harness.mongo.MongoModule;
 import io.harness.persistence.PersistentEntity;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import software.wings.app.MainConfiguration;
 
 import java.util.HashSet;
@@ -95,7 +94,7 @@ public class ChangeTracker {
     }
   }
 
-  private Future<?> openChangeStreams(Set<ChangeTrackingInfo<?>> changeTrackingInfos) {
+  private void openChangeStreams(Set<ChangeTrackingInfo<?>> changeTrackingInfos) {
     executorService =
         Executors.newFixedThreadPool(8, new ThreadFactoryBuilder().setNameFormat("change-tracker-%d").build());
     CountDownLatch latch = new CountDownLatch(changeTrackingInfos.size());
@@ -107,20 +106,7 @@ public class ChangeTracker {
         Future f = executorService.submit(changeTrackingTask);
         changeTrackingTasksFuture.add(f);
       }
-
-      Future<?> f = executorService.submit(() -> {
-        try {
-          latch.await();
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-          logger.error("Change tracker stopped", e);
-        }
-      });
-
-      executorService.shutdown();
-      return f;
     }
-    return ConcurrentUtils.constantFuture(false);
   }
 
   private boolean shouldProcessChange(ChangeStreamDocument<DBObject> changeStreamDocument) {
@@ -139,9 +125,18 @@ public class ChangeTracker {
     };
   }
 
-  public Future start(Set<ChangeTrackingInfo<?>> changeTrackingInfos) {
+  public void start(Set<ChangeTrackingInfo<?>> changeTrackingInfos) {
     connectToMongoDatabase();
-    return openChangeStreams(changeTrackingInfos);
+    openChangeStreams(changeTrackingInfos);
+  }
+
+  public boolean checkIfAnyChangeTrackerIsAlive() {
+    for (Future<?> f : changeTrackingTasksFuture) {
+      if (!f.isDone()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public void stop() {
