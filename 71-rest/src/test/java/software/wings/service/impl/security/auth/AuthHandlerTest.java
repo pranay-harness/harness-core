@@ -49,7 +49,6 @@ import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
@@ -71,7 +70,6 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.WorkflowFilter;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -88,7 +86,6 @@ public class AuthHandlerTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private WorkflowService workflowService;
   @Mock private PipelineService pipelineService;
-  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks @Inject private AuthHandler authHandler;
 
@@ -241,7 +238,6 @@ public class AuthHandlerTest extends WingsBaseTest {
     when(workflowService.readWorkflowWithoutOrchestration(APP_ID, workflow4.getUuid())).thenReturn(workflow4);
     when(workflowService.readWorkflowWithoutOrchestration(APP_ID, buildWorkflow.getUuid())).thenReturn(buildWorkflow);
     pipeline0.setPipelineStages(null);
-    when(featureFlagService.isEnabled(eq(FeatureName.PIPELINE_RBAC), any())).thenReturn(true);
   }
 
   @Test

@@ -53,7 +53,6 @@ import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
@@ -95,7 +94,6 @@ import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
@@ -151,7 +149,6 @@ public class AuthHandler {
   @Inject private ApiKeyService apiKeyService;
   @Inject private HarnessApiKeyService harnessApiKeyService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
-  @Inject private FeatureFlagService featureFlagService;
 
   public UserPermissionInfo evaluateUserPermissionInfo(String accountId, List<UserGroup> userGroups, User user) {
     UserPermissionInfoBuilder userPermissionInfoBuilder = UserPermissionInfo.builder().accountId(accountId);
@@ -174,7 +171,7 @@ public class AuthHandler {
 
     // Filter and assign permissions
     Map<String, AppPermissionSummary> appPermissionMap =
-        populateAppPermissions(accountId, userGroups, permissionTypeAppIdEntityMap, allAppIds);
+        populateAppPermissions(userGroups, permissionTypeAppIdEntityMap, allAppIds);
 
     userPermissionInfoBuilder.appPermissionMapInternal(appPermissionMap)
         .accountPermissionSummary(accountPermissionSummaryBuilder.build());
@@ -191,7 +188,7 @@ public class AuthHandler {
     return userPermissionInfo;
   }
 
-  private Map<String, AppPermissionSummary> populateAppPermissions(String accountId, List<UserGroup> userGroups,
+  private Map<String, AppPermissionSummary> populateAppPermissions(List<UserGroup> userGroups,
       Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap, HashSet<String> allAppIds) {
     Map<String, AppPermissionSummary> appPermissionMap = new HashMap<>();
     Multimap<String, Action> envActionMapForPipeline = HashMultimap.create();
@@ -219,24 +216,23 @@ public class AuthHandler {
                 appPermission.getActions());
           });
 
-          attachPipelinePermission(accountId, envActionMapForPipeline, appPermissionMap, permissionTypeAppIdEntityMap,
-              appIds, PIPELINE, null, appPermission.getActions());
+          attachPipelinePermission(envActionMapForPipeline, appPermissionMap, permissionTypeAppIdEntityMap, appIds,
+              PIPELINE, null, appPermission.getActions());
 
-          attachPipelinePermission(accountId, envActionMapForDeployment, appPermissionMap, permissionTypeAppIdEntityMap,
-              appIds, DEPLOYMENT, null, appPermission.getActions());
+          attachPipelinePermission(envActionMapForDeployment, appPermissionMap, permissionTypeAppIdEntityMap, appIds,
+              DEPLOYMENT, null, appPermission.getActions());
 
         } else {
           if (permissionType == PIPELINE) {
-            attachPipelinePermission(accountId, envActionMapForPipeline, appPermissionMap, permissionTypeAppIdEntityMap,
-                appIds, permissionType, appPermission.getEntityFilter(), appPermission.getActions());
+            attachPipelinePermission(envActionMapForPipeline, appPermissionMap, permissionTypeAppIdEntityMap, appIds,
+                permissionType, appPermission.getEntityFilter(), appPermission.getActions());
           } else {
             attachPermission(appPermissionMap, permissionTypeAppIdEntityMap, appIds, permissionType,
                 appPermission.getEntityFilter(), appPermission.getActions());
 
             if (permissionType == DEPLOYMENT) {
-              attachPipelinePermission(accountId, envActionMapForDeployment, appPermissionMap,
-                  permissionTypeAppIdEntityMap, appIds, permissionType, appPermission.getEntityFilter(),
-                  appPermission.getActions());
+              attachPipelinePermission(envActionMapForDeployment, appPermissionMap, permissionTypeAppIdEntityMap,
+                  appIds, permissionType, appPermission.getEntityFilter(), appPermission.getActions());
             }
           }
         }
@@ -506,7 +502,7 @@ public class AuthHandler {
     return workflowCache;
   }
 
-  private void attachPipelinePermission(String accountId, Multimap<String, Action> envActionMap,
+  private void attachPipelinePermission(Multimap<String, Action> envActionMap,
       Map<String, AppPermissionSummary> appPermissionMap,
       Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap, Set<String> appIds,
       PermissionType permissionType, Filter entityFilter, Set<Action> actions) {
@@ -548,7 +544,7 @@ public class AuthHandler {
             finalAppPermissionSummary.setPipelineUpdatePermissionsForEnvs(updatedEnvIdSet);
           }
 
-          pipelineIdActionMap = getPipelineIdsByFilter(accountId, permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
+          pipelineIdActionMap = getPipelineIdsByFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
               permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions,
               workflowCache);
 
@@ -562,7 +558,7 @@ public class AuthHandler {
             break;
           }
 
-          pipelineIdActionMap = getPipelineIdsByFilter(accountId, permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
+          pipelineIdActionMap = getPipelineIdsByFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
               permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions,
               workflowCache);
 
@@ -1185,14 +1181,9 @@ public class AuthHandler {
     return finalWorkflowCache;
   }
 
-  private Multimap<String, Action> getPipelineIdsByFilter(String accountId, List<Base> pipelines,
-      List<Base> environments, EnvFilter envFilter, Multimap<String, Action> envActionMap,
-      Set<Action> entityActionsFromCurrentPermission, Map<String, Workflow> workflowCache) {
-    if (!featureFlagService.isEnabled(FeatureName.PIPELINE_RBAC, accountId)) {
-      return getPipelineIdsByFilterFFOff(
-          pipelines, environments, envFilter, envActionMap, entityActionsFromCurrentPermission);
-    }
-
+  private Multimap<String, Action> getPipelineIdsByFilter(List<Base> pipelines, List<Base> environments,
+      EnvFilter envFilter, Multimap<String, Action> envActionMap, Set<Action> entityActionsFromCurrentPermission,
+      Map<String, Workflow> workflowCache) {
     Multimap<String, Action> pipelineActionMap = HashMultimap.create();
     if (isEmpty(pipelines)) {
       return pipelineActionMap;
@@ -1243,73 +1234,7 @@ public class AuthHandler {
     return pipelineActionMap;
   }
 
-  private Multimap<String, Action> getPipelineIdsByFilterFFOff(List<Base> pipelines, List<Base> environments,
-      EnvFilter envFilter, Multimap<String, Action> envActionMap, Set<Action> entityActionsFromCurrentPermission) {
-    Multimap<String, Action> pipelineActionMap = HashMultimap.create();
-    if (isEmpty(pipelines)) {
-      return pipelineActionMap;
-    }
-
-    Set<String> envIds;
-    if (isNotEmpty(environments)) {
-      envIds = getEnvIdsByFilter(environments, envFilter);
-      envIds.forEach(envId -> envActionMap.putAll(envId, entityActionsFromCurrentPermission));
-    } else {
-      envIds = Collections.emptySet();
-    }
-
-    Set<String> envIdsFromOtherPermissions = envActionMap.keySet();
-    pipelines.forEach(p -> {
-      Set<Action> entityActions = new HashSet(entityActionsFromCurrentPermission);
-      boolean match;
-      Pipeline pipeline = (Pipeline) p;
-      if (pipeline.getPipelineStages() == null) {
-        match = true;
-      } else {
-        match = pipeline.getPipelineStages().stream().allMatch(pipelineStage
-            -> pipelineStage != null && pipelineStage.getPipelineStageElements() != null
-                && pipelineStage.getPipelineStageElements().stream().allMatch(pipelineStageElement -> {
-                     if (pipelineStageElement.getType().equals(StateType.APPROVAL.name())) {
-                       return true;
-                     }
-
-                     if (pipelineStageElement.getProperties() == null) {
-                       return false;
-                     }
-
-                     Object stageEnvIdObj = pipelineStageElement.getProperties().get("envId");
-                     if (stageEnvIdObj == null) {
-                       return true;
-                     }
-                     // TODO: For now we are comparing if env has expression then not check for env permissions
-                     // TODO: We should find a better way of handling
-                     String stageEnvId = (String) stageEnvIdObj;
-                     if (ManagerExpressionEvaluator.matchesVariablePattern(stageEnvId)) {
-                       return true;
-                     }
-                     if (envIds.contains(stageEnvId)) {
-                       return true;
-                     } else if (envIdsFromOtherPermissions.contains(stageEnvId)) {
-                       entityActions.retainAll(envActionMap.get(stageEnvId));
-                       return true;
-                     }
-
-                     return false;
-                   }));
-      }
-
-      if (match) {
-        pipelineActionMap.putAll(pipeline.getUuid(), entityActions);
-      }
-    });
-    return pipelineActionMap;
-  }
-
   public boolean checkIfPipelineHasOnlyGivenEnvs(Pipeline pipeline, Set<String> allowedEnvIds) {
-    if (!featureFlagService.isEnabled(FeatureName.PIPELINE_RBAC, pipeline.getAccountId())) {
-      return checkIfPipelineHasOnlyGivenEnvsFFOff(pipeline, allowedEnvIds);
-    }
-
     if (isEmpty(pipeline.getPipelineStages())) {
       return true;
     }
@@ -1326,45 +1251,6 @@ public class AuthHandler {
                  }
 
                  return isNotEmpty(allowedEnvIds) && allowedEnvIds.contains(envId);
-               }));
-  }
-
-  public boolean checkIfPipelineHasOnlyGivenEnvsFFOff(Pipeline pipeline, Set<String> allowedEnvIds) {
-    if (pipeline.getPipelineStages() == null) {
-      return true;
-    }
-
-    return pipeline.getPipelineStages().stream().allMatch(pipelineStage
-        -> pipelineStage != null && pipelineStage.getPipelineStageElements() != null
-            && pipelineStage.getPipelineStageElements().stream().allMatch(pipelineStageElement -> {
-                 if (pipelineStageElement.getType().equals(StateType.APPROVAL.name())) {
-                   return true;
-                 }
-
-                 if (pipelineStageElement.getProperties() == null) {
-                   return false;
-                 }
-
-                 Object stageEnvIdObj = pipelineStageElement.getProperties().get("envId");
-                 if (stageEnvIdObj == null) {
-                   return true;
-                 }
-                 // TODO: For now we are comparing if env has expression then not check for env permissions
-                 // TODO: We should find a better way of handling
-                 String stageEnvId = (String) stageEnvIdObj;
-                 if (ManagerExpressionEvaluator.matchesVariablePattern(stageEnvId)) {
-                   return true;
-                 }
-
-                 if (isEmpty(allowedEnvIds)) {
-                   return false;
-                 }
-
-                 if (allowedEnvIds.contains(stageEnvId)) {
-                   return true;
-                 }
-
-                 return false;
                }));
   }
 

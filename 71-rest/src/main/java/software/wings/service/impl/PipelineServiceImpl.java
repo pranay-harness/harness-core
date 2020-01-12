@@ -1418,14 +1418,6 @@ public class PipelineServiceImpl implements PipelineService {
           keywords.add(workflow.getDescription());
           List<Service> resolvedServiceForWorkflow =
               resolveServices(services, serviceIds, stageElement.getWorkflowVariables(), workflow);
-          if (!featureFlagService.isEnabled(FeatureName.PIPELINE_RBAC, pipeline.getAccountId())) {
-            if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() != BUILD
-                && isNullOrEmpty((String) stageElement.getProperties().get("envId"))) {
-              logger.info("It should not happen. If happens printing the properties of appId {} are {}",
-                  pipeline.getAppId(), stageElement.getProperties());
-              throw new InvalidArgumentsException("Environment can not be null for non-build state", USER);
-            }
-          }
 
           if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == ROLLING) {
             for (Service service : emptyIfNull(resolvedServiceForWorkflow)) {
