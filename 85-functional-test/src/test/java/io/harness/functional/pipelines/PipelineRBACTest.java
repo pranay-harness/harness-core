@@ -34,14 +34,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,7 +53,6 @@ public class PipelineRBACTest extends AbstractFunctionalTest {
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private ArtifactStreamManager artifactStreamManager;
-  @Inject private FeatureFlagService featureFlagService;
 
   private Application application;
   private Environment qaEnvironment;
@@ -73,10 +70,6 @@ public class PipelineRBACTest extends AbstractFunctionalTest {
 
     application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
     assertThat(application).isNotNull();
-
-    if (isPipelineRBACDisabled()) {
-      return;
-    }
 
     Service service = serviceGenerator.ensurePredefined(seed, owners, Services.K8S_V2_TEST);
     assertThat(service).isNotNull();
@@ -114,11 +107,6 @@ public class PipelineRBACTest extends AbstractFunctionalTest {
   @Owner(developers = GARVIT)
   @Category(FunctionalTests.class)
   public void testPipelineRBAC() {
-    if (isPipelineRBACDisabled()) {
-      logger.info("Skipping Pipeline RBAC functional test as the feature flag is off");
-      return;
-    }
-
     String pipelineName = "Pipeline RBAC Test - " + System.currentTimeMillis();
     logger.info("Pipeline name: " + pipelineName);
 
@@ -174,9 +162,5 @@ public class PipelineRBACTest extends AbstractFunctionalTest {
     assertThat(verifyCreatedPipeline).isNotNull();
     assertThat(verifyCreatedPipeline.getName()).isEqualTo(pipelineName);
     logger.info("Validation completed");
-  }
-
-  private boolean isPipelineRBACDisabled() {
-    return !featureFlagService.isEnabled(FeatureName.PIPELINE_RBAC, owners.obtainAccount().getUuid());
   }
 }
