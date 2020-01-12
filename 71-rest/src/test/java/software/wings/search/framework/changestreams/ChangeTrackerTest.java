@@ -15,7 +15,6 @@ import software.wings.beans.Application;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Future;
 
 @Slf4j
 public class ChangeTrackerTest extends WingsBaseTest {
@@ -30,8 +29,8 @@ public class ChangeTrackerTest extends WingsBaseTest {
         new ChangeTrackingInfo<>(Application.class, changeEvent -> logger.info(changeEvent.toString()), null);
     changeTrackingInfos.add(changeTrackingInfo);
 
-    Future f = changeTracker.start(changeTrackingInfos);
-    assertThat(f.isDone()).isFalse();
+    changeTracker.start(changeTrackingInfos);
+    assertThat(changeTracker.checkIfAnyChangeTrackerIsAlive()).isTrue();
 
     changeTracker.stop();
   }

@@ -27,7 +27,7 @@ public class ElasticsearchSyncJobTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
-  public void testElasticsearchSyncTask() {
+  public void testElasticsearchSyncTask() throws InterruptedException {
     ElasticsearchBulkSyncTask elasticsearchBulkSyncTask = mock(ElasticsearchBulkSyncTask.class);
     ElasticsearchRealtimeSyncTask elasticsearchRealtimeSyncTask = mock(ElasticsearchRealtimeSyncTask.class);
 
@@ -55,7 +55,7 @@ public class ElasticsearchSyncJobTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
-  public void testErroredElasticsearchSyncTask() {
+  public void testErroredElasticsearchSyncTask() throws InterruptedException {
     ElasticsearchBulkSyncTask elasticsearchBulkSyncTask = mock(ElasticsearchBulkSyncTask.class);
     ElasticsearchRealtimeSyncTask elasticsearchRealtimeSyncTask = mock(ElasticsearchRealtimeSyncTask.class);
 

@@ -11,7 +11,6 @@ import software.wings.search.framework.changestreams.ChangeTrackingInfo;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Future;
 
 /**
  * Abstract template class for both
@@ -26,7 +25,7 @@ class ElasticsearchSyncHelper {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ChangeTracker changeTracker;
 
-  Future startChangeListeners(ChangeSubscriber changeSubscriber) {
+  void startChangeListeners(ChangeSubscriber changeSubscriber) {
     Set<Class<? extends PersistentEntity>> subscribedClasses = new HashSet<>();
     searchEntities.forEach(searchEntity -> subscribedClasses.addAll(searchEntity.getSubscriptionEntities()));
 
@@ -38,7 +37,7 @@ class ElasticsearchSyncHelper {
     }
 
     logger.info("Calling change tracker to start change listeners");
-    return changeTracker.start(changeTrackingInfos);
+    changeTracker.start(changeTrackingInfos);
   }
 
   private <T extends PersistentEntity> ChangeTrackingInfo<T> getChangeTrackingInfo(
@@ -50,6 +49,10 @@ class ElasticsearchSyncHelper {
       token = searchSourceEntitySyncState.getLastSyncedToken();
     }
     return new ChangeTrackingInfo<>(subscribedClass, changeSubscriber, token);
+  }
+
+  boolean checkIfAnyChangeListenerIsAlive() {
+    return changeTracker.checkIfAnyChangeTrackerIsAlive();
   }
 
   void stopChangeListeners() {
