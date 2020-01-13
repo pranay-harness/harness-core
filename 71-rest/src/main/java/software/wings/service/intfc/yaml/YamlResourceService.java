@@ -112,6 +112,8 @@ public interface YamlResourceService {
 
   RestResponse<YamlPayload> getNotificationGroup(String accountId, String notificationGroupUuid);
 
+  RestResponse<YamlPayload> getTemplateLibrary(String accountId, String appId, String templateId);
+
   RestResponse<YamlPayload> getPcfServiceSpecification(
       String accountId, String appId, String pcfServiceSpecificationId);
 

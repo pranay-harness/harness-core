@@ -4,6 +4,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.validation.Validator.notNullCheck;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import com.google.common.base.Charsets;
@@ -38,6 +39,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.template.Template;
 import software.wings.exception.YamlProcessingException;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute.Action;
@@ -144,9 +146,36 @@ public class YamlResource {
   }
 
   /**
+   * Gets the yaml for global template library
+   *
+   * @param accountId  the account id
+   * @param templateId the template id
+   * @return the rest response
+   */
+  @GET
+  @Path("/templates/{templateId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.TEMPLATE_MANAGEMENT, action = Action.READ)
+  public RestResponse<YamlPayload> getTemplateLibrary(@QueryParam("accountId") String accountId,
+      @PathParam("templateId") String templateId, @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId) {
+    return yamlResourceService.getTemplateLibrary(accountId, appId, templateId);
+  }
+
+  @PUT
+  @Path("/templates/{templateId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.TEMPLATE_MANAGEMENT, action = Action.UPDATE)
+  public RestResponse<Template> updateTemplate(@QueryParam("accountId") String accountId,
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, YamlPayload yamlPayload) {
+    return yamlService.update(yamlPayload, accountId);
+  }
+
+  /**
    * Gets the yaml for a workflow
    *
-   * @param appId      the app id
+   * @param appId         the app id
    * @param provisionerId the provisioner id
    * @return the rest response
    */

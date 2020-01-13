@@ -23,6 +23,7 @@ import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_OVERRI
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_SERVICE_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_TEMPLATE_LIBRARY;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER_OVERRIDE;
@@ -40,6 +41,7 @@ import static software.wings.beans.yaml.YamlType.CV_CONFIGURATION;
 import static software.wings.beans.yaml.YamlType.DEPLOYMENT_SPECIFICATION;
 import static software.wings.beans.yaml.YamlType.DEPLOYMENT_TRIGGER;
 import static software.wings.beans.yaml.YamlType.ENVIRONMENT;
+import static software.wings.beans.yaml.YamlType.GLOBAL_TEMPLATE_LIBRARY;
 import static software.wings.beans.yaml.YamlType.INFRA_DEFINITION;
 import static software.wings.beans.yaml.YamlType.INFRA_MAPPING;
 import static software.wings.beans.yaml.YamlType.LOADBALANCER_PROVIDER;
@@ -59,6 +61,7 @@ import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -84,6 +87,7 @@ import io.harness.exception.YamlException;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import software.wings.beans.Base;
@@ -150,6 +154,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private static final Set<YamlType> rbacDeleteYamlTypes = Sets.newHashSet(YamlType.APPLICATION, YamlType.ENVIRONMENT);
 
   private static final int YAML_MAX_PARALLEL_COUNT = 20;
+  private static final List<YamlType> templateYamlTypes =
+      ImmutableList.of(GLOBAL_TEMPLATE_LIBRARY, APPLICATION_TEMPLATE_LIBRARY);
 
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 
@@ -170,16 +176,16 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private List<YamlType> getEntityProcessingOrder() {
     return Lists.newArrayList(ACCOUNT_DEFAULTS, TAG, CLOUD_PROVIDER, CLOUD_PROVIDER_OVERRIDE, ARTIFACT_SERVER,
         ARTIFACT_SERVER_OVERRIDE, COLLABORATION_PROVIDER, LOADBALANCER_PROVIDER, VERIFICATION_PROVIDER,
-        NOTIFICATION_GROUP, APPLICATION, APPLICATION_DEFAULTS, SERVICE, PROVISIONER, ARTIFACT_STREAM,
-        ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE, CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE, COMMAND,
-        DEPLOYMENT_SPECIFICATION, CONFIG_FILE_CONTENT, CONFIG_FILE, APPLICATION_MANIFEST, MANIFEST_FILE,
-        APPLICATION_MANIFEST_VALUES_SERVICE_OVERRIDE, MANIFEST_FILE_VALUES_SERVICE_OVERRIDE, ENVIRONMENT, INFRA_MAPPING,
-        CV_CONFIGURATION, INFRA_DEFINITION, CONFIG_FILE_OVERRIDE_CONTENT, CONFIG_FILE_OVERRIDE,
-        APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE, APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE,
-        APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE, APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE,
-        MANIFEST_FILE_VALUES_ENV_OVERRIDE, MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE,
-        MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE, MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE,
-        TRIGGER, DEPLOYMENT_TRIGGER);
+        NOTIFICATION_GROUP, GLOBAL_TEMPLATE_LIBRARY, APPLICATION, APPLICATION_DEFAULTS, APPLICATION_TEMPLATE_LIBRARY,
+        SERVICE, PROVISIONER, ARTIFACT_STREAM, ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE,
+        CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE, COMMAND, DEPLOYMENT_SPECIFICATION, CONFIG_FILE_CONTENT, CONFIG_FILE,
+        APPLICATION_MANIFEST, MANIFEST_FILE, APPLICATION_MANIFEST_VALUES_SERVICE_OVERRIDE,
+        MANIFEST_FILE_VALUES_SERVICE_OVERRIDE, ENVIRONMENT, INFRA_MAPPING, CV_CONFIGURATION, INFRA_DEFINITION,
+        CONFIG_FILE_OVERRIDE_CONTENT, CONFIG_FILE_OVERRIDE, APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE,
+        APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE, APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE,
+        APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_VALUES_ENV_OVERRIDE,
+        MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE,
+        MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE, TRIGGER, DEPLOYMENT_TRIGGER);
   }
 
   @Override
@@ -273,15 +279,13 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           yamlGitService.processFailedChanges(accountId, ex.getFailedYamlFileChangeMap(), false);
         }
         return Builder.aRestResponse()
-            .withResponseMessages(
-                asList(new ResponseMessage[] {ResponseMessage.builder().code(ErrorCode.DEFAULT_ERROR_CODE).build()}))
+            .withResponseMessages(asList(ResponseMessage.builder().code(ErrorCode.DEFAULT_ERROR_CODE).build()))
             .build();
       });
       return future.get(30, TimeUnit.SECONDS);
     } catch (Exception e) {
       return Builder.aRestResponse()
-          .withResponseMessages(
-              asList(new ResponseMessage[] {ResponseMessage.builder().code(ErrorCode.DEFAULT_ERROR_CODE).build()}))
+          .withResponseMessages(asList(ResponseMessage.builder().code(ErrorCode.DEFAULT_ERROR_CODE).build()))
           .build();
     }
   }
@@ -399,7 +403,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       String yamlFilePath = change.getFilePath();
 
       try {
-        ChangeContext manifestFileChangeContext = validateManifestFile(yamlFilePath, change);
+        final ChangeContext manifestFileChangeContext = validateManifestFile(yamlFilePath, change);
 
         if (manifestFileChangeContext != null) {
           changeContextList.add(manifestFileChangeContext);
@@ -412,6 +416,12 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
                   change.getAccountId(), FeatureName.INFRA_MAPPING_REFACTOR, INFRA_MAPPING, yamlType)) {
             logger.warn("Skipping {} because feature flag {} is enabled", change.getFilePath(),
                 FeatureName.INFRA_MAPPING_REFACTOR);
+            continue;
+          }
+
+          if (!isProcessingAllowed(change, yamlType)) {
+            logger.warn(
+                "Skipping [{}], because processing is disabled for yamlType [{}]", change.getFilePath(), yamlType);
             continue;
           }
 
@@ -477,6 +487,16 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
     logger.info(GIT_YAML_LOG_PREFIX + "Validated changeset");
     return changeContextList;
+  }
+
+  private boolean isProcessingAllowed(Change change, YamlType yamlType) {
+    switch (yamlType) {
+      case GLOBAL_TEMPLATE_LIBRARY:
+      case APPLICATION_TEMPLATE_LIBRARY:
+        return featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, change.getAccountId());
+      default:
+        return true;
+    }
   }
 
   private void addToFailedYamlMap(
@@ -664,11 +684,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   private boolean doesEntityUsesActualFile(String filePath) {
-    if (Pattern.compile(YamlType.MANIFEST_FILE.getPathExpression()).matcher(filePath).matches()) {
-      return true;
-    }
-
-    return false;
+    return Pattern.compile(YamlType.MANIFEST_FILE.getPathExpression()).matcher(filePath).matches();
   }
 
   private void upsertFromYaml(ChangeContext changeContext, List<ChangeContext> changeContextList)
@@ -702,13 +718,14 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private final class FilePathComparator implements Comparator<Change> {
     @Override
     public int compare(Change lhs, Change rhs) {
-      return findOrdinal(lhs.getFilePath()) - findOrdinal(rhs.getFilePath());
+      return findOrdinal(lhs.getFilePath(), lhs.getAccountId()) - findOrdinal(rhs.getFilePath(), rhs.getAccountId());
     }
   }
 
-  private int findOrdinal(String yamlFilePath) {
+  private int findOrdinal(String yamlFilePath, String accountId) {
     final AtomicInteger count = new AtomicInteger();
-    Optional<YamlType> first = yamlProcessingOrder.stream()
+    Optional<YamlType> first = getYamlProcessingOrder(accountId)
+                                   .stream()
                                    .filter(yamlType -> {
                                      count.incrementAndGet();
                                      return Pattern.matches(yamlType.getPathExpression(), yamlFilePath);
@@ -722,8 +739,16 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     }
   }
 
+  private List<YamlType> getYamlProcessingOrder(String accountId) {
+    if (!featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, accountId)) {
+      return ListUtils.removeAll(yamlProcessingOrder, templateYamlTypes);
+    }
+    return yamlProcessingOrder;
+  }
+
   private YamlType findYamlType(String yamlFilePath, String accountId) throws YamlException {
-    Optional<YamlType> first = yamlProcessingOrder.stream()
+    Optional<YamlType> first = getYamlProcessingOrder(accountId)
+                                   .stream()
                                    .filter(yamlType -> Pattern.matches(yamlType.getPathExpression(), yamlFilePath))
                                    .findFirst();
 

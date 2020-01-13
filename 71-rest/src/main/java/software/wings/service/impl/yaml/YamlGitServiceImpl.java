@@ -26,6 +26,7 @@ import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static software.wings.beans.yaml.YamlConstants.GLOBAL_TEMPLATE_LIBRARY_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -66,6 +67,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.beans.GitConfig;
@@ -95,6 +97,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -157,7 +160,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Inject private YamlGitService yamlGitSyncService;
   @Inject YamlHelper yamlHelper;
   @Inject private WebhookEventUtils webhookEventUtils;
-
+  @Inject private FeatureFlagService featureFlagService;
   /**
    * Gets the yaml git sync info by entityId
    *
@@ -327,6 +330,9 @@ public class YamlGitServiceImpl implements YamlGitService {
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, LOAD_BALANCERS_FOLDER));
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, VERIFICATION_PROVIDERS_FOLDER));
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, NOTIFICATION_GROUPS_FOLDER));
+    if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, accountId)) {
+      gitFileChanges.add(generateGitFileChangeForDelete(accountId, GLOBAL_TEMPLATE_LIBRARY_FOLDER));
+    }
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, DEFAULTS_YAML));
 
     return gitFileChanges;

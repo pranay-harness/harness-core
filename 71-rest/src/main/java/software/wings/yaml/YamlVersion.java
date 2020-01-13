@@ -151,7 +151,9 @@ public class YamlVersion extends Base implements YamlHistory {
     APPLICATION_MANIFEST,
     APPLICATION_MANIFEST_FILE,
     SERVICE_CV_CONFIG,
-    TAGS
+    TAGS,
+    GLOBAL_TEMPLATE_LIBRARY,
+    APPLICATION_TEMPLATE_LIBRARY
   }
 
   @Override

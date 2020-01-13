@@ -19,6 +19,7 @@ import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.beans.template.Template;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.GitFileChange;
@@ -119,6 +120,8 @@ public interface YamlDirectoryService {
   String getRootPathByPcfServiceSpecification(Service service, PcfServiceSpecification pcfServiceSpecification);
 
   String getRootPathByInfraProvisioner(InfrastructureProvisioner provisioner);
+
+  String getRootPathByGlobalTemplate(Template template);
 
   void getGitFileChange(DirectoryNode dn, String path, String accountId, boolean includeFiles,
       List<GitFileChange> gitFileChanges, boolean failFast, Optional<List<String>> listOfYamlErrors,
