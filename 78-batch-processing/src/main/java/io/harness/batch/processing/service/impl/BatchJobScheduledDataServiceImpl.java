@@ -22,8 +22,9 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
   }
 
   @Override
-  public Instant fetchLastBatchJobScheduledTime(BatchJobType batchJobType) {
-    BatchJobScheduledData batchJobScheduledData = batchJobScheduledDataDao.fetchLastBatchJobScheduledData(batchJobType);
+  public Instant fetchLastBatchJobScheduledTime(String accountId, BatchJobType batchJobType) {
+    BatchJobScheduledData batchJobScheduledData =
+        batchJobScheduledDataDao.fetchLastBatchJobScheduledData(accountId, batchJobType);
     return null != batchJobScheduledData ? batchJobScheduledData.getEndAt()
                                          : Instant.now().minus(20, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
   }

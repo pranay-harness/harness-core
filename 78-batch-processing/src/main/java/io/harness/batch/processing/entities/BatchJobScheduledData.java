@@ -19,14 +19,17 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
 
 import java.time.Instant;
 
 @Data
 @Entity(value = "batchJobScheduledData", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "batchJobType_endAt"), fields = {
-    @Field(BatchJobScheduledDataKeys.batchJobType), @Field(BatchJobScheduledDataKeys.endAt)
+  @Index(options = @IndexOptions(name = "accountId_batchJobType_endAt", background = true), fields = {
+    @Field(BatchJobScheduledDataKeys.accountId)
+    , @Field(BatchJobScheduledDataKeys.batchJobType),
+        @Field(value = BatchJobScheduledDataKeys.endAt, type = IndexType.DESC)
   })
 })
 @FieldNameConstants(innerTypeName = "BatchJobScheduledDataKeys")
@@ -34,13 +37,15 @@ import java.time.Instant;
 @StoreIn(EVENTS_DB)
 public class BatchJobScheduledData implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
+  String accountId;
   BatchJobType batchJobType;
   Instant startAt;
   Instant endAt;
   long createdAt;
   long lastUpdatedAt;
 
-  public BatchJobScheduledData(BatchJobType batchJobType, Instant startAt, Instant endAt) {
+  public BatchJobScheduledData(String accountId, BatchJobType batchJobType, Instant startAt, Instant endAt) {
+    this.accountId = accountId;
     this.batchJobType = batchJobType;
     this.startAt = startAt;
     this.endAt = endAt;

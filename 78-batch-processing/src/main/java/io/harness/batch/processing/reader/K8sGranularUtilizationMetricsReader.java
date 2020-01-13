@@ -31,9 +31,10 @@ public class K8sGranularUtilizationMetricsReader implements ItemReader<List<Stri
   public List<String> read() {
     List<String> distinctInstanceIds = null;
     if (!runOnlyOnce.getAndSet(true)) {
+      String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
       long startDate = Long.parseLong(parameters.getString(CCMJobConstants.JOB_START_DATE));
       long endDate = Long.parseLong(parameters.getString(CCMJobConstants.JOB_END_DATE));
-      distinctInstanceIds = k8sUtilizationGranularDataService.getDistinctInstantIds(startDate, endDate);
+      distinctInstanceIds = k8sUtilizationGranularDataService.getDistinctInstantIds(accountId, startDate, endDate);
     }
     return distinctInstanceIds;
   }

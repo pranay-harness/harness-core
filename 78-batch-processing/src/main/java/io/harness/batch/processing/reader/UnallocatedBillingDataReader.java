@@ -32,9 +32,10 @@ public class UnallocatedBillingDataReader implements ItemReader<List<Unallocated
   public List<UnallocatedCostData> read() {
     List<UnallocatedCostData> unallocatedCostDataList = null;
     if (!runOnlyOnce.getAndSet(true)) {
+      String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
       long startDate = Long.parseLong(parameters.getString(CCMJobConstants.JOB_START_DATE));
       long endDate = Long.parseLong(parameters.getString(CCMJobConstants.JOB_END_DATE));
-      unallocatedCostDataList = unallocatedBillingDataService.getUnallocatedCostData(startDate, endDate);
+      unallocatedCostDataList = unallocatedBillingDataService.getUnallocatedCostData(accountId, startDate, endDate);
     }
     return unallocatedCostDataList;
   }

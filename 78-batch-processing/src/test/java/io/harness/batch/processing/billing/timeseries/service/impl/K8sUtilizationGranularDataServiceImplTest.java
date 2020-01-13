@@ -49,6 +49,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
   private final long START_DATE = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
   private final long END_DATE = NOW.toEpochMilli();
   final int[] count = {0};
+  private final String ACCOUNTID = "ACCOUNTID" + this.getClass().getSimpleName();
 
   @Before
   public void setup() throws SQLException {
@@ -71,7 +72,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
     instanceIdsMockResultSet();
     when(timeScaleDBService.isValid()).thenReturn(true);
     when(statement.executeQuery(any())).thenReturn(instanceIdsResultSet);
-    List<String> distinctIds = k8sUtilizationGranularDataService.getDistinctInstantIds(START_DATE, END_DATE);
+    List<String> distinctIds = k8sUtilizationGranularDataService.getDistinctInstantIds(ACCOUNTID, START_DATE, END_DATE);
     assertThat(distinctIds.get(0)).isEqualTo("INSTANCEID");
   }
 
@@ -80,7 +81,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetDistinctInstantIdsInvalidDBService() {
     when(timeScaleDBService.getDBConnection()).thenThrow(SQLException.class);
-    assertThat(k8sUtilizationGranularDataService.getDistinctInstantIds(START_DATE, END_DATE)).isNull();
+    assertThat(k8sUtilizationGranularDataService.getDistinctInstantIds(ACCOUNTID, START_DATE, END_DATE)).isNull();
   }
 
   @Test
@@ -92,7 +93,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
     when(statement.executeQuery(any())).thenReturn(aggregatedDataResultSet);
     Map<String, InstanceUtilizationData> instanceUtilizationDataMap =
         k8sUtilizationGranularDataService.getAggregatedUtilizationData(
-            Collections.singletonList("INSTANCEID"), START_DATE, END_DATE);
+            ACCOUNTID, Collections.singletonList("INSTANCEID"), START_DATE, END_DATE);
     assertThat(instanceUtilizationDataMap.get("INSTANCEID").getSettingId()).isEqualTo("SETTINGID");
   }
 
@@ -102,7 +103,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
   public void testGetAggregatedUtilizationDataInvalidDBService() {
     when(timeScaleDBService.getDBConnection()).thenThrow(SQLException.class);
     assertThat(k8sUtilizationGranularDataService.getAggregatedUtilizationData(
-                   Collections.singletonList("instance"), START_DATE, END_DATE))
+                   ACCOUNTID, Collections.singletonList("instance"), START_DATE, END_DATE))
         .isNull();
   }
 

@@ -18,6 +18,7 @@ import java.time.Instant;
 public class InstanceDataMongoEventReaderTest extends WingsBaseTest {
   @Inject private InstanceDataMongoEventReader instanceDataMongoEventReader;
 
+  private final String ACCOUNT_ID = "ACCOUNT_ID";
   private final Instant NOW = Instant.now();
   private final long START_TIME = NOW.getEpochSecond();
   private final long END_TIME = NOW.getEpochSecond();
@@ -26,7 +27,7 @@ public class InstanceDataMongoEventReaderTest extends WingsBaseTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testInstanceDataMongoEventReader() {
-    ItemReader<InstanceData> reader = instanceDataMongoEventReader.getEventReader(START_TIME, END_TIME);
+    ItemReader<InstanceData> reader = instanceDataMongoEventReader.getEventReader(ACCOUNT_ID, START_TIME, END_TIME);
     assertThat(reader).isNotNull();
   }
 }

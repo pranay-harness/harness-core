@@ -66,6 +66,7 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
+    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNTID);
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
     when(instanceDataService.fetchPrunedInstanceDataWithName(ACCOUNTID, SETTINGID, INSTANCEID, START_TIME_MILLIS))
@@ -93,7 +94,7 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
             .build());
     Mockito
         .when(k8sUtilizationGranularDataService.getAggregatedUtilizationData(
-            Collections.singletonList(INSTANCEID), START_TIME_MILLIS, END_TIME_MILLIS))
+            ACCOUNTID, Collections.singletonList(INSTANCEID), START_TIME_MILLIS, END_TIME_MILLIS))
         .thenReturn(aggregatedDataMap);
     k8sUtilizationMetricsWriter.write(Collections.singletonList(Collections.singletonList(INSTANCEID)));
     verify(utilizationDataService).create(instanceUtilizationDataArgumentCaptor.capture());
@@ -131,7 +132,7 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
             .build());
     Mockito
         .when(k8sUtilizationGranularDataService.getAggregatedUtilizationData(
-            Collections.singletonList(INSTANCEID1), START_TIME_MILLIS, END_TIME_MILLIS))
+            ACCOUNTID, Collections.singletonList(INSTANCEID1), START_TIME_MILLIS, END_TIME_MILLIS))
         .thenReturn(aggregatedDataMap);
     k8sUtilizationMetricsWriter.write(Collections.singletonList(Collections.singletonList(INSTANCEID1)));
     verify(utilizationDataService).create(instanceUtilizationDataArgumentCaptor.capture());

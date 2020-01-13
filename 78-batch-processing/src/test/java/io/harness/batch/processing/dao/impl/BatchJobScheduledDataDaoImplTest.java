@@ -22,6 +22,7 @@ import java.time.temporal.ChronoUnit;
 public class BatchJobScheduledDataDaoImplTest extends WingsBaseTest {
   @Inject private BatchJobScheduledDataDaoImpl batchJobScheduledDataDao;
 
+  private final String ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final Instant NOW = Instant.now();
   private final Instant START_INSTANT = NOW.truncatedTo(ChronoUnit.DAYS);
   private final Instant END_INSTANT = NOW.plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
@@ -35,7 +36,7 @@ public class BatchJobScheduledDataDaoImplTest extends WingsBaseTest {
         batchJobScheduledDataDao.create(batchJobScheduledData(PREV_START_INSTANT, START_INSTANT));
     boolean createSecondEntry = batchJobScheduledDataDao.create(batchJobScheduledData(START_INSTANT, END_INSTANT));
     BatchJobScheduledData batchJobScheduledData =
-        batchJobScheduledDataDao.fetchLastBatchJobScheduledData(BatchJobType.ECS_EVENT);
+        batchJobScheduledDataDao.fetchLastBatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT);
     assertThat(createFirstEntry).isTrue();
     assertThat(createSecondEntry).isTrue();
     assertThat(batchJobScheduledData.getStartAt()).isEqualTo(START_INSTANT);
@@ -43,6 +44,6 @@ public class BatchJobScheduledDataDaoImplTest extends WingsBaseTest {
   }
 
   private BatchJobScheduledData batchJobScheduledData(Instant startInstant, Instant endInstant) {
-    return new BatchJobScheduledData(BatchJobType.ECS_EVENT, startInstant, endInstant);
+    return new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT, startInstant, endInstant);
   }
 }

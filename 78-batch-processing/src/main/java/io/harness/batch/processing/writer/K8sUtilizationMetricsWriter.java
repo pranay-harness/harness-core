@@ -34,6 +34,7 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
 
   @Override
   public void write(List<? extends List<String>> lists) {
+    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
     long startDate = Long.parseLong(parameters.getString(CCMJobConstants.JOB_START_DATE));
     long endDate = Long.parseLong(parameters.getString(CCMJobConstants.JOB_END_DATE));
     logger.info("Published batch size is K8sUtilizationMetricsWriter {} ", lists.size());
@@ -41,53 +42,54 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
 
     lists.forEach(list -> Lists.partition(list, BATCH_SIZE).forEach(instanceIdsBatch -> {
       Map<String, InstanceUtilizationData> aggregatedUtilizationData =
-          k8sUtilizationGranularDataService.getAggregatedUtilizationData(instanceIdsBatch, startDate, endDate);
+          k8sUtilizationGranularDataService.getAggregatedUtilizationData(
+              accountId, instanceIdsBatch, startDate, endDate);
 
       for (Map.Entry<String, InstanceUtilizationData> entry : aggregatedUtilizationData.entrySet()) {
         InstanceUtilizationData instanceUtilizationData = entry.getValue();
-        String accountId = instanceUtilizationData.getAccountId();
         String settingId = instanceUtilizationData.getSettingId();
         String instanceId = entry.getKey();
 
         PrunedInstanceData instanceData =
             instanceDataService.fetchPrunedInstanceDataWithName(accountId, settingId, instanceId, startDate);
         // Initialisation to 100% Utilisation
-        double cpuAvgPercentage = 1;
-        double cpuMaxPercentage = 1;
-        double memoryAvgPercentage = 1;
-        double memoryMaxPercentage = 1;
 
-        double cpuAvgValue = instanceUtilizationData.getCpuUtilizationAvg();
-        double cpuMaxValue = instanceUtilizationData.getCpuUtilizationMax();
-        double memoryAvgValue = instanceUtilizationData.getMemoryUtilizationAvg();
-        double memoryMaxValue = instanceUtilizationData.getMemoryUtilizationMax();
+        if (instanceData.getInstanceId() != null) {
+          double cpuAvgPercentage = 1;
+          double cpuMaxPercentage = 1;
+          double memoryAvgPercentage = 1;
+          double memoryMaxPercentage = 1;
 
-        if (null != instanceData && instanceData.getTotalResource() != null) {
-          Double totalCpuResource = instanceData.getTotalResource().getCpuUnits();
-          Double totalMemoryResource = instanceData.getTotalResource().getMemoryMb();
-          if (totalCpuResource != 0) {
-            cpuAvgPercentage = cpuAvgValue / totalCpuResource;
-            cpuMaxPercentage = cpuMaxValue / totalCpuResource;
-          }
-          if (totalMemoryResource != 0) {
-            memoryAvgPercentage = memoryAvgValue / totalMemoryResource;
-            memoryMaxPercentage = memoryMaxValue / totalMemoryResource;
+          double cpuAvgValue = instanceUtilizationData.getCpuUtilizationAvg();
+          double cpuMaxValue = instanceUtilizationData.getCpuUtilizationMax();
+          double memoryAvgValue = instanceUtilizationData.getMemoryUtilizationAvg();
+          double memoryMaxValue = instanceUtilizationData.getMemoryUtilizationMax();
+          if (instanceData.getTotalResource() != null) {
+            Double totalCpuResource = instanceData.getTotalResource().getCpuUnits();
+            Double totalMemoryResource = instanceData.getTotalResource().getMemoryMb();
+            if (totalCpuResource != 0) {
+              cpuAvgPercentage = cpuAvgValue / totalCpuResource;
+              cpuMaxPercentage = cpuMaxValue / totalCpuResource;
+            }
+            if (totalMemoryResource != 0) {
+              memoryAvgPercentage = memoryAvgValue / totalMemoryResource;
+              memoryMaxPercentage = memoryMaxValue / totalMemoryResource;
+            }
           }
           instanceUtilizationData.setInstanceId(instanceData.getInstanceId());
+          instanceUtilizationData.setCpuUtilizationAvg(cpuAvgPercentage);
+          instanceUtilizationData.setCpuUtilizationMax(cpuMaxPercentage);
+          instanceUtilizationData.setMemoryUtilizationAvg(memoryAvgPercentage);
+          instanceUtilizationData.setMemoryUtilizationMax(memoryMaxPercentage);
+          instanceUtilizationData.setCpuUtilizationAvgValue(cpuAvgValue);
+          instanceUtilizationData.setCpuUtilizationMaxValue(cpuMaxValue);
+          instanceUtilizationData.setMemoryUtilizationAvgValue(memoryAvgValue);
+          instanceUtilizationData.setMemoryUtilizationMaxValue(memoryMaxValue);
+          instanceUtilizationData.setStartTimestamp(startDate);
+          instanceUtilizationData.setEndTimestamp(endDate);
+
+          instanceUtilizationDataList.add(instanceUtilizationData);
         }
-
-        instanceUtilizationData.setCpuUtilizationAvg(cpuAvgPercentage);
-        instanceUtilizationData.setCpuUtilizationMax(cpuMaxPercentage);
-        instanceUtilizationData.setMemoryUtilizationAvg(memoryAvgPercentage);
-        instanceUtilizationData.setMemoryUtilizationMax(memoryMaxPercentage);
-        instanceUtilizationData.setCpuUtilizationAvgValue(cpuAvgValue);
-        instanceUtilizationData.setCpuUtilizationMaxValue(cpuMaxValue);
-        instanceUtilizationData.setMemoryUtilizationAvgValue(memoryAvgValue);
-        instanceUtilizationData.setMemoryUtilizationMaxValue(memoryMaxValue);
-        instanceUtilizationData.setStartTimestamp(startDate);
-        instanceUtilizationData.setEndTimestamp(endDate);
-
-        instanceUtilizationDataList.add(instanceUtilizationData);
       }
     }));
     utilizationDataService.create(instanceUtilizationDataList);

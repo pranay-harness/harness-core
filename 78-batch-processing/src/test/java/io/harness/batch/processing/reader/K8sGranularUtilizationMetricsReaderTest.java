@@ -38,12 +38,14 @@ public class K8sGranularUtilizationMetricsReaderTest extends WingsBaseTest {
   private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
   private final long END_TIME_MILLIS = NOW.toEpochMilli();
   private final String INSTANCE_ID = "instanceId";
+  private final String ACCOUNT_ID = "accountId";
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    when(k8sUtilizationGranularDataService.getDistinctInstantIds(START_TIME_MILLIS, END_TIME_MILLIS))
+    when(k8sUtilizationGranularDataService.getDistinctInstantIds(ACCOUNT_ID, START_TIME_MILLIS, END_TIME_MILLIS))
         .thenReturn(Collections.singletonList(INSTANCE_ID));
+    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
     runOnlyOnce = new AtomicBoolean(false);

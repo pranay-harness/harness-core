@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import software.wings.beans.Account;
+import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.util.Comparator;
 import java.util.List;
@@ -18,20 +20,22 @@ import javax.annotation.PostConstruct;
 public class EventJobScheduler {
   @Autowired private List<Job> jobs;
   @Autowired private BatchJobRunner batchJobRunner;
+  @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
 
   @PostConstruct
   public void orderJobs() {
     jobs.sort(Comparator.comparingInt(job -> BatchJobType.valueOf(job.getName()).getOrder()));
   }
 
-  @Scheduled(cron = "0 */1 * * * ?")
+  @Scheduled(cron = "0 */20 * * * ?")
   public void runCloudEfficiencyEventJobs() {
-    jobs.forEach(this ::runJob);
+    List<Account> ccmEnabledAccounts = cloudToHarnessMappingService.getCCMEnabledAccounts();
+    ccmEnabledAccounts.forEach(account -> jobs.forEach(job -> runJob(account.getUuid(), job)));
   }
 
-  private void runJob(Job job) {
+  private void runJob(String accountId, Job job) {
     try {
-      batchJobRunner.runJob(job);
+      batchJobRunner.runJob(accountId, job);
     } catch (Exception ex) {
       logger.error("Exception while running job {}", job);
     }

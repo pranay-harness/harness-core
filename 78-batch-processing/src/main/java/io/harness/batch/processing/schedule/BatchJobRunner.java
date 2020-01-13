@@ -31,28 +31,31 @@ public class BatchJobRunner {
    * @param job - Job
    * @throws Exception
    */
-  public void runJob(Job job) throws JobParametersInvalidException, JobExecutionAlreadyRunningException,
-                                     JobRestartException, JobInstanceAlreadyCompleteException {
+  public void runJob(String accountId, Job job) throws JobParametersInvalidException,
+                                                       JobExecutionAlreadyRunningException, JobRestartException,
+                                                       JobInstanceAlreadyCompleteException {
     BatchJobType batchJobType = BatchJobType.fromJob(job);
     long duration = batchJobType.getInterval();
     ChronoUnit chronoUnit = batchJobType.getIntervalUnit();
     List<BatchJobType> dependentBatchJobs = batchJobType.getDependentBatchJobs();
-    Instant startAt = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(batchJobType);
+    Instant startAt = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(accountId, batchJobType);
     Instant endAt = Instant.now().minus(4, ChronoUnit.HOURS);
     BatchJobScheduleTimeProvider batchJobScheduleTimeProvider =
         new BatchJobScheduleTimeProvider(startAt, endAt, duration, chronoUnit);
     Instant startInstant = startAt;
     while (batchJobScheduleTimeProvider.hasNext()) {
       Instant endInstant = batchJobScheduleTimeProvider.next();
-      if (null != endInstant && checkDependentJobFinished(startInstant, dependentBatchJobs)) {
+      if (null != endInstant && checkDependentJobFinished(accountId, startInstant, dependentBatchJobs)) {
         JobParameters params =
             new JobParametersBuilder()
                 .addString(CCMJobConstants.JOB_ID, String.valueOf(System.currentTimeMillis()))
+                .addString(CCMJobConstants.ACCOUNT_ID, accountId)
                 .addString(CCMJobConstants.JOB_START_DATE, String.valueOf(startInstant.toEpochMilli()))
                 .addString(CCMJobConstants.JOB_END_DATE, String.valueOf(endInstant.toEpochMilli()))
                 .toJobParameters();
         jobLauncher.run(job, params);
-        BatchJobScheduledData batchJobScheduledData = new BatchJobScheduledData(batchJobType, startInstant, endInstant);
+        BatchJobScheduledData batchJobScheduledData =
+            new BatchJobScheduledData(accountId, batchJobType, startInstant, endInstant);
         batchJobScheduledDataService.create(batchJobScheduledData);
         startInstant = endInstant;
       } else {
@@ -61,9 +64,9 @@ public class BatchJobRunner {
     }
   }
 
-  boolean checkDependentJobFinished(Instant startAt, List<BatchJobType> dependentBatchJobs) {
+  boolean checkDependentJobFinished(String accountId, Instant startAt, List<BatchJobType> dependentBatchJobs) {
     for (BatchJobType dependentBatchJob : dependentBatchJobs) {
-      Instant instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(dependentBatchJob);
+      Instant instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(accountId, dependentBatchJob);
       if (!instant.isAfter(startAt)) {
         return false;
       }

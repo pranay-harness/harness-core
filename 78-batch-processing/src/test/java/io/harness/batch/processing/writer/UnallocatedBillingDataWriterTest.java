@@ -104,14 +104,14 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
                                                         .cloudProvider(CLOUD_PROVIDER)
                                                         .workloadType(WORKLOAD_TYPE);
 
-    when(unallocatedBillingDataService.getCommonFields(eq(CLUSTER_ID_1), anyLong(), anyLong()))
-        .thenReturn(clusterCostDataBuilder.clusterType(K8S_CLUSTER_TYPE).build());
-    when(unallocatedBillingDataService.getCommonFields(eq(CLUSTER_ID_2), anyLong(), anyLong()))
-        .thenReturn(clusterCostDataBuilder.clusterType(K8S_CLUSTER_TYPE).build());
-    when(unallocatedBillingDataService.getCommonFields(eq(CLUSTER_ID_3), anyLong(), anyLong()))
-        .thenReturn(clusterCostDataBuilder.clusterType(ECS_CLUSTER_TYPE).build());
-    when(unallocatedBillingDataService.getCommonFields(eq(CLUSTER_ID_4), anyLong(), anyLong()))
-        .thenReturn(clusterCostDataBuilder.clusterType(ECS_CLUSTER_TYPE).build());
+    when(unallocatedBillingDataService.getCommonFields(eq(ACCOUNT_ID), eq(CLUSTER_ID_1), anyLong(), anyLong()))
+        .thenReturn(clusterCostDataBuilder.accountId(ACCOUNT_ID).clusterType(K8S_CLUSTER_TYPE).build());
+    when(unallocatedBillingDataService.getCommonFields(eq(ACCOUNT_ID), eq(CLUSTER_ID_2), anyLong(), anyLong()))
+        .thenReturn(clusterCostDataBuilder.accountId(ACCOUNT_ID).clusterType(K8S_CLUSTER_TYPE).build());
+    when(unallocatedBillingDataService.getCommonFields(eq(ACCOUNT_ID), eq(CLUSTER_ID_3), anyLong(), anyLong()))
+        .thenReturn(clusterCostDataBuilder.accountId(ACCOUNT_ID).clusterType(ECS_CLUSTER_TYPE).build());
+    when(unallocatedBillingDataService.getCommonFields(eq(ACCOUNT_ID), eq(CLUSTER_ID_4), anyLong(), anyLong()))
+        .thenReturn(clusterCostDataBuilder.accountId(ACCOUNT_ID).clusterType(ECS_CLUSTER_TYPE).build());
   }
 
   @Test
@@ -143,6 +143,7 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
   UnallocatedCostData getMockUnallocatedCostData(String clusterId, String instanceType, double cost) {
     return UnallocatedCostData.builder()
         .clusterId(clusterId)
+        .accountId(ACCOUNT_ID)
         .instanceType(instanceType)
         .cost(cost)
         .startTime(START_TIME_MILLIS)

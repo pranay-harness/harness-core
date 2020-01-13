@@ -19,6 +19,7 @@ import java.time.Instant;
 public class MongoEventReaderFactoryTest extends WingsBaseTest {
   @Inject private MongoEventReaderFactory mongoEventReaderFactory;
 
+  private final String ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final Instant NOW = Instant.now();
   private final long START_TIME = NOW.getEpochSecond();
   private final long END_TIME = NOW.getEpochSecond();
@@ -28,7 +29,7 @@ public class MongoEventReaderFactoryTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testPublishedMessageMongoEventReader() {
     ItemReader<PublishedMessage> reader =
-        mongoEventReaderFactory.getEventReader(EventTypeConstants.EC2_INSTANCE_INFO, START_TIME, END_TIME);
+        mongoEventReaderFactory.getEventReader(ACCOUNT_ID, EventTypeConstants.EC2_INSTANCE_INFO, START_TIME, END_TIME);
     assertThat(reader).isNotNull();
   }
 }

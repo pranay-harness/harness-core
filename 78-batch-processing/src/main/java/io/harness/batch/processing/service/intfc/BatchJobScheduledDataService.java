@@ -8,5 +8,5 @@ import java.time.Instant;
 public interface BatchJobScheduledDataService {
   boolean create(BatchJobScheduledData batchJobScheduledData);
 
-  Instant fetchLastBatchJobScheduledTime(BatchJobType batchJobType);
+  Instant fetchLastBatchJobScheduledTime(String accountId, BatchJobType batchJobType);
 }

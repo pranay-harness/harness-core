@@ -35,16 +35,15 @@ public class K8sUtilizationGranularDataServiceImpl {
   static final String INSERT_STATEMENT =
       "INSERT INTO KUBERNETES_UTILIZATION_DATA (STARTTIME, ENDTIME, CPU, MEMORY, INSTANCEID, INSTANCETYPE, SETTINGID, ACCOUNTID) VALUES (?,?,?,?,?,?,?,?)";
   static final String SELECT_DISTINCT_INSTANCEID =
-      "SELECT DISTINCT INSTANCEID FROM KUBERNETES_UTILIZATION_DATA WHERE STARTTIME >= '%s' AND STARTTIME < '%s'";
+      "SELECT DISTINCT INSTANCEID FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s'";
   static final String UTILIZATION_DATA_QUERY =
       "SELECT MAX(CPU) as CPUUTILIZATIONMAX, MAX(MEMORY) as MEMORYUTILIZATIONMAX, AVG(CPU) as CPUUTILIZATIONAVG, AVG(MEMORY) as MEMORYUTILIZATIONAVG,"
-      + " SETTINGID, INSTANCEID,  INSTANCETYPE, ACCOUNTID FROM KUBERNETES_UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' "
-      + " GROUP BY ACCOUNTID, INSTANCEID, SETTINGID, INSTANCETYPE ";
+      + " SETTINGID, INSTANCEID, INSTANCETYPE FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' "
+      + " GROUP BY INSTANCEID, SETTINGID, INSTANCETYPE ";
 
   public boolean create(List<K8sGranularUtilizationData> k8sGranularUtilizationDataList) {
     boolean successfulInsert = false;
     if (timeScaleDBService.isValid()) {
-      long startTime = System.currentTimeMillis();
       int retryCount = 0;
       while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
@@ -64,12 +63,10 @@ public class K8sUtilizationGranularDataServiceImpl {
           logger.info(
               "Failed to save K8s Utilization data,[{}],retryCount=[{}]", k8sGranularUtilizationDataList, retryCount);
           retryCount++;
-        } finally {
-          logger.info("Total time=[{}]", System.currentTimeMillis() - startTime);
         }
       }
     } else {
-      logger.info("Not processing K8s Utilization data:[{}]", k8sGranularUtilizationDataList);
+      logger.warn("Not processing K8s Utilization data:[{}]", k8sGranularUtilizationDataList);
     }
     return successfulInsert;
   }
@@ -87,12 +84,12 @@ public class K8sUtilizationGranularDataServiceImpl {
     statement.setString(8, k8sGranularUtilizationData.getAccountId());
   }
 
-  public List<String> getDistinctInstantIds(long startDate, long endDate) {
+  public List<String> getDistinctInstantIds(String accountId, long startDate, long endDate) {
     ResultSet resultSet = null;
     List<String> instanceIdsList = new ArrayList<>();
 
-    String query =
-        String.format(SELECT_DISTINCT_INSTANCEID, Instant.ofEpochMilli(startDate), Instant.ofEpochMilli(endDate));
+    String query = String.format(
+        SELECT_DISTINCT_INSTANCEID, accountId, Instant.ofEpochMilli(startDate), Instant.ofEpochMilli(endDate));
 
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
@@ -110,9 +107,9 @@ public class K8sUtilizationGranularDataServiceImpl {
   }
 
   public Map<String, InstanceUtilizationData> getAggregatedUtilizationData(
-      List<String> distinctIdsList, long startDate, long endDate) {
+      String accountId, List<String> distinctIdsList, long startDate, long endDate) {
     ResultSet resultSet = null;
-    String query = String.format(UTILIZATION_DATA_QUERY, String.join("','", distinctIdsList),
+    String query = String.format(UTILIZATION_DATA_QUERY, accountId, String.join("','", distinctIdsList),
         Instant.ofEpochMilli(startDate), Instant.ofEpochMilli(endDate));
 
     Map<String, InstanceUtilizationData> instanceUtilizationDataMap = new HashMap<>();
@@ -123,7 +120,6 @@ public class K8sUtilizationGranularDataServiceImpl {
         String instanceType = resultSet.getString("INSTANCETYPE");
         String instanceId = resultSet.getString("INSTANCEID");
         String settingId = resultSet.getString("SETTINGID");
-        String accountId = resultSet.getString("ACCOUNTID");
         double cpuMax = resultSet.getDouble("CPUUTILIZATIONMAX");
         double memMax = resultSet.getDouble("MEMORYUTILIZATIONMAX");
         double cpuAvg = resultSet.getDouble("CPUUTILIZATIONAVG");

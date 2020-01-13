@@ -22,15 +22,16 @@ public class InstanceDataMongoEventReader implements InstanceDataEventReader {
   @Autowired private MongoTemplate mongoTemplate;
 
   @Override
-  public ItemReader<InstanceData> getEventReader(Long startDate, Long endDate) {
+  public ItemReader<InstanceData> getEventReader(String accountId, Long startDate, Long endDate) {
     MongoItemReader<InstanceData> reader = new MongoItemReader<>();
     reader.setCollection("instanceData");
     reader.setTemplate(mongoTemplate);
     reader.setTargetType(InstanceData.class);
     Query query = new Query();
     query.addCriteria(
-        Criteria.where(InstanceDataKeys.usageStartTime)
-            .exists(true)
+        new Criteria()
+            .andOperator(Criteria.where(InstanceDataKeys.accountId).is(accountId),
+                Criteria.where(InstanceDataKeys.usageStartTime).exists(true))
             .orOperator(
                 Criteria.where(InstanceDataKeys.usageStartTime)
                     .exists(true)

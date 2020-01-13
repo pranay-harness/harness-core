@@ -32,7 +32,7 @@ public class PodUtilizationMetricsWriter extends EventWriter implements ItemWrit
         .forEach(publishedMessage -> {
           String accountId = publishedMessage.getAccountId();
           PodMetric podUtilizationMetric = (PodMetric) publishedMessage.getMessage();
-          logger.info("Pod Utilization {} ", podUtilizationMetric);
+          logger.debug("Pod Utilization {} ", podUtilizationMetric);
 
           long endTime = podUtilizationMetric.getTimestamp().getSeconds() * 1000;
           long startTime = endTime - (podUtilizationMetric.getWindow().getSeconds() * 1000);

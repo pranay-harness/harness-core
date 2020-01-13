@@ -38,6 +38,7 @@ public class UnallocatedBillingDataReaderTest extends WingsBaseTest {
   private final Instant NOW = Instant.now();
   private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
   private final long END_TIME_MILLIS = NOW.toEpochMilli();
+  private static final String ACCOUNT_ID = "accountId";
   private final String CLUSTER_ID = "clusterId";
   private final String INSTANCE_TYPE = "instanceType";
   private final double COST = 2.0;
@@ -45,7 +46,7 @@ public class UnallocatedBillingDataReaderTest extends WingsBaseTest {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    when(unallocatedBillingDataService.getUnallocatedCostData(START_TIME_MILLIS, END_TIME_MILLIS))
+    when(unallocatedBillingDataService.getUnallocatedCostData(ACCOUNT_ID, START_TIME_MILLIS, END_TIME_MILLIS))
         .thenReturn(Collections.singletonList(UnallocatedCostData.builder()
                                                   .clusterId(CLUSTER_ID)
                                                   .instanceType(INSTANCE_TYPE)
@@ -55,6 +56,7 @@ public class UnallocatedBillingDataReaderTest extends WingsBaseTest {
                                                   .startTime(START_TIME_MILLIS)
                                                   .endTime(END_TIME_MILLIS)
                                                   .build()));
+    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
     runOnlyOnce = new AtomicBoolean(false);

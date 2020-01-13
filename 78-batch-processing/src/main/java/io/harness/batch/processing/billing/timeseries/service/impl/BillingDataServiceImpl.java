@@ -28,7 +28,6 @@ public class BillingDataServiceImpl {
   public boolean create(InstanceBillingData instanceBillingData) {
     boolean successfulInsert = false;
     if (timeScaleDBService.isValid()) {
-      long startTime = System.currentTimeMillis();
       int retryCount = 0;
       while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
@@ -40,12 +39,10 @@ public class BillingDataServiceImpl {
         } catch (SQLException e) {
           logger.error("Failed to save instance data,[{}],retryCount=[{}]", instanceBillingData, retryCount);
           retryCount++;
-        } finally {
-          logger.info("Total time=[{}]", System.currentTimeMillis() - startTime);
         }
       }
     } else {
-      logger.info("Not processing instance billing data:[{}]", instanceBillingData);
+      logger.warn("Not processing instance billing data:[{}]", instanceBillingData);
     }
     return successfulInsert;
   }

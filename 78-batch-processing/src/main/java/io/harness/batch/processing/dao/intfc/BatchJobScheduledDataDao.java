@@ -6,5 +6,5 @@ import io.harness.batch.processing.entities.BatchJobScheduledData;
 public interface BatchJobScheduledDataDao {
   boolean create(BatchJobScheduledData batchJobScheduledData);
 
-  BatchJobScheduledData fetchLastBatchJobScheduledData(BatchJobType batchJobType);
+  BatchJobScheduledData fetchLastBatchJobScheduledData(String accountId, BatchJobType batchJobType);
 }

@@ -32,6 +32,8 @@ public class BatchJobScheduled {
 
   @Autowired private HPersistence hPersistence;
 
+  private static final String ACCOUNT_ID = "accountId";
+
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
@@ -40,17 +42,17 @@ public class BatchJobScheduled {
     Instant firstStartAt = Instant.now().minus(2, ChronoUnit.DAYS);
     Instant firstEndAt = Instant.now().minus(1, ChronoUnit.DAYS);
     BatchJobScheduledData batchJobScheduledData =
-        new BatchJobScheduledData(BatchJobType.ECS_EVENT, firstStartAt, firstEndAt);
+        new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT, firstStartAt, firstEndAt);
     assertThat(batchJobScheduledDataService.create(batchJobScheduledData)).isTrue();
 
-    Instant instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(BatchJobType.ECS_EVENT);
+    Instant instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.ECS_EVENT);
     assertThat(instant).isEqualTo(firstEndAt);
 
     Instant secondEndAt = Instant.now();
-    batchJobScheduledData = new BatchJobScheduledData(BatchJobType.ECS_EVENT, firstEndAt, secondEndAt);
+    batchJobScheduledData = new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT, firstEndAt, secondEndAt);
     assertThat(batchJobScheduledDataService.create(batchJobScheduledData)).isTrue();
 
-    instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(BatchJobType.ECS_EVENT);
+    instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.ECS_EVENT);
     assertThat(instant).isEqualTo(secondEndAt);
   }
 
@@ -58,6 +60,7 @@ public class BatchJobScheduled {
   public void clearCollection() {
     val ds = hPersistence.getDatastore(BatchJobScheduledData.class);
     ds.delete(ds.createQuery(BatchJobScheduledData.class)
+                  .filter(BatchJobScheduledDataKeys.accountId, ACCOUNT_ID)
                   .filter(BatchJobScheduledDataKeys.batchJobType, BatchJobType.ECS_EVENT));
   }
 }

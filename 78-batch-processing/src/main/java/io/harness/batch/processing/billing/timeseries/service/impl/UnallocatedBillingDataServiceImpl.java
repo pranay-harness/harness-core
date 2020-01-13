@@ -23,22 +23,23 @@ public class UnallocatedBillingDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
 
   static final String GET_UNALLOCATED_COST_DATA =
-      "SELECT SUM(BILLINGAMOUNT) AS COST, SUM(CPUBILLINGAMOUNT) AS CPUCOST, SUM(MEMORYBILLINGAMOUNT) AS MEMORYCOST, CLUSTERID, INSTANCETYPE FROM BILLING_DATA WHERE CLUSTERID IS NOT NULL AND INSTANCETYPE IN ('K8S_POD', 'K8S_NODE', 'ECS_CONTAINER_INSTANCE', 'ECS_TASK_EC2') AND STARTTIME >= '%s' AND ENDTIME <= '%s' GROUP BY CLUSTERID, INSTANCETYPE";
+      "SELECT SUM(BILLINGAMOUNT) AS COST, SUM(CPUBILLINGAMOUNT) AS CPUCOST, SUM(MEMORYBILLINGAMOUNT) AS MEMORYCOST, ACCOUNTID, CLUSTERID, INSTANCETYPE FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND CLUSTERID IS NOT NULL AND INSTANCETYPE IN ('K8S_POD', 'K8S_NODE', 'ECS_CONTAINER_INSTANCE', 'ECS_TASK_EC2') AND STARTTIME >= '%s' AND ENDTIME <= '%s' GROUP BY ACCOUNTID, CLUSTERID, INSTANCETYPE";
 
   static final String GET_COMMON_FIELDS =
-      "SELECT BILLINGACCOUNTID, ACCOUNTID, CLUSTERNAME, SETTINGID, REGION, CLOUDPROVIDER, CLUSTERTYPE, WORKLOADTYPE FROM BILLING_DATA WHERE CLUSTERID = '%s' AND INSTANCETYPE IN ('K8S_POD', 'K8S_NODE', 'ECS_CONTAINER_INSTANCE', 'ECS_TASK_EC2') AND STARTTIME >= '%s' AND ENDTIME <= '%s' LIMIT 1";
+      "SELECT BILLINGACCOUNTID, ACCOUNTID, CLUSTERNAME, SETTINGID, REGION, CLOUDPROVIDER, CLUSTERTYPE, WORKLOADTYPE FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND CLUSTERID = '%s' AND INSTANCETYPE IN ('K8S_POD', 'K8S_NODE', 'ECS_CONTAINER_INSTANCE', 'ECS_TASK_EC2') AND STARTTIME >= '%s' AND ENDTIME <= '%s' LIMIT 1";
 
-  public List<UnallocatedCostData> getUnallocatedCostData(long startDate, long endDate) {
+  public List<UnallocatedCostData> getUnallocatedCostData(String accountId, long startDate, long endDate) {
     ResultSet resultSet = null;
     List<UnallocatedCostData> unallocatedCostDataList = new ArrayList<>();
 
-    String query =
-        String.format(GET_UNALLOCATED_COST_DATA, Instant.ofEpochMilli(startDate), Instant.ofEpochMilli(endDate));
+    String query = String.format(
+        GET_UNALLOCATED_COST_DATA, accountId, Instant.ofEpochMilli(startDate), Instant.ofEpochMilli(endDate));
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(query);
       while (resultSet.next()) {
         unallocatedCostDataList.add(UnallocatedCostData.builder()
+                                        .accountId(resultSet.getString("ACCOUNTID"))
                                         .clusterId(resultSet.getString("CLUSTERID"))
                                         .instanceType(resultSet.getString("INSTANCETYPE"))
                                         .cost(resultSet.getDouble("COST"))
@@ -57,12 +58,12 @@ public class UnallocatedBillingDataServiceImpl {
     return Collections.emptyList();
   }
 
-  public ClusterCostData getCommonFields(String clusterId, long startDate, long endDate) {
+  public ClusterCostData getCommonFields(String accountId, String clusterId, long startDate, long endDate) {
     ResultSet resultSet = null;
     ClusterCostData clusterCostData = ClusterCostData.builder().build();
 
-    String query =
-        String.format(GET_COMMON_FIELDS, clusterId, Instant.ofEpochMilli(startDate), Instant.ofEpochMilli(endDate));
+    String query = String.format(
+        GET_COMMON_FIELDS, accountId, clusterId, Instant.ofEpochMilli(startDate), Instant.ofEpochMilli(endDate));
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(query);

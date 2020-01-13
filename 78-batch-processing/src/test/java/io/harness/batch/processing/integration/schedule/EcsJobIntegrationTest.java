@@ -105,7 +105,7 @@ public class EcsJobIntegrationTest extends CategoryTest implements EcsEventGener
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldRunEcsJob() throws Exception {
-    batchJobRunner.runJob(ecsJob);
+    batchJobRunner.runJob(TEST_ACCOUNT_ID, ecsJob);
 
     List<InstanceState> stoppedInstanceState = getStoppedInstanceState();
     InstanceData stoppedInstanceData =
