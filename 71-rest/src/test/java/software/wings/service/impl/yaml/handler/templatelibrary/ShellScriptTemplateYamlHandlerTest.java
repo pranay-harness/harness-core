@@ -1,8 +1,10 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -20,6 +22,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.NoResultFoundException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,8 +30,10 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import software.wings.beans.Application;
 import software.wings.beans.template.Template;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.yaml.templatelibrary.ShellScriptTemplateYaml;
 
@@ -39,6 +44,7 @@ public class ShellScriptTemplateYamlHandlerTest extends TemplateLibraryYamlHandl
 
   @InjectMocks @Inject private ShellScriptTemplateYamlHandler yamlHandler;
   @Mock private TemplateService templateService;
+  @Mock private AppService appService;
 
   @Before
   public void runBeforeTest() {
@@ -112,5 +118,44 @@ public class ShellScriptTemplateYamlHandlerTest extends TemplateLibraryYamlHandl
     testFailures(VALID_SHELL_SCRIPT_TEMPLATE_WITH_VARIABLE, SHELL_SCRIPT_TEMPLATE_VALID_YAML_FILE_PATH,
         INVALID_SHELL_SCRIPT_TEMPLATE_WITH_VARIABLE, INVALID_SHELL_SCRIPT_TEMPLATE_VALID_YAML_FILE_PATH, yamlHandler,
         ShellScriptTemplateYaml.class);
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_getApplicationId() {
+    final String accountid = "accountid";
+    final String yamlPath = "/Setup/Applications/app1/Template Library/harness/folder1/shell.yaml";
+    doReturn("app1").when(yamlHelper).getAppName(yamlPath);
+    doReturn(Application.Builder.anApplication().uuid("app_uuid").build())
+        .when(appService)
+        .getAppByName(accountid, "app1");
+    final String applicationId = yamlHandler.getApplicationId(accountid, yamlPath);
+    assertThat(applicationId).isEqualTo("app_uuid");
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_getApplicationId_GLOBAL() {
+    final String accountid = "accountid";
+    final String yamlPath = "/Setup/Template Library/harness/folder1/shell.yaml";
+
+    doReturn(null).when(yamlHelper).getAppName(yamlPath);
+    doReturn(null).when(appService).getAppByName(accountid, "app1");
+    final String applicationId = yamlHandler.getApplicationId(accountid, yamlPath);
+    assertThat(applicationId).isEqualTo(GLOBAL_APP_ID);
+  }
+
+  @Test(expected = NoResultFoundException.class)
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_getApplicationId_erro() {
+    final String accountid = "accountid";
+    final String yamlPath = "/Setup/Applications/app1/Template Library/harness/folder1/shell.yaml";
+
+    doReturn("app1").when(yamlHelper).getAppName(yamlPath);
+    doReturn(null).when(appService).getAppByName(accountid, "app1");
+    final String applicationId = yamlHandler.getApplicationId(accountid, yamlPath);
   }
 }
