@@ -17,6 +17,7 @@ import software.wings.graphql.schema.type.aggregation.QLStackedData;
 import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesData;
 import software.wings.graphql.schema.type.audit.QLApiKeyChangeSet;
+import software.wings.graphql.schema.type.audit.QLGenericChangeSet;
 import software.wings.graphql.schema.type.audit.QLGitChangeSet;
 import software.wings.graphql.schema.type.audit.QLUserChangeSet;
 import software.wings.graphql.schema.type.cloudProvider.QLAwsCloudProvider;
@@ -145,6 +146,7 @@ public class TypeResolverManager {
     public static final String UserChangeSet = "UserChangeSet";
     public static final String GitChangeSet = "GitChangeSet";
     public static final String ApiKeyChangeSet = "ApiKeyChangeSet";
+    public static final String GenericChangeSet = "GenericChangeSet";
   }
 
   /**
@@ -249,6 +251,7 @@ public class TypeResolverManager {
                                       .put(QLUserChangeSet.class, TypeResolverManagerTypes.UserChangeSet)
                                       .put(QLGitChangeSet.class, TypeResolverManagerTypes.GitChangeSet)
                                       .put(QLApiKeyChangeSet.class, TypeResolverManagerTypes.ApiKeyChangeSet)
+                                      .put(QLGenericChangeSet.class, TypeResolverManagerTypes.GenericChangeSet)
                                       .build()))
         .build();
   }

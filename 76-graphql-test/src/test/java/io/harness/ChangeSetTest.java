@@ -27,6 +27,7 @@ import software.wings.graphql.schema.type.aggregation.audit.QLTimeUnit;
 import software.wings.graphql.schema.type.audit.QLApiKeyChangeSet;
 import software.wings.graphql.schema.type.audit.QLChangeDetails;
 import software.wings.graphql.schema.type.audit.QLChangeSet;
+import software.wings.graphql.schema.type.audit.QLGenericChangeSet;
 import software.wings.graphql.schema.type.audit.QLGitChangeSet;
 import software.wings.graphql.schema.type.audit.QLRequestInfo;
 import software.wings.graphql.schema.type.audit.QLUserChangeSet;
@@ -253,6 +254,38 @@ resourceType
     }
   }
 
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testQueryForGenericChangeSet() {
+    final Randomizer.Seed seed = new Randomizer.Seed(0);
+    final OwnerManager.Owners owners = ownerManager.create();
+    owners.add(EmbeddedUser.builder().uuid(generateUuid()).email("email").name("name").build());
+    final AuditHeader auditHeader = changeSetGenerator.ensureGitChangeSetTest(seed, owners);
+
+    String changeSetQueryPattern = $.GQL(/*
+    {
+    audits(limit:1){
+      nodes{
+        id
+        ... on GenericChangeSet{
+          triggeredAt
+        }
+      }
+    }
+  }
+  */ ChangeSetTest.class);
+
+    String query = String.format(changeSetQueryPattern, 1);
+
+    QLChangeSetConnectionGenericImpl changeSetConnection =
+        qlExecute(QLChangeSetConnectionGenericImpl.class, query, auditHeader.getAccountId());
+    assertThat(changeSetConnection.getNodes().size()).isEqualTo(1);
+    verifyPageInfo(changeSetConnection.getPageInfo());
+    QLGenericChangeSet genericChangeSet = changeSetConnection.getNodes().get(0);
+    verifyChangeSet(genericChangeSet, auditHeader);
+  }
+
   /**
    * Verify common attributes of different implementations of QLChangeSet
    * @param changeSet
@@ -304,5 +337,11 @@ resourceType
   private static class QLChangeSetConnectionApiKeyImpl {
     private QLPageInfo pageInfo;
     @Singular private List<QLApiKeyChangeSet> nodes;
+  }
+
+  @Data
+  private static class QLChangeSetConnectionGenericImpl {
+    private QLPageInfo pageInfo;
+    @Singular private List<QLGenericChangeSet> nodes;
   }
 }

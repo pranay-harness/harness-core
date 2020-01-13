@@ -94,6 +94,21 @@ type ApiKeyChangeSet implements ChangeSet {
   apiKeyId: String
 }
 
+#If changeSet got triggered by any other source than GraphQL mutation(through API key)
+#or Git action or User action
+type GenericChangeSet implements ChangeSet {
+  #Unique ID of a changeSet
+  id: String
+  #List of all changeDetails
+  changes: [ChangeDetails]
+  #Timestamp when changeSet was triggered
+  triggeredAt: DateTime
+  #HTTP request that triggered the changeSet
+  request: RequestInfo
+  #Failure message
+  failureStatusMsg: String
+}
+
 type RequestInfo {
   #Request URL
   url: String
