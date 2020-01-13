@@ -648,22 +648,34 @@ public abstract class AbstractAnalysisState extends State {
         InstanceElementListParam instances = (InstanceElementListParam) contextElement;
         instances.getPcfInstanceElements().forEach(pcfInstanceElement -> {
           String pcfHostName = getPcfHostName(pcfInstanceElement, includePrevious);
-          if (isNotEmpty(pcfHostName)) {
-            if (isEmpty(hostnameTemplate)) {
-              rv.put(pcfHostName, DEFAULT_GROUP_NAME);
-            } else {
-              rv.put(context.renderExpression(hostnameTemplate,
-                         StateExecutionContext.builder()
-                             .contextElements(Lists.newArrayList(
-                                 HostElement.builder().hostName(pcfHostName).pcfElement(pcfInstanceElement).build()))
-                             .build()),
-                  DEFAULT_GROUP_NAME);
-            }
-          }
+          addToRvMap(context, rv, pcfInstanceElement, pcfHostName);
         });
+
+        if (includePrevious && isNotEmpty(instances.getPcfOldInstanceElements())) {
+          instances.getPcfOldInstanceElements().forEach(pcfInstanceElement -> {
+            String pcfHostName = getPcfHostName(pcfInstanceElement, includePrevious);
+            addToRvMap(context, rv, pcfInstanceElement, pcfHostName);
+          });
+        }
       }
     });
     return rv;
+  }
+
+  private void addToRvMap(
+      ExecutionContext context, Map<String, String> rv, PcfInstanceElement pcfInstanceElement, String pcfHostName) {
+    if (isNotEmpty(pcfHostName)) {
+      if (isEmpty(hostnameTemplate)) {
+        rv.put(pcfHostName, DEFAULT_GROUP_NAME);
+      } else {
+        rv.put(context.renderExpression(hostnameTemplate,
+                   StateExecutionContext.builder()
+                       .contextElements(Lists.newArrayList(
+                           HostElement.builder().hostName(pcfHostName).pcfElement(pcfInstanceElement).build()))
+                       .build()),
+            DEFAULT_GROUP_NAME);
+      }
+    }
   }
 
   private Map<String, String> getAwsAmiHostNames(
@@ -728,8 +740,8 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected String getPcfHostName(PcfInstanceElement pcfInstanceElement, boolean includePrevious) {
-    if (includePrevious || pcfInstanceElement.isUpsize()) {
-      return pcfInstanceElement.getApplicationId();
+    if ((includePrevious && !pcfInstanceElement.isUpsize()) || (!includePrevious && pcfInstanceElement.isUpsize())) {
+      return pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex();
     }
 
     return null;
