@@ -177,13 +177,14 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
       final Set<NewRelicMetricDataRecord> controlRecords =
           context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
           ? analysisService.getPreviousSuccessfulRecords(context.getAppId(), lastSuccessfulWorkflowExecutionIdWithData,
-                groupName, analysisMinute, analysisStartMin)
+                groupName, analysisMinute, analysisStartMin, context.getAccountId())
           : analysisService.getRecords(context.getAppId(), context.getStateExecutionId(), groupName,
-                getNodesForGroup(groupName, context.getControlNodes()), analysisMinute, analysisStartMin);
+                getNodesForGroup(groupName, context.getControlNodes()), analysisMinute, analysisStartMin,
+                context.getAccountId());
 
-      final Set<NewRelicMetricDataRecord> testRecords =
-          analysisService.getRecords(context.getAppId(), context.getStateExecutionId(), groupName,
-              getNodesForGroup(groupName, context.getTestNodes()), analysisMinute, analysisStartMin);
+      final Set<NewRelicMetricDataRecord> testRecords = analysisService.getRecords(context.getAppId(),
+          context.getStateExecutionId(), groupName, getNodesForGroup(groupName, context.getTestNodes()), analysisMinute,
+          analysisStartMin, context.getAccountId());
 
       String message = "";
       if (isEmpty(testRecords)) {
@@ -376,14 +377,14 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
           TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo timeSeriesMlAnalysisGroupInfo = entry.getValue();
           String groupName = timeSeriesMlAnalysisGroupInfo.getGroupName();
           TimeSeriesMlAnalysisType timeSeriesMlAnalysisType = timeSeriesMlAnalysisGroupInfo.getMlAnalysisType();
-          final NewRelicMetricDataRecord lastHeartBeatRecord =
-              analysisService.getHeartBeat(context.getStateType(), context.getAppId(), context.getStateExecutionId(),
-                  context.getWorkflowExecutionId(), context.getServiceId(), groupName, OrderType.DESC);
+          final NewRelicMetricDataRecord lastHeartBeatRecord = analysisService.getHeartBeat(context.getStateType(),
+              context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(), groupName,
+              OrderType.DESC, context.getAccountId());
 
           if (lastHeartBeatRecord != null) {
-            final NewRelicMetricDataRecord firstHeartBeatRecord =
-                analysisService.getHeartBeat(context.getStateType(), context.getAppId(), context.getStateExecutionId(),
-                    context.getWorkflowExecutionId(), context.getServiceId(), groupName, OrderType.ASC);
+            final NewRelicMetricDataRecord firstHeartBeatRecord = analysisService.getHeartBeat(context.getStateType(),
+                context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(), groupName,
+                OrderType.ASC, context.getAccountId());
             completeCron = timeSeriesMlAnalysisType == TimeSeriesMlAnalysisType.PREDICTIVE
                 ? lastHeartBeatRecord.getDataCollectionMinute()
                     >= PREDECTIVE_HISTORY_MINUTES + context.getStartDataCollectionMinute() + analysisDuration
@@ -397,9 +398,9 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
             }
           }
 
-          final NewRelicMetricDataRecord analysisDataRecord =
-              analysisService.getAnalysisMinute(context.getStateType(), context.getAppId(),
-                  context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(), groupName);
+          final NewRelicMetricDataRecord analysisDataRecord = analysisService.getAnalysisMinute(context.getStateType(),
+              context.getAppId(), context.getStateExecutionId(), context.getWorkflowExecutionId(),
+              context.getServiceId(), groupName, context.getAccountId());
           if (analysisDataRecord == null) {
             logger.info("for {} Skipping time series analysis. No new data.", context.getStateExecutionId());
             continue;
@@ -421,7 +422,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
 
                 int minControlMinute = analysisService.getMinControlMinuteWithData(context.getStateType(),
                     context.getAppId(), context.getServiceId(), context.getWorkflowId(),
-                    context.getPrevWorkflowExecutionId(), groupName);
+                    context.getPrevWorkflowExecutionId(), groupName, context.getAccountId());
 
                 if (analysisMinute < minControlMinute) {
                   logger.info(
@@ -433,7 +434,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
 
                 int maxControlMinute = analysisService.getMaxControlMinuteWithData(context.getStateType(),
                     context.getAppId(), context.getServiceId(), context.getWorkflowId(),
-                    context.getPrevWorkflowExecutionId(), groupName);
+                    context.getPrevWorkflowExecutionId(), groupName, context.getAccountId());
                 // this is a migration code
                 // we are moving from relative minute to absolute minute for all the usecases.
                 // we can get rid of this logic only after we have no relative minute baseline set. The current TTL for
@@ -446,7 +447,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
                   // Do nothing. Don't run any analysis.
                   taskQueued = true;
                   analysisService.bumpCollectionMinuteToProcess(context.getAppId(), context.getStateExecutionId(),
-                      context.getWorkflowExecutionId(), groupName, analysisMinute, context.getAccountId(), false);
+                      context.getWorkflowExecutionId(), groupName, analysisMinute, context.getAccountId());
                   break;
                 }
                 taskQueued = timeSeriesML(analysisMinute, groupName, timeSeriesMlAnalysisType);
@@ -468,7 +469,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
             NewRelicMetricAnalysisRecord analysisRecord = analyzeLocal(analysisMinute, groupName);
             analysisService.saveAnalysisRecordsIgnoringDuplicate(analysisRecord);
             analysisService.bumpCollectionMinuteToProcess(context.getAppId(), context.getStateExecutionId(),
-                context.getWorkflowExecutionId(), groupName, analysisMinute, context.getAccountId(), false);
+                context.getWorkflowExecutionId(), groupName, analysisMinute, context.getAccountId());
           } else if (!taskQueued) {
             continue;
           }

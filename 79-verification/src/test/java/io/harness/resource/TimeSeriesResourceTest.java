@@ -125,7 +125,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testGetMetricData() throws IOException {
     boolean compareCurrent = true;
-    when(timeSeriesAnalysisService.getRecords(applicationId, stateExecutionId, groupName, nodes, 0, 0))
+    when(timeSeriesAnalysisService.getRecords(applicationId, stateExecutionId, groupName, nodes, 0, 0, accountId))
         .thenReturn(newRelicMetricDataRecords);
     RestResponse<Set<NewRelicMetricDataRecord>> resp = timeSeriesResource.getMetricData(
         accountId, applicationId, workflowExecutionId, groupName, compareCurrent, tsRequest);
@@ -134,15 +134,17 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
     resp = timeSeriesResource.getMetricData(accountId, applicationId, null, groupName, false, tsRequest);
     assertThat(resp.getResource()).isEqualTo(new HashSet<>());
 
-    when(timeSeriesAnalysisService.getPreviousSuccessfulRecords(applicationId, workflowExecutionId, groupName, 0, 0))
+    when(timeSeriesAnalysisService.getPreviousSuccessfulRecords(
+             applicationId, workflowExecutionId, groupName, 0, 0, accountId))
         .thenReturn(newRelicMetricDataRecords);
     resp = timeSeriesResource.getMetricData(accountId, applicationId, workflowExecutionId, groupName, false, tsRequest);
     assertThat(resp.getResource()).isEqualTo(newRelicMetricDataRecords);
 
-    verify(timeSeriesAnalysisService, times(1)).getRecords(applicationId, stateExecutionId, groupName, nodes, 0, 0);
+    verify(timeSeriesAnalysisService, times(1))
+        .getRecords(applicationId, stateExecutionId, groupName, nodes, 0, 0, accountId);
 
     verify(timeSeriesAnalysisService, times(1))
-        .getPreviousSuccessfulRecords(applicationId, workflowExecutionId, groupName, 0, 0);
+        .getPreviousSuccessfulRecords(applicationId, workflowExecutionId, groupName, 0, 0, accountId);
   }
 
   @Test

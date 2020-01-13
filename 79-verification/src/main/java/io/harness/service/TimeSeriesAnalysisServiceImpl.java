@@ -40,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.dl.WingsPersistence;
@@ -300,8 +301,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       return true;
     } else {
       saveTimeSeriesMLScores(timeSeriesMLScores);
-      bumpCollectionMinuteToProcess(
-          appId, stateExecutionId, workflowExecutionId, groupName, analysisMinute, accountId, cvConfigId != null);
+      bumpCollectionMinuteToProcess(appId, stateExecutionId, workflowExecutionId, groupName, analysisMinute, accountId);
       learningEngineService.markCompleted(taskId);
     }
 
@@ -418,18 +418,33 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public Set<NewRelicMetricDataRecord> getRecords(String appId, String stateExecutionId, String groupName,
-      Set<String> nodes, int analysisMinute, int analysisStartMinute) {
-    PageRequest<NewRelicMetricDataRecord> pageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter(NewRelicMetricDataRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
-            .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
-            .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
-            .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.GE, analysisStartMinute)
-            .build();
-
-    final PageResponse<NewRelicMetricDataRecord> results =
-        dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      Set<String> nodes, int analysisMinute, int analysisStartMinute, String accountId) {
+    List<NewRelicMetricDataRecord> results;
+    if (managerClientHelper
+            .callManagerWithRetry(managerClient.isFeatureEnabled(FeatureName.WORKFLOW_TS_RECORDS_NEW, accountId))
+            .getResource()) {
+      PageRequest<TimeSeriesDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(TimeSeriesMetricRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
+              .addFilter(TimeSeriesMetricRecordKeys.groupName, Operator.EQ, groupName)
+              .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
+              .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.GE, analysisStartMinute)
+              .build();
+      List<TimeSeriesDataRecord> response =
+          dataStoreService.list(TimeSeriesDataRecord.class, pageRequest).getResponse();
+      results = TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(response);
+    } else {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(NewRelicMetricDataRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
+              .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
+              .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
+              .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.GE, analysisStartMinute)
+              .build();
+      results = dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest).getResponse();
+    }
     return results.stream()
         .filter(dataRecord
             -> nodes.contains(dataRecord.getHost()) && ClusterLevel.H0 != dataRecord.getLevel()
@@ -438,22 +453,40 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public Set<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(
-      String appId, String workflowExecutionId, String groupName, int analysisMinute, int analysisStartMinute) {
+  public Set<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(String appId, String workflowExecutionId,
+      String groupName, int analysisMinute, int analysisStartMinute, String accountId) {
     if (isEmpty(workflowExecutionId)) {
       return Collections.emptySet();
     }
-    PageRequest<NewRelicMetricDataRecord> pageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter(NewRelicMetricDataRecordKeys.workflowExecutionId, Operator.EQ, workflowExecutionId)
-            .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
-            .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
-            .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.GE, analysisStartMinute)
-            .build();
-
-    final PageResponse<NewRelicMetricDataRecord> results =
-        dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+    List<NewRelicMetricDataRecord> results = new ArrayList<>();
+    boolean newWorkflowDataRecords =
+        managerClientHelper
+            .callManagerWithRetry(managerClient.isFeatureEnabled(FeatureName.WORKFLOW_TS_RECORDS_NEW, accountId))
+            .getResource();
+    if (newWorkflowDataRecords) {
+      PageRequest<TimeSeriesDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(TimeSeriesMetricRecordKeys.workflowExecutionId, Operator.EQ, workflowExecutionId)
+              .addFilter(TimeSeriesMetricRecordKeys.groupName, Operator.EQ, groupName)
+              .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
+              .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.GE, analysisStartMinute)
+              .build();
+      List<TimeSeriesDataRecord> response =
+          dataStoreService.list(TimeSeriesDataRecord.class, pageRequest).getResponse();
+      results = TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(response);
+    }
+    if (isEmpty(results) || !newWorkflowDataRecords) {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(NewRelicMetricDataRecordKeys.workflowExecutionId, Operator.EQ, workflowExecutionId)
+              .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
+              .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
+              .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.GE, analysisStartMinute)
+              .build();
+      results = dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest).getResponse();
+    }
     return results.stream()
         .filter(dataRecord -> ClusterLevel.H0 != dataRecord.getLevel() && ClusterLevel.HF != dataRecord.getLevel())
         .collect(Collectors.toSet());
@@ -461,37 +494,62 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public int getMaxControlMinuteWithData(StateType stateType, String appId, String serviceId, String workflowId,
-      String workflowExecutionId, String groupName) {
-    return getControlMinuteWithData(stateType, serviceId, workflowExecutionId, groupName, OrderType.DESC);
+      String workflowExecutionId, String groupName, String accountId) {
+    return getControlMinuteWithData(stateType, serviceId, workflowExecutionId, groupName, OrderType.DESC, accountId);
   }
 
   @Override
   public int getMinControlMinuteWithData(StateType stateType, String appId, String serviceId, String workflowId,
-      String workflowExecutionId, String groupName) {
-    return getControlMinuteWithData(stateType, serviceId, workflowExecutionId, groupName, OrderType.ASC);
+      String workflowExecutionId, String groupName, String accountId) {
+    return getControlMinuteWithData(stateType, serviceId, workflowExecutionId, groupName, OrderType.ASC, accountId);
   }
 
-  private int getControlMinuteWithData(
-      StateType stateType, String serviceId, String workflowExecutionId, String groupName, OrderType orderType) {
-    PageRequest<NewRelicMetricDataRecord> pageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter(NewRelicMetricDataRecordKeys.workflowExecutionId, Operator.EQ, workflowExecutionId)
-            .build();
+  private int getControlMinuteWithData(StateType stateType, String serviceId, String workflowExecutionId,
+      String groupName, OrderType orderType, String accountId) {
+    final List<NewRelicMetricDataRecord> records;
+    if (managerClientHelper
+            .callManagerWithRetry(managerClient.isFeatureEnabled(FeatureName.WORKFLOW_TS_RECORDS_NEW, accountId))
+            .getResource()) {
+      PageRequest<TimeSeriesDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(TimeSeriesMetricRecordKeys.workflowExecutionId, Operator.EQ, workflowExecutionId)
+              .build();
+      PageResponse<TimeSeriesDataRecord> results = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+      if (results.isEmpty()) {
+        return -1;
+      }
+      final List<TimeSeriesDataRecord> dataRecords =
+          results.getResponse()
+              .stream()
+              .filter(dataRecord
+                  -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
+                      && (dataRecord.getGroupName().equals(groupName)
+                             || dataRecord.getGroupName().equals(DEFAULT_GROUP_NAME))
+                      && (ClusterLevel.H0 != dataRecord.getLevel() && ClusterLevel.HF != dataRecord.getLevel()))
+              .collect(Collectors.toList());
+      records = TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(dataRecords);
+    } else {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(NewRelicMetricDataRecordKeys.workflowExecutionId, Operator.EQ, workflowExecutionId)
+              .build();
 
-    PageResponse<NewRelicMetricDataRecord> results = dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
-    if (results.isEmpty()) {
-      return -1;
+      PageResponse<NewRelicMetricDataRecord> results =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      if (results.isEmpty()) {
+        return -1;
+      }
+      records = results.getResponse()
+                    .stream()
+                    .filter(dataRecord
+                        -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
+                            && (dataRecord.getGroupName().equals(groupName)
+                                   || dataRecord.getGroupName().equals(DEFAULT_GROUP_NAME))
+                            && (ClusterLevel.H0 != dataRecord.getLevel() && ClusterLevel.HF != dataRecord.getLevel()))
+                    .collect(Collectors.toList());
     }
-    final List<NewRelicMetricDataRecord> records =
-        results.getResponse()
-            .stream()
-            .filter(dataRecord
-                -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
-                    && (dataRecord.getGroupName().equals(groupName)
-                           || dataRecord.getGroupName().equals(DEFAULT_GROUP_NAME))
-                    && (ClusterLevel.H0 != dataRecord.getLevel() && ClusterLevel.HF != dataRecord.getLevel()))
-            .collect(Collectors.toList());
     if (records.isEmpty()) {
       return -1;
     }
@@ -591,28 +649,47 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public NewRelicMetricDataRecord getHeartBeat(StateType stateType, String appId, String stateExecutionId,
-      String workflowExecutionId, String serviceId, String groupName, OrderType orderType) {
+  public NewRelicMetricDataRecord getHeartBeat(StateType stateType, String stateExecutionId, String workflowExecutionId,
+      String serviceId, String groupName, OrderType orderType, String accountId) {
     logger.info(
-        "Querying for getLastHeartBeat. Params are: stateType {}, appId {}, stateExecutionId: {}, workflowExecutionId: {} serviceId {}, groupName: {} ",
-        stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName);
+        "Querying for getLastHeartBeat. Params are: stateType {}, stateExecutionId: {}, workflowExecutionId: {} serviceId {}, groupName: {} ",
+        stateType, stateExecutionId, workflowExecutionId, serviceId, groupName);
+    List<NewRelicMetricDataRecord> rv;
+    if (managerClientHelper
+            .callManagerWithRetry(managerClient.isFeatureEnabled(FeatureName.WORKFLOW_TS_RECORDS_NEW, accountId))
+            .getResource()) {
+      PageRequest<TimeSeriesDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(TimeSeriesMetricRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
+              .addFilter(TimeSeriesMetricRecordKeys.groupName, Operator.EQ, groupName)
+              .addOrder(TimeSeriesMetricRecordKeys.dataCollectionMinute, orderType)
+              .build();
+      final PageResponse<TimeSeriesDataRecord> results = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+      List<TimeSeriesDataRecord> dataRecords =
+          results.stream()
+              .filter(dataRecord
+                  -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
+                      && ClusterLevel.HF == dataRecord.getLevel())
+              .collect(Collectors.toList());
+      rv = TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(dataRecords);
+    } else {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(NewRelicMetricDataRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
+              .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
+              .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, orderType)
+              .build();
 
-    PageRequest<NewRelicMetricDataRecord> pageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter(NewRelicMetricDataRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
-            .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
-            .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, orderType)
-            .build();
-
-    final PageResponse<NewRelicMetricDataRecord> results =
-        dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
-    List<NewRelicMetricDataRecord> rv =
-        results.stream()
-            .filter(dataRecord
-                -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
-                    && ClusterLevel.HF == dataRecord.getLevel())
-            .collect(Collectors.toList());
+      final PageResponse<NewRelicMetricDataRecord> results =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      rv = results.stream()
+               .filter(dataRecord
+                   -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
+                       && ClusterLevel.HF == dataRecord.getLevel())
+               .collect(Collectors.toList());
+    }
 
     if (isEmpty(rv)) {
       logger.info(
@@ -625,26 +702,47 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public NewRelicMetricDataRecord getAnalysisMinute(StateType stateType, String appId, String stateExecutionId,
-      String workflowExecutionId, String serviceId, String groupName) {
+      String workflowExecutionId, String serviceId, String groupName, String accountId) {
     logger.info(
         "Querying for getLastHeartBeat. Params are: stateType {}, appId {}, stateExecutionId: {}, workflowExecutionId: {} serviceId {}, groupName: {} ",
         stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName);
-    PageRequest<NewRelicMetricDataRecord> pageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter(NewRelicMetricDataRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
-            .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
-            .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, OrderType.DESC)
-            .build();
+    List<NewRelicMetricDataRecord> rv;
+    if (managerClientHelper
+            .callManagerWithRetry(managerClient.isFeatureEnabled(FeatureName.WORKFLOW_TS_RECORDS_NEW, accountId))
+            .getResource()) {
+      PageRequest<TimeSeriesDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(NewRelicMetricDataRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
+              .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
+              .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, OrderType.DESC)
+              .build();
 
-    final PageResponse<NewRelicMetricDataRecord> results =
-        dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
-    List<NewRelicMetricDataRecord> rv =
-        results.stream()
-            .filter(dataRecord
-                -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
-                    && ClusterLevel.H0 == dataRecord.getLevel())
-            .collect(Collectors.toList());
+      final PageResponse<TimeSeriesDataRecord> results = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+      List<TimeSeriesDataRecord> dataRecords =
+          results.stream()
+              .filter(dataRecord
+                  -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
+                      && ClusterLevel.H0 == dataRecord.getLevel())
+              .collect(Collectors.toList());
+      rv = TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(dataRecords);
+    } else {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(NewRelicMetricDataRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
+              .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
+              .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, OrderType.DESC)
+              .build();
+
+      final PageResponse<NewRelicMetricDataRecord> results =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      rv = results.stream()
+               .filter(dataRecord
+                   -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
+                       && ClusterLevel.H0 == dataRecord.getLevel())
+               .collect(Collectors.toList());
+    }
 
     if (isEmpty(rv)) {
       logger.info(
@@ -659,29 +757,47 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   // TODO: Remove is24x7 parameter when changes for workflow go in
   @Override
   public void bumpCollectionMinuteToProcess(String appId, String stateExecutionId, String workflowExecutionId,
-      String groupName, int analysisMinute, String accountId, boolean is24x7) {
+      String groupName, int analysisMinute, String accountId) {
     logger.info(
         "bumpCollectionMinuteToProcess. Going to update the record for stateExecutionId {} and dataCollectionMinute {}",
         stateExecutionId, analysisMinute);
-    if (isEmpty(stateExecutionId) || is24x7) {
+    if (isEmpty(stateExecutionId)) {
       return;
     }
 
-    PageRequest<NewRelicMetricDataRecord> pageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter(NewRelicMetricDataRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
-            .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
-            .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
-            .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, OrderType.DESC)
-            .build();
-    final PageResponse<NewRelicMetricDataRecord> dataRecords =
-        dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
-
-    dataRecords.stream()
-        .filter(dataRecord -> ClusterLevel.H0 == dataRecord.getLevel())
-        .forEach(dataRecord -> dataRecord.setLevel(ClusterLevel.HF));
-    dataStoreService.save(NewRelicMetricDataRecord.class, dataRecords, false);
+    if (managerClientHelper
+            .callManagerWithRetry(managerClient.isFeatureEnabled(FeatureName.WORKFLOW_TS_RECORDS_NEW, accountId))
+            .getResource()) {
+      PageRequest<TimeSeriesDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(TimeSeriesMetricRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
+              .addFilter(TimeSeriesMetricRecordKeys.groupName, Operator.EQ, groupName)
+              .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
+              .addOrder(TimeSeriesMetricRecordKeys.dataCollectionMinute, OrderType.DESC)
+              .build();
+      final PageResponse<TimeSeriesDataRecord> dataRecords =
+          dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+      dataRecords.stream()
+          .filter(dataRecord -> ClusterLevel.H0 == dataRecord.getLevel())
+          .forEach(dataRecord -> dataRecord.setLevel(ClusterLevel.HF));
+      dataStoreService.save(TimeSeriesDataRecord.class, dataRecords, false);
+    } else {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(NewRelicMetricDataRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
+              .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
+              .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
+              .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, OrderType.DESC)
+              .build();
+      final PageResponse<NewRelicMetricDataRecord> dataRecords =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      dataRecords.stream()
+          .filter(dataRecord -> ClusterLevel.H0 == dataRecord.getLevel())
+          .forEach(dataRecord -> dataRecord.setLevel(ClusterLevel.HF));
+      dataStoreService.save(NewRelicMetricDataRecord.class, dataRecords, false);
+    }
   }
 
   @Override

@@ -205,15 +205,15 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
 
     for (String groupName : timeSeriesAnalysisService.getMetricGroups(appId, stateExecutionId).keySet()) {
       when(timeSeriesAnalysisService.getAnalysisMinute(timeSeriesAnalysisContext.getStateType(), appId,
-               stateExecutionId, workflowExecutionId, serviceId, groupName))
+               stateExecutionId, workflowExecutionId, serviceId, groupName, accountId))
           .thenReturn(NewRelicMetricDataRecord.builder().dataCollectionMinute(10).build());
 
       when(timeSeriesAnalysisService.getMinControlMinuteWithData(timeSeriesAnalysisContext.getStateType(), appId,
-               serviceId, workflowId, timeSeriesAnalysisContext.getPrevWorkflowExecutionId(), groupName))
+               serviceId, workflowId, timeSeriesAnalysisContext.getPrevWorkflowExecutionId(), groupName, accountId))
           .thenReturn(2);
 
       when(timeSeriesAnalysisService.getMaxControlMinuteWithData(timeSeriesAnalysisContext.getStateType(), appId,
-               serviceId, workflowId, timeSeriesAnalysisContext.getPrevWorkflowExecutionId(), groupName))
+               serviceId, workflowId, timeSeriesAnalysisContext.getPrevWorkflowExecutionId(), groupName, accountId))
           .thenReturn(18);
     }
 
@@ -286,7 +286,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
     verifyTimeSeriesQueuedTasks();
     verify(timeSeriesAnalysisService, times(3))
         .getMaxControlMinuteWithData(
-            any(StateType.class), anyString(), anyString(), anyString(), anyString(), anyString());
+            any(StateType.class), anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
   }
 
   @Test

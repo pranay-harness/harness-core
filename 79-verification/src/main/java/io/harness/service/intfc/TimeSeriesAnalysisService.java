@@ -43,24 +43,24 @@ public interface TimeSeriesAnalysisService {
   List<TimeSeriesMLScores> getTimeSeriesMLScores(String appId, String workflowId, int analysisMinute, int limit);
 
   Set<NewRelicMetricDataRecord> getRecords(String appId, String stateExecutionId, String groupName, Set<String> nodes,
-      int analysisMinute, int analysisStartMinute);
+      int analysisMinute, int analysisStartMinute, String accountId);
 
-  Set<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(
-      String appId, String workflowExecutionID, String groupName, int analysisMinute, int analysisStartMinute);
+  Set<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(String appId, String workflowExecutionID, String groupName,
+      int analysisMinute, int analysisStartMinute, String accountId);
 
   List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId);
 
-  NewRelicMetricDataRecord getHeartBeat(StateType stateType, String appId, String stateExecutionId,
-      String workflowExecutionId, String serviceId, String metricGroup, OrderType orderType);
+  NewRelicMetricDataRecord getHeartBeat(StateType stateType, String stateExecutionId, String workflowExecutionId,
+      String serviceId, String metricGroup, OrderType orderType, String accountId);
 
   void bumpCollectionMinuteToProcess(String appId, String stateExecutionId, String workflowExecutionId,
-      String groupName, int analysisMinute, String accountId, boolean is24x7);
+      String groupName, int analysisMinute, String accountId);
 
   int getMaxControlMinuteWithData(StateType stateType, String appId, String serviceId, String workflowId,
-      String workflowExecutionId, String groupName);
+      String workflowExecutionId, String groupName, String accountId);
 
   int getMinControlMinuteWithData(StateType stateType, String appId, String serviceId, String workflowId,
-      String workflowExecutionId, String groupName);
+      String workflowExecutionId, String groupName, String accountId);
 
   String getLastSuccessfulWorkflowExecutionIdWithData(
       StateType stateType, String appId, String workflowId, String serviceId);
@@ -73,7 +73,7 @@ public interface TimeSeriesAnalysisService {
       Version version);
 
   NewRelicMetricDataRecord getAnalysisMinute(StateType stateType, String appId, String stateExecutionId,
-      String workflowExecutionId, String serviceId, String groupName);
+      String workflowExecutionId, String serviceId, String groupName, String accountId);
 
   Map<String, TimeSeriesMetricDefinition> getMetricTemplates(
       String accountId, StateType stateType, String stateExecutionId, String cvConfigId);
