@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.templatelibrary;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -53,7 +54,8 @@ public abstract class TemplateLibraryYamlHandler<Y extends TemplateLibraryYaml> 
     templateService.delete(accountId, template.getUuid());
   }
 
-  protected String getApplicationId(String accountId, String yamlPath) {
+  @VisibleForTesting
+  String getApplicationId(String accountId, String yamlPath) {
     final String appName = yamlHelper.getAppName(yamlPath);
     if (EmptyPredicate.isNotEmpty(appName)) {
       final Application application = appService.getAppByName(accountId, appName);

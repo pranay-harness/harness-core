@@ -797,7 +797,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return applicationsFolder;
   }
 
-  private FolderNode doTemplateLibraryForApp(Application app, DirectoryPath directoryPath) {
+  @VisibleForTesting
+  FolderNode doTemplateLibraryForApp(Application app, DirectoryPath directoryPath) {
     return doTemplateLibrary(app.getAccountId(), directoryPath, app.getAppId(), APPLICATION_TEMPLATE_LIBRARY_FOLDER,
         Type.APPLICATION_TEMPLATE_LIBRARY);
   }
