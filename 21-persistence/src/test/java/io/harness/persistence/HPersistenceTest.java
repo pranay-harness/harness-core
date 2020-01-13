@@ -1,8 +1,10 @@
 package io.harness.persistence;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.TestUserProvider.testUserProvider;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
@@ -10,32 +12,19 @@ import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.PersistenceTest;
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.TestEntity.TestEntityKeys;
+import io.harness.persistence.TestEntityCreatedAware.TestEntityCreatedAwareKeys;
 import io.harness.rule.Owner;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.FieldNameConstants;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 import java.util.List;
 import java.util.stream.IntStream;
-
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@FieldNameConstants(innerTypeName = "TestEntityKeys")
-class TestEntity implements PersistentEntity, UuidAccess {
-  @Id private String uuid;
-  private String test;
-}
 
 public class HPersistenceTest extends PersistenceTest {
   @Inject private HPersistence persistence;
@@ -47,6 +36,38 @@ public class HPersistenceTest extends PersistenceTest {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("foo").build();
     String id = persistence.save(entity);
     assertThat(id).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void shouldUpsert() {
+    String uuid = generateUuid();
+    Query<TestEntityCreatedAware> query =
+        persistence.createQuery(TestEntityCreatedAware.class).filter(TestEntityCreatedAwareKeys.uuid, uuid);
+    UpdateOperations<TestEntityCreatedAware> updateOperations1 =
+        persistence.createUpdateOperations(TestEntityCreatedAware.class)
+            .set(TestEntityCreatedAwareKeys.uuid, uuid)
+            .set(TestEntityCreatedAwareKeys.test, "foo");
+
+    try {
+      testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
+
+      TestEntityCreatedAware entity1 = persistence.upsert(query, updateOperations1, upsertReturnNewOptions);
+      assertThat(entity1).isNotNull();
+
+      UpdateOperations<TestEntityCreatedAware> updateOperations2 =
+          persistence.createUpdateOperations(TestEntityCreatedAware.class).set(TestEntityCreatedAwareKeys.test, "bar");
+
+      testUserProvider.setActiveUser(EmbeddedUser.builder().name("user2").build());
+      TestEntityCreatedAware entity2 = persistence.upsert(query, updateOperations2, upsertReturnNewOptions);
+      assertThat(entity2).isNotNull();
+
+      assertThat(entity1.getCreatedAt()).isEqualTo(entity2.getCreatedAt());
+      assertThat(entity1.getCreatedBy().getName()).isEqualTo(entity2.getCreatedBy().getName());
+    } finally {
+      testUserProvider.setActiveUser(null);
+    }
   }
 
   @Test
