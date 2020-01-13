@@ -12,6 +12,9 @@ import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.LoginSettingsUtils;
 import io.harness.testframework.restutils.UserRestUtils;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,21 +25,21 @@ import software.wings.beans.loginSettings.UserLockoutPolicy;
 import software.wings.service.intfc.UserService;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class UserLockoutPolicyFunctionalTest extends AbstractFunctionalTest {
-  static final boolean ENABLE_LOCKOUT_POLICY = true;
-  static final boolean DISABLE_LOCKOUT_POLICY = false;
-  static final int MAX_NUMBER_OF_ATTEMPTS = 3;
-  static final int UPDATED_MAX_NUMBER_OF_ATTEMPTS = 2;
-  static final int LOCKOUT_CLEARING_PERIOD = 1;
-  static final boolean ENABLE_NOTIFY_USER = true;
-  static final String TEST_EMAIL = "default@harness.io";
-  static final String CORRECT_PASSWORD = "default";
-  static final String WRONG_PASSWORD = "defaul";
-  static String LoginSettingsId;
-  static UserLockoutPolicy userLockoutPolicy;
-  static User user;
+  static boolean ENABLE_LOCKOUT_POLICY = true;
+  static boolean DISABLE_LOCKOUT_POLICY = false;
+  static int MAX_NUMBER_OF_ATTEMPTS = 3;
+  static int UPDATED_MAX_NUMBER_OF_ATTEMPTS = 2;
+  static int LOCKOUT_CLEARING_PERIOD = 1;
+  static boolean ENABLE_NOTIFY_USER = true;
+  static String TEST_EMAIL = "default@harness.io";
+  static String CORRECT_PASSWORD = "default";
+  static String WRONG_PASSWORD = "defaul";
+  @NonFinal static String LoginSettingsId;
+  @NonFinal static UserLockoutPolicy userLockoutPolicy;
 
-  @Inject private UserService userService;
+  @Inject @NonFinal UserService userService;
 
   @Test
   @Owner(developers = UTKARSH)
@@ -83,10 +86,10 @@ public class UserLockoutPolicyFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = UTKARSH)
+  @Owner(developers = UTKARSH, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC2_checkUserLockout() {
-    user = loginUserOrNull(TEST_EMAIL, CORRECT_PASSWORD);
+    User user = loginUserOrNull(TEST_EMAIL, CORRECT_PASSWORD);
     assertThat(user).isNotNull();
     Setup.signOut(user.getUuid(), user.getToken());
     loginUserOrNull(TEST_EMAIL, WRONG_PASSWORD);
