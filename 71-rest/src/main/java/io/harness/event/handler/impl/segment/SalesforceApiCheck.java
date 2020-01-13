@@ -117,12 +117,13 @@ public class SalesforceApiCheck {
         break;
       }
       if (count >= MAX_RETRIES) {
+        logger.error("Response from Salesforce Login is null");
         return null;
       }
     }
 
     JSONObject json = new JSONObject(loginResponseString);
-    String baseUri = json.getString(INSTANCE_URL) + REST_ENDPOINT + "/v" + salesforceConfig.getApiVersion() + "/query";
+    String baseUri = json.getString(INSTANCE_URL) + REST_ENDPOINT + "/v47.0/query";
 
     String uri = new URIBuilder().setPath(baseUri).setCustomQuery(queryString).toString();
     HttpGet httpGet = new HttpGet(uri);
@@ -167,6 +168,7 @@ public class SalesforceApiCheck {
         return responseString;
       }
       if (count >= MAX_RETRIES) {
+        logger.error("Response from Salesforce Query is null");
         return null;
       }
     }
