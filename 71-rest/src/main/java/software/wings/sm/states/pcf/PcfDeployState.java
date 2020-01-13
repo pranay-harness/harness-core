@@ -343,9 +343,17 @@ public class PcfDeployState extends State {
               .filter(pcfInstanceElement -> pcfInstanceElement.isNewInstance())
               .collect(Collectors.toList());
 
+    List<PcfInstanceElement> pcfOldInstanceElements = isEmpty(pcfDeployCommandResponse.getPcfInstanceElements())
+        ? emptyList()
+        : pcfDeployCommandResponse.getPcfInstanceElements()
+              .stream()
+              .filter(pcfInstanceElement -> !pcfInstanceElement.isNewInstance())
+              .collect(Collectors.toList());
+
     InstanceElementListParam instanceElementListParam = InstanceElementListParam.builder()
                                                             .instanceElements(emptyList())
                                                             .pcfInstanceElements(pcfInstanceElements)
+                                                            .pcfOldInstanceElements(pcfOldInstanceElements)
                                                             .build();
 
     return ExecutionResponse.builder()

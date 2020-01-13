@@ -19,6 +19,7 @@ public class InstanceElementListParam implements ContextElement {
 
   private List<InstanceElement> instanceElements;
   private List<PcfInstanceElement> pcfInstanceElements;
+  private List<PcfInstanceElement> pcfOldInstanceElements;
 
   @Override
   public ContextElementType getElementType() {
