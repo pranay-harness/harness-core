@@ -159,7 +159,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       if (isEmpty(canaryNewHostNames) && !isAwsLambdaState(context)) {
         getLogger().warn(
             "id: {}, Could not find test nodes to compare the data", context.getStateExecutionInstanceId());
-        return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Could not find nodes to analyze!");
+        return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
+            "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
       }
 
       Map<String, String> lastExecutionNodes = analysisContext.getControlNodes();
@@ -167,7 +168,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
           getLogger().info("No nodes with older version found to compare the logs. Skipping analysis");
           return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
-              "Skipping analysis due to lack of baseline data (First time deployment or Last phase).");
+              "Could not find existing instances of the service and environment. Analysis will be skipped. Either this is the first deployment or the previous version instances are deleted/unreachable. Please check your setup.");
         }
 
         getLogger().info("It seems that there is no successful run for this workflow yet. "
@@ -178,7 +179,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           && lastExecutionNodes.equals(canaryNewHostNames)) {
         getLogger().warn("Control and test nodes are same. Will not be running Log analysis");
         return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
-            "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
+            "Skipping analysis because both the new and old instances of the service and environment are same. Please check your setup.");
       }
 
       String responseMessage = "Metric Verification running";

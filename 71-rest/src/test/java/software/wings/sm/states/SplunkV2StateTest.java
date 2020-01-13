@@ -121,7 +121,9 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertThat(response.getErrorMessage()).isEqualTo("Could not find hosts to analyze!");
+    assertThat(response.getErrorMessage())
+        .isEqualTo(
+            "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -150,7 +152,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     String analysisResponseMsg =
-        "Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.";
+        "Could not find existing instances of the service and environment. Analysis will be skipped. Either this is the first deployment or the previous version instances are deleted/unreachable. Please check your setup.";
     assertThat(response.getErrorMessage()).isEqualTo(analysisResponseMsg);
     verify(activityLogger, times(1)).info(eq(analysisResponseMsg));
     LogMLAnalysisSummary analysisSummary =
@@ -183,7 +185,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     String analysisResponseMsg =
-        "Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.";
+        "Could not find existing instances of the service and environment. Analysis will be skipped. Either this is the first deployment or the previous version instances are deleted/unreachable. Please check your setup.";
     assertThat(response.getErrorMessage()).isEqualTo(analysisResponseMsg);
     verify(activityLogger, times(1)).info(eq(analysisResponseMsg));
     LogMLAnalysisSummary analysisSummary =
