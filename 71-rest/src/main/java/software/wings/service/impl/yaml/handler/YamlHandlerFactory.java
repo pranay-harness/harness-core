@@ -30,6 +30,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.beans.template.Template;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerArtifactVariable;
@@ -70,6 +71,7 @@ import software.wings.service.impl.yaml.handler.setting.loadbalancer.ElasticLoad
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHandler;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
+import software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibraryYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.ActionYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.ArtifactSelectionYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.ConditionYamlHandler;
@@ -90,6 +92,7 @@ import software.wings.service.impl.yaml.handler.workflow.WorkflowYamlHandler;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfigurationYamlHandler;
+import software.wings.yaml.templatelibrary.TemplateYamlConfig;
 
 import java.util.HashSet;
 import java.util.List;
@@ -130,6 +133,7 @@ public class YamlHandlerFactory {
   @Inject private Map<String, HelmRepoYamlHandler> helmRepoYamlHelperMap;
   @Inject private Map<String, AzureArtifactsYamlHandler> azureArtifactsYamlHandlerMap;
   @Inject private Map<String, CloudProviderInfrastructureYamlHandler> cloudProviderInfrastructureYamlHandlerMap;
+  @Inject private Map<String, TemplateLibraryYamlHandler> templateLibraryYamlHandlerMap;
 
   @Inject private ApplicationYamlHandler applicationYamlHandler;
   @Inject private TriggerYamlHandler triggerYamlHandler;
@@ -214,6 +218,10 @@ public class YamlHandlerFactory {
         break;
       case APPLICATION:
         yamlHandler = applicationYamlHandler;
+        break;
+      case GLOBAL_TEMPLATE_LIBRARY:
+      case APPLICATION_TEMPLATE_LIBRARY:
+        yamlHandler = templateLibraryYamlHandlerMap.get(subType);
         break;
       case SERVICE:
         yamlHandler = serviceYamlHandler;
@@ -409,6 +417,9 @@ public class YamlHandlerFactory {
       return YamlType.TRIGGER_ARTIFACT_VARIABLE;
     } else if (entity instanceof WebhookEvent) {
       return YamlType.WEBHOOK_EVENT;
+    } else if (entity instanceof Template) {
+      final String appId = ((Template) entity).getAppId();
+      return TemplateYamlConfig.getInstance(appId).getYamlType();
     }
 
     throw new InvalidRequestException(
@@ -466,6 +477,8 @@ public class YamlHandlerFactory {
       return ((Trigger) entity).getName();
     } else if (entity instanceof DeploymentTrigger) {
       return ((DeploymentTrigger) entity).getName();
+    } else if (entity instanceof Template) {
+      return ((Template) entity).getName();
     }
 
     throw new InvalidRequestException(
@@ -609,6 +622,6 @@ public class YamlHandlerFactory {
         "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
         "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration",
         "AzureInfrastructureMapping", "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner",
-        "DeploymentTrigger");
+        "DeploymentTrigger", "Template");
   }
 }

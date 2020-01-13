@@ -56,6 +56,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.beans.template.Template;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
@@ -81,6 +82,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlArtifactStreamService;
@@ -94,6 +96,8 @@ import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.command.CommandYaml;
+import software.wings.yaml.templatelibrary.TemplateLibraryYaml;
+import software.wings.yaml.templatelibrary.TemplateYamlConfig;
 import software.wings.yaml.trigger.DeploymentTriggerYaml;
 import software.wings.yaml.workflow.WorkflowYaml;
 
@@ -125,6 +129,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private DeploymentTriggerService deploymentTriggerService;
+  @Inject private TemplateService templateService;
 
   /**
    * Find by app, service and service command ids.
@@ -344,6 +349,25 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, infrastructureProvisioner.getUuid(), accountId,
         provisionerYaml, provisionerYaml.getName() + YAML_EXTENSION);
+  }
+
+  /**
+   * Gets the yaml for a template library
+   *
+   * @param accountId  the account id
+   * @param appId  the app id
+   * @param templateId the template id
+   * @return the rest response
+   */
+  @Override
+  public RestResponse<YamlPayload> getTemplateLibrary(String accountId, String appId, String templateId) {
+    final YamlType yamlType = TemplateYamlConfig.getInstance(appId).getYamlType();
+    Template template = templateService.get(accountId, templateId, "latest");
+    TemplateLibraryYaml templateLibraryYaml =
+        (TemplateLibraryYaml) yamlHandlerFactory.getYamlHandler(yamlType, template.getType())
+            .toYaml(template, accountId);
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, template.getUuid(), accountId, templateLibraryYaml, template.getName() + YAML_EXTENSION);
   }
 
   @Override
@@ -694,6 +718,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       return getAppManifestYaml(accountId, (ApplicationManifest) entity);
     } else if (entity instanceof ManifestFile) {
       return getManifestFileYaml(accountId, (ManifestFile) entity);
+    } else if (entity instanceof Template) {
+      final Template template = (Template) entity;
+      return getTemplateLibrary(accountId, template.getAppId(), template.getUuid());
     }
 
     if (entity instanceof Base) {

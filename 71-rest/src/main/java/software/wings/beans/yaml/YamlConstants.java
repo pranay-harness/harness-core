@@ -10,8 +10,8 @@ import java.util.List;
 public interface YamlConstants {
   String PATH_DELIMITER = "/";
   String ANY = ".[^/]*?";
+  String MULTIPLE_ANY = ".+";
   String MANIFEST_FILE_EXPRESSION = ".*";
-  ;
   String YAML_EXPRESSION = ".[^/]*?\\.yaml";
   String PCF_YAML_EXPRESSION = ".[^/]*?\\.yml";
   String ANY_EXCEPT_YAML = ".[^/]*?[^\\.yaml]";
@@ -43,6 +43,8 @@ public interface YamlConstants {
   String COLLABORATION_PROVIDERS_FOLDER = "Collaboration Providers";
   String VERIFICATION_PROVIDERS_FOLDER = "Verification Providers";
   String NOTIFICATION_GROUPS_FOLDER = "Notification Groups";
+  String GLOBAL_TEMPLATE_LIBRARY_FOLDER = "Template Library";
+  String APPLICATION_TEMPLATE_LIBRARY_FOLDER = "Template Library";
 
   String ARTIFACT_SOURCES_FOLDER = "Artifact Servers";
   String ARTIFACT_STREAMS_FOLDER = "Artifact Streams";

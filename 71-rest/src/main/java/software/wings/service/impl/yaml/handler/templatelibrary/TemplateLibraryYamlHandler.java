@@ -1,0 +1,156 @@
+package software.wings.service.impl.yaml.handler.templatelibrary;
+
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
+
+import com.google.inject.Inject;
+
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
+import io.harness.exception.NoResultFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
+import software.wings.beans.Application;
+import software.wings.beans.Variable;
+import software.wings.beans.VariableType;
+import software.wings.beans.template.Template;
+import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.yaml.ChangeContext;
+import software.wings.service.impl.yaml.handler.BaseYamlHandler;
+import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.template.TemplateService;
+import software.wings.yaml.templatelibrary.TemplateLibraryYaml;
+import software.wings.yaml.templatelibrary.TemplateLibraryYaml.TemplateVariableYaml;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Slf4j
+public abstract class TemplateLibraryYamlHandler<Y extends TemplateLibraryYaml> extends BaseYamlHandler<Y, Template> {
+  @Inject private YamlHandlerFactory yamlHandlerFactory;
+  @Inject private YamlHelper yamlHelper;
+  @Inject private TemplateService templateService;
+  @Inject private AppService appService;
+  protected abstract void setBaseTemplate(Template template, Y yaml);
+
+  @Override
+  public void delete(ChangeContext<Y> changeContext) {
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    String accountId = changeContext.getChange().getAccountId();
+    final String appId = getApplicationId(accountId, yamlFilePath);
+    String templateName = yamlHelper.extractTemplateLibraryName(yamlFilePath, appId);
+    TemplateFolder templateFolder = yamlHelper.getTemplateFolderForYamlFilePath(accountId, yamlFilePath, appId);
+    if (templateFolder == null) {
+      return;
+    }
+    Template template = templateService.findByFolder(templateFolder, templateName, appId);
+    if (template == null) {
+      return;
+    }
+    templateService.delete(accountId, template.getUuid());
+  }
+
+  protected String getApplicationId(String accountId, String yamlPath) {
+    final String appName = yamlHelper.getAppName(yamlPath);
+    if (EmptyPredicate.isNotEmpty(appName)) {
+      final Application application = appService.getAppByName(accountId, appName);
+      if (application == null) {
+        throw NoResultFoundException.newBuilder()
+            .message("Cannot find application by name :" + appName)
+            .level(Level.ERROR)
+            .code(ErrorCode.INVALID_ARGUMENT)
+            .build();
+      }
+      return application.getUuid();
+    }
+    return GLOBAL_APP_ID;
+  }
+
+  @Override
+  public Template get(String accountId, String yamlFilePath) {
+    final String appId = getApplicationId(accountId, yamlFilePath);
+    String templateName = yamlHelper.extractTemplateLibraryName(yamlFilePath, appId);
+    TemplateFolder templateFolder = yamlHelper.ensureTemplateFolder(accountId, yamlFilePath, appId);
+    return templateService.findByFolder(templateFolder, templateName, appId);
+  }
+
+  protected void toYaml(Y yaml, Template bean) {
+    yaml.setHarnessApiVersion(getHarnessApiVersion());
+    yaml.setType(bean.getType());
+    yaml.setVariables(variablesToTemplateVariableYaml(bean.getVariables()));
+  }
+
+  @Override
+  public Template upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    String accountId = changeContext.getChange().getAccountId();
+    final String appId = getApplicationId(accountId, yamlFilePath);
+    String templateName = yamlHelper.extractTemplateLibraryName(yamlFilePath, appId);
+    TemplateFolder templateFolder = yamlHelper.ensureTemplateFolder(accountId, yamlFilePath, appId);
+    Template template = templateService.findByFolder(templateFolder, templateName, appId);
+    if (template != null) {
+      return updateTemplate(template, changeContext, changeSetContext);
+    }
+    Template newTemplate = toBean(changeContext, appId, templateFolder);
+    return templateService.save(newTemplate);
+  }
+
+  private List<TemplateVariableYaml> variablesToTemplateVariableYaml(List<Variable> variables) {
+    return ListUtils.emptyIfNull(variables)
+        .stream()
+        .map(variable
+            -> TemplateVariableYaml.builder()
+                   .description(variable.getDescription())
+                   .name(variable.getName())
+                   .value(variable.getValue())
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  private List<Variable> templateVariableYamlToVariable(List<TemplateVariableYaml> variablesYaml) {
+    return ListUtils.emptyIfNull(variablesYaml)
+        .stream()
+        .map(variableYaml
+            -> aVariable()
+                   .name(variableYaml.getName())
+                   .value(variableYaml.getValue())
+                   .description(variableYaml.getDescription())
+                   .mandatory(false)
+                   .type(VariableType.TEXT)
+                   .fixed(false)
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  private Template updateTemplate(
+      Template template, ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
+    TemplateLibraryYaml yaml = changeContext.getYaml();
+    template.setDescription(yaml.getDescription());
+    template.setVariables(templateVariableYamlToVariable(yaml.getVariables()));
+    setBaseTemplate(template, changeContext.getYaml());
+    return templateService.update(template);
+  }
+
+  private Template toBean(ChangeContext<Y> changeContext, String appId, TemplateFolder templateFolder) {
+    Y yaml = changeContext.getYaml();
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    String templateName = yamlHelper.extractTemplateLibraryName(yamlFilePath, appId);
+    Template template = Template.builder()
+                            .name(templateName)
+                            .appId(appId)
+                            .accountId(changeContext.getChange().getAccountId())
+                            .type(yaml.getType())
+                            .folderId(templateFolder.getUuid())
+                            .build();
+    setBaseTemplate(template, changeContext.getYaml());
+    return template;
+  }
+
+  @Override
+  public Class getYamlClass() {
+    return TemplateLibraryYaml.class;
+  }
+}

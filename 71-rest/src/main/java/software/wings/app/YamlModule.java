@@ -72,6 +72,7 @@ import software.wings.beans.trigger.Action.ActionType;
 import software.wings.beans.trigger.Condition.Type;
 import software.wings.beans.trigger.PayloadSource;
 import software.wings.beans.trigger.TriggerArtifactSelectionValue.ArtifactSelectionType;
+import software.wings.common.TemplateConstants;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.YamlArtifactStreamServiceImpl;
 import software.wings.service.impl.yaml.YamlDirectoryServiceImpl;
@@ -192,6 +193,8 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Pro
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SplunkConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SumoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
+import software.wings.service.impl.yaml.handler.templatelibrary.ShellScriptTemplateYamlHandler;
+import software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibraryYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.ActionYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.BitbucketPayloadSourceYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.ConditionYamlHandler;
@@ -529,5 +532,10 @@ public class YamlModule extends AbstractModule {
         .to(CloudFormationInfrastructureProvisionerYamlHandler.class);
     infrastructureProvisionerYamlHandlerMapBinder.addBinding(InfrastructureProvisionerType.SHELL_SCRIPT.name())
         .to(ShellScriptProvisionerYamlHandler.class);
+
+    MapBinder<String, TemplateLibraryYamlHandler> templateLibraryYamlHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, TemplateLibraryYamlHandler.class);
+    templateLibraryYamlHandlerMapBinder.addBinding(TemplateConstants.SHELL_SCRIPT)
+        .to(ShellScriptTemplateYamlHandler.class);
   }
 }

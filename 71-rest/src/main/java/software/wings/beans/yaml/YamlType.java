@@ -4,6 +4,7 @@ import static software.wings.beans.EntityType.VERIFICATION_CONFIGURATION;
 import static software.wings.beans.yaml.YamlConstants.ANY;
 import static software.wings.beans.yaml.YamlConstants.ANY_EXCEPT_YAML;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.APPLICATION_TEMPLATE_LIBRARY_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SERVERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_STREAMS_FOLDER;
@@ -15,6 +16,7 @@ import static software.wings.beans.yaml.YamlConstants.CV_CONFIG_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.GLOBAL_TEMPLATE_LIBRARY_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.INFRA_DEFINITION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
@@ -22,6 +24,7 @@ import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_EXPRESSION;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.MULTIPLE_ANY;
 import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.PCF_OVERRIDES_FOLDER;
@@ -74,6 +77,7 @@ import software.wings.beans.container.LogConfiguration;
 import software.wings.beans.container.PortMapping;
 import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.defaults.Defaults;
+import software.wings.beans.template.Template;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
@@ -288,6 +292,17 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, PIPELINES_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, PIPELINES_FOLDER, ANY),
       Pipeline.class),
+
+  GLOBAL_TEMPLATE_LIBRARY(EntityType.TEMPLATE.name(),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, GLOBAL_TEMPLATE_LIBRARY_FOLDER, MULTIPLE_ANY, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, GLOBAL_TEMPLATE_LIBRARY_FOLDER), Template.class),
+
+  APPLICATION_TEMPLATE_LIBRARY(EntityType.TEMPLATE.name(),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, APPLICATION_TEMPLATE_LIBRARY_FOLDER,
+          MULTIPLE_ANY, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, APPLICATION_TEMPLATE_LIBRARY_FOLDER),
+      Template.class),
+
   CV_CONFIGURATION(VERIFICATION_CONFIGURATION.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
           CV_CONFIG_FOLDER, YAML_EXPRESSION),

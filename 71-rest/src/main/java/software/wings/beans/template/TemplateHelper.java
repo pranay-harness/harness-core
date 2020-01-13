@@ -17,6 +17,7 @@ import static software.wings.beans.template.Template.TYPE_KEY;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.PersistentEntity;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -72,9 +73,8 @@ public class TemplateHelper {
       case ARTIFACT_SOURCE:
         return ARTIFACT_STREAM;
       default:
-        unhandled(templateType);
+        throw new InvalidArgumentsException(String.format("TemplateType [%s] is not supported", templateType), null);
     }
-    return null;
   }
 
   public boolean templatesLinked(TemplateType templateType, List<String> templateUuids) {

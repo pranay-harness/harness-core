@@ -3,6 +3,7 @@ package software.wings.service.impl.template;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
@@ -51,6 +52,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Test;
+import org.junit.Test.None;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
@@ -665,7 +667,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     assertThat(savedSshCommandTemplate.getCommandUnits()).extracting(CommandUnit::getName).contains("Start");
   }
 
-  @Test
+  @Test(expected = None.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetAppLevelTemplate() {
@@ -756,7 +758,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     assertThat(template1.getUuid()).isEqualTo(savedTemplate.getUuid());
   }
 
-  @Test
+  @Test(expected = None.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldUpdateApplicationLevelHttpTemplate() {
@@ -845,7 +847,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     assertThat(templateService.deleteByFolder(appLevelFolder)).isTrue();
   }
 
-  @Test
+  @Test(expected = None.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldDeleteApplicationLevelTemplate() {
@@ -944,5 +946,18 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     }
     savedTemplate.setVariables(variables);
     templateService.update(savedTemplate);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testFindByFolder() {
+    Template savedTemplate = saveTemplate();
+    assertThat(templateService.findByFolder(templateFolderService.get(savedTemplate.getFolderId()),
+                   savedTemplate.getName(), savedTemplate.getAppId()))
+        .isNotNull();
+    assertThat(templateService.findByFolder(templateFolderService.get(savedTemplate.getFolderId()),
+                   savedTemplate.getName() + "invalid text", savedTemplate.getAppId()))
+        .isNull();
   }
 }

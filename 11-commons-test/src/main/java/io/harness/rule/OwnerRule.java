@@ -120,7 +120,7 @@ public class OwnerRule implements TestRule {
   private static final Map<String, DevInfo> active =
       ImmutableMap.<String, DevInfo>builder()
           .put(AADITI, defaultDevInfo(AADITI).slack("UCFPUNRAQ").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(ABHINAV, DevInfo.builder().email("abhinav.singh@harness.io").slack("UQQPR8M6Y").build())
+          .put(ABHINAV, defaultDevInfo(ABHINAV).slack("UQQPR8M6Y").team(DEVELOPER_EXPERIENCE).build())
           .put(AMAN, DevInfo.builder().email("aman.singh@harness.io").slack("UDJG47CHF").build())
           .put(ANKIT, defaultDevInfo(ANKIT).slack("UF76W0NN5").team(PLATFORM).build())
           .put(ANSHUL, defaultDevInfo(ANSHUL).slack("UASUA3E65").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())

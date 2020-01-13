@@ -19,6 +19,8 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.exception.InvalidRequestException;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.DeploymentSpecification;
@@ -36,6 +38,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
@@ -56,10 +59,13 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.template.TemplateFolderService;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.verification.CVConfiguration;
+import software.wings.yaml.templatelibrary.TemplateYamlConfig;
 
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -88,6 +94,8 @@ public class YamlHelper {
   @Inject FeatureFlagService featureFlagService;
   @Inject TriggerService triggerService;
   @Inject DeploymentTriggerService deploymentTriggerService;
+  @Inject TemplateService templateService;
+  @Inject TemplateFolderService templateFolderService;
 
   public SettingAttribute getCloudProvider(String accountId, String yamlFilePath) {
     return getSettingAttribute(accountId, YamlType.CLOUD_PROVIDER, yamlFilePath);
@@ -475,6 +483,40 @@ public class YamlHelper {
     return pipelineService.getPipelineByName(appId, pipelineName);
   }
 
+  public String extractTemplateLibraryName(String yamlFilePath, String appId) {
+    final YamlType yamlType = TemplateYamlConfig.getInstance(appId).getYamlType();
+    return extractEntityNameFromYamlPath(yamlType.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+  }
+
+  public TemplateFolder getTemplateFolderForYamlFilePath(String accountId, final String yamlFilePath, String appId) {
+    final String templateName = extractTemplateLibraryName(yamlFilePath, appId);
+    String tempYamlFilePath = getRootTemplateLibraryPath(yamlFilePath, appId);
+    notNullCheck("template Name null in the yaml path", templateName);
+    TemplateFolder templateFolder = templateService.getTemplateTree(accountId, appId, null, null);
+    if (templateFolder == null) {
+      return null;
+    }
+    while (templateFolder != null && !tempYamlFilePath.isEmpty()
+        && !extractParentEntityNameWithoutRegex(tempYamlFilePath, PATH_DELIMITER).equals(templateFolder.getName())) {
+      tempYamlFilePath = removeTopmostEntityFromPath(tempYamlFilePath, PATH_DELIMITER);
+      String yamlFolderName = extractTopmostEntityName(tempYamlFilePath, PATH_DELIMITER);
+      templateFolder = getChildFolderFromName(templateFolder, yamlFolderName, PATH_DELIMITER);
+    }
+    if (!tempYamlFilePath.isEmpty()) {
+      return templateFolder;
+    }
+    return null;
+  }
+
+  public TemplateFolder ensureTemplateFolder(String accountId, String yamlFilePath, String appId) {
+    String templateName = extractTemplateLibraryName(yamlFilePath, appId);
+    notNullCheck("template Name null in the yaml path", templateName);
+    final TemplateFolder templateFolder = templateService.getTemplateTree(accountId, appId, null, null);
+    final YamlType yamlType = TemplateYamlConfig.getInstance(appId).getYamlType();
+    return ensurePathforTemplates(templateFolder, getRootTemplateLibraryPath(yamlFilePath, appId),
+        yamlType.getPrefixExpression(), PATH_DELIMITER);
+  }
+
   public InfrastructureMapping getInfraMapping(String accountId, String yamlFilePath) {
     String appId = getAppId(accountId, yamlFilePath);
     notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
@@ -484,6 +526,72 @@ public class YamlHelper {
         extractEntityNameFromYamlPath(YamlType.INFRA_MAPPING.getPathExpression(), yamlFilePath, PATH_DELIMITER);
     notNullCheck("Inframapping with name: " + infraMappingName, infraMappingName);
     return infraMappingService.getInfraMappingByName(appId, envId, infraMappingName);
+  }
+
+  private String getRootTemplateLibraryPath(String yamlFilePath, String appId) {
+    final YamlType yamlType = TemplateYamlConfig.getInstance(appId).getYamlType();
+    return StringUtils.replaceFirst(yamlFilePath, yamlType.getPrefixExpression(), "");
+  }
+
+  private TemplateFolder ensurePathforTemplates(
+      TemplateFolder templateFolder, String yamlFilePath, String regex, String delimiter) {
+    if (templateFolder == null) {
+      throw new InvalidRequestException("Template folder found to be null.");
+    }
+    if (extractParentEntityNameWithoutRegex(yamlFilePath, delimiter).equals(templateFolder.getName())) {
+      return templateFolder;
+    }
+    if (!extractTopmostEntityName(yamlFilePath, delimiter).equals(templateFolder.getName())) {
+      throw new InvalidRequestException("Invalid root folder");
+    }
+    String newYamlFilePath = removeTopmostEntityFromPath(yamlFilePath, delimiter);
+    String yamlFolderName = extractTopmostEntityName(newYamlFilePath, delimiter);
+    TemplateFolder childFolder = getChildFolderFromName(templateFolder, yamlFolderName, delimiter);
+    if (childFolder != null) {
+      return ensurePathforTemplates(childFolder, newYamlFilePath, regex, delimiter);
+    } else {
+      TemplateFolder childTemplateFolder = TemplateFolder.builder()
+                                               .name(yamlFolderName)
+                                               .appId(templateFolder.getAppId())
+                                               .accountId(templateFolder.getAccountId())
+                                               .parentId(templateFolder.getUuid())
+                                               .galleryId(templateFolder.getGalleryId())
+                                               .createdBy(templateFolder.getCreatedBy())
+                                               .build();
+      childTemplateFolder.setPathId(templateFolder.getPathId() + PATH_DELIMITER + templateFolder.getUuid());
+      templateFolderService.save(childTemplateFolder);
+      return ensurePathforTemplates(childTemplateFolder, newYamlFilePath, regex, delimiter);
+    }
+  }
+
+  private TemplateFolder getChildFolderFromName(TemplateFolder templateFolder, String folderName, String delimiter) {
+    if (templateFolder.getChildren() == null) {
+      return null;
+    }
+    for (TemplateFolder i : templateFolder.getChildren()) {
+      if (i.getName().equals(extractTopmostEntityName(folderName, delimiter))) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  private String removeTopmostEntityFromPath(String yamlFilePath, String delimiter) {
+    StringBuilder stringBuilder = new StringBuilder(yamlFilePath);
+    return stringBuilder.substring(stringBuilder.indexOf(delimiter, 1) + 1, stringBuilder.length());
+  }
+
+  private String extractTopmostEntityName(String yamlFilePath, String delimiter) {
+    return yamlFilePath.contains(delimiter) ? yamlFilePath.substring(0, yamlFilePath.indexOf(delimiter)) : yamlFilePath;
+  }
+
+  private String extractParentEntityNameWithoutRegex(String yamlFilePath, String delimiter) {
+    StringBuilder stringBuilder = new StringBuilder(yamlFilePath);
+    String path = stringBuilder.substring(0, stringBuilder.lastIndexOf(delimiter));
+    if (path.lastIndexOf(delimiter) == -1) {
+      return path;
+    }
+    return path.substring(path.lastIndexOf(delimiter) + 1);
   }
 
   public String extractParentEntityName(String regex, String yamlFilePath, String delimiter) {

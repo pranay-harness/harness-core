@@ -10,6 +10,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.APPLICATION_TEMPLATE_LIBRARY_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_STREAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
@@ -21,6 +22,7 @@ import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static software.wings.beans.yaml.YamlConstants.GLOBAL_TEMPLATE_LIBRARY_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.INFRA_DEFINITION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
@@ -40,6 +42,7 @@ import static software.wings.beans.yaml.YamlConstants.VALUES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
+import static software.wings.common.TemplateConstants.TEMPLATE_TYPES_WITH_YAML_SUPPORT;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -54,6 +57,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
@@ -88,6 +92,8 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.defaults.Defaults;
+import software.wings.beans.template.Template;
+import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -121,6 +127,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
@@ -191,6 +198,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private TriggerService triggerService;
   @Inject private DeploymentTriggerService deploymentTriggerService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private TemplateService templateService;
 
   @Override
   public YamlGitConfig weNeedToPushChanges(String accountId, String appId) {
@@ -231,6 +239,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       List<GitFileChange> gitFileChanges, boolean failFast, Optional<List<String>> listOfYamlErrors,
       boolean gitSyncPath) {
     logger.info("Traverse Directory: " + (dn.getName() == null ? dn.getName() : path + "/" + dn.getName()));
+
+    if (dn.getShortClassName().equals("Template")) {
+      if (!featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, accountId)) {
+        dn.setShortClassName("undefined");
+      }
+    }
 
     boolean addToFileChangeList = true;
     if (dn instanceof YamlNode) {
@@ -362,6 +376,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
           case "HarnessTag":
             yaml = yamlResourceService.getHarnessTags(accountId).getResource().getYaml();
+            break;
+          case "Template":
+            if (dn instanceof AppLevelYamlNode) {
+              appId = ((AppLevelYamlNode) dn).getAppId();
+            } else {
+              appId = GLOBAL_APP_ID;
+            }
+            yaml = yamlResourceService.getTemplateLibrary(accountId, appId, entityId).getResource().getYaml();
             break;
 
           default:
@@ -498,6 +520,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     futureList.add(executorService.submit(() -> doNotificationGroups(accountId, directoryPath.clone())));
 
+    if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, accountId)) {
+      futureList.add(executorService.submit(()
+                                                -> doTemplateLibrary(accountId, directoryPath.clone(), GLOBAL_APP_ID,
+                                                    GLOBAL_TEMPLATE_LIBRARY_FOLDER, Type.GLOBAL_TEMPLATE_LIBRARY)));
+    }
     // collect results to this map so we can rebuild the correct order
     Map<String, FolderNode> map = new HashMap<>();
 
@@ -526,6 +553,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     configFolder.addChild(map.get(COLLABORATION_PROVIDERS_FOLDER));
     configFolder.addChild(map.get(VERIFICATION_PROVIDERS_FOLDER));
     configFolder.addChild(map.get(NOTIFICATION_GROUPS_FOLDER));
+    if (map.containsKey(GLOBAL_TEMPLATE_LIBRARY_FOLDER)) {
+      configFolder.addChild(map.get(GLOBAL_TEMPLATE_LIBRARY_FOLDER));
+    }
     //--------------------------------------
 
     long endTime = System.nanoTime();
@@ -717,6 +747,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     futureResponseList.add(
         executorService.submit(() -> doProvisioners(app, appPath.clone(), applyPermissions, allowedProvisioners)));
 
+    if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, accountId)) {
+      futureResponseList.add(executorService.submit(() -> doTemplateLibraryForApp(app, appPath.clone())));
+    }
+
     if (isTriggerRefactored(accountId)) {
       futureResponseList.add(executorService.submit(() -> doDeploymentTriggers(app, appPath.clone())));
     } else if (isTriggerYamlEnabled(accountId)) {
@@ -754,10 +788,18 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     } else if (isTriggerYamlEnabled(accountId)) {
       appFolder.addChild(map.get(TRIGGER_FOLDER));
     }
+    if (map.containsKey(APPLICATION_TEMPLATE_LIBRARY_FOLDER)) {
+      appFolder.addChild(map.get(APPLICATION_TEMPLATE_LIBRARY_FOLDER));
+    }
 
     //--------------------------------------
 
     return applicationsFolder;
+  }
+
+  private FolderNode doTemplateLibraryForApp(Application app, DirectoryPath directoryPath) {
+    return doTemplateLibrary(app.getAccountId(), directoryPath, app.getAppId(), APPLICATION_TEMPLATE_LIBRARY_FOLDER,
+        Type.APPLICATION_TEMPLATE_LIBRARY);
   }
 
   private boolean isTriggerYamlEnabled(String accountId) {
@@ -1892,6 +1934,62 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
+  @VisibleForTesting
+  FolderNode doTemplateLibrary(
+      String accountId, DirectoryPath directoryPath, String appId, String templateLibraryFolderName, Type type) {
+    final FolderNode templateLibraryFolder = new FolderNode(accountId, templateLibraryFolderName,
+        SettingAttribute.class, directoryPath.add(templateLibraryFolderName), yamlGitSyncService);
+
+    // get the whole template folder tree  structure
+    final TemplateFolder templateTree =
+        templateService.getTemplateTree(accountId, appId, null, TEMPLATE_TYPES_WITH_YAML_SUPPORT);
+    // get all the templates and group them by folderId
+    final List<Template> templates = ListUtils.emptyIfNull(
+        templateService.list(aPageRequest().addFilter(Template.APP_ID_KEY, Operator.EQ, appId).build()).getResponse());
+
+    final Map<String, List<Template>> folderIdTemplateMap =
+        templates.stream().collect(Collectors.groupingBy(Template::getFolderId));
+
+    // walk through the folder structure and assign the templates to the respective folders by folderId
+    // while walking the folder, add it to relevant folder node as well.
+    final FolderNode templatesRootNode =
+        processFolder(templateTree, folderIdTemplateMap, directoryPath, accountId, appId, type);
+    if (templatesRootNode != null) {
+      templateLibraryFolder.addChild(templatesRootNode);
+    }
+    return templateLibraryFolder;
+  }
+
+  private FolderNode processFolder(TemplateFolder rootFolder, Map<String, List<Template>> folderIdTemplateMap,
+      DirectoryPath directoryPath, String accountId, String appId, Type type) {
+    if (rootFolder == null) {
+      return null;
+    }
+    final DirectoryPath dirClone = directoryPath.clone();
+    final FolderNode rootYamlFolder = new FolderNode(accountId, rootFolder.getName(), SettingAttribute.class,
+        dirClone.add(rootFolder.getName()), yamlGitSyncService);
+    // process child folders
+    ListUtils.emptyIfNull(rootFolder.getChildren()).forEach(childTemplateFolder -> {
+      rootYamlFolder.addChild(
+          processFolder(childTemplateFolder, folderIdTemplateMap, dirClone, accountId, appId, type));
+    });
+    // add all the template nodes here
+    folderIdTemplateMap.getOrDefault(rootFolder.getUuid(), Collections.emptyList())
+        .stream()
+        .filter(template -> TEMPLATE_TYPES_WITH_YAML_SUPPORT.contains(template.getType()))
+        .forEach(template -> {
+          final DirectoryPath templatePath = dirClone.clone();
+          final String templateYamlFileName = template.getName() + YAML_EXTENSION;
+          rootYamlFolder.addChild(type == Type.GLOBAL_TEMPLATE_LIBRARY
+                  ? new AccountLevelYamlNode(accountId, template.getUuid(), templateYamlFileName, Template.class,
+                        templatePath.add(templateYamlFileName), yamlGitSyncService, type)
+                  : new AppLevelYamlNode(accountId, template.getUuid(), appId, templateYamlFileName, Template.class,
+                        templatePath.add(templateYamlFileName), yamlGitSyncService, type));
+        });
+
+    return rootYamlFolder;
+  }
+
   @Override
   public String getRootPath() {
     return SETUP_FOLDER;
@@ -2209,6 +2307,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Override
   public String getRootPathByNotificationGroup(NotificationGroup notificationGroup) {
     return getRootPath() + PATH_DELIMITER + NOTIFICATION_GROUPS_FOLDER;
+  }
+
+  @Override
+  public String getRootPathByGlobalTemplate(Template template) {
+    return getRootPath() + PATH_DELIMITER + GLOBAL_TEMPLATE_LIBRARY_FOLDER;
   }
 
   @Override

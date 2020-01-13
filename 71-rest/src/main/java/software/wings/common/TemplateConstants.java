@@ -1,5 +1,9 @@
 package software.wings.common;
 
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
+
 public interface TemplateConstants {
   String LATEST_TAG = "latest";
   String PATH_DELIMITER = "/";
@@ -52,4 +56,13 @@ public interface TemplateConstants {
   String GENERIC_COMMANDS = "Generic Commands";
   String HTTP_VERIFICATION = "HTTP Verifications";
   String SHELL_SCRIPTS = "Shell Scripts";
+
+  /**
+   * Template types
+   */
+  String SSH = "SSH";
+  String SHELL_SCRIPT = "SHELL_SCRIPT";
+  String HTTP = "HTTP";
+  String ARTIFACT_SOURCE = "ARTIFACT_SOURCE";
+  List<String> TEMPLATE_TYPES_WITH_YAML_SUPPORT = ImmutableList.of(SHELL_SCRIPT);
 }

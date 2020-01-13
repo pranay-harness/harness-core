@@ -412,6 +412,22 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   @Override
+  public Template findByFolder(TemplateFolder templateFolder, String templateName, String appId) {
+    List<Template> templates = wingsPersistence.createQuery(Template.class)
+                                   .filter(Template.ACCOUNT_ID_KEY, templateFolder.getAccountId())
+                                   .filter(Template.APP_ID_KEY, appId)
+                                   .field(FOLDER_PATH_ID_KEY)
+                                   .contains(templateFolder.getUuid())
+                                   .field(NAME_KEY)
+                                   .equal(templateName)
+                                   .asList();
+    if (templates.size() == 1) {
+      return templates.get(0);
+    }
+    return null;
+  }
+
+  @Override
   public String fetchTemplateUri(String templateUuid) {
     StringBuilder templateFolderPath = new StringBuilder("");
     Template template = wingsPersistence.get(Template.class, templateUuid);

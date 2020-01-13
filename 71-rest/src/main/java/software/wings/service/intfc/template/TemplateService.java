@@ -76,4 +76,6 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
   void loadDefaultTemplates(List<String> templateFiles, String accountId, String accountName);
 
   List<String> fetchTemplateProperties(Template template);
+
+  Template findByFolder(TemplateFolder templateFolder, String templateName, String appId);
 }
