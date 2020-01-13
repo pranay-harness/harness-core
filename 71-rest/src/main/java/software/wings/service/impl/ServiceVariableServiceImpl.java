@@ -485,7 +485,9 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       return;
     }
 
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, savedServiceVariable.getEncryptedValue());
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).field(ID_KEY).equal(savedServiceVariable.getEncryptedValue());
+    EncryptedData encryptedData = query.get();
     Preconditions.checkNotNull(encryptedData, "could not find encrypted reference for " + savedServiceVariable);
 
     String appId = savedServiceVariable.getAppId();
@@ -524,7 +526,16 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       encryptedData.removeEnvironment(envId, environment.getName());
     }
 
-    wingsPersistence.save(encryptedData);
+    UpdateOperations<EncryptedData> updateOperations =
+        wingsPersistence.createUpdateOperations(EncryptedData.class)
+            .set(EncryptedDataKeys.appIds, encryptedData.getAppIds())
+            .set(EncryptedDataKeys.serviceIds, encryptedData.getServiceIds())
+            .set(EncryptedDataKeys.envIds, encryptedData.getEnvIds())
+            .set(EncryptedDataKeys.serviceVariableIds, encryptedData.getEnvIds())
+            .set(EncryptedDataKeys.searchTags, encryptedData.getSearchTags())
+            .set(EncryptedDataKeys.keywords, encryptedData.getKeywords());
+
+    wingsPersistence.update(query, updateOperations);
   }
 
   private void checkValidEncryptedReference(@Valid ServiceVariable serviceVariable) {
