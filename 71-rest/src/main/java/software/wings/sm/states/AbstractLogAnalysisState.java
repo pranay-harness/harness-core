@@ -154,7 +154,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
       if (isEmpty(canaryNewHostNames)) {
         getLogger().warn("Could not find test nodes to compare the data");
-        return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Could not find hosts to analyze!");
+        return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
+            "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
       }
 
       Set<String> lastExecutionNodes = analysisContext.getControlNodes().keySet();
@@ -162,7 +163,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         if (getComparisonStrategy() == COMPARE_WITH_CURRENT) {
           getLogger().info("No nodes with older version found to compare the logs. Skipping analysis");
           return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
-              "Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
+              "Could not find existing instances of the service and environment. Analysis will be skipped. Either this is the first deployment or the previous version instances are deleted/unreachable. Please check your setup.");
         }
 
         getLogger().warn(

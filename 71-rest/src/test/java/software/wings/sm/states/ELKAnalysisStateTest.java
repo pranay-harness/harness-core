@@ -122,7 +122,9 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertThat(response.getErrorMessage()).isEqualTo("Could not find hosts to analyze!");
+    assertThat(response.getErrorMessage())
+        .isEqualTo(
+            "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
 
     LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
     assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
@@ -147,7 +149,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     String analysisResponseMsg =
-        "Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.";
+        "Could not find existing instances of the service and environment. Analysis will be skipped. Either this is the first deployment or the previous version instances are deleted/unreachable. Please check your setup.";
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(response.getErrorMessage()).isEqualTo(analysisResponseMsg);
@@ -180,7 +182,8 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(response.getErrorMessage())
-        .isEqualTo("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
+        .isEqualTo(
+            "Could not find existing instances of the service and environment. Analysis will be skipped. Either this is the first deployment or the previous version instances are deleted/unreachable. Please check your setup.");
 
     LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
     assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
