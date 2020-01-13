@@ -1,11 +1,16 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentSummary;
+import software.wings.beans.Account;
+import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.SettingAttribute;
@@ -14,6 +19,8 @@ import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DeploymentService;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Singleton
@@ -51,5 +58,18 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   public Optional<SettingAttribute> getSettingAttribute(String id) {
     return Optional.ofNullable(
         persistence.createQuery(SettingAttribute.class).filter(SettingAttributeKeys.uuid, id).get());
+  }
+
+  @Override
+  public List<Account> getCCMEnabledAccounts() {
+    List<Account> accounts = new ArrayList<>();
+    try (HIterator<Account> query = new HIterator<>(persistence.createQuery(Account.class, excludeAuthority)
+                                                        .filter(AccountKeys.cloudCostEnabled, Boolean.TRUE)
+                                                        .fetch())) {
+      for (Account account : query) {
+        accounts.add(account);
+      }
+    }
+    return accounts;
   }
 }

@@ -21,12 +21,14 @@ public class MongoEventReaderFactory implements EventReaderFactory {
   @Autowired private MongoTemplate mongoTemplate;
 
   @Override
-  public ItemReader<PublishedMessage> getEventReader(String messageType, Long startDate, Long endDate) {
+  public ItemReader<PublishedMessage> getEventReader(
+      String accountId, String messageType, Long startDate, Long endDate) {
     Query query = new Query();
-    query.addCriteria(Criteria.where(PublishedMessageKeys.type)
-                          .is(messageType)
-                          .andOperator(Criteria.where(PublishedMessageKeys.createdAt).gte(startDate),
-                              Criteria.where(PublishedMessageKeys.createdAt).lt(endDate)));
+    query.addCriteria(new Criteria().andOperator(Criteria.where(PublishedMessageKeys.accountId).is(accountId),
+        Criteria.where(PublishedMessageKeys.type).is(messageType),
+        Criteria.where(PublishedMessageKeys.createdAt).gte(startDate),
+        Criteria.where(PublishedMessageKeys.createdAt).lt(endDate)));
+
     query.with(new Sort(Sort.Direction.ASC, PublishedMessageKeys.occurredAt));
 
     MongoItemReader<PublishedMessage> reader = new MongoItemReader<>();

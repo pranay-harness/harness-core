@@ -1,5 +1,7 @@
 package io.harness.batch.processing.billing.timeseries.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.inject.Singleton;
 
 import io.harness.batch.processing.billing.service.UtilizationData;
@@ -44,8 +46,8 @@ public class UtilizationDataServiceImpl {
 
   public boolean create(List<InstanceUtilizationData> instanceUtilizationDataList) {
     boolean successfulInsert = false;
-    if (timeScaleDBService.isValid()) {
-      long startTime = System.currentTimeMillis();
+    if (timeScaleDBService.isValid() && isNotEmpty(instanceUtilizationDataList)) {
+      logger.info("Util data size {}", instanceUtilizationDataList.size());
       int retryCount = 0;
       while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
@@ -65,12 +67,10 @@ public class UtilizationDataServiceImpl {
           logger.info(
               "Failed to save instance Utilization data,[{}],retryCount=[{}]", instanceUtilizationDataList, retryCount);
           retryCount++;
-        } finally {
-          logger.info("Total time=[{}]", System.currentTimeMillis() - startTime);
         }
       }
     } else {
-      logger.info("Not processing instance Utilization data:[{}]", instanceUtilizationDataList);
+      logger.warn("Not processing instance Utilization data:[{}]", instanceUtilizationDataList);
     }
     return successfulInsert;
   }

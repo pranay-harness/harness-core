@@ -90,9 +90,14 @@ public class InstanceDataServiceImpl implements InstanceDataService {
 
   private PrunedInstanceData pruneInstanceData(String accountId, String settingId, String instanceId, Long occurredAt) {
     InstanceData instanceData = instanceDataDao.fetchInstanceDataWithName(accountId, settingId, instanceId, occurredAt);
-    return PrunedInstanceData.builder()
-        .instanceId(instanceData.getInstanceId())
-        .totalResource(instanceData.getTotalResource())
-        .build();
+    if (null != instanceData) {
+      return PrunedInstanceData.builder()
+          .instanceId(instanceData.getInstanceId())
+          .totalResource(instanceData.getTotalResource())
+          .build();
+    } else {
+      logger.error("Instance detail not found settingId {} instanceId {}", settingId, instanceId);
+      return PrunedInstanceData.builder().build();
+    }
   }
 }

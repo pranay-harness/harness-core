@@ -94,7 +94,7 @@ public class UnallocatedBillingDataServiceImplTest {
     when(timeScaleDBService.isValid()).thenReturn(true);
     when(statement.execute()).thenReturn(true);
     List<UnallocatedCostData> unallocatedCostDataList =
-        unallocatedBillingDataService.getUnallocatedCostData(START_TIME, END_TIME);
+        unallocatedBillingDataService.getUnallocatedCostData(ACCOUNT_ID, START_TIME, END_TIME);
     assertThat(unallocatedCostDataList.get(0).getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(unallocatedCostDataList.get(0).getInstanceType()).isEqualTo(INSTANCE_TYPE);
     assertThat(unallocatedCostDataList.get(0).getCost()).isEqualTo(COST);
@@ -107,7 +107,7 @@ public class UnallocatedBillingDataServiceImplTest {
   @Category(UnitTests.class)
   public void testNullUnallocatedCostData() {
     when(timeScaleDBService.getDBConnection()).thenThrow(SQLException.class);
-    assertThat(unallocatedBillingDataService.getUnallocatedCostData(START_TIME, END_TIME))
+    assertThat(unallocatedBillingDataService.getUnallocatedCostData(ACCOUNT_ID, START_TIME, END_TIME))
         .isEqualTo(Collections.emptyList());
   }
 
@@ -117,7 +117,8 @@ public class UnallocatedBillingDataServiceImplTest {
   public void testGetCommonDataService() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
     when(statement.execute()).thenReturn(true);
-    ClusterCostData clusterCostData = unallocatedBillingDataService.getCommonFields(CLUSTER_ID, START_TIME, END_TIME);
+    ClusterCostData clusterCostData =
+        unallocatedBillingDataService.getCommonFields(ACCOUNT_ID, CLUSTER_ID, START_TIME, END_TIME);
     assertThat(clusterCostData.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(clusterCostData.getBillingAccountId()).isEqualTo(BILLING_ACCOUNT_ID);
     assertThat(clusterCostData.getClusterName()).isEqualTo(CLUSTER_NAME);
@@ -133,7 +134,7 @@ public class UnallocatedBillingDataServiceImplTest {
   @Category(UnitTests.class)
   public void testNullCommonData() {
     when(timeScaleDBService.getDBConnection()).thenThrow(SQLException.class);
-    assertThat(unallocatedBillingDataService.getCommonFields(CLUSTER_ID, START_TIME, END_TIME))
+    assertThat(unallocatedBillingDataService.getCommonFields(ACCOUNT_ID, CLUSTER_ID, START_TIME, END_TIME))
         .isEqualTo(ClusterCostData.builder().build());
   }
 

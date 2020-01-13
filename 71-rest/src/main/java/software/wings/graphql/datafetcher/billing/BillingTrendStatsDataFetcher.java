@@ -100,10 +100,9 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
     }
 
     BigDecimal totalBillingAmount = billingAmountData.getCost();
-    BigDecimal slope = totalBillingAmount.divide(new BigDecimal(billingTimeDiffMillis), 2, RoundingMode.HALF_UP);
-
     long actualTimeDiffMillis = endInstant.toEpochMilli() - billingAmountData.getMinStartTime();
-    return slope.multiply(new BigDecimal(actualTimeDiffMillis));
+    return totalBillingAmount.multiply(
+        new BigDecimal(actualTimeDiffMillis).divide(new BigDecimal(billingTimeDiffMillis), 2, RoundingMode.HALF_UP));
   }
 
   public Instant getEndInstant(List<QLBillingDataFilter> filters) {

@@ -37,8 +37,9 @@ public class K8sUtilizationConfiguration {
   @Bean
   @StepScope
   public ItemReader<PublishedMessage> k8sNodeUtilizationEventMessageReader(
-      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(EventTypeConstants.NODE_UTILIZATION, startDate, endDate);
+      @Value("#{jobParameters[accountId]}") String accountId, @Value("#{jobParameters[startDate]}") Long startDate,
+      @Value("#{jobParameters[endDate]}") Long endDate) {
+    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.NODE_UTILIZATION, startDate, endDate);
   }
 
   @Bean
@@ -54,8 +55,9 @@ public class K8sUtilizationConfiguration {
   @Bean
   @StepScope
   public ItemReader<PublishedMessage> k8sPodUtilizationEventMessageReader(
-      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(EventTypeConstants.POD_UTILIZATION, startDate, endDate);
+      @Value("#{jobParameters[accountId]}") String accountId, @Value("#{jobParameters[startDate]}") Long startDate,
+      @Value("#{jobParameters[endDate]}") Long endDate) {
+    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.POD_UTILIZATION, startDate, endDate);
   }
 
   @Bean
@@ -72,7 +74,7 @@ public class K8sUtilizationConfiguration {
   public Step k8sPodUtilizationEventStep() {
     return stepBuilderFactory.get("k8sPodUtilizationEventStep")
         .<PublishedMessage, PublishedMessage>chunk(GRANULAR_BATCH_SIZE)
-        .reader(k8sPodUtilizationEventMessageReader(null, null))
+        .reader(k8sPodUtilizationEventMessageReader(null, null, null))
         .writer(podUtilizationMetricsWriter())
         .build();
   }
@@ -81,7 +83,7 @@ public class K8sUtilizationConfiguration {
   public Step k8sNodeUtilizationEventStep() {
     return stepBuilderFactory.get("k8sNodeUtilizationEventStep")
         .<PublishedMessage, PublishedMessage>chunk(GRANULAR_BATCH_SIZE)
-        .reader(k8sNodeUtilizationEventMessageReader(null, null))
+        .reader(k8sNodeUtilizationEventMessageReader(null, null, null))
         .writer(nodeUtilizationMetricsWriter())
         .build();
   }

@@ -31,7 +31,7 @@ public class NodeUtilizationMetricsWriter extends EventWriter implements ItemWri
         .forEach(publishedMessage -> {
           String accountId = publishedMessage.getAccountId();
           NodeMetric nodeUtilizationMetric = (NodeMetric) publishedMessage.getMessage();
-          logger.info("Node Utilization {} ", nodeUtilizationMetric);
+          logger.debug("Node Utilization {} ", nodeUtilizationMetric);
 
           long endTime = nodeUtilizationMetric.getTimestamp().getSeconds() * 1000;
           long startTime = endTime - (nodeUtilizationMetric.getWindow().getSeconds() * 1000);

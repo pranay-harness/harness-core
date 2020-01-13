@@ -40,7 +40,7 @@ public class CloudProviderServiceImpl implements CloudProviderService {
   }
 
   private CloudProvider getK8SCloudProviderFromProviderId(String cloudProviderId, String providerId) {
-    CloudProvider cloudProvider = DEFAULT_CLOUD_PROVIDER;
+    CloudProvider cloudProvider = getCloudProviderForK8SCluster(providerId);
     Optional<SettingAttribute> settingAttributeMaybe =
         cloudToHarnessMappingService.getSettingAttribute(cloudProviderId);
     if (settingAttributeMaybe.isPresent()) {

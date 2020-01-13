@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UnallocatedCostData {
+  String accountId;
   String clusterId;
   String instanceType;
   double cost;

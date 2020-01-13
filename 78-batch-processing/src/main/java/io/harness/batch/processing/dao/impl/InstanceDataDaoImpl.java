@@ -58,7 +58,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
       FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(false);
       return hPersistence.upsert(query, updateOperations, findAndModifyOptions);
     } else {
-      logger.info("Instance Event received before info event {}", instanceEvent.getInstanceId());
+      logger.warn("Instance Event received before info event {}", instanceEvent.getInstanceId());
     }
     return null;
   }
@@ -102,7 +102,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
       return hPersistence.upsert(query, updateOperations, findAndModifyOptions);
     } else {
-      logger.info("Instance data found {} ", instanceData);
+      logger.trace("Instance data found {} ", instanceData);
     }
     return instanceData;
   }

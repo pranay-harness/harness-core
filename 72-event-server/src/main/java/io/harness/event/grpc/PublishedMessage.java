@@ -31,8 +31,9 @@ import java.util.Map;
 @Data
 @Entity(value = "publishedMessages", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "type_CreatedAt_occurredAt"), fields = {
-    @Field(PublishedMessageKeys.type), @Field(PublishedMessageKeys.createdAt), @Field(PublishedMessageKeys.occurredAt)
+  @Index(options = @IndexOptions(name = "accountId_type_CreatedAt_occurredAt", background = true), fields = {
+    @Field(PublishedMessageKeys.accountId)
+    , @Field(PublishedMessageKeys.type), @Field(PublishedMessageKeys.createdAt), @Field(PublishedMessageKeys.occurredAt)
   })
 })
 @FieldNameConstants(innerTypeName = "PublishedMessageKeys")

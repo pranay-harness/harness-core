@@ -2,6 +2,7 @@ package io.harness.batch.processing.writer;
 
 import static io.harness.batch.processing.ccm.ClusterType.INVALID;
 import static io.harness.batch.processing.ccm.InstanceType.CLUSTER_UNALLOCATED;
+import static io.harness.batch.processing.writer.constants.K8sCCMConstants.DEFAULT_DEPLOYMENT_TYPE;
 import static io.harness.batch.processing.writer.constants.K8sCCMConstants.UNALLOCATED;
 
 import com.google.common.base.Enums;
@@ -41,12 +42,14 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
           if (dataPoint.getInstanceType().equals(InstanceType.K8S_POD.name())
               || dataPoint.getInstanceType().equals(InstanceType.ECS_TASK_EC2.name())) {
             clusterCostData = clusterCostData.toBuilder()
+                                  .accountId(dataPoint.getAccountId())
                                   .utilizedCost(dataPoint.getCost())
                                   .cpuUtilizedCost(dataPoint.getCpuCost())
                                   .memoryUtilizedCost(dataPoint.getMemoryCost())
                                   .build();
           } else {
             clusterCostData = clusterCostData.toBuilder()
+                                  .accountId(dataPoint.getAccountId())
                                   .totalCost(dataPoint.getCost())
                                   .cpuTotalCost(dataPoint.getCpuCost())
                                   .memoryTotalCost(dataPoint.getMemoryCost())
@@ -58,6 +61,7 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
               dataPoint.getInstanceType().equals(InstanceType.K8S_POD.name())
                       || dataPoint.getInstanceType().equals(InstanceType.ECS_TASK_EC2.name())
                   ? ClusterCostData.builder()
+                        .accountId(dataPoint.getAccountId())
                         .utilizedCost(dataPoint.getCost())
                         .cpuUtilizedCost(dataPoint.getCpuCost())
                         .memoryUtilizedCost(dataPoint.getMemoryCost())
@@ -65,6 +69,7 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
                         .endTime(dataPoint.getEndTime())
                         .build()
                   : ClusterCostData.builder()
+                        .accountId(dataPoint.getAccountId())
                         .totalCost(dataPoint.getCost())
                         .cpuTotalCost(dataPoint.getCpuCost())
                         .memoryTotalCost(dataPoint.getMemoryCost())
@@ -75,7 +80,7 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
       });
       unallocatedCostMap.forEach((clusterId, clusterCostData) -> {
         ClusterCostData commonFields = unallocatedBillingDataService.getCommonFields(
-            clusterId, clusterCostData.getStartTime(), clusterCostData.getEndTime());
+            clusterCostData.getAccountId(), clusterId, clusterCostData.getStartTime(), clusterCostData.getEndTime());
         InstanceBillingDataBuilder instanceBillingDataBuilder =
             InstanceBillingData.builder()
                 .accountId(commonFields.getAccountId())
@@ -113,7 +118,7 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
           case K8S:
             instanceBillingDataBuilder.namespace(UNALLOCATED)
                 .workloadName(UNALLOCATED)
-                .workloadType(commonFields.getWorkloadType());
+                .workloadType(DEFAULT_DEPLOYMENT_TYPE);
             break;
           default:
             throw new IllegalStateException("Unexpected value: " + commonFields.getCloudProvider());

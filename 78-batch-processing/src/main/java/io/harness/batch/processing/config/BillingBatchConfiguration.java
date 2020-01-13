@@ -36,10 +36,10 @@ public class BillingBatchConfiguration {
 
   @Bean
   @StepScope
-  public ItemReader<InstanceData> instanceInfoMessageReader(
+  public ItemReader<InstanceData> instanceInfoMessageReader(@Value("#{jobParameters[accountId]}") String accountId,
       @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
     try {
-      return instanceDataMongoEventReader().getEventReader(startDate, endDate);
+      return instanceDataMongoEventReader().getEventReader(accountId, startDate, endDate);
     } catch (Exception ex) {
       logger.error("Exception instanceInfoMessageReader ", ex);
       return null;
