@@ -1,6 +1,8 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
+import static software.wings.utils.Misc.replaceDotWithUnicode;
 import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -25,14 +27,12 @@ import software.wings.beans.Base;
 import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Created by sriram_parthasarathy on 8/23/17.
@@ -128,8 +128,8 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
     this.serviceId = serviceId;
     this.predictiveHistoryMinutes = predictiveHistoryMinutes;
     this.predictiveCvConfigId = predictiveCvConfigId;
-    this.controlNodes = controlNodes == null ? new HashMap<>() : controlNodes;
-    this.testNodes = testNodes == null ? new HashMap<>() : testNodes;
+    setControlNodes(controlNodes);
+    setTestNodes(testNodes);
     this.query = query;
     this.isSSL = isSSL;
     this.appPort = appPort;
@@ -167,8 +167,8 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
         .workflowExecutionId(workflowExecutionId)
         .stateExecutionId(stateExecutionId)
         .serviceId(serviceId)
-        .controlNodes(getControlNodes().keySet().stream().map(Misc::replaceUnicodeWithDot).collect(Collectors.toSet()))
-        .testNodes(getTestNodes().keySet().stream().map(Misc::replaceUnicodeWithDot).collect(Collectors.toSet()))
+        .controlNodes(getControlNodes().keySet())
+        .testNodes(getTestNodes().keySet())
         .query(query)
         .isSSL(isSSL)
         .appPort(appPort)
@@ -215,28 +215,40 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
+  public final void setControlNodes(Map<String, String> controlNodes) {
+    this.controlNodes = updateNodesReplaceDots(controlNodes);
+  }
+
   public Map<String, String> getControlNodes() {
     if (controlNodes == null) {
       return new HashMap<>();
     }
-    return controlNodes;
+    return updateNodesReplaceUniCode(controlNodes);
+  }
+
+  public final void setTestNodes(Map<String, String> testNodes) {
+    this.testNodes = updateNodesReplaceDots(testNodes);
   }
 
   public Map<String, String> getTestNodes() {
     if (testNodes == null) {
       return new HashMap<>();
     }
-    return testNodes;
-  }
-
-  public void replaceUnicodeInControlNodesAndTestNodes() {
-    controlNodes = updateNodesReplaceUniCode(getControlNodes());
-    testNodes = updateNodesReplaceUniCode(getTestNodes());
+    return updateNodesReplaceUniCode(testNodes);
   }
 
   private Map<String, String> updateNodesReplaceUniCode(Map<String, String> nodes) {
     Map<String, String> updatedNodes = new HashMap<>();
     nodes.forEach((host, groupName) -> updatedNodes.put(replaceUnicodeWithDot(host), groupName));
+    return updatedNodes;
+  }
+
+  private Map<String, String> updateNodesReplaceDots(Map<String, String> nodes) {
+    Map<String, String> updatedNodes = new HashMap<>();
+    if (isEmpty(nodes)) {
+      return updatedNodes;
+    }
+    nodes.forEach((host, groupName) -> updatedNodes.put(replaceDotWithUnicode(host), groupName));
     return updatedNodes;
   }
 

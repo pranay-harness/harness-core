@@ -92,7 +92,6 @@ public class WorkflowLogClusterJob implements Job, MongoPersistenceIterator.Hand
     }
     if (ExecutionStatus.QUEUED == analysisContext.getExecutionStatus()) {
       learningEngineService.markJobStatus(analysisContext, ExecutionStatus.RUNNING);
-      analysisContext.replaceUnicodeInControlNodesAndTestNodes();
     }
     logger.info(
         "Handling the clustering for stateExecutionId {} using the iterators", analysisContext.getStateExecutionId());

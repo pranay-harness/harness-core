@@ -426,13 +426,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .set("executionStatus", ExecutionStatus.RUNNING)
             .inc("retry")
             .set(AnalysisContext.LAST_UPDATED_AT_KEY, System.currentTimeMillis());
-    AnalysisContext analysisContext =
-        wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
-    if (analysisContext != null) {
-      analysisContext.replaceUnicodeInControlNodesAndTestNodes();
-      logger.info("Fetched analysis Context : {}", analysisContext);
-    }
-    return analysisContext;
+    return wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
   }
 
   @Override
