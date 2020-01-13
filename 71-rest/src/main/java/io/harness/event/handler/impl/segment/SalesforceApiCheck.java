@@ -3,6 +3,7 @@ package io.harness.event.handler.impl.segment;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.event.handler.segment.SalesforceConfig;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -112,7 +113,7 @@ public class SalesforceApiCheck {
     while (true) {
       loginResponseString = getLoginResponse();
       count++;
-      if (loginResponseString != null) {
+      if (EmptyPredicate.isNotEmpty(loginResponseString)) {
         break;
       }
       if (count >= MAX_RETRIES) {
@@ -162,11 +163,10 @@ public class SalesforceApiCheck {
     while (true) {
       responseString = querySalesforce(queryString);
       count++;
-      if (responseString != null) {
+      if (EmptyPredicate.isNotEmpty(responseString)) {
         return responseString;
       }
       if (count >= MAX_RETRIES) {
-        logger.error("Response from Salesforce is null");
         return null;
       }
     }
@@ -175,7 +175,7 @@ public class SalesforceApiCheck {
   private boolean isFoundInSalesforce(String queryString) {
     String responseString = retryQueryResponse(queryString);
 
-    if (responseString != null && responseString.length() == 0) {
+    if (EmptyPredicate.isEmpty(responseString)) {
       return false;
     }
 
