@@ -585,7 +585,7 @@ public enum StateType implements StateTypeDescriptor {
       asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
   TERRAFORM_DESTROY(DestroyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Destroy",
-      asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT), ORCHESTRATION_STENCILS),
+      asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT, WRAP_UP), ORCHESTRATION_STENCILS),
 
   CLOUD_FORMATION_CREATE_STACK(CloudFormationCreateStackState.class, PROVISIONERS, 1, PROVISION_CLOUD_FORMATION,
       asList(InfrastructureMappingType.AWS_SSH), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
