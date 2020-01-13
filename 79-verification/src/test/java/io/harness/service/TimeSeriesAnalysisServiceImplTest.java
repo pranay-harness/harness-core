@@ -97,6 +97,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   private String stateExecutionId;
   private String workflowExecutionId;
   private Random randomizer;
+  private String hostname;
   private int currentEpochMinute;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
@@ -115,6 +116,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
     workflowExecutionId = generateUuid();
     timeSeriesAnalysisService = spy(timeSeriesAnalysisService);
     currentEpochMinute = (int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
+    hostname = generateUuid();
     MockitoAnnotations.initMocks(this);
     when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(false).build());
 
@@ -238,11 +240,258 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetRecords_IfNoRecordsAvailable() {
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(true).build());
+    Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getRecords(
+        appId, stateExecutionId, DEFAULT_GROUP_NAME, Sets.newHashSet(hostname), 10, 10, accountId);
+    assertThat(records).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetRecords_WhenRecordsAreAvailable() {
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(true).build());
+    NewRelicMetricDataRecord expectedRecord = NewRelicMetricDataRecord.builder()
+                                                  .groupName(DEFAULT_GROUP_NAME)
+                                                  .name("key")
+                                                  .stateExecutionId(stateExecutionId)
+                                                  .appId(appId)
+                                                  .stateType(StateType.NEW_RELIC)
+                                                  .dataCollectionMinute(currentEpochMinute)
+                                                  .host(hostname)
+                                                  .values(new HashMap<>())
+                                                  .build();
+    expectedRecord.getValues().put("name", 1.0);
+    TimeSeriesDataRecord timeSeriesDataRecord = TimeSeriesDataRecord.builder()
+                                                    .groupName(DEFAULT_GROUP_NAME)
+                                                    .stateExecutionId(stateExecutionId)
+                                                    .stateType(StateType.NEW_RELIC)
+                                                    .dataCollectionMinute(currentEpochMinute)
+                                                    .host(hostname)
+                                                    .values(TreeBasedTable.create())
+                                                    .build();
+    timeSeriesDataRecord.getValues().put("key", "name", 1.0);
+    timeSeriesDataRecord.compress();
+    wingsPersistence.save(timeSeriesDataRecord);
+    Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getRecords(appId, stateExecutionId,
+        DEFAULT_GROUP_NAME, Sets.newHashSet(hostname), currentEpochMinute, currentEpochMinute, accountId);
+    assertThat(records).hasSize(1);
+    assertThat(records.iterator().next()).isEqualTo(expectedRecord);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetRecords_ExcludeHeartbeatRecord() {
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(true).build());
+    TimeSeriesDataRecord timeSeriesDataRecord = TimeSeriesDataRecord.builder()
+                                                    .groupName(DEFAULT_GROUP_NAME)
+                                                    .stateExecutionId(stateExecutionId)
+                                                    .stateType(StateType.NEW_RELIC)
+                                                    .dataCollectionMinute(currentEpochMinute)
+                                                    .host(hostname)
+                                                    .level(ClusterLevel.L1)
+                                                    .build();
+    wingsPersistence.save(timeSeriesDataRecord);
+    wingsPersistence.save(TimeSeriesDataRecord.builder()
+                              .groupName(DEFAULT_GROUP_NAME)
+                              .stateExecutionId(stateExecutionId)
+                              .stateType(StateType.NEW_RELIC)
+                              .dataCollectionMinute(currentEpochMinute)
+                              .host(hostname)
+                              .level(ClusterLevel.H0)
+                              .build());
+    wingsPersistence.save(NewRelicMetricDataRecord.builder()
+                              .groupName(DEFAULT_GROUP_NAME)
+                              .stateExecutionId(stateExecutionId)
+                              .appId(appId)
+                              .stateType(StateType.NEW_RELIC)
+                              .dataCollectionMinute(currentEpochMinute)
+                              .host(hostname)
+                              .level(ClusterLevel.HF)
+                              .build());
+    Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getRecords(appId, stateExecutionId,
+        DEFAULT_GROUP_NAME, Sets.newHashSet(hostname), currentEpochMinute, currentEpochMinute, accountId);
+    assertThat(records).hasSize(1);
+    assertThat(records.iterator().next().getLevel()).isEqualTo(ClusterLevel.L1);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetPreviousSuccessfulRecordss_ExcludeHeartbeatRecord() {
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(true).build());
+    TimeSeriesDataRecord timeSeriesDataRecord = TimeSeriesDataRecord.builder()
+                                                    .groupName(DEFAULT_GROUP_NAME)
+                                                    .stateExecutionId(stateExecutionId)
+                                                    .workflowExecutionId(workflowExecutionId)
+                                                    .stateType(StateType.NEW_RELIC)
+                                                    .dataCollectionMinute(currentEpochMinute)
+                                                    .host(hostname)
+                                                    .level(ClusterLevel.L1)
+                                                    .build();
+    wingsPersistence.save(timeSeriesDataRecord);
+    wingsPersistence.save(TimeSeriesDataRecord.builder()
+                              .groupName(DEFAULT_GROUP_NAME)
+                              .stateExecutionId(stateExecutionId)
+                              .workflowExecutionId(workflowExecutionId)
+                              .stateType(StateType.NEW_RELIC)
+                              .dataCollectionMinute(currentEpochMinute)
+                              .host(hostname)
+                              .level(ClusterLevel.H0)
+                              .build());
+    wingsPersistence.save(TimeSeriesDataRecord.builder()
+                              .groupName(DEFAULT_GROUP_NAME)
+                              .stateExecutionId(stateExecutionId)
+                              .workflowExecutionId(workflowExecutionId)
+                              .stateType(StateType.NEW_RELIC)
+                              .dataCollectionMinute(currentEpochMinute)
+                              .host(hostname)
+                              .level(ClusterLevel.HF)
+                              .build());
+    Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getPreviousSuccessfulRecords(
+        appId, workflowExecutionId, DEFAULT_GROUP_NAME, currentEpochMinute, currentEpochMinute, accountId);
+    assertThat(records).hasSize(1);
+    assertThat(records.iterator().next().getLevel()).isEqualTo(ClusterLevel.L1);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetPreviousSuccessfulRecords_IfWorkflowExecutionIdIsEmpty() {
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(true).build());
+    TimeSeriesDataRecord timeSeriesDataRecord = TimeSeriesDataRecord.builder()
+                                                    .groupName(DEFAULT_GROUP_NAME)
+                                                    .workflowExecutionId(workflowExecutionId)
+                                                    .stateType(StateType.NEW_RELIC)
+                                                    .dataCollectionMinute(currentEpochMinute)
+                                                    .host(hostname)
+                                                    .level(ClusterLevel.L1)
+                                                    .build();
+    wingsPersistence.save(timeSeriesDataRecord);
+    Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getPreviousSuccessfulRecords(
+        appId, null, DEFAULT_GROUP_NAME, currentEpochMinute, 10, accountId);
+    assertThat(records).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetPreviousSuccessfulRecords_BaselinePinnedPreviously() {
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(true).build());
+    NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder()
+                                                            .groupName(DEFAULT_GROUP_NAME)
+                                                            .workflowExecutionId(workflowExecutionId)
+                                                            .stateType(StateType.NEW_RELIC)
+                                                            .dataCollectionMinute(currentEpochMinute)
+                                                            .workflowExecutionId(workflowExecutionId)
+                                                            .host(hostname)
+                                                            .level(ClusterLevel.L1)
+                                                            .build();
+    wingsPersistence.save(newRelicMetricDataRecord);
+    Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getPreviousSuccessfulRecords(
+        appId, workflowExecutionId, DEFAULT_GROUP_NAME, currentEpochMinute, 10, accountId);
+    assertThat(records).hasSize(1);
+    assertThat(records.iterator().next().getLevel()).isEqualTo(ClusterLevel.L1);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetMaxControlMinute_WithData() {
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(true).build());
+    String workflowId = generateUuid();
+    wingsPersistence.save(TimeSeriesDataRecord.builder()
+                              .groupName(DEFAULT_GROUP_NAME)
+                              .workflowId(workflowId)
+                              .stateExecutionId(stateExecutionId)
+                              .workflowExecutionId(workflowExecutionId)
+                              .serviceId(serviceId)
+                              .stateType(StateType.NEW_RELIC)
+                              .dataCollectionMinute(currentEpochMinute)
+                              .host(hostname)
+                              .level(ClusterLevel.L1)
+                              .build());
+    wingsPersistence.save(TimeSeriesDataRecord.builder()
+                              .groupName(DEFAULT_GROUP_NAME)
+                              .workflowId(workflowId)
+                              .stateExecutionId(stateExecutionId)
+                              .workflowExecutionId(workflowExecutionId)
+                              .serviceId(serviceId)
+                              .stateType(StateType.NEW_RELIC)
+                              .dataCollectionMinute(currentEpochMinute - 2)
+                              .host(hostname)
+                              .level(ClusterLevel.L1)
+                              .build());
+    int maxControlMinuteWithData = timeSeriesAnalysisService.getMaxControlMinuteWithData(
+        StateType.NEW_RELIC, appId, serviceId, workflowId, workflowExecutionId, DEFAULT_GROUP_NAME, accountId);
+    assertThat(maxControlMinuteWithData).isEqualTo(currentEpochMinute);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetMaxControlMinute_WithNoData() {
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(true).build());
+    String workflowId = generateUuid();
+    int maxControlMinuteWithData = timeSeriesAnalysisService.getMaxControlMinuteWithData(
+        StateType.NEW_RELIC, appId, serviceId, workflowId, workflowExecutionId, DEFAULT_GROUP_NAME, accountId);
+    assertThat(maxControlMinuteWithData).isEqualTo(-1);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetMinControlMinute_WithData() {
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(true).build());
+    String workflowId = generateUuid();
+    wingsPersistence.save(TimeSeriesDataRecord.builder()
+                              .groupName(DEFAULT_GROUP_NAME)
+                              .workflowId(workflowId)
+                              .stateExecutionId(stateExecutionId)
+                              .workflowExecutionId(workflowExecutionId)
+                              .serviceId(serviceId)
+                              .stateType(StateType.NEW_RELIC)
+                              .dataCollectionMinute(currentEpochMinute)
+                              .host(hostname)
+                              .level(ClusterLevel.L1)
+                              .build());
+    wingsPersistence.save(TimeSeriesDataRecord.builder()
+                              .groupName(DEFAULT_GROUP_NAME)
+                              .workflowId(workflowId)
+                              .stateExecutionId(stateExecutionId)
+                              .workflowExecutionId(workflowExecutionId)
+                              .serviceId(serviceId)
+                              .stateType(StateType.NEW_RELIC)
+                              .dataCollectionMinute(currentEpochMinute - 2)
+                              .host(hostname)
+                              .level(ClusterLevel.L1)
+                              .build());
+    int maxControlMinuteWithData = timeSeriesAnalysisService.getMinControlMinuteWithData(
+        StateType.NEW_RELIC, appId, serviceId, workflowId, workflowExecutionId, DEFAULT_GROUP_NAME, accountId);
+    assertThat(maxControlMinuteWithData).isEqualTo(currentEpochMinute - 2);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetMinControlMinute_WithNoData() {
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(true).build());
+    String workflowId = generateUuid();
+    int maxControlMinuteWithData = timeSeriesAnalysisService.getMinControlMinuteWithData(
+        StateType.NEW_RELIC, appId, serviceId, workflowId, workflowExecutionId, DEFAULT_GROUP_NAME, accountId);
+    assertThat(maxControlMinuteWithData).isEqualTo(-1);
+  }
+
+  @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetRecordsIfNoRecordsAvailable() {
-    Set<NewRelicMetricDataRecord> records =
-        timeSeriesAnalysisService.getRecords(appId, stateExecutionId, "DEFAULT", Sets.newHashSet("test-host"), 10, 10);
+    Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getRecords(
+        appId, stateExecutionId, "DEFAULT", Sets.newHashSet("test-host"), 10, 10, accountId);
     assertThat(records).isEmpty();
   }
 
@@ -259,8 +508,8 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
                                                             .host("test-host")
                                                             .build();
     wingsPersistence.save(newRelicMetricDataRecord);
-    Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getRecords(
-        appId, stateExecutionId, "DEFAULT", Sets.newHashSet("test-host"), currentEpochMinute, currentEpochMinute);
+    Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getRecords(appId, stateExecutionId, "DEFAULT",
+        Sets.newHashSet("test-host"), currentEpochMinute, currentEpochMinute, accountId);
     assertThat(records).hasSize(1);
     assertThat(records.iterator().next().getHost()).isEqualTo("test-host");
   }
@@ -297,8 +546,8 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
                               .host("test-host")
                               .level(ClusterLevel.HF)
                               .build());
-    Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getRecords(
-        appId, stateExecutionId, "DEFAULT", Sets.newHashSet("test-host"), currentEpochMinute, currentEpochMinute);
+    Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getRecords(appId, stateExecutionId, "DEFAULT",
+        Sets.newHashSet("test-host"), currentEpochMinute, currentEpochMinute, accountId);
     assertThat(records).hasSize(1);
     assertThat(records.iterator().next().getLevel()).isEqualTo(ClusterLevel.L1);
   }
@@ -336,7 +585,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
                               .level(ClusterLevel.HF)
                               .build());
     Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getPreviousSuccessfulRecords(
-        appId, workflowExecutionId, "DEFAULT", currentEpochMinute, currentEpochMinute);
+        appId, workflowExecutionId, "DEFAULT", currentEpochMinute, currentEpochMinute, accountId);
     assertThat(records).hasSize(1);
     assertThat(records.iterator().next().getLevel()).isEqualTo(ClusterLevel.L1);
   }
@@ -355,8 +604,8 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
                                                             .level(ClusterLevel.L1)
                                                             .build();
     wingsPersistence.save(newRelicMetricDataRecord);
-    Set<NewRelicMetricDataRecord> records =
-        timeSeriesAnalysisService.getPreviousSuccessfulRecords(appId, null, "DEFAULT", currentEpochMinute, 10);
+    Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getPreviousSuccessfulRecords(
+        appId, null, "DEFAULT", currentEpochMinute, 10, accountId);
     assertThat(records).isEmpty();
   }
 
@@ -390,7 +639,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
                               .level(ClusterLevel.L1)
                               .build());
     int maxControlMinuteWithData = timeSeriesAnalysisService.getMaxControlMinuteWithData(
-        StateType.NEW_RELIC, appId, serviceId, workflowId, workflowExecutionId, "DEFAULT");
+        StateType.NEW_RELIC, appId, serviceId, workflowId, workflowExecutionId, "DEFAULT", accountId);
     assertThat(maxControlMinuteWithData).isEqualTo(currentEpochMinute);
   }
 
@@ -400,7 +649,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   public void testGetMaxControlMinuteWithNoData() {
     String workflowId = generateUuid();
     int maxControlMinuteWithData = timeSeriesAnalysisService.getMaxControlMinuteWithData(
-        StateType.NEW_RELIC, appId, serviceId, workflowId, workflowExecutionId, "DEFAULT");
+        StateType.NEW_RELIC, appId, serviceId, workflowId, workflowExecutionId, "DEFAULT", accountId);
     assertThat(maxControlMinuteWithData).isEqualTo(-1);
   }
 
@@ -434,7 +683,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
                               .level(ClusterLevel.L1)
                               .build());
     int maxControlMinuteWithData = timeSeriesAnalysisService.getMinControlMinuteWithData(
-        StateType.NEW_RELIC, appId, serviceId, workflowId, workflowExecutionId, "DEFAULT");
+        StateType.NEW_RELIC, appId, serviceId, workflowId, workflowExecutionId, "DEFAULT", accountId);
     assertThat(maxControlMinuteWithData).isEqualTo(currentEpochMinute - 2);
   }
 
@@ -444,7 +693,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   public void testGetMinControlMinuteWithNoData() {
     String workflowId = generateUuid();
     int maxControlMinuteWithData = timeSeriesAnalysisService.getMinControlMinuteWithData(
-        StateType.NEW_RELIC, appId, serviceId, workflowId, workflowExecutionId, "DEFAULT");
+        StateType.NEW_RELIC, appId, serviceId, workflowId, workflowExecutionId, "DEFAULT", accountId);
     assertThat(maxControlMinuteWithData).isEqualTo(-1);
   }
 
@@ -598,11 +847,11 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
                                 .build());
     }
 
-    NewRelicMetricDataRecord heartBeat = timeSeriesAnalysisService.getHeartBeat(StateType.NEW_RELIC, appId,
-        stateExecutionId, workflowExecutionId, serviceId, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME, OrderType.ASC);
+    NewRelicMetricDataRecord heartBeat = timeSeriesAnalysisService.getHeartBeat(StateType.NEW_RELIC, stateExecutionId,
+        workflowExecutionId, serviceId, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME, OrderType.ASC, accountId);
     assertThat(heartBeat.getDataCollectionMinute()).isEqualTo(0);
-    heartBeat = timeSeriesAnalysisService.getHeartBeat(StateType.NEW_RELIC, appId, stateExecutionId,
-        workflowExecutionId, serviceId, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME, OrderType.DESC);
+    heartBeat = timeSeriesAnalysisService.getHeartBeat(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId,
+        serviceId, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME, OrderType.DESC, accountId);
     assertThat(heartBeat.getDataCollectionMinute()).isEqualTo(9);
   }
 
@@ -1144,7 +1393,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
                               .dataCollectionMinute(currentEpochMinute + 1)
                               .build());
     timeSeriesAnalysisService.bumpCollectionMinuteToProcess(
-        appId, stateExecutionId, workflowExecutionId, DEFAULT_GROUP_NAME, currentEpochMinute, accountId, false);
+        appId, stateExecutionId, workflowExecutionId, DEFAULT_GROUP_NAME, currentEpochMinute, accountId);
     PageRequest<NewRelicMetricDataRecord> pageRequest =
         aPageRequest()
             .withLimit(UNLIMITED)
@@ -1196,7 +1445,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
                               .dataCollectionMinute(currentEpochMinute + 1)
                               .build());
     NewRelicMetricDataRecord newRelicMetricDataRecord = timeSeriesAnalysisService.getAnalysisMinute(
-        StateType.NEW_RELIC, appId, stateExecutionId, workflowExecutionId, serviceId, DEFAULT_GROUP_NAME);
+        StateType.NEW_RELIC, appId, stateExecutionId, workflowExecutionId, serviceId, DEFAULT_GROUP_NAME, accountId);
     assertThat(newRelicMetricDataRecord.getLevel()).isEqualTo(ClusterLevel.H0);
     assertThat(newRelicMetricDataRecord.getDataCollectionMinute()).isEqualTo(currentEpochMinute + 1);
   }
@@ -1223,7 +1472,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
                               .build());
 
     NewRelicMetricDataRecord newRelicMetricDataRecord = timeSeriesAnalysisService.getAnalysisMinute(
-        StateType.NEW_RELIC, appId, stateExecutionId, workflowExecutionId, serviceId, DEFAULT_GROUP_NAME);
+        StateType.NEW_RELIC, appId, stateExecutionId, workflowExecutionId, serviceId, DEFAULT_GROUP_NAME, accountId);
     assertThat(newRelicMetricDataRecord).isNull();
   }
 

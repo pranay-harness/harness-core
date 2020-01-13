@@ -85,13 +85,13 @@ public class TimeSeriesResource {
       TSRequest request) {
     if (compareCurrent) {
       return new RestResponse<>(timeSeriesAnalysisService.getRecords(appId, request.getStateExecutionId(), groupName,
-          request.getNodes(), request.getAnalysisMinute(), request.getAnalysisStartMinute()));
+          request.getNodes(), request.getAnalysisMinute(), request.getAnalysisStartMinute(), accountId));
     } else {
       if (workflowExecutionId == null || workflowExecutionId.equals("-1")) {
         return new RestResponse<>(new HashSet<>());
       }
-      return new RestResponse<>(timeSeriesAnalysisService.getPreviousSuccessfulRecords(
-          appId, workflowExecutionId, groupName, request.getAnalysisMinute(), request.getAnalysisStartMinute()));
+      return new RestResponse<>(timeSeriesAnalysisService.getPreviousSuccessfulRecords(appId, workflowExecutionId,
+          groupName, request.getAnalysisMinute(), request.getAnalysisStartMinute(), accountId));
     }
   }
 

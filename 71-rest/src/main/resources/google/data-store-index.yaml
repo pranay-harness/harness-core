@@ -76,7 +76,14 @@ indexes:
   - name: stateExecutionId
   - name: groupName
   - name: dataCollectionMinute
-    direction: desc
+    direction: asc
+
+- kind: timeSeriesMetricRecords
+  properties:
+    - name: stateExecutionId
+    - name: groupName
+    - name: dataCollectionMinute
+      direction: desc
 
 - kind: timeSeriesMetricRecords
   properties:

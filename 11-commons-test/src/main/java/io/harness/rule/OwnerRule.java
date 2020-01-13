@@ -166,7 +166,12 @@ public class OwnerRule implements TestRule {
           .put(SHASWAT, DevInfo.builder().email("shaswat.deep@harness.io").slack("UL9J5EH7A").build())
           .put(SHUBHANSHU, defaultDevInfo(SHUBHANSHU).slack("UKLTRSAN9").team(CONTINUOUS_EFFICIENCY).build())
           .put(SOWMYA,
-              DevInfo.builder().email("sowmya.k@harness.io").team(CONTINUOUS_VERIFICATION).slack("UHM19HBKM").build())
+              DevInfo.builder()
+                  .email("sowmya.k@harness.io")
+                  .team(CONTINUOUS_VERIFICATION)
+                  .slack("UHM19HBKM")
+                  .jira("5cb679914064460e407ec221")
+                  .build())
           .put(SRINIVAS, defaultDevInfo(SRINIVAS).slack("U4QC23961").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(SRIRAM,
               DevInfo.builder().email("sriram@harness.io").team(CONTINUOUS_VERIFICATION).slack("U5L475PK5").build())
