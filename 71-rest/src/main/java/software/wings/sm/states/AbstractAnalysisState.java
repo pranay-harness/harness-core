@@ -20,7 +20,6 @@ import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.CO
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
-import static software.wings.utils.Misc.replaceDotWithUnicode;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -278,14 +277,6 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected String scheduleAnalysisCronJob(AnalysisContext context, String delegateTaskId) {
-    Map<String, String> controlNodes = new HashMap<>();
-    context.getControlNodes().forEach((host, groupName) -> controlNodes.put(replaceDotWithUnicode(host), groupName));
-    context.setControlNodes(controlNodes);
-
-    Map<String, String> testNodes = new HashMap<>();
-    context.getTestNodes().forEach((host, groupName) -> testNodes.put(replaceDotWithUnicode(host), groupName));
-    context.setTestNodes(testNodes);
-
     context.setDelegateTaskId(delegateTaskId);
     return wingsPersistence.save(context);
   }

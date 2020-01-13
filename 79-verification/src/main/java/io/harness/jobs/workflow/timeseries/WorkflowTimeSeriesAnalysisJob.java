@@ -121,7 +121,6 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
     }
     if (ExecutionStatus.QUEUED == analysisContext.getExecutionStatus()) {
       learningEngineService.markJobStatus(analysisContext, ExecutionStatus.RUNNING);
-      analysisContext.replaceUnicodeInControlNodesAndTestNodes();
     }
 
     new WorkflowTimeSeriesAnalysisJob
