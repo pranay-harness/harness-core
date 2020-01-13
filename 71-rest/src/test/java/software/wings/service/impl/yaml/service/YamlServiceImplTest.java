@@ -1,9 +1,13 @@
 package software.wings.service.impl.yaml.service;
 
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -18,9 +22,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
+import software.wings.beans.FeatureName;
+import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlGitService;
 
 import java.io.IOException;
@@ -33,7 +41,7 @@ public class YamlServiceImplTest extends WingsBaseTest {
   @Mock private YamlHelper yamlHelper;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private transient YamlGitService yamlGitService;
-
+  @Mock private FeatureFlagService featureFlagService;
   @InjectMocks @Inject YamlServiceImpl yamlService = new YamlServiceImpl();
 
   @Before
@@ -83,5 +91,29 @@ public class YamlServiceImplTest extends WingsBaseTest {
     assertThat(filteredGitFileChange).isNotNull();
     assertThat(filteredGitFileChange).hasSize(1);
     assertThat(filteredGitFileChange.get(0).getFilePath()).isEqualTo(validFilePath);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testIsProcessingAllowed() {
+    YamlType[] types = YamlType.values();
+    Change change = new Change();
+    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.TEMPLATE_YAML_SUPPORT), any());
+    for (YamlType type : types) {
+      assertThat(yamlService.isProcessingAllowed(change, type)).isEqualTo(true);
+    }
+    doReturn(false).when(featureFlagService).isEnabled(eq(FeatureName.TEMPLATE_YAML_SUPPORT), any());
+    for (YamlType type : types) {
+      switch (type) {
+        case GLOBAL_TEMPLATE_LIBRARY:
+        case APPLICATION_TEMPLATE_LIBRARY:
+          assertThat(yamlService.isProcessingAllowed(change, type)).isEqualTo(false);
+          break;
+        default:
+          assertThat(yamlService.isProcessingAllowed(change, type)).isEqualTo(true);
+          break;
+      }
+    }
   }
 }

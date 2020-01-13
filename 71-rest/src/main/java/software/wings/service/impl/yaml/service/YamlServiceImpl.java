@@ -489,7 +489,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     return changeContextList;
   }
 
-  private boolean isProcessingAllowed(Change change, YamlType yamlType) {
+  @VisibleForTesting
+  boolean isProcessingAllowed(Change change, YamlType yamlType) {
     switch (yamlType) {
       case GLOBAL_TEMPLATE_LIBRARY:
       case APPLICATION_TEMPLATE_LIBRARY:
