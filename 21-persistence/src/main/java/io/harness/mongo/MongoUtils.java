@@ -16,4 +16,12 @@ public class MongoUtils {
       return ops.set(field, value);
     }
   }
+
+  public static <T> UpdateOperations<T> setUnsetOnInsert(UpdateOperations<T> ops, String field, Object value) {
+    if (value == null || (value instanceof String && isBlank((String) value))) {
+      return ops.unset(field);
+    } else {
+      return ops.setOnInsert(field, value);
+    }
+  }
 }

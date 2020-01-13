@@ -2,6 +2,7 @@ package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.mongo.MongoUtils.setUnsetOnInsert;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
@@ -310,7 +311,7 @@ public class MongoPersistence implements HPersistence {
     final long currentTime = currentTimeMillis();
 
     if (CreatedByAware.class.isAssignableFrom(query.getEntityClass())) {
-      MongoUtils.setUnset(updateOperations, SampleEntityKeys.createdBy, userProvider.activeUser());
+      setUnsetOnInsert(updateOperations, SampleEntityKeys.createdBy, userProvider.activeUser());
     }
 
     if (CreatedAtAware.class.isAssignableFrom(query.getEntityClass())) {
