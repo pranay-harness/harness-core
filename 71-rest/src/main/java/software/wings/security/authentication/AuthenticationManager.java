@@ -30,7 +30,6 @@ import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AuthToken;
-import software.wings.beans.Event;
 import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.licensing.LicenseService;
@@ -340,12 +339,6 @@ public class AuthenticationManager {
       } else {
         user = authHandler.authenticate(userName, password).getUser();
       }
-      if (user.getAccounts() != null) {
-        user.getAccounts().forEach(account -> {
-          auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.LOGIN);
-          logger.info("Auditing login for user={} in account={}", user.getUuid(), account.getAccountName());
-        });
-      }
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
       } else {
@@ -388,12 +381,6 @@ public class AuthenticationManager {
       User user = userService.verifyJWTToken(jwtSecret, JWT_CATEGORY.SSO_REDIRECT);
       if (user == null) {
         throw new WingsException(USER_DOES_NOT_EXIST);
-      }
-      if (user.getAccounts() != null) {
-        user.getAccounts().forEach(account -> {
-          auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.LOGIN);
-          logger.info("Auditing login for user={} in account={}", user.getName(), account.getUuid());
-        });
       }
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);

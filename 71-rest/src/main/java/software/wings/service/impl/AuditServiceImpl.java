@@ -414,7 +414,6 @@ public class AuditServiceImpl implements AuditService {
       switch (type) {
         case ENABLE_2FA:
         case DISABLE_2FA:
-        case LOGIN:
         case LINK_SSO:
         case UNLINK_SSO:
         case MODIFY_PERMISSIONS:
@@ -446,7 +445,6 @@ public class AuditServiceImpl implements AuditService {
         case ACCEPTED_INVITE:
         case ENABLE_2FA:
         case DISABLE_2FA:
-        case LOGIN:
         case LINK_SSO:
         case UNLINK_SSO:
         case MODIFY_PERMISSIONS:
