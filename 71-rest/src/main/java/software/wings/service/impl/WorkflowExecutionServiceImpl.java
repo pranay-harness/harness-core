@@ -1137,6 +1137,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
     Workflow workflow = workflowExecutionServiceHelper.obtainWorkflow(appId, workflowId, infraRefactor);
+    String resolveEnvId = workflowService.resolveEnvironmentId(workflow, executionArgs.getWorkflowVariables());
+    envId = resolveEnvId != null ? resolveEnvId : envId;
+
     // Doing this check here so that workflow is already fetched from databae.
     preDeploymentChecks.checkIfWorkflowUsingRestrictedFeatures(workflow);
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
@@ -1158,9 +1161,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflow = workflowService.readWorkflow(appId, workflowId);
 
     stateMachine.setOrchestrationWorkflow(null);
-
-    String resolveEnvId = workflowService.resolveEnvironmentId(workflow, executionArgs.getWorkflowVariables());
-    envId = resolveEnvId != null ? resolveEnvId : envId;
 
     WorkflowExecution workflowExecution = workflowExecutionServiceHelper.obtainExecution(
         workflow, stateMachine, resolveEnvId, pipelineExecutionId, executionArgs, infraRefactor);

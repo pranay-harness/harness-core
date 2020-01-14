@@ -85,6 +85,8 @@ import java.util.stream.Collectors;
 public class EnvState extends State {
   public static final Integer ENV_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000;
 
+  // NOTE: This field should no longer be used. It contains incorrect/stale values.
+  @Deprecated
   @Expand(dataProvider = EnvironmentServiceImpl.class)
   @EnumData(enumDataProvider = EnvironmentServiceImpl.class)
   @Attributes(required = true, title = "Environment")
@@ -187,7 +189,7 @@ public class EnvState extends State {
         workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
     try {
       WorkflowExecution execution = executionService.triggerOrchestrationExecution(
-          appId, envId, workflowId, context.getWorkflowExecutionId(), executionArgs, null);
+          appId, null, workflowId, context.getWorkflowExecutionId(), executionArgs, null);
       envStateExecutionData.setWorkflowExecutionId(execution.getUuid());
       return ExecutionResponse.builder()
           .async(true)
@@ -403,6 +405,7 @@ public class EnvState extends State {
     return executionResponseBuilder.build();
   }
 
+  @Deprecated
   public String getEnvId() {
     return envId;
   }
