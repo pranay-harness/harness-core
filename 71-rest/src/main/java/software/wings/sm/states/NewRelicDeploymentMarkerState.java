@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static java.util.Arrays.asList;
 import static software.wings.sm.StateType.NEW_RELIC_DEPLOYMENT_MARKER;
+import static software.wings.utils.Misc.isLong;
 
 import com.google.inject.Inject;
 
@@ -11,7 +12,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
@@ -34,7 +34,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
-import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -106,6 +105,10 @@ public class NewRelicDeploymentMarkerState extends State {
       }
     }
 
+    if (!isLong(finalNewRelicApplicationId)) {
+      finalNewRelicApplicationId =
+          renderApplicationExpression(finalNewRelicApplicationId, finalServerConfigId, context);
+    }
     if (settingAttribute == null) {
       settingAttribute = settingsService.get(analysisServerConfigId);
       if (settingAttribute == null) {
@@ -115,9 +118,6 @@ public class NewRelicDeploymentMarkerState extends State {
 
     final NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
 
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
-    String infrastructureMappingId = context.fetchInfraMappingId();
     String evaluatedBody = context.renderExpression(body);
 
     final NewRelicDataCollectionInfo dataCollectionInfo =
@@ -133,7 +133,6 @@ public class NewRelicDeploymentMarkerState extends State {
             .settingAttributeId(finalServerConfigId)
             .deploymentMarker(evaluatedBody)
             .build();
-    // String waitId = UUID.randomUUID().toString();
     String correlationId = UUID.randomUUID().toString();
 
     String delegateTaskId =
@@ -147,12 +146,7 @@ public class NewRelicDeploymentMarkerState extends State {
                                                 .parameters(new Object[] {dataCollectionInfo})
                                                 .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                                 .build())
-                                      .envId(envId)
-                                      .infrastructureMappingId(infrastructureMappingId)
                                       .build());
-
-    // waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getApplicationId(), correlationId, false),
-    // waitId);
 
     final NewRelicMarkerExecutionData executionData =
         NewRelicMarkerExecutionData.builder().payload(body).evaluatedPayload(evaluatedBody).build();
@@ -236,5 +230,13 @@ public class NewRelicDeploymentMarkerState extends State {
 
   private boolean configIdTemplatized() {
     return TemplateExpressionProcessor.checkFieldTemplatized("analysisServerConfigId", getTemplateExpressions());
+  }
+
+  private String renderApplicationExpression(
+      String applicationNameExpression, String finalServerConfigId, ExecutionContext context) {
+    String applicationName = context.renderExpression(applicationNameExpression);
+    final NewRelicApplication newRelicApplication =
+        newRelicService.resolveApplicationName(finalServerConfigId, applicationName);
+    return String.valueOf(newRelicApplication.getId());
   }
 }

@@ -1,9 +1,11 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -18,13 +20,16 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
+import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.NewRelicConfig;
@@ -33,6 +38,7 @@ import software.wings.beans.TemplateExpression;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.newrelic.NewRelicApplication;
+import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -51,13 +57,13 @@ public class NewRelicDeploymentMarkerStateTest extends WingsBaseTest {
   @Mock private NewRelicService newRelicService;
   @Mock private DelegateService delegateService;
   private String accountId;
-  private String analysisServerConfigId;
   private NewRelicDeploymentMarkerState newRelicDeploymentMarkerState;
+  private String settingId;
 
   @Before
   public void setup() throws Exception {
+    MockitoAnnotations.initMocks(this);
     accountId = generateUuid();
-    analysisServerConfigId = generateUuid();
     when(workflowExecutionService.isTriggerBasedDeployment(any(ExecutionContext.class))).thenReturn(true);
     newRelicDeploymentMarkerState = new NewRelicDeploymentMarkerState("NewRelicDeploymentMarkerState");
     FieldUtils.writeField(newRelicDeploymentMarkerState, "settingsService", settingsService, true);
@@ -69,13 +75,9 @@ public class NewRelicDeploymentMarkerStateTest extends WingsBaseTest {
         newRelicDeploymentMarkerState, "templateExpressionProcessor", templateExpressionProcessor, true);
     when(executionContext.getApp())
         .thenReturn(Application.Builder.anApplication().appId(generateUuid()).accountId(accountId).build());
-    when(delegateService.queueTask(any(DelegateTask.class))).thenReturn(generateUuid());
-  }
+    when(delegateService.queueTask(any(DelegateTask.class)))
+        .thenAnswer(invocationOnMock -> wingsPersistence.save((PersistentEntity) invocationOnMock.getArguments()[0]));
 
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void shouldTestTriggered() {
     NewRelicConfig newRelicConfig = NewRelicConfig.builder()
                                         .accountId(accountId)
                                         .newRelicUrl("newrelic-url")
@@ -87,7 +89,18 @@ public class NewRelicDeploymentMarkerStateTest extends WingsBaseTest {
                                             .withValue(newRelicConfig)
                                             .build();
 
-    final String settingId = wingsPersistence.save(settingAttribute);
+    settingId = wingsPersistence.save(settingAttribute);
+
+    doReturn(NewRelicApplication.builder().id(1234).build())
+        .when(newRelicService)
+        .resolveApplicationName(settingId, "valid_app");
+    doThrow(new RuntimeException("Invalid app")).when(newRelicService).resolveApplicationName(settingId, "invalid_app");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void shouldTestTriggered() {
     doThrow(new WingsException("Can not find application by id"))
         .when(newRelicService)
         .resolveApplicationId(anyString(), anyString());
@@ -96,8 +109,7 @@ public class NewRelicDeploymentMarkerStateTest extends WingsBaseTest {
         .when(newRelicService)
         .resolveApplicationName(anyString(), anyString());
 
-    when(executionContext.renderExpression("${workflow.variables.NewRelic_Server}"))
-        .thenReturn(settingAttribute.getUuid());
+    when(executionContext.renderExpression("${workflow.variables.NewRelic_Server}")).thenReturn(settingId);
     when(executionContext.renderExpression("${workflow.variables.NewRelic_App}")).thenReturn("30444");
 
     final NewRelicDeploymentMarkerState spyRelicDeploymentMarkerState = spy(this.newRelicDeploymentMarkerState);
@@ -138,5 +150,32 @@ public class NewRelicDeploymentMarkerStateTest extends WingsBaseTest {
     } catch (RuntimeException e) {
       assertThat(e.getMessage()).isEqualTo("Can not find application by id");
     }
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void invalidAppExpression() {
+    newRelicDeploymentMarkerState.setApplicationId("${app.appName}");
+    newRelicDeploymentMarkerState.setAnalysisServerConfigId(settingId);
+    when(executionContext.renderExpression("${app.appName}")).thenReturn("invalid_app");
+    assertThatExceptionOfType(RuntimeException.class)
+        .isThrownBy(() -> newRelicDeploymentMarkerState.execute(executionContext));
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void validAppExpression() {
+    newRelicDeploymentMarkerState.setApplicationId("${app.appName}");
+    newRelicDeploymentMarkerState.setAnalysisServerConfigId(settingId);
+    when(executionContext.renderExpression("${app.appName}")).thenReturn("valid_app");
+    final ExecutionResponse executionResponse = newRelicDeploymentMarkerState.execute(executionContext);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
+    final DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).get();
+    final TaskData taskData = delegateTask.getData();
+    NewRelicDataCollectionInfo newRelicDataCollectionInfo = (NewRelicDataCollectionInfo) taskData.getParameters()[0];
+    assertThat(newRelicDataCollectionInfo.getSettingAttributeId()).isEqualTo(settingId);
+    assertThat(newRelicDataCollectionInfo.getNewRelicAppId()).isEqualTo(1234);
   }
 }
