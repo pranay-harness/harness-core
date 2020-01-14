@@ -234,4 +234,16 @@ public class Misc {
     byte[] encoded = secretKey.getEncoded();
     return Hex.encodeHexString(encoded);
   }
+
+  public static boolean isLong(String s) {
+    if (s == null) {
+      return false;
+    }
+    try {
+      Long.parseLong(s);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
 }

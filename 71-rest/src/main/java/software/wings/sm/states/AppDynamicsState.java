@@ -8,6 +8,7 @@ import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_F
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APP_DYNAMICS_24X7_VALUES_TO_ANALYZE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE;
+import static software.wings.utils.Misc.isLong;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -331,14 +332,14 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   }
 
   private void renderExpressions(ExecutionContext context) {
-    if (isNotLong(applicationId)) {
+    if (!isLong(applicationId)) {
       String applicationName = context.renderExpression(applicationId);
       applicationId = appdynamicsService.getAppDynamicsApplicationByName(analysisServerConfigId, applicationName);
       Preconditions.checkState(isLong(applicationId),
           "Not able to resolve applicationId for application name %s. Please check your expression or application name",
           applicationName);
     }
-    if (isNotLong(tierId)) {
+    if (!isLong(tierId)) {
       String tierName = context.renderExpression(tierId);
       tierId = getTierByName(context, tierName);
       Preconditions.checkState(isLong(tierId),
@@ -346,21 +347,6 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     }
   }
 
-  private boolean isNotLong(String s) {
-    return !isLong(s);
-  }
-
-  private boolean isLong(String s) {
-    if (s == null) {
-      return false;
-    }
-    try {
-      Long.parseLong(s);
-      return true;
-    } catch (NumberFormatException e) {
-      return false;
-    }
-  }
   private String createDelegateTask(ExecutionContext context, Map<String, String> hosts, String envId,
       String finalApplicationId, long finalTierId, AppDynamicsConfig appDynamicsConfig,
       long dataCollectionStartTimeStamp, TimeSeriesMlAnalysisType mlAnalysisType, List<DelegateTask> delegateTasks) {
