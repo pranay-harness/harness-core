@@ -12,7 +12,9 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -50,6 +52,8 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -61,8 +65,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElementListParam;
+import software.wings.api.PcfInstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
@@ -82,6 +89,8 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
+import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
+import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -95,6 +104,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
@@ -102,6 +112,8 @@ import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PcfDeployStateTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
@@ -312,5 +324,61 @@ public class PcfDeployStateTest extends WingsBaseTest {
     pcfDeployState.setInstanceCount(40);
     answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf);
     assertThat(answer.intValue()).isEqualTo(6);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponse() {
+    ExecutionContext context = mock(ExecutionContext.class);
+    doReturn(PcfDeployStateExecutionData.builder().build()).when(context).getStateExecutionData();
+
+    doReturn(SweepingOutputInstance.builder()).when(context).prepareSweepingOutputBuilder(any());
+    doReturn(null).when(sweepingOutputService).save(any());
+    doNothing().when(activityService).updateStatus(anyString(), anyString(), any());
+    Map<String, ResponseData> response = new HashMap<>();
+
+    doReturn(PhaseElement.builder().phaseName("name").build()).when(context).getContextElement(any(), any());
+
+    response.put("1",
+        PcfCommandExecutionResponse.builder()
+            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+            .pcfCommandResponse(PcfDeployCommandResponse.builder()
+                                    .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+                                    .pcfInstanceElements(Arrays.asList(PcfInstanceElement.builder()
+                                                                           .applicationId("1")
+                                                                           .displayName("app1")
+                                                                           .isUpsize(true)
+                                                                           .instanceIndex("4")
+                                                                           .build(),
+                                        PcfInstanceElement.builder()
+                                            .isUpsize(false)
+                                            .displayName("app0")
+                                            .applicationId("0")
+                                            .instanceIndex("2")
+                                            .build()))
+                                    .build())
+            .build());
+
+    ExecutionResponse executionResponse = pcfDeployState.handleAsyncInternal(context, response);
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getContextElements()).isNotEmpty();
+    assertThat(executionResponse.getContextElements().size()).isEqualTo(1);
+    assertThat(executionResponse.getContextElements().get(0) instanceof InstanceElementListParam).isTrue();
+    InstanceElementListParam instanceElementListParam =
+        (InstanceElementListParam) executionResponse.getContextElements().get(0);
+
+    assertThat(instanceElementListParam.getPcfInstanceElements().size()).isEqualTo(1);
+    assertThat(instanceElementListParam.getPcfOldInstanceElements().size()).isEqualTo(1);
+
+    PcfInstanceElement pcfInstanceElementOld = instanceElementListParam.getPcfOldInstanceElements().get(0);
+    assertThat(pcfInstanceElementOld.getApplicationId()).isEqualTo("0");
+    assertThat(pcfInstanceElementOld.isNewInstance()).isFalse();
+    assertThat(pcfInstanceElementOld.getInstanceIndex()).isEqualTo("2");
+
+    PcfInstanceElement pcfInstanceElement = instanceElementListParam.getPcfInstanceElements().get(0);
+    assertThat(pcfInstanceElement.getApplicationId()).isEqualTo("1");
+    assertThat(pcfInstanceElement.isNewInstance()).isTrue();
+    assertThat(pcfInstanceElement.getInstanceIndex()).isEqualTo("4");
   }
 }
