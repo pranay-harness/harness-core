@@ -17,6 +17,7 @@ enum DataFetcherEnum {
   connectorConnection
   connectorStats
   deploymentStats
+  efficiencyStats
   environment
   environmentConnection
   environmentStats

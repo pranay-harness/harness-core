@@ -27,11 +27,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
@@ -40,6 +37,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
     QLBillingDataFilter, QLCCMGroupBy, QLBillingSortCriteria> {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
+  @Inject BillingDataHelper billingDataHelper;
 
   private static final String TOTAL_COST_DESCRIPTION = "of %s - %s";
   private static final String TOTAL_COST_LABEL = "Total Cost";
@@ -50,8 +48,6 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
   private static final String TOTAL_COST_VALUE = "$%s";
   private static final String TREND_COST_VALUE = "%s";
   private static final String FORECAST_COST_VALUE = "$%s";
-  private static final String TOTAL_COST_DATE_PATTERN = "dd MMMM, yyyy";
-  private static final String DEFAULT_TIME_ZONE = "America/Los_Angeles";
   private static final String EMPTY_VALUE = "-";
   private static final String NA_VALUE = "NA";
   private static final long ONE_DAY_MILLIS = 86400000;
@@ -106,11 +102,11 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
   }
 
   public Instant getEndInstant(List<QLBillingDataFilter> filters) {
-    return Instant.ofEpochMilli(getEndTimeFilter(filters).getValue().longValue());
+    return Instant.ofEpochMilli(billingDataHelper.getEndTimeFilter(filters).getValue().longValue());
   }
 
   public Instant getStartInstant(List<QLBillingDataFilter> filters) {
-    return Instant.ofEpochMilli(getStartTimeFilter(filters).getValue().longValue());
+    return Instant.ofEpochMilli(billingDataHelper.getStartTimeFilter(filters).getValue().longValue());
   }
 
   private QLBillingStatsInfo getForecastBillingStats(
@@ -118,8 +114,8 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
     String forecastCostDescription = EMPTY_VALUE;
     String forecastCostValue = EMPTY_VALUE;
     if (forecastCost != null) {
-      String startInstantFormat = getTotalCostFormattedDate(startInstant);
-      String endInstantFormat = getTotalCostFormattedDate(endInstant);
+      String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant);
+      String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant);
       forecastCostDescription = String.format(FORECAST_COST_DESCRIPTION, startInstantFormat, endInstantFormat);
       forecastCostValue = String.format(FORECAST_COST_VALUE, getRoundedDoubleValue(forecastCost));
     }
@@ -155,10 +151,10 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
 
   private QLBillingStatsInfo getTotalBillingStats(
       QLBillingAmountData billingAmountData, List<QLBillingDataFilter> filters) {
-    Instant startInstant = Instant.ofEpochMilli(getStartTimeFilter(filters).getValue().longValue());
+    Instant startInstant = Instant.ofEpochMilli(billingDataHelper.getStartTimeFilter(filters).getValue().longValue());
     Instant endInstant = Instant.ofEpochMilli(billingAmountData.getMaxStartTime());
-    String startInstantFormat = getTotalCostFormattedDate(startInstant);
-    String endInstantFormat = getTotalCostFormattedDate(endInstant);
+    String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant);
+    String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant);
     String totalCostDescription = String.format(TOTAL_COST_DESCRIPTION, startInstantFormat, endInstantFormat);
     String totalCostValue = String.format(TOTAL_COST_VALUE, getRoundedDoubleValue(billingAmountData.getCost()));
     return QLBillingStatsInfo.builder()
@@ -168,54 +164,31 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
         .build();
   }
 
-  private QLTimeFilter getStartTimeFilter(List<QLBillingDataFilter> filters) {
-    Optional<QLBillingDataFilter> startTimeDataFilter =
-        filters.stream().filter(qlBillingDataFilter -> qlBillingDataFilter.getStartTime() != null).findFirst();
-    if (startTimeDataFilter.isPresent()) {
-      return startTimeDataFilter.get().getStartTime();
-    } else {
-      throw new InvalidRequestException("Start time cannot be null");
-    }
-  }
-
-  private QLTimeFilter getEndTimeFilter(List<QLBillingDataFilter> filters) {
-    Optional<QLBillingDataFilter> endTimeDataFilter =
-        filters.stream().filter(qlBillingDataFilter -> qlBillingDataFilter.getEndTime() != null).findFirst();
-    if (endTimeDataFilter.isPresent()) {
-      return endTimeDataFilter.get().getEndTime();
-    } else {
-      throw new InvalidRequestException("End time cannot be null");
-    }
-  }
-
-  private String getTotalCostFormattedDate(Instant instant) {
-    return getFormattedDate(instant, TOTAL_COST_DATE_PATTERN);
-  }
-
-  private String getFormattedDate(Instant instant, String datePattern) {
-    return instant.atZone(ZoneId.of(DEFAULT_TIME_ZONE)).format(DateTimeFormatter.ofPattern(datePattern));
-  }
-
   private QLBillingStatsInfo getBillingTrend(String accountId, BigDecimal totalBillingAmount, BigDecimal forecastCost,
       QLCCMAggregationFunction aggregateFunction, List<QLBillingDataFilter> filters) {
     List<QLBillingDataFilter> trendFilters = getTrendFilter(filters, getStartInstant(filters), getEndInstant(filters));
     QLBillingAmountData prevBillingAmountData = getBillingAmountData(accountId, aggregateFunction, trendFilters);
-    Instant filterStartTime = Instant.ofEpochMilli(getStartTimeFilter(trendFilters).getValue().longValue());
-    Instant endInstant = Instant.ofEpochMilli(getEndTimeFilter(trendFilters).getValue().longValue());
+    Instant filterStartTime =
+        Instant.ofEpochMilli(billingDataHelper.getStartTimeFilter(trendFilters).getValue().longValue());
+    Instant endInstant = Instant.ofEpochMilli(billingDataHelper.getEndTimeFilter(trendFilters).getValue().longValue());
     String trendCostDescription = String.format(TREND_COST_DESCRIPTION, getRoundedDoubleValue(totalBillingAmount),
-        getTotalCostFormattedDate(filterStartTime), getTotalCostFormattedDate(endInstant));
+        billingDataHelper.getTotalCostFormattedDate(filterStartTime),
+        billingDataHelper.getTotalCostFormattedDate(endInstant));
     String trendCostValue = NA_VALUE;
     if (prevBillingAmountData != null && prevBillingAmountData.getCost().compareTo(BigDecimal.ZERO) > 0) {
       BigDecimal prevTotalBillingAmount = prevBillingAmountData.getCost();
       Instant startInstant = Instant.ofEpochMilli(prevBillingAmountData.getMinStartTime());
-      String startInstantFormat = getTotalCostFormattedDate(startInstant);
-      String endInstantFormat = getTotalCostFormattedDate(endInstant);
+      String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant);
+      String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant);
       BigDecimal amountDifference = totalBillingAmount.subtract(prevTotalBillingAmount);
       if (null != forecastCost) {
         amountDifference = forecastCost.subtract(prevTotalBillingAmount);
       }
-      trendCostDescription = String.format(
-          TREND_COST_DESCRIPTION, getRoundedDoubleValue(amountDifference), startInstantFormat, endInstantFormat);
+      trendCostDescription = String.format(TREND_COST_DESCRIPTION, Math.abs(getRoundedDoubleValue(amountDifference)),
+          startInstantFormat, endInstantFormat);
+      if (amountDifference.compareTo(BigDecimal.ZERO) < 0) {
+        trendCostDescription = EMPTY_VALUE.concat(trendCostDescription);
+      }
       if (filterStartTime.plus(1, ChronoUnit.DAYS).isAfter(startInstant)) {
         BigDecimal trendPercentage =
             amountDifference.multiply(BigDecimal.valueOf(100)).divide(prevTotalBillingAmount, 2, RoundingMode.HALF_UP);

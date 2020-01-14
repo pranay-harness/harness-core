@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.rule.OwnerRule.ROHIT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -57,6 +58,8 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   private final BigDecimal MEMORY_IDLE_COST = new BigDecimal("30.0");
   private final BigDecimal AVG_CPU_UTILIZATION = new BigDecimal("0.6");
   private final BigDecimal AVG_MEMORY_UTILIZATION = new BigDecimal("0.4");
+  private final BigDecimal CPU_BILLING_AMOUNT = new BigDecimal("20.0");
+  private final BigDecimal MEM_BILLING_AMOUNT = new BigDecimal("30.0");
   private Instant END_TIME = Instant.ofEpochMilli(1571509800000l);
   private Instant START_TIME = Instant.ofEpochMilli(1570645800000l);
   final int[] count = {0};
@@ -80,6 +83,22 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testFetchUnallocatedCostStats() throws SQLException {
+    List<BillingDataMetaDataFields> metaDataFields = new ArrayList<>();
+    metaDataFields.add(BillingDataMetaDataFields.SUM);
+    metaDataFields.add(BillingDataMetaDataFields.CPUBILLINGAMOUNT);
+    metaDataFields.add(BillingDataMetaDataFields.MEMORYBILLINGAMOUNT);
+    BillingDataQueryMetadata queryMetadata = BillingDataQueryMetadata.builder().fieldNames(metaDataFields).build();
+    QLUnallocatedCost unallocatedCost =
+        idleCostTrendStatsDataFetcher.fetchUnallocatedCostStats(queryMetadata, resultSet);
+    assertThat(unallocatedCost.getUnallocatedCost()).isEqualTo(TOTAL_COST);
+    assertThat(unallocatedCost.getCpuUnallocatedCost()).isEqualTo(CPU_BILLING_AMOUNT);
+    assertThat(unallocatedCost.getMemoryUnallocatedCost()).isEqualTo(MEM_BILLING_AMOUNT);
+  }
+
+  @Test
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testGetBillingTrendWhenDbIsInvalid() {
@@ -96,8 +115,8 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testGetIdleCostTrendStats() {
-    List<QLCCMAggregationFunction> aggregationFunction =
-        Arrays.asList(makeBillingAmtAggregation(), makeIdleCostAggregation());
+    List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation(),
+        makeIdleCostAggregation(), makeCpuBillingAggregation(), makeMemoryBillingAggregation());
     List<QLBillingDataFilter> filters = createFilter();
     QLIdleCostTrendStats data = (QLIdleCostTrendStats) idleCostTrendStatsDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
@@ -209,42 +228,56 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     return filters;
   }
 
-  public QLCCMAggregationFunction makeBillingAmtAggregation() {
+  private QLCCMAggregationFunction makeBillingAmtAggregation() {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.SUM)
         .columnName("billingamount")
         .build();
   }
 
-  public QLCCMAggregationFunction makeIdleCostAggregation() {
+  private QLCCMAggregationFunction makeIdleCostAggregation() {
     return QLCCMAggregationFunction.builder().operationType(QLCCMAggregateOperation.SUM).columnName("idlecost").build();
   }
 
-  public QLCCMAggregationFunction makeCpuIdleCostAggregation() {
+  private QLCCMAggregationFunction makeCpuIdleCostAggregation() {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.SUM)
         .columnName("cpuidlecost")
         .build();
   }
 
-  public QLCCMAggregationFunction makeMemoryIdleCostAggregation() {
+  private QLCCMAggregationFunction makeMemoryIdleCostAggregation() {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.SUM)
         .columnName("memoryidlecost")
         .build();
   }
 
-  public QLCCMAggregationFunction makeAvgCpuUtilizationAggregation() {
+  private QLCCMAggregationFunction makeAvgCpuUtilizationAggregation() {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.AVG)
         .columnName("avgcpuutilization")
         .build();
   }
 
-  public QLCCMAggregationFunction makeAvgMemoryUtilizationAggregation() {
+  private QLCCMAggregationFunction makeAvgMemoryUtilizationAggregation() {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.AVG)
         .columnName("avgmemoryutilization")
+        .build();
+  }
+
+  private QLCCMAggregationFunction makeCpuBillingAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.SUM)
+        .columnName("cpubillingamount")
+        .build();
+  }
+
+  private QLCCMAggregationFunction makeMemoryBillingAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.SUM)
+        .columnName("memorybillingamount")
         .build();
   }
 
@@ -279,6 +312,9 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getBigDecimal("MEMORYIDLECOST")).thenReturn(MEMORY_IDLE_COST);
     when(resultSet.getBigDecimal("AVGCPUUTILIZATION")).thenReturn(AVG_CPU_UTILIZATION);
     when(resultSet.getBigDecimal("AVGMEMORYUTILIZATION")).thenReturn(AVG_MEMORY_UTILIZATION);
+    when(resultSet.getBigDecimal("CPUBILLINGAMOUNT")).thenReturn(CPU_BILLING_AMOUNT);
+    when(resultSet.getBigDecimal("MEMORYBILLINGAMOUNT")).thenReturn(MEM_BILLING_AMOUNT);
+
     when(resultSet.getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(), utils.getDefaultCalendar()))
         .thenReturn(new Timestamp(START_TIME.toEpochMilli()));
     when(resultSet.getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(), utils.getDefaultCalendar()))
