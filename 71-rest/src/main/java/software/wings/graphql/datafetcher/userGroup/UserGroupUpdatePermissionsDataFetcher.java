@@ -25,6 +25,7 @@ import java.util.Set;
 public class UserGroupUpdatePermissionsDataFetcher
     extends BaseMutatorDataFetcher<QLSetUserGroupPermissionsParameters, QLGroupPermissions> {
   @Inject private UserGroupService userGroupService;
+  @Inject private UserGroupPermissionValidator userGroupPermissionValidator;
 
   @Inject
   public UserGroupUpdatePermissionsDataFetcher() {
@@ -32,6 +33,7 @@ public class UserGroupUpdatePermissionsDataFetcher
   }
 
   private UserGroup updateUserGroupPermissions(QLSetUserGroupPermissionsParameters parameters, String accountId) {
+    userGroupPermissionValidator.validatePermission(parameters);
     AccountPermissions accountPermissions = populateUserGroupAccountPermissionEntity(parameters);
     Set<AppPermission> appPermissions = populateUserGroupAppPermissionEntity(parameters);
     return userGroupService.setUserGroupPermissions(
@@ -43,10 +45,10 @@ public class UserGroupUpdatePermissionsDataFetcher
   @AuthRule(permissionType = PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT)
   protected QLGroupPermissions mutateAndFetch(
       QLSetUserGroupPermissionsParameters parameters, MutationContext mutationContext) {
-    final UserGroup userGroup = updateUserGroupPermissions(parameters, mutationContext.getAccountId());
-    if (userGroup == null) {
+    if (userGroupService.get(mutationContext.getAccountId(), parameters.getUserGroupId()) == null) {
       throw new InvalidRequestException("No userGroup Exists with id " + parameters.getUserGroupId());
     }
+    final UserGroup userGroup = updateUserGroupPermissions(parameters, mutationContext.getAccountId());
     return populateUserGroupPermissions(userGroup);
   }
 }

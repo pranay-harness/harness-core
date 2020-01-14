@@ -22,6 +22,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.WORKFLO
 
 import com.google.inject.Inject;
 
+import graphql.ExecutionResult;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
@@ -35,8 +36,10 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureProvisioner;
@@ -59,6 +62,7 @@ import java.util.Set;
 
 @Slf4j
 public class UserGroupTest extends GraphQLTest {
+  @Rule public ExpectedException thrown = ExpectedException.none();
   @Inject private OwnerManager ownerManager;
   @Inject ApplicationGenerator applicationGenerator;
   @Inject ServiceGenerator serviceGenerator;
@@ -71,6 +75,7 @@ public class UserGroupTest extends GraphQLTest {
   @Inject InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
   private String accountId;
   final Randomizer.Seed seed = new Randomizer.Seed(0);
+  private String GenericErrorString = "Exception while fetching data (/updateUserGroupPermissions) : Invalid request: ";
 
   private UserGroup createUserGroup(AccountPermissions accountPermissions, Set<AppPermission> appPermissions) {
     UserGroup userGroup = UserGroup.builder()
@@ -346,7 +351,7 @@ mutation {
                           {
                              permissionType : SERVICE,
                              applications   : {
-                                                 filterType: ALL
+                                                 %s
                                                },
                              services      :  {
                                                      %s
@@ -354,13 +359,13 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                                   }
                                  ]
-}*/ getServiceIds());
+}*/ getAppIdsFilter(), getServiceIds());
 
     return appPermissionString;
   }
 
   private AppPermission createServiceWithIdPermission() {
-    GenericEntityFilter appFilter = createGenericFilterwithTypeAll();
+    GenericEntityFilter appFilter = createGenericFilterwithIds(application1.getUuid(), application2.getUuid());
     GenericEntityFilter serviceFilter = createGenericFilterwithIds(service1.getUuid(), service2.getUuid());
     return AppPermission.builder()
         .permissionType(SERVICE)
@@ -555,7 +560,7 @@ mutation {
                                                      filterTypes :
 [PRODUCTION_ENVIRONMENTS,NON_PRODUCTION_ENVIRONMENTS]
                                                },
-                              actions:        [CREATE,DELETE,READ]
+                              actions:        [READ]
                                   }
                                  ]
 }*/);
@@ -564,7 +569,7 @@ mutation {
   }
 
   private AppPermission createDeploymentAllAppsPermission() {
-    Set<Action> actions = createActionSet();
+    Set<Action> actions = new HashSet<>(Arrays.asList(Action.READ));
     GenericEntityFilter appFilter = createGenericFilterwithTypeAll();
     List<String> deploymentList = Arrays.asList("PROD", "NON_PROD");
     Set<String> deploymentFilterTypes = new HashSet<>(deploymentList);
@@ -716,7 +721,7 @@ mutation {
                              deployments     : {
                                                      %s
                                                },
-                              actions:        [CREATE,DELETE,READ]
+                              actions:        [EXECUTE,READ]
                              },
                              {
                              permissionType :PIPELINE,
@@ -750,10 +755,11 @@ mutation {
     List<String> envList = Arrays.asList(environment1.getUuid(), environment2.getUuid());
     Set<String> ids = new HashSet<>(envList);
     EnvFilter envFilter = EnvFilter.builder().ids(ids).filterTypes(new HashSet<>(Arrays.asList("SELECTED"))).build();
+    Set<Action> deploymentActions = new HashSet<>(Arrays.asList(Action.EXECUTE, Action.READ));
     AppPermission deploymentPermissions = AppPermission.builder()
                                               .permissionType(DEPLOYMENT)
                                               .entityFilter(envFilter)
-                                              .actions(createActionSet())
+                                              .actions(deploymentActions)
                                               .appFilter(appFilter)
                                               .build();
     AppPermission pipelinePermission = AppPermission.builder()
@@ -778,5 +784,264 @@ mutation {
     // Add Permission to userGroup using gql
     String appPermissionString = createListOfAppPermissionsGQL();
     testAppPermissions(userGroup, appPermissionString);
+  }
+
+  private ExecutionResult doGraphQLRequest(UserGroup userGroup, String appPermissionString) {
+    String userGroupId = userGroup.getUuid();
+    String mutationAccountPermissions = createMutation(userGroupId, appPermissionString);
+    ExecutionResult result;
+    // This query will update the userGroup
+    result = qlResult(mutationAccountPermissions, accountId);
+    return result;
+  }
+
+  private String createAppPermissionWithoutPermissionType() {
+    String appPermissionString = $GQL(
+        /*
+{
+       appPermissions :
+                             [
+                          {
+                             applications   : {
+                                                 filterType: ALL
+                                              },
+                             deployments      :  {
+                                                     filterTypes :
+[PRODUCTION_ENVIRONMENTS,NON_PRODUCTION_ENVIRONMENTS]
+                                               },
+                              actions:        [CREATE,DELETE,READ]
+                                  }
+                                 ]
+}*/);
+
+    return appPermissionString;
+  }
+
+  private UserGroup createUserGroup() {
+    Set<PermissionType> allPermissions = createAccountPermissions();
+    AccountPermissions accountPermissions = AccountPermissions.builder().permissions(allPermissions).build();
+    UserGroup userGroup = createUserGroup(accountPermissions, null);
+    return userGroup;
+  }
+
+  /*Adding set of negative test cases
+   */
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testWhenPermissionTypeNotGiven() {
+    UserGroup userGroup = createUserGroup();
+    String appPermissionString = createAppPermissionWithoutPermissionType();
+    ExecutionResult result = doGraphQLRequest(userGroup, appPermissionString);
+    assertThat(result.getErrors().size()).isEqualTo(1);
+  }
+
+  private String createAppPermissionWithoutApplications() {
+    String appPermissionString = $GQL(
+        /*
+{
+       appPermissions :
+                             [
+                          {
+                             permissionType :PROVISIONER,
+                             provisioners      :  {
+                                                     filterType : ALL
+                                               },
+                              actions:        [CREATE,DELETE,READ]
+                                  }
+                                 ]
+}*/);
+
+    return appPermissionString;
+  }
+
+  /*Adding set of negative test cases
+   */
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testWhenApplicationsNotGiven() {
+    UserGroup userGroup = createUserGroup();
+    String appPermissionString = createAppPermissionWithoutApplications();
+    ExecutionResult result = doGraphQLRequest(userGroup, appPermissionString);
+    assertThat(result.getErrors().size()).isEqualTo(1);
+  }
+
+  private String createAppPermissionWithIncorrectFilter() {
+    String appPermissionString = $GQL(
+        /*
+{
+       appPermissions :
+                             [
+                          {
+                             permissionType : ENV ,
+                             applications   : {
+                                                 filterType: ALL
+                                              },
+                             workflows      :  {
+                                                 filterTypes :
+[PRODUCTION_WORKFLOWS,NON_PRODUCTION_WORKFLOWS,WORKFLOW_TEMPLATES]
+                                               },
+                              actions:        [CREATE,DELETE,READ]
+                                  }
+                                 ]
+}*/);
+
+    return appPermissionString;
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testWhenCorrectFilterNotGiven() {
+    UserGroup userGroup = createUserGroup();
+    String appPermissionString = createAppPermissionWithIncorrectFilter();
+    ExecutionResult result = doGraphQLRequest(userGroup, appPermissionString);
+    assertThat(result.getErrors().size()).isEqualTo(1);
+
+    assertThat(result.getErrors().get(0).getMessage())
+        .isEqualTo(GenericErrorString + "Invalid filter given in ENV permissionType");
+  }
+
+  private String createDeploymentWithWrongActionsGQL() {
+    String appPermissionString = $GQL(
+        /*
+{
+       appPermissions :
+                             [
+                          {
+                             permissionType : DEPLOYMENT ,
+                             applications   : {
+                                                 filterType: ALL
+                                              },
+                             deployments      :  {
+                                                     filterTypes :
+[PRODUCTION_ENVIRONMENTS,NON_PRODUCTION_ENVIRONMENTS]
+                                               },
+                              actions:        [DELETE,READ]
+                                  }
+                                 ]
+}*/);
+    return appPermissionString;
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testInvalidActionInDeployment() {
+    UserGroup userGroup = createUserGroup();
+    String appPermissionString = createDeploymentWithWrongActionsGQL();
+    ExecutionResult result = doGraphQLRequest(userGroup, appPermissionString);
+    assertThat(result.getErrors().size()).isEqualTo(1);
+
+    assertThat(result.getErrors().get(0).getMessage())
+        .isEqualTo(GenericErrorString + "Invalid action DELETE for the DEPLOYMENT permission type");
+  }
+
+  private String createAllAppWithProvisionerIdPermission() {
+    String appPermissionString = $GQL(
+        /*
+{
+       appPermissions :
+                       [
+                          {
+                             permissionType :PROVISIONER,
+                             applications   : {
+                                                 filterType: ALL
+                                              },
+                             provisioners      :  {
+                                                     provisionerIds : ["abc"]
+                                               },
+                              actions:        [CREATE,DELETE,READ]
+                           }
+                        ]
+}*/);
+
+    return appPermissionString;
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testNoIdsForAllAppsPermission() {
+    UserGroup userGroup = createUserGroup();
+    String appPermissionString = createAllAppWithProvisionerIdPermission();
+    ExecutionResult result = doGraphQLRequest(userGroup, appPermissionString);
+    assertThat(result.getErrors().size()).isEqualTo(1);
+
+    assertThat(result.getErrors().get(0).getMessage())
+        .isEqualTo(GenericErrorString
+            + "PROVISIONER Ids should not be supplied with AppFilter=\"ALL Applications\" for filterType PROVISIONER");
+  }
+
+  private String createPermissionWithInvalidAppId() {
+    String appPermissionString = $GQL(
+        /*
+{
+       appPermissions :
+                        [
+                          {
+                             permissionType : ENV,
+                             applications   : {
+                                                 appIds: ["abc"]
+                                              },
+                             environments      :  {
+                                                     filterTypes :
+[PRODUCTION_ENVIRONMENTS,NON_PRODUCTION_ENVIRONMENTS]
+                                               },
+                              actions:        [CREATE,DELETE,READ]
+                           }
+                         ]
+}*/);
+
+    return appPermissionString;
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testWhetherAppIdIsCorrect() {
+    UserGroup userGroup = createUserGroup();
+    String appPermissionString = createPermissionWithInvalidAppId();
+    ExecutionResult result = doGraphQLRequest(userGroup, appPermissionString);
+    assertThat(result.getErrors().size()).isEqualTo(1);
+
+    assertThat(result.getErrors().get(0).getMessage())
+        .isEqualTo(GenericErrorString + "Invalid id/s abc provided in the request");
+  }
+
+  private String createPermissionWithInvalidEnvId() {
+    String appPermissionString = $GQL(
+        /*
+{
+       appPermissions :
+                        [
+                          {
+                             permissionType : PIPELINE ,
+                             applications   : {
+                                                 %s
+                                              },
+                             pipelines      :  {
+                                                     envIds :["abc"]
+                                               },
+                             actions:        [CREATE,DELETE,READ]
+                           }
+                         ]
+}*/ getAppIdsFilter());
+
+    return appPermissionString;
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testWhetherEnvIdIsCorrect() {
+    UserGroup userGroup = createUserGroup();
+    String appPermissionString = createPermissionWithInvalidEnvId();
+    ExecutionResult result = doGraphQLRequest(userGroup, appPermissionString);
+    assertThat(result.getErrors().size()).isEqualTo(1);
+
+    assertThat(result.getErrors().get(0).getMessage())
+        .isEqualTo(GenericErrorString + "Invalid id/s abc provided in the request");
   }
 }

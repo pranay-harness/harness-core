@@ -1,13 +1,13 @@
 input ApplicationPermissionsInput {
-  permissionType: AppPermissionType
-  applications: AppFilterInput
+  permissionType: AppPermissionType!
+  applications: AppFilterInput!
   services: ServicePermissionFilterInput
   environments: EnvPermissionFilterInput
   workflows: WorkflowPermissionFilterInput
   deployments: DeploymentPermissionFilterInput
   pipelines: PipelinePermissionFilterInput
   provisioners: ProvisionerPermissionFilterInput
-  actions: [Actions]
+  actions: [Actions]!
 }
 
 type ApplicationPermissions {

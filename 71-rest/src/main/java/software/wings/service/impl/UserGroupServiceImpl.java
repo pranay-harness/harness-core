@@ -389,7 +389,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup setUserGroupPermissions(
       String accountId, String userGroupId, AccountPermissions accountPermissions, Set<AppPermission> appPermissions) {
     UserGroup userGroup = get(accountId, userGroupId);
-    checkImplicitPermissions(userGroup);
+    checkImplicitPermissions(accountPermissions, accountId, userGroup.getName());
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, "appPermissions", appPermissions);
     setUnset(operations, "accountPermissions", accountPermissions);
@@ -400,7 +400,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup updatePermissions(UserGroup userGroup) {
-    checkImplicitPermissions(userGroup);
+    checkImplicitPermissions(userGroup.getAccountPermissions(), userGroup.getAccountId(), userGroup.getName());
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, "appPermissions", userGroup.getAppPermissions());
     setUnset(operations, "accountPermissions", userGroup.getAccountPermissions());
@@ -416,16 +416,16 @@ public class UserGroupServiceImpl implements UserGroupService {
     return updatedUserGroup;
   }
 
-  private void checkImplicitPermissions(UserGroup userGroup) {
-    if (null == userGroup.getAccountPermissions()) {
+  private void checkImplicitPermissions(AccountPermissions accountPermissions, String accountId, String name) {
+    if (null == accountPermissions) {
       return;
     }
 
-    Set<PermissionType> permissions = userGroup.getAccountPermissions().getPermissions();
+    Set<PermissionType> permissions = accountPermissions.getPermissions();
     if (isNotEmpty(permissions) && permissions.contains(PermissionType.USER_PERMISSION_MANAGEMENT)) {
       if (!permissions.contains(PermissionType.USER_PERMISSION_READ)) {
         logger.info("Received account permissions {} are not in proper format for account {}, userGroupName {}",
-            permissions, userGroup.getAccountId(), userGroup.getName());
+            permissions, accountId, name);
         throw new WingsException(ErrorCode.INVALID_ACCOUNT_PERMISSION, USER);
       }
     }
