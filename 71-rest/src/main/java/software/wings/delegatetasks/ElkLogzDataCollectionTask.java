@@ -1,8 +1,8 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.inject.Inject;
 
@@ -224,7 +224,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                 completed.set(true);
                 break;
               }
-              sleep(RETRY_SLEEP);
+              sleep(DATA_COLLECTION_RETRY_SLEEP);
               continue;
             }
           }
@@ -251,8 +251,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
             taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
             completed.set(true);
           } else {
-            logger.warn("error fetching elk/logz logs. retrying in " + RETRY_SLEEP + "s", ex);
-            sleep(RETRY_SLEEP);
+            logger.warn("error fetching elk/logz logs. retrying in " + DATA_COLLECTION_RETRY_SLEEP + "s", ex);
+            sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
       }

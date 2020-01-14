@@ -1690,7 +1690,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testGetEndTimeForLogAnalysisForCVTasksEnabled() throws IOException {
+  public void testGetEndTimeForLogAnalysisForSplunk() throws IOException {
     long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     AnalysisContext analysisContext = AnalysisContext.builder()
                                           .timeDuration(10)
@@ -1699,28 +1699,10 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                                           .accountId(accountId)
                                           .build();
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
-    analysisContext.setFeatureFlag(FeatureName.SPLUNK_CV_TASK, true);
-    wingsPersistence.save(analysisContext);
+
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     int endTime = analysisService.getEndTimeForLogAnalysis(analysisContext);
     assertThat(minute + 10 - 1).isEqualTo(endTime);
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testGetEndTimeForLogAnalysisForCVTasksDisabled() {
-    long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
-    AnalysisContext analysisContext = AnalysisContext.builder()
-                                          .timeDuration(10)
-                                          .startDataCollectionMinute(minute)
-                                          .stateType(SPLUNKV2)
-                                          .accountId(accountId)
-                                          .build();
-    analysisContext.setFeatureFlag(FeatureName.SPLUNK_CV_TASK, false);
-    wingsPersistence.save(analysisContext);
-    int endTime = analysisService.getEndTimeForLogAnalysis(analysisContext);
-    assertThat(9).isEqualTo(endTime);
   }
 
   @Test

@@ -232,7 +232,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       getLogger().info("triggering data collection for {} state", getStateType());
       hostsToCollect.remove(null);
       createAndSaveMetricGroups(context, hostsToCollect);
-      if (getCVTaskFeatureName().isPresent() && analysisContext.isFeatureFlagEnabled(getCVTaskFeatureName().get())) {
+      if (isCVTaskEnqueuingEnabled(context.getAccountId())) {
         getLogger().info("Data collection will be done with cv tasks.");
         analysisContext.setDataCollectionInfov2(createDataCollectionInfo(context, hostsToCollect));
       } else if (isEligibleForPerMinuteTask(context.getAccountId())) {

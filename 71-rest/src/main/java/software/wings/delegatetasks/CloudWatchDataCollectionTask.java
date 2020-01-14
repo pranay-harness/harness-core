@@ -2,8 +2,8 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Table.Cell;
@@ -171,9 +171,9 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
             logger.warn("Error fetching CloudWatch metrics for minute " + dataCollectionMinute + ". retrying in "
-                    + RETRY_SLEEP + "s",
+                    + DATA_COLLECTION_RETRY_SLEEP + "s",
                 ex);
-            sleep(RETRY_SLEEP);
+            sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
       }

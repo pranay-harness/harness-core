@@ -520,7 +520,6 @@ import software.wings.service.impl.newrelic.NewRelicMarkerExecutionData;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
-import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
@@ -1271,7 +1270,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("service.impl.newrelic.MetricAnalysisExecutionData", NotFoundClass.class);
     w.put("service.impl.newrelic.NewRelicMarkerExecutionData", NewRelicMarkerExecutionData.class);
     w.put("service.impl.splunk.SplunkAnalysisCluster", SplunkAnalysisCluster.class);
-    w.put("service.impl.splunk.SplunkDataCollectionInfo", SplunkDataCollectionInfo.class);
     w.put("service.impl.splunk.SplunkDataCollectionInfoV2", SplunkDataCollectionInfoV2.class);
     w.put("service.impl.stackdriver.StackDriverDataCollectionInfo", StackDriverDataCollectionInfo.class);
     w.put("service.impl.stackdriver.StackDriverLogDataCollectionInfo", StackDriverLogDataCollectionInfo.class);

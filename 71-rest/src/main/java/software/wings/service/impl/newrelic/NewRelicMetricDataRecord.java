@@ -107,6 +107,13 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
 
   private transient Map<String, String> deeplinkUrl;
 
+  public Map<String, Double> getValues() {
+    if (values == null) {
+      return new HashMap<>();
+    }
+    return values;
+  }
+
   @JsonIgnore
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))

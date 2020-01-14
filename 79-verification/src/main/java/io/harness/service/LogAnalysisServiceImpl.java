@@ -983,8 +983,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public int getEndTimeForLogAnalysis(AnalysisContext context) {
-    if (isPerMinTaskWithAbsoluteTimestamp(
-            context.getStateType(), context.getAccountId(), context.getStateExecutionId())) {
+    if (isPerMinTaskWithAbsoluteTimestamp(context.getStateType(), context.getStateExecutionId())) {
       return (int) context.getStartDataCollectionMinute() + context.getTimeDuration() - 1;
     } else {
       return context.getTimeDuration() - 1;
@@ -1003,26 +1002,27 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public boolean isProcessingComplete(String query, String appId, String stateExecutionId, StateType type,
       int timeDurationMins, long collectionMinute, String accountId) {
-    if (isPerMinTaskWithAbsoluteTimestamp(type, accountId, stateExecutionId)) {
+    if (isPerMinTaskWithAbsoluteTimestamp(type, stateExecutionId)) {
       return getLastProcessedMinute(stateExecutionId) - collectionMinute >= timeDurationMins - 1;
     } else {
       return getLastProcessedMinute(stateExecutionId) >= timeDurationMins - 1;
     }
   }
 
-  private boolean isPerMinTaskWithAbsoluteTimestamp(StateType type, String accountId, String stateExecutionId) {
+  private boolean isPerMinTaskWithAbsoluteTimestamp(StateType type, String stateExecutionId) {
     return PER_MINUTE_CV_STATES.contains(type) || GA_PER_MINUTE_CV_STATES.contains(type)
-        || isCVTaskPerMinuteTaskEnabled(type, accountId, stateExecutionId);
+        || isCVTaskPerMinuteTaskEnabled(type, stateExecutionId);
   }
 
   // TODO: remove this once everything is moved to cvTask
-  private boolean isCVTaskPerMinuteTaskEnabled(StateType stateType, String accountId, String stateExecutionId) {
-    AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
-                                          .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
-                                          .get();
+
+  private boolean isCVTaskPerMinuteTaskEnabled(StateType stateType, String stateExecutionId) {
     if (StateType.SPLUNKV2 == stateType) {
-      return analysisContext.isFeatureFlagEnabled(FeatureName.SPLUNK_CV_TASK);
+      return true;
     } else if (StateType.ELK == stateType) {
+      AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+                                            .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
+                                            .get();
       return analysisContext.isFeatureFlagEnabled(FeatureName.ELK_CV_TASK);
     }
     return false;

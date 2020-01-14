@@ -1,8 +1,8 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
@@ -77,7 +77,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
       }
     }
   }
-
+  @SuppressWarnings("PMD")
   protected void shutDownCollection() {
     /* Redundant now, but useful if calling shutDownCollection
      * from the worker threads before the job is aborted
@@ -152,8 +152,9 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
       if (response) {
         return true;
       }
-      getLogger().warn("Unable to save metrics to Harness manger {}. Retrying in {} ", stateExecutionId, RETRY_SLEEP);
-      sleep(RETRY_SLEEP);
+      getLogger().warn("Unable to save metrics to Harness manger {}. Retrying in {} ", stateExecutionId,
+          DATA_COLLECTION_RETRY_SLEEP);
+      sleep(DATA_COLLECTION_RETRY_SLEEP);
     } while (++retrySave != RETRIES);
     return false;
   }

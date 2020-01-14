@@ -633,7 +633,6 @@ import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowMetaDTO;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
-import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotinstAllPhaseRollbackData;
@@ -1208,8 +1207,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PrometheusMetricDataResponse.PrometheusMetricData.class, 5487);
     kryo.register(PrometheusMetricDataResponse.PrometheusMetricDataResult.class, 5488);
     kryo.register(PrometheusMetricDataResponse.class, 5315);
-    kryo.register(SplunkDataCollectionInfo.class, 5172);
-
+    kryo.register(StackDriverDataCollectionInfo.class, 5594);
     kryo.register(StackDriverMetric.class, 5593);
     kryo.register(StackDriverSetupTestNodeData.class, 5592);
     kryo.register(SumoDataCollectionInfo.class, 5173);
@@ -1399,8 +1397,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SpotInstSetupStateExecutionData.class, 7241);
     kryo.register(SpotinstDeployExecutionSummary.class, 7242);
     kryo.register(AppManifestKind.class, 7243);
-
-    kryo.register(StackDriverDataCollectionInfo.class, 5594);
     kryo.register(SpotinstAllPhaseRollbackData.class, 7245);
     kryo.register(HelmChartInfo.class, 7246);
     kryo.register(NewRelicDataCollectionInfoV2.class, 7247);
