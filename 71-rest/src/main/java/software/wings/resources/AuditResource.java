@@ -15,8 +15,6 @@ import io.swagger.annotations.Api;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.AuditHeaderYamlResponse;
-import software.wings.features.AuditTrailFeature;
-import software.wings.features.api.RestrictedApi;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuditService;
@@ -69,7 +67,6 @@ public class AuditResource {
   @ExceptionMetered
   @Produces("application/json")
   @AuthRule(permissionType = AUDIT_VIEWER)
-  @RestrictedApi(AuditTrailFeature.class)
   public RestResponse<PageResponse<AuditHeader>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<AuditHeader> pageRequest) {
     pageRequest.addFilter(AuditHeaderKeys.accountId, EQ, accountId);
@@ -82,7 +79,6 @@ public class AuditResource {
   @ExceptionMetered
   @Produces("application/json")
   @AuthRule(permissionType = AUDIT_VIEWER)
-  @RestrictedApi(AuditTrailFeature.class)
   public RestResponse<PageResponse<AuditHeader>> listUsingFilter(@QueryParam("accountId") String accountId,
       @QueryParam("filter") String filter, @QueryParam("limit") String limit, @QueryParam("offset") String offset) {
     return new RestResponse<>(httpAuditService.listUsingFilter(accountId, filter, limit, offset));
