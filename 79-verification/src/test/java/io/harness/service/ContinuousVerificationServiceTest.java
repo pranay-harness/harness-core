@@ -563,11 +563,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testSplunkLogCollectionWithCVTask() throws IOException {
-    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.SPLUNK_24_7_CV_TASK, accountId))
-        .thenReturn(managerFeatureFlagCall);
+  public void testSplunkLogCollectionWithCVTask() {
     SplunkCVConfiguration splunkCVConfiguration = SplunkCVConfiguration.builder().build();
     splunkCVConfiguration.setEnabled24x7(true);
     splunkCVConfiguration.setUuid(cvConfigId);

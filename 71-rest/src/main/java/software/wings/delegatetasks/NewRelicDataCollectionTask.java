@@ -2,7 +2,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_NON_SPECIAL_CHARS;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_SPECIAL_CHARS;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.batchMetricsToCollect;
@@ -471,8 +471,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
             logger.warn("error fetching new relic metrics for {} for minute {}. retrying in {}s",
-                dataCollectionInfo.getStateExecutionId(), dataCollectionMinute, RETRY_SLEEP, ex);
-            sleep(RETRY_SLEEP);
+                dataCollectionInfo.getStateExecutionId(), dataCollectionMinute, DATA_COLLECTION_RETRY_SLEEP, ex);
+            sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
       }

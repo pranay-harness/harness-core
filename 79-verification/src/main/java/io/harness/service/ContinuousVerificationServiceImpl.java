@@ -710,7 +710,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private boolean isCVTaskBasedCollectionEnabled(CVConfiguration cvConfiguration) {
     boolean isEnabled = false;
     if (cvConfiguration instanceof SplunkCVConfiguration) {
-      isEnabled = isFeatureFlagEnabled(FeatureName.SPLUNK_24_7_CV_TASK, cvConfiguration.getAccountId());
+      isEnabled = true;
     } else if (cvConfiguration instanceof NewRelicCVServiceConfiguration) {
       isEnabled = isFeatureFlagEnabled(FeatureName.NEWRELIC_24_7_CV_TASK, cvConfiguration.getAccountId());
     } else if (cvConfiguration instanceof ElkCVConfiguration) {

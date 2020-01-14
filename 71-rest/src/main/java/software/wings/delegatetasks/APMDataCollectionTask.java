@@ -3,9 +3,9 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
@@ -617,10 +617,10 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             if (retry == 1) {
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
-            logger.warn(
-                "error fetching apm metrics for minute " + dataCollectionMinute + ". retrying in " + RETRY_SLEEP + "s",
+            logger.warn("error fetching apm metrics for minute " + dataCollectionMinute + ". retrying in "
+                    + DATA_COLLECTION_RETRY_SLEEP + "s",
                 ex);
-            sleep(RETRY_SLEEP);
+            sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
       }

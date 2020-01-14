@@ -1,9 +1,9 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.common.VerificationConstants.PERIODIC_GAP_IN_DAYS;
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.AbstractMetricAnalysisState.CANARY_DAYS_TO_COLLECT;
@@ -174,9 +174,9 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
               }
             }
             logger.warn("error fetching Dynatrace metrics for minute " + dataCollectionMinute + ". retrying in "
-                    + RETRY_SLEEP + "s",
+                    + DATA_COLLECTION_RETRY_SLEEP + "s",
                 ex);
-            sleep(RETRY_SLEEP);
+            sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
       }

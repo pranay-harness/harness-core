@@ -2,8 +2,8 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Table.Cell;
@@ -376,10 +376,10 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                   ExceptionUtils.getMessage(ex));
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
-            logger.info(
-                "error fetching appdynamics metrics for minute {} for state {}. retrying in " + RETRY_SLEEP + "s",
+            logger.info("error fetching appdynamics metrics for minute {} for state {}. retrying in "
+                    + DATA_COLLECTION_RETRY_SLEEP + "s",
                 dataCollectionMinute, dataCollectionInfo.getStateExecutionId(), ex);
-            sleep(RETRY_SLEEP);
+            sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
       }

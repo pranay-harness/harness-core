@@ -3,9 +3,7 @@ package software.wings.delegatetasks.validation;
 import static java.util.Collections.singletonList;
 
 import io.harness.beans.DelegateTask;
-import io.harness.security.encryption.EncryptionConfig;
 import software.wings.beans.SplunkConfig;
-import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,22 +21,9 @@ public class SplunkValidation extends AbstractSecretManagerValidation {
   @Override
   public List<String> getCriteria() {
     return singletonList(Arrays.stream(getParameters())
-                             .filter(o -> o instanceof SplunkDataCollectionInfo || o instanceof SplunkConfig)
-                             .map(obj
-                                 -> (obj instanceof SplunkConfig ? (SplunkConfig) obj
-                                                                 : ((SplunkDataCollectionInfo) obj).getSplunkConfig())
-                                        .getSplunkUrl())
+                             .filter(o -> o instanceof SplunkConfig)
+                             .map(obj -> ((SplunkConfig) obj).getSplunkUrl())
                              .findFirst()
                              .orElse(null));
-  }
-
-  @Override
-  protected EncryptionConfig getEncryptionConfig() {
-    for (Object parmeter : getParameters()) {
-      if (parmeter instanceof SplunkDataCollectionInfo) {
-        return ((SplunkDataCollectionInfo) parmeter).getEncryptedDataDetails().get(0).getEncryptionConfig();
-      }
-    }
-    return super.getEncryptionConfig();
   }
 }

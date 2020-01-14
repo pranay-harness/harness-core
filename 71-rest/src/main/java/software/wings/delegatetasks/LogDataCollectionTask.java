@@ -4,8 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.BODY_STRING;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.URL_STRING;
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -318,8 +318,8 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
             if (retry == 1) {
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
-            logger.warn("error fetching logs. Retrying in " + RETRY_SLEEP + "s", ex);
-            sleep(RETRY_SLEEP);
+            logger.warn("error fetching logs. Retrying in " + DATA_COLLECTION_RETRY_SLEEP + "s", ex);
+            sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
       }

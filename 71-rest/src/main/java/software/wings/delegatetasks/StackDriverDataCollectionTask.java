@@ -2,8 +2,8 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.impl.stackdriver.StackDriverNameSpace.LOADBALANCER;
@@ -186,9 +186,9 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
             logger.warn("error fetching stack driver metrics for minute " + dataCollectionCurrentMinute
-                    + ". retrying in " + RETRY_SLEEP + "s",
+                    + ". retrying in " + DATA_COLLECTION_RETRY_SLEEP + "s",
                 ex);
-            sleep(RETRY_SLEEP);
+            sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
       }
@@ -339,10 +339,6 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
           if (value == null) {
             value = 1.0 * point.getValue().getInt64Value();
           }
-          if (newRelicMetricDataRecord.getValues() == null) {
-            newRelicMetricDataRecord.setValues(new HashMap<>());
-          }
-
           newRelicMetricDataRecord.getValues().put(dataFetchParameters.getMetric(), value);
 
           rv.put(dataFetchParameters.getNameSpace(), timeStamp, newRelicMetricDataRecord);

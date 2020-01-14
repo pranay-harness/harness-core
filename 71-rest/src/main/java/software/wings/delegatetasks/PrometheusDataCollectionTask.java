@@ -1,8 +1,8 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.sm.states.AbstractAnalysisState.END_TIME_PLACE_HOLDER;
 import static software.wings.sm.states.AbstractAnalysisState.HOST_NAME_PLACE_HOLDER;
 import static software.wings.sm.states.AbstractAnalysisState.START_TIME_PLACE_HOLDER;
@@ -149,8 +149,8 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
             logger.warn("for {} error fetching Prometheus metrics for minute {} . retrying in {}s",
-                dataCollectionInfo.getStateExecutionId(), dataCollectionMinute, RETRY_SLEEP, ex);
-            sleep(RETRY_SLEEP);
+                dataCollectionInfo.getStateExecutionId(), dataCollectionMinute, DATA_COLLECTION_RETRY_SLEEP, ex);
+            sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
       }

@@ -3,9 +3,9 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_HOST_NAME_FIELD;
 import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.inject.Inject;
@@ -172,7 +172,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
               completed.set(true);
               break;
             }
-            sleep(RETRY_SLEEP);
+            sleep(DATA_COLLECTION_RETRY_SLEEP);
             continue;
           }
           logger.info("sent Stackdriver search records to server. Num of events: " + logElements.size()
@@ -191,7 +191,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
               completed.set(true);
               break;
             }
-            sleep(RETRY_SLEEP);
+            sleep(DATA_COLLECTION_RETRY_SLEEP);
             continue;
           }
 
@@ -214,9 +214,9 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
             logger.warn("error fetching stack driver logs for minute " + logCollectionMinute + ". retrying in "
-                    + RETRY_SLEEP + "s",
+                    + DATA_COLLECTION_RETRY_SLEEP + "s",
                 ex);
-            sleep(RETRY_SLEEP);
+            sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
       }

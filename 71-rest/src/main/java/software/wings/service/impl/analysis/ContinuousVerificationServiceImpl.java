@@ -85,7 +85,6 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.TaskType;
@@ -131,7 +130,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord.NewRelicMetricDataRecordKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
-import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
@@ -186,7 +184,6 @@ import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.CustomLogCVServiceConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
-import software.wings.verification.log.SplunkCVConfiguration;
 import software.wings.verification.log.StackdriverCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
@@ -1798,10 +1795,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) cvConfiguration;
         task = createElkDelegateTask(elkCVConfiguration, waitId, startTime, endTime);
         break;
-      case SPLUNKV2:
-        SplunkCVConfiguration splunkCVConfiguration = (SplunkCVConfiguration) cvConfiguration;
-        task = createSplunkDelegateTask(splunkCVConfiguration, waitId, startTime, endTime);
-        break;
       case BUG_SNAG:
         BugsnagCVConfiguration bugsnagCVConfiguration = (BugsnagCVConfiguration) cvConfiguration;
         task = createBugSnagDelegateTask(bugsnagCVConfiguration, waitId, startTime, endTime);
@@ -2183,30 +2176,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     dataCollectionInfo.setStartTime(startTime);
     dataCollectionInfo.setEndTime(endTime);
     return createDelegateTask(TaskType.ELK_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(), waitId,
-        new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
-        dataCollectionInfo.getStateExecutionId(), config.getStateType());
-  }
-
-  private DelegateTask createSplunkDelegateTask(
-      SplunkCVConfiguration config, String waitId, long startTimeMilliSec, long endTimeMilliSec) {
-    SplunkConfig splunkConfig = (SplunkConfig) settingsService.get(config.getConnectorId()).getValue();
-    SplunkDataCollectionInfo dataCollectionInfo =
-        SplunkDataCollectionInfo.builder()
-            .splunkConfig(splunkConfig)
-            .accountId(splunkConfig.getAccountId())
-            .applicationId(config.getAppId())
-            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
-            .serviceId(config.getServiceId())
-            .query(config.getQuery())
-            .hostnameField(config.getHostnameField())
-            .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
-            .encryptedDataDetails(secretManager.getEncryptionDetails(splunkConfig, config.getAppId(), null))
-            .build();
-
-    dataCollectionInfo.setCvConfigId(config.getUuid());
-    dataCollectionInfo.setStartTime(startTimeMilliSec);
-    dataCollectionInfo.setEndTime(endTimeMilliSec);
-    return createDelegateTask(TaskType.SPLUNK_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(), waitId,
         new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
         dataCollectionInfo.getStateExecutionId(), config.getStateType());
   }

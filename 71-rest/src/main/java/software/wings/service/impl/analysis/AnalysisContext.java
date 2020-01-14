@@ -95,7 +95,8 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
   private boolean cvTasksCreated;
 
   private int retry;
-  private final Map<FeatureName, Boolean> featureFlags = new HashMap<>();
+  // This needs to be String to boolean map because FeatureFlags can be removed which can cause deserialization issue.
+  private final Map<String, Boolean> featureFlags = new HashMap<>();
   @Indexed private Long timeSeriesAnalysisIteration;
   @Indexed private Long logAnalysisIteration;
   @Indexed private Long logClusterIteration;
@@ -253,10 +254,10 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
   }
 
   public void setFeatureFlag(FeatureName featureFlag, Boolean enabled) {
-    featureFlags.put(featureFlag, enabled);
+    featureFlags.put(featureFlag.toString(), enabled);
   }
 
   public boolean isFeatureFlagEnabled(FeatureName featureFlag) {
-    return featureFlags.getOrDefault(featureFlag, false);
+    return featureFlags.getOrDefault(featureFlag.toString(), false);
   }
 }

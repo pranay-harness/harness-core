@@ -2,9 +2,9 @@ package software.wings.service.impl.sumo;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.RATE_LIMIT_STATUS;
 import static software.wings.common.VerificationConstants.URL_STRING;
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.delegatetasks.SumoDataCollectionTask.DEFAULT_TIME_ZONE;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
@@ -193,7 +193,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
         int randomNum = ThreadLocalRandom.current().nextInt(1, 11);
         logger.info("Encountered Rate limiting from sumo. Sleeping {}seconds for logCollectionMin {}", 30 + randomNum,
             logCollectionMinute);
-        sleep(RETRY_SLEEP.plus(Duration.ofSeconds(randomNum)));
+        sleep(DATA_COLLECTION_RETRY_SLEEP.plus(Duration.ofSeconds(randomNum)));
       }
       throw new VerificationOperationException(
           ErrorCode.SUMO_DATA_COLLECTION_ERROR, sumoServerException.getErrorMessage());

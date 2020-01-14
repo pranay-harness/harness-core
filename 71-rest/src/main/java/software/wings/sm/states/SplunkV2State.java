@@ -2,31 +2,18 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.beans.DelegateTask;
-import io.harness.delegate.beans.TaskData;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.VerificationOperationException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
-import software.wings.beans.FeatureName;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.SplunkConfig;
-import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
-import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
-import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -34,11 +21,7 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by peeyushaggarwal on 7/15/16.
@@ -141,73 +124,8 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts) {
-    String envId = getEnvId(context);
-    String finalServerConfigId = getServerConfigId(context);
-    final SettingAttribute settingAttribute = settingsService.get(finalServerConfigId);
-    if (settingAttribute == null) {
-      throw new VerificationOperationException(
-          ErrorCode.SPLUNK_CONFIGURATION_ERROR, "No splunk setting with id: " + finalServerConfigId + " found");
-    }
-
-    final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
-    final long logCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
-    List<Set<String>> batchedHosts = batchHosts(hosts);
-    String[] waitIds = new String[batchedHosts.size()];
-    List<DelegateTask> delegateTasks = new ArrayList<>();
-    int i = 0;
-    for (Set<String> hostBatch : batchedHosts) {
-      final SplunkDataCollectionInfo dataCollectionInfo =
-          SplunkDataCollectionInfo.builder()
-              .splunkConfig(splunkConfig)
-              .accountId(appService.get(context.getAppId()).getAccountId())
-              .applicationId(context.getAppId())
-              .stateExecutionId(context.getStateExecutionInstanceId())
-              .workflowId(getWorkflowId(context))
-              .workflowExecutionId(context.getWorkflowExecutionId())
-              .serviceId(getPhaseServiceId(context))
-              .query(getRenderedQuery())
-              .startTime(logCollectionStartTimeStamp)
-              .startMinute(0)
-              .collectionTime(Integer.parseInt(getTimeDuration()))
-              .hostnameField(getHostnameField())
-              .hosts(hostBatch)
-              .encryptedDataDetails(secretManager.getEncryptionDetails(
-                  splunkConfig, context.getAppId(), context.getWorkflowExecutionId()))
-              .isAdvancedQuery(isAdvancedQuery)
-              .build();
-
-      String waitId = generateUuid();
-      String infrastructureMappingId = context.fetchInfraMappingId();
-      delegateTasks.add(DelegateTask.builder()
-                            .async(true)
-                            .accountId(appService.get(context.getAppId()).getAccountId())
-                            .appId(context.getAppId())
-                            .waitId(waitId)
-                            .data(TaskData.builder()
-                                      .taskType(TaskType.SPLUNK_COLLECT_LOG_DATA.name())
-                                      .parameters(new Object[] {dataCollectionInfo})
-                                      .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
-                                      .build())
-                            .envId(envId)
-                            .infrastructureMappingId(infrastructureMappingId)
-                            .build());
-      waitIds[i++] = waitId;
-    }
-    waitNotifyEngine.waitForAllOn(ORCHESTRATION,
-        DataCollectionCallback.builder()
-            .appId(context.getAppId())
-            .stateExecutionId(context.getStateExecutionInstanceId())
-            .dataCollectionStartTime(logCollectionStartTimeStamp)
-            .dataCollectionEndTime(
-                logCollectionStartTimeStamp + TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration())))
-            .executionData(executionData)
-            .build(),
-        waitIds);
-    List<String> delegateTaskIds = new ArrayList<>();
-    for (DelegateTask task : delegateTasks) {
-      delegateTaskIds.add(delegateService.queueTask(task));
-    }
-    return StringUtils.join(delegateTaskIds, ",");
+    throw new UnsupportedOperationException(
+        "This should not get called. Splunk is now using new data collection framework");
   }
   @Override
   public DataCollectionInfoV2 createDataCollectionInfo(ExecutionContext context, Set<String> hosts) {
@@ -253,7 +171,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   }
 
   @Override
-  protected Optional<FeatureName> getCVTaskFeatureName() {
-    return Optional.of(FeatureName.SPLUNK_CV_TASK);
+  protected boolean isCVTaskEnqueuingEnabled(String accountId) {
+    return true;
   }
 }

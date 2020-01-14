@@ -223,7 +223,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       hostsToBeCollected.remove(null);
       getLogger().info("triggering data collection for {} state", getStateType());
 
-      if (getCVTaskFeatureName().isPresent() && analysisContext.isFeatureFlagEnabled(getCVTaskFeatureName().get())) {
+      if (isCVTaskEnqueuingEnabled(executionContext.getAccountId())) {
         getLogger().info("Data collection will be done with cv tasks.");
         analysisContext.setDataCollectionInfov2(createDataCollectionInfo(executionContext, hostsToBeCollected));
       } else if (isEligibleForPerMinuteTask(executionContext.getAccountId())) {

@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 
 import com.google.inject.Inject;
 
@@ -139,7 +139,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 completed.set(true);
                 break;
               }
-              sleep(RETRY_SLEEP);
+              sleep(DATA_COLLECTION_RETRY_SLEEP);
               continue;
             }
           }
@@ -156,7 +156,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
               completed.set(true);
               break;
             }
-            sleep(RETRY_SLEEP);
+            sleep(DATA_COLLECTION_RETRY_SLEEP);
             continue;
           }
 
@@ -186,8 +186,8 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
             logger.warn("error fetching sumo logs for stateExecutionId {}. retrying in {}s",
-                dataCollectionInfo.getStateExecutionId(), RETRY_SLEEP, ex);
-            sleep(RETRY_SLEEP);
+                dataCollectionInfo.getStateExecutionId(), DATA_COLLECTION_RETRY_SLEEP, ex);
+            sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
       }
