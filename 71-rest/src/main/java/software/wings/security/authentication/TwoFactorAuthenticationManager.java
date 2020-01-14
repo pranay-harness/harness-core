@@ -2,6 +2,7 @@ package software.wings.security.authentication;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 
@@ -61,12 +62,6 @@ public class TwoFactorAuthenticationManager {
     }
 
     user = getTwoFactorAuthHandler(user.getTwoFactorAuthenticationMechanism()).authenticate(user, passcode);
-    if (user != null && user.getAccounts() != null) {
-      for (Account account : user.getAccounts()) {
-        auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.LOGIN);
-        logger.info("Auditing login for user={} in account={}", user.getName(), account.getAccountName());
-      }
-    }
     return authService.generateBearerTokenForUser(user);
   }
 
@@ -82,12 +77,13 @@ public class TwoFactorAuthenticationManager {
     getDefaultAccount(user).ifPresent(account -> checkIfOperationIsAllowed(account.getUuid()));
 
     settings.setTwoFactorAuthenticationEnabled(true);
-    if (user.getAccounts() != null) {
+    if (isNotEmpty(user.getAccounts())) {
       user.getAccounts().forEach(account -> {
         auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.ENABLE_2FA);
         logger.info("Auditing enabling of 2FA for user={} in account={}", user.getName(), account.getAccountName());
       });
     }
+
     return applyTwoFactorAuthenticationSettings(user, settings);
   }
 
@@ -101,7 +97,7 @@ public class TwoFactorAuthenticationManager {
       if (user.isTwoFactorAuthenticationEnabled() && user.getTwoFactorAuthenticationMechanism() != null) {
         logger.info("Disabling 2FA for User={}, tfEnabled={}, tfMechanism={}", user.getEmail(),
             user.isTwoFactorAuthenticationEnabled(), user.getTwoFactorAuthenticationMechanism());
-        if (user.getAccounts() != null) {
+        if (isNotEmpty(user.getAccounts())) {
           user.getAccounts().forEach(account -> {
             auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.DISABLE_2FA);
             logger.info(

@@ -553,6 +553,18 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void shouldAuditUpdateUserProfile() {
+    User user = anUser().appId(APP_ID).uuid(USER_ID).appId(APP_ID).name(USER_NAME).build();
+    userService.updateUserProfile(user);
+    verify(updateOperations).set(UserKeys.name, USER_NAME);
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+    verify(auditServiceHelper, times(user.getAccounts().size()))
+        .reportForAuditingUsingAccountId(anyString(), eq(null), eq(user), eq(Type.UPDATE));
+  }
+
+  @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void shouldUpdateUserProfileWithoutName() {

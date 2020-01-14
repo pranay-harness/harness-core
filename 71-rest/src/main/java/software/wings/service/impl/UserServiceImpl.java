@@ -1460,7 +1460,7 @@ public class UserServiceImpl implements UserService {
                          .withClaim("email", email)
                          .sign(algorithm);
       sendResetPasswordEmail(user, token);
-      if (user.getAccounts() != null) {
+      if (isNotEmpty(user.getAccounts())) {
         user.getAccounts().forEach(account -> {
           auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Type.RESET_PASSWORD);
           logger.info(
@@ -1620,11 +1620,11 @@ public class UserServiceImpl implements UserService {
     } else {
       updateOperations.unset(UserKeys.name);
     }
-    if (user.getAccounts() != null) {
+    if (isNotEmpty(user.getAccounts())) {
       user.getAccounts().forEach(account -> {
         auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.UPDATE);
         logger.info(
-            "Auditing update of User Profile for user={} in account={}", user.getName(), account.getAccountName());
+            "Auditing update of User Profile for user={} in account={}", user.getUuid(), account.getAccountName());
       });
     }
     return applyUpdateOperations(user, updateOperations);

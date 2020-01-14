@@ -116,19 +116,8 @@ public class AuditRequestFilter implements ContainerRequestFilter {
   }
 
   private boolean isAuditExemptedHttpMethod(ContainerRequestContext requestContext) {
-    if (isLoginApi(requestContext)) {
-      return false;
-    }
     return asList(HttpMethod.GET.name(), HttpMethod.OPTIONS.name(), HttpMethod.HEAD.name())
         .contains(requestContext.getMethod());
-  }
-
-  private boolean isLoginApi(ContainerRequestContext requestContext) {
-    return requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/users/login")
-        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/users/user/login")
-        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/users/two-factor-login")
-        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/users/sso-redirect-login")
-        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/identity/user/login");
   }
 
   private String getHeaderString(MultivaluedMap<String, String> headers) {

@@ -1,5 +1,6 @@
 package software.wings.beans.loginSettings;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.USER_LOCKED_NOTIFICATION;
@@ -15,7 +16,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.passay.PasswordData;
 import software.wings.beans.Account;
-import software.wings.beans.Event.Type;
+import software.wings.beans.Event;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.User;
@@ -209,9 +210,9 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
           createUserLockoutInfoInstance(newCountOfFailedLoginAttempts, System.currentTimeMillis());
       updateUserLockoutOperations(operations, true, userLockoutInfo);
       sendNotifications(user, userLockoutPolicy);
-      if (user.getAccounts() != null) {
+      if (isNotEmpty(user.getAccounts())) {
         user.getAccounts().forEach(account -> {
-          auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Type.LOCK);
+          auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.LOCK);
           logger.info("Auditing locking of user={} in account={}", user.getName(), account.getAccountName());
         });
       }

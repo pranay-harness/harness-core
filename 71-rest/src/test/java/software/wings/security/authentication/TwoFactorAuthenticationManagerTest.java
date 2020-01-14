@@ -220,7 +220,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForNoAdminEnforce() {
     Account account = accountService.save(getAccount(AccountType.PAID, false), false);
@@ -267,8 +267,6 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     // Should allow disable
     twoFactorAuthenticationManager.disableTwoFactorAuthentication(user);
     assertThat(user.isTwoFactorAuthenticationEnabled()).isFalse();
-    verify(auditServiceHelper, times(user.getAccounts().size()))
-        .reportForAuditingUsingAccountId(anyString(), eq(null), eq(user), eq(Event.Type.DISABLE_2FA));
   }
 
   @Test
