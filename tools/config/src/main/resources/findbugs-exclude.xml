@@ -51,5 +51,9 @@
         <Method name="tryRead" />
         <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE" />
     </Match>
+    <Match>
+        <!-- this detector is experimental and creates a lot of false pasitives -->
+        <Bug pattern="BAS_BLOATED_ASSIGNMENT_SCOPE" />
+    </Match>
 </FindBugsFilter>
 

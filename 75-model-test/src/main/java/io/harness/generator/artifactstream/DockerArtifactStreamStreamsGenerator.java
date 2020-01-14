@@ -44,6 +44,11 @@ public class DockerArtifactStreamStreamsGenerator implements ArtifactStreamsGene
   }
 
   @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector, boolean metadataOnly) {
+    return null;
+  }
+
+  @Override
   public ArtifactStream ensureArtifactStream(Seed seed, ArtifactStream artifactStream, Owners owners) {
     DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
     ArtifactStream existing = artifactStreamGeneratorHelper.exists(dockerArtifactStream);

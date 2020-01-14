@@ -48,6 +48,11 @@ public class AmazonAmiArtifactStreamsGenerator implements ArtifactStreamsGenerat
   }
 
   @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector, boolean metadataOnly) {
+    return null;
+  }
+
+  @Override
   public ArtifactStream ensureArtifactStream(
       Randomizer.Seed seed, @NotNull ArtifactStream artifactStream, Owners owners) {
     AmiArtifactStream amiArtifactStream = (AmiArtifactStream) artifactStream;
