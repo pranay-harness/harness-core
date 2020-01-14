@@ -66,6 +66,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.AuditTrailFeature;
+import software.wings.features.api.RestrictedApi;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -125,6 +127,7 @@ public class AuditServiceImpl implements AuditService {
    * {@inheritDoc}
    */
   @Override
+  @RestrictedApi(AuditTrailFeature.class)
   public PageResponse<AuditHeader> list(PageRequest<AuditHeader> req) {
     return wingsPersistence.query(AuditHeader.class, req);
   }
@@ -499,6 +502,7 @@ public class AuditServiceImpl implements AuditService {
   }
 
   @Override
+  @RestrictedApi(AuditTrailFeature.class)
   public PageResponse<AuditHeader> listUsingFilter(String accountId, String filterJson, String limit, String offset) {
     AuditPreference auditPreference = (AuditPreference) auditPreferenceHelper.parseJsonIntoPreference(filterJson);
     auditPreference.setAccountId(accountId);

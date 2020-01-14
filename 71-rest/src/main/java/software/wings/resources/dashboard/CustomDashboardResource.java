@@ -36,9 +36,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
 import software.wings.beans.User;
-import software.wings.features.CustomDashboardFeature;
 import software.wings.features.api.AccountId;
-import software.wings.features.api.RestrictedApi;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
@@ -98,7 +96,6 @@ public class CustomDashboardResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
-  @RestrictedApi(CustomDashboardFeature.class)
   public RestResponse<DashboardSettings> createDashboardSetting(
       @QueryParam("accountId") @NotBlank @AccountId String accountId, DashboardSettings settings) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -113,7 +110,6 @@ public class CustomDashboardResource {
   @PUT
   @Timed
   @ExceptionMetered
-  @RestrictedApi(CustomDashboardFeature.class)
   public RestResponse<DashboardSettings> updateDashboardSettings(
       @QueryParam("accountId") @NotBlank @AccountId String accountId, DashboardSettings settings) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
@@ -132,7 +128,6 @@ public class CustomDashboardResource {
   @DELETE
   @Timed
   @ExceptionMetered
-  @RestrictedApi(CustomDashboardFeature.class)
   public RestResponse<Boolean> deleteDashboardSettings(
       @QueryParam("accountId") @NotBlank @AccountId String accountId, @QueryParam("dashboardId") @NotBlank String id) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
@@ -171,7 +166,6 @@ public class CustomDashboardResource {
   @Timed
   @Path("{dashboardId}")
   @ExceptionMetered
-  @RestrictedApi(CustomDashboardFeature.class)
   public RestResponse<DashboardSettings> getDashboardSetting(
       @QueryParam("accountId") @NotBlank @AccountId String accountId, @PathParam("dashboardId") String dashboardId) {
     if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, accountId)) {

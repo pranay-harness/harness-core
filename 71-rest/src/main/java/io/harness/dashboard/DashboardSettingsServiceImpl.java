@@ -23,6 +23,9 @@ import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
 import software.wings.beans.Event.Type;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.CustomDashboardFeature;
+import software.wings.features.api.AccountId;
+import software.wings.features.api.RestrictedApi;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.auth.DashboardAuthHandler;
 
@@ -40,15 +43,17 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
   private static final String eventName = "Custom Dashboard Created";
 
   @Override
-  public DashboardSettings get(@NotNull String accountId, @NotNull String id) {
+  @RestrictedApi(CustomDashboardFeature.class)
+  public DashboardSettings get(@NotNull @AccountId String accountId, @NotNull String id) {
     DashboardSettings dashboardSettings = persistence.get(DashboardSettings.class, id);
     dashboardAuthHandler.setAccessFlags(asList(dashboardSettings));
     return dashboardSettings;
   }
 
   @Override
+  @RestrictedApi(CustomDashboardFeature.class)
   public DashboardSettings createDashboardSettings(
-      @NotNull String accountId, @NotNull DashboardSettings dashboardSettings) {
+      @NotNull @AccountId String accountId, @NotNull DashboardSettings dashboardSettings) {
     dashboardSettings.setAccountId(accountId);
     DashboardSettings savedDashboardSettings = get(accountId, persistence.save(dashboardSettings));
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, savedDashboardSettings, Type.CREATE);
@@ -68,8 +73,9 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
   }
 
   @Override
+  @RestrictedApi(CustomDashboardFeature.class)
   public DashboardSettings updateDashboardSettings(
-      @NotNull String accountId, @NotNull DashboardSettings dashboardSettings) {
+      @NotNull @AccountId String accountId, @NotNull DashboardSettings dashboardSettings) {
     String id = dashboardSettings.getUuid();
     if (id == null) {
       throw new InvalidRequestException("Invalid Dashboard update request", USER);
@@ -96,7 +102,8 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
   }
 
   @Override
-  public boolean deleteDashboardSettings(@NotNull String accountId, @NotNull String dashboardSettingsId) {
+  @RestrictedApi(CustomDashboardFeature.class)
+  public boolean deleteDashboardSettings(@NotNull @AccountId String accountId, @NotNull String dashboardSettingsId) {
     DashboardSettings dashboardSettings = get(accountId, dashboardSettingsId);
     if (dashboardSettings != null && dashboardSettings.getAccountId().equals(accountId)) {
       boolean deleted = persistence.delete(DashboardSettings.class, dashboardSettingsId);
