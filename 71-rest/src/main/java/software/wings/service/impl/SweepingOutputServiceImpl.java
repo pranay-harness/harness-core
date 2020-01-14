@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -20,8 +19,11 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiryController;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.sm.StateExecutionInstance;
 
+import java.util.Collections;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
@@ -43,7 +45,18 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
 
   @Override
   public void ensure(SweepingOutputInstance sweepingOutputInstance) {
-    wingsPersistence.saveIgnoringDuplicateKeys(asList(sweepingOutputInstance));
+    wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(sweepingOutputInstance));
+  }
+
+  @Override
+  public void cleanForStateExecutionInstance(StateExecutionInstance stateExecutionInstance) {
+    SweepingOutputInquiry sweepingOutputInquiry =
+        SweepingOutputInquiryController.obtainFromStateExecutionInstanceWithoutName(stateExecutionInstance);
+    final Query<SweepingOutputInstance> query =
+        wingsPersistence.createQuery(SweepingOutputInstance.class)
+            .filter(SweepingOutputKeys.appId, sweepingOutputInquiry.getAppId())
+            .filter(SweepingOutputKeys.stateExecutionId, stateExecutionInstance.getUuid());
+    wingsPersistence.delete(query);
   }
 
   @Override
