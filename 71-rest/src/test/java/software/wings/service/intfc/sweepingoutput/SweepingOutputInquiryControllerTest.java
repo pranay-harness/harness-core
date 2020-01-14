@@ -63,4 +63,18 @@ public class SweepingOutputInquiryControllerTest extends WingsBaseTest {
     assertThat(sweepingOutputInquiry.getPhaseExecutionId()).isEqualTo(executionUuid + phaseElementId + "Phase 1");
     assertThat(sweepingOutputInquiry.getName()).isEqualTo("Prefix" + stateExecutionInstance.getDisplayName().trim());
   }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void obtainFromStateExecutionInstanceWithoutName() {
+    SweepingOutputInquiry sweepingOutputInquiry =
+        SweepingOutputInquiryController.obtainFromStateExecutionInstanceWithoutName(stateExecutionInstance);
+    assertThat(sweepingOutputInquiry).isNotNull();
+    assertThat(sweepingOutputInquiry.getAppId()).isEqualTo(appId);
+    assertThat(sweepingOutputInquiry.getWorkflowExecutionId()).isEqualTo(executionUuid);
+    assertThat(sweepingOutputInquiry.getStateExecutionId()).isEqualTo(stateExecutionInstanceId);
+    assertThat(sweepingOutputInquiry.getPhaseExecutionId()).isEqualTo(executionUuid + phaseElementId + "Phase 1");
+    assertThat(sweepingOutputInquiry.getName()).isNullOrEmpty();
+  }
 }

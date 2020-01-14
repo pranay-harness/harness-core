@@ -27,6 +27,16 @@ public class SweepingOutputInquiryController {
         .build();
   }
 
+  public static SweepingOutputInquiry obtainFromStateExecutionInstanceWithoutName(
+      @NotNull StateExecutionInstance stateExecutionInstance) {
+    return SweepingOutputInquiry.builder()
+        .appId(stateExecutionInstance.getAppId())
+        .workflowExecutionId(stateExecutionInstance.getExecutionUuid())
+        .stateExecutionId(stateExecutionInstance.getUuid())
+        .phaseExecutionId(getPhaseExecutionId(stateExecutionInstance))
+        .build();
+  }
+
   @Nullable
   private static String getPhaseExecutionId(@NotNull StateExecutionInstance stateExecutionInstance) {
     PhaseElement phaseElement = stateExecutionInstance.fetchPhaseElement();

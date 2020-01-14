@@ -2,8 +2,10 @@ package software.wings.service.intfc.sweepingoutput;
 
 import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
+import software.wings.sm.StateExecutionInstance;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 public interface SweepingOutputService {
   SweepingOutputInstance save(@Valid SweepingOutputInstance sweepingOutputInstance);
@@ -16,4 +18,6 @@ public interface SweepingOutputService {
 
   void copyOutputsForAnotherWorkflowExecution(
       String appId, String fromWorkflowExecutionId, String toWorkflowExecutionId);
+
+  void cleanForStateExecutionInstance(@NotNull StateExecutionInstance stateExecutionInstance);
 }

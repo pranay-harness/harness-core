@@ -100,6 +100,7 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ElementNotifyResponseData.ElementNotifyResponseDataBuilder;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.states.BarrierState;
@@ -151,6 +152,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
   @Inject private WorkflowService workflowService;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   /**
    * Execute.
@@ -1396,7 +1398,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     State currentState =
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     injector.injectMembers(currentState);
-
+    sweepingOutputService.cleanForStateExecutionInstance(stateExecutionInstance);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     injector.injectMembers(context);
     executorService.execute(new SmExecutionDispatcher(context, this));
