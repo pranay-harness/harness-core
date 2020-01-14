@@ -55,6 +55,8 @@ public class BillingDataTableSchema {
   DbColumn workloadType;
   DbColumn cloudProvider;
   DbColumn billingAmount;
+  DbColumn cpuBillingAmount;
+  DbColumn memoryBillingAmount;
   DbColumn usageDurationSeconds;
   DbColumn cpuUnitSeconds;
   DbColumn memoryMbSeconds;
@@ -96,6 +98,8 @@ public class BillingDataTableSchema {
     workloadType = billingDataTable.addColumn("workloadtype", "text", null);
     cloudProvider = billingDataTable.addColumn("cloudprovider", varcharType, null);
     billingAmount = billingDataTable.addColumn("billingamount", doubleType, null);
+    cpuBillingAmount = billingDataTable.addColumn("cpubillingamount", doubleType, null);
+    memoryBillingAmount = billingDataTable.addColumn("memorybillingamount", doubleType, null);
     usageDurationSeconds = billingDataTable.addColumn("usagedurationseconds", doubleType, null);
     cpuUnitSeconds = billingDataTable.addColumn("cpuunitseconds", doubleType, null);
     memoryMbSeconds = billingDataTable.addColumn("memorymbseconds", doubleType, null);

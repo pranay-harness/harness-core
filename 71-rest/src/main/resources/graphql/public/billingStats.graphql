@@ -31,6 +31,12 @@ extend type Query {
     groupBy: [CCMGroupBy]
     sortCriteria: [BillingSortCriteria]
   ): BillingFilterData @dataFetcher(name: billingStatsFilterValues)
+
+  efficiencyStats(
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+  ): EfficiencyStatsData @dataFetcher(name: efficiencyStats)
 }
 
 input CCMAggregationFunction {
@@ -147,6 +153,12 @@ type BillingStatsData {
   forecastCost: BillingStatsInfo
 }
 
+type EfficiencyStatsData {
+  context: ContextInfo
+  efficiencyBreakdown: StatsBreakdownInfo
+  resourceBreakdown: [ResourceStatsInfo]
+}
+
 type IdleCostStatsData {
   totalIdleCost: BillingStatsInfo
   cpuIdleCost: BillingStatsInfo
@@ -179,6 +191,25 @@ type BillingStatsInfo {
   statsLabel: String
   statsDescription: String
   statsValue: String
+}
+
+type ContextInfo {
+  efficiencyScore: Number
+  contextName: String
+  totalCost: Number
+  totalCostDescription: String
+}
+
+type StatsBreakdownInfo {
+  total: Number
+  utilized: Number
+  idle: Number
+  unallocated: Number
+}
+
+type ResourceStatsInfo {
+  type: String
+  info: StatsBreakdownInfo
 }
 
 input CCMFilter {

@@ -1,7 +1,5 @@
 package software.wings.graphql.datafetcher.billing;
 
-import static software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields.SUM;
-
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -11,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.billing.QLIdleCostData.QLIdleCostDataBuilder;
+import software.wings.graphql.datafetcher.billing.QLUnallocatedCost.QLUnallocatedCostBuilder;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
@@ -73,12 +72,12 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
         .totalIdleCost(getTotalIdleCostStats(idleCostData, filters))
         .cpuIdleCost(getCpuIdleCostStats(idleCostData))
         .memoryIdleCost(getMemoryIdleCostStats(idleCostData))
-        .unallocatedCost(
-            getUnallocatedCostStats(getUnallocatedCostData(accountId, aggregateFunction, filters), idleCostData))
+        .unallocatedCost(getUnallocatedCostStats(
+            getUnallocatedCostData(accountId, aggregateFunction, filters).getUnallocatedCost(), idleCostData))
         .build();
   }
 
-  private BigDecimal getUnallocatedCostData(
+  protected QLUnallocatedCost getUnallocatedCostData(
       String accountId, List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
     BillingDataQueryMetadata queryData = billingDataQueryBuilder.formTrendStatsQuery(
         accountId, aggregateFunction, billingDataQueryBuilder.prepareFiltersForUnallocatedCostData(filters));
@@ -96,7 +95,7 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
     }
   }
 
-  private QLIdleCostData getIdleCostData(
+  protected QLIdleCostData getIdleCostData(
       String accountId, List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
     BillingDataQueryMetadata queryData =
         billingDataQueryBuilder.formTrendStatsQuery(accountId, aggregateFunction, filters);
@@ -114,17 +113,31 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
     }
   }
 
-  private BigDecimal fetchUnallocatedCostStats(BillingDataQueryMetadata queryData, ResultSet resultSet)
+  protected QLUnallocatedCost fetchUnallocatedCostStats(BillingDataQueryMetadata queryData, ResultSet resultSet)
       throws SQLException {
-    BigDecimal totalCost = BigDecimal.ZERO;
+    QLUnallocatedCostBuilder unallocatedCostBuilder = QLUnallocatedCost.builder();
     while (null != resultSet && resultSet.next()) {
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
-        if (field == SUM) {
-          totalCost = resultSet.getBigDecimal(field.getFieldName());
+        try {
+          switch (field) {
+            case SUM:
+              unallocatedCostBuilder.unallocatedCost(resultSet.getBigDecimal(field.getFieldName()));
+              break;
+            case CPUBILLINGAMOUNT:
+              unallocatedCostBuilder.cpuUnallocatedCost(resultSet.getBigDecimal(field.getFieldName()));
+              break;
+            case MEMORYBILLINGAMOUNT:
+              unallocatedCostBuilder.memoryUnallocatedCost(resultSet.getBigDecimal(field.getFieldName()));
+              break;
+            default:
+              break;
+          }
+        } catch (Exception e) {
+          throw new InvalidRequestException("Error in reading from result set : ", e);
         }
       }
     }
-    return totalCost;
+    return unallocatedCostBuilder.build();
   }
 
   private QLIdleCostData fetchIdleCostStats(BillingDataQueryMetadata queryData, ResultSet resultSet)
@@ -160,6 +173,12 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
             case AVGMEMORYUTILIZATION:
               idleCostDataBuilder.avgMemoryUtilization(resultSet.getBigDecimal(field.getFieldName()));
               break;
+            case CPUBILLINGAMOUNT:
+              idleCostDataBuilder.totalCpuCost(resultSet.getBigDecimal(field.getFieldName()));
+              break;
+            case MEMORYBILLINGAMOUNT:
+              idleCostDataBuilder.totalMemoryCost(resultSet.getBigDecimal(field.getFieldName()));
+              break;
             default:
               break;
           }
@@ -181,13 +200,13 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
     String totalCostDescription = EMPTY_VALUE;
     String totalCostValue = EMPTY_VALUE;
     if (idleCostData.getIdleCost() != null) {
-      totalCostValue = String.format(
-          TOTAL_IDLE_COST_VALUE, billingDataQueryBuilder.getRoundedDoubleValue(idleCostData.getIdleCost()));
+      totalCostValue =
+          String.format(TOTAL_IDLE_COST_VALUE, billingDataHelper.getRoundedDoubleValue(idleCostData.getIdleCost()));
       if (idleCostData.getTotalCost() != null) {
-        double percentageOfTotalCost = billingDataQueryBuilder.getRoundedDoublePercentageValue(
+        double percentageOfTotalCost = billingDataHelper.getRoundedDoublePercentageValue(
             BigDecimal.valueOf(idleCostData.getIdleCost().doubleValue() / idleCostData.getTotalCost().doubleValue()));
         totalCostDescription = String.format(TOTAL_IDLE_COST_DESCRIPTION, percentageOfTotalCost + "%",
-            billingDataQueryBuilder.getRoundedDoubleValue(idleCostData.getTotalCost()));
+            billingDataHelper.getRoundedDoubleValue(idleCostData.getTotalCost()));
       }
     }
     return QLBillingStatsInfo.builder()
@@ -202,11 +221,11 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
     String cpuIdleCostValue = EMPTY_VALUE;
     if (idleCostData.getAvgCpuUtilization() != null) {
       cpuIdleCostDescription = String.format(CPU_IDLE_COST_DESCRIPTION,
-          billingDataQueryBuilder.getRoundedDoublePercentageValue(idleCostData.getAvgCpuUtilization()) + "%");
+          billingDataHelper.getRoundedDoublePercentageValue(idleCostData.getAvgCpuUtilization()) + "%");
     }
     if (idleCostData.getCpuIdleCost() != null) {
-      cpuIdleCostValue = String.format(
-          CPU_IDLE_COST_VALUE, billingDataQueryBuilder.getRoundedDoubleValue(idleCostData.getCpuIdleCost()));
+      cpuIdleCostValue =
+          String.format(CPU_IDLE_COST_VALUE, billingDataHelper.getRoundedDoubleValue(idleCostData.getCpuIdleCost()));
     }
     return QLBillingStatsInfo.builder()
         .statsLabel(CPU_IDLE_COST_LABEL)
@@ -220,11 +239,11 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
     String memoryIdleCostValue = EMPTY_VALUE;
     if (idleCostData.getAvgMemoryUtilization() != null) {
       memoryIdleCostDescription = String.format(MEMORY_IDLE_COST_DESCRIPTION,
-          billingDataQueryBuilder.getRoundedDoublePercentageValue(idleCostData.getAvgMemoryUtilization()) + "%");
+          billingDataHelper.getRoundedDoublePercentageValue(idleCostData.getAvgMemoryUtilization()) + "%");
     }
     if (idleCostData.getMemoryIdleCost() != null) {
       memoryIdleCostValue = String.format(
-          MEMORY_IDLE_COST_VALUE, billingDataQueryBuilder.getRoundedDoubleValue(idleCostData.getMemoryIdleCost()));
+          MEMORY_IDLE_COST_VALUE, billingDataHelper.getRoundedDoubleValue(idleCostData.getMemoryIdleCost()));
     }
     return QLBillingStatsInfo.builder()
         .statsLabel(MEMORY_IDLE_COST_LABEL)
@@ -238,12 +257,12 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
     String unallocatedCostDescription = EMPTY_VALUE;
     if (unallocatedCost != null) {
       unallocatedCostValue =
-          String.format(UNALLOCATED_COST_VALUE, billingDataQueryBuilder.getRoundedDoubleValue(unallocatedCost));
+          String.format(UNALLOCATED_COST_VALUE, billingDataHelper.getRoundedDoubleValue(unallocatedCost));
       if (idleCostData.getTotalCost() != null) {
-        double percentageOfTotalCost = billingDataQueryBuilder.getRoundedDoublePercentageValue(
+        double percentageOfTotalCost = billingDataHelper.getRoundedDoublePercentageValue(
             BigDecimal.valueOf(unallocatedCost.doubleValue() / idleCostData.getTotalCost().doubleValue()));
         unallocatedCostDescription = String.format(UNALLOCATED_COST_DESCRIPTION, percentageOfTotalCost + "%",
-            billingDataQueryBuilder.getRoundedDoubleValue(idleCostData.getTotalCost()));
+            billingDataHelper.getRoundedDoubleValue(idleCostData.getTotalCost()));
       }
     }
     return QLBillingStatsInfo.builder()
@@ -254,7 +273,7 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
   }
 
   private String getTotalIdleCostFormattedDate(Instant instant) {
-    return billingDataQueryBuilder.getFormattedDate(instant, TOTAL_IDLE_COST_DATE_PATTERN);
+    return billingDataHelper.getFormattedDate(instant, TOTAL_IDLE_COST_DATE_PATTERN);
   }
 
   @Override

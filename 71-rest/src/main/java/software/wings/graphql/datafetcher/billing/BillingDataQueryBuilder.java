@@ -42,10 +42,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 
-import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -55,7 +52,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BillingDataQueryBuilder {
   private BillingDataTableSchema schema = new BillingDataTableSchema();
-  private static final String DEFAULT_TIME_ZONE = "America/Los_Angeles";
   private static final String STANDARD_TIME_ZONE = "GMT";
   @Inject TagHelper tagHelper;
 
@@ -254,6 +250,16 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getMemoryIdleCost()),
                 BillingDataMetaDataFields.MEMORYIDLECOST.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.MEMORYIDLECOST);
+      } else if (aggregationFunction.getColumnName().equals(schema.getCpuBillingAmount().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getCpuBillingAmount()),
+                BillingDataMetaDataFields.CPUBILLINGAMOUNT.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.CPUBILLINGAMOUNT);
+      } else if (aggregationFunction.getColumnName().equals(schema.getMemoryBillingAmount().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getMemoryBillingAmount()),
+                BillingDataMetaDataFields.MEMORYBILLINGAMOUNT.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.MEMORYBILLINGAMOUNT);
       }
     } else if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.MAX) {
       if (aggregationFunction.getColumnName().equals(schema.getMaxCpuUtilization().getColumnNameSQL())) {
@@ -672,14 +678,6 @@ public class BillingDataQueryBuilder {
     return QLBillingDataFilter.builder().instanceType(instanceTypeFilter).build();
   }
 
-  protected String getFormattedDate(Instant instant, String datePattern) {
-    return instant.atZone(ZoneId.of(DEFAULT_TIME_ZONE)).format(DateTimeFormatter.ofPattern(datePattern));
-  }
-
-  protected double getRoundedDoubleValue(BigDecimal value) {
-    return Math.round(value.doubleValue() * 100D) / 100D;
-  }
-
   protected List<QLBillingDataFilter> prepareFiltersForUnallocatedCostData(List<QLBillingDataFilter> filters) {
     List<QLBillingDataFilter> modifiedFilterList =
         filters.stream()
@@ -688,10 +686,6 @@ public class BillingDataQueryBuilder {
 
     modifiedFilterList.add(getInstanceTypeFilter());
     return modifiedFilterList;
-  }
-
-  protected double getRoundedDoublePercentageValue(BigDecimal value) {
-    return Math.round(value.doubleValue() * 10000D) / 100D;
   }
 
   private List<QLBillingDataFilter> processFilterForTags(String accountId, List<QLBillingDataFilter> filters) {

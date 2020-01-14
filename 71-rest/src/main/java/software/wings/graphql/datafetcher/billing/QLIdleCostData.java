@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 @Builder
 public class QLIdleCostData {
   private BigDecimal totalCost;
+  private BigDecimal totalCpuCost;
+  private BigDecimal totalMemoryCost;
   private BigDecimal idleCost;
   private BigDecimal cpuIdleCost;
   private BigDecimal memoryIdleCost;
