@@ -69,7 +69,9 @@ import java.util.EnumSet;
 @Singleton
 public class SettingGenerator {
   private static final String HARNESS_NEXUS = "Harness Nexus";
+  private static final String HARNESS_NEXUS_2 = "Harness Nexus 2";
   private static final String HARNESS_JENKINS = "Harness Jenkins";
+  private static final String HARNESS_JENKINS_CD_TEAM = "Harness Jenkins CD Team";
   public static final String HARNESS_JIRA = "Harness Jira";
   private static final String SNOW_CONNECTOR = "Service Now Connector";
   private static final String HARNESS_NEXUS_THREE = "Harness Nexus 3";
@@ -103,11 +105,13 @@ public class SettingGenerator {
     DEV_TEST_CONNECTOR,
     WINRM_DEV_TEST_CONNECTOR,
     HARNESS_JENKINS_CONNECTOR,
+    HARNESS_JENKINS_CONNECTOR_CD_TEAM,
     GITHUB_TEST_CONNECTOR,
     TERRAFORM_CITY_GIT_REPO,
     TERRAFORM_MAIN_GIT_REPO,
     HARNESS_BAMBOO_CONNECTOR,
     HARNESS_NEXUS_CONNECTOR,
+    HARNESS_NEXUS2_CONNECTOR,
     HARNESS_NEXU3_CONNECTOR,
     HARNESS_ARTIFACTORY_CONNECTOR,
     HARNESS_DOCKER_REGISTRY,
@@ -146,6 +150,8 @@ public class SettingGenerator {
         return ensureWinrmDevTest(seed, owners);
       case HARNESS_JENKINS_CONNECTOR:
         return ensureHarnessJenkins(seed, owners);
+      case HARNESS_JENKINS_CONNECTOR_CD_TEAM:
+        return ensureHarnessJenkinsCdTeam(seed, owners);
       case GITHUB_TEST_CONNECTOR:
         return ensureGithubTest(seed, owners);
       case TERRAFORM_CITY_GIT_REPO:
@@ -154,6 +160,8 @@ public class SettingGenerator {
         return ensureHarnessBamboo(seed, owners);
       case HARNESS_NEXUS_CONNECTOR:
         return ensureHarnessNexus(seed, owners);
+      case HARNESS_NEXUS2_CONNECTOR:
+        return ensureHarnessNexus2(seed, owners);
       case HARNESS_NEXU3_CONNECTOR:
         return ensureHarnessNexus3(seed, owners);
       case HARNESS_ARTIFACTORY_CONNECTOR:
@@ -486,6 +494,26 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
+  private SettingAttribute ensureHarnessJenkinsCdTeam(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withName(HARNESS_JENKINS_CD_TEAM)
+            .withCategory(CONNECTOR)
+            .withAccountId(account.getUuid())
+            .withValue(JenkinsConfig.builder()
+                           .accountId(account.getUuid())
+                           .jenkinsUrl("https://cdteam-jenkins.harness.io")
+                           .username("wingsbuild")
+                           .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
+                           .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
   public SettingAttribute ensureHarnessJira(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
 
@@ -522,6 +550,24 @@ public class SettingGenerator {
             .withValue(NexusConfig.builder()
                            .accountId(account.getUuid())
                            .nexusUrl("https://nexus2.harness.io")
+                           .username("admin")
+                           .password(scmSecret.decryptToCharArray(new SecretName("harness_nexus")))
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
+    return ensureSettingAttribute(seed, nexusSettingAttribute, owners);
+  }
+
+  private SettingAttribute ensureHarnessNexus2(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    SettingAttribute nexusSettingAttribute =
+        aSettingAttribute()
+            .withName(HARNESS_NEXUS_2)
+            .withCategory(SettingCategory.CONNECTOR)
+            .withAccountId(account.getUuid())
+            .withValue(NexusConfig.builder()
+                           .accountId(account.getUuid())
+                           .nexusUrl("https://nexus2-cdteam.harness.io")
                            .username("admin")
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_nexus")))
                            .build())

@@ -42,6 +42,11 @@ public class SpotinstAmiArtifactStreamsGenerator implements ArtifactStreamsGener
   }
 
   @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector, boolean metadataOnly) {
+    return null;
+  }
+
+  @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
     return ensureArtifactStream(seed, owners, false);
   }

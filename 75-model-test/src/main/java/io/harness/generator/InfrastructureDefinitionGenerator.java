@@ -138,6 +138,7 @@ public class InfrastructureDefinitionGenerator {
     AZURE_HELM,
     PIPELINE_RBAC_QA_AWS_SSH_TEST,
     PIPELINE_RBAC_PROD_AWS_SSH_TEST,
+    AWS_WINRM_DOWNLOAD
   }
 
   public InfrastructureDefinition ensurePredefined(
@@ -173,6 +174,8 @@ public class InfrastructureDefinitionGenerator {
         return ensurePipelineRbacQaK8sTest(seed, owners);
       case PIPELINE_RBAC_PROD_AWS_SSH_TEST:
         return ensurePipelineRbacProdK8sTest(seed, owners);
+      case AWS_WINRM_DOWNLOAD:
+        return ensureAwsWinrmDownloadTest(seed, owners);
       default:
         unhandled(infraType);
     }
@@ -404,12 +407,19 @@ public class InfrastructureDefinitionGenerator {
   }
 
   private InfrastructureDefinition ensureAwsWinrmFunctionalTest(Seed seed, Owners owners) {
+    final List<Tag> tags = Collections.singletonList(Tag.builder().key("role").value("rollback-ft").build());
     return ensureAwsWinrmInfraDefinition(
-        seed, owners, Environments.FUNCTIONAL_TEST, Services.WINDOWS_TEST, "Aws WinRM InfraDef");
+        seed, owners, Environments.FUNCTIONAL_TEST, Services.WINDOWS_TEST, "Aws WinRM InfraDef", tags);
+  }
+
+  private InfrastructureDefinition ensureAwsWinrmDownloadTest(Seed seed, Owners owners) {
+    final List<Tag> tags = Collections.singletonList(Tag.builder().key("role").value("download-artifact").build());
+    return ensureAwsWinrmInfraDefinition(seed, owners, Environments.FUNCTIONAL_TEST, Services.WINDOWS_TEST_DOWNLOAD,
+        "Aws WinRM Download InfraDef", tags);
   }
 
   private InfrastructureDefinition ensureAwsWinrmInfraDefinition(
-      Seed seed, Owners owners, Environments environments, Services services, String name) {
+      Seed seed, Owners owners, Environments environments, Services services, String name, List<Tag> tags) {
     Environment environment = owners.obtainEnvironment();
     if (environment == null) {
       environment = environmentGenerator.ensurePredefined(seed, owners, environments);
@@ -421,8 +431,6 @@ public class InfrastructureDefinitionGenerator {
       service = serviceGenerator.ensurePredefined(seed, owners, services);
       owners.add(service);
     }
-
-    final List<Tag> tags = Collections.singletonList(Tag.builder().key("role").value("rollback-ft").build());
 
     final SettingAttribute awsTestSettingAttribute =
         settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);

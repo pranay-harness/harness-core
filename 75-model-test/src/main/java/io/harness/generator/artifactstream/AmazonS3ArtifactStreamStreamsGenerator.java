@@ -31,6 +31,15 @@ public class AmazonS3ArtifactStreamStreamsGenerator implements ArtifactStreamsGe
 
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector) {
+    return ensureArtifactStream(seed, owners, atConnector, true);
+  }
+
+  private String getServiceId(Service service) {
+    return service != null ? service.getUuid() : null;
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector, boolean metadataOnly) {
     Service service = owners.obtainService();
     Application application = owners.obtainApplication();
     final SettingAttribute settingAttribute =
@@ -39,7 +48,7 @@ public class AmazonS3ArtifactStreamStreamsGenerator implements ArtifactStreamsGe
     return ensureArtifactStream(seed,
         AmazonS3ArtifactStream.builder()
             .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
-            .serviceId(atConnector ? settingAttribute.getUuid() : service != null ? service.getUuid() : null)
+            .serviceId(atConnector ? settingAttribute.getUuid() : getServiceId(service))
             .name("harness-iis-app")
             .sourceName(settingAttribute.getName())
             .jobname("iis-app-example")

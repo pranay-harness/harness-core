@@ -30,16 +30,22 @@ public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGen
 
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector) {
+    return ensureArtifactStream(seed, owners, atConnector, false);
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector, boolean metadataOnly) {
     Service service = owners.obtainService();
     Application application = owners.obtainApplication();
     final SettingAttribute settingAttribute =
-        settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_JENKINS_CONNECTOR);
+        settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_JENKINS_CONNECTOR_CD_TEAM);
     return ensureArtifactStream(seed,
         JenkinsArtifactStream.builder()
             .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
             .serviceId(atConnector ? settingAttribute.getUuid() : service != null ? service.getUuid() : null)
             .autoPopulate(false)
-            .name("harness-samples")
+            .metadataOnly(metadataOnly)
+            .name(metadataOnly ? "jenkins-harness-samples-metadataOnly" : "jenkins-harness-samples")
             .sourceName(settingAttribute.getName())
             .jobname("harness-samples")
             .artifactPaths(asList("echo/target/echo.war"))
@@ -86,6 +92,8 @@ public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGen
     } else {
       throw new UnsupportedOperationException();
     }
+
+    builder.metadataOnly(artifactStream.isMetadataOnly());
 
     return artifactStreamGeneratorHelper.saveArtifactStream(builder.build(), owners);
   }

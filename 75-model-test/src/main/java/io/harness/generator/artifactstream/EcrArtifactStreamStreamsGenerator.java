@@ -45,6 +45,11 @@ public class EcrArtifactStreamStreamsGenerator implements ArtifactStreamsGenerat
   }
 
   @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector, boolean metadataOnly) {
+    return null;
+  }
+
+  @Override
   public ArtifactStream ensureArtifactStream(Seed seed, ArtifactStream artifactStream, Owners owners) {
     EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
     ArtifactStream existing = artifactStreamGeneratorHelper.exists(ecrArtifactStream);

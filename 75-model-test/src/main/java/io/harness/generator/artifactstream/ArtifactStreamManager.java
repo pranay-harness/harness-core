@@ -27,7 +27,7 @@ public class ArtifactStreamManager {
   public enum ArtifactStreams {
     HARNESS_SAMPLE_ECHO_WAR,
     ARTIFACTORY_ECHO_WAR,
-    HARNESS_SAMPLE_IIS_APP,
+    HARNESS_SAMPLE_IIS_APP_S3,
     HARNESS_SAMPLE_ECR,
     HARNESS_SAMPLE_DOCKER,
     AWS_AMI,
@@ -35,7 +35,11 @@ public class ArtifactStreamManager {
     HARNESS_EXAMPLE_LAMBDA,
     HARNESS_SAMPLE_ECHO_WAR_AT_CONNECTOR,
     HARNESS_SAMPLE_DOCKER_AT_CONNECTOR,
-    PCF
+    PCF,
+    JENKINS_METADATA_ONLY,
+    BAMBOO_METADATA_ONLY,
+    NEXUS2_MAVEN_METADATA_ONLY,
+    NEXUS3_MAVEN_METADATA_ONLY
   }
 
   public ArtifactStream ensurePredefined(Seed seed, Owners owners, ArtifactStreams predefined) {
@@ -45,6 +49,18 @@ public class ArtifactStreamManager {
   public ArtifactStream ensurePredefined(Seed seed, Owners owners, ArtifactStreams predefined, boolean atConnector) {
     ArtifactStreamsGenerator streamsGenerator = streamGeneratorFactory.getArtifactStreamGenerator(predefined);
     return streamsGenerator.ensureArtifactStream(seed, owners, atConnector);
+  }
+
+  public ArtifactStream ensurePredefined(
+      Seed seed, Owners owners, ArtifactStreams predefined, boolean atConnector, boolean metadataOnly) {
+    ArtifactStreamsGenerator streamsGenerator = streamGeneratorFactory.getArtifactStreamGenerator(predefined);
+    return streamsGenerator.ensureArtifactStream(seed, owners, atConnector, metadataOnly);
+  }
+
+  public ArtifactStream ensurePredefined(
+      Seed seed, Owners owners, ArtifactStreams predefined, ArtifactStream artifactStream) {
+    ArtifactStreamsGenerator streamsGenerator = streamGeneratorFactory.getArtifactStreamGenerator(predefined);
+    return streamsGenerator.ensureArtifactStream(seed, artifactStream, owners);
   }
 
   /**

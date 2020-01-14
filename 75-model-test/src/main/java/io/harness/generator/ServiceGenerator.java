@@ -67,7 +67,8 @@ public class ServiceGenerator {
     MULTI_ARTIFACT_K8S_V2_TEST,
     PCF_V2_TEST,
     PCF_V2_REMOTE_TEST,
-    HELM_S3
+    HELM_S3,
+    WINDOWS_TEST_DOWNLOAD
   }
 
   public Service ensurePredefined(Randomizer.Seed seed, Owners owners, Services predefined) {
@@ -96,6 +97,16 @@ public class ServiceGenerator {
         unhandled(predefined);
     }
 
+    return null;
+  }
+
+  public Service ensurePredefined(
+      Randomizer.Seed seed, Owners owners, Services predefined, ArtifactStreams artifactStreams) {
+    if (predefined == Services.WINDOWS_TEST_DOWNLOAD) {
+      return ensureWindowsTest(seed, owners, "Test IIS APP Service Download", artifactStreams);
+    } else {
+      unhandled(predefined);
+    }
     return null;
   }
 
@@ -207,7 +218,18 @@ public class ServiceGenerator {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.IIS_APP).build()));
     ArtifactStream artifactStream =
-        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_IIS_APP);
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_IIS_APP_S3);
+    Service service = owners.obtainService();
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+    return service;
+  }
+
+  public Service ensureWindowsTest(
+      Randomizer.Seed seed, Owners owners, String name, ArtifactStreams artifactStreamPredefined) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.IIS_APP).build()));
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, artifactStreamPredefined, false, true);
     Service service = owners.obtainService();
     service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
     return service;

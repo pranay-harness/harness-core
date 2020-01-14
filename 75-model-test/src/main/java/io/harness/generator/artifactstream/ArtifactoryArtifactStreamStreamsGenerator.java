@@ -29,6 +29,11 @@ public class ArtifactoryArtifactStreamStreamsGenerator implements ArtifactStream
 
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector) {
+    return ensureArtifactStream(seed, owners, atConnector, false);
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector, boolean metadataOnly) {
     Service service = owners.obtainService();
     Application application = owners.obtainApplication();
     final SettingAttribute settingAttribute =
@@ -38,7 +43,8 @@ public class ArtifactoryArtifactStreamStreamsGenerator implements ArtifactStream
         ArtifactoryArtifactStream.builder()
             .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
             .serviceId(atConnector ? settingAttribute.getUuid() : service != null ? service.getUuid() : null)
-            .name("artifactory-echo-war")
+            .metadataOnly(metadataOnly)
+            .name(metadataOnly ? "artifactory-echo-war-metadataOnly" : "artifactory-echo-war")
             .jobname("functional-test")
             .autoPopulate(true)
             .artifactPattern("/io/harness/e2e/echo/*/*.war")

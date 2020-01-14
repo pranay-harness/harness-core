@@ -18,6 +18,9 @@ public class ArtifactStreamGeneratorFactory {
   @Inject private AmazonAmiArtifactStreamsGenerator amazonAmiArtifactStreamsGenerator;
   @Inject private AmazonLambdaArtifactStreamGenerator amazonLambdaArtifactStreamGenerator;
   @Inject private SpotinstAmiArtifactStreamsGenerator spotinstAmiArtifactStreamsGenerator;
+  @Inject private BambooArtifactStreamGenerator bambooArtifactStreamGenerator;
+  @Inject private Nexus2MavenArtifactStreamsGenerator nexus2MavenArtifactStreamsGenerator;
+  @Inject private Nexus3MavenArtifactStreamsGenerator nexus3MavenArtifactStreamsGenerator;
 
   public ArtifactStreamsGenerator getArtifactStreamGenerator(ArtifactStreams artifactStreams) {
     if (ArtifactStreams.HARNESS_SAMPLE_ECR == artifactStreams) {
@@ -29,7 +32,7 @@ public class ArtifactStreamGeneratorFactory {
     if (ArtifactStreams.ARTIFACTORY_ECHO_WAR == artifactStreams || ArtifactStreams.PCF == artifactStreams) {
       return artifactoryArtifactStreamStreamsGenerator;
     }
-    if (ArtifactStreams.HARNESS_SAMPLE_IIS_APP == artifactStreams) {
+    if (ArtifactStreams.HARNESS_SAMPLE_IIS_APP_S3 == artifactStreams) {
       return amazonS3ArtifactStreamStreamsGenerator;
     }
     if (ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR == artifactStreams) {
@@ -49,6 +52,18 @@ public class ArtifactStreamGeneratorFactory {
     }
     if (ArtifactStreams.HARNESS_SAMPLE_DOCKER_AT_CONNECTOR == artifactStreams) {
       return dockerArtifactStreamGenerator;
+    }
+    if (ArtifactStreams.JENKINS_METADATA_ONLY == artifactStreams) {
+      return jenkinsArtifactStreamStreamsGenerator;
+    }
+    if (ArtifactStreams.BAMBOO_METADATA_ONLY == artifactStreams) {
+      return bambooArtifactStreamGenerator;
+    }
+    if (ArtifactStreams.NEXUS2_MAVEN_METADATA_ONLY == artifactStreams) {
+      return nexus2MavenArtifactStreamsGenerator;
+    }
+    if (ArtifactStreams.NEXUS3_MAVEN_METADATA_ONLY == artifactStreams) {
+      return nexus3MavenArtifactStreamsGenerator;
     }
 
     throw new InvalidRequestException(
