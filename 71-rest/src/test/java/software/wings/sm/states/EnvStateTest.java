@@ -71,13 +71,12 @@ public class EnvStateTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    envState.setEnvId(ENV_ID);
     envState.setWorkflowId(WORKFLOW_ID);
     when(context.getApp()).thenReturn(anApplication().uuid(APP_ID).build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(WORKFLOW_STANDARD_PARAMS);
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(workflowExecutionService.triggerOrchestrationExecution(
-             eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any()))
+             eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any()))
         .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.NEW).build());
     when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
   }
@@ -90,7 +89,7 @@ public class EnvStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = envState.execute(context);
     verify(workflowExecutionService)
         .triggerOrchestrationExecution(
-            eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
+            eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
     assertThat(executionResponse.getCorrelationIds()).hasSameElementsAs(asList(WORKFLOW_EXECUTION_ID));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
     assertThat(executionResponse.isAsync()).isTrue();
@@ -109,7 +108,7 @@ public class EnvStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = envState.execute(context);
     verify(workflowExecutionService, times(0))
         .triggerOrchestrationExecution(
-            eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
+            eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
     assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }
@@ -125,7 +124,7 @@ public class EnvStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = envState.execute(context);
     verify(workflowExecutionService, times(0))
         .triggerOrchestrationExecution(
-            eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
+            eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
     assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }
@@ -141,7 +140,7 @@ public class EnvStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = envState.execute(context);
     verify(workflowExecutionService, times(0))
         .triggerOrchestrationExecution(
-            eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
+            eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
     assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }
@@ -160,14 +159,14 @@ public class EnvStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldExecuteOnError() {
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    when(workflowExecutionService.triggerOrchestrationExecution(eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID),
+    when(workflowExecutionService.triggerOrchestrationExecution(eq(APP_ID), eq(null), eq(WORKFLOW_ID),
              eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(ExecutionArgs.class), any()))
         .thenThrow(new InvalidRequestException("Workflow variable [test] is mandatory for execution"));
     ExecutionResponse executionResponse = envState.execute(context);
 
     verify(workflowExecutionService)
-        .triggerOrchestrationExecution(eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID),
-            any(ExecutionArgs.class), any());
+        .triggerOrchestrationExecution(
+            eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(ExecutionArgs.class), any());
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
     assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }
