@@ -473,7 +473,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
 
   protected String createActivity(ExecutionContext executionContext) {
     Application app = ((ExecutionContextImpl) executionContext).fetchRequiredApp();
-    Environment env = ((ExecutionContextImpl) executionContext).fetchRequiredEnvironment();
+    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);
@@ -501,7 +501,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     if (executionContext.getOrchestrationWorkflowType() != null
         && executionContext.getOrchestrationWorkflowType() == BUILD) {
       activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
-    } else {
+    } else if (env != null) {
       activityBuilder.environmentId(env.getUuid())
           .environmentName(env.getName())
           .environmentType(env.getEnvironmentType());
