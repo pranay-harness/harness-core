@@ -34,6 +34,8 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private WorkloadRepository workloadRepository;
   private static String POD = "Pod";
+  private static String KUBE_SYSTEM_NAMESPACE = "kube-system";
+  private static String KUBE_PROXY_POD_PREFIX = "kube-proxy";
 
   @Override
   public InstanceInfo process(PublishedMessage publishedMessage) {
@@ -41,6 +43,12 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
     PodInfo podInfo = (PodInfo) publishedMessage.getMessage();
     String workloadName = podInfo.getTopLevelOwner().getName();
     String workloadType = podInfo.getTopLevelOwner().getKind();
+
+    if (podInfo.getNamespace().equals(KUBE_SYSTEM_NAMESPACE)
+        && podInfo.getPodName().startsWith(KUBE_PROXY_POD_PREFIX)) {
+      workloadName = KUBE_PROXY_POD_PREFIX;
+      workloadType = POD;
+    }
 
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.GCP.name());

@@ -54,7 +54,10 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   @Mock private WorkloadRepository workloadRepository;
 
   private static final String POD_UID = "pod_uid";
+  private static final String POD_NAME = "pod_name";
   private static final String NAMESPACE = "namespace";
+  private static final String KUBE_SYSTEM_NAMESPACE = "kube-system";
+  private static final String KUBE_PROXY_POD_NAME = "kube-proxy-pod";
   private static final long CPU_AMOUNT = 1_000_000_000L; // 1 vcpu in nanocores
   private static final long MEMORY_AMOUNT = 1024L * 1024; // 1Mi in bytes
   private static final String NODE_NAME = "node_name";
@@ -115,8 +118,9 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M"));
     requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M"));
     Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).build();
-    PublishedMessage k8sPodInfoMessage = getK8sPodInfoMessage(POD_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
-        CLUSTER_ID, CLUSTER_NAME, NAMESPACE, label, resource, START_TIMESTAMP);
+    PublishedMessage k8sPodInfoMessage =
+        getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME,
+            NAMESPACE, label, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
     InstanceInfo instanceInfo = k8sPodInfoProcessor.process(k8sPodInfoMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
     Map<String, String> metaData = instanceInfo.getMetaData();
@@ -128,6 +132,42 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
     assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
     assertThat(metaData.get(InstanceMetaDataConstants.WORKLOAD_NAME)).isEqualTo(WORKLOAD_NAME);
+    assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY))
+        .isEqualTo(String.valueOf((double) MEMORY_AMOUNT));
+    assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_CPU))
+        .isEqualTo(String.valueOf((double) CPU_AMOUNT));
+    verify(workloadRepository).savePodWorkload(ACCOUNT_ID, (PodInfo) k8sPodInfoMessage.getMessage());
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void shouldCreateInstancePodInfoWithKubeProxyWorkload() throws Exception {
+    InstanceData instanceData = getNodeInstantData();
+    when(instanceDataService.fetchInstanceDataWithName(
+             ACCOUNT_ID, CLOUD_PROVIDER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
+        .thenReturn(instanceData);
+    when(cloudToHarnessMappingService.getHarnessServiceInfo(any())).thenReturn(harnessServiceInfo());
+    Map<String, String> label = new HashMap<>();
+    label.put(K8sCCMConstants.RELEASE_NAME, K8sCCMConstants.RELEASE_NAME);
+    Map<String, Quantity> requestQuantity = new HashMap<>();
+    requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M"));
+    requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M"));
+    Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).build();
+    PublishedMessage k8sPodInfoMessage =
+        getK8sPodInfoMessage(POD_UID, KUBE_PROXY_POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID,
+            CLUSTER_NAME, KUBE_SYSTEM_NAMESPACE, label, resource, START_TIMESTAMP, "", "", "");
+    InstanceInfo instanceInfo = k8sPodInfoProcessor.process(k8sPodInfoMessage);
+    io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
+    Map<String, String> metaData = instanceInfo.getMetaData();
+    assertThat(instanceInfo).isNotNull();
+    assertThat(instanceInfo.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(instanceInfo.getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(instanceInfo.getClusterName()).isEqualTo(CLUSTER_NAME);
+    assertThat(instanceInfo.getInstanceType()).isEqualTo(InstanceType.K8S_POD);
+    assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
+    assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
+    assertThat(metaData.get(InstanceMetaDataConstants.WORKLOAD_NAME)).isEqualTo("kube-proxy");
     assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY))
         .isEqualTo(String.valueOf((double) MEMORY_AMOUNT));
     assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_CPU))
@@ -164,11 +204,12 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     return Quantity.newBuilder().setAmount(amount).setUnit(unit).build();
   }
 
-  private PublishedMessage getK8sPodInfoMessage(String podUid, String nodeName, String cloudProviderId,
+  private PublishedMessage getK8sPodInfoMessage(String podUid, String podName, String nodeName, String cloudProviderId,
       String accountId, String clusterId, String clusterName, String namespace, Map<String, String> label,
-      Resource resource, Timestamp timestamp) {
+      Resource resource, Timestamp timestamp, String workloadName, String workloadType, String workloadId) {
     PodInfo nodeInfo = PodInfo.newBuilder()
                            .setPodUid(podUid)
+                           .setPodName(podName)
                            .setNodeName(nodeName)
                            .setCloudProviderId(cloudProviderId)
                            .setClusterId(clusterId)
@@ -177,13 +218,18 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
                            .putAllLabels(label)
                            .setTotalResource(resource)
                            .setCreationTimestamp(timestamp)
-                           .setTopLevelOwner(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
-                                                 .setName(WORKLOAD_NAME)
-                                                 .setKind(WORKLOAD_TYPE)
-                                                 .setUid(WORKLOAD_ID)
-                                                 .build())
+                           .setTopLevelOwner(getOwner(workloadName, workloadType, workloadId))
                            .build();
     return getPublishedMessage(accountId, nodeInfo, HTimestamps.toMillis(timestamp));
+  }
+
+  private io.harness.perpetualtask.k8s.watch.Owner getOwner(
+      String workloadName, String workloadType, String workloadId) {
+    return io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
+        .setName(workloadName)
+        .setKind(workloadType)
+        .setUid(workloadId)
+        .build();
   }
 
   private PublishedMessage getK8sPodEventMessage(
