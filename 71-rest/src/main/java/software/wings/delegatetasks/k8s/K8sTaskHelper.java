@@ -54,6 +54,7 @@ import io.harness.beans.FileData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
@@ -687,7 +688,14 @@ public class K8sTaskHelper {
       return manifestFiles;
     }
 
-    String valuesFileOptions = writeValuesToFile(k8sDelegateTaskParams.getWorkingDirectory(), valuesFiles);
+    String valuesFileOptions = null;
+    try {
+      valuesFileOptions = writeValuesToFile(k8sDelegateTaskParams.getWorkingDirectory(), valuesFiles);
+    } catch (KubernetesValuesException kvexception) {
+      String message = kvexception.getParams().get("reason").toString();
+      executionLogCallback.saveExecutionLog(message, ERROR);
+      throw new KubernetesValuesException(message, kvexception.getCause());
+    }
 
     logger.info("Values file options: " + valuesFileOptions);
 
