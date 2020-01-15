@@ -21,9 +21,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -58,8 +56,8 @@ public class OwnerRule implements TestRule {
   public static final String GHPRB_PULL_AUTHOR_EMAIL = "ghprbPullAuthorEmail";
 
   public static final String PLATFORM = "PL";
-  public static final String CONTINUOUS_DEPLOYMENT_PLATFORM = "CD Platform";
-  public static final String CONTINUOUS_DEPLOYMENT_CORE = "CD Core";
+  public static final String CONTINUOUS_DEPLOYMENT_PLATFORM = "CDP";
+  public static final String CONTINUOUS_DEPLOYMENT_CORE = "CDC";
   public static final String CONTINUOUS_VERIFICATION = "CV";
   public static final String CONTINUOUS_EFFICIENCY = "CE";
   public static final String DEVELOPER_EXPERIENCE = "DX";
@@ -102,7 +100,7 @@ public class OwnerRule implements TestRule {
   public static final String SOWMYA = "sowmya.k";
   public static final String SRINIVAS = "srinivas";
   public static final String SRIRAM = "sriram";
-  public static final String SATYAM = "satyam";
+  public static final String SATYAM = "satyam.shanker";
   public static final String UJJAWAL = "ujjawal.prasad";
   public static final String UTKARSH = "utkarsh.gupta";
   public static final String VAIBHAV_SI = "vaibhav.si";
@@ -135,41 +133,28 @@ public class OwnerRule implements TestRule {
           .put(HARSH, defaultDevInfo(HARSH).slack("UJ1CDM3FY").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(HITESH, defaultDevInfo(HITESH).slack("UK41C9QJH").team(CONTINUOUS_EFFICIENCY).build())
           .put(JUHI, DevInfo.builder().email("juhi.agrawal@harness.io").slack("UL1KX4K1S").build())
-          .put(KAMAL, defaultDevInfo(KAMAL).team(CONTINUOUS_VERIFICATION).slack("UKFQ1PQBH").build())
+          .put(KAMAL, defaultDevInfo(KAMAL).slack("UKFQ1PQBH").team(CONTINUOUS_VERIFICATION).build())
           .put(MEENAKSHI, DevInfo.builder().email("meenakshi.raikwar@harness.io").slack("UKP2AEUNA").build())
           .put(NATARAJA, defaultDevInfo(NATARAJA).slack("UDQAS9J5C").team(PLATFORM).build())
-          .put(PARNIAN,
-              DevInfo.builder().email("parnian@harness.io").team(CONTINUOUS_VERIFICATION).slack("U89A5MLQK").build())
+          .put(PARNIAN, defaultDevInfo(PARNIAN).slack("U89A5MLQK").team(CONTINUOUS_VERIFICATION).build())
           .put(POOJA, DevInfo.builder().email("pooja@harness.io").slack("UDDA9L0D6").build())
           .put(PRANJAL, DevInfo.builder().email("pranjal@harness.io").slack("UBV049Q5B").build())
           .put(PRASHANT, defaultDevInfo(PRASHANT).slack("UJLBB7ULT").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(PRAVEEN, defaultDevInfo(PRAVEEN).team(CONTINUOUS_VERIFICATION).slack("UAQH9QHSB").build())
+          .put(PRAVEEN, defaultDevInfo(PRAVEEN).slack("UAQH9QHSB").team(CONTINUOUS_VERIFICATION).build())
           .put(PUNEET, defaultDevInfo(PUNEET).slack("U8PMB1XKM").team(CONTINUOUS_EFFICIENCY).build())
           .put(RAGHU, defaultDevInfo(RAGHU).slack("U4Z2PG2TD").team(CONTINUOUS_VERIFICATION).build())
-          .put(RAMA, defaultDevInfo(RAMA).team(DEVELOPER_EXPERIENCE).slack("U69BLRG72").build())
+          .put(RAMA, defaultDevInfo(RAMA).slack("U69BLRG72").team(DEVELOPER_EXPERIENCE).build())
           .put(ROHIT, defaultDevInfo(ROHIT).slack("UKLSUUCAC").team(CONTINUOUS_EFFICIENCY).build())
           .put(ROHIT_KUMAR, defaultDevInfo(ROHIT_KUMAR).slack("UL92UJN4S").team(DEVELOPER_EXPERIENCE).build())
           .put(ROHITKARELIA, defaultDevInfo(ROHITKARELIA).slack("UP48HU3T9").team(SWAT).build())
           .put(RUSHABH, DevInfo.builder().email("rushabh@harness.io").slack("U8M736D36").build())
-          .put(ADWAIT,
-              defaultDevInfo(ADWAIT)
-                  .email("adwait.bhandare@harness.io")
-                  .slack("U8PL7JRMG")
-                  .team(CONTINUOUS_DEPLOYMENT_PLATFORM)
-                  .build())
-          .put(SATYAM, defaultDevInfo("satyam.shanker").slack("U9Z3R0GL8").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
+          .put(ADWAIT, defaultDevInfo(ADWAIT).slack("U8PL7JRMG").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
+          .put(SATYAM, defaultDevInfo(SATYAM).slack("U9Z3R0GL8").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(SHASWAT, DevInfo.builder().email("shaswat.deep@harness.io").slack("UL9J5EH7A").build())
           .put(SHUBHANSHU, defaultDevInfo(SHUBHANSHU).slack("UKLTRSAN9").team(CONTINUOUS_EFFICIENCY).build())
-          .put(SOWMYA,
-              DevInfo.builder()
-                  .email("sowmya.k@harness.io")
-                  .team(CONTINUOUS_VERIFICATION)
-                  .slack("UHM19HBKM")
-                  .jira("5cb679914064460e407ec221")
-                  .build())
+          .put(SOWMYA, defaultDevInfo(SOWMYA).slack("UHM19HBKM").team(CONTINUOUS_VERIFICATION).build())
           .put(SRINIVAS, defaultDevInfo(SRINIVAS).slack("U4QC23961").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(SRIRAM,
-              DevInfo.builder().email("sriram@harness.io").team(CONTINUOUS_VERIFICATION).slack("U5L475PK5").build())
+          .put(SRIRAM, defaultDevInfo(SRIRAM).slack("U5L475PK5").team(CONTINUOUS_VERIFICATION).build())
           .put(UJJAWAL, defaultDevInfo(UJJAWAL).slack("UKLSV01DW").team(PLATFORM).build())
           .put(UTKARSH, defaultDevInfo(UTKARSH).slack("UKGF0UL58").team(PLATFORM).build())
           .put(VAIBHAV_SI, defaultDevInfo(VAIBHAV_SI).slack("UCK76T36U").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
@@ -177,7 +162,7 @@ public class OwnerRule implements TestRule {
           .put(VIKAS, DevInfo.builder().email("vikas.naiyar@harness.io").slack("UE7M4CNMA").build())
           .put(YOGESH, defaultDevInfo(YOGESH).slack("UJVLUUXAT").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(VARDAN_BANSAL, defaultDevInfo(VARDAN_BANSAL).slack("UH8NYAAUU").team(DEVELOPER_EXPERIENCE).build())
-          .put(NANDAN, defaultDevInfo(NANDAN).team(CONTINUOUS_VERIFICATION).slack("UKMS5KCBS").build())
+          .put(NANDAN, defaultDevInfo(NANDAN).slack("UKMS5KCBS").team(CONTINUOUS_VERIFICATION).build())
           .put(UNKNOWN, DevInfo.builder().email("n/a").slack("channel").build())
           .build();
 
@@ -272,7 +257,7 @@ public class OwnerRule implements TestRule {
 
       Issue issue = searchResult.issues.get(0);
 
-      if (!issue.getProject().getKey().equals(jiraProject(devInfo))) {
+      if (!issue.getProject().getKey().equals(devInfo.getTeam())) {
         // We cannot automatically move an issue from one project to another.
         // Instead we are going to mark the current one as rejected.
         // Next time we would not find it and we will create a new one.
@@ -282,14 +267,6 @@ public class OwnerRule implements TestRule {
 
         issue.transition().execute("Rejected");
         return;
-      }
-
-      String jiraComponent = jiraComponent(devInfo);
-      if (jiraComponent != null
-          && (issue.getComponents().size() != 1 || !jiraComponent.equals(issue.getComponents().get(0).getName()))) {
-        List<String> list = new ArrayList();
-        list.add(jiraComponent);
-        issue.update().field(COMPONENTS, list).execute();
       }
 
       if (devInfo.getJira() != null && !issue.getAssignee().getEmail().equals(devInfo.getEmail())) {
@@ -305,39 +282,14 @@ public class OwnerRule implements TestRule {
     }
   }
 
-  private static String jiraProject(DevInfo devInfo) {
-    if (devInfo.getTeam() == null) {
-      return null;
-    }
-    return devInfo.getTeam().split(" ")[0];
-  }
-
-  private static String jiraComponent(DevInfo devInfo) {
-    if (devInfo.getTeam() == null) {
-      return null;
-    }
-    if (devInfo.getTeam().split(" ").length == 1) {
-      return null;
-    }
-    return devInfo.getTeam();
-  }
-
   private static Issue.FluentCreate generateJiraCreate(String test, DevInfo devInfo, String priority)
       throws JiraException {
-    Issue.FluentCreate create = getJira()
-                                    .createIssue(jiraProject(devInfo), "Bug")
-                                    .field(ASSIGNEE, devInfo.getJira())
-                                    .field(SUMMARY, test + " " + NEEDS_FIXING)
-                                    .field(PRIORITY, priority)
-                                    .field(DESCRIPTION, DESCRIPTION_VALUE);
-
-    String jiraComponent = jiraComponent(devInfo);
-    if (jiraComponent != null) {
-      List<String> list = new ArrayList();
-      list.add(jiraComponent);
-      create.field(COMPONENTS, list);
-    }
-    return create;
+    return getJira()
+        .createIssue(devInfo.getTeam(), "Bug")
+        .field(ASSIGNEE, devInfo.getJira())
+        .field(SUMMARY, test + " " + NEEDS_FIXING)
+        .field(PRIORITY, priority)
+        .field(DESCRIPTION, DESCRIPTION_VALUE);
   }
 
   public static void fileOwnerAs(String developer, String type) {
