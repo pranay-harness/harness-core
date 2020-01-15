@@ -9,6 +9,7 @@ import io.harness.testframework.framework.matchers.LoginMatcher;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import org.jboss.aerogear.security.otp.Totp;
+import software.wings.beans.LoginRequest;
 import software.wings.beans.User;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 
@@ -86,18 +87,20 @@ public class TwoFactorAuthRestUtils {
     GenericType<RestResponse<User>> genericType = new GenericType<RestResponse<User>>() {};
     String basicAuthValue =
         "Basic " + encodeBase64String(String.format("%s:%s", userName, password).getBytes(StandardCharsets.UTF_8));
+    LoginRequest loginRequest = LoginRequest.builder().authorization(basicAuthValue).build();
     RestResponse<User> userRestResponse =
-        Setup.portal().header("Authorization", basicAuthValue).get("/users/login").as(genericType.getType());
+        Setup.portal().body(loginRequest).post("/users/login").as(genericType.getType());
     User user = userRestResponse.getResource();
     String twoFactorJwtToken = user.getTwoFactorJwtToken();
     Totp otp = new Totp(secretKey);
     String twoFactorCode = otp.now();
     basicAuthValue = "JWT "
         + encodeBase64String(String.format("%s:%s", twoFactorJwtToken, twoFactorCode).getBytes(StandardCharsets.UTF_8));
+    loginRequest = LoginRequest.builder().authorization(basicAuthValue).build();
     userRestResponse = Setup.portal()
-                           .header("Authorization", basicAuthValue)
+                           .body(loginRequest)
                            .queryParam("routingId", accountId)
-                           .get("/users/two-factor-login")
+                           .post("/users/two-factor-login")
                            .as(genericType.getType());
     user = userRestResponse.getResource();
     return user;

@@ -43,8 +43,8 @@ import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureName;
 import software.wings.beans.LoginRequest;
+import software.wings.beans.LoginTypeRequest;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
@@ -71,9 +71,7 @@ import software.wings.service.impl.MarketplaceTypeLogContext;
 import software.wings.service.impl.ReCaptchaVerifier;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
-import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.AccountPermissionUtils;
@@ -132,24 +130,21 @@ public class UserResource {
   private CacheManager cacheManager;
   private HarnessUserGroupService harnessUserGroupService;
   private UserGroupService userGroupService;
-  private UsageRestrictionsService usageRestrictionsService;
   private AccountPermissionUtils accountPermissionUtils;
   private MainConfiguration mainConfiguration;
   private AccountPasswordExpirationJob accountPasswordExpirationJob;
   private ReCaptchaVerifier reCaptchaVerifier;
-  private FeatureFlagService featureFlagService;
   private static final String BASIC = "Basic";
   @Inject
   public UserResource(UserService userService, AuthService authService, AccountService accountService,
-      UsageRestrictionsService usageRestrictionsService, AccountPermissionUtils accountPermissionUtils,
-      AuthenticationManager authenticationManager, TwoFactorAuthenticationManager twoFactorAuthenticationManager,
-      CacheManager cacheManager, HarnessUserGroupService harnessUserGroupService, UserGroupService userGroupService,
+      AccountPermissionUtils accountPermissionUtils, AuthenticationManager authenticationManager,
+      TwoFactorAuthenticationManager twoFactorAuthenticationManager, CacheManager cacheManager,
+      HarnessUserGroupService harnessUserGroupService, UserGroupService userGroupService,
       MainConfiguration mainConfiguration, AccountPasswordExpirationJob accountPasswordExpirationJob,
-      ReCaptchaVerifier reCaptchaVerifier, FeatureFlagService featureFlagService) {
+      ReCaptchaVerifier reCaptchaVerifier) {
     this.userService = userService;
     this.authService = authService;
     this.accountService = accountService;
-    this.usageRestrictionsService = usageRestrictionsService;
     this.accountPermissionUtils = accountPermissionUtils;
     this.authenticationManager = authenticationManager;
     this.twoFactorAuthenticationManager = twoFactorAuthenticationManager;
@@ -159,7 +154,6 @@ public class UserResource {
     this.mainConfiguration = mainConfiguration;
     this.accountPasswordExpirationJob = accountPasswordExpirationJob;
     this.reCaptchaVerifier = reCaptchaVerifier;
-    this.featureFlagService = featureFlagService;
   }
 
   /**
@@ -559,33 +553,6 @@ public class UserResource {
    *
    * @return the rest response
    */
-  @GET
-  @Path("login")
-  @PublicApi
-  @Timed
-  @ExceptionMetered
-  public RestResponse<User> login(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization,
-      @QueryParam("accountId") String accountId, @QueryParam("captcha") @Nullable String captchaToken) {
-    if (featureFlagService.isEnabled(FeatureName.LOGIN_POST_REQUEST, null)) {
-      throw new InvalidRequestException("UNEXPECTED_LOGIN_GET_CALL");
-    }
-    if (!StringUtils.isEmpty(captchaToken)) {
-      reCaptchaVerifier.verify(captchaToken);
-    }
-
-    // accountId field is optional, it could be null.
-    return new RestResponse<>(
-        authenticationManager.defaultLoginAccount(authenticationManager.extractToken(authorization, BASIC), accountId));
-  }
-
-  /**
-   * Login a user through basic auth.
-   *
-   * If accountId is specified, it will authenticate using the specified account's auth mechanism. Otherwise
-   * it will authenticate using the user's default/primary account's auth mechanism.
-   *
-   * @return the rest response
-   */
   @POST
   @Path("login")
   @PublicApi
@@ -593,9 +560,6 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse<User> login(LoginRequest loginBody, @QueryParam("accountId") String accountId,
       @QueryParam("captcha") @Nullable String captchaToken) {
-    if (!featureFlagService.isEnabled(FeatureName.LOGIN_POST_REQUEST, null)) {
-      throw new InvalidRequestException("UNEXPECTED_LOGIN_POST_CALL");
-    }
     if (!StringUtils.isEmpty(captchaToken)) {
       reCaptchaVerifier.verify(captchaToken);
     }
@@ -627,41 +591,14 @@ public class UserResource {
         authenticationManager.extractToken(loginBody.getAuthorization(), BASIC)));
   }
 
-  /**
-   * Harness local login.
-   * To be used in case of lockout scenarios, if the default login mechanism is 3rd party provider.
-   * Only users having account management permissions will be able to login using this.
-   *
-   * @return the rest response
-   */
-  @GET
-  @Path("harness-local-login")
-  @PublicApi
-  @Timed
-  @ExceptionMetered
-  public RestResponse<User> forceLoginUsingHarnessPassword(
-      @HeaderParam(HttpHeaders.AUTHORIZATION) String authorization) {
-    if (!DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
-      throw new InvalidRequestException("Invalid Login mechanism");
-    }
-
-    return new RestResponse<>(
-        authenticationManager.loginUsingHarnessPassword(authenticationManager.extractToken(authorization, BASIC)));
-  }
-
-  /**
-   * Login.
-   *
-   * @return the rest response
-   */
-  @GET
+  @POST
   @Path("two-factor-login")
   @PublicApi
   @Timed
   @ExceptionMetered
-  public RestResponse<User> twoFactorLogin(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization) {
-    return new RestResponse<>(
-        twoFactorAuthenticationManager.authenticate(authenticationManager.extractToken(authorization, "JWT")));
+  public RestResponse<User> twoFactorLogin(@NotNull LoginRequest loginRequest) {
+    return new RestResponse<>(twoFactorAuthenticationManager.authenticate(
+        authenticationManager.extractToken(loginRequest.getAuthorization(), "JWT")));
   }
 
   /**
@@ -672,15 +609,12 @@ public class UserResource {
    *
    * @return the rest response
    */
-  @GET
+  @POST
   @Path("logintype")
   @PublicApi
-  @Timed
-  @ExceptionMetered
   public RestResponse<LoginTypeResponse> getLoginType(
-      @QueryParam("userName") String userName, @QueryParam("accountId") String accountId) {
-    // accountId field is optional, it could be null.
-    return new RestResponse<>(authenticationManager.getLoginTypeResponse(urlDecode(userName), accountId));
+      @NotNull LoginTypeRequest loginTypeRequest, @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(authenticationManager.getLoginTypeResponse(loginTypeRequest.getUserName(), accountId));
   }
 
   @GET

@@ -31,7 +31,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.FeatureName;
 import software.wings.beans.LoginRequest;
 import software.wings.beans.User;
 import software.wings.exception.WingsExceptionMapper;
@@ -41,9 +40,7 @@ import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.service.impl.ReCaptchaVerifier;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
-import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.AccountPermissionUtils;
@@ -72,9 +69,7 @@ public class UserResourceTest extends WingsBaseTest {
   public static final ReCaptchaVerifier RE_CAPTCHA_VERIFIER = mock(ReCaptchaVerifier.class);
   public static final TwoFactorAuthenticationManager TWO_FACTOR_AUTHENTICATION_MANAGER =
       mock(TwoFactorAuthenticationManager.class);
-  static final UsageRestrictionsService USAGE_RESTRICTIONS_SERVICE = mock(UsageRestrictionsService.class);
   static final AccountPermissionUtils ACCOUNT_PERMISSION_UTILS = mock(AccountPermissionUtils.class);
-  static final FeatureFlagService FEATURE_FLAG_SERVICE = mock(FeatureFlagService.class);
   @Inject @InjectMocks private UserResource userResource;
 
   /**
@@ -83,10 +78,9 @@ public class UserResourceTest extends WingsBaseTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, USAGE_RESTRICTIONS_SERVICE,
-              ACCOUNT_PERMISSION_UTILS, AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER, CACHE_HELPER,
-              HARNESS_USER_GROUP_SERVICE, USER_GROUP_SERVICE, MAIN_CONFIGURATION, ACCOUNT_PASSWORD_EXPIRATION_JOB,
-              RE_CAPTCHA_VERIFIER, FEATURE_FLAG_SERVICE))
+          .addResource(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, ACCOUNT_PERMISSION_UTILS,
+              AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER, CACHE_HELPER, HARNESS_USER_GROUP_SERVICE,
+              USER_GROUP_SERVICE, MAIN_CONFIGURATION, ACCOUNT_PASSWORD_EXPIRATION_JOB, RE_CAPTCHA_VERIFIER))
           .addProvider(WingsExceptionMapper.class)
           .addProvider(MultiPartFeature.class)
           .build();
@@ -129,7 +123,6 @@ public class UserResourceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldLoginUserUsingPostRequest() {
     when(AUTHENTICATION_MANAGER.defaultLoginAccount(anyString(), anyString())).thenReturn(new User());
-    when(FEATURE_FLAG_SERVICE.isEnabled(FeatureName.LOGIN_POST_REQUEST, null)).thenReturn(true);
     String username = "userEmail";
     String password = "userPassword";
     String actualString = username + ":" + password;

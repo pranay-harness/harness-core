@@ -11,6 +11,7 @@ import io.harness.scm.SecretName;
 import io.harness.testframework.framework.matchers.LoginMatcher;
 import io.restassured.specification.RequestSpecification;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.LoginRequest;
 import software.wings.beans.User;
 
 import java.nio.charset.StandardCharsets;
@@ -38,9 +39,10 @@ public class Setup {
   public static User loginUser(String email, String password) {
     String basicAuthValue =
         "Basic " + encodeBase64String(String.format("%s:%s", email, password).getBytes(StandardCharsets.UTF_8));
+    LoginRequest loginRequest = LoginRequest.builder().authorization(basicAuthValue).build();
     GenericType<RestResponse<User>> genericType = new GenericType<RestResponse<User>>() {};
     RestResponse<User> userRestResponse =
-        Setup.portal().header("Authorization", basicAuthValue).get("/users/login").as(genericType.getType());
+        Setup.portal().body(loginRequest).post("/users/login").as(genericType.getType());
     if (userRestResponse.getResource() == null) {
       throw new UnexpectedException(String.valueOf(userRestResponse.getResponseMessages()));
     }
@@ -54,12 +56,10 @@ public class Setup {
   public static String getAuthTokenForAccount(String accountId, String email, String password) {
     String basicAuthValue =
         "Basic " + encodeBase64String(String.format("%s:%s", email, password).getBytes(StandardCharsets.UTF_8));
+    LoginRequest loginRequest = LoginRequest.builder().authorization(basicAuthValue).build();
     GenericType<RestResponse<User>> genericType = new GenericType<RestResponse<User>>() {};
-    RestResponse<User> userRestResponse = Setup.portal()
-                                              .header("Authorization", basicAuthValue)
-                                              .queryParam("accountId", accountId)
-                                              .get("/users/login")
-                                              .as(genericType.getType());
+    RestResponse<User> userRestResponse =
+        Setup.portal().queryParam("accountId", accountId).post("/users/login", loginRequest).as(genericType.getType());
     assertThat(userRestResponse).isNotNull();
     User user = userRestResponse.getResource();
     assertThat(user).isNotNull();

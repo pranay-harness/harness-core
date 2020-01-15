@@ -11,5 +11,4 @@ public class LoginTypeResponse {
   private SSORequest SSORequest;
   private boolean isOauthEnabled;
   private boolean showCaptcha;
-  private boolean postRequest;
 }

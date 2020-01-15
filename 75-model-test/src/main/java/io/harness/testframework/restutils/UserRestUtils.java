@@ -11,6 +11,7 @@ import io.harness.testframework.framework.constants.UserConstants;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import software.wings.beans.Account;
+import software.wings.beans.LoginRequest;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.resources.UserResource;
@@ -59,9 +60,10 @@ public class UserRestUtils {
   public static User loginUserOrNull(String email, String password) {
     String basicAuthValue =
         "Basic " + encodeBase64String(String.format("%s:%s", email, password).getBytes(StandardCharsets.UTF_8));
+    LoginRequest loginRequest = LoginRequest.builder().authorization(basicAuthValue).build();
     GenericType<RestResponse<User>> genericType = new GenericType<RestResponse<User>>() {};
     RestResponse<User> userRestResponse =
-        Setup.portal().header("Authorization", basicAuthValue).get("/users/login").as(genericType.getType());
+        Setup.portal().body(loginRequest).post("/users/login").as(genericType.getType());
     assertThat(userRestResponse).isNotNull();
     User user = userRestResponse.getResource();
     return user;
