@@ -333,7 +333,7 @@ public class TriggerServiceHelper {
   }
 
   public static Map<String, String> overrideTriggerVariables(
-      boolean infraDefEnabled, Trigger trigger, ExecutionArgs executionArgs) {
+      boolean infraDefEnabled, Trigger trigger, ExecutionArgs executionArgs, List<Variable> updatedVariables) {
     // Workflow variables come from Webhook
     Map<String, String> webhookVariableValues =
         executionArgs.getWorkflowVariables() == null ? new HashMap<>() : executionArgs.getWorkflowVariables();
@@ -352,11 +352,15 @@ public class TriggerServiceHelper {
         }
       }
     }
-    triggerWorkflowVariableValues = triggerWorkflowVariableValues.entrySet()
-                                        .stream()
-                                        .filter(variableEntry -> isNotEmpty(variableEntry.getValue()))
-                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
+    // Current updated variables present in pipeline/workflow
+    List<String> updatedVariablesNames = updatedVariables != null
+        ? updatedVariables.stream().map(Variable::getName).collect(toList())
+        : new ArrayList<>();
+    if (isNotEmpty(triggerWorkflowVariableValues)) {
+      triggerWorkflowVariableValues.entrySet().removeIf(
+          entry -> !updatedVariablesNames.contains(entry.getKey()) || isEmpty(entry.getValue()));
+    }
     return triggerWorkflowVariableValues;
   }
 

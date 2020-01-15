@@ -135,7 +135,7 @@ public class WebHookServiceImpl implements WebHookService {
       DeploymentTrigger deploymentTrigger = deploymentTriggerService.getTriggerByWebhookToken(token);
       String accountId = getAccountId(token, trigger, deploymentTrigger);
       try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-        logger.info("Received the Webhook Request {} with accountId ", String.valueOf(webHookRequest), accountId);
+        logger.info("Received the Webhook Request {} with accountId {}", webHookRequest, accountId);
       }
       if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
         if (deploymentTrigger == null) {
@@ -274,7 +274,7 @@ public class WebHookServiceImpl implements WebHookService {
   private String getAccountId(String token, Trigger trigger, DeploymentTrigger deploymentTrigger) {
     if (trigger == null) {
       if (deploymentTrigger != null) {
-        return deploymentTriggerService.getTriggerByWebhookToken(token).getAccountId();
+        return deploymentTrigger.getAccountId();
       } else {
         return null;
       }

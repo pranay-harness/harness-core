@@ -406,7 +406,7 @@ public class TriggerServiceImpl implements TriggerService {
       List<Artifact> artifacts = new ArrayList<>();
       Trigger trigger = triggerServiceHelper.getTrigger(appId, webHookToken);
       logger.info("Received WebHook request  for the Trigger {} with Service Build Numbers {}  and parameters {}",
-          trigger.getPipelineId(), String.valueOf(serviceArtifactMapping), String.valueOf(parameters));
+          trigger.getPipelineId(), serviceArtifactMapping, parameters);
       if (isNotEmpty(serviceArtifactMapping)) {
         addArtifactsFromVersionsOfWebHook(trigger, serviceArtifactMapping, artifacts);
       }
@@ -737,7 +737,7 @@ public class TriggerServiceImpl implements TriggerService {
     notNullCheck("Pipeline was deleted or does not exist", pipeline, USER);
 
     Map<String, String> triggerWorkflowVariableValues =
-        overrideTriggerVariables(infraDefEnabled, trigger, executionArgs);
+        overrideTriggerVariables(infraDefEnabled, trigger, executionArgs, pipeline.getPipelineVariables());
 
     List<Variable> pipelineVariables = pipeline.getPipelineVariables();
     String envId = null;
@@ -881,8 +881,8 @@ public class TriggerServiceImpl implements TriggerService {
     notNullCheck("Orchestration Workflow not present", workflow.getOrchestrationWorkflow(), USER);
     boolean infraDefEnabled = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, workflow.getAccountId());
 
-    Map<String, String> triggerWorkflowVariableValues =
-        overrideTriggerVariables(infraDefEnabled, trigger, executionArgs);
+    Map<String, String> triggerWorkflowVariableValues = overrideTriggerVariables(
+        infraDefEnabled, trigger, executionArgs, workflow.getOrchestrationWorkflow().getUserVariables());
 
     String envId = null;
     if (BUILD == workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()) {
