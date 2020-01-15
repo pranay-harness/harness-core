@@ -55,7 +55,7 @@ public class BillingCalculationService {
       cpuUnit = pricingData.getCpuUnit();
       memoryMb = pricingData.getMemoryMb();
     }
-    logger.info("Billing amount {} {} {}", billingAmount, pricePerHour, instanceActiveSeconds);
+    logger.debug("Billing amount {} {} {}", billingAmount, pricePerHour, instanceActiveSeconds);
     BillingAmountBreakup billingAmountForResource =
         getBillingAmountForResource(instanceData, billingAmount, cpuUnit, memoryMb);
     return new BillingData(billingAmountForResource,

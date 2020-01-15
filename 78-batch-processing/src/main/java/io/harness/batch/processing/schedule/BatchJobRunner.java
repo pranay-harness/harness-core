@@ -5,6 +5,7 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.entities.BatchJobScheduledData;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -53,11 +54,16 @@ public class BatchJobRunner {
                 .addString(CCMJobConstants.JOB_START_DATE, String.valueOf(startInstant.toEpochMilli()))
                 .addString(CCMJobConstants.JOB_END_DATE, String.valueOf(endInstant.toEpochMilli()))
                 .toJobParameters();
-        jobLauncher.run(job, params);
-        BatchJobScheduledData batchJobScheduledData =
-            new BatchJobScheduledData(accountId, batchJobType, startInstant, endInstant);
-        batchJobScheduledDataService.create(batchJobScheduledData);
-        startInstant = endInstant;
+        BatchStatus status = jobLauncher.run(job, params).getStatus();
+        logger.info("Job status {}", status);
+        if (status == BatchStatus.COMPLETED) {
+          BatchJobScheduledData batchJobScheduledData =
+              new BatchJobScheduledData(accountId, batchJobType, startInstant, endInstant);
+          batchJobScheduledDataService.create(batchJobScheduledData);
+          startInstant = endInstant;
+        } else {
+          break;
+        }
       } else {
         break;
       }

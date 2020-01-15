@@ -19,7 +19,6 @@ import retrofit2.Response;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -33,8 +32,7 @@ public class VMPricingServiceImpl implements VMPricingService {
     this.banzaiPricingClient = banzaiPricingClient;
   }
 
-  private Cache<String, VMComputePricingInfo> vmPricingInfoCache =
-      Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).build();
+  private Cache<String, VMComputePricingInfo> vmPricingInfoCache = Caffeine.newBuilder().build();
 
   @Override
   public VMComputePricingInfo getComputeVMPricingInfo(String instanceType, String region, CloudProvider cloudProvider) {
@@ -54,7 +52,6 @@ public class VMPricingServiceImpl implements VMPricingService {
 
   private VMComputePricingInfo getVMPricingInfoFromCache(
       String instanceType, String region, CloudProvider cloudProvider) {
-    logger.info("Cache size {}", vmPricingInfoCache.asMap().size());
     String vmCacheKey = getVMCacheKey(instanceType, region, cloudProvider);
     return vmPricingInfoCache.getIfPresent(vmCacheKey);
   }
@@ -67,7 +64,7 @@ public class VMPricingServiceImpl implements VMPricingService {
       List<VMComputePricingInfo> products = pricingInfo.body().getProducts();
       products.forEach(
           product -> vmPricingInfoCache.put(getVMCacheKey(product.getType(), region, cloudProvider), product));
-
+      logger.info("Cache size {}", vmPricingInfoCache.asMap().size());
       logger.info("Pricing response {} {}", pricingInfo.toString(), pricingInfo.body().getProducts());
     } catch (IOException e) {
       logger.error("Exception in pricing service ", e);
