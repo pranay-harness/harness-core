@@ -4,8 +4,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.graphql.utils.GraphQLConstants.APP_ID_ARG;
-import static software.wings.graphql.utils.GraphQLConstants.CREATE_APPLICATION_API_PATH;
+import static software.wings.graphql.utils.GraphQLConstants.CREATE_APPLICATION_API;
+import static software.wings.graphql.utils.GraphQLConstants.DELETE_APPLICATION_API;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -56,6 +58,8 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 @Singleton
 public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
+  private static final Set<String> apisToEvictUserPermissionRestrictionCache =
+      ImmutableSet.of(CREATE_APPLICATION_API, DELETE_APPLICATION_API);
   private AuthRuleFilter authRuleFilter;
   private AuthHandler authHandler;
   private AuthService authService;
@@ -338,7 +342,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
   public <I, O> void handlePostMutation(MutationContext mutationContext, I parameter, O mutationResult) {
     final DataFetchingEnvironment dataFetchingEnvironment = mutationContext.getDataFetchingEnvironment();
 
-    if (CREATE_APPLICATION_API_PATH.equals(dataFetchingEnvironment.getField().getName())) {
+    if (apisToEvictUserPermissionRestrictionCache.contains(dataFetchingEnvironment.getField().getName())) {
       authService.evictUserPermissionAndRestrictionCacheForAccount(mutationContext.getAccountId(), true, true);
     }
   }
