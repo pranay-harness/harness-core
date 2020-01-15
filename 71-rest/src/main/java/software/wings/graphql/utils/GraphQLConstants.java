@@ -14,7 +14,8 @@ public class GraphQLConstants {
       "You've reached your account's rate limit for data queries. Please try again later.";
   public static final String INVALID_API_KEY = "Invalid Api Key";
   public static final String INVALID_TOKEN = "Invalid Token";
-  public static final String CREATE_APPLICATION_API_PATH = "createApplication";
+  public static final String CREATE_APPLICATION_API = "createApplication";
+  public static final String DELETE_APPLICATION_API = "deleteApplication";
   public static final String HTTP_SERVLET_REQUEST = "httpServletRequest";
   public static final String GRAPHQL_QUERY_STRING = "graphqlQueryString";
 }

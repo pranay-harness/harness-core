@@ -5,7 +5,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.graphql.utils.GraphQLConstants.CREATE_APPLICATION_API_PATH;
+import static software.wings.graphql.utils.GraphQLConstants.CREATE_APPLICATION_API;
+import static software.wings.graphql.utils.GraphQLConstants.DELETE_APPLICATION_API;
 
 import graphql.language.Field;
 import graphql.schema.DataFetchingEnvironment;
@@ -44,11 +45,14 @@ public class AuthRuleGraphQLTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_handlePostMutation() {
     final DataFetchingEnvironment dataFetchingEnvironment = Mockito.mock(DataFetchingEnvironment.class);
-    doReturn(new Field(CREATE_APPLICATION_API_PATH)).when(dataFetchingEnvironment).getField();
+    doReturn(new Field(CREATE_APPLICATION_API)).when(dataFetchingEnvironment).getField();
     doNothing().when(authService).evictUserPermissionAndRestrictionCacheForAccount("accountid", true, true);
     final MutationContext mutationContext =
         MutationContext.builder().accountId("accountid").dataFetchingEnvironment(dataFetchingEnvironment).build();
     authRuleGraphQL.handlePostMutation(mutationContext, new Object(), new Object());
     verify(authService, times(1)).evictUserPermissionAndRestrictionCacheForAccount("accountid", true, true);
+    doReturn(new Field(DELETE_APPLICATION_API)).when(dataFetchingEnvironment).getField();
+    authRuleGraphQL.handlePostMutation(mutationContext, new Object(), new Object());
+    verify(authService, times(2)).evictUserPermissionAndRestrictionCacheForAccount("accountid", true, true);
   }
 }
