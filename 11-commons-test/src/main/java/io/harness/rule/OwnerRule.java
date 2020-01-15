@@ -149,7 +149,7 @@ public class OwnerRule implements TestRule {
           .put(RAMA, defaultDevInfo(RAMA).team(DEVELOPER_EXPERIENCE).slack("U69BLRG72").build())
           .put(ROHIT, defaultDevInfo(ROHIT).slack("UKLSUUCAC").team(CONTINUOUS_EFFICIENCY).build())
           .put(ROHIT_KUMAR, defaultDevInfo(ROHIT_KUMAR).slack("UL92UJN4S").team(DEVELOPER_EXPERIENCE).build())
-          .put(ROHITKARELIA, DevInfo.builder().email("rohit.karelia@harness.io").slack("UP48HU3T9").build())
+          .put(ROHITKARELIA, defaultDevInfo(ROHITKARELIA).slack("UP48HU3T9").team(SWAT).build())
           .put(RUSHABH, DevInfo.builder().email("rushabh@harness.io").slack("U8M736D36").build())
           .put(ADWAIT,
               defaultDevInfo(ADWAIT)

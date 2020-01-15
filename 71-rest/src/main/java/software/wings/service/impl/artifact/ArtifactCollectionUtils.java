@@ -763,18 +763,20 @@ public class ArtifactCollectionUtils {
       return true;
     }
 
-    SettingAttribute settingAttribute = settingsService.getOnlyConnectivityError(artifactStream.getSettingId());
-    if (settingAttribute == null) {
-      throw new InvalidRequestException(
-          format("%s: Invalid artifact stream setting: %s", prefix, artifactStream.getSettingId()));
+    if (!CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+      SettingAttribute settingAttribute = settingsService.getOnlyConnectivityError(artifactStream.getSettingId());
+      if (settingAttribute == null) {
+        throw new InvalidRequestException(
+            format("%s: Invalid artifact stream setting: %s", prefix, artifactStream.getSettingId()));
+      }
+      if (isNotBlank(settingAttribute.getConnectivityError())) {
+        logger.info(
+            "{}: Skipping {} for artifact stream: {}, because of connectivity error in setting: {} and error: {}",
+            prefix, action, artifactStream.getUuid(), artifactStream.getSettingId(),
+            settingAttribute.getConnectivityError());
+        return true;
+      }
     }
-    if (isNotBlank(settingAttribute.getConnectivityError())) {
-      logger.info("{}: Skipping {} for artifact stream: {}, because of connectivity error in setting: {} and error: {}",
-          prefix, action, artifactStream.getUuid(), artifactStream.getSettingId(),
-          settingAttribute.getConnectivityError());
-      return true;
-    }
-
     return false;
   }
 }
