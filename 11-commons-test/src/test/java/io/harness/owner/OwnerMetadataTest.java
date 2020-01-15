@@ -24,7 +24,7 @@ public class OwnerMetadataTest extends CategoryTest {
 
     String developerId = OwnerRule.findDeveloperId(email);
     assertThat(developerId)
-        .as("You are not in the list of the owners or your email is incorect.\n"
+        .as("You are not in the list of the owners or your email is incorrect.\n"
             + "Add or correct your metadata in the OwnerRule class")
         .isNotNull();
 
