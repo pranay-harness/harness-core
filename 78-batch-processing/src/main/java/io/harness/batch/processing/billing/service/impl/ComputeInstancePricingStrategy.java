@@ -45,7 +45,6 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
       String region = instanceMetaData.get(InstanceMetaDataConstants.REGION);
       vmComputePricingInfo = vmPricingService.getComputeVMPricingInfo(instanceFamily, region, cloudProvider);
     }
-
     return PricingData.builder()
         .pricePerHour(getPricePerHour(zone, instanceCategory, vmComputePricingInfo))
         .cpuUnit(vmComputePricingInfo.getCpusPerVm() * 1024)
