@@ -1526,7 +1526,7 @@
         </repository>
         <repository>
             <id>spring-io</id>
-            <url>http://repo.spring.io/plugins-release/</url>
+            <url>https://repo.spring.io/plugins-release/</url>
         </repository>
         <repository>
             <id>michaelklishin</id>
@@ -1538,12 +1538,12 @@
             </snapshots>
             <id>bintray-palantir-releases</id>
             <name>bintray</name>
-            <url>http://palantir.bintray.com/releases</url>
+            <url>https://palantir.bintray.com/releases</url>
         </repository>
         <repository>
             <id>sonatype-nexus-releases</id>
             <name>Sonatype Nexus releases</name>
-            <url>http://oss.sonatype.org/content/repositories/releases</url>
+            <url>https://oss.sonatype.org/content/repositories/releases</url>
         </repository>
         <repository>
             <id>jitpack.io</id>
@@ -1555,7 +1555,7 @@
             </snapshots>
             <id>bintray</id>
             <name>bintray</name>
-            <url>http://jcenter.bintray.com</url>
+            <url>https://jcenter.bintray.com</url>
         </repository>
     </repositories>
     <pluginRepositories>
