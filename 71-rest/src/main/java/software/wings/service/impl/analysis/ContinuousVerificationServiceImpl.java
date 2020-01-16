@@ -23,6 +23,8 @@ import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_F
 import static software.wings.common.VerificationConstants.BUGSNAG_UI_DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+import static software.wings.common.VerificationConstants.DATADOG_END_TIME_PLACEHOLDER;
+import static software.wings.common.VerificationConstants.DATADOG_START_TIME_PLACEHOLDER;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.ERROR_METRIC_NAMES;
@@ -1575,6 +1577,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
       if (url.contains(VERIFICATION_HOST_PLACEHOLDER)) {
         url = url.replace(VERIFICATION_HOST_PLACEHOLDER, hostname);
+      }
+      if (url.contains(DATADOG_START_TIME_PLACEHOLDER)) {
+        url = url.replace(DATADOG_START_TIME_PLACEHOLDER, String.valueOf(config.getFromTime()));
+      }
+      if (url.contains(DATADOG_END_TIME_PLACEHOLDER)) {
+        url = url.replace(DATADOG_END_TIME_PLACEHOLDER, String.valueOf(config.getToTime()));
       }
       apmValidateCollectorConfig.setUrl(url);
       VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =

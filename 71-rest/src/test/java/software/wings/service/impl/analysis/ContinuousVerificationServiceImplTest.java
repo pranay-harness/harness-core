@@ -14,8 +14,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.common.VerificationConstants.DATADOG_END_TIME_PLACEHOLDER;
+import static software.wings.common.VerificationConstants.DATADOG_START_TIME_PLACEHOLDER;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -40,12 +43,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
+import software.wings.beans.APMValidateCollectorConfig;
+import software.wings.beans.DatadogConfig;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.User;
 import software.wings.common.VerificationConstants;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.MetricType;
 import software.wings.security.AppPermissionSummary;
@@ -53,10 +59,12 @@ import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
 import software.wings.service.impl.CloudWatchServiceImpl;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
+import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.service.intfc.AuthService;
@@ -111,6 +119,10 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Mock private WingsPersistence mockWingsPersistence;
   @Mock private UserPermissionInfo mockUserPermissionInfo;
   @Mock private CVConfigurationService cvConfigurationService;
+  @Mock private SettingsService settingsService;
+  @Mock private SecretManager secretManager;
+  @Mock private DelegateProxyFactory delegateProxyFactory;
+  @Mock private APMDelegateService apmDelegateService;
   @InjectMocks private ContinuousVerificationServiceImpl continuousVerificationService;
 
   @Before
@@ -137,6 +149,9 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
 
     when(mockAuthService.getUserPermissionInfo(accountId, user, false)).thenReturn(mockUserPermissionInfo);
     FieldUtils.writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
+    FieldUtils.writeField(continuousVerificationService, "settingsService", settingsService, true);
+    FieldUtils.writeField(continuousVerificationService, "secretManager", secretManager, true);
+    FieldUtils.writeField(continuousVerificationService, "delegateProxyFactory", delegateProxyFactory, true);
   }
 
   private ContinuousVerificationExecutionMetaData getExecutionMetadata() {
@@ -617,5 +632,49 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
         continuousVerificationService.getCVExecutionMetaData(stateExecutionId);
     assertThat(cvMetaData).isNotNull();
     assertThat(cvMetaData.getUuid()).isEqualTo(savedData.getUuid());
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetDataForNode() {
+    String serverConfigId = generateUuid();
+    DataDogSetupTestNodeData testNodeData = DataDogSetupTestNodeData.builder()
+                                                .stateType(StateType.DATA_DOG)
+                                                .workflowId(generateUuid())
+                                                .settingId(serverConfigId)
+                                                .metrics("kubernetes.cpu.usage.total")
+                                                .datadogServiceName("datadog")
+                                                .build();
+
+    DatadogConfig datadogConfig = DatadogConfig.builder().url("http://api.datadog.com/metrics").build();
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(datadogConfig);
+
+    when(settingsService.get(serverConfigId)).thenReturn(settingAttribute);
+    when(secretManager.getEncryptionDetails(any(), any(), any())).thenReturn(new ArrayList<>());
+    when(delegateProxyFactory.get(any(), any())).thenReturn(apmDelegateService);
+    when(apmDelegateService.fetch(any(), any())).thenReturn("{}");
+
+    continuousVerificationService.getDataForNode(accountId, serverConfigId, testNodeData, StateType.DATA_DOG);
+    ArgumentCaptor<APMValidateCollectorConfig> validateCollectorConfigArgumentCaptor =
+        ArgumentCaptor.forClass(APMValidateCollectorConfig.class);
+    ArgumentCaptor<ThirdPartyApiCallLog> thirdPartyApiCallLogArgumentCaptor =
+        ArgumentCaptor.forClass(ThirdPartyApiCallLog.class);
+    verify(apmDelegateService, times(1))
+        .fetch(validateCollectorConfigArgumentCaptor.capture(), thirdPartyApiCallLogArgumentCaptor.capture());
+
+    APMValidateCollectorConfig apmValidateCollectorConfig = validateCollectorConfigArgumentCaptor.getValue();
+    ThirdPartyApiCallLog thirdPartyApiCallLog = thirdPartyApiCallLogArgumentCaptor.getValue();
+
+    assertThat(apmValidateCollectorConfig).isNotNull();
+    assertThat(apmValidateCollectorConfig.getBaseUrl()).isEqualTo(datadogConfig.getUrl());
+    assertThat(apmValidateCollectorConfig.getUrl()).doesNotContain(DATADOG_START_TIME_PLACEHOLDER);
+    assertThat(apmValidateCollectorConfig.getUrl()).doesNotContain(DATADOG_END_TIME_PLACEHOLDER);
+    assertThat(apmValidateCollectorConfig.getUrl()).contains("${apiKey}");
+    assertThat(apmValidateCollectorConfig.getUrl()).contains("${applicationKey}");
+
+    assertThat(thirdPartyApiCallLog).isNotNull();
+    assertThat(thirdPartyApiCallLog.getAccountId()).isEqualTo(accountId);
   }
 }
