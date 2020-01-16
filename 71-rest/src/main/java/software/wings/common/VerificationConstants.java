@@ -197,6 +197,9 @@ public class VerificationConstants {
 
   public static final String DELEGATE_DATA_COLLETION = "delegate-data-collection";
 
+  public static final String DATADOG_START_TIME_PLACEHOLDER = "${start_time_seconds}";
+  public static final String DATADOG_END_TIME_PLACEHOLDER = "${end_time_seconds}";
+
   public static final Map<String, String> ERROR_METRIC_NAMES =
       Collections.unmodifiableMap(new HashMap<String, String>() {
         {
