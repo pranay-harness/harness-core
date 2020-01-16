@@ -110,7 +110,8 @@ public class PivotalClientTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testHandlePasswordForSpecialCharacters() throws Exception {
-    String password = "Ab1~!@#$%^&*()_'\"c";
+    // Single quotes cannot be part of the password due to limitations on escaping them.
+    String password = "Ab1~!@#$%^&*()\"_c";
     ProcessExecutor processExecutor =
         new ProcessExecutor()
             .timeout(1, TimeUnit.MINUTES)
@@ -119,7 +120,7 @@ public class PivotalClientTest extends WingsBaseTest {
     ProcessResult processResult = processExecutor.execute();
     assertThat(processResult.getExitValue()).isNotEqualTo(0);
 
-    password = pcfClient.handlePwdForSpecialCharsForShell("Ab1~!@#$%^&*()_'\"c");
+    password = pcfClient.handlePwdForSpecialCharsForShell("Ab1~!@#$%^&*()\"_c");
     processExecutor = new ProcessExecutor()
                           .timeout(1, TimeUnit.MINUTES)
                           .command("/bin/sh", "-c",

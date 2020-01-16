@@ -775,8 +775,9 @@ public class PcfClientImpl implements PcfClient {
   }
 
   String handlePwdForSpecialCharsForShell(String password) {
-    password = password.replace("\"", "\\\"");
-    return "\"" + password + "\"";
+    // Wrapped around single quotes to by pass '$' characted.
+    // Single quotes cannot be part of the password due to limitations on escaping them.
+    return "'" + password + "'";
   }
 
   private void logManifestFile(String finalFilePath, ExecutionLogCallback executionLogCallback) {
