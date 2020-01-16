@@ -2,10 +2,8 @@ package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.threading.Morpheus.sleep;
-import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.service.impl.ThirdPartyApiCallLog.PAYLOAD;
@@ -35,6 +33,7 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.NewRelicDeploymentMarkerPayload;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.newrelic.NewRelicRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
@@ -84,6 +83,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   @Inject private EncryptionService encryptionService;
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private DelegateLogService delegateLogService;
+  @Inject private RequestExecutor requestExecutor;
 
   public static Map<String, List<Set<String>>> batchMetricsToCollect(
       Collection<NewRelicMetric> metrics, boolean checkNotAllowedStrings) {
@@ -571,54 +571,16 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         + updatedMetrics.size() + " transactions from " + newRelicConfig.getNewRelicUrl() + urlToCall);
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
-    Response<NewRelicMetricDataResponse> response;
-    int failedAttempts = 0;
-    while (true) {
-      final Call<NewRelicMetricDataResponse> request = instanceId > 0
-          ? getNewRelicRestClient(newRelicConfig)
-                .getInstanceMetricData(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId,
-                    instanceId, dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)),
-                    updatedMetrics)
-          : getNewRelicRestClient(newRelicConfig)
-                .getApplicationMetricData(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId,
-                    summarize, dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)),
-                    updatedMetrics);
-      apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                       .name(URL_STRING)
-                                       .value(request.request().url().toString())
-                                       .type(FieldType.URL)
-                                       .build());
-      try {
-        response = request.execute();
-        break;
-      } catch (Exception e) {
-        failedAttempts++;
-        logger.warn(
-            format("Unsuccessful response while fetching data from NewRelic. trial num: %d", failedAttempts), e);
-        if (failedAttempts == NUM_OF_RETRIES) {
-          apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-          apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-          delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-          logger.error("txn name fetch failed after {} retries", failedAttempts, e);
-          throw new WingsException("Unsuccessful response while fetching data from NewRelic failed after "
-              + NUM_OF_RETRIES + " retries. Error message: " + e.getMessage()
-              + " Request: " + request.request().url().toString());
-        }
-        sleep(ofMillis(1000));
-      }
-    }
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    if (response.isSuccessful()) {
-      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-      delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-      return response.body().getMetric_data();
-    }
-
-    apiCallLog.addFieldToResponse(response.code(), response.toString(), FieldType.TEXT);
-    delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-    String errMsg = "Unsuccessful response from NewRelic. Response Code " + response.code()
-        + " Error: " + response.errorBody().string();
-    throw new WingsException(ErrorCode.NEWRELIC_ERROR, errMsg, USER);
+    final Call<NewRelicMetricDataResponse> request = instanceId > 0
+        ? getNewRelicRestClient(newRelicConfig)
+              .getInstanceMetricData(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId, instanceId,
+                  dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)), updatedMetrics)
+        : getNewRelicRestClient(newRelicConfig)
+              .getApplicationMetricData(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId,
+                  summarize, dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)),
+                  updatedMetrics);
+    NewRelicMetricDataResponse response = requestExecutor.executeRequest(apiCallLog, request);
+    return response.getMetric_data();
   }
 
   @Override
