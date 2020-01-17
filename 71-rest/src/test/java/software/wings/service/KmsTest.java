@@ -9,7 +9,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -172,7 +171,7 @@ public class KmsTest extends WingsBaseTest {
   @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
   private final int numOfEncryptedValsForKms = 3;
   private final String userEmail = "rsingh@harness.io";
-  private final String userName = "raghu";
+  private final String userName = "UTKARSH";
   private final User user = User.Builder.anUser().email(userEmail).name(userName).build();
   private String userId;
   private String accountId;
@@ -316,7 +315,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void validateConfig() {
     KmsConfig kmsConfig = getKmsConfig();
@@ -332,7 +331,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void getKmsConfigForAccount() {
     KmsConfig kmsConfig = getKmsConfig();
@@ -346,7 +345,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void saveAndEditConfig() {
@@ -427,7 +426,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void localNullEncryption() {
     final char[] keyToEncrypt = null;
@@ -440,7 +439,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void localEncryption() {
     final String keyToEncrypt = UUID.randomUUID().toString();
@@ -452,7 +451,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void kmsNullEncryption() {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -466,7 +465,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void kmsEncryption() {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -480,7 +479,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void localEncryptionWhileSaving() {
     String password = UUID.randomUUID().toString();
@@ -503,7 +502,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void localEncryptionWhileSavingNullEncryptedData() {
     final ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder()
@@ -537,7 +536,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void kmsEncryptionWhileSavingFeatureDisabled() {
     String password = UUID.randomUUID().toString();
@@ -560,7 +559,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void enableKmsAfterSaving() {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -581,7 +580,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void kmsEncryptionWhileSaving() throws IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -639,7 +638,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void secretUsageLog() {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -668,7 +667,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void kmsEncryptionSaveMultiple() {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -685,7 +684,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testNumOfEncryptedValue() {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -713,7 +712,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void noKmsEncryptionUpdateObject() throws IllegalAccessException {
     String password = UUID.randomUUID().toString();
@@ -798,7 +797,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   public void noKmsEncryptionUpdateServiceVariable() {
@@ -873,7 +872,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void kmsEncryptionUpdateObject() throws IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -942,7 +941,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void kmsEncryptionUpdateFieldSettingAttribute() throws IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -1066,7 +1065,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void updateSettingAttributeAfterKmsEnabled() {
     String password = UUID.randomUUID().toString();
@@ -1117,7 +1116,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void saveServiceVariableNoKMS() {
     String value = UUID.randomUUID().toString();
@@ -1173,7 +1172,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void saveServiceVariableNoEncryption() {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -1400,7 +1399,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void kmsEncryptionSaveServiceVariableTemplate() {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -1510,7 +1509,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void kmsEncryptionDeleteSettingAttribute() {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -1533,7 +1532,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void kmsEncryptionDeleteSettingAttributeQueryUuid() {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -1552,7 +1551,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void kmsEncryptionDeleteSettingAttributeQuery() {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -1650,7 +1649,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void listKmsConfigMultiple() {
     KmsConfig kmsConfig1 = getKmsConfig();
@@ -1732,7 +1731,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void resetDefaultShouldNotAcrossAccount() {
     int numOfKmsConfigs = 3;
@@ -1766,7 +1765,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void deleteGlobalKmsNotAllowed() {
     KmsConfig globalKmsConfig = getKmsConfig();
@@ -1783,7 +1782,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   public void listKmsGlobalDefault() {
@@ -1848,7 +1847,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void listKmsConfigOrder() {
     int numOfKms = 10;
@@ -1876,7 +1875,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void listKmsConfigHasDefault() {
     KmsConfig globalKmsConfig = getKmsConfig();
@@ -1949,7 +1948,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void listKmsConfig() {
     KmsConfig kmsConfig = getKmsConfig();
@@ -2010,7 +2009,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void transitionKms() throws InterruptedException, IllegalAccessException {
     Thread listenerThread = startTransitionListener();
@@ -2078,7 +2077,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void transitionAndDeleteKms() throws InterruptedException, IllegalAccessException {
     Thread listenerThread = startTransitionListener();
@@ -2213,7 +2212,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void saveAwsConfig() {
     KmsConfig fromConfig = getKmsConfig();
@@ -2645,7 +2644,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void kmsExceptionTest() {
     KmsConfig kmsConfig = getKmsConfig();
@@ -2672,7 +2671,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void reuseYamlPasswordNoEncryption() throws IllegalAccessException {
     int numOfSettingAttributes = 5;
@@ -2749,7 +2748,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void reuseYamlPasswordKmsEncryption() throws IllegalAccessException {
     KmsConfig fromConfig = getKmsConfig();
@@ -2828,7 +2827,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void reuseYamlPasswordNewEntityKmsEncryption() throws IllegalAccessException {
     KmsConfig fromConfig = getKmsConfig();
@@ -2863,7 +2862,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void getUsageLogs() throws IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -2941,7 +2940,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void getChangeLogs() throws IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();

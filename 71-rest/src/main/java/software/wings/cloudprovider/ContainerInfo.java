@@ -26,4 +26,5 @@ public class ContainerInfo {
   private String workloadName;
   private boolean newContainer;
   private EcsContainerDetails ecsContainerDetails;
+  private boolean containerTasksReachable;
 }

@@ -484,6 +484,9 @@ public abstract class AbstractAnalysisState extends State {
 
     Map<String, String> map = new HashMap<>();
     getLogger().info("Container info list : " + containerInfos);
+    containerInfos.forEach(containerInfo
+        -> Preconditions.checkState(containerInfo.isContainerTasksReachable(),
+            "Could not reach ECS to determine container ids. Please check execution logs of deployment and make sure the delegate has connectivity to cluster resources."));
 
     for (software.wings.cloudprovider.ContainerInfo containerInfo : containerInfos) {
       String evaluatedHost = isEmpty(getHostnameTemplate())

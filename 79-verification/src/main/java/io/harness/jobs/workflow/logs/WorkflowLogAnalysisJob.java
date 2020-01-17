@@ -174,6 +174,7 @@ public class WorkflowLogAnalysisJob implements Job, Handler<AnalysisContext> {
         if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
           logger.warn(" log ml analysis : state is not valid " + context.getStateExecutionId());
           learningEngineService.markJobStatus(context, ExecutionStatus.SUCCESS);
+          completeCron = true;
           return -1L;
         }
 
