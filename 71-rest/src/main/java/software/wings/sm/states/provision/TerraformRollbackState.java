@@ -3,6 +3,7 @@ package software.wings.sm.states.provision;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.lang.String.format;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.FeatureName.TF_USE_VAR_CL;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
@@ -10,6 +11,7 @@ import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STAT
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
@@ -67,9 +70,24 @@ public class TerraformRollbackState extends TerraformProvisionState {
     return rollbackCommand;
   }
 
+  private boolean applyHappened(ExecutionContext context) {
+    SweepingOutputInstance sweepingOutputInstance =
+        sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(getMarkerName()).build());
+    if (sweepingOutputInstance == null) {
+      return false;
+    }
+    return ((TerraformApplyMarkerParam) sweepingOutputInstance.getValue()).isApplyCompleted();
+  }
+
   @Override
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
+    if (!applyHappened(context)) {
+      return ExecutionResponse.builder()
+          .executionStatus(SUCCESS)
+          .errorMessage(format("Apply did not happen with provisioner: [%s]", terraformProvisioner.getName()))
+          .build();
+    }
     String path = context.renderExpression(terraformProvisioner.getPath());
     String workspace = context.renderExpression(getWorkspace());
     workspace = handleDefaultWorkspace(workspace);

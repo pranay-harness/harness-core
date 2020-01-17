@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
@@ -31,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
@@ -44,6 +46,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.Query;
 import software.wings.api.ScriptStateExecutionData;
+import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
@@ -80,6 +83,7 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -130,6 +134,7 @@ public abstract class TerraformProvisionState extends State {
   @Inject private transient GitConfigHelperService gitConfigHelperService;
   @Inject private transient LogService logService;
   @Inject protected FeatureFlagService featureFlagService;
+  @Inject protected SweepingOutputService sweepingOutputService;
 
   @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
@@ -234,6 +239,19 @@ public abstract class TerraformProvisionState extends State {
         .build();
   }
 
+  protected String getMarkerName() {
+    return format("tfApplyCompleted_%s", provisionerId).trim();
+  }
+
+  private void markApplyExecutionCompleted(ExecutionContext context) {
+    SweepingOutputInstance sweepingOutputInstance =
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(getMarkerName())
+            .value(TerraformApplyMarkerParam.builder().applyCompleted(true).provisionerId(provisionerId).build())
+            .build();
+    sweepingOutputService.save(sweepingOutputInstance);
+  }
+
   private ExecutionResponse handleAsyncResponseInternalRegular(
       ExecutionContext context, Map<String, ResponseData> response) {
     Entry<String, ResponseData> responseEntry = response.entrySet().iterator().next();
@@ -242,6 +260,9 @@ public abstract class TerraformProvisionState extends State {
     terraformExecutionData.setActivityId(activityId);
 
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
+    if (!(this instanceof DestroyTerraformProvisionState)) {
+      markApplyExecutionCompleted(context);
+    }
     saveUserInputs(context, terraformExecutionData, terraformProvisioner);
     if (terraformExecutionData.getExecutionStatus() == FAILED) {
       return ExecutionResponse.builder()
