@@ -320,6 +320,11 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           secretEngineSummaries.add(secretEngineSummary);
         }
       } else {
+        // Log down why the sys mount failed.
+        if (response.errorBody() != null) {
+          logger.error("Failed to list secret engines for secret manager {} due to the following error {}",
+              vaultConfig.getVaultUrl(), response.errorBody().string());
+        }
         // To be consistent with the old Vault secret management behavior we will take a default secret engine
         SecretEngineSummary secretEngineSummary = SecretEngineSummary.builder()
                                                       .name(VaultService.DEFAULT_SECRET_ENGINE_NAME)

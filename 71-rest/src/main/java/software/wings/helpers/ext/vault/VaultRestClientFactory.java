@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.network.Http;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import okhttp3.logging.HttpLoggingInterceptor.Level;
@@ -31,6 +32,7 @@ import java.util.Map;
  * @author mark.lu on 10/11/18
  */
 @UtilityClass
+@Slf4j
 public class VaultRestClientFactory {
   private static final String PATH_SEPARATOR = "/";
   private static final String KEY_NAME_SEPARATOR = "#";
@@ -125,6 +127,7 @@ public class VaultRestClientFactory {
       valueMap.put(pathAndKey.keyName, value);
       Response<Void> response =
           vaultRestClient.writeSecret(authToken, secretEngine, pathAndKey.path, valueMap).execute();
+      logErrorIfRequestFailed(response);
       return response.isSuccessful();
     }
 
@@ -172,6 +175,7 @@ public class VaultRestClientFactory {
       VaultSecretValue vaultSecretValue = new VaultSecretValue(dataMap);
       Response<Void> response =
           vaultRestClient.writeSecret(authToken, secretEngine, pathAndKey.path, vaultSecretValue).execute();
+      logErrorIfRequestFailed(response);
       return response.isSuccessful();
     }
 
@@ -203,6 +207,12 @@ public class VaultRestClientFactory {
     @Override
     public boolean renewToken(String authToken) throws IOException {
       return vaultRestClient.renewToken(authToken).execute().isSuccessful();
+    }
+  }
+
+  private static void logErrorIfRequestFailed(Response<Void> response) throws IOException {
+    if (!response.isSuccessful() && response.errorBody() != null) {
+      logger.error("Could not write secret in the vault due to the following error {}", response.errorBody().string());
     }
   }
 

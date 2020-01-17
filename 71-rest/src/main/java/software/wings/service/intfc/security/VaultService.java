@@ -31,6 +31,8 @@ public interface VaultService {
 
   boolean deleteVaultConfig(String accountId, String vaultConfigId);
 
+  boolean isReadOnly(String vaultConfigId);
+
   List<SecretEngineSummary> listSecretEngines(VaultConfig vaultConfig);
 
   void decryptVaultConfigSecrets(String accountId, VaultConfig vaultConfig, boolean maskSecret);

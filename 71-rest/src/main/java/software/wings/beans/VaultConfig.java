@@ -50,6 +50,8 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
 
   @Attributes(title = "Renew token interval", required = true) private int renewIntervalHours;
 
+  @Attributes(title = "Is Vault Read Only") private boolean isReadOnly;
+
   /**
    * Vault 0.11 is using secrete engine V2 by default and it mandate a slightly different way of read/write secrets
    * This field should have value "1" or "2". For backward compatibility, null of value "0" will be converted to value
