@@ -906,8 +906,19 @@ public class SecretManagerImpl implements SecretManager {
                                      .filter(ACCOUNT_ID_KEY, accountId)
                                      .filter(EncryptedDataKeys.kmsId, fromSecretManagerId);
 
-    if (toEncryptionType == EncryptionType.VAULT) {
+    if (toEncryptionType == VAULT) {
+      if (vaultService.isReadOnly(toSecretManagerId)) {
+        throw new SecretManagementException(
+            UNSUPPORTED_OPERATION_EXCEPTION, "Cannot transfer secrets to a read only vault", USER);
+      }
       query = query.field(EncryptedDataKeys.type).notEqual(SettingVariableTypes.VAULT);
+    }
+
+    if (fromEncryptionType == VAULT) {
+      if (vaultService.isReadOnly(fromSecretManagerId)) {
+        throw new SecretManagementException(
+            UNSUPPORTED_OPERATION_EXCEPTION, "Cannot transfer secrets from a read only vault", USER);
+      }
     }
 
     try (HIterator<EncryptedData> iterator = new HIterator<>(query.fetch())) {

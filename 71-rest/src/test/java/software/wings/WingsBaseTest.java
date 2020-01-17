@@ -180,6 +180,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
                                   .secretEngineVersion(1)
                                   .build();
     vaultConfig.setDefault(true);
+    vaultConfig.setReadOnly(false);
     vaultConfig.setEncryptionType(EncryptionType.VAULT);
     return vaultConfig;
   }

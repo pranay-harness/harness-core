@@ -70,6 +70,12 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData encryptedData) {
+    if (vaultConfig.isReadOnly() && (encryptedData == null || isEmpty(encryptedData.getPath()))) {
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+          "Cannot use a read only vault to add an inline encrypted text or file. Add the secret in vault and refer it from here",
+          USER);
+    }
+
     SyncTaskContext syncTaskContext =
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
     return (EncryptedData) delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
@@ -106,6 +112,15 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     Query<VaultConfig> query =
         wingsPersistence.createQuery(VaultConfig.class).filter(ACCOUNT_ID_KEY, accountId).filter(ID_KEY, entityId);
     return getVaultConfigInternal(query);
+  }
+
+  @Override
+  public boolean isReadOnly(String configId) {
+    VaultConfig vaultConfig = (VaultConfig) wingsPersistence.get(SecretManagerConfig.class, configId);
+    if (vaultConfig == null) {
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Vault config not found", USER);
+    }
+    return vaultConfig.isReadOnly();
   }
 
   @Override
@@ -254,6 +269,11 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       oldConfigForAudit = KryoUtils.clone(savedVaultConfig);
     }
 
+    if (vaultConfig.isReadOnly() && vaultConfig.isDefault()) {
+      throw new SecretManagementException(
+          SECRET_MANAGEMENT_ERROR, "A read only vault cannot be the default secret manager", USER);
+    }
+
     // Validate every time when secret manager config change submitted
     validateVaultConfig(accountId, vaultConfig);
 
@@ -262,11 +282,11 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       savedVaultConfig.setName(vaultConfig.getName());
       savedVaultConfig.setRenewIntervalHours(vaultConfig.getRenewIntervalHours());
       savedVaultConfig.setDefault(vaultConfig.isDefault());
+      savedVaultConfig.setReadOnly(vaultConfig.isReadOnly());
       savedVaultConfig.setBasePath(vaultConfig.getBasePath());
       savedVaultConfig.setSecretEngineName(vaultConfig.getSecretEngineName());
       savedVaultConfig.setSecretEngineVersion(vaultConfig.getSecretEngineVersion());
       savedVaultConfig.setAppRoleId(vaultConfig.getAppRoleId());
-
       // PL-3237: Audit secret manager config changes.
       generateAuditForSecretManager(accountId, oldConfigForAudit, savedVaultConfig);
 
@@ -530,12 +550,15 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       throw new SecretManagementException(VAULT_OPERATION_ERROR, message, e, USER);
     }
 
-    try {
-      encrypt(VAULT_VAILDATION_URL, Boolean.TRUE.toString(), accountId, SettingVariableTypes.VAULT, vaultConfig, null);
-    } catch (WingsException e) {
-      String message =
-          "Was not able to reach vault using given credentials. Please check your credentials and try again";
-      throw new SecretManagementException(VAULT_OPERATION_ERROR, message, e, USER);
+    if (!vaultConfig.isReadOnly()) {
+      try {
+        encrypt(
+            VAULT_VAILDATION_URL, Boolean.TRUE.toString(), accountId, SettingVariableTypes.VAULT, vaultConfig, null);
+      } catch (WingsException e) {
+        String message =
+            "Was not able to reach vault using given credentials. Please check your credentials and try again";
+        throw new SecretManagementException(VAULT_OPERATION_ERROR, message, e, USER);
+      }
     }
   }
 

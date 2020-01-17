@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
+import static io.harness.eraro.ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ANKIT;
@@ -93,6 +94,7 @@ import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.impl.security.KmsTransitionEventListener;
+import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
@@ -103,7 +105,9 @@ import software.wings.settings.UsageRestrictions;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -238,6 +242,69 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void saveConfigShouldFail_DefaultTrue_ReadOnlyTrue() {
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
+    vaultConfig.setReadOnly(true);
+    vaultConfig.setDefault(true);
+    try {
+      vaultService.saveVaultConfig(accountId, vaultConfig);
+      fail("Saved invalid vault config with both default and read only true");
+    } catch (SecretManagementException e) {
+      logger.info("Error", e);
+      assertThat(e.getCode()).isEqualTo(ErrorCode.SECRET_MANAGEMENT_ERROR);
+    }
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void createEncryptedText_WithReadOnlyVault() {
+    String secretName = UUID.randomUUID().toString();
+    String secretValue = UUID.randomUUID().toString();
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
+    vaultConfig.setReadOnly(true);
+    vaultConfig.setDefault(false);
+    String configId = vaultService.saveVaultConfig(accountId, vaultConfig);
+    assertThat(configId).isNotNull();
+    String secretId = secretManager.saveSecret(accountId, configId, secretName, null, "/value/utkarsh#key", null);
+    assertThat(secretId).isNotNull();
+    try {
+      secretManager.saveSecret(accountId, configId, secretName, secretValue, null, null);
+      fail("Should not have been able to create encrypted text with read only vault");
+    } catch (SecretManagementException e) {
+      logger.info("Error", e);
+      assertThat(e.getCode()).isEqualTo(ErrorCode.SECRET_MANAGEMENT_ERROR);
+    }
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void createEncryptedFile_WithReadOnlyVault() throws FileNotFoundException {
+    String secretFileName = UUID.randomUUID().toString();
+    URL url = getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt");
+    assertThat(url).isNotNull();
+    File file = new File(url.getFile());
+
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
+    vaultConfig.setReadOnly(true);
+    vaultConfig.setDefault(false);
+    String configId = vaultService.saveVaultConfig(accountId, vaultConfig);
+    assertThat(configId).isNotNull();
+
+    try {
+      secretManager.saveFile(
+          accountId, configId, secretFileName, file.length(), null, new BoundedInputStream(new FileInputStream(file)));
+      fail("Should not have been able to create encrypted file with read only vault");
+    } catch (SecretManagementException e) {
+      logger.info("Error", e);
+      assertThat(e.getCode()).isEqualTo(ErrorCode.SECRET_MANAGEMENT_ERROR);
+    }
+  }
+
+  @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void saveConfig() {
@@ -247,6 +314,7 @@ public class VaultTest extends WingsBaseTest {
 
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setDefault(false);
+    vaultConfig.setReadOnly(false);
     String vaultConfigId = vaultService.saveVaultConfig(accountId, vaultConfig);
 
     List<SecretManagerConfig> encryptionConfigs = secretManager.listSecretManagers(accountId);
@@ -1149,6 +1217,48 @@ public class VaultTest extends WingsBaseTest {
       }
     } finally {
       stopTransitionListener(listenerThread);
+    }
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void transitionVault_shouldFailReadOnly() {
+    VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);
+    fromConfig.setDefault(false);
+    fromConfig.setReadOnly(true);
+    String fromConfigId = vaultService.saveVaultConfig(accountId, fromConfig);
+    assertThat(fromConfigId).isNotNull();
+    fromConfig.setUuid(fromConfigId);
+
+    VaultConfig toConfig = getVaultConfig(VAULT_TOKEN);
+    toConfig.setDefault(false);
+    toConfig.setReadOnly(false);
+    String toConfigId = vaultService.saveVaultConfig(accountId, toConfig);
+    assertThat(toConfigId).isNotNull();
+    toConfig.setUuid(toConfigId);
+
+    try {
+      secretManager.transitionSecrets(
+          accountId, EncryptionType.VAULT, fromConfig.getUuid(), EncryptionType.VAULT, toConfig.getUuid());
+      fail("Should not have been able to transition secrets from read only vault");
+    } catch (SecretManagementException e) {
+      logger.info("Expected error", e);
+      assertThat(e.getCode()).isEqualTo(UNSUPPORTED_OPERATION_EXCEPTION);
+    }
+
+    fromConfig.setReadOnly(false);
+    vaultService.saveVaultConfig(accountId, fromConfig);
+    toConfig.setReadOnly(true);
+    vaultService.saveVaultConfig(accountId, toConfig);
+
+    try {
+      secretManager.transitionSecrets(
+          accountId, EncryptionType.VAULT, fromConfig.getUuid(), EncryptionType.VAULT, toConfig.getUuid());
+      fail("Should not have been able to transition secrets to read only vault");
+    } catch (SecretManagementException e) {
+      logger.info("Expected error", e);
+      assertThat(e.getCode()).isEqualTo(UNSUPPORTED_OPERATION_EXCEPTION);
     }
   }
 
