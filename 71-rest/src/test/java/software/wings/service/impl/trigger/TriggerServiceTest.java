@@ -25,6 +25,7 @@ import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Variable.ENTITY_TYPE;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -2119,10 +2120,14 @@ public class TriggerServiceTest extends WingsBaseTest {
     triggerWorkflowVariables.put("Service", SERVICE_NAME);
     triggerWorkflowVariables.put("Infra", INFRA_NAME);
 
+    Map<String, Object> metadata = new HashMap<>();
+    metadata.put(Variable.ENV_ID, ENV_ID);
+    metadata.put(ENTITY_TYPE, INFRASTRUCTURE_DEFINITION);
+
     List<Variable> workflowVariables =
         asList(aVariable().entityType(SERVICE).name("Service").value("Service 1").build(),
             aVariable().entityType(ENVIRONMENT).name("Environment").value("env 1").build(),
-            aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("Infra").value("${Infra}").build());
+            aVariable().name("Infra").value("${Infra}").metadata(metadata).build());
 
     InfrastructureDefinition infrastructureDefinitionMocked =
         InfrastructureDefinition.builder()
