@@ -26,6 +26,7 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     yaml.setType(kubernetesClusterConfig.getType());
     yaml.setMasterUrl(kubernetesClusterConfig.getMasterUrl());
     yaml.setUsername(kubernetesClusterConfig.getUsername());
+    yaml.setSkipValidation(kubernetesClusterConfig.isSkipValidation());
 
     String fieldName = null;
     String encryptedYamlRef;
@@ -97,6 +98,7 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     kubernetesClusterConfig.setEncryptedClientCert(yaml.getClientCert());
     kubernetesClusterConfig.setEncryptedClientKey(yaml.getClientKey());
     kubernetesClusterConfig.setEncryptedClientKeyPassphrase(yaml.getClientKeyPassphrase());
+    kubernetesClusterConfig.setSkipValidation(yaml.isSkipValidation());
 
     String encryptedRef = yaml.getPassword();
     if (encryptedRef != null) {
