@@ -615,12 +615,12 @@ public class TriggerDeploymentExecution {
       } else {
         InfrastructureDefinition infrastructureDefinition =
             getInfrastructureDefinition(appId, infraEnvId, infraDefIdOrName);
-        if (infrastructureDefinition == null) {
+        if (infrastructureDefinition != null) {
+          triggerWorkflowVariableValues.put(infraDefVarName, infrastructureDefinition.getUuid());
+        } else {
           InfrastructureMapping infrastructureMapping = getInfrastructureMapping(appId, infraEnvId, infraDefIdOrName);
           notNullCheck("Service Infrastructure [" + infraDefIdOrName + "] does not exist", infrastructureMapping, USER);
           triggerWorkflowVariableValues.put(infraDefVarName, infrastructureMapping.getInfrastructureDefinitionId());
-        } else {
-          triggerWorkflowVariableValues.put(infraDefVarName, infrastructureDefinition.getUuid());
         }
       }
     }

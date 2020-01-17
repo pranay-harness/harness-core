@@ -823,21 +823,29 @@ public class TriggerServiceImpl implements TriggerService {
 
   void resolveInfraDefinitions(
       String appId, Map<String, String> triggerWorkflowVariableValues, String envId, List<Variable> variables) {
-    List<String> infraDefinitionWorkflowVariables =
-        WorkflowServiceTemplateHelper.getInfraDefinitionWorkflowVariables(variables);
-    for (String infraDefVarName : infraDefinitionWorkflowVariables) {
+    for (Variable variable : WorkflowServiceTemplateHelper.getInfraDefCompleteWorkflowVariables(variables)) {
+      String infraEnvId = null;
+      String infraDefVarName = variable.getName();
       String infraDefIdOrName = triggerWorkflowVariableValues.get(infraDefVarName);
+
+      if (isNotEmpty(variable.getMetadata()) && variable.getMetadata().get(Variable.ENV_ID) != null) {
+        infraEnvId = variable.getMetadata().get(Variable.ENV_ID).toString();
+      } else {
+        infraEnvId = envId;
+      }
+
       if (isEmpty(infraDefVarName) || matchesVariablePattern(infraDefIdOrName)) {
         String infraMappingVarName = infraDefVarName.replace("InfraDefinition", "ServiceInfra");
         String infraMappingIdOrName = triggerWorkflowVariableValues.get(infraMappingVarName);
-        InfrastructureMapping infrastructureMapping = getInfrastructureMapping(appId, envId, infraMappingIdOrName);
+        InfrastructureMapping infrastructureMapping = getInfrastructureMapping(appId, infraEnvId, infraMappingIdOrName);
         notNullCheck(
             "Service Infrastructure [" + infraMappingIdOrName + "] does not exist", infrastructureMapping, USER);
         triggerWorkflowVariableValues.put(infraDefVarName, infrastructureMapping.getInfrastructureDefinitionId());
       } else {
-        InfrastructureDefinition infrastructureDefinition = getInfrastructureDefinition(appId, envId, infraDefIdOrName);
+        InfrastructureDefinition infrastructureDefinition =
+            getInfrastructureDefinition(appId, infraEnvId, infraDefIdOrName);
         if (infrastructureDefinition == null) {
-          InfrastructureMapping infrastructureMapping = getInfrastructureMapping(appId, envId, infraDefIdOrName);
+          InfrastructureMapping infrastructureMapping = getInfrastructureMapping(appId, infraEnvId, infraDefIdOrName);
           notNullCheck("Service Infrastructure [" + infraDefIdOrName + "] does not exist", infrastructureMapping, USER);
           triggerWorkflowVariableValues.put(infraDefVarName, infrastructureMapping.getInfrastructureDefinitionId());
         } else {
