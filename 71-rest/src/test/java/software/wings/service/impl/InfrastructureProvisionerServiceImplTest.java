@@ -3,12 +3,17 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -18,6 +23,7 @@ import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrast
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
@@ -40,7 +46,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
@@ -81,7 +86,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -113,20 +117,20 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
         CloudFormationInfrastructureProvisioner.builder()
             .appId(APP_ID)
             .uuid(ID_KEY)
-            .mappingBlueprints(Arrays.asList(
-                InfrastructureMappingBlueprint.builder()
-                    .cloudProviderType(CloudProviderType.AWS)
-                    .serviceId(SERVICE_ID)
-                    .deploymentType(DeploymentType.SSH)
-                    .properties(Arrays.asList(BlueprintProperty.builder()
+            .mappingBlueprints(
+                asList(InfrastructureMappingBlueprint.builder()
+                           .cloudProviderType(CloudProviderType.AWS)
+                           .serviceId(SERVICE_ID)
+                           .deploymentType(DeploymentType.SSH)
+                           .properties(asList(BlueprintProperty.builder()
                                                   .name("region")
                                                   .value("${cloudformation"
                                                       + ".myregion}")
                                                   .build(),
-                        BlueprintProperty.builder().name("vpcs").value("${cloudformation.myvpcs}").build(),
-                        BlueprintProperty.builder().name("tags").value("${cloudformation.mytags}").build()))
-                    .nodeFilteringType(AWS_INSTANCE_FILTER)
-                    .build()))
+                               BlueprintProperty.builder().name("vpcs").value("${cloudformation.myvpcs}").build(),
+                               BlueprintProperty.builder().name("tags").value("${cloudformation.mytags}").build()))
+                           .nodeFilteringType(AWS_INSTANCE_FILTER)
+                           .build()))
             .build();
     doReturn(infrastructureProvisioner)
         .when(wingsPersistence)
@@ -161,6 +165,12 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
                                                         .build();
 
     doReturn(infrastructureMapping).when(infrastructureMappingService).update(any());
+
+    PageResponse<Service> response = new PageResponse<>();
+    Service service = Service.builder().name("service1").uuid(SERVICE_ID).build();
+    response.setResponse(singletonList(service));
+    doReturn(response).when(serviceResourceService).list(any(), anyBoolean(), anyBoolean(), anyBoolean(), any());
+
     infrastructureProvisionerService.regenerateInfrastructureMappings(ID_KEY, executionContext, objectMap);
 
     ArgumentCaptor<InfrastructureMapping> captor = ArgumentCaptor.forClass(InfrastructureMapping.class);
@@ -188,7 +198,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   public void testGetCFTemplateParamKeys() {
     String defaultString = "default";
 
-    doReturn(Arrays.asList())
+    doReturn(asList())
         .when(awsCFHelperServiceManager)
         .getParamsData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
 
@@ -249,13 +259,13 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   private void shouldBackendConfigValidation(TerraformInfrastructureProvisioner terraformProvisioner,
       InfrastructureProvisionerServiceImpl provisionerService) {
     terraformProvisioner.setBackendConfigs(
-        Arrays.asList(NameValuePair.builder().name("access.key").valueType(Type.TEXT.toString()).build(),
+        asList(NameValuePair.builder().name("access.key").valueType(Type.TEXT.toString()).build(),
             NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
     Assertions.assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
 
     terraformProvisioner.setBackendConfigs(
-        Arrays.asList(NameValuePair.builder().name("$access_key").valueType(Type.TEXT.toString()).build(),
+        asList(NameValuePair.builder().name("$access_key").valueType(Type.TEXT.toString()).build(),
             NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
     Assertions.assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
@@ -267,7 +277,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     provisionerService.validateProvisioner(terraformProvisioner);
 
     terraformProvisioner.setBackendConfigs(
-        Arrays.asList(NameValuePair.builder().name("access_key").valueType(Type.TEXT.toString()).build(),
+        asList(NameValuePair.builder().name("access_key").valueType(Type.TEXT.toString()).build(),
             NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
     provisionerService.validateProvisioner(terraformProvisioner);
   }
@@ -275,13 +285,13 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   private void shouldVariablesValidation(TerraformInfrastructureProvisioner terraformProvisioner,
       InfrastructureProvisionerServiceImpl provisionerService) {
     terraformProvisioner.setVariables(
-        Arrays.asList(NameValuePair.builder().name("access.key").valueType(Type.TEXT.toString()).build(),
+        asList(NameValuePair.builder().name("access.key").valueType(Type.TEXT.toString()).build(),
             NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
     Assertions.assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
 
     terraformProvisioner.setVariables(
-        Arrays.asList(NameValuePair.builder().name("$access_key").valueType(Type.TEXT.toString()).build(),
+        asList(NameValuePair.builder().name("$access_key").valueType(Type.TEXT.toString()).build(),
             NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
     Assertions.assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
@@ -293,7 +303,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     provisionerService.validateProvisioner(terraformProvisioner);
 
     terraformProvisioner.setVariables(
-        Arrays.asList(NameValuePair.builder().name("access_key").valueType(Type.TEXT.toString()).build(),
+        asList(NameValuePair.builder().name("access_key").valueType(Type.TEXT.toString()).build(),
             NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
     provisionerService.validateProvisioner(terraformProvisioner);
   }
@@ -336,7 +346,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     Map<String, Object> contextMap = null;
     List<NameValuePair> properties = new ArrayList<>();
     properties.add(NameValuePair.builder().value(workflowVariable).build());
-    ManagerExpressionEvaluator evaluator = Mockito.mock(ManagerExpressionEvaluator.class);
+    ManagerExpressionEvaluator evaluator = mock(ManagerExpressionEvaluator.class);
     Reflect.on(infrastructureProvisionerService).set("evaluator", evaluator);
     when(evaluator.evaluate(workflowVariable, contextMap)).thenReturn(null);
 
@@ -355,7 +365,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     Map<String, Object> contextMap = null;
     List<NameValuePair> properties = new ArrayList<>();
     properties.add(NameValuePair.builder().value(provisionerVariable).build());
-    ManagerExpressionEvaluator evaluator = Mockito.mock(ManagerExpressionEvaluator.class);
+    ManagerExpressionEvaluator evaluator = mock(ManagerExpressionEvaluator.class);
     Reflect.on(infrastructureProvisionerService).set("evaluator", evaluator);
     when(evaluator.evaluate(provisionerVariable, contextMap)).thenReturn(null);
 
@@ -369,12 +379,12 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   public void shouldGetIdToServiceMapping() {
     PageRequest<Service> servicePageRequest = new PageRequest<>();
     servicePageRequest.addFilter(Service.APP_ID_KEY, Operator.EQ, APP_ID);
-    Set<String> serviceIds = Sets.newHashSet(Arrays.asList("id1", "id2"));
+    Set<String> serviceIds = Sets.newHashSet(asList("id1", "id2"));
     servicePageRequest.addFilter(ServiceKeys.uuid, Operator.IN, serviceIds.toArray());
     PageResponse<Service> services = new PageResponse<>();
     Service service1 = Service.builder().name("service1").uuid("id1").build();
     Service service2 = Service.builder().name("service2").uuid("id2").build();
-    services.setResponse(Arrays.asList(service1, service2));
+    services.setResponse(asList(service1, service2));
     when(serviceResourceService.list(servicePageRequest, false, false, false, null)).thenReturn(services);
 
     Map<String, Service> idToServiceMapping = ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
@@ -403,12 +413,12 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     settingAttributePageRequest.addFilter(SettingAttribute.ACCOUNT_ID_KEY, Operator.EQ, ACCOUNT_ID);
     settingAttributePageRequest.addFilter(
         SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT.name());
-    Set<String> settingAttributeIds = Sets.newHashSet(Arrays.asList("id1", "id2"));
+    Set<String> settingAttributeIds = Sets.newHashSet(asList("id1", "id2"));
     settingAttributePageRequest.addFilter(SettingAttributeKeys.uuid, Operator.IN, settingAttributeIds.toArray());
     PageResponse<SettingAttribute> settingAttributePageResponse = new PageResponse<>();
     SettingAttribute settingAttribute1 = Builder.aSettingAttribute().withUuid("id1").build();
     SettingAttribute settingAttribute2 = Builder.aSettingAttribute().withUuid("id2").build();
-    settingAttributePageResponse.setResponse(Arrays.asList(settingAttribute1, settingAttribute2));
+    settingAttributePageResponse.setResponse(asList(settingAttribute1, settingAttribute2));
     when(settingService.list(settingAttributePageRequest, null, null)).thenReturn(settingAttributePageResponse);
 
     Map<String, SettingAttribute> idToSettingAttributeMapping =
@@ -443,20 +453,19 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     TerraformInfrastructureProvisioner provisioner =
         TerraformInfrastructureProvisioner.builder()
             .sourceRepoSettingId("settingId")
-            .mappingBlueprints(
-                Collections.singletonList(InfrastructureMappingBlueprint.builder().serviceId("serviceId").build()))
+            .mappingBlueprints(singletonList(InfrastructureMappingBlueprint.builder().serviceId("serviceId").build()))
             .build();
-    infraProvisionerPageResponse.setResponse(Collections.singletonList(provisioner));
+    infraProvisionerPageResponse.setResponse(singletonList(provisioner));
     doReturn(infraProvisionerPageResponse)
         .when(resourceLookupService)
         .listWithTagFilters(infraProvisionerPageRequest, null, EntityType.PROVISIONER, true);
     doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
-    HashSet<String> settingAttributeIds = new HashSet<>(Collections.singletonList("settingId"));
+    HashSet<String> settingAttributeIds = new HashSet<>(singletonList("settingId"));
     Map<String, SettingAttribute> idToSettingAttributeMapping = new HashMap<>();
     doReturn(idToSettingAttributeMapping)
         .when(ipService)
         .getIdToSettingAttributeMapping(ACCOUNT_ID, settingAttributeIds);
-    HashSet<String> servicesIds = new HashSet<>(Collections.singletonList("serviceId"));
+    HashSet<String> servicesIds = new HashSet<>(singletonList("serviceId"));
     Map<String, Service> idToServiceMapping = new HashMap<>();
     doReturn(idToServiceMapping).when(ipService).getIdToServiceMapping(APP_ID, servicesIds);
     InfrastructureProvisionerDetails infrastructureProvisionerDetails =
@@ -483,12 +492,12 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     PageResponse<InfrastructureProvisioner> infraProvisionerPageResponse = new PageResponse<>();
     TerraformInfrastructureProvisioner provisioner =
         TerraformInfrastructureProvisioner.builder().sourceRepoSettingId("settingId").build();
-    infraProvisionerPageResponse.setResponse(Collections.singletonList(provisioner));
+    infraProvisionerPageResponse.setResponse(singletonList(provisioner));
     doReturn(infraProvisionerPageResponse)
         .when(resourceLookupService)
         .listWithTagFilters(infraProvisionerPageRequest, null, EntityType.PROVISIONER, true);
     doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
-    HashSet<String> settingAttributeIds = new HashSet<>(Collections.singletonList("settingId"));
+    HashSet<String> settingAttributeIds = new HashSet<>(singletonList("settingId"));
     Map<String, SettingAttribute> idToSettingAttributeMapping = new HashMap<>();
     doReturn(idToSettingAttributeMapping)
         .when(ipService)
@@ -507,5 +516,32 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
 
     assertThat(infraProvisionerDetailsPageResponse.getResponse()).hasSize(1);
     assertThat(infraProvisionerDetailsPageResponse.getResponse().get(0)).isEqualTo(infrastructureProvisionerDetails);
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void shouldFilterDeletedServices() {
+    InfrastructureProvisionerServiceImpl ipService = spy(new InfrastructureProvisionerServiceImpl());
+    WingsPersistence mockWingsPersistence = mock(WingsPersistence.class);
+    Reflect.on(ipService).set("wingsPersistence", mockWingsPersistence);
+    FeatureFlagService mockFeatureFlagService = mock(FeatureFlagService.class);
+    Reflect.on(ipService).set("featureFlagService", mockFeatureFlagService);
+    String SVC_ID_00 = "svc-00";
+    String SVC_ID_01 = "svc-01";
+    doReturn(false).when(mockFeatureFlagService).isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), any());
+    InfrastructureProvisioner provisioner =
+        TerraformInfrastructureProvisioner.builder()
+            .mappingBlueprints(asList(InfrastructureMappingBlueprint.builder().serviceId(SVC_ID_00).build(),
+                InfrastructureMappingBlueprint.builder().serviceId(SVC_ID_01).build()))
+            .build();
+    doReturn(provisioner).when(mockWingsPersistence).getWithAppId(any(), anyString(), anyString());
+    Map<String, Service> map = new HashMap<>();
+    map.put("svc-00", Service.builder().uuid(SVC_ID_00).name("name-00").build());
+    doReturn(map).when(ipService).getIdToServiceMapping(anyString(), anySet());
+    InfrastructureProvisioner returned = ipService.get(APP_ID, PROVISIONER_ID);
+    assertThat(returned).isNotNull();
+    assertThat(returned.getMappingBlueprints().size()).isEqualTo(1);
+    assertThat(returned.getMappingBlueprints().get(0).getServiceId()).isEqualTo(SVC_ID_00);
   }
 }

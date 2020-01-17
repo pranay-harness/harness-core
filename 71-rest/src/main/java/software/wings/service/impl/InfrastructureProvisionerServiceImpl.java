@@ -6,8 +6,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static org.atteo.evo.inflector.English.plural;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -50,7 +52,6 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.TerraformExecutionData;
-import software.wings.beans.Base;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.CloudFormationSourceType;
@@ -115,6 +116,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -286,14 +288,16 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       detailsBuilder.cloudFormationSourceType(sourceType);
     }
 
-    if (isNotEmpty(provisioner.getMappingBlueprints())) {
-      detailsBuilder.services(provisioner.getMappingBlueprints()
-                                  .stream()
-                                  .map(InfrastructureMappingBlueprint::getServiceId)
-                                  .map(idToServiceMapping::get)
-                                  .collect(toMap(Service::getName, Base::getUuid)));
+    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, provisioner.getAccountId())) {
+      if (isNotEmpty(provisioner.getMappingBlueprints())) {
+        detailsBuilder.services(provisioner.getMappingBlueprints()
+                                    .stream()
+                                    .map(InfrastructureMappingBlueprint::getServiceId)
+                                    .map(idToServiceMapping::get)
+                                    .filter(Objects::nonNull)
+                                    .collect(toMap(Service::getName, Service::getUuid)));
+      }
     }
-
     return detailsBuilder.build();
   }
 
@@ -387,6 +391,23 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         wingsPersistence.getWithAppId(InfrastructureProvisioner.class, appId, infrastructureProvisionerId);
     if (infrastructureProvisioner == null) {
       throw new InvalidRequestException("Provisioner Not Found");
+    }
+    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureProvisioner.getAccountId())) {
+      List<InfrastructureMappingBlueprint> mappingBlueprints = infrastructureProvisioner.getMappingBlueprints();
+      if (isNotEmpty(mappingBlueprints)) {
+        Set<String> serviceIds =
+            mappingBlueprints.stream().map(InfrastructureMappingBlueprint::getServiceId).collect(toSet());
+        Map<String, Service> idToServiceMapping = getIdToServiceMapping(appId, serviceIds);
+        Set<String> existingServiceIds = idToServiceMapping.keySet();
+        if (isEmpty(existingServiceIds)) {
+          infrastructureProvisioner.setMappingBlueprints(emptyList());
+        } else {
+          infrastructureProvisioner.setMappingBlueprints(
+              mappingBlueprints.stream()
+                  .filter(mappingBlueprint -> existingServiceIds.contains(mappingBlueprint.getServiceId()))
+                  .collect(toList()));
+        }
+      }
     }
     return infrastructureProvisioner;
   }
