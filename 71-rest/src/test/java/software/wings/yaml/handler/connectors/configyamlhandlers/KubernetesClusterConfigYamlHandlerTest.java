@@ -11,7 +11,6 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.CCMSettingService;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,8 +21,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.KubernetesClusterConfigYamlHandler;
 import software.wings.service.intfc.AccountService;
-
-import java.io.IOException;
 
 public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
   @Mock private CCMSettingService ccmSettingService;
@@ -38,16 +35,24 @@ public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConf
   @Test
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     String kubernetesClusterConfigName = "KubernetesCluster-" + System.currentTimeMillis();
 
-    SettingAttribute settingAttributeSaved = createKubernetesClusterConfigProvider(kubernetesClusterConfigName);
-    assertThat(settingAttributeSaved.getName()).isEqualTo(kubernetesClusterConfigName);
+    SettingAttribute K8sClusterConfigWithoutValidation =
+        createKubernetesClusterConfigProvider(kubernetesClusterConfigName, true);
+    assertThat(K8sClusterConfigWithoutValidation.getName()).isEqualTo(kubernetesClusterConfigName);
 
-    testCRUD(generateSettingValueYamlConfig(kubernetesClusterConfigName, settingAttributeSaved));
+    testCRUD(generateSettingValueYamlConfig(kubernetesClusterConfigName, K8sClusterConfigWithoutValidation));
+
+    SettingAttribute K8sClusterConfigWithValidation =
+        createKubernetesClusterConfigProvider(kubernetesClusterConfigName, false);
+    assertThat(K8sClusterConfigWithValidation.getName()).isEqualTo(kubernetesClusterConfigName);
+
+    testCRUD(generateSettingValueYamlConfig(kubernetesClusterConfigName, K8sClusterConfigWithValidation));
   }
 
-  private SettingAttribute createKubernetesClusterConfigProvider(String kubernetesClusterConfigName) {
+  private SettingAttribute createKubernetesClusterConfigProvider(
+      String kubernetesClusterConfigName, boolean skipValidation) {
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
     return settingsService.save(aSettingAttribute()
@@ -59,6 +64,7 @@ public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConf
                                                    .username(username)
                                                    .password(password.toCharArray())
                                                    .accountId(ACCOUNT_ID)
+                                                   .skipValidation(skipValidation)
                                                    .build())
                                     .build());
   }
