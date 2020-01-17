@@ -1242,6 +1242,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                                 .ec2Instance(ec2Instance)
                                                 .status(Status.SUCCESS)
                                                 .newContainer(!originalTaskArns.contains(task.getArn()))
+                                                .containerTasksReachable(true)
                                                 .build();
 
               containerInfos.add(containerInfo);
