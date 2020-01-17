@@ -89,6 +89,7 @@ import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.SplunkStateExecutionData;
+import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
 import software.wings.api.WaitStateExecutionData;
@@ -1446,5 +1447,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureArtifactsCollectionTaskParameters.class, 7289);
     kryo.register(GcpKmsConfig.class, 7290);
     kryo.register(UtmInfo.class, 7291);
+    kryo.register(TerraformApplyMarkerParam.class, 7292);
   }
 }

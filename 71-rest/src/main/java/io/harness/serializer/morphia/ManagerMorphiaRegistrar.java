@@ -83,6 +83,7 @@ import software.wings.api.ServiceNowExecutionData;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.SimpleWorkflowParam;
+import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
 import software.wings.api.cloudformation.CloudFormationDeleteStackElement;
@@ -1057,6 +1058,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.terraform.TerraformProvisionInheritPlanElement", TerraformProvisionInheritPlanElement.class);
     w.put("api.TerraformExecutionData", TerraformExecutionData.class);
     w.put("api.TerraformOutputInfoElement", TerraformOutputInfoElement.class);
+    w.put("api.TerraformApplyMarkerParam", TerraformApplyMarkerParam.class);
     w.put("api.lambda.AwsLambdaDeploymentInfo", AwsLambdaDeploymentInfo.class);
     w.put("audit.EntityAuditRecord", EntityAuditRecord.class);
     w.put("beans.alert.ApprovalNeededAlert", ApprovalNeededAlert.class);
