@@ -61,25 +61,12 @@ public class ManifestHelper {
       throw new KubernetesYamlException(e.getMessage(), e.getCause());
     }
 
-    if (!map.containsKey("kind")) {
-      throw new KubernetesYamlException("Error processing yaml manifest. kind not found in spec.");
-    }
-
-    String kind = map.get("kind").toString();
-
-    if (!map.containsKey("metadata")) {
-      throw new KubernetesYamlException("Error processing yaml manifest. metadata not found in spec.");
-    }
-
-    Map metadata = (Map) map.get("metadata");
-    if (!metadata.containsKey("name")) {
-      throw new KubernetesYamlException("Error processing yaml manifest. metadata.name not found in spec.");
-    }
-
-    String name = metadata.get("name").toString();
+    String kind = getKind(map);
+    Map metadata = getMetadata(map);
+    String name = getName(metadata);
 
     String namespace = null;
-    if (metadata.containsKey("namespace")) {
+    if (metadata.containsKey("namespace") && metadata.get("namespace") != null) {
       namespace = metadata.get("namespace").toString();
     }
 
@@ -88,6 +75,41 @@ public class ManifestHelper {
         .value(map)
         .spec(spec)
         .build();
+  }
+
+  private static String getName(Map metadata) {
+    if (!metadata.containsKey("name")) {
+      throw new KubernetesYamlException("Error processing yaml manifest. metadata.name not found in spec.");
+    }
+
+    if (metadata.get("name") == null) {
+      throw new KubernetesYamlException("Error processing yaml manifest. metadata.name is set to null in spec.");
+    }
+
+    return metadata.get("name").toString();
+  }
+
+  private static Map getMetadata(Map map) {
+    if (!map.containsKey("metadata")) {
+      throw new KubernetesYamlException("Error processing yaml manifest. metadata not found in spec.");
+    }
+
+    if (map.get("metadata") == null) {
+      throw new KubernetesYamlException("Error processing yaml manifest. metadata is set to null in spec.");
+    }
+
+    return (Map) map.get("metadata");
+  }
+
+  private static String getKind(Map map) {
+    if (!map.containsKey("kind")) {
+      throw new KubernetesYamlException("Error processing yaml manifest. kind not found in spec.");
+    }
+
+    if (map.get("kind") == null) {
+      throw new KubernetesYamlException("Error processing yaml manifest. kind is set to null in spec.");
+    }
+    return map.get("kind").toString();
   }
 
   public static List<KubernetesResource> processYaml(String yamlString) {

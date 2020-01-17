@@ -335,4 +335,79 @@ public class ManifestHelperTest extends CategoryTest {
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
   }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testNullNameInSpec() {
+    try {
+      processYaml("apiVersion: v1\n"
+          + "kind: ConfigMap\n"
+          + "metadata:\n"
+          + "  name: \n"
+          + "  namespace: \n"
+          + "data:\n"
+          + "  hello: world");
+      fail("should not reach here");
+    } catch (KubernetesYamlException e) {
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
+          .extracting(ResponseMessage::getMessage)
+          .containsExactly(
+              "Invalid Kubernetes YAML Spec. Error processing yaml manifest. metadata.name is set to null in spec..");
+    }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testNullKindInSpec() {
+    try {
+      processYaml("apiVersion: v1\n"
+          + "kind: \n"
+          + "metadata:\n"
+          + "  name: configmap-test\n"
+          + "  namespace: \n"
+          + "data:\n"
+          + "  hello: world");
+      fail("should not reach here");
+    } catch (KubernetesYamlException e) {
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
+          .extracting(ResponseMessage::getMessage)
+          .containsExactly(
+              "Invalid Kubernetes YAML Spec. Error processing yaml manifest. kind is set to null in spec..");
+    }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testNullMetadataInSpec() {
+    try {
+      processYaml("apiVersion: v1\n"
+          + "kind: ConfigMap\n"
+          + "metadata:\n"
+          + "data:\n"
+          + "  hello: world");
+      fail("should not reach here");
+    } catch (KubernetesYamlException e) {
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
+          .extracting(ResponseMessage::getMessage)
+          .containsExactly(
+              "Invalid Kubernetes YAML Spec. Error processing yaml manifest. metadata is set to null in spec..");
+    }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testNullNamespaceInSpec() {
+    List<KubernetesResource> kubernetesResources = processYaml("apiVersion: v1\n"
+        + "kind: ConfigMap\n"
+        + "metadata:\n"
+        + "  name: configmap-test\n"
+        + "  namespace: \n"
+        + "data:\n"
+        + "  hello: world");
+    assertThat(kubernetesResources).isNotEmpty();
+  }
 }
