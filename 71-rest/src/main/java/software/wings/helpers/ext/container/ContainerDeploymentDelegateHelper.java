@@ -105,7 +105,7 @@ public class ContainerDeploymentDelegateHelper {
     config.setClientKey(getEncodedChars(config.getClientKey()));
   }
 
-  private String getConfigFileContent(KubernetesConfig config) {
+  public String getConfigFileContent(KubernetesConfig config) {
     encodeCharsIfNeeded(config);
 
     if (isBlank(config.getMasterUrl())) {

@@ -2,66 +2,65 @@ package software.wings.cloudprovider.gke;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
-import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.times;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import com.google.common.util.concurrent.TimeLimiter;
 
-import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.DoneableReplicationController;
 import io.fabric8.kubernetes.api.model.DoneableService;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.impl.KubernetesHelperService;
+import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
+import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by brett on 2/10/17.
  */
-public class KubernetesContainerServiceImplTest extends WingsBaseTest {
+public class KubernetesContainerServiceImplTest extends CategoryTest {
   public static final String MASTER_URL = "masterUrl";
   public static final String USERNAME = "username";
 
@@ -72,62 +71,55 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
                                                                 .namespace("default")
                                                                 .build();
 
-  @Mock private KubernetesHelperService kubernetesHelperService;
   @Mock private KubernetesClient kubernetesClient;
   @Mock
   private MixedOperation<ReplicationController, ReplicationControllerList, DoneableReplicationController,
       RollableScalableResource<ReplicationController, DoneableReplicationController>> replicationControllers;
+
   @Mock
   private NonNamespaceOperation<ReplicationController, ReplicationControllerList, DoneableReplicationController,
       RollableScalableResource<ReplicationController, DoneableReplicationController>> namespacedControllers;
+
   @Mock private MixedOperation<Service, ServiceList, DoneableService, Resource<Service, DoneableService>> services;
   @Mock
   private NonNamespaceOperation<Service, ServiceList, DoneableService, Resource<Service, DoneableService>>
       namespacedServices;
   @Mock
   private RollableScalableResource<ReplicationController, DoneableReplicationController> scalableReplicationController;
-  @Mock private ReplicationController replicationController;
   @Mock private Resource<Service, DoneableService> serviceResource;
-  @Mock private ObjectMeta replicationControllerMetadata;
   @Mock private MixedOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> pods;
-  @Mock private NonNamespaceOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> namespacedPods;
-  @Mock private FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> podsWithLabels;
-  @Mock private PodList podList;
-  @Mock private Pod pod;
-  @Mock private PodStatus podStatus;
-  @Mock private ObjectMeta podMetadata;
-  @Mock private ContainerStatus containerStatus;
-  @Mock private ReplicationControllerSpec replicationControllerSpec;
 
-  @Inject @InjectMocks private KubernetesContainerService kubernetesContainerService;
+  @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Mock private KubernetesHelperService kubernetesHelperService;
+  @Mock private TimeLimiter timeLimiter;
+  @Mock private Clock clock;
+  @Mock private K8sGlobalConfigService k8sGlobalConfigService;
+
+  @InjectMocks private KubernetesContainerServiceImpl kubernetesContainerService;
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+
+  ReplicationController replicationController;
+  ReplicationControllerSpec spec;
 
   @Before
   public void setUp() throws Exception {
     when(kubernetesHelperService.getKubernetesClient(KUBERNETES_CONFIG, Collections.emptyList()))
         .thenReturn(kubernetesClient);
+
+    when(kubernetesClient.services()).thenReturn(services);
     when(kubernetesClient.replicationControllers()).thenReturn(replicationControllers);
     when(replicationControllers.inNamespace("default")).thenReturn(namespacedControllers);
-    when(kubernetesClient.services()).thenReturn(services);
     when(services.inNamespace("default")).thenReturn(namespacedServices);
     when(namespacedServices.createOrReplaceWithNew()).thenReturn(new DoneableService(item -> item));
     when(namespacedControllers.withName(anyString())).thenReturn(scalableReplicationController);
     when(namespacedServices.withName(anyString())).thenReturn(serviceResource);
-    when(scalableReplicationController.get()).thenReturn(replicationController);
-    when(replicationController.getMetadata()).thenReturn(replicationControllerMetadata);
-    when(replicationController.getSpec()).thenReturn(replicationControllerSpec);
-    when(replicationControllerSpec.getTemplate()).thenReturn(null);
-    when(replicationControllerMetadata.getLabels()).thenReturn(ImmutableMap.of("app", "appname"));
-    when(kubernetesClient.pods()).thenReturn(pods);
-    when(pods.inNamespace("default")).thenReturn(namespacedPods);
-    when(namespacedPods.withLabels(anyMap())).thenReturn(podsWithLabels);
-    when(podsWithLabels.list()).thenReturn(podList);
-    when(podList.getItems()).thenReturn(ImmutableList.of(pod, pod, pod));
-    when(pod.getStatus()).thenReturn(podStatus);
-    when(podStatus.getPhase()).thenReturn("Running");
-    when(pod.getMetadata()).thenReturn(podMetadata);
-    when(podMetadata.getName()).thenReturn("pod-name");
-    when(podStatus.getContainerStatuses()).thenReturn(ImmutableList.of(containerStatus));
-    when(containerStatus.getContainerID()).thenReturn("docker://0123456789ABCDEF");
+
+    replicationController = new ReplicationController();
+    spec = new ReplicationControllerSpec();
+    spec.setReplicas(8);
+    replicationController.setSpec(spec);
+    when(timeLimiter.callWithTimeout(any(), anyLong(), isA(TimeUnit.class), anyBoolean()))
+        .thenReturn(replicationController);
   }
 
   @Test
@@ -136,18 +128,18 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   public void shouldCreateBackendController() {}
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldCreateFrontendController() {}
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldDeleteController() {
     kubernetesContainerService.deleteController(KUBERNETES_CONFIG, Collections.emptyList(), "ctrl");
 
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
-    verify(namespacedControllers, times(2)).withName(args.capture());
+    verify(namespacedControllers).withName(args.capture());
     assertThat(args.getValue()).isEqualTo("ctrl");
     verify(scalableReplicationController).delete();
   }
@@ -158,12 +150,12 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   public void shouldCreateFrontendService() {}
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldCreateBackendService() {}
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldDeleteService() {
     kubernetesContainerService.deleteService(KUBERNETES_CONFIG, Collections.emptyList(), "service");
@@ -192,10 +184,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
-  public void shouldGetControllerPodCount() {
-    when(scalableReplicationController.get())
-        .thenReturn(new ReplicationControllerBuilder().withNewSpec().withReplicas(8).endSpec().build());
-
+  public void shouldGetControllerPodCount() throws Exception {
     Optional<Integer> count =
         kubernetesContainerService.getControllerPodCount(KUBERNETES_CONFIG, Collections.emptyList(), "foo");
 
@@ -208,7 +197,6 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetControllerPodCountUnhandledResource() {
     Service service = new Service();
-
     try {
       kubernetesContainerService.getControllerPodCount(service);
       fail("Should not reach here.");

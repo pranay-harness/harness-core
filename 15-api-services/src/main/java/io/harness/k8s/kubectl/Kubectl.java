@@ -33,6 +33,10 @@ public class Kubectl {
     return new GetCommand(this);
   }
 
+  public AuthCommand auth() {
+    return new AuthCommand(this);
+  }
+
   public DescribeCommand describe() {
     return new DescribeCommand(this);
   }

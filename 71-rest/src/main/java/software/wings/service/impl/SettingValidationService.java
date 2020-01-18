@@ -12,10 +12,12 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
+import io.harness.ccm.CCMSettingService;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -133,6 +135,7 @@ public class SettingValidationService {
   @Inject private DelegateService delegateService;
   @Inject private ServiceNowServiceImpl servicenowServiceImpl;
   @Inject private SpotinstHelperServiceManager spotinstHelperServiceManager;
+  @Inject private CCMSettingService ccmSettingService;
 
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -218,12 +221,13 @@ public class SettingValidationService {
     } else if (settingValue instanceof AzureConfig) {
       azureHelperService.validateAzureAccountCredential((AzureConfig) settingValue, encryptedDataDetails);
     } else if (settingValue instanceof PcfConfig) {
-      validatePcfConfig(settingAttribute, (PcfConfig) settingValue);
+      validatePcfConfig((PcfConfig) settingValue);
     } else if (settingValue instanceof AwsConfig) {
       validateAwsConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof KubernetesClusterConfig) {
       if (!((KubernetesClusterConfig) settingValue).isSkipValidation()) {
-        validateKubernetesClusterConfig(settingAttribute);
+        boolean isCloudCostEnabled = ccmSettingService.isCloudCostEnabled(settingAttribute);
+        validateKubernetesClusterConfig(settingAttribute, isCloudCostEnabled);
       }
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
         || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig
@@ -314,28 +318,27 @@ public class SettingValidationService {
     }
   }
 
-  private void validatePcfConfig(SettingAttribute settingAttribute, PcfConfig pcfConfig) {
+  private void validatePcfConfig(PcfConfig pcfConfig) {
     pcfHelperService.validate(pcfConfig);
   }
 
-  private void validateKubernetesClusterConfig(SettingAttribute settingAttribute) {
-    if (settingAttribute.getValue() instanceof KubernetesClusterConfig
-        && ((KubernetesClusterConfig) settingAttribute.getValue()).isSkipValidation()) {
-      return;
-    }
-
-    String namespace = "default";
+  private boolean validateKubernetesClusterConfig(SettingAttribute settingAttribute, boolean isCloudCostEnabled) {
+    SettingValue settingValue = settingAttribute.getValue();
+    Preconditions.checkArgument(((KubernetesClusterConfig) settingValue).isSkipValidation() == false);
 
     SyncTaskContext syncTaskContext =
         SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    ContainerService containerService = delegateProxyFactory.get(ContainerService.class, syncTaskContext);
+
+    String namespace = "default";
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
                                                         .encryptionDetails(emptyList())
                                                         .namespace(namespace)
+                                                        .cloudCostEnabled(isCloudCostEnabled)
                                                         .build();
     try {
-      ContainerService containerService = delegateProxyFactory.get(ContainerService.class, syncTaskContext);
-      containerService.validate(containerServiceParams);
+      return containerService.validate(containerServiceParams);
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
