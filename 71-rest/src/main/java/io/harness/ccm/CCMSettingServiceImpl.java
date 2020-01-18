@@ -31,7 +31,7 @@ public class CCMSettingServiceImpl implements CCMSettingService {
     if (account.isCloudCostEnabled()) {
       CloudCostAware value = (CloudCostAware) settingAttribute.getValue();
       CCMConfig ccmConfig = value.getCcmConfig();
-      if (!isNull(ccmConfig)) {
+      if (null != ccmConfig) {
         return ccmConfig.isCloudCostEnabled();
       }
     }

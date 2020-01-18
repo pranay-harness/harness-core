@@ -239,6 +239,7 @@ public class ContainerServiceImpl implements ContainerService {
 
   @Override
   public Boolean validate(ContainerServiceParams containerServiceParams) {
+    String namespace = containerServiceParams.getNamespace();
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     if (value instanceof AwsConfig) {
       awsClusterService.getServices(containerServiceParams.getRegion(), containerServiceParams.getSettingAttribute(),
@@ -249,34 +250,26 @@ public class ContainerServiceImpl implements ContainerService {
       if (azureHelperService.isValidKubernetesCluster(azureConfig, containerServiceParams.getEncryptionDetails(),
               containerServiceParams.getSubscriptionId(), containerServiceParams.getResourceGroup(),
               containerServiceParams.getClusterName())) {
-        KubernetesConfig kubernetesConfig =
-            azureHelperService.getKubernetesClusterConfig(azureConfig, containerServiceParams.getEncryptionDetails(),
-                containerServiceParams.getSubscriptionId(), containerServiceParams.getResourceGroup(),
-                containerServiceParams.getClusterName(), containerServiceParams.getNamespace());
+        KubernetesConfig kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig,
+            containerServiceParams.getEncryptionDetails(), containerServiceParams.getSubscriptionId(),
+            containerServiceParams.getResourceGroup(), containerServiceParams.getClusterName(), namespace);
         kubernetesConfig.setDecrypted(true);
-        // TODO - switch to list namespaces?
-        kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
-        // kubernetesContainerService.listNamespaces(kubernetesConfig, containerServiceParams.getEncryptionDetails());
+        kubernetesContainerService.validate(kubernetesConfig, containerServiceParams.getEncryptionDetails());
         return true;
       } else {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Invalid Argument: Not a valid AKS cluster");
       }
     } else if (value instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
-      KubernetesConfig kubernetesConfig =
-          kubernetesClusterConfig.createKubernetesConfig(containerServiceParams.getNamespace());
-      // TODO - switch to list namespaces?
-      kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
-      // kubernetesContainerService.listNamespaces(kubernetesConfig, containerServiceParams.getEncryptionDetails());
+      KubernetesConfig kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
+      kubernetesContainerService.validate(
+          kubernetesConfig, containerServiceParams.getEncryptionDetails(), kubernetesClusterConfig.cloudCostEnabled());
       return true;
     } else if (isKubernetesClusterConfig(value)) {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-      // TODO - switch to list namespaces?
-      kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
-      // kubernetesContainerService.listNamespaces(kubernetesConfig, containerServiceParams.getEncryptionDetails());
+      kubernetesContainerService.validate(kubernetesConfig, containerServiceParams.getEncryptionDetails());
       return true;
     }
-
     throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
         .addParam("args", "Unknown setting value type: " + value.getType());
   }

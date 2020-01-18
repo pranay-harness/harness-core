@@ -40,6 +40,10 @@ public interface KubernetesContainerService {
   List<? extends HasMetadata> getControllers(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels);
 
+  void validate(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptionDetails);
+  void validate(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptionDetails, boolean cloudCostEnabled);
+
   List<? extends HasMetadata> listControllers(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
