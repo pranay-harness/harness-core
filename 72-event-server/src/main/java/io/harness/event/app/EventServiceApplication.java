@@ -20,12 +20,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.LogManager;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
@@ -41,6 +43,16 @@ public class EventServiceApplication {
   }
 
   public static void main(String[] args) throws IOException, InterruptedException {
+    // Optionally remove existing handlers attached to j.u.l root logger
+    SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
+
+    // add SLF4JBridgeHandler to j.u.l's root logger, should be done once during
+    // the initialization phase of your application
+    SLF4JBridgeHandler.install();
+
+    // Set logging level
+    java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
+
     logger.info("Starting event service application...");
 
     File configFile = new File(args[1]);
