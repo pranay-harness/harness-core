@@ -1141,6 +1141,7 @@ public class PcfClientImpl implements PcfClient {
           .routes()
           .create(createRouteRequestBuilder.build())
           .subscribe(null, throwable -> {
+            exceptionOccured.set(true);
             handleException(throwable, "createRouteMapIfNotExists", errorBuilder);
             latch2.countDown();
           }, latch2::countDown);
@@ -1363,9 +1364,14 @@ public class PcfClientImpl implements PcfClient {
     String domainNameUsed = EMPTY;
     for (String domainName : domainNames) {
       if (routeToCreate.contains(domainName)) {
-        validRoute = true;
-        domainNameUsed = domainName;
-        break;
+        if (!validRoute) {
+          validRoute = true;
+          domainNameUsed = domainName;
+        } else {
+          if (domainName.length() > domainNameUsed.length()) {
+            domainNameUsed = domainName;
+          }
+        }
       }
     }
 

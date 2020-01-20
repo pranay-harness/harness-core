@@ -1075,6 +1075,8 @@ public class PivotalClientTest extends WingsBaseTest {
     PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
     Set<String> domains = new HashSet<>();
     domains.add("apps.io");
+    domains.add("harness.io");
+    domains.add("z.harness.io");
 
     try {
       clientImpl.createRouteFromPath("app1.cfapps1.io", pcfRequestConfig, domains);
@@ -1114,5 +1116,20 @@ public class PivotalClientTest extends WingsBaseTest {
     assertThat(hostCaptor.getValue()).isEqualTo("app1");
     assertThat(domainCaptor.getValue()).isEqualTo("apps.io");
     assertThat(pathCaptor.getValue()).isEqualTo("/inside/display.jsp");
+
+    reset(clientImpl);
+    doNothing()
+        .when(clientImpl)
+        .createRouteMap(any(), anyString(), anyString(), anyString(), anyBoolean(), anyBoolean(), anyInt());
+    clientImpl.createRouteFromPath("cdp-10128.z.harness.io", pcfRequestConfig, domains);
+    hostCaptor = ArgumentCaptor.forClass(String.class);
+    domainCaptor = ArgumentCaptor.forClass(String.class);
+    pathCaptor = ArgumentCaptor.forClass(String.class);
+
+    verify(clientImpl)
+        .createRouteMap(any(), hostCaptor.capture(), domainCaptor.capture(), pathCaptor.capture(), anyBoolean(),
+            anyBoolean(), anyInt());
+    assertThat(hostCaptor.getValue()).isEqualTo("cdp-10128");
+    assertThat(domainCaptor.getValue()).isEqualTo("z.harness.io");
   }
 }
