@@ -25,13 +25,14 @@ public abstract class EventWriter {
   @Autowired protected InstanceDataService instanceDataService;
   @Autowired protected CloudToHarnessMappingService cloudToHarnessMappingService;
 
-  protected InstanceData fetchActiveInstanceData(String accountId, String instanceId) {
+  protected InstanceData fetchActiveInstanceData(String accountId, String clusterId, String instanceId) {
     List<InstanceState> instanceStates =
         new ArrayList<>(Arrays.asList(InstanceState.INITIALIZING, InstanceState.RUNNING));
-    return instanceDataService.fetchActiveInstanceData(accountId, instanceId, instanceStates);
+    return instanceDataService.fetchActiveInstanceData(accountId, clusterId, instanceId, instanceStates);
   }
 
-  protected void updateInstanceDataLifecycle(String accountId, String instanceId, Lifecycle lifecycle) {
+  protected void updateInstanceDataLifecycle(
+      String accountId, String clusterId, String instanceId, Lifecycle lifecycle) {
     Instant instanceTime = HTimestamps.toInstant(lifecycle.getTimestamp());
     InstanceState currentInstanceState = null;
     InstanceState updateInstanceState = null;
@@ -46,7 +47,7 @@ public abstract class EventWriter {
 
     if (null != currentInstanceState && null != updateInstanceState) {
       InstanceData instanceData = instanceDataService.fetchActiveInstanceData(
-          accountId, instanceId, new ArrayList<>(Arrays.asList(currentInstanceState)));
+          accountId, clusterId, instanceId, new ArrayList<>(Arrays.asList(currentInstanceState)));
       if (null != instanceData
           && !(instanceData.getInstanceState() == InstanceState.RUNNING
                  && instanceData.getUsageStartTime().isAfter(instanceTime))) {
@@ -68,13 +69,13 @@ public abstract class EventWriter {
 
   protected void handleLifecycleEvent(String accountId, Lifecycle lifecycle) {
     String instanceId = getIdFromArn(lifecycle.getInstanceId());
-    updateInstanceDataLifecycle(accountId, instanceId, lifecycle);
+    String clusterId = lifecycle.getClusterId();
+    updateInstanceDataLifecycle(accountId, clusterId, instanceId, lifecycle);
   }
 
-  protected Set<String> fetchActiveInstanceAtTime(
-      String accountId, String settingId, String clusterId, Instant startTime) {
+  protected Set<String> fetchActiveInstanceAtTime(String accountId, String clusterId, Instant startTime) {
     List<InstanceData> activeInstances =
-        instanceDataService.fetchClusterActiveInstanceData(accountId, settingId, clusterId, startTime);
+        instanceDataService.fetchClusterActiveInstanceData(accountId, clusterId, startTime);
     return activeInstances.stream().map(InstanceData::getInstanceId).collect(Collectors.toSet());
   }
 

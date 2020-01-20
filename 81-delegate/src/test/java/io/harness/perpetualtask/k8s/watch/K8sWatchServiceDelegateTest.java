@@ -103,6 +103,7 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     ByteString k8sClusterConfig1 = ByteString.copyFrom(KryoUtils.asBytes(
         K8sClusterConfig.builder().clusterName("test-cluster1").namespace("namespace1").cloudProvider(null).build()));
     K8sWatchTaskParams k8sWatchTaskParams1 = K8sWatchTaskParams.newBuilder()
+                                                 .setClusterId("clusterId1")
                                                  .setK8SClusterConfig(k8sClusterConfig1)
                                                  .setCloudProviderId(cloudProviderId1)
                                                  .build();
@@ -110,6 +111,7 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     ByteString k8sClusterConfig2 = ByteString.copyFrom(KryoUtils.asBytes(
         K8sClusterConfig.builder().clusterName("test-cluster2").namespace("namespace2").cloudProvider(null).build()));
     K8sWatchTaskParams k8sWatchTaskParams2 = K8sWatchTaskParams.newBuilder()
+                                                 .setClusterId("clusterId2")
                                                  .setK8SClusterConfig(k8sClusterConfig2)
                                                  .setCloudProviderId(cloudProviderId2)
                                                  .build();

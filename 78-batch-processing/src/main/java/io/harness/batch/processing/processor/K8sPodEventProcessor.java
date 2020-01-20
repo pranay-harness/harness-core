@@ -28,6 +28,7 @@ public class K8sPodEventProcessor implements ItemProcessor<PublishedMessage, Ins
     return InstanceEvent.builder()
         .accountId(publishedMessage.getAccountId())
         .cloudProviderId(podEvent.getCloudProviderId())
+        .clusterId(podEvent.getClusterId())
         .instanceId(podEvent.getPodUid())
         .type(type)
         .timestamp(HTimestamps.toInstant(podEvent.getTimestamp()))

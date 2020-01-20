@@ -18,6 +18,7 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
   private NodeMetric() {
     cloudProviderId_ = "";
     name_ = "";
+    clusterId_ = "";
   }
 
   @java.
@@ -91,6 +92,12 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
               usage_ = subBuilder.buildPartial();
             }
 
+            break;
+          }
+          case 50: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            clusterId_ = s;
             break;
           }
           default: {
@@ -246,6 +253,36 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
     return getUsage();
   }
 
+  public static final int CLUSTER_ID_FIELD_NUMBER = 6;
+  private volatile java.lang.Object clusterId_;
+  /**
+   * <code>string cluster_id = 6;</code>
+   */
+  public java.lang.String getClusterId() {
+    java.lang.Object ref = clusterId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      clusterId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string cluster_id = 6;</code>
+   */
+  public com.google.protobuf.ByteString getClusterIdBytes() {
+    java.lang.Object ref = clusterId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      clusterId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -276,6 +313,9 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
     if (usage_ != null) {
       output.writeMessage(5, getUsage());
     }
+    if (!getClusterIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 6, clusterId_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -300,6 +340,9 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
     }
     if (usage_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(5, getUsage());
+    }
+    if (!getClusterIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, clusterId_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -338,6 +381,8 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       if (!getUsage().equals(other.getUsage()))
         return false;
     }
+    if (!getClusterId().equals(other.getClusterId()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -366,6 +411,8 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       hash = (37 * hash) + USAGE_FIELD_NUMBER;
       hash = (53 * hash) + getUsage().hashCode();
     }
+    hash = (37 * hash) + CLUSTER_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getClusterId().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -499,6 +546,8 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
         usage_ = null;
         usageBuilder_ = null;
       }
+      clusterId_ = "";
+
       return this;
     }
 
@@ -546,6 +595,7 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       } else {
         result.usage_ = usageBuilder_.build();
       }
+      result.clusterId_ = clusterId_;
       onBuilt();
       return result;
     }
@@ -604,6 +654,10 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       }
       if (other.hasUsage()) {
         mergeUsage(other.getUsage());
+      }
+      if (!other.getClusterId().isEmpty()) {
+        clusterId_ = other.clusterId_;
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1087,6 +1141,68 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
         usage_ = null;
       }
       return usageBuilder_;
+    }
+
+    private java.lang.Object clusterId_ = "";
+    /**
+     * <code>string cluster_id = 6;</code>
+     */
+    public java.lang.String getClusterId() {
+      java.lang.Object ref = clusterId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        clusterId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string cluster_id = 6;</code>
+     */
+    public com.google.protobuf.ByteString getClusterIdBytes() {
+      java.lang.Object ref = clusterId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        clusterId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string cluster_id = 6;</code>
+     */
+    public Builder setClusterId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      clusterId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_id = 6;</code>
+     */
+    public Builder clearClusterId() {
+      clusterId_ = getDefaultInstance().getClusterId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_id = 6;</code>
+     */
+    public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      clusterId_ = value;
+      onChanged();
+      return this;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

@@ -38,7 +38,7 @@ public class K8sWatchServiceDelegate {
   }
 
   public String create(K8sWatchTaskParams params) {
-    String watchId = params.getCloudProviderId();
+    String watchId = params.getClusterId();
     // computeIfAbsent form required for lookup & create to be atomic.
     watchMap.computeIfAbsent(watchId, id -> {
       K8sClusterConfig k8sClusterConfig =

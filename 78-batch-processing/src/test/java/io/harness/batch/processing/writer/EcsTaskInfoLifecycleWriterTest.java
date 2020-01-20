@@ -53,6 +53,7 @@ public class EcsTaskInfoLifecycleWriterTest extends CategoryTest implements EcsE
   private final String UNKNOWN_LAUNCH_TYPE = "UNKNOWN";
   private final String TEST_TASK_ARN = "TASK_ARN_" + this.getClass().getSimpleName();
   private final String TEST_ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();
+  private final String TEST_CLUSTER_ID = "CLUSTER_ID_" + this.getClass().getSimpleName();
   private final String TEST_CLUSTER_ARN = "CLUSTER_ARN_" + this.getClass().getSimpleName();
   private final String TEST_SERVICE_NAME = "SERVICE_NAME_" + this.getClass().getSimpleName();
   private final String TEST_CONTAINER_ARN = "CONTAINER_ARN_" + this.getClass().getSimpleName();
@@ -71,8 +72,8 @@ public class EcsTaskInfoLifecycleWriterTest extends CategoryTest implements EcsE
     when(instanceDataService.fetchInstanceData(TEST_ACCOUNT_ID, TEST_CONTAINER_ARN))
         .thenReturn(createContainerInstanceData(TEST_ACCOUNT_ID, TEST_CONTAINER_ARN, InstanceState.RUNNING));
     when(cloudToHarnessMappingService.getHarnessServiceInfo(any())).thenReturn(createHarnessServiceInfo());
-    PublishedMessage ec2InstanceInfoMessage = getTaskInfoMessage(
-        TEST_TASK_ARN, TEST_SERVICE_NAME, LAUNCH_TYPE, TEST_CONTAINER_ARN, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceInfoMessage = getTaskInfoMessage(TEST_TASK_ARN, TEST_SERVICE_NAME, LAUNCH_TYPE,
+        TEST_CONTAINER_ARN, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ecsTaskInfoWriter.write(Arrays.asList(ec2InstanceInfoMessage));
     ArgumentCaptor<InstanceData> instanceDataArgumentCaptor = ArgumentCaptor.forClass(InstanceData.class);
     verify(instanceDataService).create(instanceDataArgumentCaptor.capture());
@@ -97,8 +98,8 @@ public class EcsTaskInfoLifecycleWriterTest extends CategoryTest implements EcsE
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenParentResourceNotPresent() throws Exception {
     when(instanceDataService.fetchInstanceData(TEST_ACCOUNT_ID, TEST_CONTAINER_ARN)).thenReturn(null);
-    PublishedMessage ec2InstanceInfoMessage =
-        getTaskInfoMessage(TEST_TASK_ARN, "", LAUNCH_TYPE, TEST_CONTAINER_ARN, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceInfoMessage = getTaskInfoMessage(
+        TEST_TASK_ARN, "", LAUNCH_TYPE, TEST_CONTAINER_ARN, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> ecsTaskInfoWriter.write(Arrays.asList(ec2InstanceInfoMessage)));
   }
@@ -108,10 +109,10 @@ public class EcsTaskInfoLifecycleWriterTest extends CategoryTest implements EcsE
   @Category(UnitTests.class)
   public void updateTaskStartTime() throws Exception {
     when(instanceDataService.fetchActiveInstanceData(
-             TEST_ACCOUNT_ID, TEST_TASK_ARN, Arrays.asList(InstanceState.INITIALIZING)))
+             TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_TASK_ARN, Arrays.asList(InstanceState.INITIALIZING)))
         .thenReturn(createTaskInstanceData(TEST_TASK_ARN, TEST_ACCOUNT_ID, InstanceState.INITIALIZING));
-    PublishedMessage taskLifecycleMessage =
-        getTaskLifecycleMessage(INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_TASK_ARN, TEST_ACCOUNT_ID);
+    PublishedMessage taskLifecycleMessage = getTaskLifecycleMessage(
+        INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_TASK_ARN, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ecsTaskLifecycleWriter.write(Arrays.asList(taskLifecycleMessage));
     ArgumentCaptor<InstanceData> instanceDataArgumentCaptor = ArgumentCaptor.forClass(InstanceData.class);
     ArgumentCaptor<InstanceState> ec2InstanceStateArgumentCaptor = ArgumentCaptor.forClass(InstanceState.class);
@@ -128,8 +129,8 @@ public class EcsTaskInfoLifecycleWriterTest extends CategoryTest implements EcsE
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetFargateInstanceType() {
-    PublishedMessage ec2InstanceInfoMessage = getTaskInfoMessage(
-        TEST_TASK_ARN, TEST_SERVICE_NAME, FARGATE_LAUNCH_TYPE, TEST_CONTAINER_ARN, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceInfoMessage = getTaskInfoMessage(TEST_TASK_ARN, TEST_SERVICE_NAME, FARGATE_LAUNCH_TYPE,
+        TEST_CONTAINER_ARN, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     EcsTaskInfo ecsTaskInfo = (EcsTaskInfo) ec2InstanceInfoMessage.getMessage();
     InstanceType instanceType = ecsTaskInfoWriter.getInstanceType(ecsTaskInfo.getEcsTaskDescription());
     assertThat(instanceType).isEqualTo(InstanceType.ECS_TASK_FARGATE);
@@ -139,8 +140,8 @@ public class EcsTaskInfoLifecycleWriterTest extends CategoryTest implements EcsE
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetNullInstanceType() {
-    PublishedMessage ec2InstanceInfoMessage = getTaskInfoMessage(
-        TEST_TASK_ARN, TEST_SERVICE_NAME, UNKNOWN_LAUNCH_TYPE, TEST_CONTAINER_ARN, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceInfoMessage = getTaskInfoMessage(TEST_TASK_ARN, TEST_SERVICE_NAME, UNKNOWN_LAUNCH_TYPE,
+        TEST_CONTAINER_ARN, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     EcsTaskInfo ecsTaskInfo = (EcsTaskInfo) ec2InstanceInfoMessage.getMessage();
     InstanceType nullInstanceType = ecsTaskInfoWriter.getInstanceType(ecsTaskInfo.getEcsTaskDescription());
     assertThat(nullInstanceType).isNull();

@@ -43,6 +43,7 @@ import java.util.List;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class EcsJobIntegrationTest extends CategoryTest implements EcsEventGenerator {
   private final String TEST_ACCOUNT_ID = "EC2_INSTANCE_INFO_ACCOUNT_ID_" + this.getClass().getSimpleName();
+  private final String TEST_CLUSTER_ID = "EC2_INSTANCE_INFO_CLUSTER_ID_" + this.getClass().getSimpleName();
   private final String TEST_INSTANCE_ID = "EC2_INSTANCE_INFO_INSTANCE_ID_" + this.getClass().getSimpleName();
   private final String TEST_CLUSTER_ARN = "EC2_INSTANCE_INFO_CLUSTER_ARN_" + this.getClass().getSimpleName();
 
@@ -64,39 +65,39 @@ public class EcsJobIntegrationTest extends CategoryTest implements EcsEventGener
 
     Instant createdTimestamp = NOW.minus(3, ChronoUnit.DAYS);
     PublishedMessage ec2InstanceInfoMessage =
-        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
+        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN, TEST_CLUSTER_ID);
     ec2InstanceInfoMessage.setCreatedAt(createdTimestamp.toEpochMilli());
     hPersistence.save(ec2InstanceInfoMessage);
 
     PublishedMessage ec2InstanceInfoDuplicateMessage =
-        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
+        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN, TEST_CLUSTER_ID);
     ec2InstanceInfoDuplicateMessage.setCreatedAt(createdTimestamp.plus(1, ChronoUnit.HOURS).toEpochMilli());
     hPersistence.save(ec2InstanceInfoDuplicateMessage);
 
-    PublishedMessage ec2InstanceLifecycleStartMessage =
-        getEc2InstanceLifecycleMessage(INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_INSTANCE_ID, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceLifecycleStartMessage = getEc2InstanceLifecycleMessage(
+        INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ec2InstanceLifecycleStartMessage.setCreatedAt(createdTimestamp.toEpochMilli());
     hPersistence.save(ec2InstanceLifecycleStartMessage);
 
-    PublishedMessage ec2InstanceLifecycleStartDuplicateMessage =
-        getEc2InstanceLifecycleMessage(INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_INSTANCE_ID, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceLifecycleStartDuplicateMessage = getEc2InstanceLifecycleMessage(
+        INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ec2InstanceLifecycleStartDuplicateMessage.setCreatedAt(
         createdTimestamp.plus(30, ChronoUnit.MINUTES).toEpochMilli());
     hPersistence.save(ec2InstanceLifecycleStartDuplicateMessage);
 
-    PublishedMessage ec2InstanceLifecycleStopMessage =
-        getEc2InstanceLifecycleMessage(INSTANCE_STOP_TIMESTAMP, EVENT_TYPE_STOP, TEST_INSTANCE_ID, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceLifecycleStopMessage = getEc2InstanceLifecycleMessage(
+        INSTANCE_STOP_TIMESTAMP, EVENT_TYPE_STOP, TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ec2InstanceLifecycleStopMessage.setCreatedAt(createdTimestamp.plus(45, ChronoUnit.MINUTES).toEpochMilli());
     hPersistence.save(ec2InstanceLifecycleStopMessage);
 
-    PublishedMessage ec2InstanceLifecycleStartDuplicateTwoMessage =
-        getEc2InstanceLifecycleMessage(INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_INSTANCE_ID, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceLifecycleStartDuplicateTwoMessage = getEc2InstanceLifecycleMessage(
+        INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ec2InstanceLifecycleStartDuplicateTwoMessage.setCreatedAt(
         createdTimestamp.plus(50, ChronoUnit.MINUTES).toEpochMilli());
     hPersistence.save(ec2InstanceLifecycleStartDuplicateTwoMessage);
 
-    PublishedMessage ec2InstanceLifecycleStopDuplicateMessage =
-        getEc2InstanceLifecycleMessage(INSTANCE_STOP_TIMESTAMP, EVENT_TYPE_STOP, TEST_INSTANCE_ID, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceLifecycleStopDuplicateMessage = getEc2InstanceLifecycleMessage(
+        INSTANCE_STOP_TIMESTAMP, EVENT_TYPE_STOP, TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ec2InstanceLifecycleStopDuplicateMessage.setCreatedAt(createdTimestamp.plus(1, ChronoUnit.HOURS).toEpochMilli());
     hPersistence.save(ec2InstanceLifecycleStopDuplicateMessage);
   }
@@ -108,8 +109,8 @@ public class EcsJobIntegrationTest extends CategoryTest implements EcsEventGener
     batchJobRunner.runJob(TEST_ACCOUNT_ID, ecsJob);
 
     List<InstanceState> stoppedInstanceState = getStoppedInstanceState();
-    InstanceData stoppedInstanceData =
-        instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID, stoppedInstanceState);
+    InstanceData stoppedInstanceData = instanceDataService.fetchActiveInstanceData(
+        TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_INSTANCE_ID, stoppedInstanceState);
 
     assertThat(stoppedInstanceData.getInstanceState()).isEqualTo(InstanceState.STOPPED);
     assertThat(stoppedInstanceData.getInstanceId()).isEqualTo(TEST_INSTANCE_ID);

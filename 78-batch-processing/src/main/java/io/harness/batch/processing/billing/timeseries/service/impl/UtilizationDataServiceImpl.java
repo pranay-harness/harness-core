@@ -40,7 +40,7 @@ public class UtilizationDataServiceImpl {
   private static final int BATCH_SIZE = 500;
 
   static final String INSERT_STATEMENT =
-      "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, ACCOUNTID, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTANCEID, INSTANCETYPE, SETTINGID, MAXCPUVALUE, MAXMEMORYVALUE, AVGCPUVALUE, AVGMEMORYVALUE ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, ACCOUNTID, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTANCEID, INSTANCETYPE, CLUSTERID, MAXCPUVALUE, MAXMEMORYVALUE, AVGCPUVALUE, AVGMEMORYVALUE ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
   private static final String UTILIZATION_DATA_QUERY =
       "SELECT MAX(MAXCPU) as MAXCPUUTILIZATION, MAX(MAXMEMORY) as MAXMEMORYUTILIZATION, AVG(AVGCPU) as AVGCPUUTILIZATION, AVG(AVGMEMORY) as AVGMEMORYUTILIZATION, MAX(MAXCPUVALUE) as MAXCPUVALUE, MAX(MAXMEMORYVALUE) as MAXMEMORYVALUE, AVG(AVGCPUVALUE) as AVGCPUVALUE, AVG(AVGMEMORYVALUE) as AVGMEMORYVALUE, INSTANCEID FROM UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY INSTANCEID;";
 
@@ -70,7 +70,7 @@ public class UtilizationDataServiceImpl {
         }
       }
     } else {
-      logger.warn("Not processing instance Utilization data:[{}]", instanceUtilizationDataList);
+      logger.info("Not processing instance Utilization data:[{}]", instanceUtilizationDataList);
     }
     return successfulInsert;
   }
@@ -86,7 +86,7 @@ public class UtilizationDataServiceImpl {
     statement.setDouble(7, instanceUtilizationData.getMemoryUtilizationAvg());
     statement.setString(8, instanceUtilizationData.getInstanceId());
     statement.setString(9, instanceUtilizationData.getInstanceType());
-    statement.setString(10, instanceUtilizationData.getSettingId());
+    statement.setString(10, instanceUtilizationData.getClusterId());
     statement.setDouble(11, instanceUtilizationData.getCpuUtilizationMaxValue());
     statement.setDouble(12, instanceUtilizationData.getMemoryUtilizationMaxValue());
     statement.setDouble(13, instanceUtilizationData.getCpuUtilizationAvgValue());

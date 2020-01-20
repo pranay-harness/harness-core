@@ -46,7 +46,7 @@ public class EcsTaskInfoWriter extends EventWriter implements ItemWriter<Publish
           String clusterId = ecsTaskDescription.getClusterId();
           String settingId = ecsTaskDescription.getSettingId();
 
-          InstanceData instanceData = fetchActiveInstanceData(accountId, taskId);
+          InstanceData instanceData = fetchActiveInstanceData(accountId, clusterId, taskId);
           InstanceType instanceType = getInstanceType(ecsTaskDescription);
 
           if (null == instanceData && null != instanceType) {

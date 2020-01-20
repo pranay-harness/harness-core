@@ -18,12 +18,13 @@ public interface InstanceDataDao {
   boolean updateInstanceState(
       InstanceData instanceData, Instant instant, String instantField, InstanceState instanceState);
 
-  InstanceData fetchActiveInstanceData(String accountId, String instanceId, List<InstanceState> instanceState);
+  InstanceData fetchActiveInstanceData(
+      String accountId, String clusterId, String instanceId, List<InstanceState> instanceState);
 
   InstanceData fetchInstanceData(String accountId, String instanceId);
 
   InstanceData fetchInstanceDataWithName(String accountId, String settingId, String instanceName, Long occurredAt);
 
   List<InstanceData> fetchClusterActiveInstanceData(
-      String accountId, String settingId, String clusterName, List<InstanceState> instanceState, Instant startTime);
+      String accountId, String clusterName, List<InstanceState> instanceState, Instant startTime);
 }

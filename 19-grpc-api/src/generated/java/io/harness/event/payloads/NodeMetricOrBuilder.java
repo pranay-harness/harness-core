@@ -63,4 +63,13 @@ public interface NodeMetricOrBuilder extends
    * <code>.io.harness.event.payloads.Usage usage = 5;</code>
    */
   io.harness.event.payloads.UsageOrBuilder getUsageOrBuilder();
+
+  /**
+   * <code>string cluster_id = 6;</code>
+   */
+  java.lang.String getClusterId();
+  /**
+   * <code>string cluster_id = 6;</code>
+   */
+  com.google.protobuf.ByteString getClusterIdBytes();
 }

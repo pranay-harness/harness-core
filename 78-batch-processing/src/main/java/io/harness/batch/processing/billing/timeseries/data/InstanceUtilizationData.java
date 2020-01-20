@@ -9,7 +9,7 @@ public class InstanceUtilizationData {
   private String accountId;
   private String instanceId;
   private String instanceType;
-  private String settingId;
+  private String clusterId;
   private double cpuUtilizationAvg;
   private double cpuUtilizationMax;
   private double memoryUtilizationAvg;

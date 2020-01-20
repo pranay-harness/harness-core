@@ -94,7 +94,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
     Map<String, InstanceUtilizationData> instanceUtilizationDataMap =
         k8sUtilizationGranularDataService.getAggregatedUtilizationData(
             ACCOUNTID, Collections.singletonList("INSTANCEID"), START_DATE, END_DATE);
-    assertThat(instanceUtilizationDataMap.get("INSTANCEID").getSettingId()).isEqualTo("SETTINGID");
+    assertThat(instanceUtilizationDataMap.get("INSTANCEID").getClusterId()).isEqualTo("CLUSTERID");
   }
 
   @Test
@@ -140,7 +140,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
 
   private K8sGranularUtilizationData K8sGranularUtilizationData() {
     return K8sGranularUtilizationData.builder()
-        .settingId("settingId")
+        .clusterId("clusterId")
         .instanceType("instanceType")
         .instanceId("instanceId")
         .memory(2)
@@ -159,7 +159,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
     when(aggregatedDataResultSet.getString("INSTANCEID")).thenAnswer((Answer<String>) invocation -> "INSTANCEID");
     when(aggregatedDataResultSet.getString("ACCOUNTID")).thenAnswer((Answer<String>) invocation -> "ACCOUNTID");
     when(aggregatedDataResultSet.getString("INSTANCETYPE")).thenAnswer((Answer<String>) invocation -> "INSTANCETYPE");
-    when(aggregatedDataResultSet.getString("SETTINGID")).thenAnswer((Answer<String>) invocation -> "SETTINGID");
+    when(aggregatedDataResultSet.getString("CLUSTERID")).thenAnswer((Answer<String>) invocation -> "CLUSTERID");
     when(aggregatedDataResultSet.getString("CPUUTILIZATIONMAX"))
         .thenAnswer((Answer<String>) invocation -> "CPUUTILIZATIONMAX");
     when(aggregatedDataResultSet.getString("MEMORYUTILIZATIONMAX"))

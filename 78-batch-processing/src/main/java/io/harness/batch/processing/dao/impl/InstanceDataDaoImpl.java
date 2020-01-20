@@ -36,7 +36,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   public InstanceData upsert(InstanceEvent instanceEvent) {
     Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
                                     .filter(InstanceDataKeys.accountId, instanceEvent.getAccountId())
-                                    .filter(InstanceDataKeys.settingId, instanceEvent.getCloudProviderId())
+                                    .filter(InstanceDataKeys.clusterId, instanceEvent.getClusterId())
                                     .filter(InstanceDataKeys.instanceId, instanceEvent.getInstanceId());
     InstanceData instanceData = query.get();
     if (null != instanceData) {
@@ -67,7 +67,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   public InstanceData upsert(InstanceInfo instanceInfo) {
     Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
                                     .filter(InstanceDataKeys.accountId, instanceInfo.getAccountId())
-                                    .filter(InstanceDataKeys.settingId, instanceInfo.getSettingId())
+                                    .filter(InstanceDataKeys.clusterId, instanceInfo.getClusterId())
                                     .filter(InstanceDataKeys.instanceId, instanceInfo.getInstanceId());
     InstanceData instanceData = query.get();
     if (null == instanceData) {
@@ -117,7 +117,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
     Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
                                     .filter(InstanceDataKeys.accountId, instanceData.getAccountId())
-                                    .filter(InstanceDataKeys.settingId, instanceData.getSettingId())
+                                    .filter(InstanceDataKeys.clusterId, instanceData.getClusterId())
                                     .filter(InstanceDataKeys.instanceId, instanceData.getInstanceId());
 
     FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(false);
@@ -125,9 +125,11 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   }
 
   @Override
-  public InstanceData fetchActiveInstanceData(String accountId, String instanceId, List<InstanceState> instanceState) {
+  public InstanceData fetchActiveInstanceData(
+      String accountId, String clusterId, String instanceId, List<InstanceState> instanceState) {
     return hPersistence.createQuery(InstanceData.class)
         .filter(InstanceDataKeys.accountId, accountId)
+        .filter(InstanceDataKeys.clusterId, clusterId)
         .filter(InstanceDataKeys.instanceId, instanceId)
         .field(InstanceDataKeys.instanceState)
         .in(instanceState)
@@ -144,10 +146,10 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
   @Override
   public InstanceData fetchInstanceDataWithName(
-      String accountId, String settingId, String instanceName, Long occurredAt) {
+      String accountId, String clusterId, String instanceName, Long occurredAt) {
     return hPersistence.createQuery(InstanceData.class)
         .filter(InstanceDataKeys.accountId, accountId)
-        .filter(InstanceDataKeys.settingId, settingId)
+        .filter(InstanceDataKeys.clusterId, clusterId)
         .filter(InstanceDataKeys.instanceName, instanceName)
         .order(Sort.descending(InstanceDataKeys.usageStartTime))
         .get();
@@ -158,10 +160,9 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
    */
   @Override
   public List<InstanceData> fetchClusterActiveInstanceData(
-      String accountId, String settingId, String clusterName, List<InstanceState> instanceState, Instant startTime) {
+      String accountId, String clusterName, List<InstanceState> instanceState, Instant startTime) {
     return hPersistence.createQuery(InstanceData.class)
         .filter(InstanceDataKeys.accountId, accountId)
-        .filter(InstanceDataKeys.settingId, settingId)
         .filter(InstanceDataKeys.clusterId, clusterName)
         .field(InstanceDataKeys.instanceState)
         .in(instanceState)

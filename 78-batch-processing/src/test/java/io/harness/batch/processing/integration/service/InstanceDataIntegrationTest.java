@@ -33,6 +33,7 @@ import java.util.List;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class InstanceDataIntegrationTest extends CategoryTest {
   private final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID_" + this.getClass().getSimpleName();
+  private final String TEST_CLUSTER_ID = "TESET_CLUSTER_ID_" + this.getClass().getSimpleName();
   private final String TEST_INSTANCE_ID = "TEST_INSTANCE_ID_" + this.getClass().getSimpleName();
   private final String TEST_CLUSTER_ARN = "TEST_CLUSTER_ARN_" + this.getClass().getSimpleName();
 
@@ -50,16 +51,16 @@ public class InstanceDataIntegrationTest extends CategoryTest {
 
     List<InstanceState> activeInstanceStates =
         new ArrayList<>(Arrays.asList(InstanceState.INITIALIZING, InstanceState.RUNNING));
-    InstanceData savedInstanceData =
-        instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID, activeInstanceStates);
+    InstanceData savedInstanceData = instanceDataService.fetchActiveInstanceData(
+        TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_INSTANCE_ID, activeInstanceStates);
 
     Instant startTime = Instant.now().minus(1, ChronoUnit.DAYS);
     boolean instanceUpdated =
         instanceDataService.updateInstanceState(savedInstanceData, startTime, InstanceState.RUNNING);
     assertThat(instanceUpdated).isTrue();
 
-    savedInstanceData =
-        instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID, activeInstanceStates);
+    savedInstanceData = instanceDataService.fetchActiveInstanceData(
+        TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_INSTANCE_ID, activeInstanceStates);
     assertThat(savedInstanceData.getUsageStartTime()).isEqualTo(startTime);
     assertThat(savedInstanceData.getInstanceState()).isEqualTo(InstanceState.RUNNING);
 
@@ -74,6 +75,7 @@ public class InstanceDataIntegrationTest extends CategoryTest {
         .accountId(TEST_ACCOUNT_ID)
         .instanceId(instanceId)
         .clusterName(TEST_CLUSTER_ARN)
+        .clusterId(TEST_CLUSTER_ID)
         .instanceType(InstanceType.EC2_INSTANCE)
         .instanceState(InstanceState.INITIALIZING)
         .build();

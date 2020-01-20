@@ -10,6 +10,7 @@ import java.time.Instant;
 public class InstanceEvent {
   String accountId;
   String cloudProviderId;
+  String clusterId;
   String instanceId;
   String instanceName;
   Instant timestamp;

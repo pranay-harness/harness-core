@@ -41,6 +41,7 @@ public class ContainerInstanceInfoLifecycleWriterIntegrationTest extends Categor
   private final String TEST_ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String TEST_INSTANCE_ID = "INSTANCE_ID_" + this.getClass().getSimpleName();
   private final String TEST_CLUSTER_ARN = "CLUSTER_ARN_" + this.getClass().getSimpleName();
+  private final String TEST_CLUSTER_ID = "CLUSTER_ID_" + this.getClass().getSimpleName();
   private final String TEST_CONTAINER_ARN = "CONTAINER_ARN_" + this.getClass().getSimpleName();
   private final String TEST_CLOUD_PROVIDER_ID = "CLOUD_PROVIDER_" + this.getClass().getSimpleName();
 
@@ -64,16 +65,16 @@ public class ContainerInstanceInfoLifecycleWriterIntegrationTest extends Categor
   @Category(UnitTests.class)
   public void shouldCreateContainerInstanceData() throws Exception {
     PublishedMessage ec2InstanceInfoMessage =
-        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
+        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN, TEST_CLUSTER_ID);
     ec2InstanceInfoWriter.write(getMessageList(ec2InstanceInfoMessage));
 
-    PublishedMessage containerInstanceInfoMessage = getContainerInstanceInfoMessage(
-        TEST_CONTAINER_ARN, TEST_INSTANCE_ID, TEST_CLOUD_PROVIDER_ID, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID);
+    PublishedMessage containerInstanceInfoMessage = getContainerInstanceInfoMessage(TEST_CONTAINER_ARN,
+        TEST_INSTANCE_ID, TEST_CLOUD_PROVIDER_ID, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ecsContainerInstanceInfoWriter.write(getMessageList(containerInstanceInfoMessage));
 
     List<InstanceState> activeInstanceState = getActiveInstanceState();
-    InstanceData instanceData =
-        instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_CONTAINER_ARN, activeInstanceState);
+    InstanceData instanceData = instanceDataService.fetchActiveInstanceData(
+        TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_CONTAINER_ARN, activeInstanceState);
 
     assertThat(instanceData.getInstanceState()).isEqualTo(InstanceState.INITIALIZING);
     assertThat(instanceData.getInstanceId()).isEqualTo(TEST_CONTAINER_ARN);
@@ -88,23 +89,23 @@ public class ContainerInstanceInfoLifecycleWriterIntegrationTest extends Categor
 
     // start container instance
     PublishedMessage ecsLifecycleStartMessage = getContainerInstanceLifecycleMessage(
-        INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_CONTAINER_ARN, TEST_ACCOUNT_ID);
+        INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_CONTAINER_ARN, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ecsContainerInstanceLifecycleWriter.write(getMessageList(ecsLifecycleStartMessage));
 
     List<InstanceState> activeInstanceState = getActiveInstanceState();
-    InstanceData instanceData =
-        instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_CONTAINER_ARN, activeInstanceState);
+    InstanceData instanceData = instanceDataService.fetchActiveInstanceData(
+        TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_CONTAINER_ARN, activeInstanceState);
     assertThat(instanceData.getInstanceState()).isEqualTo(InstanceState.RUNNING);
     assertThat(HTimestamps.fromInstant(instanceData.getUsageStartTime())).isEqualTo(INSTANCE_START_TIMESTAMP);
 
     // stop container instance
     PublishedMessage ecsLifecycleStopMessage = getContainerInstanceLifecycleMessage(
-        INSTANCE_STOP_TIMESTAMP, EVENT_TYPE_STOP, TEST_CONTAINER_ARN, TEST_ACCOUNT_ID);
+        INSTANCE_STOP_TIMESTAMP, EVENT_TYPE_STOP, TEST_CONTAINER_ARN, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ecsContainerInstanceLifecycleWriter.write(getMessageList(ecsLifecycleStopMessage));
 
     List<InstanceState> stoppedInstanceState = getStoppedInstanceState();
-    InstanceData stoppedContainerInstanceData =
-        instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_CONTAINER_ARN, stoppedInstanceState);
+    InstanceData stoppedContainerInstanceData = instanceDataService.fetchActiveInstanceData(
+        TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_CONTAINER_ARN, stoppedInstanceState);
 
     assertThat(HTimestamps.fromInstant(stoppedContainerInstanceData.getUsageStopTime()))
         .isEqualTo(INSTANCE_STOP_TIMESTAMP);

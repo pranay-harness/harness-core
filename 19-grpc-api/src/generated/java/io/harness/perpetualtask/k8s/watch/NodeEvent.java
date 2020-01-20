@@ -20,6 +20,7 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     nodeUid_ = "";
     type_ = 0;
     nodeName_ = "";
+    clusterId_ = "";
   }
 
   @java.
@@ -79,6 +80,12 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
             java.lang.String s = input.readStringRequireUtf8();
 
             nodeName_ = s;
+            break;
+          }
+          case 58: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            clusterId_ = s;
             break;
           }
           default: {
@@ -342,6 +349,36 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     }
   }
 
+  public static final int CLUSTER_ID_FIELD_NUMBER = 7;
+  private volatile java.lang.Object clusterId_;
+  /**
+   * <code>string cluster_id = 7;</code>
+   */
+  public java.lang.String getClusterId() {
+    java.lang.Object ref = clusterId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      clusterId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string cluster_id = 7;</code>
+   */
+  public com.google.protobuf.ByteString getClusterIdBytes() {
+    java.lang.Object ref = clusterId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      clusterId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -372,6 +409,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     if (!getNodeNameBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 6, nodeName_);
     }
+    if (!getClusterIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 7, clusterId_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -396,6 +436,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     }
     if (!getNodeNameBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, nodeName_);
+    }
+    if (!getClusterIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, clusterId_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -426,6 +469,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     }
     if (!getNodeName().equals(other.getNodeName()))
       return false;
+    if (!getClusterId().equals(other.getClusterId()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -450,6 +495,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     }
     hash = (37 * hash) + NODE_NAME_FIELD_NUMBER;
     hash = (53 * hash) + getNodeName().hashCode();
+    hash = (37 * hash) + CLUSTER_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getClusterId().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -577,6 +624,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
       nodeName_ = "";
 
+      clusterId_ = "";
+
       return this;
     }
 
@@ -616,6 +665,7 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
         result.timestamp_ = timestampBuilder_.build();
       }
       result.nodeName_ = nodeName_;
+      result.clusterId_ = clusterId_;
       onBuilt();
       return result;
     }
@@ -674,6 +724,10 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
       if (!other.getNodeName().isEmpty()) {
         nodeName_ = other.nodeName_;
+        onChanged();
+      }
+      if (!other.getClusterId().isEmpty()) {
+        clusterId_ = other.clusterId_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -1041,6 +1095,68 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       checkByteStringIsUtf8(value);
 
       nodeName_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object clusterId_ = "";
+    /**
+     * <code>string cluster_id = 7;</code>
+     */
+    public java.lang.String getClusterId() {
+      java.lang.Object ref = clusterId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        clusterId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string cluster_id = 7;</code>
+     */
+    public com.google.protobuf.ByteString getClusterIdBytes() {
+      java.lang.Object ref = clusterId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        clusterId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string cluster_id = 7;</code>
+     */
+    public Builder setClusterId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      clusterId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_id = 7;</code>
+     */
+    public Builder clearClusterId() {
+      clusterId_ = getDefaultInstance().getClusterId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_id = 7;</code>
+     */
+    public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      clusterId_ = value;
       onChanged();
       return this;
     }

@@ -40,6 +40,7 @@ public class EcsSyncEventWriterTest extends CategoryTest implements EcsEventGene
   @InjectMocks private EcsSyncEventWriter ecsSyncEventWriter;
   @Mock private InstanceDataService instanceDataService;
 
+  private final String TEST_CLUSTER_ID = "CLUSTER_ID_" + this.getClass().getSimpleName();
   private final String TEST_ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String TEST_SETTING_ID = "SETTING_ID_" + this.getClass().getSimpleName();
   private final String TEST_CLUSTER_ARN = "CLUSTER_ARN_" + this.getClass().getSimpleName();
@@ -59,16 +60,17 @@ public class EcsSyncEventWriterTest extends CategoryTest implements EcsEventGene
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldStopInactiveInstance() throws Exception {
-    when(instanceDataService.fetchClusterActiveInstanceData(TEST_ACCOUNT_ID, TEST_SETTING_ID, TEST_CLUSTER_ARN,
-             HTimestamps.toInstant(INSTANCE_LAST_PROCESSED_TIMESTAMP)))
+    when(instanceDataService.fetchClusterActiveInstanceData(
+             TEST_ACCOUNT_ID, TEST_CLUSTER_ID, HTimestamps.toInstant(INSTANCE_LAST_PROCESSED_TIMESTAMP)))
         .thenReturn(Arrays.asList(
             createContainerInstanceData(TEST_ACTIVE_CONTAINER_ARN, TEST_ACCOUNT_ID, InstanceState.RUNNING)));
     when(instanceDataService.fetchActiveInstanceData(
-             TEST_ACCOUNT_ID, TEST_ACTIVE_CONTAINER_ARN, Arrays.asList(InstanceState.RUNNING)))
+             TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_ACTIVE_CONTAINER_ARN, Arrays.asList(InstanceState.RUNNING)))
         .thenReturn(createContainerInstanceData(TEST_ACTIVE_CONTAINER_ARN, TEST_ACCOUNT_ID, InstanceState.RUNNING));
     List<String> activeEc2InstanceList = new ArrayList<>(Arrays.asList(TEST_ACTIVE_INSTANCE_ID));
-    PublishedMessage ecsSyncEventMessage = getEcsSyncEventMessage(TEST_ACCOUNT_ID, TEST_SETTING_ID, TEST_CLUSTER_ARN,
-        Collections.emptyList(), activeEc2InstanceList, Collections.emptyList(), INSTANCE_LAST_PROCESSED_TIMESTAMP);
+    PublishedMessage ecsSyncEventMessage =
+        getEcsSyncEventMessage(TEST_ACCOUNT_ID, TEST_SETTING_ID, TEST_CLUSTER_ID, TEST_CLUSTER_ARN,
+            Collections.emptyList(), activeEc2InstanceList, Collections.emptyList(), INSTANCE_LAST_PROCESSED_TIMESTAMP);
     ecsSyncEventWriter.write(Arrays.asList(ecsSyncEventMessage));
     ArgumentCaptor<InstanceData> instanceDataArgumentCaptor = ArgumentCaptor.forClass(InstanceData.class);
     ArgumentCaptor<InstanceState> instanceStateArgumentCaptor = ArgumentCaptor.forClass(InstanceState.class);

@@ -80,4 +80,13 @@ public interface PodMetricOrBuilder extends
    * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
    */
   io.harness.event.payloads.PodMetric.ContainerOrBuilder getContainersOrBuilder(int index);
+
+  /**
+   * <code>string cluster_id = 7;</code>
+   */
+  java.lang.String getClusterId();
+  /**
+   * <code>string cluster_id = 7;</code>
+   */
+  com.google.protobuf.ByteString getClusterIdBytes();
 }

@@ -43,6 +43,7 @@ public class ContainerInstanceInfoLifecycleWriterTest extends CategoryTest imple
 
   private final String TEST_ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String TEST_INSTANCE_ID = "INSTANCE_ID_" + this.getClass().getSimpleName();
+  private final String TEST_CLUSTER_ID = "CLUSTER_ID_" + this.getClass().getSimpleName();
   private final String TEST_CLUSTER_ARN = "CLUSTER_ARN_" + this.getClass().getSimpleName();
   private final String TEST_CONTAINER_ARN = "CONTAINER_ARN_" + this.getClass().getSimpleName();
   private final String TEST_CLOUD_PROVIDER_ID = "CLOUD_PROVIDER_" + this.getClass().getSimpleName();
@@ -60,8 +61,8 @@ public class ContainerInstanceInfoLifecycleWriterTest extends CategoryTest imple
   public void shouldWriteContainerInstanceInfo() throws Exception {
     when(instanceDataService.fetchInstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID))
         .thenReturn(createEc2InstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID, InstanceState.RUNNING));
-    PublishedMessage ec2InstanceInfoMessage = getContainerInstanceInfoMessage(
-        TEST_CONTAINER_ARN, TEST_INSTANCE_ID, TEST_CLOUD_PROVIDER_ID, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceInfoMessage = getContainerInstanceInfoMessage(TEST_CONTAINER_ARN, TEST_INSTANCE_ID,
+        TEST_CLOUD_PROVIDER_ID, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ecsContainerInstanceInfoWriter.write(Arrays.asList(ec2InstanceInfoMessage));
     ArgumentCaptor<InstanceData> instanceDataArgumentCaptor = ArgumentCaptor.forClass(InstanceData.class);
     verify(instanceDataService).create(instanceDataArgumentCaptor.capture());
@@ -81,10 +82,10 @@ public class ContainerInstanceInfoLifecycleWriterTest extends CategoryTest imple
   @Category(UnitTests.class)
   public void updateContainerInstantStartTime() throws Exception {
     when(instanceDataService.fetchActiveInstanceData(
-             TEST_ACCOUNT_ID, TEST_CONTAINER_ARN, Arrays.asList(InstanceState.INITIALIZING)))
+             TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_CONTAINER_ARN, Arrays.asList(InstanceState.INITIALIZING)))
         .thenReturn(createContainerInstanceData(TEST_CONTAINER_ARN, TEST_ACCOUNT_ID, InstanceState.INITIALIZING));
     PublishedMessage containerInstanceLifecycleMessage = getContainerInstanceLifecycleMessage(
-        INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_CONTAINER_ARN, TEST_ACCOUNT_ID);
+        INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_CONTAINER_ARN, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ecsContainerInstanceLifecycleWriter.write(Arrays.asList(containerInstanceLifecycleMessage));
     ArgumentCaptor<InstanceData> containerInstanceDataArgumentCaptor = ArgumentCaptor.forClass(InstanceData.class);
     ArgumentCaptor<InstanceState> containerInstanceStateArgumentCaptor = ArgumentCaptor.forClass(InstanceState.class);

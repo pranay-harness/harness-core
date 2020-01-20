@@ -55,6 +55,7 @@ public class NodeWatcher implements Watcher<Node> {
     final Timestamp timestamp = HTimestamps.parse(node.getMetadata().getCreationTimestamp());
     NodeEvent nodeStartedEvent = NodeEvent.newBuilder()
                                      .setCloudProviderId(cloudProviderId)
+                                     .setClusterId(clusterId)
                                      .setNodeUid(node.getMetadata().getUid())
                                      .setNodeName(node.getMetadata().getName())
                                      .setType(EVENT_TYPE_START)
@@ -68,6 +69,7 @@ public class NodeWatcher implements Watcher<Node> {
     final Timestamp timestamp = HTimestamps.fromInstant(Instant.now());
     NodeEvent nodeStoppedEvent = NodeEvent.newBuilder()
                                      .setCloudProviderId(cloudProviderId)
+                                     .setClusterId(clusterId)
                                      .setNodeUid(node.getMetadata().getUid())
                                      .setNodeName(node.getMetadata().getName())
                                      .setType(EVENT_TYPE_STOP)

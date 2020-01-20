@@ -23,7 +23,7 @@ public class WorkloadRepositoryImpl implements WorkloadRepository {
 
   @Value
   private static class CacheKey {
-    String settingId;
+    String clusterId;
     String uid;
   }
 
@@ -36,12 +36,12 @@ public class WorkloadRepositoryImpl implements WorkloadRepository {
   public void savePodWorkload(String accountId, PodInfo podInfo) {
     Owner topLevelOwner = podInfo.getTopLevelOwner();
     if (isNotEmpty(topLevelOwner.getLabelsMap())) {
-      final CacheKey cacheKey = new CacheKey(podInfo.getCloudProviderId(), topLevelOwner.getUid());
+      final CacheKey cacheKey = new CacheKey(podInfo.getClusterId(), topLevelOwner.getUid());
       saved.get(cacheKey,
           key
           -> (hPersistence.upsert(hPersistence.createQuery(K8sWorkload.class)
-                                      .field(K8sWorkloadKeys.settingId)
-                                      .equal(key.settingId)
+                                      .field(K8sWorkloadKeys.clusterId)
+                                      .equal(key.clusterId)
                                       .field(K8sWorkloadKeys.uid)
                                       .equal(key.uid),
                  hPersistence.createUpdateOperations(K8sWorkload.class)
