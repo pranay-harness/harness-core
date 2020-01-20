@@ -28,6 +28,7 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.FeatureName.ADD_WORKFLOW_FORMIK;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PCF_PCF;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
@@ -1979,8 +1980,9 @@ public class WorkflowServiceHelper {
   public void handleBasicWorkflow(CanaryOrchestrationWorkflow canaryOrchestrationWorkflow,
       List<TemplateExpression> templateExpressions, String appId, String serviceId, String infraId, boolean envChanged,
       boolean infraChanged) {
-    boolean infraRefactor =
-        featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
+    String accountId = appService.getAccountIdByAppId(appId);
+    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
+    boolean formikWorkflowEnabled = featureFlagService.isEnabled(ADD_WORKFLOW_FORMIK, appId);
     TemplateExpression envExpression =
         WorkflowServiceTemplateHelper.getTemplateExpression(templateExpressions, "envId");
     if (envExpression != null) {
@@ -1993,10 +1995,15 @@ public class WorkflowServiceHelper {
         if (serviceId != null) {
           phase.setServiceId(serviceId);
         }
+
+        if (formikWorkflowEnabled && serviceId == null && phase.checkServiceTemplatized()) {
+          phase.setServiceId(serviceId);
+        }
+
         if (infraRefactor) {
-          setInfraDefinitionDetails(appId, infraId, phase, envChanged, infraChanged);
+          setInfraDefinitionDetails(appId, infraId, phase, envChanged, infraChanged, formikWorkflowEnabled);
         } else {
-          setInframappingDetails(appId, infraId, phase, envChanged, infraChanged);
+          setInframappingDetails(appId, infraId, phase, envChanged, infraChanged, formikWorkflowEnabled);
         }
         if (infraChanged || envChanged) {
           resetNodeSelection(phase);
@@ -2009,10 +2016,15 @@ public class WorkflowServiceHelper {
         if (serviceId != null) {
           phase.setServiceId(serviceId);
         }
+
+        if (formikWorkflowEnabled && serviceId == null && phase.checkServiceTemplatized()) {
+          phase.setServiceId(serviceId);
+        }
+
         if (infraRefactor) {
-          setInfraDefinitionDetails(appId, infraId, phase, envChanged, infraChanged);
+          setInfraDefinitionDetails(appId, infraId, phase, envChanged, infraChanged, formikWorkflowEnabled);
         } else {
-          setInframappingDetails(appId, infraId, phase, envChanged, infraChanged);
+          setInframappingDetails(appId, infraId, phase, envChanged, infraChanged, formikWorkflowEnabled);
         }
       });
     }
@@ -2024,8 +2036,8 @@ public class WorkflowServiceHelper {
    * @param inframappingId
    * @param phase
    */
-  private void setInframappingDetails(
-      String appId, String inframappingId, WorkflowPhase phase, boolean envChanged, boolean infraChanged) {
+  private void setInframappingDetails(String appId, String inframappingId, WorkflowPhase phase, boolean envChanged,
+      boolean infraChanged, boolean formikWorkflowEnabled) {
     if (inframappingId != null) {
       if (!inframappingId.equals(phase.getInfraMappingId())) {
         phase.setInfraMappingId(inframappingId);
@@ -2043,10 +2055,14 @@ public class WorkflowServiceHelper {
     } else if (envChanged && !infraChanged) {
       unsetInfraMappingDetails(phase);
     }
+
+    if (formikWorkflowEnabled && inframappingId == null && phase.checkInfraTemplatized()) {
+      phase.setInfraMappingId(inframappingId);
+    }
   }
 
-  private void setInfraDefinitionDetails(
-      String appId, String infraDefinitionId, WorkflowPhase phase, boolean envChanged, boolean infraChanged) {
+  private void setInfraDefinitionDetails(String appId, String infraDefinitionId, WorkflowPhase phase,
+      boolean envChanged, boolean infraChanged, boolean formikWorkflowEnabled) {
     if (infraDefinitionId != null) {
       if (!infraDefinitionId.equals(phase.getInfraDefinitionId())) {
         phase.setInfraDefinitionId(infraDefinitionId);
@@ -2059,6 +2075,10 @@ public class WorkflowServiceHelper {
       }
     } else if (envChanged && !infraChanged) {
       unsetInfraDefinitionsDetails(phase);
+    }
+
+    if (formikWorkflowEnabled && infraDefinitionId == null && phase.checkInfraDefinitionTemplatized()) {
+      phase.setInfraDefinitionId(infraDefinitionId);
     }
   }
 
