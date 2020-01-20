@@ -28,8 +28,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.common.Constants.INFRA_ROUTE;
-import static software.wings.common.Constants.PCF_APP_NAME;
 import static software.wings.common.Constants.PCF_OLD_APP_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.INFRA_ROUTE_PCF;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.MASKED;
@@ -327,8 +325,8 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testExecute_pcfAPP_Switch_Infra_routes() {
-    pcfRouteSwapState.setPcfAppName("${" + PCF_APP_NAME + "}");
-    pcfRouteSwapState.setRoute("${" + INFRA_ROUTE + "}");
+    pcfRouteSwapState.setPcfAppName("${" + MapRouteState.PCF_APP_NAME + "}");
+    pcfRouteSwapState.setRoute("${" + MapRouteState.INFRA_ROUTE + "}");
     test_pcfAPP_Switch_Infra_routes();
   }
 
@@ -336,7 +334,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testExecute_pcfAPP_Switch_Infra_routes_New_Route_Name() {
-    pcfRouteSwapState.setPcfAppName("${" + PCF_APP_NAME + "}");
+    pcfRouteSwapState.setPcfAppName("${" + MapRouteState.PCF_APP_NAME + "}");
     pcfRouteSwapState.setRoute("${" + INFRA_ROUTE_PCF + "}");
     test_pcfAPP_Switch_Infra_routes();
   }
@@ -405,7 +403,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testExecute_pcfAPP_infra_tempRoute() {
-    pcfRouteSwapState.setPcfAppName("${" + PCF_APP_NAME + "}");
+    pcfRouteSwapState.setPcfAppName("${" + MapRouteState.PCF_APP_NAME + "}");
     pcfRouteSwapState.setRoute("${" + INFRA_TEMP_ROUTE + "}");
 
     on(context).set("serviceTemplateService", serviceTemplateService);
@@ -451,7 +449,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecute_pcfOldAPP_infra_route() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_OLD_APP_NAME + "}");
-    pcfRouteSwapState.setRoute("${" + INFRA_ROUTE + "}");
+    pcfRouteSwapState.setRoute("${" + MapRouteState.INFRA_ROUTE + "}");
 
     on(context).set("serviceTemplateService", serviceTemplateService);
     on(context).set("sweepingOutputService", sweepingOutputService);

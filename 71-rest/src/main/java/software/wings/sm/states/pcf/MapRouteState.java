@@ -27,7 +27,6 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
@@ -53,6 +52,9 @@ import java.util.List;
 import java.util.Map;
 
 public class MapRouteState extends State {
+  public static final String PCF_APP_NAME = "pcfAppName";
+  public static final String INFRA_ROUTE = "infra.route";
+
   @Inject private transient AppService appService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient SecretManager secretManager;
@@ -64,7 +66,7 @@ public class MapRouteState extends State {
 
   public static final String PCF_MAP_ROUTE_COMMAND = "PCF Map Route";
 
-  @DefaultValue("${" + Constants.PCF_APP_NAME + "}") @Attributes(title = "PCF App Name") private String pcfAppName;
+  @DefaultValue("${" + PCF_APP_NAME + "}") @Attributes(title = "PCF App Name") private String pcfAppName;
 
   @DefaultValue("${" + WorkflowServiceHelper.INFRA_ROUTE_PCF + "}")
   @Attributes(title = "Map Route")
@@ -169,7 +171,7 @@ public class MapRouteState extends State {
   private List<String> getRoutes(SetupSweepingOutputPcf setupSweepingOutputPcf) {
     // determine which routes to map
     boolean isOriginalRoute = false;
-    String infraRouteConst = "${" + Constants.INFRA_ROUTE + "}";
+    String infraRouteConst = "${" + INFRA_ROUTE + "}";
     String infraRouteConstLegacy = "${" + WorkflowServiceHelper.INFRA_ROUTE_PCF + "}";
     if (route == null || infraRouteConst.equalsIgnoreCase(route.trim())
         || infraRouteConstLegacy.equalsIgnoreCase(route.trim())) {
@@ -186,7 +188,7 @@ public class MapRouteState extends State {
   }
 
   private List<String> getApplicationNamesTobeUpdated(SetupSweepingOutputPcf setupSweepingOutputPcf) {
-    String appConst = "${" + Constants.PCF_APP_NAME + "}";
+    String appConst = "${" + PCF_APP_NAME + "}";
     boolean isNewApplication = pcfAppName == null || appConst.equalsIgnoreCase(pcfAppName.trim());
 
     List<String> appNames = new ArrayList<>();
