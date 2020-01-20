@@ -10,5 +10,5 @@ public interface HealthMonitor {
   Duration healthValidFor();
 
   // Should throw an exception if the system is unhealthy.
-  void isHealthy() throws Exception;
+  void isHealthy();
 }

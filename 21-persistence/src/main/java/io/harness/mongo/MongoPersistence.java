@@ -84,7 +84,7 @@ public class MongoPersistence implements HPersistence {
   }
 
   @Override
-  public void isHealthy() throws Exception {
+  public void isHealthy() {
     final List<AdvancedDatastore> datastores = datastoreMap.values().stream().distinct().collect(toList());
     for (AdvancedDatastore datastore : datastores) {
       datastore.getDB().getStats();
