@@ -18,9 +18,11 @@ import com.google.inject.Singleton;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.InvalidRequestException;
 import software.wings.api.CanaryWorkflowStandardParams;
+import software.wings.api.DeploymentType;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
@@ -28,6 +30,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
@@ -49,6 +52,7 @@ public class WorkflowExecutionServiceHelper {
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private PipelineService pipelineService;
+  @Inject private FeatureFlagService featureFlagService;
 
   public WorkflowVariablesMetadata fetchWorkflowVariables(
       String appId, ExecutionArgs executionArgs, String workflowExecutionId) {
@@ -118,6 +122,13 @@ public class WorkflowExecutionServiceHelper {
     List<Service> services = workflowService.getResolvedServices(workflow, workflowVariables);
     if (isNotEmpty(services)) {
       workflowExecution.setServiceIds(services.stream().map(Service::getUuid).collect(toList()));
+      if (services.size() == 1) {
+        Service targetService = services.get(0);
+        boolean useSweepingOutput = (targetService.getDeploymentType() == DeploymentType.SSH
+                                        || targetService.getDeploymentType() == DeploymentType.WINRM)
+            && featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, workflow.getAccountId());
+        workflowExecution.setUseSweepingOutputs(useSweepingOutput);
+      }
     }
 
     if (infraRefactor) {

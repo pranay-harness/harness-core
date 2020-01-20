@@ -175,6 +175,7 @@ public class WorkflowExecution
 
   private Set<String> keywords;
   private boolean onDemandRollback;
+  private boolean useSweepingOutputs;
   // Information of original execution is this is for OnDemand Rollback
   private WorkflowExecutionInfo originalExecution;
 

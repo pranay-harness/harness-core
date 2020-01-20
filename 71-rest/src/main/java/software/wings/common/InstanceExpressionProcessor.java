@@ -416,11 +416,11 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     if (featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, context.getAccountId())) {
       return getServiceInstanceIdsParamFromSweepingOutput();
     }
-    return getServiceInstanceIdsParamFromSweepingOutputContextElement();
+    return getServiceInstanceIdsParamFromContextElement();
   }
 
   @Nullable
-  private ServiceInstanceIdsParam getServiceInstanceIdsParamFromSweepingOutputContextElement() {
+  private ServiceInstanceIdsParam getServiceInstanceIdsParamFromContextElement() {
     List<ContextElement> params = context.getContextElementList(ContextElementType.PARAM);
     if (params == null) {
       return null;
@@ -440,10 +440,16 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       return null;
     }
     String suffix = getSweepingOutputNameSuffix(phaseElement);
-    return (ServiceInstanceIdsParam) sweepingOutputService.findSweepingOutput(
-        context.prepareSweepingOutputInquiryBuilder()
-            .name(ServiceInstanceIdsParam.SERVICE_INSTANCE_IDS_PARAMS + suffix)
-            .build());
+    ServiceInstanceIdsParam serviceInstanceIdsParam =
+        (ServiceInstanceIdsParam) sweepingOutputService.findSweepingOutput(
+            context.prepareSweepingOutputInquiryBuilder()
+                .name(ServiceInstanceIdsParam.SERVICE_INSTANCE_IDS_PARAMS + suffix)
+                .build());
+    if (serviceInstanceIdsParam == null) {
+      return getServiceInstanceIdsParamFromContextElement();
+    } else {
+      return serviceInstanceIdsParam;
+    }
   }
 
   private String getSweepingOutputNameSuffix(@NotNull PhaseElement phaseElement) {

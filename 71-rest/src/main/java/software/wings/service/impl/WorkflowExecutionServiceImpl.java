@@ -1789,6 +1789,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         throw new InvalidRequestException("On demand rollback should not be available for this execution");
       }
 
+      if (!checkIfUsingSweepingOutputs(appId, workflowExecution)) {
+        throw new InvalidRequestException("Rollback is not available for older deployment");
+      }
+
       if (isEmpty(workflowExecution.getServiceIds()) || workflowExecution.getServiceIds().size() != 1) {
         throw new InvalidRequestException("Rollback Execution is not available for multi Service workflow");
       }
@@ -1822,6 +1826,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       return RollbackConfirmation.builder().artifacts(previousArtifacts).workflowId(workflowId).valid(true).build();
+    }
+  }
+
+  private boolean checkIfUsingSweepingOutputs(String appId, WorkflowExecution workflowExecution) {
+    List<String> infraDefId = workflowExecution.getInfraDefinitionIds();
+    InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefId.get(0));
+    if (infrastructureDefinition.getDeploymentType() == DeploymentType.SSH
+        || infrastructureDefinition.getDeploymentType() == DeploymentType.WINRM) {
+      return workflowExecution.isUseSweepingOutputs();
+    } else {
+      return true;
     }
   }
 
