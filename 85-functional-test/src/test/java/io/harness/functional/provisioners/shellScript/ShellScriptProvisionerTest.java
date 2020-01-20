@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
@@ -162,7 +163,7 @@ public class ShellScriptProvisionerTest extends AbstractFunctionalTest {
         infrastructureDefinitionService.getInfrastructureMapping(service.getUuid(), infrastructureDefinition);
     List<Host> hosts = infrastructureMappingService.listHosts(application.getUuid(), infrastructureMapping.getUuid());
     if (hosts == null) {
-      throw new WingsException("Host is null for Infra Mapping");
+      throw new InvalidRequestException("Host is null for Infra Mapping");
     }
   }
 

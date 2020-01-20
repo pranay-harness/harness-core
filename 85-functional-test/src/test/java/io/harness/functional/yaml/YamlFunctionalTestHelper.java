@@ -1,6 +1,5 @@
 package io.harness.functional.yaml;
 
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.generator.AccountGenerator.ACCOUNT_ID;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,7 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.filesystem.FileIo;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.resource.Project;
@@ -137,7 +136,7 @@ public class YamlFunctionalTestHelper {
       stream.forEach(s -> contentBuilder.append(s).append("\n"));
     } catch (IOException e) {
       logger.error("Failed to read file Content {}", path.toString());
-      throw new WingsException(GENERAL_ERROR, "Failed to read file Content {}", e);
+      throw new InvalidRequestException("Failed to read file Content {}", e);
     }
 
     String content = contentBuilder.toString();

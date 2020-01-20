@@ -38,7 +38,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -87,7 +87,7 @@ public class WorkflowUtils {
   public void checkForWorkflowSuccess(WorkflowExecution workflowExecution) {
     WorkflowExecution finalWorkflowExecution = awaitAndFetchFinalWorkflowExecution(workflowExecution);
     if (finalWorkflowExecution.getStatus() != ExecutionStatus.SUCCESS) {
-      throw new WingsException(
+      throw new InvalidRequestException(
           "workflow execution did not succeed. Final status: " + finalWorkflowExecution.getStatus());
     }
   }
@@ -95,7 +95,7 @@ public class WorkflowUtils {
   public void validateWorkflowStatus(WorkflowExecution workflowExecution, ExecutionStatus expectedStatus) {
     WorkflowExecution finalWorkflowExecution = awaitAndFetchFinalWorkflowExecution(workflowExecution);
     if (finalWorkflowExecution.getStatus() != expectedStatus) {
-      throw new WingsException("workflow execution did not complete with expected status. Final status: "
+      throw new InvalidRequestException("workflow execution did not complete with expected status. Final status: "
           + finalWorkflowExecution.getStatus() + " Expected status: " + expectedStatus);
     }
   }

@@ -11,7 +11,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
 import io.harness.exception.EmptyRestResponseException;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
@@ -51,7 +51,7 @@ public class WorkflowRestUtils {
                                                        .as(workflowType.getType());
 
     if (savedWorkflowResponse.getResource() == null) {
-      throw new WingsException(String.valueOf(savedWorkflowResponse.getResponseMessages()));
+      throw new InvalidRequestException(String.valueOf(savedWorkflowResponse.getResponseMessages()));
     }
 
     return savedWorkflowResponse.getResource();
@@ -127,7 +127,7 @@ public class WorkflowRestUtils {
                                                                          .post("/executions")
                                                                          .as(workflowExecutionType.getType());
     if (savedWorkflowExecutionResponse.getResource() == null) {
-      throw new WingsException(String.valueOf(savedWorkflowExecutionResponse.getResponseMessages()));
+      throw new InvalidRequestException(String.valueOf(savedWorkflowExecutionResponse.getResponseMessages()));
     }
 
     return savedWorkflowExecutionResponse.getResource();

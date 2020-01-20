@@ -24,7 +24,6 @@ import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.PCF;
-import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
@@ -2596,15 +2595,18 @@ public class WorkflowServiceHelper {
    * @return
    */
   public List<String> getServiceCommands(WorkflowPhase workflowPhase, String appId, String svcId) {
-    if (svcId == null || workflowPhase == null || SSH != workflowPhase.getDeploymentType()
-        || !serviceResourceService.exist(appId, svcId)) {
-      return new ArrayList<>();
+    if (svcId != null && workflowPhase != null) {
+      // Read Service commands only for SSH Deployment Type PDC, AWS and WINRM
+      DeploymentType deploymentType = workflowPhase.getDeploymentType();
+      if ((deploymentType == null || DeploymentType.SSH == deploymentType || DeploymentType.WINRM == deploymentType)
+          && serviceResourceService.exist(appId, svcId)) {
+        return serviceResourceService.getServiceCommands(appId, svcId)
+            .stream()
+            .map(serviceCommand -> serviceCommand.getCommand().getName())
+            .distinct()
+            .collect(Collectors.toList());
+      }
     }
-
-    List<ServiceCommand> serviceCommands = serviceResourceService.getServiceCommands(appId, svcId);
-    return serviceCommands.stream()
-        .map(serviceCommand -> serviceCommand.getCommand().getName())
-        .distinct()
-        .collect(Collectors.toList());
+    return new ArrayList<>();
   }
 }
