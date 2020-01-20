@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
@@ -17,6 +18,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.SettingsService;
@@ -67,5 +69,13 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
 
     assertThat(artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, true)).isFalse();
     assertThat(artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, false)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldNotSkipArtifactStreamIterationForConnectivityErrorForCustomArtifactSource() {
+    ArtifactStream artifactStream = CustomArtifactStream.builder().build();
+    assertThat(artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, true)).isFalse();
   }
 }
