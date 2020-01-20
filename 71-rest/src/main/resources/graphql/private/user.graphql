@@ -1,0 +1,20 @@
+extend type Query {
+  user(id: String!): User @dataFetcher(name: user)
+  users(limit: Int!, offset: Int): UserConnection @dataFetcher(name: userConnection)
+}
+
+extend type User {
+  id: String
+  name: String
+  email: String
+  isEmailVerified: Boolean
+  isTwoFactorAuthenticationEnabled: Boolean
+  isUserLocked: Boolean
+  isPasswordExpired: Boolean
+  isImportedFromIdentityProvider: Boolean
+}
+
+type UserConnection {
+  pageInfo: PageInfo
+  nodes: [User]
+}

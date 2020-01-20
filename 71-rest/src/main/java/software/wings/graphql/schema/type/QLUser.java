@@ -10,8 +10,13 @@ import software.wings.security.annotations.Scope;
 @Builder
 @FieldNameConstants(innerTypeName = "QLUserKeys")
 @Scope(ResourceType.USER)
-public class QLUser {
+public class QLUser implements QLObject {
   private String id;
   private String name;
   private String email;
+  private Boolean isEmailVerified;
+  private Boolean isTwoFactorAuthenticationEnabled;
+  private Boolean isUserLocked;
+  private Boolean isPasswordExpired;
+  private Boolean isImportedFromIdentityProvider;
 }

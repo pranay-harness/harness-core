@@ -22,6 +22,7 @@ public interface NameService {
   String instance = "Instance";
   String trigger = "Trigger";
   String pipelineExecution = "PipelineExecution";
+  String user = "User";
 
   NameResult getNames(@NotNull Set<String> ids, @NotNull String type);
 }
