@@ -4,6 +4,7 @@ import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
@@ -11,6 +12,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -35,6 +37,9 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.container.EcsServiceSpecification.ECS_REPLICA_SCHEDULING_STRATEGY;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_DAEMON_SCHEDULING_STRATEGY;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getEnvTemplateExpression;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getServiceTemplateExpression;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.prepareInfraDefTemplateExpression;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_LISTENER_UPDATE;
@@ -248,6 +253,47 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     verifyPhase(workflowPhase,
         asList(new String[] {ECS_BG_SERVICE_SETUP.name(), ECS_SERVICE_DEPLOY.name(), null, ECS_LISTENER_UPDATE.name()}),
         5);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testHandleBasicWorkflow() throws Exception {
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = null;
+    List<WorkflowPhase> workflowPhases = null;
+
+    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
+    when(appService.getAccountIdByAppId(any())).thenReturn(ACCOUNT_ID);
+
+    InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
+                                                            .uuid("id1")
+                                                            .appId(APP_ID)
+                                                            .infrastructure(PcfInfraStructure.builder().build())
+                                                            .build();
+    when(infrastructureDefinitionService.getInfraStructureDefinitionByUuids(anyString(), anyList()))
+        .thenReturn(Arrays.asList(infrastructureDefinition));
+
+    List<TemplateExpression> templateExpressions =
+        asList(getEnvTemplateExpression(), getServiceTemplateExpression(), prepareInfraDefTemplateExpression());
+    workflowPhases = ImmutableList.<WorkflowPhase>of(aWorkflowPhase()
+                                                         .templateExpressions(templateExpressions)
+                                                         .infraDefinitionId(INFRA_DEFINITION_ID)
+                                                         .serviceId(SERVICE_ID)
+                                                         .build());
+
+    Map<String, WorkflowPhase> rollbackMap = new HashMap<>();
+    rollbackMap.put(workflowPhases.get(0).getUuid(), workflowPhases.get(0));
+
+    canaryOrchestrationWorkflow = aCanaryOrchestrationWorkflow()
+                                      .withWorkflowPhases(workflowPhases)
+                                      .withRollbackWorkflowPhaseIdMap(rollbackMap)
+                                      .build();
+
+    workflowServiceHelper.handleBasicWorkflow(
+        canaryOrchestrationWorkflow, templateExpressions, APP_ID, null, null, false, false);
+
+    assertThat(workflowPhases.get(0).getServiceId()).isNull();
+    assertThat(workflowPhases.get(0).getInfraDefinitionId()).isNull();
   }
 
   @Test
