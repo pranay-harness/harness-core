@@ -45,6 +45,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -462,6 +463,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       case "string":
       case "any":
         return fieldValue;
+      case "datetime":
+        return new Timestamp(Long.parseLong(fieldValue));
       case "multiselect":
         List<ValueTuple> valueTuples = new ArrayList<>();
         List<String> valueList = Arrays.asList(fieldValue.split(","));
