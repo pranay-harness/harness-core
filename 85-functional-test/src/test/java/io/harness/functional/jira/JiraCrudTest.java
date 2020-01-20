@@ -58,11 +58,11 @@ public class JiraCrudTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = POOJA)
   @Category(FunctionalTests.class)
-  public void shouldCreateJiraStepinWorkflow() throws Exception {
+  public void shouldCreateJira() {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
-    Workflow jiraWorkflow = workflowUtils.buildCanaryWorkflowPostDeploymentStep(
-        "Create JIRA" + System.currentTimeMillis(), environment.getUuid(), getJiraCreateNode());
+    Workflow jiraWorkflow = WorkflowUtils.buildCanaryWorkflowPostDeploymentStep(
+        "Create JIRA" + System.currentTimeMillis(), environment.getUuid(), getJiraCreateNodeWithoutCustomFields());
 
     // REST API.
     Workflow savedWorkflow =
@@ -76,9 +76,36 @@ public class JiraCrudTest extends AbstractFunctionalTest {
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
-  private GraphNode getJiraCreateNode() {
+  @Test
+  @Owner(developers = POOJA)
+  @Category(FunctionalTests.class)
+  public void shouldCreateJiraWithCustomFields() {
+    Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
+    assertThat(environment).isNotNull();
+    Workflow jiraWorkflow = WorkflowUtils.buildCanaryWorkflowPostDeploymentStep(
+        "Create JIRA" + System.currentTimeMillis(), environment.getUuid(), getJiraCreateNodeWithCustomFields());
+
+    // REST API.
+    Workflow savedWorkflow =
+        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), jiraWorkflow);
+    assertThat(savedWorkflow).isNotNull();
+
+    // Test running the workflow
+    WorkflowExecution workflowExecution = runWorkflow(bearerToken, application.getUuid(), environment.getUuid(),
+        savedWorkflow.getUuid(), Collections.<Artifact>emptyList());
+    assertThat(workflowExecution).isNotNull();
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  private GraphNode getJiraCreateNodeWithoutCustomFields() {
     SettingAttribute jiraSetting = settingGenerator.ensurePredefined(seed, owners, HARNESS_JIRA);
     assertThat(jiraSetting).isNotNull();
-    return JiraUtils.getJiraCreateNode(jiraSetting.getUuid());
+    return JiraUtils.getJiraCreateNodeWithoutCustomFields(jiraSetting.getUuid());
+  }
+
+  private GraphNode getJiraCreateNodeWithCustomFields() {
+    SettingAttribute jiraSetting = settingGenerator.ensurePredefined(seed, owners, HARNESS_JIRA);
+    assertThat(jiraSetting).isNotNull();
+    return JiraUtils.getJiraCreateNodeWithCustomFields(jiraSetting.getUuid());
   }
 }

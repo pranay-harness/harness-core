@@ -143,7 +143,7 @@ public abstract class AbstractAccountMigrationTest extends AbstractFunctionalTes
   public void addWorkflowWithJira() {
     SettingAttribute jiraConnector = addJIRAConnector();
     Workflow workflow = WorkflowUtils.buildCanaryWorkflowPostDeploymentStep(
-        "WF", env.getUuid(), JiraUtils.getJiraCreateNode(jiraConnector.getUuid()));
+        "WF", env.getUuid(), JiraUtils.getJiraCreateNodeWithoutCustomFields(jiraConnector.getUuid()));
     WorkflowRestUtils.createWorkflow(user.getToken(), account.getUuid(), app.getAppId(), workflow);
   }
 

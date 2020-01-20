@@ -19,6 +19,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.beans.Activity;
@@ -52,6 +53,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
+@FieldNameConstants(innerTypeName = "JiraCreateUpdateKeys")
 public class JiraCreateUpdate extends State implements SweepingOutputStateMixin {
   private static final long JIRA_TASK_TIMEOUT_MILLIS = 60 * 1000;
   private static final String JIRA_ISSUE_ID = "issueId";
