@@ -158,7 +158,7 @@ public class MongoPersistentLocker implements PersistentLocker, HealthMonitor {
   }
 
   @Override
-  public void isHealthy() throws Exception {
+  public void isHealthy() {
     try (AcquiredLock dummy = acquireEphemeralLock("HEALTH_CHECK - " + generateUuid(), ofSeconds(1))) {
       // nothing to do
     }
