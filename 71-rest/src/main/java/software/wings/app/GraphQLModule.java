@@ -83,6 +83,10 @@ import software.wings.graphql.datafetcher.trigger.TriggerDataFetcher;
 import software.wings.graphql.datafetcher.trigger.TriggerStatsDataFetcher;
 import software.wings.graphql.datafetcher.user.UserConnectionDataFetcher;
 import software.wings.graphql.datafetcher.user.UserDataFetcher;
+import software.wings.graphql.datafetcher.userGroup.CreateUserGroupDataFetcher;
+import software.wings.graphql.datafetcher.userGroup.DeleteUserGroupDataFetcher;
+import software.wings.graphql.datafetcher.userGroup.UserGroupConnectionDataFetcher;
+import software.wings.graphql.datafetcher.userGroup.UserGroupDataFetcher;
 import software.wings.graphql.datafetcher.userGroup.UserGroupUpdatePermissionsDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowConnectionDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher;
@@ -203,6 +207,10 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(UpdateApplicationDataFetcher.class);
     bindDataFetcherWithAnnotation(DeleteApplicationDataFetcher.class);
     bindDataFetcherWithAnnotation(UserGroupUpdatePermissionsDataFetcher.class);
+    bindDataFetcherWithAnnotation(UserGroupDataFetcher.class);
+    bindDataFetcherWithAnnotation(UserGroupConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeleteUserGroupDataFetcher.class);
+    bindDataFetcherWithAnnotation(CreateUserGroupDataFetcher.class);
     bindDataFetcherWithAnnotation(UserDataFetcher.class);
     bindDataFetcherWithAnnotation(UserConnectionDataFetcher.class);
   }

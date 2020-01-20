@@ -1,4 +1,91 @@
 extend type Mutation {
+  createUserGroup(input: CreateUserGroupInput!): CreateUserGroupPayload @dataFetcher(name: createUserGroup)
   updateUserGroupPermissions(userGroupId: String!, permissions: Permissions!): UserGroupPermissions
     @dataFetcher(name: userGroupUpdatePermissions)
+  deleteUserGroup(input: DeleteUserGroupInput!): DeleteUserGroupPayload @dataFetcher(name: deleteUserGroup)
+}
+
+extend type Query {
+  userGroup(userGroupId: String!): UserGroup @dataFetcher(name: userGroup)
+  userGroups(limit: Int!, offset: Int): UserGroupConnection @dataFetcher(name: userGroupConnection)
+}
+
+input CreateUserGroupInput {
+  name: String!
+  description: String
+  permissions: Permissions
+  notificationSettings: NotificationSettingsInput
+  requestId: String
+}
+
+input DeleteUserGroupInput {
+  requestId: String
+  userGroupId: String!
+}
+
+type UserGroup {
+  id: String
+  name: String
+  description: String
+  importedByScim: Boolean
+  isSSOLinked: Boolean
+  notificationSettings: NotificationSettingsPayload
+  permissions: UserGroupPermissions
+  requestId: String
+}
+
+type CreateUserGroupPayload {
+  id: String
+  name: String
+  description: String
+  importedByScim: Boolean
+  isSSOLinked: Boolean
+  notificationSettings: NotificationSettingsPayload
+  permissions: UserGroupPermissions
+  requestId: String
+}
+
+type UserGroupConnection {
+  pageInfo: PageInfo
+  nodes: [UserGroup]
+}
+
+input NotificationSettingsInput {
+  sendNotificationToMembers: Boolean
+  sendMailToNewMembers: Boolean
+  groupEmailAddresses: [String]
+  slackNotificationSetting: SlackNotificationSettingInput
+  pagerDutyIntegrationKey: String
+}
+
+input SlackNotificationSettingInput {
+  slackChannelName: String
+  slackWebhookURL: String
+}
+
+type NotificationSettingsPayload {
+  sendNotificationToMembers: Boolean
+  sendMailToNewMembers: Boolean
+  groupEmailAddresses: [String]
+  slackNotificationSetting: SlackNotificationSettingPayload
+}
+
+input SlackNotificationSetting {
+  slackChannelName: String
+  slackWebhookURL: String
+}
+
+type SlackNotificationSettingPayload {
+  slackChannelName: String
+  slackWebhookURL: String
+}
+
+enum RequestStatus {
+  SUCCESS
+  FAILED
+}
+
+type DeleteUserGroupPayload {
+  status: RequestStatus
+  message: String
 }

@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -15,11 +16,11 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
-import software.wings.graphql.schema.mutation.userGroup.QLSetUserGroupPermissionsParameters;
 import software.wings.graphql.schema.type.permissions.QLActions;
 import software.wings.graphql.schema.type.permissions.QLAppFilter;
 import software.wings.graphql.schema.type.permissions.QLAppPermissions;
 import software.wings.graphql.schema.type.permissions.QLPermissionType;
+import software.wings.graphql.schema.type.permissions.QLUserGroupPermissions;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -35,7 +36,9 @@ import java.util.stream.Collectors;
  * All the NULL checks should be done at this layer, so that we can assume that the input passed
  * to the UserController is correct
  * */
+
 @Slf4j
+@Singleton
 public class UserGroupPermissionValidator {
   @Inject AppService appService;
   @Inject ServiceResourceService serviceResourceService;
@@ -283,12 +286,12 @@ public class UserGroupPermissionValidator {
   }
 
   // it is clear form where the error is happening
-  public void validatePermission(QLSetUserGroupPermissionsParameters parameters) {
+  public void validatePermission(QLUserGroupPermissions permissions) {
     // check if the userGroup Exists
-    if (parameters.getPermissions().getAppPermissions() == null) {
+    if (permissions == null || permissions.getAppPermissions() == null) {
       return;
     }
-    for (QLAppPermissions appPermission : parameters.getPermissions().getAppPermissions()) {
+    for (QLAppPermissions appPermission : permissions.getAppPermissions()) {
       // Check that for a particular permissionType their filterType should also be given
       checkWhetherPermissionIsValid(appPermission);
       // Check that the action is valid for that permissionType

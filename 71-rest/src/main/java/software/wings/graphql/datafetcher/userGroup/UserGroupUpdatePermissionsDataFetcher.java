@@ -1,8 +1,8 @@
 package software.wings.graphql.datafetcher.userGroup;
 
-import static software.wings.graphql.datafetcher.userGroup.UserGroupController.populateUserGroupAccountPermissionEntity;
-import static software.wings.graphql.datafetcher.userGroup.UserGroupController.populateUserGroupAppPermissionEntity;
-import static software.wings.graphql.datafetcher.userGroup.UserGroupController.populateUserGroupPermissions;
+import static software.wings.graphql.datafetcher.userGroup.UserGroupPermissionsController.populateUserGroupAccountPermissionEntity;
+import static software.wings.graphql.datafetcher.userGroup.UserGroupPermissionsController.populateUserGroupAppPermissionEntity;
+import static software.wings.graphql.datafetcher.userGroup.UserGroupPermissionsController.populateUserGroupPermissions;
 
 import com.google.inject.Inject;
 
@@ -33,14 +33,13 @@ public class UserGroupUpdatePermissionsDataFetcher
   }
 
   private UserGroup updateUserGroupPermissions(QLSetUserGroupPermissionsParameters parameters, String accountId) {
-    userGroupPermissionValidator.validatePermission(parameters);
-    AccountPermissions accountPermissions = populateUserGroupAccountPermissionEntity(parameters);
-    Set<AppPermission> appPermissions = populateUserGroupAppPermissionEntity(parameters);
+    userGroupPermissionValidator.validatePermission(parameters.getPermissions());
+    AccountPermissions accountPermissions = populateUserGroupAccountPermissionEntity(parameters.getPermissions());
+    Set<AppPermission> appPermissions = populateUserGroupAppPermissionEntity(parameters.getPermissions());
     return userGroupService.setUserGroupPermissions(
         accountId, parameters.getUserGroupId(), accountPermissions, appPermissions);
   }
 
-  // Need to change this Permission Type ?
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT)
   protected QLGroupPermissions mutateAndFetch(
