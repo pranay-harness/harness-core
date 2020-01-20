@@ -48,4 +48,6 @@ enum DataFetcherEnum {
   updateApplication
   deleteApplication
   userGroupUpdatePermissions
+  user
+  userConnection
 }
