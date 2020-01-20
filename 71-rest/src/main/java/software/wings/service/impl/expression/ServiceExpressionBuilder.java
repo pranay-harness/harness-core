@@ -9,12 +9,11 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
-import io.harness.govern.Switch;
+import software.wings.api.DeploymentType;
 import software.wings.api.PcfInstanceElement.PcfInstanceElementKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.FeatureName;
@@ -93,17 +92,15 @@ public class ServiceExpressionBuilder extends ExpressionBuilder {
 
   public List<String> getContinuousVerificationVariables(String appId, String serviceId) {
     final Service service = serviceResourceService.get(appId, serviceId);
-    Preconditions.checkNotNull(service, "Service not found with id " + serviceId);
+    if (service == null) {
+      return new ArrayList<>();
+    }
     List<String> rv = new ArrayList<>();
     rv.add("host.hostName");
-    switch (service.getDeploymentType()) {
-      case PCF:
-        rv.add("host.pcfElement." + PcfInstanceElementKeys.applicationId);
-        rv.add("host.pcfElement." + PcfInstanceElementKeys.displayName);
-        rv.add("host.pcfElement." + PcfInstanceElementKeys.instanceIndex);
-        break;
-      default:
-        Switch.noop();
+    if (service.getDeploymentType() == DeploymentType.PCF) {
+      rv.add("host.pcfElement." + PcfInstanceElementKeys.applicationId);
+      rv.add("host.pcfElement." + PcfInstanceElementKeys.displayName);
+      rv.add("host.pcfElement." + PcfInstanceElementKeys.instanceIndex);
     }
     return rv;
   }
