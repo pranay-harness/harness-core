@@ -8,7 +8,6 @@ import software.wings.beans.FeatureFlag.Scope;
  * delete the feature name.
  */
 public enum FeatureName {
-  AWS_CLOUD_FORMATION_TEMPLATE,
   CV_DEMO,
   LOGML_NEURAL_NET,
   GIT_BATCH_SYNC,
