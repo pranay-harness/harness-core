@@ -6,26 +6,29 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.mutation.application.QLCreateApplicationParameters;
+import software.wings.graphql.schema.mutation.application.input.QLCreateApplicationInput;
+import software.wings.graphql.schema.mutation.application.payload.QLCreateApplicationPayload;
 import software.wings.graphql.schema.type.QLApplication;
-import software.wings.graphql.schema.type.QLApplicationInput;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 
 @Slf4j
-public class CreateApplicationDataFetcher extends BaseMutatorDataFetcher<QLCreateApplicationParameters, QLApplication> {
-  @Inject private AppService appService;
+public class CreateApplicationDataFetcher
+    extends BaseMutatorDataFetcher<QLCreateApplicationInput, QLCreateApplicationPayload> {
+  private AppService appService;
 
   @Inject
   public CreateApplicationDataFetcher(AppService appService) {
-    super(QLCreateApplicationParameters.class, QLApplication.class);
+    super(QLCreateApplicationInput.class, QLCreateApplicationPayload.class);
     this.appService = appService;
   }
 
-  private Application prepareApplication(QLApplicationInput qlApplicationInput, String accountId) {
-    return ApplicationController.populateApplication(Application.Builder.anApplication(), qlApplicationInput)
+  private Application prepareApplication(QLCreateApplicationInput qlApplicationInput, String accountId) {
+    return Application.Builder.anApplication()
+        .name(qlApplicationInput.getName())
+        .description(qlApplicationInput.getDescription())
         .accountId(accountId)
         .build();
   }
@@ -35,10 +38,12 @@ public class CreateApplicationDataFetcher extends BaseMutatorDataFetcher<QLCreat
 
   @Override
   @AuthRule(permissionType = PermissionType.APPLICATION_CREATE_DELETE, action = PermissionAttribute.Action.CREATE)
-  protected QLApplication mutateAndFetch(QLCreateApplicationParameters parameter, MutationContext mutationContext) {
-    final Application savedApplication =
-        appService.save(prepareApplication(parameter.getApplication(), mutationContext.getAccountId()));
-
-    return prepareQLApplication(savedApplication);
+  protected QLCreateApplicationPayload mutateAndFetch(
+      QLCreateApplicationInput parameter, MutationContext mutationContext) {
+    final Application savedApplication = appService.save(prepareApplication(parameter, mutationContext.getAccountId()));
+    return QLCreateApplicationPayload.builder()
+        .requestId(parameter.getRequestId())
+        .application(prepareQLApplication(savedApplication))
+        .build();
   }
 }

@@ -28,7 +28,8 @@ import software.wings.graphql.datafetcher.AuthRuleGraphQL;
 import software.wings.graphql.datafetcher.BaseDataFetcher;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.mutation.application.QLCreateApplicationParameters;
+import software.wings.graphql.schema.mutation.application.input.QLCreateApplicationInput;
+import software.wings.graphql.schema.mutation.application.payload.QLCreateApplicationPayload;
 import software.wings.graphql.schema.type.QLApplication;
 import software.wings.service.intfc.AppService;
 
@@ -51,7 +52,7 @@ public class CreateApplicationDataFetcherTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_get() throws Exception {
     final DataFetchingEnvironment dataFetchingEnvironment = Mockito.mock(DataFetchingEnvironment.class);
-    doReturn(ImmutableMap.of("application", ImmutableMap.of("name", "appname", "description", "app description")))
+    doReturn(ImmutableMap.of("requestId", "req1", "name", "appname", "description", "app description"))
         .when(dataFetchingEnvironment)
         .getArguments();
     doReturn("accountid1").when(utils).getAccountId(dataFetchingEnvironment);
@@ -63,15 +64,19 @@ public class CreateApplicationDataFetcherTest extends CategoryTest {
                                              .build();
     doReturn(savedApplication).when(appService).save(any(Application.class));
 
-    final QLApplication qlApplication = createApplicationDataFetcher.get(dataFetchingEnvironment);
-
+    final QLCreateApplicationPayload qlCreateApplicationPayload =
+        createApplicationDataFetcher.get(dataFetchingEnvironment);
+    final QLApplication qlApplication = qlCreateApplicationPayload.getApplication();
+    assertThat(qlCreateApplicationPayload.getRequestId()).isEqualTo("req1");
     ArgumentCaptor<Application> applicationArgumentCaptor = ArgumentCaptor.forClass(Application.class);
     verify(appService, times(1)).save(applicationArgumentCaptor.capture());
     verify(authRuleInstrumentation, times(1))
-        .instrumentDataFetcher(any(BaseDataFetcher.class), eq(dataFetchingEnvironment), eq(QLApplication.class));
+        .instrumentDataFetcher(
+            any(BaseDataFetcher.class), eq(dataFetchingEnvironment), eq(QLCreateApplicationPayload.class));
 
     verify(authRuleInstrumentation, times(1))
-        .handlePostMutation(any(MutationContext.class), any(QLCreateApplicationParameters.class), eq(qlApplication));
+        .handlePostMutation(
+            any(MutationContext.class), any(QLCreateApplicationInput.class), any(QLCreateApplicationPayload.class));
 
     final Application applicationArgument = applicationArgumentCaptor.getValue();
     assertThat(applicationArgument.getName()).isEqualTo("appname");
