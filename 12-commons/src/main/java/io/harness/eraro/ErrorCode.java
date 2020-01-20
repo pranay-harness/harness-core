@@ -396,7 +396,9 @@ public enum ErrorCode {
 
   BATCH_PROCESSING_ERROR,
 
-  GRAPHQL_ERROR;
+  GRAPHQL_ERROR,
+
+  ILLEGAL_STATE;
 
   private Status status = BAD_REQUEST;
   private String description;

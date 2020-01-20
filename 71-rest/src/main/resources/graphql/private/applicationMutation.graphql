@@ -1,15 +1,37 @@
 extend type Mutation {
-  createApplication(application: ApplicationInput!): Application @dataFetcher(name: createApplication)
-  updateApplication(applicationId: String!, application: ApplicationInput!): Application
-    @dataFetcher(name: updateApplication)
-  deleteApplication(applicationId: String!): DeleteApplicationResult @dataFetcher(name: deleteApplication)
+  createApplication(input: CreateApplicationInput!): CreateApplicationPayload @dataFetcher(name: createApplication)
+  updateApplication(input: UpdateApplicationInput!): UpdateApplicationPayload @dataFetcher(name: updateApplication)
+  deleteApplication(input: DeleteApplicationInput!): DeleteApplicationPayload @dataFetcher(name: deleteApplication)
 }
 
-input ApplicationInput {
+input CreateApplicationInput {
+  requestId: String!
+  name: String!
+  description: String
+}
+input UpdateApplicationInput {
+  requestId: String!
+  applicationId: String!
   name: String
   description: String
 }
 
-type DeleteApplicationResult {
+input DeleteApplicationInput {
+  requestId: String!
+  applicationId: String!
+}
+
+type CreateApplicationPayload {
+  requestId: String
+  application: Application
+}
+
+type UpdateApplicationPayload {
+  requestId: String
+  application: Application
+}
+
+type DeleteApplicationPayload {
+  requestId: String
   success: Boolean
 }

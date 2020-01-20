@@ -20,8 +20,8 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.mutation.application.QLDeleteApplicationResult;
-import software.wings.graphql.schema.mutation.application.QLUpdateApplicationParameters;
+import software.wings.graphql.schema.mutation.application.input.QLUpdateApplicationInput;
+import software.wings.graphql.schema.mutation.application.payload.QLDeleteApplicationPayload;
 import software.wings.service.intfc.AppService;
 
 public class DeleteApplicationDataFetcherTest extends CategoryTest {
@@ -41,17 +41,18 @@ public class DeleteApplicationDataFetcherTest extends CategoryTest {
   @Category(UnitTests.class)
   public void mutateAndFetch() {
     doNothing().when(appService).delete(anyString());
-    final QLUpdateApplicationParameters applicationParameters =
+    final QLUpdateApplicationInput applicationParameters =
 
-        QLUpdateApplicationParameters.builder().applicationId("appid").build();
+        QLUpdateApplicationInput.builder().applicationId("appid").requestId("req1").build();
     final MutationContext mutationContext = MutationContext.builder()
                                                 .accountId("accountid")
                                                 .dataFetchingEnvironment(Mockito.mock(DataFetchingEnvironment.class))
                                                 .build();
 
-    final QLDeleteApplicationResult qlDeleteApplicationResult =
+    final QLDeleteApplicationPayload qlDeleteApplicationPayload =
         deleteApplicationDataFetcher.mutateAndFetch(applicationParameters, mutationContext);
     verify(appService, times(1)).delete("appid");
-    Assertions.assertThat(qlDeleteApplicationResult.getSuccess()).isTrue();
+    Assertions.assertThat(qlDeleteApplicationPayload.getSuccess()).isTrue();
+    Assertions.assertThat(qlDeleteApplicationPayload.getRequestId()).isEqualTo("req1");
   }
 }
