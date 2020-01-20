@@ -42,13 +42,15 @@ public interface EcsEventGenerator {
   String INSTANCE_STATE_NAME = "running";
   String DEFAULT_AWS_REGION = "us-east-1";
 
-  default PublishedMessage getEc2InstanceInfoMessage(String instanceId, String accountId, String clusterId) {
+  default PublishedMessage getEc2InstanceInfoMessage(
+      String instanceId, String accountId, String clusterArn, String clusterId) {
     InstanceState instanceState =
         InstanceState.newBuilder().setCode(INSTANCE_STATE_CODE).setName(INSTANCE_STATE_NAME).build();
 
     Ec2InstanceInfo ec2InstanceInfo = Ec2InstanceInfo.newBuilder()
                                           .setInstanceId(instanceId)
-                                          .setClusterArn(clusterId)
+                                          .setClusterArn(clusterArn)
+                                          .setClusterId(clusterId)
                                           .setInstanceType(INSTANCE_TYPE)
                                           .setRegion(DEFAULT_AWS_REGION)
                                           .setInstanceState(instanceState)
@@ -57,29 +59,38 @@ public interface EcsEventGenerator {
   }
 
   default PublishedMessage getEc2InstanceLifecycleMessage(
-      Timestamp timestamp, EventType eventType, String instanceId, String accountId) {
-    Ec2Lifecycle ec2Lifecycle =
-        Ec2Lifecycle.newBuilder()
-            .setLifecycle(Lifecycle.newBuilder().setInstanceId(instanceId).setType(eventType).setTimestamp(timestamp))
-            .build();
+      Timestamp timestamp, EventType eventType, String instanceId, String accountId, String clusterId) {
+    Ec2Lifecycle ec2Lifecycle = Ec2Lifecycle.newBuilder()
+                                    .setLifecycle(Lifecycle.newBuilder()
+                                                      .setInstanceId(instanceId)
+                                                      .setClusterId(clusterId)
+                                                      .setType(eventType)
+                                                      .setTimestamp(timestamp))
+                                    .build();
     return getPublishedMessage(accountId, ec2Lifecycle);
   }
 
   default PublishedMessage getContainerInstanceLifecycleMessage(
-      Timestamp timestamp, EventType eventType, String instanceId, String accountId) {
-    EcsContainerInstanceLifecycle containerInstanceLifecycle =
-        EcsContainerInstanceLifecycle.newBuilder()
-            .setLifecycle(Lifecycle.newBuilder().setInstanceId(instanceId).setType(eventType).setTimestamp(timestamp))
-            .build();
+      Timestamp timestamp, EventType eventType, String instanceId, String accountId, String clusterId) {
+    EcsContainerInstanceLifecycle containerInstanceLifecycle = EcsContainerInstanceLifecycle.newBuilder()
+                                                                   .setLifecycle(Lifecycle.newBuilder()
+                                                                                     .setInstanceId(instanceId)
+                                                                                     .setClusterId(clusterId)
+                                                                                     .setType(eventType)
+                                                                                     .setTimestamp(timestamp))
+                                                                   .build();
     return getPublishedMessage(accountId, containerInstanceLifecycle);
   }
 
   default PublishedMessage getTaskLifecycleMessage(
-      Timestamp timestamp, EventType eventType, String instanceId, String accountId) {
-    EcsTaskLifecycle taskLifecycle =
-        EcsTaskLifecycle.newBuilder()
-            .setLifecycle(Lifecycle.newBuilder().setInstanceId(instanceId).setType(eventType).setTimestamp(timestamp))
-            .build();
+      Timestamp timestamp, EventType eventType, String instanceId, String accountId, String clusterId) {
+    EcsTaskLifecycle taskLifecycle = EcsTaskLifecycle.newBuilder()
+                                         .setLifecycle(Lifecycle.newBuilder()
+                                                           .setInstanceId(instanceId)
+                                                           .setClusterId(clusterId)
+                                                           .setType(eventType)
+                                                           .setTimestamp(timestamp))
+                                         .build();
     return getPublishedMessage(accountId, taskLifecycle);
   }
 
@@ -87,8 +98,8 @@ public interface EcsEventGenerator {
     return ReservedResource.newBuilder().setMemory(INSTANCE_MEMORY).setCpu(INSTANCE_CPU).build();
   }
 
-  default PublishedMessage getContainerInstanceInfoMessage(
-      String containerInstanceArn, String instanceId, String settingId, String clusterArn, String accountId) {
+  default PublishedMessage getContainerInstanceInfoMessage(String containerInstanceArn, String instanceId,
+      String settingId, String clusterArn, String accountId, String clusterId) {
     EcsContainerInstanceDescription containerInstanceDescription = EcsContainerInstanceDescription.newBuilder()
                                                                        .setRegion(DEFAULT_AWS_REGION)
                                                                        .setOperatingSystem(OPERATING_SYSTEM)
@@ -96,6 +107,7 @@ public interface EcsEventGenerator {
                                                                        .setClusterId(clusterArn)
                                                                        .setEc2InstanceId(instanceId)
                                                                        .setSettingId(settingId)
+                                                                       .setClusterId(clusterId)
                                                                        .setContainerInstanceArn(containerInstanceArn)
                                                                        .build();
     EcsContainerInstanceInfo ecsContainerInstanceInfo =
@@ -107,10 +119,11 @@ public interface EcsEventGenerator {
   }
 
   default PublishedMessage getTaskInfoMessage(String taskId, String serviceName, String launchType,
-      String containerInstanceArn, String clusterArn, String accountId) {
+      String containerInstanceArn, String clusterArn, String accountId, String clusterId) {
     EcsTaskDescription ecsTaskDescription = EcsTaskDescription.newBuilder()
                                                 .setRegion(DEFAULT_AWS_REGION)
                                                 .setClusterArn(clusterArn)
+                                                .setClusterId(clusterId)
                                                 .setContainerInstanceArn(containerInstanceArn)
                                                 .setTaskArn(taskId)
                                                 .setServiceName(serviceName)
@@ -124,11 +137,12 @@ public interface EcsEventGenerator {
     return getPublishedMessage(accountId, ecsTaskInfo);
   }
 
-  default PublishedMessage getEcsSyncEventMessage(String accountId, String settingId, String clusterArn,
-      List<String> activeTaskArns, List<String> activeEc2InstanceArns, List<String> activeContainerInstanceArns,
-      Timestamp lastProcessedTimestamp) {
+  default PublishedMessage getEcsSyncEventMessage(String accountId, String settingId, String clusterId,
+      String clusterArn, List<String> activeTaskArns, List<String> activeEc2InstanceArns,
+      List<String> activeContainerInstanceArns, Timestamp lastProcessedTimestamp) {
     EcsSyncEvent ecsSyncEvent = EcsSyncEvent.newBuilder()
                                     .setClusterArn(clusterArn)
+                                    .setClusterId(clusterId)
                                     .setSettingId(settingId)
                                     .addAllActiveTaskArns(activeTaskArns)
                                     .addAllActiveEc2InstanceArns(activeEc2InstanceArns)
@@ -139,7 +153,7 @@ public interface EcsEventGenerator {
   }
 
   default PublishedMessage getEcsUtilizationMetricsMessage(String accountId, String clusterName, String clusterArn,
-      String serviceName, String serviceArn, String settingId) {
+      String serviceName, String serviceArn, String settingId, String clusterId) {
     EcsUtilization ecsUtilization =
         EcsUtilization.newBuilder()
             .setClusterArn(clusterArn)
@@ -147,6 +161,7 @@ public interface EcsEventGenerator {
             .setServiceArn(serviceArn)
             .setServiceName(serviceName)
             .setSettingId(settingId)
+            .setClusterId(clusterId)
             .addMetricValues(MetricValue.newBuilder()
                                  .setStatistic("Maximum")
                                  .setMetricName("MemoryUtilization")

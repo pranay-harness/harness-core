@@ -46,7 +46,7 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
   @Mock private InstanceDataService instanceDataService;
   @Mock private JobParameters parameters;
 
-  private final String SETTINGID = "SETTING_ID_" + this.getClass().getSimpleName();
+  private final String CLUSTERID = "CLUSTERID_" + this.getClass().getSimpleName();
   private final String INSTANCEID = "INSTANCEID" + this.getClass().getSimpleName();
   private final String INSTANCEID1 = "INSTANCEID1" + this.getClass().getSimpleName();
   private final String ACCOUNTID = "ACCOUNTID" + this.getClass().getSimpleName();
@@ -69,7 +69,7 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
     when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNTID);
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
-    when(instanceDataService.fetchPrunedInstanceDataWithName(ACCOUNTID, SETTINGID, INSTANCEID, START_TIME_MILLIS))
+    when(instanceDataService.fetchPrunedInstanceDataWithName(ACCOUNTID, CLUSTERID, INSTANCEID, START_TIME_MILLIS))
         .thenReturn(PrunedInstanceData.builder()
                         .instanceId(INSTANCEID)
                         .totalResource(Resource.builder().cpuUnits(CPUTOTAL).memoryMb(MEMORYTOTAL).build())
@@ -84,7 +84,7 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
     aggregatedDataMap.put(INSTANCEID,
         InstanceUtilizationData.builder()
             .accountId(ACCOUNTID)
-            .settingId(SETTINGID)
+            .clusterId(CLUSTERID)
             .instanceType(INSTANCETYPE)
             .instanceId(INSTANCEID)
             .cpuUtilizationMax(CPUMAX)
@@ -101,7 +101,7 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
     InstanceUtilizationData instanceUtilizationData = instanceUtilizationDataArgumentCaptor.getValue().get(0);
     assertThat(instanceUtilizationData.getInstanceId()).isEqualTo(INSTANCEID);
     assertThat(instanceUtilizationData.getInstanceType()).isEqualTo(INSTANCETYPE);
-    assertThat(instanceUtilizationData.getSettingId()).isEqualTo(SETTINGID);
+    assertThat(instanceUtilizationData.getClusterId()).isEqualTo(CLUSTERID);
     assertThat(instanceUtilizationData.getCpuUtilizationAvg()).isEqualTo(CPUAVG / CPUTOTAL);
     assertThat(instanceUtilizationData.getCpuUtilizationMax()).isEqualTo(CPUMAX / CPUTOTAL);
     assertThat(instanceUtilizationData.getMemoryUtilizationAvg()).isEqualTo(MEMORYAVG / MEMORYTOTAL);
@@ -112,7 +112,7 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void shouldWriteK8sUtilizationMetricsWhenResourceIsZero() {
-    when(instanceDataService.fetchPrunedInstanceDataWithName(ACCOUNTID, SETTINGID, INSTANCEID1, START_TIME_MILLIS))
+    when(instanceDataService.fetchPrunedInstanceDataWithName(ACCOUNTID, CLUSTERID, INSTANCEID1, START_TIME_MILLIS))
         .thenReturn(PrunedInstanceData.builder()
                         .instanceId(INSTANCEID1)
                         .totalResource(Resource.builder().cpuUnits(0.0).memoryMb(0.0).build())
@@ -122,7 +122,7 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
     aggregatedDataMap.put(INSTANCEID1,
         InstanceUtilizationData.builder()
             .accountId(ACCOUNTID)
-            .settingId(SETTINGID)
+            .clusterId(CLUSTERID)
             .instanceType(INSTANCETYPE)
             .instanceId(INSTANCEID)
             .cpuUtilizationMax(CPUMAX)
@@ -139,7 +139,7 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
     InstanceUtilizationData instanceUtilizationData = instanceUtilizationDataArgumentCaptor.getValue().get(0);
     assertThat(instanceUtilizationData.getInstanceId()).isEqualTo(INSTANCEID1);
     assertThat(instanceUtilizationData.getInstanceType()).isEqualTo(INSTANCETYPE);
-    assertThat(instanceUtilizationData.getSettingId()).isEqualTo(SETTINGID);
+    assertThat(instanceUtilizationData.getClusterId()).isEqualTo(CLUSTERID);
     assertThat(instanceUtilizationData.getCpuUtilizationAvg()).isEqualTo(1);
     assertThat(instanceUtilizationData.getCpuUtilizationMax()).isEqualTo(1);
     assertThat(instanceUtilizationData.getMemoryUtilizationAvg()).isEqualTo(1);

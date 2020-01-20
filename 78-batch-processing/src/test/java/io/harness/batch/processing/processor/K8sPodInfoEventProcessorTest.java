@@ -76,7 +76,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldCreateInstanceStartPodEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage = getK8sPodEventMessage(
-        POD_UID, CLOUD_PROVIDER_ID, ACCOUNT_ID, PodEvent.EventType.EVENT_TYPE_SCHEDULED, START_TIMESTAMP);
+        POD_UID, CLOUD_PROVIDER_ID, CLUSTER_ID, ACCOUNT_ID, PodEvent.EventType.EVENT_TYPE_SCHEDULED, START_TIMESTAMP);
     InstanceEvent instanceEvent = k8sPodEventProcessor.process(k8sNodeEventMessage);
     assertThat(instanceEvent).isNotNull();
     assertThat(instanceEvent.getTimestamp()).isEqualTo(HTimestamps.toInstant(START_TIMESTAMP));
@@ -86,8 +86,8 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInvalidInstancePodEvent() throws Exception {
-    PublishedMessage k8sNodeEventMessage =
-        getK8sPodEventMessage(POD_UID, CLOUD_PROVIDER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_INVALID, START_TIMESTAMP);
+    PublishedMessage k8sNodeEventMessage = getK8sPodEventMessage(
+        POD_UID, CLOUD_PROVIDER_ID, CLUSTER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_INVALID, START_TIMESTAMP);
     InstanceEvent instanceEvent = k8sPodEventProcessor.process(k8sNodeEventMessage);
     assertThat(instanceEvent).isNotNull();
     assertThat(instanceEvent.getType()).isNull();
@@ -97,8 +97,8 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInstanceStopPodEvent() throws Exception {
-    PublishedMessage k8sNodeEventMessage =
-        getK8sPodEventMessage(POD_UID, CLOUD_PROVIDER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_DELETED, START_TIMESTAMP);
+    PublishedMessage k8sNodeEventMessage = getK8sPodEventMessage(
+        POD_UID, CLOUD_PROVIDER_ID, CLUSTER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_DELETED, START_TIMESTAMP);
     InstanceEvent instanceEvent = k8sPodEventProcessor.process(k8sNodeEventMessage);
     assertThat(instanceEvent).isNotNull();
   }
@@ -109,7 +109,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   public void shouldCreateInstancePodInfo() throws Exception {
     InstanceData instanceData = getNodeInstantData();
     when(instanceDataService.fetchInstanceDataWithName(
-             ACCOUNT_ID, CLOUD_PROVIDER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
+             ACCOUNT_ID, CLUSTER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
         .thenReturn(instanceData);
     when(cloudToHarnessMappingService.getHarnessServiceInfo(any())).thenReturn(harnessServiceInfo());
     Map<String, String> label = new HashMap<>();
@@ -145,7 +145,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   public void shouldCreateInstancePodInfoWithKubeProxyWorkload() throws Exception {
     InstanceData instanceData = getNodeInstantData();
     when(instanceDataService.fetchInstanceDataWithName(
-             ACCOUNT_ID, CLOUD_PROVIDER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
+             ACCOUNT_ID, CLUSTER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
         .thenReturn(instanceData);
     when(cloudToHarnessMappingService.getHarnessServiceInfo(any())).thenReturn(harnessServiceInfo());
     Map<String, String> label = new HashMap<>();
@@ -232,11 +232,12 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
         .build();
   }
 
-  private PublishedMessage getK8sPodEventMessage(
-      String PodUid, String cloudProviderId, String accountId, PodEvent.EventType eventType, Timestamp timestamp) {
+  private PublishedMessage getK8sPodEventMessage(String PodUid, String cloudProviderId, String clusterId,
+      String accountId, PodEvent.EventType eventType, Timestamp timestamp) {
     PodEvent podEvent = PodEvent.newBuilder()
                             .setPodUid(PodUid)
                             .setCloudProviderId(cloudProviderId)
+                            .setClusterId(clusterId)
                             .setType(eventType)
                             .setTimestamp(timestamp)
                             .build();

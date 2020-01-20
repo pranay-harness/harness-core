@@ -108,6 +108,7 @@ public class K8SSyncEventWriterTest extends CategoryTest {
     return InstanceEvent.builder()
         .accountId(TEST_ACCOUNT_ID)
         .cloudProviderId(CLOUD_PROVIDER_ID)
+        .clusterId(TEST_CLUSTER_ID)
         .instanceId(instanceId)
         .type(eventType)
         .timestamp(instant)
@@ -122,15 +123,15 @@ public class K8SSyncEventWriterTest extends CategoryTest {
 
     List<InstanceState> stoppedInstanceState = new ArrayList<>(Arrays.asList(InstanceState.STOPPED));
     InstanceData stoppedInstanceData = instanceDataService.fetchActiveInstanceData(
-        TEST_ACCOUNT_ID, TEST_INSTANCE_ID_POD_RUNNING, stoppedInstanceState);
+        TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_INSTANCE_ID_POD_RUNNING, stoppedInstanceState);
     assertThat(stoppedInstanceData).isNotNull();
     assertThat(stoppedInstanceData.getUsageStartTime()).isEqualTo(INSTANCE_START_TIMESTAMP);
     assertThat(stoppedInstanceData.getUsageStopTime()).isEqualTo(NOW);
 
     List<InstanceState> activeInstanceState =
         new ArrayList<>(Arrays.asList(InstanceState.INITIALIZING, InstanceState.RUNNING));
-    InstanceData activeInstanceData =
-        instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_ACTIVE_INSTANCE_ID, activeInstanceState);
+    InstanceData activeInstanceData = instanceDataService.fetchActiveInstanceData(
+        TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_ACTIVE_INSTANCE_ID, activeInstanceState);
     assertThat(activeInstanceData).isNotNull();
   }
 

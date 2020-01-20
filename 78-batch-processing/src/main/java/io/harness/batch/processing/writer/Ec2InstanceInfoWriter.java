@@ -32,10 +32,10 @@ public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<Pub
           String accountId = publishedMessage.getAccountId();
           String clusterArn = ec2InstanceInfo.getClusterArn();
           String instanceId = ec2InstanceInfo.getInstanceId();
+          String clusterId = ec2InstanceInfo.getClusterId();
 
-          InstanceData instanceData = fetchActiveInstanceData(accountId, instanceId);
+          InstanceData instanceData = fetchActiveInstanceData(accountId, clusterId, instanceId);
           if (null == instanceData) {
-            String clusterId = ec2InstanceInfo.getClusterId();
             String settingId = ec2InstanceInfo.getSettingId();
 
             String instanceFamily = ec2InstanceInfo.getInstanceType();

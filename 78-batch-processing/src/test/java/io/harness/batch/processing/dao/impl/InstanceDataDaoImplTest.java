@@ -53,8 +53,8 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReturnInstanceDataWithName() {
     instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
-    InstanceData instanceData = instanceDataDao.fetchInstanceDataWithName(
-        ACCOUNT_ID, CLOUD_PROVIDER_ID, INSTANCE_NAME, START_INSTANT.toEpochMilli());
+    InstanceData instanceData =
+        instanceDataDao.fetchInstanceDataWithName(ACCOUNT_ID, CLUSTER_ID, INSTANCE_NAME, START_INSTANT.toEpochMilli());
     assertThat(instanceData).isNotNull();
   }
 
@@ -64,7 +64,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   public void shouldReturnActiveInstance() {
     instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
     InstanceData instanceData =
-        instanceDataDao.fetchActiveInstanceData(ACCOUNT_ID, RUNNING_INSTANCE_ID, getActiveInstanceState());
+        instanceDataDao.fetchActiveInstanceData(ACCOUNT_ID, CLUSTER_ID, RUNNING_INSTANCE_ID, getActiveInstanceState());
     assertThat(instanceData).isNotNull();
   }
 
@@ -74,7 +74,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   public void shouldReturnEmptyClusterActiveInstance() {
     instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
     List<InstanceData> instanceData = instanceDataDao.fetchClusterActiveInstanceData(
-        ACCOUNT_ID, CLOUD_PROVIDER_ID, CLUSTER_NAME, getActiveInstanceState(), PREV_START_INSTANT);
+        ACCOUNT_ID, CLUSTER_ID, getActiveInstanceState(), PREV_START_INSTANT);
     assertThat(instanceData).hasSize(0);
   }
 
@@ -83,8 +83,8 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReturnClusterActiveInstance() {
     instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
-    List<InstanceData> instanceData = instanceDataDao.fetchClusterActiveInstanceData(
-        ACCOUNT_ID, CLOUD_PROVIDER_ID, CLUSTER_NAME, getActiveInstanceState(), END_INSTANT);
+    List<InstanceData> instanceData =
+        instanceDataDao.fetchClusterActiveInstanceData(ACCOUNT_ID, CLUSTER_ID, getActiveInstanceState(), END_INSTANT);
     assertThat(instanceData).hasSize(1);
     assertThat(instanceData.get(0).getInstanceId()).isEqualTo(RUNNING_INSTANCE_ID);
   }
@@ -152,7 +152,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
         .settingId(CLOUD_PROVIDER_ID)
         .instanceState(instanceState)
         .clusterName(CLUSTER_NAME)
-        .clusterId(CLUSTER_NAME)
+        .clusterId(CLUSTER_ID)
         .instanceType(InstanceType.EC2_INSTANCE)
         .instanceState(InstanceState.RUNNING)
         .usageStartTime(START_INSTANT)
@@ -181,6 +181,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
         .instanceId(RUNNING_INSTANCE_ID)
         .timestamp(instant)
         .accountId(ACCOUNT_ID)
+        .clusterId(CLUSTER_ID)
         .cloudProviderId(CLOUD_PROVIDER_ID)
         .type(eventType)
         .instanceName(INSTANCE_NAME)

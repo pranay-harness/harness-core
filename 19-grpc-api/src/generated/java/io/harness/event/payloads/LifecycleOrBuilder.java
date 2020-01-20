@@ -50,4 +50,22 @@ public interface LifecycleOrBuilder extends
    * <code>.google.protobuf.Timestamp created_timestamp = 4;</code>
    */
   com.google.protobuf.TimestampOrBuilder getCreatedTimestampOrBuilder();
+
+  /**
+   * <code>string cluster_id = 5;</code>
+   */
+  java.lang.String getClusterId();
+  /**
+   * <code>string cluster_id = 5;</code>
+   */
+  com.google.protobuf.ByteString getClusterIdBytes();
+
+  /**
+   * <code>string setting_id = 6;</code>
+   */
+  java.lang.String getSettingId();
+  /**
+   * <code>string setting_id = 6;</code>
+   */
+  com.google.protobuf.ByteString getSettingIdBytes();
 }

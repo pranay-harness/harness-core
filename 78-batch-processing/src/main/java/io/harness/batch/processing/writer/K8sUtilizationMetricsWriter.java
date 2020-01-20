@@ -47,11 +47,11 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
 
       for (Map.Entry<String, InstanceUtilizationData> entry : aggregatedUtilizationData.entrySet()) {
         InstanceUtilizationData instanceUtilizationData = entry.getValue();
-        String settingId = instanceUtilizationData.getSettingId();
+        String clusterId = instanceUtilizationData.getClusterId();
         String instanceId = entry.getKey();
 
         PrunedInstanceData instanceData =
-            instanceDataService.fetchPrunedInstanceDataWithName(accountId, settingId, instanceId, startDate);
+            instanceDataService.fetchPrunedInstanceDataWithName(accountId, clusterId, instanceId, startDate);
         // Initialisation to 100% Utilisation
 
         if (instanceData.getInstanceId() != null) {

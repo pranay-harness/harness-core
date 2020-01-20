@@ -42,7 +42,7 @@ public class EcsContainerInstanceInfoWriter extends EventWriter implements ItemW
           String clusterId = ecsContainerInstanceDescription.getClusterId();
           String settingId = ecsContainerInstanceDescription.getSettingId();
 
-          InstanceData instanceData = fetchActiveInstanceData(accountId, containerInstanceId);
+          InstanceData instanceData = fetchActiveInstanceData(accountId, clusterId, containerInstanceId);
 
           if (null == instanceData) {
             InstanceData ec2InstanceData = fetchInstanceData(accountId, ec2InstanceId);

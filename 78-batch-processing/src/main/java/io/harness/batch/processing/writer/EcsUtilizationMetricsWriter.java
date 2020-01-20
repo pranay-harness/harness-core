@@ -40,7 +40,7 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
 
           String serviceArn = ecsUtilization.getServiceArn();
           String serviceName = ecsUtilization.getServiceName();
-          String settingId = ecsUtilization.getSettingId();
+          String clusterId = ecsUtilization.getClusterId();
           String instanceId;
           String instanceType;
           if (serviceArn.equals("") && serviceName.equals("")) {
@@ -107,7 +107,7 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
                     .accountId(accountId)
                     .instanceId(instanceId)
                     .instanceType(instanceType)
-                    .settingId(settingId)
+                    .clusterId(clusterId)
                     .cpuUtilizationMax(getScaledUtilValue(cpuUtilizationMaxList.get(metricIndex)))
                     .cpuUtilizationAvg(getScaledUtilValue(cpuUtilizationAvgList.get(metricIndex)))
                     .memoryUtilizationMax(getScaledUtilValue(memoryUtilizationMaxList.get(metricIndex)))

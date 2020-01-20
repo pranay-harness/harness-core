@@ -42,8 +42,10 @@ public class Ec2InstanceInfoLifecycleWriterTest extends CategoryTest implements 
   @InjectMocks private Ec2InstanceLifecycleWriter ec2InstanceLifecycleWriter;
   @Mock private InstanceDataService instanceDataService;
 
+  private final String TEST_CLUSTER_ID = "CLUSTER_ID_" + this.getClass().getSimpleName();
   private final String TEST_ACCOUNT_ID = "EC2_INSTANCE_INFO_ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String TEST_INSTANCE_ID = "EC2_INSTANCE_INFO_INSTANCE_ID_" + this.getClass().getSimpleName();
+
   private final String TEST_CLUSTER_ARN = "EC2_INSTANCE_INFO_CLUSTER_ARN_" + this.getClass().getSimpleName();
 
   private final Instant NOW = Instant.now();
@@ -60,7 +62,7 @@ public class Ec2InstanceInfoLifecycleWriterTest extends CategoryTest implements 
   @Category(UnitTests.class)
   public void shouldWriteEc2InstanceInfo() throws Exception {
     PublishedMessage ec2InstanceInfoMessage =
-        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
+        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN, TEST_CLUSTER_ID);
     ec2InstanceInfoWriter.write(Arrays.asList(ec2InstanceInfoMessage));
     ArgumentCaptor<InstanceData> instanceDataArgumentCaptor = ArgumentCaptor.forClass(InstanceData.class);
     verify(instanceDataService, times(1)).create(instanceDataArgumentCaptor.capture());
@@ -78,10 +80,10 @@ public class Ec2InstanceInfoLifecycleWriterTest extends CategoryTest implements 
   @Category(UnitTests.class)
   public void updateEc2InstantStartTime() throws Exception {
     when(instanceDataService.fetchActiveInstanceData(
-             TEST_ACCOUNT_ID, TEST_INSTANCE_ID, Arrays.asList(InstanceState.INITIALIZING)))
+             TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_INSTANCE_ID, Arrays.asList(InstanceState.INITIALIZING)))
         .thenReturn(createEc2InstanceData(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, InstanceState.RUNNING));
-    PublishedMessage ec2InstanceLifecycleMessage =
-        getEc2InstanceLifecycleMessage(INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_INSTANCE_ID, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceLifecycleMessage = getEc2InstanceLifecycleMessage(
+        INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ec2InstanceLifecycleWriter.write(Arrays.asList(ec2InstanceLifecycleMessage));
     ArgumentCaptor<InstanceData> instanceDataArgumentCaptor = ArgumentCaptor.forClass(InstanceData.class);
     ArgumentCaptor<InstanceState> instanceStateArgumentCaptor = ArgumentCaptor.forClass(InstanceState.class);
@@ -98,10 +100,10 @@ public class Ec2InstanceInfoLifecycleWriterTest extends CategoryTest implements 
   @Category(UnitTests.class)
   public void updateEc2InstantStopTime() throws Exception {
     when(instanceDataService.fetchActiveInstanceData(
-             TEST_ACCOUNT_ID, TEST_INSTANCE_ID, Arrays.asList(InstanceState.RUNNING)))
+             TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_INSTANCE_ID, Arrays.asList(InstanceState.RUNNING)))
         .thenReturn(createEc2InstanceData(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, InstanceState.RUNNING));
-    PublishedMessage ec2InstanceStopLifecycleMessage =
-        getEc2InstanceLifecycleMessage(INSTANCE_STOP_TIMESTAMP, EVENT_TYPE_STOP, TEST_INSTANCE_ID, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceStopLifecycleMessage = getEc2InstanceLifecycleMessage(
+        INSTANCE_STOP_TIMESTAMP, EVENT_TYPE_STOP, TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ec2InstanceLifecycleWriter.write(Arrays.asList(ec2InstanceStopLifecycleMessage));
     ArgumentCaptor<InstanceData> instanceDataArgumentCaptor = ArgumentCaptor.forClass(InstanceData.class);
     ArgumentCaptor<Instant> stopTimeArgumentCaptor = ArgumentCaptor.forClass(Instant.class);

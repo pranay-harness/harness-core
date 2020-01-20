@@ -139,7 +139,7 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
   private InstanceUtilizationData instanceUtilizationData() {
     return InstanceUtilizationData.builder()
         .instanceId(SERVICE_ARN)
-        .settingId(SETTING_ID)
+        .clusterId(CLUSTER_ID)
         .instanceType(UtilizationInstanceType.ECS_SERVICE)
         .startTimestamp(1546281000000l)
         .endTimestamp(1546367400000l)

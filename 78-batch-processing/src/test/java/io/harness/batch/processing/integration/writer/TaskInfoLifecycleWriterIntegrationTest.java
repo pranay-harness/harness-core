@@ -43,6 +43,7 @@ public class TaskInfoLifecycleWriterIntegrationTest extends CategoryTest impleme
   private final String LAUNCH_TYPE = "EC2";
   private final String TEST_TASK_ARN = "TASK_ARN_" + this.getClass().getSimpleName();
   private final String TEST_ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();
+  private final String TEST_CLUSTER_ID = "CLUSTER_ID_" + this.getClass().getSimpleName();
   private final String TEST_INSTANCE_ID = "INSTANCE_ID_" + this.getClass().getSimpleName();
   private final String TEST_CLUSTER_ARN = "CLUSTER_ARN_" + this.getClass().getSimpleName();
   private final String TEST_SERVICE_NAME = "SERVICE_NAME_" + this.getClass().getSimpleName();
@@ -67,20 +68,20 @@ public class TaskInfoLifecycleWriterIntegrationTest extends CategoryTest impleme
   @Category(UnitTests.class)
   public void shouldCreateTaskData() throws Exception {
     PublishedMessage ec2InstanceInfoMessage =
-        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
+        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN, TEST_CLUSTER_ID);
     ec2InstanceInfoWriter.write(getMessageList(ec2InstanceInfoMessage));
 
-    PublishedMessage containerInstanceInfoMessage = getContainerInstanceInfoMessage(
-        TEST_CONTAINER_ARN, TEST_INSTANCE_ID, TEST_CLOUD_PROVIDER_ID, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID);
+    PublishedMessage containerInstanceInfoMessage = getContainerInstanceInfoMessage(TEST_CONTAINER_ARN,
+        TEST_INSTANCE_ID, TEST_CLOUD_PROVIDER_ID, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ecsContainerInstanceInfoWriter.write(getMessageList(containerInstanceInfoMessage));
 
-    PublishedMessage taskInfoMessage = getTaskInfoMessage(
-        TEST_TASK_ARN, TEST_SERVICE_NAME, LAUNCH_TYPE, TEST_CONTAINER_ARN, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID);
+    PublishedMessage taskInfoMessage = getTaskInfoMessage(TEST_TASK_ARN, TEST_SERVICE_NAME, LAUNCH_TYPE,
+        TEST_CONTAINER_ARN, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ecsTaskInfoWriter.write(getMessageList(taskInfoMessage));
 
     List<InstanceState> activeInstanceState = getActiveInstanceState();
-    InstanceData instanceData =
-        instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_TASK_ARN, activeInstanceState);
+    InstanceData instanceData = instanceDataService.fetchActiveInstanceData(
+        TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_TASK_ARN, activeInstanceState);
 
     assertThat(instanceData.getInstanceState()).isEqualTo(InstanceState.INITIALIZING);
     assertThat(instanceData.getInstanceId()).isEqualTo(TEST_TASK_ARN);
@@ -94,24 +95,24 @@ public class TaskInfoLifecycleWriterIntegrationTest extends CategoryTest impleme
     shouldCreateTaskData();
 
     // start task
-    PublishedMessage taskLifecycleStartMessage =
-        getTaskLifecycleMessage(INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_TASK_ARN, TEST_ACCOUNT_ID);
+    PublishedMessage taskLifecycleStartMessage = getTaskLifecycleMessage(
+        INSTANCE_START_TIMESTAMP, EVENT_TYPE_START, TEST_TASK_ARN, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ecsTaskLifecycleWriter.write(getMessageList(taskLifecycleStartMessage));
 
     List<InstanceState> activeInstanceState = getActiveInstanceState();
-    InstanceData instanceData =
-        instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_TASK_ARN, activeInstanceState);
+    InstanceData instanceData = instanceDataService.fetchActiveInstanceData(
+        TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_TASK_ARN, activeInstanceState);
     assertThat(instanceData.getInstanceState()).isEqualTo(InstanceState.RUNNING);
     assertThat(HTimestamps.fromInstant(instanceData.getUsageStartTime())).isEqualTo(INSTANCE_START_TIMESTAMP);
 
     // stop task
-    PublishedMessage taskLifecycleStopMessage =
-        getTaskLifecycleMessage(INSTANCE_STOP_TIMESTAMP, EVENT_TYPE_STOP, TEST_TASK_ARN, TEST_ACCOUNT_ID);
+    PublishedMessage taskLifecycleStopMessage = getTaskLifecycleMessage(
+        INSTANCE_STOP_TIMESTAMP, EVENT_TYPE_STOP, TEST_TASK_ARN, TEST_ACCOUNT_ID, TEST_CLUSTER_ID);
     ecsTaskLifecycleWriter.write(getMessageList(taskLifecycleStopMessage));
 
     List<InstanceState> stoppedInstanceState = getStoppedInstanceState();
-    InstanceData stoppedTaskInstanceData =
-        instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_TASK_ARN, stoppedInstanceState);
+    InstanceData stoppedTaskInstanceData = instanceDataService.fetchActiveInstanceData(
+        TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_TASK_ARN, stoppedInstanceState);
 
     assertThat(stoppedInstanceState).isNotNull();
     assertThat(HTimestamps.fromInstant(stoppedTaskInstanceData.getUsageStopTime())).isEqualTo(INSTANCE_STOP_TIMESTAMP);

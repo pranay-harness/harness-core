@@ -44,7 +44,8 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
   private final String STATISTIC2 = "Average";
   private final String INVALID_STATISTIC = "invalid_statistic";
   private final String INVALID_METRIC = "invalid_metric";
-  String SETTING_ID = "SETTING_ID";
+  private final String SETTING_ID = "SETTING_ID";
+  private final String CLUSTER_ID = "CLUSTER_ID";
 
   private final String INSTANCEID = TEST_SERVICE_ARN;
   private final String INSTANCETYPE = UtilizationInstanceType.ECS_SERVICE;
@@ -55,8 +56,8 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void shouldWriteTaskInfo() {
-    PublishedMessage ecsUtilizationMetricsMessages = getEcsUtilizationMetricsMessage(
-        TEST_ACCOUNT_ID, TEST_CLUSTER_NAME, TEST_CLUSTER_ARN, TEST_SERVICE_NAME, TEST_SERVICE_ARN, SETTING_ID);
+    PublishedMessage ecsUtilizationMetricsMessages = getEcsUtilizationMetricsMessage(TEST_ACCOUNT_ID, TEST_CLUSTER_NAME,
+        TEST_CLUSTER_ARN, TEST_SERVICE_NAME, TEST_SERVICE_ARN, SETTING_ID, CLUSTER_ID);
 
     ecsUtilizationMetricsWriter.write(Collections.singletonList(ecsUtilizationMetricsMessages));
     verify(utilizationDataService).create(instanceUtilizationDataArgumentCaptor.capture());
@@ -64,7 +65,7 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
     InstanceUtilizationData instanceUtilizationDataPoint0 = instanceUtilizationDataList.get(0);
     assertThat(instanceUtilizationDataPoint0.getInstanceId()).isEqualTo(INSTANCEID);
     assertThat(instanceUtilizationDataPoint0.getInstanceType()).isEqualTo(INSTANCETYPE);
-    assertThat(instanceUtilizationDataPoint0.getSettingId()).isEqualTo(SETTING_ID);
+    assertThat(instanceUtilizationDataPoint0.getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(instanceUtilizationDataPoint0.getCpuUtilizationAvg()).isEqualTo(0.5);
     assertThat(instanceUtilizationDataPoint0.getCpuUtilizationMax()).isEqualTo(0.5);
     assertThat(instanceUtilizationDataPoint0.getMemoryUtilizationAvg()).isEqualTo(10.24);
@@ -75,7 +76,7 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
     InstanceUtilizationData instanceUtilizationDataPoint1 = instanceUtilizationDataList.get(1);
     assertThat(instanceUtilizationDataPoint1.getInstanceId()).isEqualTo(INSTANCEID);
     assertThat(instanceUtilizationDataPoint1.getInstanceType()).isEqualTo(INSTANCETYPE);
-    assertThat(instanceUtilizationDataPoint1.getSettingId()).isEqualTo(SETTING_ID);
+    assertThat(instanceUtilizationDataPoint1.getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(instanceUtilizationDataPoint1.getCpuUtilizationAvg()).isEqualTo(0.6);
     assertThat(instanceUtilizationDataPoint1.getCpuUtilizationMax()).isEqualTo(0.6);
     assertThat(instanceUtilizationDataPoint1.getMemoryUtilizationAvg()).isEqualTo(20.48);
@@ -103,8 +104,8 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void clusterInstanceTypeTest() {
-    PublishedMessage ecsUtilizationMetricsMessages =
-        getEcsUtilizationMetricsMessage(TEST_ACCOUNT_ID, TEST_CLUSTER_NAME, TEST_CLUSTER_ARN, "", "", SETTING_ID);
+    PublishedMessage ecsUtilizationMetricsMessages = getEcsUtilizationMetricsMessage(
+        TEST_ACCOUNT_ID, TEST_CLUSTER_NAME, TEST_CLUSTER_ARN, "", "", SETTING_ID, CLUSTER_ID);
     ecsUtilizationMetricsWriter.write(Collections.singletonList(ecsUtilizationMetricsMessages));
     verify(utilizationDataService).create(instanceUtilizationDataArgumentCaptor.capture());
     InstanceUtilizationData instanceUtilizationData = instanceUtilizationDataArgumentCaptor.getValue().get(0);

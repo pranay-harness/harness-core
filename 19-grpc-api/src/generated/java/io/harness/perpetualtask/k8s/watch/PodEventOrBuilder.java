@@ -46,4 +46,13 @@ public interface PodEventOrBuilder extends
    * <code>.google.protobuf.Timestamp timestamp = 5;</code>
    */
   com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder();
+
+  /**
+   * <code>string cluster_id = 6;</code>
+   */
+  java.lang.String getClusterId();
+  /**
+   * <code>string cluster_id = 6;</code>
+   */
+  com.google.protobuf.ByteString getClusterIdBytes();
 }

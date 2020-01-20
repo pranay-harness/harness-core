@@ -12,7 +12,8 @@ public interface InstanceDataService {
 
   boolean updateInstanceState(InstanceData instanceData, Instant instant, InstanceState instanceState);
 
-  InstanceData fetchActiveInstanceData(String accountId, String instanceId, List<InstanceState> instanceState);
+  InstanceData fetchActiveInstanceData(
+      String accountId, String clusterId, String instanceId, List<InstanceState> instanceState);
 
   InstanceData fetchInstanceData(String accountId, String instanceId);
 
@@ -21,6 +22,5 @@ public interface InstanceDataService {
   PrunedInstanceData fetchPrunedInstanceDataWithName(
       String accountId, String settingId, String instanceId, Long occurredAt);
 
-  List<InstanceData> fetchClusterActiveInstanceData(
-      String accountId, String settingId, String clusterId, Instant startTime);
+  List<InstanceData> fetchClusterActiveInstanceData(String accountId, String clusterId, Instant startTime);
 }

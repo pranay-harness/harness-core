@@ -81,6 +81,7 @@ public class PodWatcher implements Watcher<Pod> {
       final Timestamp timestamp = HTimestamps.parse(podScheduledCondition.getLastTransitionTime());
       PodEvent podEvent = PodEvent.newBuilder()
                               .setCloudProviderId(cloudProviderId)
+                              .setClusterId(clusterId)
                               .setPodUid(uid)
                               .setType(EVENT_TYPE_SCHEDULED)
                               .setTimestamp(timestamp)
@@ -95,6 +96,7 @@ public class PodWatcher implements Watcher<Pod> {
       Timestamp timestamp = HTimestamps.parse(deletionTimestamp);
       PodEvent podEvent = PodEvent.newBuilder()
                               .setCloudProviderId(cloudProviderId)
+                              .setClusterId(clusterId)
                               .setPodUid(uid)
                               .setType(EVENT_TYPE_DELETED)
                               .setTimestamp(timestamp)

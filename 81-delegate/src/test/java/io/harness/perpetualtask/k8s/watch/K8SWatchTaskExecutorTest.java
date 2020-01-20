@@ -160,11 +160,12 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
     doNothing()
         .when(eventPublisher)
         .publishMessage(messageArgumentCaptor.capture(), eq(HTimestamps.fromInstant(heartbeatTime)));
-    K8SWatchTaskExecutor.publishNodeMetrics(k8sMetricClient, eventPublisher, CLOUD_PROVIDER_ID, heartbeatTime);
+    K8SWatchTaskExecutor.publishNodeMetrics(k8sMetricClient, eventPublisher, getK8sWatchTaskParams(), heartbeatTime);
     assertThat(messageArgumentCaptor.getAllValues())
         .hasSize(2)
         .containsExactlyInAnyOrder(NodeMetric.newBuilder()
                                        .setCloudProviderId(CLOUD_PROVIDER_ID)
+                                       .setClusterId(CLUSTER_ID)
                                        .setName("node1-name")
                                        .setTimestamp(HTimestamps.parse("2019-11-26T07:00:32Z"))
                                        .setWindow(HDurations.parse("30s"))
@@ -175,6 +176,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                                        .build(),
             NodeMetric.newBuilder()
                 .setCloudProviderId(CLOUD_PROVIDER_ID)
+                .setClusterId(CLUSTER_ID)
                 .setName("node2-name")
                 .setTimestamp(HTimestamps.parse("2019-11-26T07:00:28Z"))
                 .setWindow(HDurations.parse("30s"))
@@ -257,11 +259,12 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
     doNothing()
         .when(eventPublisher)
         .publishMessage(messageArgumentCaptor.capture(), eq(HTimestamps.fromInstant(heartbeatTime)));
-    K8SWatchTaskExecutor.publishPodMetrics(k8sMetricClient, eventPublisher, CLOUD_PROVIDER_ID, heartbeatTime);
+    K8SWatchTaskExecutor.publishPodMetrics(k8sMetricClient, eventPublisher, getK8sWatchTaskParams(), heartbeatTime);
     assertThat(messageArgumentCaptor.getAllValues())
         .hasSize(2)
         .containsExactlyInAnyOrder(PodMetric.newBuilder()
                                        .setCloudProviderId(CLOUD_PROVIDER_ID)
+                                       .setClusterId(CLUSTER_ID)
                                        .setName("pod1")
                                        .setNamespace("ns1")
                                        .setTimestamp(HTimestamps.parse("2019-11-26T07:00:32Z"))
@@ -276,6 +279,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                                        .build(),
             PodMetric.newBuilder()
                 .setCloudProviderId(CLOUD_PROVIDER_ID)
+                .setClusterId(CLUSTER_ID)
                 .setName("pod2")
                 .setNamespace("ns1")
                 .setTimestamp(HTimestamps.parse("2019-11-26T07:00:32Z"))

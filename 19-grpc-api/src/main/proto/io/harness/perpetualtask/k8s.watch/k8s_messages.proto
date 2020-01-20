@@ -54,6 +54,7 @@ message PodEvent {
   }
   EventType type = 4;
   google.protobuf.Timestamp timestamp = 5;
+  string cluster_id = 6;
 }
 
 message NodeInfo {
@@ -79,6 +80,7 @@ message NodeEvent {
   EventType type = 4;
   google.protobuf.Timestamp timestamp = 5;
   string node_name = 6;
+  string cluster_id = 7;
 }
 
 message K8SClusterSyncEvent {

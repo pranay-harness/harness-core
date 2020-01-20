@@ -37,6 +37,7 @@ public class NodeUtilizationMetricsWriterTest extends CategoryTest implements Ec
   private final String ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String INSTANCEID = "INSTANCEID" + this.getClass().getSimpleName();
   private final String INSTANCETYPE = K8S_NODE;
+  private final String CLUSTERID = "CLUSTERID" + this.getClass().getSimpleName();
   private final String SETTINGID = "SETTINGID" + this.getClass().getSimpleName();
   private final long START_TIME_STAMP = 1000000000L;
   private final long END_TIME_STAMP = 1200000000L;
@@ -60,13 +61,14 @@ public class NodeUtilizationMetricsWriterTest extends CategoryTest implements Ec
     assertThat(k8sGranularUtilizationData.getEndTimestamp()).isEqualTo(END_TIME_STAMP * 1000);
     assertThat(k8sGranularUtilizationData.getInstanceId()).isEqualTo(INSTANCEID);
     assertThat(k8sGranularUtilizationData.getInstanceType()).isEqualTo(INSTANCETYPE);
-    assertThat(k8sGranularUtilizationData.getSettingId()).isEqualTo(SETTINGID);
+    assertThat(k8sGranularUtilizationData.getClusterId()).isEqualTo(CLUSTERID);
   }
 
   private PublishedMessage getNodeUtilizationMetricsMessages() {
     NodeMetric nodeMetric = NodeMetric.newBuilder()
                                 .setName(INSTANCEID)
                                 .setCloudProviderId(SETTINGID)
+                                .setClusterId(CLUSTERID)
                                 .setTimestamp(Timestamp.newBuilder().setSeconds(END_TIME_STAMP).build())
                                 .setWindow(Duration.newBuilder().setSeconds(WINDOW).build())
                                 .setUsage(Usage.newBuilder().setCpuNano(CPU).setMemoryByte(MEMORY).build())

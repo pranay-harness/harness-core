@@ -33,17 +33,10 @@ import java.util.Map;
 @Builder
 @Entity(value = "instanceData", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "accountId_instanceId_instanceState"),
-      fields =
-      {
-        @Field(InstanceDataKeys.accountId), @Field(InstanceDataKeys.instanceId), @Field(InstanceDataKeys.instanceState)
-      })
-  ,
-      @Index(options = @IndexOptions(name = "accountId_settingId_instanceId"), fields = {
-        @Field(InstanceDataKeys.accountId), @Field(InstanceDataKeys.settingId), @Field(InstanceDataKeys.instanceId)
-      }), @Index(options = @IndexOptions(name = "accountId_settingId"), fields = {
-        @Field(InstanceDataKeys.accountId), @Field(InstanceDataKeys.settingId)
-      })
+  @Index(options = @IndexOptions(name = "accountId_clusterId_instanceId_instanceState"), fields = {
+    @Field(InstanceDataKeys.accountId)
+    , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceId), @Field(InstanceDataKeys.instanceState)
+  })
 })
 @FieldNameConstants(innerTypeName = "InstanceDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)

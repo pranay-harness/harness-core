@@ -33,13 +33,13 @@ public class K8sUtilizationGranularDataServiceImpl {
   private static final int MAX_RETRY_COUNT = 5;
   private static final int BATCH_SIZE = 500;
   static final String INSERT_STATEMENT =
-      "INSERT INTO KUBERNETES_UTILIZATION_DATA (STARTTIME, ENDTIME, CPU, MEMORY, INSTANCEID, INSTANCETYPE, SETTINGID, ACCOUNTID) VALUES (?,?,?,?,?,?,?,?)";
+      "INSERT INTO KUBERNETES_UTILIZATION_DATA (STARTTIME, ENDTIME, CPU, MEMORY, INSTANCEID, INSTANCETYPE, CLUSTERID, ACCOUNTID) VALUES (?,?,?,?,?,?,?,?)";
   static final String SELECT_DISTINCT_INSTANCEID =
       "SELECT DISTINCT INSTANCEID FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s'";
   static final String UTILIZATION_DATA_QUERY =
       "SELECT MAX(CPU) as CPUUTILIZATIONMAX, MAX(MEMORY) as MEMORYUTILIZATIONMAX, AVG(CPU) as CPUUTILIZATIONAVG, AVG(MEMORY) as MEMORYUTILIZATIONAVG,"
-      + " SETTINGID, INSTANCEID, INSTANCETYPE FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' "
-      + " GROUP BY INSTANCEID, SETTINGID, INSTANCETYPE ";
+      + " CLUSTERID, INSTANCEID, INSTANCETYPE FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' "
+      + " GROUP BY INSTANCEID, CLUSTERID, INSTANCETYPE ";
 
   public boolean create(List<K8sGranularUtilizationData> k8sGranularUtilizationDataList) {
     boolean successfulInsert = false;
@@ -80,7 +80,7 @@ public class K8sUtilizationGranularDataServiceImpl {
     statement.setDouble(4, k8sGranularUtilizationData.getMemory());
     statement.setString(5, k8sGranularUtilizationData.getInstanceId());
     statement.setString(6, k8sGranularUtilizationData.getInstanceType());
-    statement.setString(7, k8sGranularUtilizationData.getSettingId());
+    statement.setString(7, k8sGranularUtilizationData.getClusterId());
     statement.setString(8, k8sGranularUtilizationData.getAccountId());
   }
 
@@ -119,7 +119,7 @@ public class K8sUtilizationGranularDataServiceImpl {
       while (resultSet.next()) {
         String instanceType = resultSet.getString("INSTANCETYPE");
         String instanceId = resultSet.getString("INSTANCEID");
-        String settingId = resultSet.getString("SETTINGID");
+        String clusterid = resultSet.getString("CLUSTERID");
         double cpuMax = resultSet.getDouble("CPUUTILIZATIONMAX");
         double memMax = resultSet.getDouble("MEMORYUTILIZATIONMAX");
         double cpuAvg = resultSet.getDouble("CPUUTILIZATIONAVG");
@@ -128,7 +128,7 @@ public class K8sUtilizationGranularDataServiceImpl {
         instanceUtilizationDataMap.put(instanceId,
             InstanceUtilizationData.builder()
                 .accountId(accountId)
-                .settingId(settingId)
+                .clusterId(clusterid)
                 .instanceType(instanceType)
                 .instanceId(instanceId)
                 .cpuUtilizationMax(cpuMax)

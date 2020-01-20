@@ -67,8 +67,8 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
       publishClusterSyncEvent(k8sMetricsClient, eventPublisher, watchTaskParams, Instant.now());
       taskWatchIdMap.put(taskId.getId(), watchId);
     }
-    publishNodeMetrics(k8sMetricsClient, eventPublisher, watchTaskParams.getCloudProviderId(), heartbeatTime);
-    publishPodMetrics(k8sMetricsClient, eventPublisher, watchTaskParams.getCloudProviderId(), heartbeatTime);
+    publishNodeMetrics(k8sMetricsClient, eventPublisher, watchTaskParams, heartbeatTime);
+    publishPodMetrics(k8sMetricsClient, eventPublisher, watchTaskParams, heartbeatTime);
     return true;
   }
 
@@ -103,15 +103,16 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   }
 
   @VisibleForTesting
-  static void publishNodeMetrics(
-      K8sMetricsClient k8sMetricsClient, EventPublisher eventPublisher, String cloudProviderId, Instant heartbeatTime) {
+  static void publishNodeMetrics(K8sMetricsClient k8sMetricsClient, EventPublisher eventPublisher,
+      K8sWatchTaskParams watchTaskParams, Instant heartbeatTime) {
     k8sMetricsClient.nodeMetrics()
         .list()
         .getItems()
         .stream()
         .map(nodeMetric
             -> NodeMetric.newBuilder()
-                   .setCloudProviderId(cloudProviderId)
+                   .setCloudProviderId(watchTaskParams.getCloudProviderId())
+                   .setClusterId(watchTaskParams.getClusterId())
                    .setName(nodeMetric.getMetadata().getName())
                    .setTimestamp(HTimestamps.parse(nodeMetric.getTimestamp()))
                    .setWindow(HDurations.parse(nodeMetric.getWindow()))
@@ -124,8 +125,8 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   }
 
   @VisibleForTesting
-  static void publishPodMetrics(
-      K8sMetricsClient k8sMetricsClient, EventPublisher eventPublisher, String cloudProviderId, Instant heartbeatTime) {
+  static void publishPodMetrics(K8sMetricsClient k8sMetricsClient, EventPublisher eventPublisher,
+      K8sWatchTaskParams watchTaskParams, Instant heartbeatTime) {
     k8sMetricsClient.podMetrics()
         .inAnyNamespace()
         .list()
@@ -134,7 +135,8 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
         .filter(podMetric -> isNotEmpty(podMetric.getContainers()))
         .map(podMetric
             -> PodMetric.newBuilder()
-                   .setCloudProviderId(cloudProviderId)
+                   .setCloudProviderId(watchTaskParams.getCloudProviderId())
+                   .setClusterId(watchTaskParams.getClusterId())
                    .setNamespace(podMetric.getMetadata().getNamespace())
                    .setName(podMetric.getMetadata().getName())
                    .setTimestamp(HTimestamps.parse(podMetric.getTimestamp()))

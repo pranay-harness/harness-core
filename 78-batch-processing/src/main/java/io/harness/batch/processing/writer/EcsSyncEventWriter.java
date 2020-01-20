@@ -31,11 +31,10 @@ public class EcsSyncEventWriter extends EventWriter implements ItemWriter<Publis
           EcsSyncEvent ecsSyncEvent = (EcsSyncEvent) publishedMessage.getMessage();
           logger.debug("ECS sync event {} ", ecsSyncEvent);
           String accountId = publishedMessage.getAccountId();
-          String clusterId = getIdFromArn(ecsSyncEvent.getClusterArn());
-          String settingId = ecsSyncEvent.getSettingId();
+          String clusterId = ecsSyncEvent.getClusterId();
           Timestamp lastProcessedTimestamp = ecsSyncEvent.getLastProcessedTimestamp();
           Set<String> activeInstanceIds =
-              fetchActiveInstanceAtTime(accountId, settingId, clusterId, HTimestamps.toInstant(lastProcessedTimestamp));
+              fetchActiveInstanceAtTime(accountId, clusterId, HTimestamps.toInstant(lastProcessedTimestamp));
           logger.debug("Active instances before {} time {}", lastProcessedTimestamp, activeInstanceIds);
 
           Set<String> activeInstanceArns = new HashSet<>();
@@ -50,13 +49,15 @@ public class EcsSyncEventWriter extends EventWriter implements ItemWriter<Publis
           logger.info("Inactive instance arns {}", inactiveInstanceArns.toString());
 
           inactiveInstanceArns.forEach(inactiveInstanceArn
-              -> handleLifecycleEvent(accountId, createLifecycle(inactiveInstanceArn, lastProcessedTimestamp)));
+              -> handleLifecycleEvent(
+                  accountId, createLifecycle(inactiveInstanceArn, clusterId, lastProcessedTimestamp)));
         });
   }
 
-  private Lifecycle createLifecycle(String instanceId, Timestamp lastProcessedTimestamp) {
+  private Lifecycle createLifecycle(String instanceId, String clusterId, Timestamp lastProcessedTimestamp) {
     return Lifecycle.newBuilder()
         .setInstanceId(instanceId)
+        .setClusterId(clusterId)
         .setType(EventType.EVENT_TYPE_STOP)
         .setTimestamp(lastProcessedTimestamp)
         .build();

@@ -23,12 +23,13 @@ public final class CommonMessages {
   static {
     java.lang.String[] descriptorData = {"\n/io/harness/event/payloads/common_messa"
         + "ges.proto\022\031io.harness.event.payloads\032\037go"
-        + "ogle/protobuf/timestamp.proto\"\224\002\n\tLifecy"
+        + "ogle/protobuf/timestamp.proto\"\274\002\n\tLifecy"
         + "cle\022\023\n\013instance_id\030\001 \001(\t\022<\n\004type\030\002 \001(\0162."
         + ".io.harness.event.payloads.Lifecycle.Eve"
         + "ntType\022-\n\ttimestamp\030\003 \001(\0132\032.google.proto"
         + "buf.Timestamp\0225\n\021created_timestamp\030\004 \001(\013"
-        + "2\032.google.protobuf.Timestamp\"N\n\tEventTyp"
+        + "2\032.google.protobuf.Timestamp\022\022\n\ncluster_"
+        + "id\030\005 \001(\t\022\022\n\nsetting_id\030\006 \001(\t\"N\n\tEventTyp"
         + "e\022\026\n\022EVENT_TYPE_INVALID\020\000\022\024\n\020EVENT_TYPE_"
         + "START\020\001\022\023\n\017EVENT_TYPE_STOP\020\002B\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
@@ -53,6 +54,8 @@ public final class CommonMessages {
                 "Type",
                 "Timestamp",
                 "CreatedTimestamp",
+                "ClusterId",
+                "SettingId",
             });
     com.google.protobuf.TimestampProto.getDescriptor();
   }

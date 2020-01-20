@@ -29,7 +29,7 @@ import java.util.Map;
 @Entity(value = "k8sWorkload", noClassnameStored = true)
 @Indexes({
   @Index(options = @IndexOptions(name = "no_dup", unique = true), fields = {
-    @Field(K8sWorkloadKeys.settingId), @Field(K8sWorkloadKeys.uid)
+    @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.uid)
   })
 })
 @FieldNameConstants(innerTypeName = "K8sWorkloadKeys")

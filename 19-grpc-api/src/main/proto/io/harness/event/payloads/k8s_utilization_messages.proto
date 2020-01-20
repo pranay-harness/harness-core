@@ -18,6 +18,7 @@ message NodeMetric {
   google.protobuf.Timestamp timestamp = 3;
   google.protobuf.Duration window = 4;
   Usage usage = 5;
+  string cluster_id = 6;
 }
 
 message PodMetric {
@@ -31,4 +32,5 @@ message PodMetric {
     string name = 1;
     Usage usage = 2;
   }
+  string cluster_id = 7;
 }

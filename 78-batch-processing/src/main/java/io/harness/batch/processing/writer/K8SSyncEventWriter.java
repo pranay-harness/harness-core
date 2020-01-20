@@ -29,10 +29,9 @@ public class K8SSyncEventWriter extends EventWriter implements ItemWriter<Publis
       String accountId = publishedMessage.getAccountId();
       String clusterId = k8SClusterSyncEvent.getClusterId();
       Timestamp lastProcessedTimestamp = k8SClusterSyncEvent.getLastProcessedTimestamp();
-      String settingId = k8SClusterSyncEvent.getCloudProviderId();
       Set<String> activeInstanceIds =
-          fetchActiveInstanceAtTime(accountId, settingId, clusterId, HTimestamps.toInstant(lastProcessedTimestamp));
-      logger.info("Active K8S instances before {} time {}", lastProcessedTimestamp, activeInstanceIds);
+          fetchActiveInstanceAtTime(accountId, clusterId, HTimestamps.toInstant(lastProcessedTimestamp));
+      logger.debug("Active K8S instances before {} time {}", lastProcessedTimestamp, activeInstanceIds);
 
       Set<String> activeInstanceArns = new HashSet<>();
       activeInstanceArns.addAll(k8SClusterSyncEvent.getActiveNodeUidsList());
@@ -41,13 +40,14 @@ public class K8SSyncEventWriter extends EventWriter implements ItemWriter<Publis
       logger.info("Inactive K8S instance arns {}", inactiveInstanceArns.toString());
 
       inactiveInstanceArns.forEach(inactiveInstanceArn
-          -> handleLifecycleEvent(accountId, createLifecycle(inactiveInstanceArn, lastProcessedTimestamp)));
+          -> handleLifecycleEvent(accountId, createLifecycle(inactiveInstanceArn, clusterId, lastProcessedTimestamp)));
     });
   }
 
-  private Lifecycle createLifecycle(String instanceId, Timestamp lastProcessedTimestamp) {
+  private Lifecycle createLifecycle(String instanceId, String clusterId, Timestamp lastProcessedTimestamp) {
     return Lifecycle.newBuilder()
         .setInstanceId(instanceId)
+        .setClusterId(clusterId)
         .setType(EventType.EVENT_TYPE_STOP)
         .setTimestamp(lastProcessedTimestamp)
         .build();

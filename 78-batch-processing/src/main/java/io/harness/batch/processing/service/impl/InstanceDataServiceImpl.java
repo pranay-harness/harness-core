@@ -28,12 +28,12 @@ public class InstanceDataServiceImpl implements InstanceDataService {
   LoadingCache<CacheKey, PrunedInstanceData> instanceDataCache =
       Caffeine.newBuilder()
           .expireAfterWrite(24, TimeUnit.HOURS)
-          .build(key -> pruneInstanceData(key.accountId, key.settingId, key.instanceId, key.occurredAt));
+          .build(key -> pruneInstanceData(key.accountId, key.clusterId, key.instanceId, key.occurredAt));
 
   @Value
   private static class CacheKey {
     private String accountId;
-    private String settingId;
+    private String clusterId;
     private String instanceId;
     @EqualsAndHashCode.Exclude private long occurredAt;
   }
@@ -59,8 +59,9 @@ public class InstanceDataServiceImpl implements InstanceDataService {
   }
 
   @Override
-  public InstanceData fetchActiveInstanceData(String accountId, String instanceId, List<InstanceState> instanceState) {
-    return instanceDataDao.fetchActiveInstanceData(accountId, instanceId, instanceState);
+  public InstanceData fetchActiveInstanceData(
+      String accountId, String clusterId, String instanceId, List<InstanceState> instanceState) {
+    return instanceDataDao.fetchActiveInstanceData(accountId, clusterId, instanceId, instanceState);
   }
 
   @Override
@@ -70,33 +71,32 @@ public class InstanceDataServiceImpl implements InstanceDataService {
 
   @Override
   public InstanceData fetchInstanceDataWithName(
-      String accountId, String settingId, String instanceId, Long occurredAt) {
-    return instanceDataDao.fetchInstanceDataWithName(accountId, settingId, instanceId, occurredAt);
+      String accountId, String clusterId, String instanceId, Long occurredAt) {
+    return instanceDataDao.fetchInstanceDataWithName(accountId, clusterId, instanceId, occurredAt);
   }
 
   @Override
-  public List<InstanceData> fetchClusterActiveInstanceData(
-      String accountId, String settingId, String clusterId, Instant startTime) {
+  public List<InstanceData> fetchClusterActiveInstanceData(String accountId, String clusterId, Instant startTime) {
     List<InstanceState> instanceStates =
         new ArrayList<>(Arrays.asList(InstanceState.INITIALIZING, InstanceState.RUNNING));
-    return instanceDataDao.fetchClusterActiveInstanceData(accountId, settingId, clusterId, instanceStates, startTime);
+    return instanceDataDao.fetchClusterActiveInstanceData(accountId, clusterId, instanceStates, startTime);
   }
 
   public PrunedInstanceData fetchPrunedInstanceDataWithName(
-      String accountId, String settingId, String instanceId, Long occurredAt) {
-    final CacheKey cacheKey = new CacheKey(accountId, settingId, instanceId, occurredAt);
+      String accountId, String clusterId, String instanceId, Long occurredAt) {
+    final CacheKey cacheKey = new CacheKey(accountId, clusterId, instanceId, occurredAt);
     return instanceDataCache.get(cacheKey);
   }
 
-  private PrunedInstanceData pruneInstanceData(String accountId, String settingId, String instanceId, Long occurredAt) {
-    InstanceData instanceData = instanceDataDao.fetchInstanceDataWithName(accountId, settingId, instanceId, occurredAt);
+  private PrunedInstanceData pruneInstanceData(String accountId, String clusterId, String instanceId, Long occurredAt) {
+    InstanceData instanceData = instanceDataDao.fetchInstanceDataWithName(accountId, clusterId, instanceId, occurredAt);
     if (null != instanceData) {
       return PrunedInstanceData.builder()
           .instanceId(instanceData.getInstanceId())
           .totalResource(instanceData.getTotalResource())
           .build();
     } else {
-      logger.error("Instance detail not found settingId {} instanceId {}", settingId, instanceId);
+      logger.error("Instance detail not found clusterId {} instanceId {}", clusterId, instanceId);
       return PrunedInstanceData.builder().build();
     }
   }

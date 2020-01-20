@@ -55,4 +55,13 @@ public interface NodeEventOrBuilder extends
    * <code>string node_name = 6;</code>
    */
   com.google.protobuf.ByteString getNodeNameBytes();
+
+  /**
+   * <code>string cluster_id = 7;</code>
+   */
+  java.lang.String getClusterId();
+  /**
+   * <code>string cluster_id = 7;</code>
+   */
+  com.google.protobuf.ByteString getClusterIdBytes();
 }
