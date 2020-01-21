@@ -65,6 +65,8 @@ public class Account extends Base implements PersistentRegularIterable {
 
   private Set<AccountEvent> accountEvents;
 
+  @Getter @Setter private String subdomainUrl;
+
   @JsonIgnore private byte[] encryptedLicenseInfo;
 
   @JsonIgnore private boolean emailSentToSales;
@@ -430,6 +432,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private long lastLicenseExpiryReminderSentAt;
     private boolean oauthEnabled;
     private boolean cloudCostEnabled;
+    private String subdomainUrl;
 
     private Builder() {}
 
@@ -532,6 +535,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return this;
     }
 
+    public Builder withSubdomainUrl(String subdomainUrl) {
+      this.subdomainUrl = subdomainUrl;
+      return this;
+    }
+
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -551,7 +559,8 @@ public class Account extends Base implements PersistentRegularIterable {
           .withEmailSentToSales(emailSentToSales)
           .withWhitelistedDomains(whitelistedDomains)
           .withLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt)
-          .withOauthEnabled(oauthEnabled);
+          .withOauthEnabled(oauthEnabled)
+          .withSubdomainUrl(subdomainUrl);
     }
 
     public Account build() {
@@ -575,6 +584,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt);
       account.setOauthEnabled(oauthEnabled);
       account.setCloudCostEnabled(cloudCostEnabled);
+      account.setSubdomainUrl(subdomainUrl);
       return account;
     }
   }

@@ -51,7 +51,9 @@ import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.persistence.HIterator;
@@ -59,6 +61,7 @@ import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.validator.routines.UrlValidator;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
@@ -86,6 +89,7 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.Service;
+import software.wings.beans.SubdomainUrl;
 import software.wings.beans.SystemCatalog;
 import software.wings.beans.TechStack;
 import software.wings.beans.UrlInfo;
@@ -125,6 +129,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
@@ -215,7 +220,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private EmailNotificationService emailNotificationService;
   @Inject private DashboardStatisticsService dashboardStatisticsService;
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
-  @Inject private HarnessUserGroupServiceImpl harnessUserGroupService;
+  @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private EventPublisher eventPublisher;
   @Inject private SegmentGroupEventJobService segmentGroupEventJobService;
 
@@ -1377,5 +1382,60 @@ public class AccountServiceImpl implements AccountService {
   public boolean isSSOEnabled(Account account) {
     return (account.getAuthenticationMechanism() != null)
         && (account.getAuthenticationMechanism() != AuthenticationMechanism.USER_PASSWORD);
+  }
+
+  /**
+   * Takes a User ID and does the following checks before adding subdomainUrl to the account
+   * Sanity check on Url provided
+   * @param subdomainUrl subdomain URL object
+   * @return boolean
+   */
+  @Override
+  public boolean validateSubdomainUrl(SubdomainUrl subdomainUrl) {
+    // Sanity check for subdomain URL
+    String[] schemes = {"https"};
+    UrlValidator urlValidator = new UrlValidator(schemes);
+    return urlValidator.isValid(subdomainUrl.getUrl());
+  }
+
+  /**
+   * Function to set subdomain Url of the account
+   * @param account Account Object
+   * @param subdomainUrl Subdomain URL
+   */
+  @Override
+  public void setSubdomainUrl(Account account, SubdomainUrl subdomainUrl) {
+    UpdateOperations<Account> updateOperation = wingsPersistence.createUpdateOperations(Account.class);
+    updateOperation.set(AccountKeys.subdomainUrl, subdomainUrl.getUrl());
+    wingsPersistence.update(account, updateOperation);
+  }
+
+  /**
+   * Function to add subdomain URL
+   * @param userId
+   * @param accountId
+   * @param subDomainUrl
+   * @return boolean
+   */
+  @Override
+  public Boolean addSubdomainUrl(String userId, String accountId, SubdomainUrl subDomainUrl) {
+    Account account = get(accountId);
+    if (!isBlank(account.getSubdomainUrl())) {
+      throw new InvalidRequestException("Account already has subdomain URL. Updating it is not allowed");
+    }
+
+    // Check if the user is a part of Harness User Group
+    if (!harnessUserGroupService.isHarnessSupportUser(userId)) {
+      throw new UnauthorizedException("User is not authorized to add subdomain URL", USER);
+    }
+
+    // Check if URL is valid
+    if (!validateSubdomainUrl(subDomainUrl)) {
+      throw new InvalidArgumentsException("Subdomain URL provided is invalid", USER);
+    }
+
+    // Update Account with the given subdomainUrl
+    setSubdomainUrl(get(accountId), subDomainUrl);
+    return Boolean.TRUE;
   }
 }
