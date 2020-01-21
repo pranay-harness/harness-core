@@ -110,7 +110,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
         groupByEntityList = new ArrayList<>();
       }
       // We need to determine the order so that the correct grouping happens at each level.
-      if (groupByEntityList.size() == 1 && groupByTagList.size() == 1) {
+      if (!groupByEntityList.isEmpty() && groupByTagList.size() == 1) {
         int entityIndex = findFirstGroupByEntityPosition(groupByList);
         int tagIndex = findFirstGroupByTagPosition(groupByList);
         if (entityIndex > tagIndex) {

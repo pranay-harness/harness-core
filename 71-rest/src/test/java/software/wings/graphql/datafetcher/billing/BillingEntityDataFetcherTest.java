@@ -389,11 +389,12 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
-  public void testFetchMethodInBillingEntitySeriesDataFetcherWithTagGroupBy() {
+  public void testFetchAndPostFetchMethodInBillingEntitySeriesDataFetcherWithTagGroupBy() {
     List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
     List<QLBillingDataFilter> filters = new ArrayList<>();
 
-    List<QLCCMGroupBy> groupBy = Arrays.asList(makeTagGroupBy(QLBillingDataTagType.APPLICATION, "App"));
+    List<QLCCMGroupBy> groupBy =
+        Arrays.asList(makeApplicationEntityGroupBy(), makeTagGroupBy(QLBillingDataTagType.APPLICATION, TAG_TEAM));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
 
     QLEntityTableListData data = (QLEntityTableListData) billingStatsEntityDataFetcher.fetch(
@@ -418,6 +419,13 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getCpuIdleCost()).isEqualTo(BillingStatsDefaultKeys.CPUIDLECOST);
     assertThat(data.getData().get(0).getMemoryIdleCost()).isEqualTo(BillingStatsDefaultKeys.MEMORYIDLECOST);
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
+
+    data = (QLEntityTableListData) billingStatsEntityDataFetcher.postFetch(ACCOUNT1_ID, groupBy, data);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getName()).isEqualTo(TAG_TEAM1);
+    assertThat(data.getData().get(0).getId()).isEqualTo(TAG_TEAM1);
+    assertThat(data.getData().get(0).getType()).isEqualTo("TAG");
+    assertThat(data.getData().get(0).getTotalCost()).isEqualTo(60.0);
   }
 
   public QLBillingSortCriteria makeDescByTimeSortingCriteria() {
