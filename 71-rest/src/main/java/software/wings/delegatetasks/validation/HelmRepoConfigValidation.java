@@ -97,10 +97,12 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   }
 
   private boolean validateGcsHelmRepoConfig() {
-    if (getHelmValuesFetchTaskParameters().isBindTaskFeatureSet()) {
-      return isHelmInstalled() && isChartMuseumInstalled() && validateContainerParams();
+    boolean valid = true;
+    if (getParameters()[0] instanceof HelmValuesFetchTaskParameters
+        && getHelmValuesFetchTaskParameters().isBindTaskFeatureSet()) {
+      valid = validateContainerParams();
     }
-    return isHelmInstalled() && isChartMuseumInstalled();
+    return valid && isHelmInstalled() && isChartMuseumInstalled();
   }
 
   private List<DelegateConnectionResult> taskValidationResult(boolean validated) {
@@ -110,11 +112,12 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
 
   private boolean validateHttpHelmRepoConfig(HelmRepoConfig helmRepoConfig) {
     HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmRepoConfig;
-    if (getHelmValuesFetchTaskParameters().isBindTaskFeatureSet()) {
-      return isHelmInstalled() && isConnectableHttpUrl(httpHelmRepoConfig.getChartRepoUrl())
-          && validateContainerParams();
+    boolean valid = true;
+    if (getParameters()[0] instanceof HelmValuesFetchTaskParameters
+        && getHelmValuesFetchTaskParameters().isBindTaskFeatureSet()) {
+      valid = validateContainerParams();
     }
-    return isHelmInstalled() && isConnectableHttpUrl(httpHelmRepoConfig.getChartRepoUrl());
+    return valid && isHelmInstalled() && isConnectableHttpUrl(httpHelmRepoConfig.getChartRepoUrl());
   }
 
   private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters() {
@@ -122,11 +125,12 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   }
 
   private boolean validateAmazonS3HelmRepoConfig() {
-    if (getHelmValuesFetchTaskParameters().isBindTaskFeatureSet()) {
-      return isHelmInstalled() && isChartMuseumInstalled() && isConnectableHttpUrl(AWS_URL)
-          && validateContainerParams();
+    boolean valid = true;
+    if (getParameters()[0] instanceof HelmValuesFetchTaskParameters
+        && getHelmValuesFetchTaskParameters().isBindTaskFeatureSet()) {
+      valid = validateContainerParams();
     }
-    return isHelmInstalled() && isChartMuseumInstalled() && isConnectableHttpUrl(AWS_URL);
+    return valid && isHelmInstalled() && isChartMuseumInstalled() && isConnectableHttpUrl(AWS_URL);
   }
 
   private boolean isConnectableHttpUrl(String url) {
