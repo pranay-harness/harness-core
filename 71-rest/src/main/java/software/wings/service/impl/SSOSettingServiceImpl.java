@@ -18,10 +18,12 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
+import software.wings.beans.Event;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -63,6 +65,7 @@ import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SecretManager secretManager;
@@ -74,6 +77,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private AccountService accountService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private OauthOptions oauthOptions;
+  @Inject private AuditServiceHelper auditServiceHelper;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   static final int ONE_DAY = 86400000;
 
@@ -120,7 +124,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       savedSettings = wingsPersistence.get(SamlSettings.class, ssoSettingUuid);
       eventPublishHelper.publishSSOEvent(settings.getAccountId());
     }
-
+    auditServiceHelper.reportForAuditingUsingAccountId(settings.getAccountId(), null, settings, Event.Type.CREATE);
+    logger.info("Auditing creation of SAML Settings for account={}", settings.getAccountId());
     return savedSettings;
   }
 
@@ -142,6 +147,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     }
     Account account = accountService.get(settings.getAccountId());
     accountService.update(account);
+    auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, settings, Event.Type.CREATE);
+    logger.info("Auditing creation of OAUTH Settings for account={}", settings.getAccountId());
     return savedSettings;
   }
 
@@ -155,7 +162,10 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     oldSettings.setAllowedProviders(allowedProviders);
     oldSettings.setDisplayName(allowedProviders.stream().map(OauthProviderType::name).collect(Collectors.joining(",")));
     wingsPersistence.save(oldSettings);
-    return wingsPersistence.get(OauthSettings.class, oldSettings.getUuid());
+    OauthSettings newSettings = wingsPersistence.get(OauthSettings.class, oldSettings.getUuid());
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, newSettings, Event.Type.UPDATE);
+    logger.info("Auditing updation of OAUTH Settings for account={}", newSettings.getAccountId());
+    return newSettings;
   }
 
   @Override
@@ -170,6 +180,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     }
     account.setOauthEnabled(false);
     accountService.update(account);
+    auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, settings);
+    logger.info("Auditing deletion of OAUTH Settings for account={}", accountId);
     return wingsPersistence.delete(settings);
   }
 
@@ -179,6 +191,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     if (samlSettings == null) {
       throw new InvalidRequestException("No Saml settings found for this account");
     }
+    auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, samlSettings);
+    logger.info("Auditing deletion of SAML Settings for account={}", accountId);
     return deleteSamlSettings(samlSettings);
   }
 
@@ -212,6 +226,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     settings.encryptFields(secretManager);
     LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, settings);
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
+    auditServiceHelper.reportForAuditingUsingAccountId(settings.getAccountId(), null, settings, Event.Type.CREATE);
+    logger.info("Auditing creation of LDAP Settings for account={}", settings.getAccountId());
     eventPublishHelper.publishSSOEvent(settings.getAccountId());
     return savedSettings;
   }
@@ -233,6 +249,9 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     oldSettings.setGroupSettingsList(settings.getGroupSettingsList());
     oldSettings.encryptFields(secretManager);
     LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, oldSettings);
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        settings.getAccountId(), oldSettings, savedSettings, Event.Type.UPDATE);
+    logger.info("Auditing updation of LDAP for account={}", savedSettings.getAccountId());
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
     return savedSettings;
   }
@@ -255,6 +274,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     secretManager.deleteSecretUsingUuid(settings.getConnectionSettings().getEncryptedBindPassword());
     wingsPersistence.delete(settings);
     LdapGroupSyncJob.delete(jobScheduler, this, settings.getAccountId(), settings.getUuid());
+    auditServiceHelper.reportDeleteForAuditingUsingAccountId(settings.getAccountId(), settings);
+    logger.info("Auditing deletion of LDAP Settings for account={}", settings.getAccountId());
     return settings;
   }
 

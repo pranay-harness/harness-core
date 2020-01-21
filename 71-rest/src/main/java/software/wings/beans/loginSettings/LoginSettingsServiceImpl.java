@@ -100,14 +100,32 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
       String accountId, PasswordExpirationPolicy newPasswordExpirationPolicy) {
     UpdateOperations<LoginSettings> operations = wingsPersistence.createUpdateOperations(LoginSettings.class);
     setUnset(operations, LoginSettingKeys.passwordExpirationPolicy, newPasswordExpirationPolicy);
-    return updateAndGetLoginSettings(accountId, operations);
+    LoginSettings loginSettings = updateAndGetLoginSettings(accountId, operations);
+    auditPasswordExpirationPolicy(accountId, loginSettings);
+    logger.info("Auditing updation of Password Expiration Policy for account={}", accountId);
+    return loginSettings;
   }
 
   @Override
   public LoginSettings updatePasswordStrengthPolicy(String accountId, PasswordStrengthPolicy passwordStrengthPolicy) {
     UpdateOperations<LoginSettings> operations = wingsPersistence.createUpdateOperations(LoginSettings.class);
     setUnset(operations, LoginSettingKeys.passwordStrengthPolicy, passwordStrengthPolicy);
-    return updateAndGetLoginSettings(accountId, operations);
+    LoginSettings loginSettings = updateAndGetLoginSettings(accountId, operations);
+    auditPasswordStrengthPolicy(accountId, loginSettings);
+    logger.info("Auditing updation of Password Strength Policy for account={}", accountId);
+    return loginSettings;
+  }
+
+  private void auditPasswordStrengthPolicy(String accountId, LoginSettings loginSettings) {
+    LoginSettings auditLoginSettings = loginSettings;
+    auditLoginSettings.setPasswordExpirationPolicy(null);
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, auditLoginSettings, Event.Type.UPDATE);
+  }
+
+  private void auditPasswordExpirationPolicy(String accountId, LoginSettings loginSettings) {
+    LoginSettings auditLoginSettings = loginSettings;
+    auditLoginSettings.setPasswordStrengthPolicy(null);
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, auditLoginSettings, Event.Type.UPDATE);
   }
 
   @Override
