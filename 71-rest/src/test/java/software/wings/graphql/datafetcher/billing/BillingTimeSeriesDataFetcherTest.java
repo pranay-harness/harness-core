@@ -33,6 +33,8 @@ import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagAggregation;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagType;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortType;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
@@ -466,6 +468,76 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
   }
 
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchAndPostFetchMethodsInBillingTimeSeriesDataFetcherWithTagAggregation() {
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeServiceEntityGroupBy(), makeApplicationTagGroupBy(TAG_TEAM));
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(groupBy.get(1).getTagAggregation().getTagName()).isEqualTo(TAG_TEAM);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(APP1_ID_ACCOUNT1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("APPID");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
+
+    data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(ACCOUNT1_ID, groupBy, data);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(TAG_TEAM1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("TAG");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(95.0);
+
+    // checking post fetch in case of no tag group by
+    data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
+        ACCOUNT1_ID, Collections.emptyList(), data);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(TAG_TEAM1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("TAG");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(95.0);
+
+    // checking post fetch when data is empty
+    QLBillingStackedTimeSeriesData emptyData =
+        QLBillingStackedTimeSeriesData.builder().data(Collections.emptyList()).build();
+    emptyData =
+        (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(ACCOUNT1_ID, groupBy, emptyData);
+    assertThat(emptyData).isNotNull();
+    assertThat(emptyData.getData()).hasSize(0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchAndPostFetchMethodsInBillingTimeSeriesDataFetcherWithInvalidTagAggregation() {
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeApplicationTagGroupBy(TAG_TEAM + "invalid"));
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(groupBy.get(0).getTagAggregation().getTagName()).isEqualTo(TAG_TEAM + "invalid");
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(APP1_ID_ACCOUNT1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("APPID");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
+
+    data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(ACCOUNT1_ID, groupBy, data);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues()).hasSize(0);
+  }
+
   private QLCCMAggregationFunction makeBillingAmtAggregation() {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.SUM)
@@ -588,6 +660,12 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   private QLCCMGroupBy makeClusterTypeEntityGroupBy() {
     QLCCMEntityGroupBy clusterTypeGroupBy = QLCCMEntityGroupBy.ClusterType;
     return QLCCMGroupBy.builder().entityGroupBy(clusterTypeGroupBy).build();
+  }
+
+  private QLCCMGroupBy makeApplicationTagGroupBy(String tagName) {
+    QLBillingDataTagAggregation tagAggregation =
+        QLBillingDataTagAggregation.builder().entityType(QLBillingDataTagType.APPLICATION).tagName(tagName).build();
+    return QLCCMGroupBy.builder().tagAggregation(tagAggregation).build();
   }
 
   private QLBillingDataFilter makeApplicationFilter(String[] values) {
