@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.lang.String.format;
 
 import com.google.inject.Singleton;
 
@@ -10,6 +11,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.FindOptions;
@@ -333,5 +335,17 @@ public class DataFetcherUtils {
 
   public Calendar getDefaultCalendar() {
     return Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+  }
+
+  public void ensureNotBlankField(String field, String fieldName) {
+    if (StringUtils.isBlank(field)) {
+      throw new InvalidRequestException(format("Field: [%s] should not be blank", fieldName));
+    }
+  }
+
+  public void ensureNotNullField(Object field, String fieldName) {
+    if (field == null) {
+      throw new InvalidRequestException(format("Field: [%s] is required", fieldName));
+    }
   }
 }

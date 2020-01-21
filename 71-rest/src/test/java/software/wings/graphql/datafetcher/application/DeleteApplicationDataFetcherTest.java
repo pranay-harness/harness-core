@@ -52,7 +52,6 @@ public class DeleteApplicationDataFetcherTest extends CategoryTest {
     final QLDeleteApplicationPayload qlDeleteApplicationPayload =
         deleteApplicationDataFetcher.mutateAndFetch(applicationParameters, mutationContext);
     verify(appService, times(1)).delete("appid");
-    Assertions.assertThat(qlDeleteApplicationPayload.getSuccess()).isTrue();
     Assertions.assertThat(qlDeleteApplicationPayload.getRequestId()).isEqualTo("req1");
   }
 }

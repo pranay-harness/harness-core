@@ -2,6 +2,37 @@ extend type Mutation {
   createApplication(input: CreateApplicationInput!): CreateApplicationPayload @dataFetcher(name: createApplication)
   updateApplication(input: UpdateApplicationInput!): UpdateApplicationPayload @dataFetcher(name: updateApplication)
   deleteApplication(input: DeleteApplicationInput!): DeleteApplicationPayload @dataFetcher(name: deleteApplication)
+  updateApplicationGitConfig(input: UpdateApplicationGitConfigInput!): UpdateApplicationGitConfigPayload
+    @dataFetcher(name: updateApplicationGitConfig)
+  removeApplicationGitConfig(input: RemoveApplicationGitConfigInput!): RemoveApplicationGitConfigPayload
+    @dataFetcher(name: removeApplicationGitConfig)
+  updateApplicationGitConfigStatus(
+    input: UpdateApplicationGitConfigStatusInput!
+  ): UpdateApplicationGitConfigStatusPayload @dataFetcher(name: updateApplicationGitConfigStatus)
+}
+
+type UpdateApplicationGitConfigPayload {
+  requestId: String
+  gitConfig: GitConfig
+}
+
+input UpdateApplicationGitConfigStatusInput {
+  requestId: String!
+  applicationId: String!
+  syncEnabled: Boolean!
+}
+
+input RemoveApplicationGitConfigInput {
+  requestId: String!
+  applicationId: String!
+}
+
+input UpdateApplicationGitConfigInput {
+  requestId: String!
+  applicationId: String!
+  gitConnectorId: String!
+  branch: String!
+  syncEnabled: Boolean!
 }
 
 input CreateApplicationInput {
@@ -33,5 +64,25 @@ type UpdateApplicationPayload {
 
 type DeleteApplicationPayload {
   requestId: String
-  success: Boolean
+}
+
+type GitConfig {
+  gitConnector: GitConnector
+    @dataFetcher(name: connector, contextFieldArgsMap: "{ \"connectorId\": \"gitConnectorId\"}")
+  branch: String
+  syncEnabled: Boolean
+}
+
+extend type Application {
+  gitConfig: GitConfig @dataFetcher(name: applicationGitConfig, contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
+}
+
+type UpdateApplicationGitConfigStatusPayload {
+  requestId: String
+  gitConfig: GitConfig
+}
+
+type RemoveApplicationGitConfigPayload {
+  requestId: String
+  application: Application
 }

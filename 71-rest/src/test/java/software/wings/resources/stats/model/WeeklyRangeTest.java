@@ -33,7 +33,7 @@ public class WeeklyRangeTest extends CategoryTest {
     WeeklyRange weeklyRange = new WeeklyRange(null, "Monday", "2:00 AM", "Monday", "1:00 AM", "Asia/Kolkata");
     int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
     int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
-    if (dayOfWeek == 1 && hourOfDay == 1) {
+    if (dayOfWeek == 2 && hourOfDay == 1) {
       assertThat(weeklyRange.isInRange()).isEqualTo(true);
     } else {
       assertThat(weeklyRange.isInRange()).isEqualTo(false);
