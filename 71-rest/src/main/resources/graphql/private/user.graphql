@@ -1,6 +1,43 @@
+extend type Mutation {
+  createUser(input: CreateUserInput!): CreateUserPayload @dataFetcher(name: createUser)
+  updateUser(input: UpdateUserInput!): UpdateUserPayload @dataFetcher(name: updateUser)
+  deleteUser(input: DeleteUserInput!): DeleteUserPayload @dataFetcher(name: deleteUser)
+}
+
 extend type Query {
   user(id: String!): User @dataFetcher(name: user)
   users(limit: Int!, offset: Int): UserConnection @dataFetcher(name: userConnection)
+}
+
+input CreateUserInput {
+  requestId: String!
+  name: String!
+  email: String!
+}
+
+type CreateUserPayload {
+  requestId: String
+  user: User
+}
+
+input UpdateUserInput {
+  requestId: String!
+  id: String!
+  name: String
+}
+
+type UpdateUserPayload {
+  requestId: String
+  user: User
+}
+
+input DeleteUserInput {
+  id: String!
+}
+
+type DeleteUserPayload {
+  status: RequestStatus
+  message: String
 }
 
 extend type User {

@@ -48,6 +48,9 @@ enum DataFetcherEnum {
   updateApplication
   deleteApplication
   userGroupUpdatePermissions
+  createUser
+  updateUser
+  deleteUser
   userGroup
   userGroupConnection
   deleteUserGroup
