@@ -4,13 +4,13 @@ import static io.harness.ccm.budget.entities.BudgetType.PREVIOUS_MONTH_SPEND;
 import static io.harness.ccm.budget.entities.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
+import io.harness.ccm.budget.entities.EnvironmentType;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class BudgetDaoTest extends WingsBaseTest {
                   .name("test_budget")
                   .scope(ApplicationBudgetScope.builder()
                              .applicationIds(new String[] {applicationId1, applicationId2})
-                             .type(ALL)
+                             .environmentType(EnvironmentType.ALL)
                              .build())
                   .type(SPECIFIED_AMOUNT)
                   .budgetAmount(100.0)

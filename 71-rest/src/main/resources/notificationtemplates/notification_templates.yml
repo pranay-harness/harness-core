@@ -184,5 +184,5 @@ SSO_PROVIDER_NOT_REACHABLE_NOTIFICATION:
 BUDGET_NOTIFICATION:
   email:
     subject: ${THRESHOLD_PERCENTAGE}% of the budget ${BUDGET_NAME} has been spent so far.
-    body: "Dear Harness customer, You requested that we alert you when the cost associated with your ${BUDGET_NAME} budget exceeds ${THRESHOLD_PERCENTAGE}% for the current month. The cost associated with this budget is ${CURRENT_COST}. "
+    body: "Dear Harness customer, <p>You requested that we alert you when the cost associated with your \"${BUDGET_NAME}\" budget exceeds ${THRESHOLD_PERCENTAGE}% for the current month. As of now, the cost associated with this budget is ${CURRENT_COST}. </p>"
   slack: ${THRESHOLD_PERCENTAGE}% of the budget ${BUDGET_NAME} has been spent so far.

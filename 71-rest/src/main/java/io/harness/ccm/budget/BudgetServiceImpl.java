@@ -1,14 +1,10 @@
 package io.harness.ccm.budget;
 
-import static io.harness.ccm.budget.BudgetUtils.roundOffBudgetCreationTime;
-
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.ccm.budget.entities.AlertThreshold;
-import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
-import io.harness.ccm.budget.entities.ClusterBudgetScope;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +19,6 @@ import software.wings.graphql.datafetcher.budget.BudgetDefaultKeys;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
-import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData.QLBudgetTableDataBuilder;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableListData;
 
 import java.math.BigDecimal;
@@ -91,7 +86,8 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public double getForecastCost(Budget budget) {
-    List<QLBillingDataFilter> filters = getFilters(budget);
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(budget.getScope().getBudgetFilter());
     QLCCMAggregationFunction aggregationFunction = BudgetUtils.makeBillingAmtAggregation();
     QLBillingAmountData billingAmountData =
         billingTrendStatsDataFetcher.getBillingAmountData(budget.getAccountId(), aggregationFunction, filters);
@@ -103,23 +99,11 @@ public class BudgetServiceImpl implements BudgetService {
     return forecastCost.doubleValue();
   }
 
-  private List<QLBillingDataFilter> getFilters(Budget budget) {
-    List<QLBillingDataFilter> filters = new ArrayList<>();
-    if (budget.getScope().getClass().equals(ClusterBudgetScope.class)) {
-      ClusterBudgetScope clusterBudgetScope = (ClusterBudgetScope) budget.getScope();
-      filters.add(BudgetUtils.makeClusterFilter(clusterBudgetScope.getClusterIds()));
-    } else if (budget.getScope().getClass().equals(ApplicationBudgetScope.class)) {
-      ApplicationBudgetScope applicationBudgetScope = (ApplicationBudgetScope) budget.getScope();
-      filters.add(BudgetUtils.makeApplicationFilter(applicationBudgetScope.getApplicationIds()));
-    }
-    return filters;
-  }
-
   @Override
   public QLBudgetTableListData getBudgetData(Budget budget) {
     Preconditions.checkNotNull(budget.getAccountId());
-
-    List<QLBillingDataFilter> filters = getFilters(budget);
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(budget.getScope().getBudgetFilter());
     QLCCMAggregationFunction aggregationFunction = BudgetUtils.makeBillingAmtAggregation();
 
     QLCCMTimeSeriesAggregation groupBy = BudgetUtils.makeStartTimeEntityGroupBy();
@@ -133,25 +117,21 @@ public class BudgetServiceImpl implements BudgetService {
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(queryData.getQuery());
       Double budgetedAmount = budget.getBudgetAmount();
-      long createdAt = roundOffBudgetCreationTime(budget.getCreatedAt());
-      return generateBudgetData(resultSet, queryData, budgetedAmount, createdAt);
+      return generateBudgetData(resultSet, queryData, budgetedAmount);
     } catch (SQLException e) {
       logger.error("Exception {}", e);
     } finally {
       DBUtils.close(resultSet);
     }
-
     return null;
   }
 
-  private QLBudgetTableListData generateBudgetData(ResultSet resultSet, BillingDataQueryMetadata queryData,
-      Double budgetedAmount, long createdAt) throws SQLException {
+  private QLBudgetTableListData generateBudgetData(
+      ResultSet resultSet, BillingDataQueryMetadata queryData, Double budgetedAmount) throws SQLException {
     List<QLBudgetTableData> budgetTableDataList = new ArrayList<>();
 
     Double actualCost = BudgetDefaultKeys.ACTUAL_COST;
     long time = BudgetDefaultKeys.TIME;
-    Double budgetVariance;
-    Double budgetVariancePercentage;
 
     while (resultSet != null && resultSet.next()) {
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
@@ -167,26 +147,33 @@ public class BudgetServiceImpl implements BudgetService {
         }
       }
 
-      if (createdAt > time) {
-        budgetedAmount = 0.0;
-      }
-      budgetVariance = budgetedAmount - actualCost;
+      Double budgetVariance = getBudgetVariance(budgetedAmount, actualCost);
 
-      if (budgetedAmount != 0) {
-        budgetVariancePercentage = (budgetVariance / budgetedAmount) * 100;
-      } else {
-        budgetVariancePercentage = 0.0;
-      }
+      Double budgetVariancePercentage = getBudgetVariancePercentage(budgetVariance, budgetedAmount);
 
-      final QLBudgetTableDataBuilder budgetTableDataBuilder = QLBudgetTableData.builder();
-      budgetTableDataBuilder.actualCost(actualCost)
-          .budgeted(budgetedAmount)
-          .budgetVariance(budgetVariance)
-          .budgetVariancePercentage(budgetVariancePercentage)
-          .time(time);
-      budgetTableDataList.add(budgetTableDataBuilder.build());
+      QLBudgetTableData qlBudgetTableData = QLBudgetTableData.builder()
+                                                .actualCost(actualCost)
+                                                .budgeted(budgetedAmount)
+                                                .budgetVariance(budgetVariance)
+                                                .budgetVariancePercentage(budgetVariancePercentage)
+                                                .time(time)
+                                                .build();
+      budgetTableDataList.add(qlBudgetTableData);
     }
-
     return QLBudgetTableListData.builder().data(budgetTableDataList).build();
+  }
+
+  private static Double getBudgetVariance(Double budgetedAmount, Double actualCost) {
+    return budgetedAmount - actualCost;
+  }
+
+  private static Double getBudgetVariancePercentage(Double budgetVariance, Double budgetedAmount) {
+    Double budgetVariancePercentage;
+    if (budgetedAmount != 0) {
+      budgetVariancePercentage = (budgetVariance / budgetedAmount) * 100;
+    } else {
+      budgetVariancePercentage = 0.0;
+    }
+    return budgetVariancePercentage;
   }
 }

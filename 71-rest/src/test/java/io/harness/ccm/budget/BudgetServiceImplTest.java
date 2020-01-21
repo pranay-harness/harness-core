@@ -11,7 +11,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -22,6 +21,7 @@ import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.budget.entities.Budget.BudgetBuilder;
 import io.harness.ccm.budget.entities.BudgetType;
 import io.harness.ccm.budget.entities.ClusterBudgetScope;
+import io.harness.ccm.budget.entities.EnvironmentType;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Before;
@@ -34,7 +34,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.stubbing.Answer;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
@@ -95,7 +94,10 @@ public class BudgetServiceImplTest extends CategoryTest {
                  .uuid(budgetId)
                  .accountId(accountId)
                  .name("test_budget")
-                 .scope(ApplicationBudgetScope.builder().applicationIds(applicationIds).type(ALL).build())
+                 .scope(ApplicationBudgetScope.builder()
+                            .applicationIds(applicationIds)
+                            .environmentType(io.harness.ccm.budget.entities.EnvironmentType.ALL)
+                            .build())
                  .type(SPECIFIED_AMOUNT)
                  .budgetAmount(100.0)
                  .alertThresholds(new AlertThreshold[] {alertThreshold})
@@ -123,7 +125,7 @@ public class BudgetServiceImplTest extends CategoryTest {
       budgetBuilder.scope(ClusterBudgetScope.builder().clusterIds(clusterIds).build());
     } else {
       budgetBuilder.scope(
-          ApplicationBudgetScope.builder().applicationIds(applicationIds).type(environmentType).build());
+          ApplicationBudgetScope.builder().applicationIds(applicationIds).environmentType(environmentType).build());
     }
     return budgetBuilder.build();
   }
@@ -166,7 +168,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldGetBudgetDataForApplicationType() {
+  public void shouldGetBudgetDataForApplicationType() throws SQLException {
     when(budgetDao.get(budgetId)).thenReturn(mockBudget("APPLICATION"));
     QLBudgetTableListData data = budgetService.getBudgetData(budget);
     verify(timeScaleDBService).getDBConnection();
@@ -175,7 +177,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldGetActualCost() {
+  public void shouldGetActualCost() throws Exception {
     budgetService.getActualCost(budget);
     verify(timeScaleDBService).getDBConnection();
   }

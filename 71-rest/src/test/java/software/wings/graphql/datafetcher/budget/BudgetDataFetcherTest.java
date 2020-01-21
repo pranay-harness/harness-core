@@ -16,6 +16,7 @@ import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.budget.entities.Budget.BudgetBuilder;
 import io.harness.ccm.budget.entities.BudgetType;
 import io.harness.ccm.budget.entities.ClusterBudgetScope;
+import io.harness.ccm.budget.entities.EnvironmentType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -23,7 +24,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
@@ -75,7 +75,8 @@ public class BudgetDataFetcherTest extends AbstractDataFetcherTest {
     if (scope.equals("CLUSTER")) {
       budgetBuilder.scope(ClusterBudgetScope.builder().clusterIds(clusterIds).build());
     } else {
-      budgetBuilder.scope(ApplicationBudgetScope.builder().applicationIds(appIds).type(environmentType).build());
+      budgetBuilder.scope(
+          ApplicationBudgetScope.builder().applicationIds(appIds).environmentType(environmentType).build());
     }
     return budgetBuilder.build();
   }

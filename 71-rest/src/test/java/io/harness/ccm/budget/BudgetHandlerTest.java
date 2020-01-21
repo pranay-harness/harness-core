@@ -11,7 +11,6 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -19,6 +18,7 @@ import io.harness.ccm.budget.entities.AlertThreshold;
 import io.harness.ccm.budget.entities.AlertThresholdBase;
 import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
+import io.harness.ccm.budget.entities.EnvironmentType;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,7 +56,7 @@ public class BudgetHandlerTest extends CategoryTest {
                  .name("test_budget")
                  .scope(ApplicationBudgetScope.builder()
                             .applicationIds(new String[] {applicationId1, applicationId2})
-                            .type(ALL)
+                            .environmentType(EnvironmentType.ALL)
                             .build())
                  .type(SPECIFIED_AMOUNT)
                  .budgetAmount(0.0)

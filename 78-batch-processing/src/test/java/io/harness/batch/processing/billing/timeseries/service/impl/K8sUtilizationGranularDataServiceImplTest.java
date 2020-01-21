@@ -79,7 +79,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void testGetDistinctInstantIdsInvalidDBService() {
+  public void testGetDistinctInstantIdsInvalidDBService() throws SQLException {
     when(timeScaleDBService.getDBConnection()).thenThrow(SQLException.class);
     assertThat(k8sUtilizationGranularDataService.getDistinctInstantIds(ACCOUNTID, START_DATE, END_DATE)).isNull();
   }
@@ -100,7 +100,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void testGetAggregatedUtilizationDataInvalidDBService() {
+  public void testGetAggregatedUtilizationDataInvalidDBService() throws SQLException {
     when(timeScaleDBService.getDBConnection()).thenThrow(SQLException.class);
     assertThat(k8sUtilizationGranularDataService.getAggregatedUtilizationData(
                    ACCOUNTID, Collections.singletonList("instance"), START_DATE, END_DATE))

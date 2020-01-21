@@ -3,7 +3,6 @@ package io.harness.ccm.budget;
 import io.harness.ccm.budget.entities.Budget;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableListData;
 
-import java.sql.SQLException;
 import java.util.List;
 
 public interface BudgetService {
@@ -19,7 +18,7 @@ public interface BudgetService {
 
   boolean delete(String budgetId);
 
-  double getActualCost(Budget budget) throws SQLException;
+  double getActualCost(Budget budget);
 
   double getForecastCost(Budget budget);
 
