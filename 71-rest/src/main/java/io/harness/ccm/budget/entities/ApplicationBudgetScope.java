@@ -6,7 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 
 @Data
 @Builder
@@ -15,5 +17,12 @@ import software.wings.beans.Environment.EnvironmentType;
 @FieldNameConstants(innerTypeName = "ApplicationBudgetScopeKeys")
 public class ApplicationBudgetScope implements BudgetScope {
   String[] applicationIds;
-  EnvironmentType type;
+  EnvironmentType environmentType;
+
+  @Override
+  public QLBillingDataFilter getBudgetFilter() {
+    return QLBillingDataFilter.builder()
+        .application(QLIdFilter.builder().operator(QLIdOperator.IN).values(applicationIds).build())
+        .build();
+  }
 }

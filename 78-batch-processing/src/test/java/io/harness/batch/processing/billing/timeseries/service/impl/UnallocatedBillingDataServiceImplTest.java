@@ -105,7 +105,7 @@ public class UnallocatedBillingDataServiceImplTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void testNullUnallocatedCostData() {
+  public void testNullUnallocatedCostData() throws SQLException {
     when(timeScaleDBService.getDBConnection()).thenThrow(SQLException.class);
     assertThat(unallocatedBillingDataService.getUnallocatedCostData(ACCOUNT_ID, START_TIME, END_TIME))
         .isEqualTo(Collections.emptyList());
@@ -132,7 +132,7 @@ public class UnallocatedBillingDataServiceImplTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void testNullCommonData() {
+  public void testNullCommonData() throws SQLException {
     when(timeScaleDBService.getDBConnection()).thenThrow(SQLException.class);
     assertThat(unallocatedBillingDataService.getCommonFields(ACCOUNT_ID, CLUSTER_ID, START_TIME, END_TIME))
         .isEqualTo(ClusterCostData.builder().build());

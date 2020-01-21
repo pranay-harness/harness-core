@@ -4,6 +4,7 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 import static java.time.Duration.ofSeconds;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.BUDGET_NOTIFICATION;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.hazelcast.util.Preconditions;
@@ -21,9 +22,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.service.impl.notifications.UserGroupBasedDispatcher;
 import software.wings.service.intfc.UserGroupService;
 
-import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.HashMap;
 
 @Slf4j
 public class BudgetHandler implements Handler<Budget> {
@@ -42,48 +41,59 @@ public class BudgetHandler implements Handler<Budget> {
             .targetInterval(ofSeconds(60))
             .acceptableNoAlertDelay(ofSeconds(60))
             .handler(this)
+            .filterExpander(q -> q.field(BudgetKeys.alertThresholds).exists())
             .schedulingType(REGULAR)
             .redistribute(true));
   }
 
   @Override
   public void handle(Budget budget) {
-    AlertThreshold[] alertThresholds = budget.getAlertThresholds();
-    if (null == alertThresholds) {
+    Preconditions.checkNotNull(budget.getAlertThresholds());
+    Preconditions.checkNotNull(budget.getAccountId());
+
+    String userGroupId = budget.getUserGroupId();
+    UserGroup userGroup = userGroupService.get(budget.getAccountId(), userGroupId, true);
+    if (null == userGroupId || null == userGroup) {
+      logger.warn("The budget with id={} has no associated UserGroup.", budget.getUuid());
       return;
     }
 
-    String accountId = budget.getAccountId();
-    String userGroupId = budget.getUserGroupId();
-    UserGroup userGroup = userGroupService.get(accountId, userGroupId, true);
-    if (null == userGroupId || null == userGroup) {
-      logger.warn("This budget has no associated UserGroup.");
-      return;
-    }
+    AlertThreshold[] alertThresholds = budget.getAlertThresholds();
     for (int i = 0; i < alertThresholds.length; i++) {
+      if (alertThresholds[i].getAlertsSent() > 0) {
+        break;
+      }
+
       double currentCost = 0;
       try {
         currentCost = budgetService.getActualCost(budget);
-      } catch (SQLException e) {
+        logger.info("{} has been spent under the budget with id={} ", currentCost, budget.getUuid());
+      } catch (Exception e) {
         logger.error(e.getMessage());
+        break;
       }
-      if (alertThresholds[i].getAlertsSent() <= 0
-          && exceedsThreshold(currentCost, getThresholdAmount(budget, alertThresholds[i]))) {
-        sendBudgetAlerts(accountId, userGroup);
+
+      if (exceedsThreshold(currentCost, getThresholdAmount(budget, alertThresholds[i]))) {
+        Notification budgetNotification =
+            getBudgetNotification(budget.getAccountId(), budget.getName(), alertThresholds[i], currentCost);
+        userGroupBasedDispatcher.dispatch(Arrays.asList(budgetNotification), userGroup);
         budgetService.incAlertCount(budget, i);
       }
     }
   }
 
-  private boolean sendBudgetAlerts(String accountId, UserGroup userGroup) {
-    Preconditions.checkNotNull(userGroup);
-    Notification notification = InformationNotification.builder()
-                                    .notificationTemplateId(BUDGET_NOTIFICATION.name())
-                                    .notificationTemplateVariables(new HashMap<>())
-                                    .accountId(accountId)
-                                    .build();
-    userGroupBasedDispatcher.dispatch(Arrays.asList(notification), userGroup);
-    return true;
+  private Notification getBudgetNotification(
+      String accountId, String budgetName, AlertThreshold alertThreshold, double currentCost) {
+    return InformationNotification.builder()
+        .notificationTemplateId(BUDGET_NOTIFICATION.name())
+        .notificationTemplateVariables(
+            ImmutableMap.<String, String>builder()
+                .put("BUDGET_NAME", budgetName)
+                .put("THRESHOLD_PERCENTAGE", String.format("%.1f", alertThreshold.getPercentage()))
+                .put("CURRENT_COST", String.format("%.2f", currentCost))
+                .build())
+        .accountId(accountId)
+        .build();
   }
 
   private boolean exceedsThreshold(double currentAmount, double thresholdAmount) {

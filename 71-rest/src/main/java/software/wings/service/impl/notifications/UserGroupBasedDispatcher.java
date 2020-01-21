@@ -55,12 +55,13 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       emailDispatcher.dispatch(notifications, emails);
     }
 
-    if (CollectionUtils.isNotEmpty(userGroup.getEmailAddresses())) {
+    List<String> emailAddresses = userGroup.getEmailAddresses();
+    if (CollectionUtils.isNotEmpty(emailAddresses)) {
       try {
-        log.info("Trying to send email. emails: {}", userGroup.getEmailAddresses());
-        emailDispatcher.dispatch(notifications, userGroup.getEmailAddresses());
+        log.info("Sending emails to these addresses: {}", emailAddresses);
+        emailDispatcher.dispatch(notifications, emailAddresses);
       } catch (Exception e) {
-        log.error("Error sending email. Email Addresses: {}", userGroup.getEmailAddresses(), e);
+        log.error("Error sending emails to these addresses: {}", emailAddresses, e);
       }
     }
 
