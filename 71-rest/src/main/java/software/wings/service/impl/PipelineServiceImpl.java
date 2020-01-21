@@ -546,7 +546,14 @@ public class PipelineServiceImpl implements PipelineService {
             resolveServices(services, serviceIds, resolvedWorkflowStepVariables, workflow);
             resolveInfraMappings(infraMappingIds, resolvedWorkflowStepVariables, workflow);
             resolveInfraDefinitions(infraDefinitionIds, resolvedWorkflowStepVariables, workflow);
-            resolveEnvIds(envIds, resolvedWorkflowStepVariables, workflow);
+            if (pipelineStageElement.checkDisableAssertion()) {
+              try {
+                resolveEnvIds(envIds, resolvedWorkflowStepVariables, workflow);
+              } catch (InvalidRequestException ignored) {
+              }
+            } else {
+              resolveEnvIds(envIds, resolvedWorkflowStepVariables, workflow);
+            }
           }
           if (!workflowIds.contains(workflowId)) {
             workflowIds.add(workflowId);

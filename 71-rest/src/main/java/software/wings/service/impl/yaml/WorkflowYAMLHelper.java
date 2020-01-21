@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.validation.Validator.notNullCheck;
@@ -30,8 +31,8 @@ public class WorkflowYAMLHelper {
   @Inject SettingsService settingsService;
 
   public String getWorkflowVariableValueBean(
-      String accountId, String envId, String appId, String entityType, String variableValue) {
-    if (matchesVariablePattern(variableValue) || entityType == null) {
+      String accountId, String envId, String appId, String entityType, String variableValue, boolean skipEmpty) {
+    if (entityType == null || (skipEmpty && isEmpty(variableValue)) || matchesVariablePattern(variableValue)) {
       return variableValue;
     }
     EntityType entityTypeEnum = EntityType.valueOf(entityType);
@@ -47,8 +48,14 @@ public class WorkflowYAMLHelper {
     }
   }
 
-  public String getWorkflowVariableValueYaml(String appId, String entryValue, EntityType entityType) {
-    if (matchesVariablePattern(entryValue) || entityType == null) {
+  public String getWorkflowVariableValueBean(
+      String accountId, String envId, String appId, String entityType, String variableValue) {
+    return getWorkflowVariableValueBean(accountId, envId, appId, entityType, variableValue, false);
+  }
+
+  public String getWorkflowVariableValueYaml(
+      String appId, String entryValue, EntityType entityType, boolean skipEmpty) {
+    if (entityType == null || (skipEmpty && isEmpty(entryValue)) || matchesVariablePattern(entryValue)) {
       return entryValue;
     }
     NameAccess x = getNameAccess(appId, entryValue, entityType);
@@ -57,6 +64,10 @@ public class WorkflowYAMLHelper {
     } else {
       return entryValue;
     }
+  }
+
+  public String getWorkflowVariableValueYaml(String appId, String entryValue, EntityType entityType) {
+    return getWorkflowVariableValueYaml(appId, entryValue, entityType, false);
   }
 
   @Nullable
