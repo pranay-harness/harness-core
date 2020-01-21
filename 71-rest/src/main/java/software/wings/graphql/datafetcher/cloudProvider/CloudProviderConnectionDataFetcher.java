@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
+import static software.wings.graphql.datafetcher.cloudProvider.CloudProviderController.populateCloudProvider;
+
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
@@ -66,16 +68,13 @@ public class CloudProviderConnectionDataFetcher
       resp = filteredSettingAttributes.subList(offset, endIdx);
     }
 
-    List<QLCloudProvider> nodes = new ArrayList<>();
+    List<QLCloudProvider> qlCloudProviders = new ArrayList<>();
     for (SettingAttribute settingAttribute : resp) {
-      nodes.add(CloudProviderController
-                    .populateCloudProvider(
-                        settingAttribute, CloudProviderController.getCloudProviderBuilder(settingAttribute))
-                    .build());
+      qlCloudProviders.add(populateCloudProvider(settingAttribute).build());
     }
 
     QLPageInfo pageInfo = pageInfoBuilder.total(total).limit(limit).offset(offset).hasMore(total > offset).build();
-    qlCloudProviderConnectionBuilder.pageInfo(pageInfo).nodes(nodes);
+    qlCloudProviderConnectionBuilder.pageInfo(pageInfo).nodes(qlCloudProviders);
 
     return qlCloudProviderConnectionBuilder.build();
   }

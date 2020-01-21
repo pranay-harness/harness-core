@@ -17,11 +17,11 @@ import javax.ws.rs.QueryParam;
 @Api("cost")
 @Path("/cost")
 @Produces("application/json")
-public class CCMHealthResource {
+public class CEHealthResource {
   private HealthStatusService healthStatusService;
 
   @Inject
-  CCMHealthResource(HealthStatusService healthStatusService) {
+  CEHealthResource(HealthStatusService healthStatusService) {
     this.healthStatusService = healthStatusService;
   }
 

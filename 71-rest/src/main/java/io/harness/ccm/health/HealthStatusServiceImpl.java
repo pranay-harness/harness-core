@@ -1,5 +1,7 @@
 package io.harness.ccm.health;
 
+import static java.lang.String.format;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
@@ -20,8 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 public class HealthStatusServiceImpl implements HealthStatusService {
@@ -37,7 +37,8 @@ public class HealthStatusServiceImpl implements HealthStatusService {
   public CEHealthStatus getHealthStatus(String cloudProviderId) {
     SettingAttribute cloudProvider = settingsService.get(cloudProviderId);
     Preconditions.checkNotNull(cloudProvider);
-    Preconditions.checkArgument(ccmSettingService.isCloudCostEnabled(cloudProvider));
+    Preconditions.checkArgument(ccmSettingService.isCloudCostEnabled(cloudProvider),
+        format("The cloud provider with id=%s has CE disabled.", cloudProvider.getUuid()));
 
     CEHealthStatusBuilder builder = CEHealthStatus.builder();
 
@@ -47,33 +48,40 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       return builder.isHealthy(true).build();
     }
 
-    List<String> perpetualTaskIds = new ArrayList<>();
+    List<String> clusterIds = new ArrayList<>();
     for (ClusterRecord clusterRecord : clusterRecords) {
-      perpetualTaskIds =
-          Stream.concat(Arrays.asList(clusterRecord.getPerpetualTaskIds()).stream(), perpetualTaskIds.stream())
-              .collect(Collectors.toList());
+      clusterIds.add(clusterRecord.getUuid());
     }
 
-    if (perpetualTaskIds.isEmpty()) {
-      return builder.isHealthy(false).build();
+    Map<String, List<CEError>> clusterErrorMap = new HashMap<>();
+
+    for (ClusterRecord clusterRecord : clusterRecords) {
+      clusterErrorMap.put(clusterRecord.getUuid(), getErrors(clusterRecord));
     }
 
-    Map<String, List<CEError>> taskErrorMap = new HashMap<>();
+    boolean isHealthy = clusterErrorMap.values().stream().allMatch(List::isEmpty);
+
+    return builder.isHealthy(isHealthy)
+        .clusterIds(clusterIds)
+        .clusterRecords(clusterRecords)
+        .clusterErrors(clusterErrorMap)
+        .build();
+  }
+
+  private List<CEError> getErrors(ClusterRecord clusterRecord) {
+    if (null == clusterRecord.getPerpetualTaskIds()) {
+      return new ArrayList<>(Arrays.asList(CEError.PERPETUAL_TASK_CREATION_FAILURE));
+    }
+
+    List<CEError> errors = new ArrayList<>();
+    List<String> perpetualTaskIds = Arrays.asList(clusterRecord.getPerpetualTaskIds());
     for (String taskId : perpetualTaskIds) {
       PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
-      taskErrorMap.put(perpetualTaskRecord.getUuid(), new ArrayList<>());
       if (!hasRecentHeartbeat(perpetualTaskRecord.getLastHeartbeat())) {
-        List<CEError> errors = taskErrorMap.get(perpetualTaskRecord.getUuid());
         errors.add(CEError.PERPETUAL_TASK_MISSING_HEARTBEAT);
-        taskErrorMap.put(perpetualTaskRecord.getUuid(), errors);
       }
     }
-    boolean isHealthy = taskErrorMap.values().stream().allMatch(List::isEmpty);
-
-    return builder.isHealthy(isHealthy && perpetualTaskIds.size() >= clusterRecords.size())
-        .clusterRecords(clusterRecords)
-        .taskErrorMap(taskErrorMap)
-        .build();
+    return errors;
   }
 
   private boolean hasRecentHeartbeat(long lastHeartbeat) {

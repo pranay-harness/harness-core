@@ -1,5 +1,8 @@
 package software.wings.graphql.provider;
 
+import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
+import static software.wings.graphql.schema.TypeResolverManager.TypeResolverManagerTypes;
+
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -15,6 +18,7 @@ import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
+import software.wings.graphql.datafetcher.ce.CEHealthStatusDataFetcher;
 import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.instrumentation.QLAuditInstrumentation;
 import software.wings.graphql.instrumentation.QueryDepthInstrumentation;
@@ -43,6 +47,7 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   @Inject private DataFetcherDirective dataFetcherDirective;
   @Inject FeatureFlagService featureFlagService;
   @Inject QLAuditInstrumentation qlAuditInstrumentation;
+  @Inject CEHealthStatusDataFetcher ceHealthStatusDataFetcher;
 
   @Inject
   public void init() {
@@ -99,6 +104,8 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
         .scalar(LongScalar.type)
         .scalar(NumberScalar.type)
         .directive("dataFetcher", dataFetcherDirective);
+    builder.type(newTypeWiring(TypeResolverManagerTypes.KubernetesCloudProvider)
+                     .dataFetcher("ceHealthStatus", ceHealthStatusDataFetcher.get()));
     return builder.build();
   }
 

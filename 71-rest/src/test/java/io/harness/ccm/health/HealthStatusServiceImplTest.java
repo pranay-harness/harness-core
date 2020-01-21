@@ -2,6 +2,7 @@ package io.harness.ccm.health;
 
 import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -70,6 +71,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
     String kubernetesClusterConfigName = "KubernetesCluster-" + System.currentTimeMillis();
     cloudProvider = aSettingAttribute()
                         .withCategory(SettingCategory.CLOUD_PROVIDER)
+                        .withUuid(cloudProviderId)
                         .withAccountId(accountId)
                         .withName(kubernetesClusterConfigName)
                         .withValue(kubernetesClusterConfig)
@@ -82,7 +84,6 @@ public class HealthStatusServiceImplTest extends CategoryTest {
     taskRecord = PerpetualTaskRecord.builder().lastHeartbeat(Instant.now().toEpochMilli()).build();
 
     when(settingsService.get(eq(cloudProviderId))).thenReturn(cloudProvider);
-    when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
     when(clusterRecordService.list(eq(accountId), eq(cloudProviderId))).thenReturn(Arrays.asList(clusterRecord));
     when(perpetualTaskService.getTaskRecord(anyString())).thenReturn(taskRecord);
   }
@@ -90,7 +91,17 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
+  public void shouldThrowExceptionForCEDisabledCloudProviders() {
+    when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(false);
+    assertThatThrownBy(() -> healthStatusService.getHealthStatus(cloudProviderId))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
   public void shouldReturnHealthyForCloudProvidersWithHeatbeat() {
+    when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
     CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
     assertThat(status.isHealthy()).isTrue();
   }
@@ -98,7 +109,8 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldReturnUnHealthyForCloudProvidersWithHeatbeat() {
+  public void shouldReturnUnHealthyForCloudProvidersWithoutHeatbeat() {
+    when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
     taskRecord.setLastHeartbeat(0);
     CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
     assertThat(status.isHealthy()).isFalse();

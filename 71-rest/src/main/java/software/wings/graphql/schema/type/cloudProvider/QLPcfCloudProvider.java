@@ -1,5 +1,6 @@
 package software.wings.graphql.schema.type.cloudProvider;
 
+import io.harness.ccm.health.CEHealthStatus;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -19,6 +20,7 @@ public class QLPcfCloudProvider implements QLCloudProvider {
   private QLUser createdBy;
   private String type;
   private boolean isCloudCostEnabled;
+  private CEHealthStatus ceHealthStatus;
 
   public static class QLPcfCloudProviderBuilder implements QLCloudProviderBuilder {}
 }

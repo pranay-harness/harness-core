@@ -36,11 +36,31 @@ interface CloudProvider {
   type: String
   # The field is work in progress.
   isCloudCostEnabled: Boolean
+  ceHealthStatus: CEHealthStatus
 }
 
 type CloudProviderConnection {
   pageInfo: PageInfo
   nodes: [CloudProvider]
+}
+
+type CEHealthStatus {
+  isHealthy: Boolean
+  clusterIds: [String]
+  clusterErrors: [ClusterError]
+}
+
+type ClusterError {
+  clusterId: String
+  clusterErrors: [CEError]
+}
+
+enum CEError {
+  DELEGATE_NOT_AVAILABLE
+  CREDENTIALS_INCORRECT
+  PERPETUAL_TASK_MISSING_HEARTBEAT
+  BILLING_REPORTS_MISSING
+  INTERNAL_ERROR
 }
 
 type AwsCloudProvider implements CloudProvider {
@@ -51,6 +71,7 @@ type AwsCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isCloudCostEnabled: Boolean
+  ceHealthStatus: CEHealthStatus
 }
 
 type PhysicalDataCenterCloudProvider implements CloudProvider {
@@ -61,6 +82,7 @@ type PhysicalDataCenterCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isCloudCostEnabled: Boolean
+  ceHealthStatus: CEHealthStatus
 }
 
 type AzureCloudProvider implements CloudProvider {
@@ -71,6 +93,7 @@ type AzureCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isCloudCostEnabled: Boolean
+  ceHealthStatus: CEHealthStatus
 }
 
 type GcpCloudProvider implements CloudProvider {
@@ -81,6 +104,7 @@ type GcpCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isCloudCostEnabled: Boolean
+  ceHealthStatus: CEHealthStatus
 }
 
 type KubernetesCloudProvider implements CloudProvider {
@@ -91,6 +115,7 @@ type KubernetesCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isCloudCostEnabled: Boolean
+  ceHealthStatus: CEHealthStatus
 }
 
 type PcfCloudProvider implements CloudProvider {
@@ -101,4 +126,5 @@ type PcfCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isCloudCostEnabled: Boolean
+  ceHealthStatus: CEHealthStatus
 }
