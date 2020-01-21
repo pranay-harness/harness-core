@@ -33,6 +33,7 @@ import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagType;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
@@ -385,6 +386,40 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
   }
 
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingEntitySeriesDataFetcherWithTagGroupBy() {
+    List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeTagGroupBy(QLBillingDataTagType.APPLICATION, "App"));
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+
+    QLEntityTableListData data = (QLEntityTableListData) billingStatsEntityDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, null);
+
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getWorkloadName()).isEqualTo("Total");
+    assertThat(data.getData().get(0).getName()).isEqualTo(APP1_ID_ACCOUNT1);
+    assertThat(data.getData().get(0).getId()).isEqualTo(APP1_ID_ACCOUNT1);
+    assertThat(data.getData().get(0).getType()).isEqualTo("APPID");
+    assertThat(data.getData().get(0).getRegion()).isEqualTo(BillingStatsDefaultKeys.REGION);
+    assertThat(data.getData().get(0).getWorkloadType()).isEqualTo(BillingStatsDefaultKeys.WORKLOADTYPE);
+    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(BillingStatsDefaultKeys.IDLECOST);
+    assertThat(data.getData().get(0).getTrendType()).isEqualTo(BillingStatsDefaultKeys.TRENDTYPE);
+    assertThat(data.getData().get(0).getClusterType()).isEqualTo(BillingStatsDefaultKeys.CLUSTERTYPE);
+    assertThat(data.getData().get(0).getClusterId()).isEqualTo(BillingStatsDefaultKeys.CLUSTERID);
+    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(BillingStatsDefaultKeys.IDLECOST);
+    assertThat(data.getData().get(0).getCpuIdleCost()).isEqualTo(BillingStatsDefaultKeys.CPUIDLECOST);
+    assertThat(data.getData().get(0).getMemoryIdleCost()).isEqualTo(BillingStatsDefaultKeys.MEMORYIDLECOST);
+    assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
+  }
+
   public QLBillingSortCriteria makeDescByTimeSortingCriteria() {
     return QLBillingSortCriteria.builder().sortOrder(QLSortOrder.DESCENDING).sortType(QLBillingSortType.Time).build();
   }
@@ -487,6 +522,12 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
   public QLCCMGroupBy makeRegionEntityGroupBy() {
     QLCCMEntityGroupBy regionGroupBy = QLCCMEntityGroupBy.Region;
     return QLCCMGroupBy.builder().entityGroupBy(regionGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeTagGroupBy(QLBillingDataTagType entityType, String tagName) {
+    QLBillingDataTagAggregation tagAggregation =
+        QLBillingDataTagAggregation.builder().tagName(tagName).entityType(entityType).build();
+    return QLCCMGroupBy.builder().tagAggregation(tagAggregation).build();
   }
 
   public QLBillingDataFilter makeTimeFilter(Long filterTime) {

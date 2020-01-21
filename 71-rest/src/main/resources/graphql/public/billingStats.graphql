@@ -60,6 +60,7 @@ enum CCMAggregateOperation {
 input CCMGroupBy {
   entityGroupBy: CCMEntityGroupBy
   timeAggregation: CCMTimeSeriesAggregation
+  tagAggregation: BillingDataTagAggregation
 }
 
 enum CCMEntityGroupBy {
@@ -87,6 +88,11 @@ input CCMTimeSeriesAggregation {
 enum TimeGroupType {
   DAY
   MONTH
+}
+
+input BillingDataTagAggregation {
+  entityType: BillingDataTagType
+  tagName: String
 }
 
 input BillingSortCriteria {

@@ -34,6 +34,7 @@ import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilterType;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagType;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
@@ -752,6 +753,20 @@ public class BillingDataQueryBuilder {
       default:
         logger.error("Unsupported entity type {} for tag ", entityType);
         throw new InvalidRequestException("Unsupported entity type " + entityType);
+    }
+  }
+
+  protected QLCCMEntityGroupBy getGroupByEntityFromTag(QLBillingDataTagAggregation groupByTag) {
+    switch (groupByTag.getEntityType()) {
+      case APPLICATION:
+        return QLCCMEntityGroupBy.Application;
+      case SERVICE:
+        return QLCCMEntityGroupBy.Service;
+      case ENVIRONMENT:
+        return QLCCMEntityGroupBy.Environment;
+      default:
+        logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
+        throw new InvalidRequestException("Unsupported entity type " + groupByTag.getEntityType());
     }
   }
 }

@@ -6,10 +6,13 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
+import software.wings.beans.EntityType;
+import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndTags;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagAggregation;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagType;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
@@ -17,6 +20,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAgg
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableData;
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableData.QLEntityTableDataBuilder;
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableListData;
+import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
@@ -31,8 +35,9 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
-public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithAggregationList<QLCCMAggregationFunction,
-    QLBillingDataFilter, QLCCMGroupBy, QLBillingSortCriteria> {
+public class BillingStatsEntityDataFetcher
+    extends AbstractStatsDataFetcherWithAggregationListAndTags<QLCCMAggregationFunction, QLBillingDataFilter,
+        QLCCMGroupBy, QLBillingSortCriteria, QLBillingDataTagType, QLBillingDataTagAggregation, QLCCMEntityGroupBy> {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject BillingDataHelper billingDataHelper;
@@ -59,7 +64,10 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
+    List<QLBillingDataTagAggregation> groupByTagList = getGroupByTag(groupByList);
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupByList);
+
+    groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList);
 
     queryData = billingDataQueryBuilder.formQuery(
         accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria, true);
@@ -271,12 +279,27 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
   }
 
   @Override
-  protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList, QLData qlData) {
-    return null;
+  public String getEntityType() {
+    return NameService.deployment;
   }
 
   @Override
-  public String getEntityType() {
-    return null;
+  protected QLBillingDataTagAggregation getTagAggregation(QLCCMGroupBy groupBy) {
+    return groupBy.getTagAggregation();
+  }
+
+  @Override
+  protected EntityType getEntityType(QLBillingDataTagType entityType) {
+    return billingDataQueryBuilder.getEntityType(entityType);
+  }
+
+  @Override
+  protected QLCCMEntityGroupBy getGroupByEntityFromTag(QLBillingDataTagAggregation groupByTag) {
+    return billingDataQueryBuilder.getGroupByEntityFromTag(groupByTag);
+  }
+
+  @Override
+  protected QLCCMEntityGroupBy getEntityAggregation(QLCCMGroupBy groupBy) {
+    return groupBy.getEntityGroupBy();
   }
 }
