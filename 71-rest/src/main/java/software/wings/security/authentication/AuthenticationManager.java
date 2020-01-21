@@ -60,6 +60,7 @@ import javax.ws.rs.core.Response;
 @Singleton
 @Slf4j
 public class AuthenticationManager {
+  public static final String EMAIL = "email";
   @Inject private PasswordBasedAuthHandler passwordBasedAuthHandler;
   @Inject private SamlBasedAuthHandler samlBasedAuthHandler;
   @Inject private LdapBasedAuthHandler ldapBasedAuthHandler;
@@ -254,7 +255,9 @@ public class AuthenticationManager {
   }
 
   public User generate2faJWTToken(User user) {
-    String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.MULTIFACTOR_AUTH);
+    HashMap<String, String> claimMap = new HashMap<>();
+    claimMap.put(EMAIL, user.getEmail());
+    String jwtToken = userService.generateJWTToken(claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH);
     return User.Builder.anUser()
         .uuid(user.getUuid())
         .email(user.getEmail())
@@ -391,7 +394,10 @@ public class AuthenticationManager {
   public Response samlLogin(String... credentials) throws URISyntaxException {
     try {
       User user = samlBasedAuthHandler.authenticate(credentials).getUser();
-      String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.SSO_REDIRECT);
+      HashMap<String, String> claimMap = new HashMap<>();
+      claimMap.put(EMAIL, user.getEmail());
+      claimMap.put("subDomainUrl", accountService.get(user.getDefaultAccountId()).getSubdomainUrl());
+      String jwtToken = userService.generateJWTToken(claimMap, JWT_CATEGORY.SSO_REDIRECT);
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
       Map<String, String> params = getRedirectParamsForSsoRedirection(jwtToken, encodedApiUrl);
@@ -452,7 +458,9 @@ public class AuthenticationManager {
       }
 
       logger.info("OauthAuthentication succeeded for email {}", user.getEmail());
-      String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.SSO_REDIRECT);
+      HashMap<String, String> claimMap = new HashMap<>();
+      claimMap.put(EMAIL, user.getEmail());
+      String jwtToken = userService.generateJWTToken(claimMap, JWT_CATEGORY.SSO_REDIRECT);
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
       Map<String, String> params = getRedirectParamsForSsoRedirection(jwtToken, encodedApiUrl);

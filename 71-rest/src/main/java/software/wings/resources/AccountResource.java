@@ -11,6 +11,8 @@ import com.google.inject.name.Named;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+
+import io.dropwizard.jersey.PATCH;
 import io.harness.account.ProvisionStep;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -33,6 +35,7 @@ import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.LicenseUpdateInfo;
 import software.wings.beans.Service;
+import software.wings.beans.SubdomainUrl;
 import software.wings.beans.TechStack;
 import software.wings.features.api.FeatureService;
 import software.wings.licensing.LicenseService;
@@ -387,5 +390,14 @@ public class AccountResource {
       @NotNull AccountEvent accountEvent, @QueryParam("oneTimeOnly") @DefaultValue("true") boolean oneTimeOnly,
       @QueryParam("trialOnly") @DefaultValue("true") boolean trialOnly) {
     return new RestResponse<>(accountService.postCustomEvent(accountId, accountEvent, oneTimeOnly, trialOnly));
+  }
+
+  @PATCH
+  @Path("{accountId}/addSubdomainUrl")
+  @AuthRule(permissionType = LOGGED_IN)
+  public RestResponse<Boolean> addSubdomainUrl(
+      @PathParam("accountId") @NotEmpty String accountId, SubdomainUrl subdomainUrl) {
+    String userId = UserThreadLocal.get().getUuid();
+    return new RestResponse<>(accountService.addSubdomainUrl(userId, accountId, subdomainUrl));
   }
 }

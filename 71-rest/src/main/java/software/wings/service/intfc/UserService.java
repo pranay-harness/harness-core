@@ -415,11 +415,11 @@ public interface UserService extends OwnedByAccount {
 
   /**
    *
-   * @param userId
+   * @param claims Map of claims
    * @return
    */
 
-  String generateJWTToken(@NotEmpty String userId, @NotNull SecretManager.JWT_CATEGORY category);
+  String generateJWTToken(Map<String, String> claims, @NotNull SecretManager.JWT_CATEGORY category);
 
   /**
    *

@@ -12,6 +12,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.Service;
+import software.wings.beans.SubdomainUrl;
 import software.wings.beans.TechStack;
 import software.wings.beans.User;
 import software.wings.security.authentication.AccountSettingsResponse;
@@ -140,4 +141,19 @@ public interface AccountService {
   boolean postCustomEvent(String accountId, AccountEvent accountEvent, boolean oneTimeOnly, boolean trialOnly);
 
   boolean isSSOEnabled(Account account);
+
+  /**
+   * Validates subdomain URL
+   */
+  boolean validateSubdomainUrl(SubdomainUrl subdomainUrl);
+
+  /**
+   * Set subdomainUrl of Account
+   */
+  void setSubdomainUrl(Account account, SubdomainUrl subdomainUrl);
+
+  /**
+   * Add subDomainUrl to the account
+   */
+  Boolean addSubdomainUrl(String userId, String accountId, SubdomainUrl subdomainUrl);
 }

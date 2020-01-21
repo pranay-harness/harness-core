@@ -41,6 +41,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
@@ -2176,7 +2177,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public String generateJWTToken(String userId, SecretManager.JWT_CATEGORY category) {
+  public String generateJWTToken(Map<String, String> claims, SecretManager.JWT_CATEGORY category) {
     String jwtPasswordSecret = secretManager.getJWTSecret(category);
     if (jwtPasswordSecret == null) {
       throw new InvalidRequestException("incorrect portal setup");
@@ -2184,12 +2185,15 @@ public class UserServiceImpl implements UserService {
 
     try {
       Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
-      return JWT.create()
-          .withIssuer("Harness Inc")
-          .withIssuedAt(new Date())
-          .withExpiresAt(new Date(System.currentTimeMillis() + category.getValidityDuration()))
-          .withClaim("email", userId)
-          .sign(algorithm);
+      JWTCreator.Builder jwtBuilder =
+          JWT.create()
+              .withIssuer("Harness Inc")
+              .withIssuedAt(new Date())
+              .withExpiresAt(new Date(System.currentTimeMillis() + category.getValidityDuration()));
+      if (claims != null && claims.size() > 0) {
+        claims.forEach(jwtBuilder::withClaim);
+      }
+      return jwtBuilder.sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new GeneralException("JWTToken could not be generated");
     }

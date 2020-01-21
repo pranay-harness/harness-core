@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -63,6 +64,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.StringValue.Builder;
+import software.wings.beans.SubdomainUrl;
 import software.wings.beans.TechStack;
 import software.wings.beans.UrlInfo;
 import software.wings.beans.User;
@@ -82,6 +84,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
@@ -113,6 +116,7 @@ public class AccountServiceTest extends WingsBaseTest {
   @Mock private UserPermissionInfo mockUserPermissionInfo;
   @Mock private AuthService authService;
   @Mock private EmailNotificationService emailNotificationService;
+  @Mock private HarnessUserGroupService harnessUserGroupService;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
   @InjectMocks @Inject private LicenseService licenseService;
   @InjectMocks @Inject private AccountService accountService;
@@ -790,5 +794,44 @@ public class AccountServiceTest extends WingsBaseTest {
             false);
     Boolean isSSO = accountService.isSSOEnabled(userPassAccount);
     assertThat(isSSO).isFalse();
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void testValidateSubdomainUrl() {
+    SubdomainUrl validUrl = new SubdomainUrl("https://domain.io");
+    SubdomainUrl invalidUrl1 = new SubdomainUrl("domain.com");
+    SubdomainUrl invalidUrl2 = new SubdomainUrl("http://domain.com");
+    SubdomainUrl invalidUrl3 = new SubdomainUrl("https:// domain.com");
+
+    Boolean result1 = accountService.validateSubdomainUrl(validUrl);
+    assertThat(result1).isTrue();
+
+    Boolean result2 = accountService.validateSubdomainUrl(invalidUrl1);
+    assertThat(result2).isFalse();
+
+    Boolean result3 = accountService.validateSubdomainUrl(invalidUrl2);
+    assertThat(result3).isFalse();
+
+    Boolean result4 = accountService.validateSubdomainUrl(invalidUrl3);
+    assertThat(result4).isFalse();
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void testSetSubdomainUrl() {
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName("CompanyName 1")
+                                              .withAccountName("Account Name 1")
+                                              .withSubdomainUrl("https://initialDomain.com")
+                                              .withLicenseInfo(getLicenseInfo())
+                                              .build(),
+        false);
+    SubdomainUrl subdomainUrl = new SubdomainUrl("https://domain.com");
+    accountService.setSubdomainUrl(account, subdomainUrl);
+    assertThat(wingsPersistence.get(Account.class, account.getUuid()).getSubdomainUrl())
+        .isEqualTo(subdomainUrl.getUrl());
   }
 }
