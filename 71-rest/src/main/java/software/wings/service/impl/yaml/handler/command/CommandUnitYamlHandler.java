@@ -25,7 +25,7 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
     extends BaseYamlHandler<Y, C> {
   protected abstract C getCommandUnit();
 
-  protected GraphNode getGraphNode(ChangeContext<Y> changeContext, GraphNode previousNode) {
+  public GraphNode getGraphNode(ChangeContext<Y> changeContext, GraphNode previousNode) {
     Y yaml = changeContext.getYaml();
     return GraphNode.builder()
         .name(yaml.getName())

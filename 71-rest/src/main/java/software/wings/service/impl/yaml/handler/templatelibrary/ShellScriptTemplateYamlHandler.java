@@ -5,7 +5,10 @@ import com.google.inject.Singleton;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.command.ShellScriptTemplate;
+import software.wings.beans.yaml.ChangeContext;
 import software.wings.yaml.templatelibrary.ShellScriptTemplateYaml;
+
+import java.util.List;
 
 @Singleton
 public class ShellScriptTemplateYamlHandler extends TemplateLibraryYamlHandler<ShellScriptTemplateYaml> {
@@ -23,7 +26,9 @@ public class ShellScriptTemplateYamlHandler extends TemplateLibraryYamlHandler<S
   }
 
   @Override
-  protected void setBaseTemplate(Template template, ShellScriptTemplateYaml yaml) {
+  protected void setBaseTemplate(
+      Template template, ChangeContext<ShellScriptTemplateYaml> changeContext, List<ChangeContext> changeSetContext) {
+    ShellScriptTemplateYaml yaml = changeContext.getYaml();
     BaseTemplate baseTemplate = ShellScriptTemplate.builder()
                                     .scriptString(yaml.getScriptString())
                                     .outputVars(yaml.getOutputVars())

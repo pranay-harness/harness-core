@@ -35,7 +35,18 @@ public abstract class TemplateLibraryYamlHandler<Y extends TemplateLibraryYaml> 
   @Inject private YamlHelper yamlHelper;
   @Inject private TemplateService templateService;
   @Inject private AppService appService;
-  protected abstract void setBaseTemplate(Template template, Y yaml);
+
+  public static List<TemplateVariableYaml> variablesToTemplateVariableYaml(List<Variable> variables) {
+    return ListUtils.emptyIfNull(variables)
+        .stream()
+        .map(variable
+            -> TemplateVariableYaml.builder()
+                   .description(variable.getDescription())
+                   .name(variable.getName())
+                   .value(variable.getValue())
+                   .build())
+        .collect(Collectors.toList());
+  }
 
   @Override
   public void delete(ChangeContext<Y> changeContext) {
@@ -96,23 +107,11 @@ public abstract class TemplateLibraryYamlHandler<Y extends TemplateLibraryYaml> 
     if (template != null) {
       return updateTemplate(template, changeContext, changeSetContext);
     }
-    Template newTemplate = toBean(changeContext, appId, templateFolder);
+    Template newTemplate = toBean(changeContext, appId, templateFolder, changeSetContext);
     return templateService.save(newTemplate);
   }
 
-  private List<TemplateVariableYaml> variablesToTemplateVariableYaml(List<Variable> variables) {
-    return ListUtils.emptyIfNull(variables)
-        .stream()
-        .map(variable
-            -> TemplateVariableYaml.builder()
-                   .description(variable.getDescription())
-                   .name(variable.getName())
-                   .value(variable.getValue())
-                   .build())
-        .collect(Collectors.toList());
-  }
-
-  private List<Variable> templateVariableYamlToVariable(List<TemplateVariableYaml> variablesYaml) {
+  public static List<Variable> templateVariableYamlToVariable(List<TemplateVariableYaml> variablesYaml) {
     return ListUtils.emptyIfNull(variablesYaml)
         .stream()
         .map(variableYaml
@@ -127,16 +126,20 @@ public abstract class TemplateLibraryYamlHandler<Y extends TemplateLibraryYaml> 
         .collect(Collectors.toList());
   }
 
+  protected abstract void setBaseTemplate(
+      Template template, ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext);
+
   private Template updateTemplate(
       Template template, ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
     TemplateLibraryYaml yaml = changeContext.getYaml();
     template.setDescription(yaml.getDescription());
     template.setVariables(templateVariableYamlToVariable(yaml.getVariables()));
-    setBaseTemplate(template, changeContext.getYaml());
+    setBaseTemplate(template, changeContext, changeSetContext);
     return templateService.update(template);
   }
 
-  private Template toBean(ChangeContext<Y> changeContext, String appId, TemplateFolder templateFolder) {
+  private Template toBean(ChangeContext<Y> changeContext, String appId, TemplateFolder templateFolder,
+      List<ChangeContext> changeSetContext) {
     Y yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String templateName = yamlHelper.extractTemplateLibraryName(yamlFilePath, appId);
@@ -147,7 +150,7 @@ public abstract class TemplateLibraryYamlHandler<Y extends TemplateLibraryYaml> 
                             .type(yaml.getType())
                             .folderId(templateFolder.getUuid())
                             .build();
-    setBaseTemplate(template, changeContext.getYaml());
+    setBaseTemplate(template, changeContext, changeSetContext);
     return template;
   }
 

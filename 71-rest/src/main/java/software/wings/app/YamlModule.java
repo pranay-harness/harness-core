@@ -194,6 +194,9 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Pro
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SplunkConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SumoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
+import software.wings.service.impl.yaml.handler.templatelibrary.CommandTemplateRefYamlHandler;
+import software.wings.service.impl.yaml.handler.templatelibrary.CommandTemplateYamlHandler;
+import software.wings.service.impl.yaml.handler.templatelibrary.HttpTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.ShellScriptTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibraryYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.ActionYamlHandler;
@@ -528,6 +531,8 @@ public class YamlModule extends AbstractModule {
     commandUnitYamlHandlerMapBinder.addBinding(KUBERNETES_SETUP.name()).to(KubernetesSetupCommandUnitYamlHandler.class);
     commandUnitYamlHandlerMapBinder.addBinding(DOWNLOAD_ARTIFACT.name())
         .to(DownloadArtifactCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(TemplateConstants.TEMPLATE_REF_COMMAND)
+        .to(CommandTemplateRefYamlHandler.class);
 
     MapBinder<String, InfrastructureProvisionerYamlHandler> infrastructureProvisionerYamlHandlerMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvisionerYamlHandler.class);
@@ -542,5 +547,7 @@ public class YamlModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, TemplateLibraryYamlHandler.class);
     templateLibraryYamlHandlerMapBinder.addBinding(TemplateConstants.SHELL_SCRIPT)
         .to(ShellScriptTemplateYamlHandler.class);
+    templateLibraryYamlHandlerMapBinder.addBinding(TemplateConstants.HTTP).to(HttpTemplateYamlHandler.class);
+    templateLibraryYamlHandlerMapBinder.addBinding(TemplateConstants.SSH).to(CommandTemplateYamlHandler.class);
   }
 }

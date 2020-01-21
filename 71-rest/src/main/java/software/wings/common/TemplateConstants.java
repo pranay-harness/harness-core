@@ -64,5 +64,7 @@ public interface TemplateConstants {
   String SHELL_SCRIPT = "SHELL_SCRIPT";
   String HTTP = "HTTP";
   String ARTIFACT_SOURCE = "ARTIFACT_SOURCE";
-  List<String> TEMPLATE_TYPES_WITH_YAML_SUPPORT = ImmutableList.of(SHELL_SCRIPT);
+  List<String> TEMPLATE_TYPES_WITH_YAML_SUPPORT = ImmutableList.of(SHELL_SCRIPT, HTTP, SSH);
+
+  String TEMPLATE_REF_COMMAND = "TEMPLATE_REF_COMMAND";
 }
