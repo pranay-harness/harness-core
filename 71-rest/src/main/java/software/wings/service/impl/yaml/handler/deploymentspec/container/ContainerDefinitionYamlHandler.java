@@ -75,13 +75,12 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
   }
 
   @Override
-  public ContainerDefinition upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public ContainerDefinition upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     return toBean(changeContext, changeSetContext);
   }
 
-  private ContainerDefinition toBean(ChangeContext<ContainerDefinition.Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  private ContainerDefinition toBean(
+      ChangeContext<ContainerDefinition.Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml yaml = changeContext.getYaml();
 
     // port mappings
@@ -151,7 +150,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     // Do nothing
   }
 }

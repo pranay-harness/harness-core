@@ -5,7 +5,6 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream.DockerArtifactStreamBuilder;
@@ -32,8 +31,7 @@ public class DockerArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
   }
 
   @Override
-  public DockerArtifactStream upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public DockerArtifactStream upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     DockerArtifactStream previous = get(accountId, yamlFilePath);

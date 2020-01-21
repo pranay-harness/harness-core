@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.TemplateExpression;
@@ -63,8 +62,7 @@ public class AppDefYamlHandler extends BaseYamlHandler<Yaml, TemplateExpression>
   }
 
   @Override
-  public TemplateExpression upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public TemplateExpression upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     return toBean(changeContext);
   }
 
@@ -79,7 +77,7 @@ public class AppDefYamlHandler extends BaseYamlHandler<Yaml, TemplateExpression>
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     // Do nothing
   }
 }

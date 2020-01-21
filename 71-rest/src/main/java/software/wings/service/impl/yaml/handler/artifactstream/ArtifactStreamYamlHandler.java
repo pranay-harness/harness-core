@@ -9,7 +9,6 @@ import static software.wings.beans.template.TemplateHelper.obtainTemplateVersion
 
 import com.google.inject.Inject;
 
-import io.harness.exception.HarnessException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
@@ -65,7 +64,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
   }
 
   @Override
-  public void delete(ChangeContext<Y> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Y> changeContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
@@ -141,8 +140,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
   }
 
   @Override
-  public B upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public B upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     B previous = get(changeContext.getChange().getAccountId(), yamlFilePath);
     if (previous != null) {
