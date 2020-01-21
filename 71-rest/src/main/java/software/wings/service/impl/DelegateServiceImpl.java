@@ -18,6 +18,7 @@ import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.obfuscate.Obfuscator.obfuscate;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -551,7 +552,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       DelegateProfileErrorAlert alertData = DelegateProfileErrorAlert.builder()
                                                 .accountId(delegate.getAccountId())
                                                 .hostName(delegate.getHostName())
-                                                .ip(delegate.getIp())
+                                                .obfuscatedIpAddress(obfuscate(delegate.getIp()))
                                                 .build();
       alertService.closeAlert(delegate.getAccountId(), GLOBAL_APP_ID, AlertType.DelegateProfileError, alertData);
 
@@ -1167,13 +1168,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown,
           DelegatesDownAlert.builder()
               .accountId(accountId)
-              .ip(existingDelegate.getIp())
+              .obfuscatedIpAddress(obfuscate(existingDelegate.getIp()))
               .hostName(existingDelegate.getHostName())
               .build());
       alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegateProfileError,
           DelegateProfileErrorAlert.builder()
               .accountId(accountId)
-              .ip(existingDelegate.getIp())
+              .obfuscatedIpAddress(obfuscate(existingDelegate.getIp()))
               .hostName(existingDelegate.getHostName())
               .build());
     }
@@ -1354,7 +1355,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     DelegateProfileErrorAlert alertData = DelegateProfileErrorAlert.builder()
                                               .accountId(accountId)
                                               .hostName(delegate.getHostName())
-                                              .ip(delegate.getIp())
+                                              .obfuscatedIpAddress(obfuscate(delegate.getIp()))
                                               .build();
     if (error) {
       alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.DelegateProfileError, alertData);

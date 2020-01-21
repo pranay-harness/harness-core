@@ -13,6 +13,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.message.MessageConstants.SELF_DESTRUCT;
+import static io.harness.obfuscate.Obfuscator.obfuscate;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
@@ -919,7 +920,11 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     verify(alertService)
         .closeAlert(eq(ACCOUNT_ID), eq(GLOBAL_APP_ID), eq(AlertType.DelegateProfileError),
-            eq(DelegateProfileErrorAlert.builder().accountId(ACCOUNT_ID).hostName("hostname").ip("1.2.3.4").build()));
+            eq(DelegateProfileErrorAlert.builder()
+                    .accountId(ACCOUNT_ID)
+                    .hostName("hostname")
+                    .obfuscatedIpAddress(obfuscate("1.2.3.4"))
+                    .build()));
 
     Delegate delegate = wingsPersistence.get(Delegate.class, DELEGATE_ID);
     assertThat(delegate.getProfileExecutedAt()).isGreaterThanOrEqualTo(now);
@@ -950,7 +955,11 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     verify(alertService)
         .openAlert(eq(ACCOUNT_ID), eq(GLOBAL_APP_ID), eq(AlertType.DelegateProfileError),
-            eq(DelegateProfileErrorAlert.builder().accountId(ACCOUNT_ID).hostName("hostname").ip("1.2.3.4").build()));
+            eq(DelegateProfileErrorAlert.builder()
+                    .accountId(ACCOUNT_ID)
+                    .hostName("hostname")
+                    .obfuscatedIpAddress(obfuscate("1.2.3.4"))
+                    .build()));
 
     verify(fileService).deleteFile(eq("previous-result"), eq(FileBucket.PROFILE_RESULTS));
 

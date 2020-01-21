@@ -2,6 +2,7 @@ package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.obfuscate.Obfuscator.obfuscate;
 import static java.util.stream.Collectors.toSet;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ManagerConfiguration.MATCH_ALL_VERSION;
@@ -155,7 +156,7 @@ public class AlertCheckJob implements Job {
       AlertData alertData = DelegatesDownAlert.builder()
                                 .accountId(accountId)
                                 .hostName(delegate.getHostName())
-                                .ip(delegate.getIp())
+                                .obfuscatedIpAddress(obfuscate(delegate.getIp()))
                                 .build();
 
       if (primaryConnections.contains(delegate.getUuid())) {

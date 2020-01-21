@@ -10,7 +10,7 @@ import software.wings.utils.KubernetesConvention;
 @Data
 @Builder
 public class DelegatesDownAlert implements AlertData {
-  private String ip;
+  private String obfuscatedIpAddress;
   private String hostName;
   private String accountId;
 
@@ -20,11 +20,11 @@ public class DelegatesDownAlert implements AlertData {
     return StringUtils.equals(accountId, delegatesDownAlert.getAccountId())
         && StringUtils.equals(hostName, delegatesDownAlert.getHostName())
         && (hostName.contains(KubernetesConvention.getAccountIdentifier(accountId))
-               || StringUtils.equals(ip, delegatesDownAlert.getIp()));
+               || StringUtils.equals(obfuscatedIpAddress, delegatesDownAlert.getObfuscatedIpAddress()));
   }
 
   @Override
   public String buildTitle() {
-    return format("Delegate %s with IP %s is down", hostName, ip);
+    return format("Delegate %s is down", hostName);
   }
 }

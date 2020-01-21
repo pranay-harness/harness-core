@@ -10,9 +10,9 @@ import software.wings.utils.KubernetesConvention;
 @Data
 @Builder
 public class DelegateProfileErrorAlert implements AlertData {
-  private String accountId;
-  private String ip;
+  private String obfuscatedIpAddress;
   private String hostName;
+  private String accountId;
 
   @Override
   public boolean matches(AlertData alertData) {
@@ -20,7 +20,7 @@ public class DelegateProfileErrorAlert implements AlertData {
     return StringUtils.equals(accountId, delegateProfileErrorAlert.getAccountId())
         && StringUtils.equals(hostName, delegateProfileErrorAlert.getHostName())
         && (hostName.contains(KubernetesConvention.getAccountIdentifier(accountId))
-               || StringUtils.equals(ip, delegateProfileErrorAlert.getIp()));
+               || StringUtils.equals(obfuscatedIpAddress, delegateProfileErrorAlert.getObfuscatedIpAddress()));
   }
 
   @Override
