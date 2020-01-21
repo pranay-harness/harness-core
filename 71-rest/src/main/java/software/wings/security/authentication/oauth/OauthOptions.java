@@ -50,8 +50,8 @@ public class OauthOptions {
     }
   }
 
-  public SSORequest createOauthSSORequest(String userEmail, String accountId) {
-    logger.info("Creating OAuth SSO Request for user {}", userEmail);
+  public SSORequest createOauthSSORequest(String accountId) {
+    logger.info("Creating OAuth SSO Request for user");
     OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(accountId);
 
     if (null == oauthSettings || isEmpty(oauthSettings.getAllowedProviders())) {
