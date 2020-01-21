@@ -1,9 +1,11 @@
 package software.wings.integration.verification;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.splunk.Service;
@@ -11,6 +13,7 @@ import io.harness.category.element.IntegrationTests;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -104,5 +107,27 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
     Object r = method.invoke(splunkDelegateService, advancedQuery, "myHostNameField", "harness.test.host.name", true);
     String formedQuery = (String) r;
     assertThat(formedQuery).isEqualTo(expectedQuery);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(IntegrationTests.class)
+  public void splunkInvalidUrl() {
+    SplunkConfig config =
+        SplunkConfig.builder()
+            .accountId(accountId)
+            .splunkUrl("https://www.google.com/")
+            .username(scmSecret.decryptToString(new SecretName("splunk_cloud_username")))
+            .password(scmSecret.decryptToString(new SecretName("splunk_cloud_password")).toCharArray())
+            .build();
+
+    try {
+      splunkDelegateService.validateConfig(config, Lists.newArrayList());
+      Assert.fail("Validated invalid url");
+    } catch (Exception e) {
+      assertThat(e).isInstanceOf(IllegalArgumentException.class);
+      assertThat(e.getMessage())
+          .isEqualTo("Can not reach url " + config.getSplunkUrl() + " to create splunk serach job");
+    }
   }
 }

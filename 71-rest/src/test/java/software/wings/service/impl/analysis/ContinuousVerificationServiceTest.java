@@ -112,15 +112,6 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testGetVerificationStateExecutionData_whenStateExecutionMapIsEmpty() {
-    String stateExecutionId = wingsPersistence.save(Builder.aStateExecutionInstance().build());
-    assertThatThrownBy(() -> continuousVerificationService.getVerificationStateExecutionData(stateExecutionId))
-        .isInstanceOf(IllegalStateException.class);
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
   public void testGetVerificationStateExecutionData_whenAnalysisContextExpires() {
     String stateExecutionId =
         wingsPersistence.save(Builder.aStateExecutionInstance().status(ExecutionStatus.SUCCESS).build());

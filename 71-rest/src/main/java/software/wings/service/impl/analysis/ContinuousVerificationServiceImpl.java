@@ -2620,7 +2620,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       demoStatExecutionData.setEndTs(Timestamp.currentMinuteBoundary());
       return demoStatExecutionData;
     }
-    Preconditions.checkState(isNotEmpty(stateExecutionMap), "No state execution map found");
+    if (isEmpty(stateExecutionMap)) {
+      return VerificationStateAnalysisExecutionData.builder().build();
+    }
     Preconditions.checkState(stateExecutionMap.containsKey(stateExecutionInstance.getDisplayName()),
         "The details for the state are not in the stateExecutionMap for " + stateExecutionId);
     final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =

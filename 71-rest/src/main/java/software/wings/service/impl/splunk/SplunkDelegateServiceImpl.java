@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.splunk.Event;
+import com.splunk.HttpException;
 import com.splunk.HttpService;
 import com.splunk.Job;
 import com.splunk.JobArgs;
@@ -19,6 +20,7 @@ import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -73,6 +75,13 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       createSearchJob(splunkService, getQuery("*exception*", null, null, false),
           System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(5), System.currentTimeMillis());
       return true;
+    } catch (HttpException httpException) {
+      if (httpException.getStatus() == HttpStatus.SC_NOT_FOUND) {
+        throw new IllegalArgumentException(
+            "Can not reach url " + splunkConfig.getSplunkUrl() + " to create splunk serach job");
+      }
+      throw new VerificationOperationException(
+          ErrorCode.APM_CONFIGURATION_ERROR, ExceptionUtils.getMessage(httpException), httpException);
     } catch (Exception exception) {
       throw new WingsException("Error connecting to Splunk " + ExceptionUtils.getMessage(exception), exception);
     }
