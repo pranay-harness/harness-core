@@ -21,7 +21,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.type.QLRequestStatus;
 import software.wings.graphql.schema.type.user.QLDeleteUserInput;
 import software.wings.graphql.schema.type.user.QLDeleteUserPayload;
 import software.wings.service.intfc.UserService;
@@ -50,7 +49,6 @@ public class DeleteUserDataFetcherTest extends CategoryTest {
 
     QLDeleteUserPayload qlDeleteUserPayload = deleteUserDataFetcher.mutateAndFetch(qlDeleteUserInput, mutationContext);
     verify(userService, times(1)).delete(eq("accountId"), eq("userId"));
-    Assertions.assertThat(qlDeleteUserPayload.getStatus()).isEqualTo(QLRequestStatus.SUCCESS);
     Assertions.assertThat(qlDeleteUserPayload.getRequestId()).isEqualTo("request1");
   }
 }

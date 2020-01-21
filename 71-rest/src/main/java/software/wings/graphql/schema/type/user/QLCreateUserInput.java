@@ -5,11 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import software.wings.graphql.schema.mutation.QLMutationInput;
 
+import java.util.List;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
 public class QLCreateUserInput implements QLMutationInput {
-  String requestId;
-  String name;
-  String email;
+  private String requestId;
+  private String name;
+  private String email;
+  private List<String> userGroupIds;
 }
