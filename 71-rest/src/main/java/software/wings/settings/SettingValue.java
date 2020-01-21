@@ -140,6 +140,7 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
      */
     DYNA_TRACE("Dynatrace"),
 
+    INSTANA("Instana"),
     /**
      * Dyna trace variable types.
      */

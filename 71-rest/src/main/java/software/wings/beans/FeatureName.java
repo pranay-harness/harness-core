@@ -88,8 +88,8 @@ public enum FeatureName {
   SIDE_NAVIGATION,
   WORKFLOW_TS_RECORDS_NEW,
   TEMPLATE_YAML_SUPPORT,
-  ADD_WORKFLOW_FORMIK;
-
+  ADD_WORKFLOW_FORMIK,
+  CV_INSTANA;
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
   }

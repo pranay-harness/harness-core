@@ -14,4 +14,11 @@ public class MetricElement {
   private String groupName;
   private long timestamp;
   @Builder.Default private Map<String, Double> values = new HashMap<>();
+
+  public Map<String, Double> getValues() {
+    if (values == null) {
+      return new HashMap<>();
+    }
+    return values;
+  }
 }

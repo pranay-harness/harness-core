@@ -136,6 +136,7 @@ import software.wings.sm.states.GcpClusterSetup;
 import software.wings.sm.states.HelmDeployState;
 import software.wings.sm.states.HelmRollbackState;
 import software.wings.sm.states.HttpState;
+import software.wings.sm.states.InstanaState;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.KubernetesDeploy;
 import software.wings.sm.states.KubernetesDeployRollback;
@@ -353,6 +354,11 @@ public enum StateType implements StateTypeDescriptor {
    */
   STACK_DRIVER_LOG(
       StackDriverLogState.class, VERIFICATIONS, 20, "Stackdriver Log", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  /**
+   * Instana state type
+   */
+  INSTANA(InstanaState.class, VERIFICATIONS, 21, "Instana", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.

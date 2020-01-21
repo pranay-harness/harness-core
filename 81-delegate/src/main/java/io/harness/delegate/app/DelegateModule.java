@@ -186,6 +186,7 @@ import software.wings.service.impl.bugsnag.BugsnagDelegateServiceImpl;
 import software.wings.service.impl.cloudwatch.CloudWatchDelegateServiceImpl;
 import software.wings.service.impl.dynatrace.DynaTraceDelegateServiceImpl;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
+import software.wings.service.impl.instana.InstanaDelegateServiceImpl;
 import software.wings.service.impl.ldap.LdapDelegateServiceImpl;
 import software.wings.service.impl.logz.LogzDelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
@@ -241,6 +242,7 @@ import software.wings.service.intfc.aws.delegate.AwsServiceDiscoveryHelperServic
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
+import software.wings.service.intfc.instana.InstanaDelegateService;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
@@ -362,6 +364,7 @@ public class DelegateModule extends DependencyModule {
     bind(NexusBuildService.class).to(NexusBuildServiceImpl.class);
     bind(NexusService.class).to(NexusServiceImpl.class);
     bind(AppdynamicsDelegateService.class).to(AppdynamicsDelegateServiceImpl.class);
+    bind(InstanaDelegateService.class).to(InstanaDelegateServiceImpl.class);
     bind(StackDriverDelegateService.class).to(StackDriverDelegateServiceImpl.class);
     bind(APMDelegateService.class).to(APMDelegateServiceImpl.class);
     bind(NewRelicDelegateService.class).to(NewRelicDelgateServiceImpl.class);

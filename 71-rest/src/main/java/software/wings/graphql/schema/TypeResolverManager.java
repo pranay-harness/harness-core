@@ -44,6 +44,7 @@ import software.wings.graphql.schema.type.connector.QLGCSConnector;
 import software.wings.graphql.schema.type.connector.QLGCSHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
 import software.wings.graphql.schema.type.connector.QLHttpHelmRepoConnector;
+import software.wings.graphql.schema.type.connector.QLInstanaConnector;
 import software.wings.graphql.schema.type.connector.QLJenkinsConnector;
 import software.wings.graphql.schema.type.connector.QLJiraConnector;
 import software.wings.graphql.schema.type.connector.QLLogzConnector;
@@ -115,6 +116,7 @@ public class TypeResolverManager {
     public static final String AmazonS3Connector = "AmazonS3Connector";
     public static final String ApmVerificationConnector = "ApmVerificationConnector";
     public static final String AppDynamicsConnector = "AppDynamicsConnector";
+    public static final String InstanaCollector = "InstanaConnector";
     public static final String ArtifactoryConnector = "ArtifactoryConnector";
     public static final String BambooConnector = "BambooConnector";
     public static final String BugSnagConnector = "BugSnagConnector";
@@ -205,6 +207,7 @@ public class TypeResolverManager {
                     .put(QLSmtpConnector.class, TypeResolverManagerTypes.SmtpConnector)
                     .put(QLSplunkConnector.class, TypeResolverManagerTypes.SplunkConnector)
                     .put(QLSumoConnector.class, TypeResolverManagerTypes.SumoConnector)
+                    .put(QLInstanaConnector.class, TypeResolverManagerTypes.InstanaCollector)
                     .put(QLGCSHelmRepoConnector.class, TypeResolverManagerTypes.GCSHelmRepoConnector)
                     .put(QLHttpHelmRepoConnector.class, TypeResolverManagerTypes.HttpHelmRepoConnector)
                     .put(QLAmazonS3HelmConnector.class, TypeResolverManagerTypes.AmazonS3HelmRepoConnector)

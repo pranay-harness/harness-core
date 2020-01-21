@@ -22,6 +22,7 @@ import static software.wings.sm.StateType.CLOUD_WATCH;
 import static software.wings.sm.StateType.DATA_DOG;
 import static software.wings.sm.StateType.DYNA_TRACE;
 import static software.wings.sm.StateType.ELK;
+import static software.wings.sm.StateType.INSTANA;
 import static software.wings.sm.StateType.NEW_RELIC;
 import static software.wings.sm.StateType.PROMETHEUS;
 import static software.wings.sm.StateType.SPLUNKV2;
@@ -90,6 +91,7 @@ import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
+import software.wings.verification.instana.InstanaCVConfiguration;
 import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
@@ -121,6 +123,8 @@ import javax.ws.rs.core.GenericType;
 public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
   private String appId, envId, serviceId, appDynamicsApplicationId;
+  private String instanaQuery = "entity.kubernetes.cluster.label:harness-test";
+  private List<String> instanaMetrics = Lists.newArrayList("cpu.total_usage", "memory.usage");
   @Inject private WingsPersistence wingsPersistence;
   @Inject @InjectMocks private AppService appService;
   @Inject @InjectMocks private EnvironmentService environmentService;
@@ -137,6 +141,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   private BugsnagCVConfiguration bugsnagCVConfiguration;
   private StackdriverCVConfiguration stackdriverCVConfiguration;
   private APMCVServiceConfiguration apmcvServiceConfiguration;
+  private InstanaCVConfiguration instanaCVConfiguration;
 
   private SettingAttribute settingAttribute;
   private String settingAttributeId;
@@ -168,6 +173,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     createNewRelicConfig(true);
     createAppDynamicsConfig();
+    createInstanaCVConfig(true);
     createDynaTraceConfig();
     createPrometheusConfig();
     createDatadogConfig();
@@ -233,6 +239,20 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     appDynamicsCVServiceConfiguration.setConnectorId(generateUuid());
     appDynamicsCVServiceConfiguration.setStateType(APP_DYNAMICS);
     appDynamicsCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
+  }
+
+  private void createInstanaCVConfig(boolean cv24x7) {
+    instanaCVConfiguration = new InstanaCVConfiguration();
+    instanaCVConfiguration.setName("instana-config");
+    instanaCVConfiguration.setAppId(appId);
+    instanaCVConfiguration.setEnvId(envId);
+    instanaCVConfiguration.setServiceId(serviceId);
+    instanaCVConfiguration.setEnabled24x7(cv24x7);
+    instanaCVConfiguration.setQuery(instanaQuery);
+    instanaCVConfiguration.setMetrics(instanaMetrics);
+    instanaCVConfiguration.setConnectorId(generateUuid());
+    instanaCVConfiguration.setStateType(INSTANA);
+    instanaCVConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
   }
 
   private void createDynaTraceConfig() {
@@ -518,6 +538,79 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertThat(fetchedObject.getServiceId()).isEqualTo(serviceId);
     assertThat(fetchedObject.getStateType()).isEqualTo(APP_DYNAMICS);
     assertThat(fetchedObject.getAppDynamicsApplicationId()).isEqualTo(appDynamicsApplicationId);
+    assertThat(fetchedObject.getAnalysisTolerance()).isEqualTo(AnalysisTolerance.HIGH);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(IntegrationTests.class)
+  public <T extends CVConfiguration> void testInstanaConfiguration_create() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + INSTANA;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(instanaCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+
+    target = client.target(url);
+
+    RestResponse<InstanaCVConfiguration> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<InstanaCVConfiguration>>() {});
+    InstanaCVConfiguration fetchedObject = getRequestResponse.getResource();
+    assertThat(fetchedObject.getUuid()).isEqualTo(savedObjectUuid);
+    assertThat(fetchedObject.getAccountId()).isEqualTo(accountId);
+    assertThat(fetchedObject.getAppId()).isEqualTo(appId);
+    assertThat(fetchedObject.getEnvId()).isEqualTo(envId);
+    assertThat(fetchedObject.getServiceId()).isEqualTo(serviceId);
+    assertThat(fetchedObject.getStateType()).isEqualTo(INSTANA);
+    assertThat(fetchedObject.getQuery()).isEqualTo(instanaQuery);
+    assertThat(fetchedObject.getMetrics()).isEqualTo(instanaMetrics);
+    assertThat(fetchedObject.getAnalysisTolerance()).isEqualTo(AnalysisTolerance.HIGH);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(IntegrationTests.class)
+  public <T extends CVConfiguration> void testInstanaConfiguration_update() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + INSTANA;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(instanaCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
+        + "&stateType=" + INSTANA + "&serviceConfigurationId=" + savedObjectUuid;
+    logger.info("PUT " + url);
+    target = client.target(url);
+    String updateApplicationId = generateUuid();
+    instanaCVConfiguration.setQuery(updateApplicationId);
+    getRequestBuilderWithAuthHeader(target).put(
+        entity(instanaCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+
+    // Call GET
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+    target = client.target(url);
+
+    RestResponse<InstanaCVConfiguration> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<InstanaCVConfiguration>>() {});
+    InstanaCVConfiguration fetchedObject = getRequestResponse.getResource();
+    assertThat(fetchedObject.getUuid()).isEqualTo(savedObjectUuid);
+    assertThat(fetchedObject.getAccountId()).isEqualTo(accountId);
+    assertThat(fetchedObject.getAppId()).isEqualTo(appId);
+    assertThat(fetchedObject.getEnvId()).isEqualTo(envId);
+    assertThat(fetchedObject.getServiceId()).isEqualTo(serviceId);
+    assertThat(fetchedObject.getStateType()).isEqualTo(INSTANA);
+    assertThat(fetchedObject.getQuery()).isEqualTo(updateApplicationId);
+    assertThat(fetchedObject.getMetrics()).isEqualTo(instanaMetrics);
     assertThat(fetchedObject.getAnalysisTolerance()).isEqualTo(AnalysisTolerance.HIGH);
   }
 

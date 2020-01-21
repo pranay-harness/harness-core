@@ -1,0 +1,75 @@
+package software.wings.service.impl.instana;
+
+import static io.harness.rule.OwnerRule.KAMAL;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import retrofit2.Call;
+import software.wings.WingsBaseTest;
+import software.wings.beans.InstanaConfig;
+import software.wings.delegatetasks.cv.RequestExecutor;
+import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.intfc.instana.InstanaDelegateService;
+import software.wings.service.intfc.security.EncryptionService;
+
+import java.util.List;
+import java.util.UUID;
+
+public class InstanaDelegateServiceImplTest extends WingsBaseTest {
+  @Mock private EncryptionService encryptionService;
+  @Mock private RequestExecutor requestExecutor;
+  private InstanaDelegateService instanaDelegateService;
+  private InstanaConfig instanaConfig;
+  private String accountId = UUID.randomUUID().toString();
+
+  @Before
+  public void setup() throws IllegalAccessException {
+    initMocks(this);
+    instanaDelegateService = new InstanaDelegateServiceImpl();
+    FieldUtils.writeField(instanaDelegateService, "encryptionService", encryptionService, true);
+    FieldUtils.writeField(instanaDelegateService, "requestExecutor", requestExecutor, true);
+
+    instanaConfig = InstanaConfig.builder()
+                        .instanaUrl("https://instana-example.com/")
+                        .accountId(accountId)
+                        .apiToken(UUID.randomUUID().toString().toCharArray())
+                        .build();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetInfraMetrics() {
+    InstanaInfraMetricRequest infraMetricRequest = InstanaInfraMetricRequest.builder().build();
+    String stateExecutionId = UUID.randomUUID().toString();
+    ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(accountId, stateExecutionId);
+    InstanaInfraMetrics instanaInfraMetrics = mock(InstanaInfraMetrics.class);
+    when(requestExecutor.executeRequest(any(), any())).thenReturn(instanaInfraMetrics);
+
+    InstanaInfraMetrics result =
+        instanaDelegateService.getInfraMetrics(instanaConfig, mock(List.class), infraMetricRequest, apiCallLog);
+    ArgumentCaptor<Call> argumentCaptor = ArgumentCaptor.forClass(Call.class);
+    verify(requestExecutor).executeRequest(eq(apiCallLog), argumentCaptor.capture());
+    assertThat(argumentCaptor.getValue()).isInstanceOf(Call.class);
+    Call<InstanaInfraMetrics> call = argumentCaptor.getValue();
+    assertThat(call.request().url().toString())
+        .isEqualTo("https://instana-example.com/api/infrastructure-monitoring/metrics/");
+    assertThat(call.request().method()).isEqualTo("POST");
+    assertThat(call.request().header("Authorization")).isEqualTo("apiToken " + new String(instanaConfig.getApiToken()));
+    assertThat(result).isEqualTo(instanaInfraMetrics);
+    assertThat(apiCallLog.getTitle()).isEqualTo("Fetching Infrastructure metrics from https://instana-example.com/");
+  }
+}

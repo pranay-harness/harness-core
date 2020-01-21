@@ -23,6 +23,7 @@ import software.wings.graphql.schema.type.connector.QLGCSConnector;
 import software.wings.graphql.schema.type.connector.QLGCSHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
 import software.wings.graphql.schema.type.connector.QLHttpHelmRepoConnector;
+import software.wings.graphql.schema.type.connector.QLInstanaConnector;
 import software.wings.graphql.schema.type.connector.QLJenkinsConnector;
 import software.wings.graphql.schema.type.connector.QLJiraConnector;
 import software.wings.graphql.schema.type.connector.QLLogzConnector;
@@ -74,6 +75,8 @@ public class ConnectorsController {
         return QLSumoConnector.builder();
       case APP_DYNAMICS:
         return QLAppDynamicsConnector.builder();
+      case INSTANA:
+        return QLInstanaConnector.builder();
       case NEW_RELIC:
         return QLNewRelicConnector.builder();
       case DYNA_TRACE:

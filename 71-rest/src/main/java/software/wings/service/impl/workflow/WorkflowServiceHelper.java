@@ -227,6 +227,7 @@ public class WorkflowServiceHelper {
   public static final String ARTIFACT_CHECK_STEP = "Artifact Check";
   public static final String APPDYNAMICS = "AppDynamics";
   public static final String NEW_RELIC = "New Relic";
+  public static final String INSTANA = "Instana";
   public static final String DYNATRACE = "Dynatrace";
   public static final String PROMETHEUS = "Prometheus";
   public static final String DATADOG_METRICS = "Datadog Metrics";

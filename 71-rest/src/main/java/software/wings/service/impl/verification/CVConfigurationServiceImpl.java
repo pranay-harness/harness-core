@@ -73,6 +73,8 @@ import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
+import software.wings.verification.instana.InstanaCVConfiguration;
+import software.wings.verification.instana.InstanaCVConfiguration.InstanaCVConfigurationKeys;
 import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.CustomLogCVServiceConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
@@ -132,7 +134,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case APP_DYNAMICS:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), AppDynamicsCVServiceConfiguration.class);
         break;
-
+      case INSTANA:
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), InstanaCVConfiguration.class);
+        break;
       case DYNA_TRACE:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), DynaTraceCVServiceConfiguration.class);
         break;
@@ -419,6 +423,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case APP_DYNAMICS:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), AppDynamicsCVServiceConfiguration.class);
         break;
+      case INSTANA:
+        updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), InstanaCVConfiguration.class);
+        break;
       case DYNA_TRACE:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), DynaTraceCVServiceConfiguration.class);
         break;
@@ -649,6 +656,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("appDynamicsApplicationId",
                 ((AppDynamicsCVServiceConfiguration) cvConfiguration).getAppDynamicsApplicationId())
             .set("tierId", ((AppDynamicsCVServiceConfiguration) cvConfiguration).getTierId());
+        break;
+      case INSTANA:
+        updateOperations.set(InstanaCVConfigurationKeys.query, ((InstanaCVConfiguration) cvConfiguration).getQuery())
+            .set(InstanaCVConfigurationKeys.metrics, ((InstanaCVConfiguration) cvConfiguration).getMetrics());
         break;
       case DYNA_TRACE:
         break;
@@ -904,6 +915,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case DATA_DOG_LOG:
       case SPLUNKV2:
       case LOG_VERIFICATION:
+      case INSTANA:
         break;
       case PROMETHEUS:
         metricTemplates = PrometheusState.createMetricTemplates(
@@ -939,7 +951,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         metricTemplates = metricDefinitions(
             APMVerificationState.buildMetricInfoMap(metricCollectionInfos, Optional.empty()).values());
         break;
-
       default:
         throw new VerificationOperationException(
             ErrorCode.APM_CONFIGURATION_ERROR, "No matching metric state type found " + stateType);
