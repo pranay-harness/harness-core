@@ -426,6 +426,7 @@ public class AuditServiceImpl implements AuditService {
         case UNLOCK:
         case RESET_PASSWORD:
         case ACCEPTED_INVITE:
+        case TEST:
         case UPDATE:
           entityToQuery = (UuidAccess) newEntity;
           break;
@@ -451,6 +452,7 @@ public class AuditServiceImpl implements AuditService {
         case LINK_SSO:
         case UNLINK_SSO:
         case MODIFY_PERMISSIONS:
+        case TEST:
         case UPDATE_NOTIFICATION_SETTING:
         case CREATE: {
           saveEntityYamlForAudit(newEntity, record, accountId);
