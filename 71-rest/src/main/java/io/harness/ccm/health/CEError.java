@@ -7,6 +7,8 @@ public enum CEError {
 
   CREDENTIALS_INCORRECT("Credentials are not correct."),
 
+  PERPETUAL_TASK_CREATION_FAILURE("Perpetual tasks fail to be created for this cluster."),
+
   PERPETUAL_TASK_MISSING_HEARTBEAT("Perpetual tasks are missing heartbeats."),
 
   BILLING_REPORTS_MISSING("Billing Reports are not generated/available/accessible."),

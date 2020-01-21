@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
+import static software.wings.graphql.datafetcher.cloudProvider.CloudProviderController.populateCloudProvider;
+
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -16,7 +18,7 @@ import software.wings.security.annotations.AuthRule;
 @Slf4j
 public class CloudProviderDataFetcher
     extends AbstractObjectDataFetcher<QLCloudProvider, QLCloudProviderQueryParameters> {
-  @Inject HPersistence persistence;
+  @Inject private HPersistence persistence;
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -30,8 +32,6 @@ public class CloudProviderDataFetcher
       throw new InvalidRequestException("Cloud Provider does not exist", WingsException.USER);
     }
 
-    return CloudProviderController
-        .populateCloudProvider(settingAttribute, CloudProviderController.getCloudProviderBuilder(settingAttribute))
-        .build();
+    return populateCloudProvider(settingAttribute).build();
   }
 }

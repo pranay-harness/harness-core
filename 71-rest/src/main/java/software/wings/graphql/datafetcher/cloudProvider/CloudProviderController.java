@@ -15,9 +15,9 @@ import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterClou
 
 @UtilityClass
 public class CloudProviderController {
-  public static QLCloudProviderBuilder populateCloudProvider(
-      SettingAttribute settingAttribute, QLCloudProviderBuilder builder) {
-    return builder.id(settingAttribute.getUuid())
+  public static QLCloudProviderBuilder populateCloudProvider(SettingAttribute settingAttribute) {
+    return getCloudProviderBuilder(settingAttribute)
+        .id(settingAttribute.getUuid())
         .name(settingAttribute.getName())
         .createdAt(settingAttribute.getCreatedAt())
         .createdBy(UserController.populateUser(settingAttribute.getCreatedBy()))
@@ -25,7 +25,7 @@ public class CloudProviderController {
         .isCloudCostEnabled(getCloudCostEnabledBoolean(settingAttribute));
   }
 
-  public static QLCloudProviderBuilder getCloudProviderBuilder(SettingAttribute settingAttribute) {
+  private static QLCloudProviderBuilder getCloudProviderBuilder(SettingAttribute settingAttribute) {
     QLCloudProviderBuilder cloudProviderBuilder;
     switch (settingAttribute.getValue().getSettingType()) {
       case AZURE:

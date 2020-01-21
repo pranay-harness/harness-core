@@ -19,7 +19,7 @@ import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.core.GenericType;
 
-public class CCMHealthResourceTest extends CategoryTest {
+public class CEHealthResourceTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
 
@@ -27,7 +27,7 @@ public class CCMHealthResourceTest extends CategoryTest {
 
   @ClassRule
   public static ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().addResource(new CCMHealthResource(healthStatusService)).build();
+      ResourceTestRule.builder().addResource(new CEHealthResource(healthStatusService)).build();
 
   @Test
   @Owner(developers = HANTANG)

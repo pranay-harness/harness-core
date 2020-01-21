@@ -8,6 +8,7 @@ enum DataFetcherEnum {
   billingStatsTimeSeries
   billingTrendStats
   budget
+  ceHealthStatusta
   cloudProvider
   cloudProviderConnection
   cloudProviderStats

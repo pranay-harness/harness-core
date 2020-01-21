@@ -11,6 +11,7 @@ import java.util.Map;
 @Builder
 public class CEHealthStatus {
   boolean isHealthy;
+  List<String> clusterIds;
   List<ClusterRecord> clusterRecords;
-  Map<String, List<CEError>> taskErrorMap;
+  Map<String, List<CEError>> clusterErrors;
 }
