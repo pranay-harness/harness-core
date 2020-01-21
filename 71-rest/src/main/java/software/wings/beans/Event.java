@@ -221,7 +221,8 @@ public class Event {
     /**
      * Update Notification Setting type.
      */
-    MODIFY_PERMISSIONS
+    MODIFY_PERMISSIONS,
+    TEST
   }
 
   /**

@@ -92,6 +92,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.StringValue;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.Variable;
+import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.Workflow;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
@@ -504,7 +505,13 @@ public class SettingsServiceImpl implements SettingsService {
       if (existingSetting != null) {
         resetUnchangedEncryptedFields(existingSetting, settingAttribute);
       }
-
+      if (settingAttribute.getValue() instanceof HostConnectionAttributes
+          || settingAttribute.getValue() instanceof WinRmConnectionAttributes) {
+        auditServiceHelper.reportForAuditingUsingAccountId(
+            settingAttribute.getAccountId(), null, settingAttribute, Type.TEST);
+        logger.info("Auditing testing of connectivity for settingAttribute={} in accountId={}",
+            settingAttribute.getUuid(), settingAttribute.getAccountId());
+      }
       return settingValidationService.validateConnectivity(settingAttribute);
     } catch (Exception ex) {
       return new ValidationResult(false, ExceptionUtils.getMessage(ex));
