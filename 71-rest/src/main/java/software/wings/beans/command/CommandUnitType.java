@@ -53,7 +53,6 @@ public enum CommandUnitType implements CommandUnitDescriptor {
       SpotinstDummyCommandUnit.class, "Spotinst Command Unit", StencilCategory.SPOTINST, DEFAULT_DISPLAY_ORDER),
   HELM_DUMMY(HelmDummyCommandUnit.class, "Helm Command Unit", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
   PCF_DUMMY(PcfDummyCommandUnit.class, "PCF Command Unit", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER);
-
   private static final String stencilsPath = "/templates/commandstencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
 
