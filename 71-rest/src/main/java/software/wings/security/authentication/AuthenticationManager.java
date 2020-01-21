@@ -186,7 +186,7 @@ public class AuthenticationManager {
     }
     builder.isOauthEnabled(account.isOauthEnabled());
     if (account.isOauthEnabled()) {
-      builder.SSORequest(oauthOptions.createOauthSSORequest(userName, account.getUuid()));
+      builder.SSORequest(oauthOptions.createOauthSSORequest(account.getUuid()));
     }
 
     SSORequest ssoRequest;
