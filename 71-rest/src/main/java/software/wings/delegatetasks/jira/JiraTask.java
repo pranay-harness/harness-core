@@ -152,7 +152,10 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   private ResponseData getCreateMetadata(JiraTaskParameters parameters) {
     URI uri = null;
     try {
+      logger.info("Getting decrypted jira client configs for GET_CREATE_METADATA");
       JiraClient jiraClient = getJiraClient(parameters);
+
+      logger.info("Building URI for GET_CREATE_METADATA");
       Map<String, String> queryParams = new HashMap<>();
       if (EmptyPredicate.isNotEmpty(parameters.getCreatemetaExpandParam())) {
         queryParams.put("expand", parameters.getCreatemetaExpandParam());
@@ -166,10 +169,13 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
       uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "issue/createmeta", queryParams);
 
+      logger.info(" Fetching metadata from jira for GET_CREATE_METADATA");
       JSON response = jiraClient.getRestClient().get(uri);
 
+      logger.info(" Response received from jira for GET_CREATE_METADATA");
       JiraCreateMetaResponse jiraCreateMetaResponse = new JiraCreateMetaResponse((JSONObject) response);
 
+      logger.info(" Returning response to manager for GET_CREATE_METADATA");
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.SUCCESS)
           .createMetadata(jiraCreateMetaResponse)
