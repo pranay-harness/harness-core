@@ -112,7 +112,7 @@ public class AuditServiceImpl implements AuditService {
   private static Set<String> nonYamlEntities = newHashSet(EntityType.TEMPLATE.name(), EntityType.TEMPLATE_FOLDER.name(),
       EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name(), ResourceType.CONNECTION_ATTRIBUTES.name(),
       ResourceType.DEPLOYMENT_FREEZE.name(), ResourceType.CUSTOM_DASHBOARD.name(), ResourceType.SECRET_MANAGER.name(),
-      EntityType.PIPELINE_GOVERNANCE_STANDARD.name());
+      EntityType.PIPELINE_GOVERNANCE_STANDARD.name(), ResourceType.SSO_SETTINGS.name());
 
   /**
    * Instantiates a new audit service impl.

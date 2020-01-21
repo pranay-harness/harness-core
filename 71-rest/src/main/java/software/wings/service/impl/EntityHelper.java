@@ -67,8 +67,10 @@ import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.governance.GovernanceConfig;
+import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.access.Whitelist;
+import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.trigger.DeploymentTrigger;
@@ -96,15 +98,20 @@ public class EntityHelper {
   private static final String DEPLOYMENT_SPECIFICATION_YAML_PATH_FORMAT =
       "Setup/Application/%s/Services/%s/Deloyment Specifications/%s.yaml";
   private static final String COMMANDS_YAML_PATH_FORMAT = "Setup/Application/%s/Services/%s/Commands/%s.yaml";
+  private static final String STRENGTH_POLICY = "PASSWORD STRENGTH POLICY";
+  private static final String EXPIRATION_POLICY = "PASSWORD EXPIRATION POLICY";
+  private static final String LDAP_SETTINGS = "LDAP_SETTINGS";
+  private static final String OAUTH_SETTINGS = "OAUTH_SETTINGS";
+  private static final String SAML_SETTINGS = "SAML_SETTINGS";
 
   // Some Setting Attributes defined that do not have Yaml
   static final String SSH_KEYS_ENTITY_TYPE = "Host Connection Attributes";
   static final String WIN_RM_CONNECTION_ENTITY_TYPE = "Win Rm Connection Attributes";
 
   public <T extends UuidAccess> void loadMetaDataForEntity(T entity, EntityAuditRecordBuilder builder, Type type) {
+    String entityName = EMPTY;
     String entityId = entity.getUuid();
     String entityType = EMPTY;
-    String entityName = EMPTY;
     String appId = EMPTY;
     String appName = EMPTY;
     String affectedResourceId = EMPTY;
@@ -200,6 +207,26 @@ public class EntityHelper {
       affectedResourceType = EntityType.ENVIRONMENT.name();
       affectedResourceOperation =
           getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
+    } else if (entity instanceof SSOSettings) {
+      SSOSettings ssoSettings = (SSOSettings) entity;
+      entityName = ssoSettings.getDisplayName();
+      affectedResourceId = ssoSettings.getUuid();
+      affectedResourceName = ssoSettings.getDisplayName();
+      affectedResourceType = EntityType.SSO_SETTINGS.name();
+      switch (ssoSettings.getType()) {
+        case LDAP:
+          entityType = LDAP_SETTINGS;
+          break;
+        case SAML:
+          entityType = SAML_SETTINGS;
+          break;
+        case OAUTH:
+          entityType = OAUTH_SETTINGS;
+          break;
+        default:
+          break;
+      }
+      affectedResourceOperation = type.name();
     } else if (entity instanceof Workflow) {
       Workflow workflow = (Workflow) entity;
       entityType = EntityType.WORKFLOW.name();
@@ -362,6 +389,20 @@ public class EntityHelper {
         affectedResourceOperation =
             getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
       }
+    } else if (entity instanceof LoginSettings) {
+      LoginSettings loginSettings = (LoginSettings) entity;
+      entityType = EntityType.LOGIN_SETTINGS.name();
+      affectedResourceId = loginSettings.getUuid();
+      if (loginSettings.getPasswordExpirationPolicy() == null) {
+        entityName = STRENGTH_POLICY;
+        affectedResourceName = entityName;
+      }
+      if (loginSettings.getPasswordStrengthPolicy() == null) {
+        entityName = EXPIRATION_POLICY;
+        affectedResourceName = entityName;
+      }
+      affectedResourceType = EntityType.LOGIN_SETTINGS.name();
+      affectedResourceOperation = type.name();
     } else if (entity instanceof SettingAttribute) {
       SettingAttribute settingAttribute = (SettingAttribute) entity;
       SettingValue value = settingAttribute.getValue();

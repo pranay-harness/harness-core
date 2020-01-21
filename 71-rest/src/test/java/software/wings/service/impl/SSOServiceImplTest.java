@@ -3,9 +3,13 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static software.wings.security.authentication.AuthenticationMechanism.LDAP;
 import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
 import static software.wings.security.authentication.AuthenticationMechanism.SAML;
@@ -24,6 +28,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.Event;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.SSOConfig;
@@ -40,9 +45,10 @@ public class SSOServiceImplTest extends WingsBaseTest {
   private static final String APP_ID = "app_id";
 
   @Mock private AuthHandler authHandler;
+  @Mock private AuditServiceHelper auditServiceHelper;
   @InjectMocks @Inject private SSOService ssoService;
-  @Inject private AccountService accountService;
-  @Inject private SSOSettingService ssoSettingService;
+  @InjectMocks @Inject private AccountService accountService;
+  @InjectMocks @Inject private SSOSettingService ssoSettingService;
 
   @Test
   @Owner(developers = UJJAWAL)
@@ -187,5 +193,31 @@ public class SSOServiceImplTest extends WingsBaseTest {
     account = accountService.get(account.getUuid());
     assertThat(account.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
     assertThat(account.isOauthEnabled()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testUploadOauthSettingAuditing() {
+    Account account = Account.Builder.anAccount()
+                          .withUuid("Account 4")
+                          .withOauthEnabled(false)
+                          .withAccountName("Account 4")
+                          .withLicenseInfo(getLicenseInfo())
+                          .withAppId(APP_ID)
+                          .withCompanyName("Account 4")
+                          .withAuthenticationMechanism(USER_PASSWORD)
+                          .build();
+    accountService.save(account, false);
+    OauthSettings response =
+        ssoSettingService.saveOauthSettings(OauthSettings.builder()
+                                                .accountId(account.getUuid())
+                                                .allowedProviders(Sets.newHashSet(OauthProviderType.GITHUB))
+                                                .displayName("Some display name")
+                                                .build());
+
+    verify(auditServiceHelper, times(1))
+        .reportForAuditingUsingAccountId(
+            eq(account.getUuid()), eq(null), any(OauthSettings.class), eq(Event.Type.CREATE));
   }
 }

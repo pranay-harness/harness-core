@@ -2,9 +2,14 @@ package software.wings.service;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
@@ -19,7 +24,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.Event;
 import software.wings.beans.sso.SamlSettings;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
@@ -28,8 +35,42 @@ import javax.validation.ConstraintViolationException;
 
 public class SSOSettingServiceTest extends WingsBaseTest {
   @Mock UserGroupService userGroupService;
+  @Mock AuditServiceHelper auditServiceHelper;
   @Inject AccountService accountService;
   @Inject @InjectMocks SSOSettingService ssoSettingService;
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testSamlSettingsSaveAuditing() {
+    Account account = Account.Builder.anAccount()
+                          .withUuid("TestAccountID")
+                          .withOauthEnabled(false)
+                          .withAccountName("Account_1")
+                          .withLicenseInfo(getLicenseInfo())
+                          .withAppId("appId")
+                          .withCompanyName("Account_2")
+                          .withAuthenticationMechanism(USER_PASSWORD)
+                          .build();
+    accountService.save(account, false);
+    SamlSettings samlSettings = SamlSettings.builder()
+                                    .metaDataFile("TestMetaDataFile")
+                                    .url("TestURL")
+                                    .accountId("TestAccountID")
+                                    .displayName("Okta")
+                                    .origin("TestOrigin")
+                                    .build();
+
+    samlSettings = ssoSettingService.saveSamlSettings(samlSettings);
+    assertThat(samlSettings.getUrl()).isEqualTo("TestURL");
+    assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
+    assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile");
+    assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
+    assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin");
+    verify(auditServiceHelper, times(1))
+        .reportForAuditingUsingAccountId(
+            eq(samlSettings.getAccountId()), eq(null), any(SamlSettings.class), eq(Event.Type.CREATE));
+  }
 
   @Test
   @Owner(developers = GEORGE)

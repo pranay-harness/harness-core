@@ -231,6 +231,10 @@ public enum EntityType {
 
   SERVERLESS_INSTANCE,
 
-  USER_INVITE
+  USER_INVITE,
+
+  LOGIN_SETTINGS,
+
+  SSO_SETTINGS
 
 }
