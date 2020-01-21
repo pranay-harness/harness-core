@@ -48,7 +48,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
   @Inject private ServiceTemplateService serviceTemplateService;
 
   @Override
-  public void delete(ChangeContext<OverrideYaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<OverrideYaml> changeContext) {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);

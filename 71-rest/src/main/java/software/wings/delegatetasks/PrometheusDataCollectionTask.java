@@ -14,8 +14,9 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
+import io.harness.exception.VerificationOperationException;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
@@ -245,7 +246,9 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
         } catch (IOException e) {
           apiCallLog.addFieldToResponse(HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage(), FieldType.TEXT);
           delegateLogService.save(prometheusConfig.getAccountId(), apiCallLog);
-          throw new WingsException("Exception occured while fetching metrics from Prometheus.", e);
+          logger.error("for {} error occurred while fetching metrics", dataCollectionInfo.getStateExecutionId(), e);
+          throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
+              "Exception occured while fetching metrics from Prometheus. " + ExceptionUtils.getMessage(e));
         }
       });
       rv.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,

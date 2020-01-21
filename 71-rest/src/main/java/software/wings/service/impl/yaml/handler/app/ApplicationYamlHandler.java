@@ -6,7 +6,6 @@ import static software.wings.beans.EntityType.APPLICATION;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Yaml;
 import software.wings.beans.EntityType;
@@ -31,7 +30,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
   @Inject YamlGitService yamlGitService;
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     Application application = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     if (application != null) {
       appService.delete(application.getUuid(), changeContext.getChange().isSyncFromGit());
@@ -52,8 +51,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
   }
 
   @Override
-  public Application upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public Application upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
     Yaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();

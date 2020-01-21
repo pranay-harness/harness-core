@@ -8,7 +8,6 @@ import static java.util.Arrays.asList;
 import com.google.inject.Inject;
 
 import io.harness.exception.HarnessException;
-import io.harness.exception.WingsException;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.yaml.Change;
@@ -51,14 +50,10 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
     if (yaml.getAdvancedConfig() == null && yaml.getContainerDefinition() != null) {
       ContainerDefinitionYamlHandler containerDefYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.CONTAINER_DEFINITION);
-      try {
-        ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, yaml.getContainerDefinition());
-        ContainerDefinition containerDefinition =
-            containerDefYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
-        containerTask.setContainerDefinitions(asList(containerDefinition));
-      } catch (HarnessException e) {
-        throw new WingsException(e);
-      }
+      ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, yaml.getContainerDefinition());
+      ContainerDefinition containerDefinition =
+          containerDefYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
+      containerTask.setContainerDefinitions(asList(containerDefinition));
     } else {
       ContainerDefinition containerDefinition = ContainerDefinition.builder().name("DEFAULT_NAME").build();
       containerTask.setContainerDefinitions(asList(containerDefinition));
