@@ -220,6 +220,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
         case DATA_DOG:
         case APM_VERIFICATION:
         case STACK_DRIVER:
+        case INSTANA:
           stateValuesToAnalyze = getMetricTypeMap(analysisService.getMetricTemplates(
               context.getAppId(), context.getStateType(), context.getStateExecutionId(), null));
           break;

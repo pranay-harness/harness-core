@@ -172,7 +172,6 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
   protected void setupCommonFields(AbstractAnalysisState state) throws IllegalAccessException {
     FieldUtils.writeField(state, "appService", this.appService, true);
     FieldUtils.writeField(state, "configuration", configuration, true);
-    FieldUtils.writeField(state, "analysisService", analysisService, true);
     FieldUtils.writeField(state, "settingsService", settingsService, true);
     FieldUtils.writeField(state, "waitNotifyEngine", waitNotifyEngine, true);
     FieldUtils.writeField(state, "delegateService", delegateService, true);

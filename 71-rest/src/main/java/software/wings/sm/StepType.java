@@ -156,6 +156,7 @@ import software.wings.sm.states.GcpClusterSetup;
 import software.wings.sm.states.HelmDeployState;
 import software.wings.sm.states.HelmRollbackState;
 import software.wings.sm.states.HttpState;
+import software.wings.sm.states.InstanaState;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.KubernetesDeploy;
 import software.wings.sm.states.KubernetesDeployRollback;
@@ -452,6 +453,9 @@ public enum StepType {
       asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   NEW_RELIC(NewRelicState.class, WorkflowServiceHelper.NEW_RELIC, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
       asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  INSTANA(InstanaState.class, WorkflowServiceHelper.INSTANA, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+
   DYNA_TRACE(DynatraceState.class, DYNATRACE, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
       asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   PROMETHEUS(PrometheusState.class, WorkflowServiceHelper.PROMETHEUS, asList(APM),

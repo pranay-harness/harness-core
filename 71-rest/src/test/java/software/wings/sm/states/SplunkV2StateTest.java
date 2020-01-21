@@ -83,6 +83,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     setupCommonFields(splunkState);
     FieldUtils.writeField(splunkState, "appService", appService, true);
     FieldUtils.writeField(splunkState, "accountService", accountService, true);
+    FieldUtils.writeField(splunkState, "analysisService", analysisService, true);
     FieldUtils.writeField(splunkState, "templateExpressionProcessor", templateExpressionProcessor, true);
   }
 

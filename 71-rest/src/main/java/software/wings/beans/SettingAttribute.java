@@ -28,6 +28,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.GCS_HELM
 import static software.wings.settings.SettingValue.SettingVariableTypes.GIT;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HTTP_HELM_REPO;
+import static software.wings.settings.SettingValue.SettingVariableTypes.INSTANA;
 import static software.wings.settings.SettingValue.SettingVariableTypes.JENKINS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.JIRA;
 import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
@@ -141,9 +142,9 @@ public class SettingAttribute extends Base implements NameAccess, PersistentRegu
   public enum SettingCategory {
     CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, KUBERNETES_CLUSTER, PCF, SPOT_INST)),
 
-    CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, NEW_RELIC, DYNA_TRACE,
-        BUG_SNAG, DATA_DOG, APM_VERIFICATION, PROMETHEUS, ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3,
-        GCS, GIT, SMB, JIRA, SFTP, SERVICENOW, CUSTOM)),
+    CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, INSTANA, NEW_RELIC,
+        DYNA_TRACE, BUG_SNAG, DATA_DOG, APM_VERIFICATION, PROMETHEUS, ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY,
+        AMAZON_S3, GCS, GIT, SMB, JIRA, SFTP, SERVICENOW, CUSTOM)),
 
     SETTING(Lists.newArrayList(
         HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING, WINRM_CONNECTION_ATTRIBUTES)),

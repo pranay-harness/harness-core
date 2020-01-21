@@ -186,6 +186,7 @@ import software.wings.service.impl.yaml.handler.setting.collaborationprovider.Sp
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.AppDynamicsConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.DynaTraceConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.ElkConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.InstanaConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.JenkinsConfigVerificationYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.LogzConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.NewRelicConfigYamlHandler;
@@ -242,6 +243,7 @@ import software.wings.verification.CustomLogCVConfigurationYamlHandler;
 import software.wings.verification.DatadogCvConfigurationYamlHandler;
 import software.wings.verification.DynatraceCVConfigurationYamlHandler;
 import software.wings.verification.ElkCVConfigurationYamlHandler;
+import software.wings.verification.InstanaCVConfigurationYamlHandler;
 import software.wings.verification.LogsCVConfigurationYamlHandler;
 import software.wings.verification.NewRelicCVConfigurationYamlHandler;
 import software.wings.verification.PrometheusCVConfigurationYamlHandler;
@@ -401,12 +403,15 @@ public class YamlModule extends AbstractModule {
         .to(SplunkConfigYamlHandler.class);
     verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SUMO.name())
         .to(SumoConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.INSTANA.name())
+        .to(InstanaConfigYamlHandler.class);
 
     MapBinder<String, CVConfigurationYamlHandler> cvConfigYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CVConfigurationYamlHandler.class);
 
     cvConfigYamlHelperMapBinder.addBinding(StateType.APP_DYNAMICS.name())
         .to(AppDynamicsCVConfigurationYamlHandler.class);
+    cvConfigYamlHelperMapBinder.addBinding(StateType.INSTANA.name()).to(InstanaCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.NEW_RELIC.name()).to(NewRelicCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.DATA_DOG.name()).to(DatadogCvConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.SUMO.name()).to(LogsCVConfigurationYamlHandler.class);

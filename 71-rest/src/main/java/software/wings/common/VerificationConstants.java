@@ -27,7 +27,6 @@ public class VerificationConstants {
     New Relic constants
      */
   private static final String NEWRELIC_METRICS_YAML_URL = "/apm/newrelic_metrics.yml";
-
   public static final long TOTAL_HITS_PER_MIN_THRESHOLD = 1000;
   public static final long VERIFICATION_TASK_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
   public static final String LAST_SUCCESSFUL_WORKFLOW_IDS = "/last-successful-workflow-ids";
@@ -92,7 +91,11 @@ public class VerificationConstants {
   public static final String URL_STRING = "Url";
   public static final String BODY_STRING = "Body";
   public static final String CONNECTOR = ":";
-  public static final String VERIFICATION_HOST_PLACEHOLDER = "${host}";
+  @Deprecated
+  public static final String VERIFICATION_HOST_PLACEHOLDER =
+      "${host}"; // we want to use VERIFICATION_HOST_PLACEHOLDERV2 everywhere now.
+  public static final String VERIFICATION_HOST_PLACEHOLDERV2 = "${host.hostName}";
+  public static final String INSTANA_DOCKER_PLUGIN = "docker";
 
   public static final String STATIC_CLOUD_WATCH_METRIC_URL = "/configs/cloudwatch_metrics.yml";
 

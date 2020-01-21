@@ -10,6 +10,7 @@ public enum TaskGroup {
   HTTP,
   SPLUNK,
   APPDYNAMICS,
+  INSTANA,
   NEWRELIC,
   STACKDRIVER,
   DYNA_TRACE,

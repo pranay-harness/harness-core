@@ -42,6 +42,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.InstanaConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.KubernetesClusterConfig;
@@ -236,6 +237,15 @@ public class PluginServiceImpl implements PluginService {
             .withType(SettingVariableTypes.SUMO.name())
             .withPluginCategories(asList(Verification))
             .withUiSchema(readUiSchema(SettingVariableTypes.SUMO.name()))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(InstanaConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName(SettingVariableTypes.INSTANA.getDisplayName())
+            .withType(SettingVariableTypes.INSTANA.name())
+            .withPluginCategories(asList(Verification))
+            .withUiSchema(readUiSchema(SettingVariableTypes.INSTANA.name()))
             .build(),
         anAccountPlugin()
             .withSettingClass(SmtpConfig.class)

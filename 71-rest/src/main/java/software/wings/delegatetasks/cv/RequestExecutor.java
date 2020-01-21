@@ -30,6 +30,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class RequestExecutor {
   @Inject private DelegateLogService delegateLogService;
   private static final int MAX_RETRIES = 3;
+
   public <U> U executeRequest(ThirdPartyApiCallLog thirdPartyApiCallLog, Call<U> request) {
     int retryCount = 0;
     while (true) {
@@ -91,7 +92,7 @@ public class RequestExecutor {
               ThirdPartyApiCallField.builder().name("body").value(body).type(FieldType.JSON).build());
         }
       }
-      Response<U> response = request.clone().execute(); // TODO: add retry logic and rate limit exceeded logic here.
+      Response<U> response = request.clone().execute();
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       if (response.isSuccessful()) {
         apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);

@@ -98,6 +98,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     setupCommonFields(elkAnalysisState);
     FieldUtils.writeField(elkAnalysisState, "elkAnalysisService", elkAnalysisService, true);
     FieldUtils.writeField(elkAnalysisState, "accountService", accountService, true);
+    FieldUtils.writeField(elkAnalysisState, "analysisService", analysisService, true);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
   }
 

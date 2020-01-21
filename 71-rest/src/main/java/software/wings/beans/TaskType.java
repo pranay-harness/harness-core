@@ -98,6 +98,7 @@ import software.wings.delegatetasks.validation.HelmCommandValidation;
 import software.wings.delegatetasks.validation.HelmRepoConfigValidation;
 import software.wings.delegatetasks.validation.HostValidationValidation;
 import software.wings.delegatetasks.validation.HttpValidation;
+import software.wings.delegatetasks.validation.InstanaValidation;
 import software.wings.delegatetasks.validation.JenkinsValidation;
 import software.wings.delegatetasks.validation.JiraValidation;
 import software.wings.delegatetasks.validation.K8sCommandValidation;
@@ -219,6 +220,8 @@ public enum TaskType {
   APPDYNAMICS_COLLECT_24_7_METRIC_DATA(
       TaskGroup.GUARD_24x7, AppdynamicsDataCollectionTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_METRIC_DATA_FOR_NODE(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
+  INSTANA_GET_INFRA_METRICS(TaskGroup.INSTANA, ServiceImplDelegateTask.class, InstanaValidation.class),
+  INSTANA_COLLECT_METRIC_DATA(TaskGroup.INSTANA, MetricsDataCollectionTask.class, DataCollectionValidator.class),
   NEWRELIC_VALIDATE_CONFIGURATION_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   BUGSNAG_GET_APP_TASK(TaskGroup.LOG, ServiceImplDelegateTask.class, APMValidation.class),
   BUGSNAG_GET_RECORDS(TaskGroup.LOG, ServiceImplDelegateTask.class, APMValidation.class),
