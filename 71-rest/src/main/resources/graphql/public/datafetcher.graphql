@@ -54,4 +54,8 @@ enum DataFetcherEnum {
   createUserGroup
   user
   userConnection
+  updateApplicationGitConfig
+  removeApplicationGitConfig
+  updateApplicationGitConfigStatus
+  applicationGitConfig
 }

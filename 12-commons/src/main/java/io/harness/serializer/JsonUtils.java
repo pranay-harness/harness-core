@@ -421,4 +421,8 @@ public class JsonUtils {
       throw new RuntimeException("Error reading the file -" + file.getAbsolutePath(), exception);
     }
   }
+
+  public static <T> T convertValue(Object fromValue, Class<T> toValueType) {
+    return mapper.convertValue(fromValue, toValueType);
+  }
 }
