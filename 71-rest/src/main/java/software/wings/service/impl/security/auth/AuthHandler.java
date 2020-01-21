@@ -1266,7 +1266,8 @@ public class AuthHandler {
     }
 
     String envId = resolveEnvId(appId, pipelineStageElement, workflowCache);
-    if (envId == null || ManagerExpressionEvaluator.matchesVariablePattern(envId)) {
+    if (envId == null || (pipelineStageElement.checkDisableAssertion() && isEmpty(envId))
+        || ManagerExpressionEvaluator.matchesVariablePattern(envId)) {
       return ImmutablePair.of(null, Boolean.TRUE);
     }
 
