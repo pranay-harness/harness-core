@@ -82,7 +82,7 @@ public class BillingStatsTimeSeriesDataFetcher
     }
 
     queryData = billingDataQueryBuilder.formQuery(
-        accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria);
+        accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria, true);
     logger.info("BillingStatsTimeSeriesDataFetcher query: {}", queryData.getQuery());
     logger.info(queryData.getQuery());
 

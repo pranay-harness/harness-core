@@ -44,6 +44,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAgg
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -57,7 +58,7 @@ public class BillingDataQueryBuilder {
 
   protected BillingDataQueryMetadata formQuery(String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
-      QLCCMTimeSeriesAggregation groupByTime, List<QLBillingSortCriteria> sortCriteria) {
+      QLCCMTimeSeriesAggregation groupByTime, List<QLBillingSortCriteria> sortCriteria, boolean addInstanceTypeFilter) {
     BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
     SelectQuery selectQuery = new SelectQuery();
 
@@ -68,7 +69,8 @@ public class BillingDataQueryBuilder {
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
     List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
 
-    if (isGroupByClusterPresent(groupBy) || isNoneGroupBySelectedWithoutFilterInClusterView(groupBy, filters)) {
+    if (addInstanceTypeFilter
+        && (isGroupByClusterPresent(groupBy) || isNoneGroupBySelectedWithoutFilterInClusterView(groupBy, filters))) {
       addInstanceTypeFilter(filters);
     }
 
@@ -488,7 +490,7 @@ public class BillingDataQueryBuilder {
                                  .filter(g -> g.getEntityGroupBy() != null)
                                  .map(QLCCMGroupBy::getEntityGroupBy)
                                  .collect(Collectors.toList())
-                           : null;
+                           : Collections.emptyList();
   }
 
   private boolean isValidGroupBy(List<QLCCMEntityGroupBy> groupBy) {

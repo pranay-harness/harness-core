@@ -37,6 +37,13 @@ extend type Query {
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]
   ): EfficiencyStatsData @dataFetcher(name: efficiencyStats)
+
+  sunburstChartStats(
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+    sortCriteria: [BillingSortCriteria]
+  ): SunburstChartData @dataFetcher(name: sunburstChartStats)
 }
 
 input CCMAggregationFunction {
@@ -118,6 +125,26 @@ type BillingEntityDataPoint {
   avgCpuUtilization: Number
   avgMemoryUtilization: Number
   unallocatedCost: Number
+}
+
+type SunburstChartData {
+  data: [SunburstChartDataPoint]
+  gridData: [SunburstGridDataPoint]
+}
+
+type SunburstChartDataPoint {
+  id: String
+  parent: String
+  name: String
+  value: Number
+  clusterType: String
+}
+
+type SunburstGridDataPoint {
+  name: String
+  trend: String
+  value: String
+  info: String
 }
 
 type BillingEntityData {

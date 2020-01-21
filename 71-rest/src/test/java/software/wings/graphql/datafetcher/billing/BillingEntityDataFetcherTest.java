@@ -353,7 +353,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
         ACCOUNT1_ID, aggregationFunction, filters, groupBy, null);
 
     billingDataQueryBuilder.formQuery(
-        ACCOUNT1_ID, filters, Collections.emptyList(), Collections.emptyList(), null, null);
+        ACCOUNT1_ID, filters, Collections.emptyList(), Collections.emptyList(), null, null, true);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
