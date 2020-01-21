@@ -171,6 +171,14 @@ public class Event {
      */
     DELETE,
     /**
+     * Enable type.
+     */
+    ENABLE,
+    /**
+     * Disable type.
+     */
+    DISABLE,
+    /**
      * Lock type.
      */
     LOCK,

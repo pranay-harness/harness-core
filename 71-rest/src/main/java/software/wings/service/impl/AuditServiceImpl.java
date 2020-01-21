@@ -111,7 +111,8 @@ public class AuditServiceImpl implements AuditService {
 
   private static Set<String> nonYamlEntities = newHashSet(EntityType.TEMPLATE.name(), EntityType.TEMPLATE_FOLDER.name(),
       EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name(), ResourceType.CONNECTION_ATTRIBUTES.name(),
-      ResourceType.GOVERNANCE.name(), ResourceType.CUSTOM_DASHBOARD.name(), ResourceType.SECRET_MANAGER.name());
+      ResourceType.DEPLOYMENT_FREEZE.name(), ResourceType.CUSTOM_DASHBOARD.name(), ResourceType.SECRET_MANAGER.name(),
+      EntityType.PIPELINE_GOVERNANCE_STANDARD.name());
 
   /**
    * Instantiates a new audit service impl.
@@ -419,6 +420,8 @@ public class AuditServiceImpl implements AuditService {
         case MODIFY_PERMISSIONS:
         case UPDATE_NOTIFICATION_SETTING:
         case CREATE:
+        case ENABLE:
+        case DISABLE:
         case LOCK:
         case UNLOCK:
         case RESET_PASSWORD:
@@ -454,6 +457,8 @@ public class AuditServiceImpl implements AuditService {
           resourceLookupService.saveResourceLookupRecordIfNeeded(record, accountId);
           break;
         }
+        case ENABLE:
+        case DISABLE:
         case UPDATE: {
           loadLatestYamlDetailsForEntity(record, accountId);
           saveEntityYamlForAudit(newEntity, record, accountId);

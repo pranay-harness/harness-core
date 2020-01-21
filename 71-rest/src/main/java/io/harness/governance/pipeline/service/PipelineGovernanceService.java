@@ -11,7 +11,5 @@ public interface PipelineGovernanceService {
 
   List<PipelineGovernanceConfig> list(String accountId);
 
-  PipelineGovernanceConfig update(String accountId, String uuid, PipelineGovernanceConfig config);
-
   PipelineGovernanceConfig add(String accountId, PipelineGovernanceConfig config);
 }

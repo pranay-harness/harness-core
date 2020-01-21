@@ -3,6 +3,9 @@ package software.wings.service;
 import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
@@ -20,8 +23,11 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.beans.Account;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.Event;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
 import software.wings.beans.governance.GovernanceConfig;
@@ -33,6 +39,7 @@ import software.wings.resources.stats.model.TimeRange;
 import software.wings.resources.stats.model.WeeklyRange;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.utils.WingsTestConstants;
@@ -46,8 +53,9 @@ import java.util.Collections;
 public class GovernanceConfigServiceTest extends BaseIntegrationTest {
   @Inject private AccountService accountService;
   @Inject private LicenseService licenseService;
-  @Inject private GovernanceConfigService governanceConfigService;
+  @Inject @InjectMocks private GovernanceConfigService governanceConfigService;
   @Inject @Named(GovernanceFeature.FEATURE_NAME) private PremiumFeature governanceFeature;
+  @Mock private AuditServiceHelper auditServiceHelper;
 
   private String accountId = "some-account-uuid-" + RandomStringUtils.randomAlphanumeric(5);
 
@@ -90,6 +98,10 @@ public class GovernanceConfigServiceTest extends BaseIntegrationTest {
     GovernanceConfig savedGovernanceConfig = governanceConfigService.upsert(accountId, inputConfig);
     compare(inputConfig, savedGovernanceConfig);
 
+    verify(auditServiceHelper, times(1))
+        .reportForAuditingUsingAccountId(
+            eq(accountId), eq(governanceConfig), eq(savedGovernanceConfig), eq(Event.Type.ENABLE));
+
     savedGovernanceConfig = governanceConfigService.get(accountId);
     compare(inputConfig, savedGovernanceConfig);
 
@@ -102,13 +114,28 @@ public class GovernanceConfigServiceTest extends BaseIntegrationTest {
 
     inputConfig = GovernanceConfig.builder()
                       .accountId(accountId)
-                      .deploymentFreeze(false)
+                      .deploymentFreeze(true)
                       .timeRangeBasedFreezeConfigs(Collections.singletonList(timeRangeBasedFreezeConfig))
                       .weeklyFreezeConfigs(Collections.singletonList(weeklyFreezeConfig))
                       .build();
 
+    GovernanceConfig oldGovernanceConfig = savedGovernanceConfig;
     savedGovernanceConfig = governanceConfigService.upsert(accountId, inputConfig);
     compare(inputConfig, savedGovernanceConfig);
+
+    verify(auditServiceHelper, times(1))
+        .reportForAuditingUsingAccountId(
+            eq(accountId), eq(oldGovernanceConfig), eq(savedGovernanceConfig), eq(Event.Type.UPDATE));
+
+    inputConfig.setDeploymentFreeze(false);
+
+    oldGovernanceConfig = savedGovernanceConfig;
+    savedGovernanceConfig = governanceConfigService.upsert(accountId, inputConfig);
+    compare(inputConfig, savedGovernanceConfig);
+
+    verify(auditServiceHelper, times(1))
+        .reportForAuditingUsingAccountId(
+            eq(accountId), eq(oldGovernanceConfig), eq(savedGovernanceConfig), eq(Event.Type.DISABLE));
 
     savedGovernanceConfig = governanceConfigService.get(accountId);
     compare(inputConfig, savedGovernanceConfig);

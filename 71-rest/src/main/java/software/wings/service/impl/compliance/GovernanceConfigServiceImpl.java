@@ -85,9 +85,9 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         logger.error("ThreadLocal User is null when trying to update governance config. accountId={}", accountId);
       }
 
-      GovernanceConfig updatedVal =
+      GovernanceConfig updatedSetting =
           wingsPersistence.findAndModify(query, updateOperations, WingsPersistence.upsertReturnNewOptions);
-      auditServiceHelper.reportForAuditingUsingAccountId(accountId, oldSetting, updatedVal, Type.UPDATE);
+      auditDeploymentFreeze(accountId, oldSetting, updatedSetting);
 
       if (!ListUtils.isEqualList(
               oldSetting.getTimeRangeBasedFreezeConfigs(), governanceConfig.getTimeRangeBasedFreezeConfigs())) {
@@ -98,8 +98,26 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         publishToSegment(accountId, user, EventType.BLACKOUT_WINDOW_UPDATED);
       }
 
-      return updatedVal;
+      return updatedSetting;
     }
+  }
+
+  private void auditDeploymentFreeze(String accountId, GovernanceConfig oldConfig, GovernanceConfig updatedConfig) {
+    if (deploymentFreezeBeingEnabled(oldConfig, updatedConfig)) {
+      auditServiceHelper.reportForAuditingUsingAccountId(accountId, oldConfig, updatedConfig, Type.ENABLE);
+    } else if (deploymentFreezeBeingDisabled(oldConfig, updatedConfig)) {
+      auditServiceHelper.reportForAuditingUsingAccountId(accountId, oldConfig, updatedConfig, Type.DISABLE);
+    } else {
+      auditServiceHelper.reportForAuditingUsingAccountId(accountId, oldConfig, updatedConfig, Type.UPDATE);
+    }
+  }
+
+  private boolean deploymentFreezeBeingEnabled(GovernanceConfig oldConfig, GovernanceConfig updatedConfig) {
+    return updatedConfig.isDeploymentFreeze() && (oldConfig == null || !oldConfig.isDeploymentFreeze());
+  }
+
+  private boolean deploymentFreezeBeingDisabled(GovernanceConfig oldConfig, GovernanceConfig updatedConfig) {
+    return !updatedConfig.isDeploymentFreeze() && (oldConfig == null || oldConfig.isDeploymentFreeze());
   }
 
   private void publishToSegment(String accountId, User user, EventType eventType) {
