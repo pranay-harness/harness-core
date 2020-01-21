@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.type.QLRequestStatus;
 import software.wings.graphql.schema.type.user.QLDeleteUserInput;
 import software.wings.graphql.schema.type.user.QLDeleteUserPayload;
 import software.wings.graphql.schema.type.user.QLDeleteUserPayload.QLDeleteUserPayloadBuilder;
@@ -26,11 +25,7 @@ public class DeleteUserDataFetcher extends BaseMutatorDataFetcher<QLDeleteUserIn
   protected QLDeleteUserPayload mutateAndFetch(QLDeleteUserInput qlDeleteUserInput, MutationContext mutationContext) {
     QLDeleteUserPayloadBuilder qlDeleteUserPayloadBuilder =
         QLDeleteUserPayload.builder().requestId(qlDeleteUserInput.getRequestId());
-    try {
-      userService.delete(mutationContext.getAccountId(), qlDeleteUserInput.getId());
-      return qlDeleteUserPayloadBuilder.status(QLRequestStatus.SUCCESS).build();
-    } catch (Exception ex) {
-      return qlDeleteUserPayloadBuilder.status(QLRequestStatus.FAILED).message(ex.getMessage()).build();
-    }
+    userService.delete(mutationContext.getAccountId(), qlDeleteUserInput.getId());
+    return qlDeleteUserPayloadBuilder.build();
   }
 }

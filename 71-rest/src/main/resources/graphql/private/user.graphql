@@ -13,6 +13,7 @@ input CreateUserInput {
   requestId: String!
   name: String!
   email: String!
+  userGroupIds: [String!]
 }
 
 type CreateUserPayload {
@@ -24,6 +25,7 @@ input UpdateUserInput {
   requestId: String!
   id: String!
   name: String
+  userGroupIds: [String!]
 }
 
 type UpdateUserPayload {
@@ -32,12 +34,12 @@ type UpdateUserPayload {
 }
 
 input DeleteUserInput {
+  requestId: String!
   id: String!
 }
 
 type DeleteUserPayload {
-  status: RequestStatus
-  message: String
+  requestId: String
 }
 
 extend type User {
@@ -49,6 +51,8 @@ extend type User {
   isUserLocked: Boolean
   isPasswordExpired: Boolean
   isImportedFromIdentityProvider: Boolean
+  userGroups(limit: Int!, offset: Int): UserGroupConnection
+    @dataFetcher(name: userGroupConnection, contextFieldArgsMap: "{ \"User\": \"id\"}")
 }
 
 type UserConnection {
