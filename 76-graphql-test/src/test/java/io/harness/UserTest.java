@@ -19,7 +19,7 @@ import software.wings.beans.AccountType;
 import software.wings.beans.User;
 import software.wings.graphql.schema.type.QLUser;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
-import software.wings.graphql.schema.type.User.QLUserConnection;
+import software.wings.graphql.schema.type.user.QLUserConnection;
 
 public class UserTest extends GraphQLTest {
   @Inject private AccountGenerator accountGenerator;
