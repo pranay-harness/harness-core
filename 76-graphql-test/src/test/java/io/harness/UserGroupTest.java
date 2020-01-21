@@ -100,6 +100,64 @@ public class UserGroupTest extends GraphQLTest {
     }
   }
 
+  private String getUpdatedUserGroupGQL(String userGroupId) {
+    String updatedUserGroup = $GQL(
+        /* {
+              name: "gqltests",
+              description: "descc",
+              permissions: {
+                   accountPermissions: ADMINISTER_OTHER_ACCOUNT_FUNCTIONS
+              },
+              userGroupId : "%s",
+              notificationSettings: {
+                 sendMailToNewMembers: true,
+                 sendNotificationToMembers: true,
+                 slackNotificationSetting:
+                     {
+                       slackWebhookURL: "https://abc",
+                       slackChannelName: "cool"
+                     },
+                 groupEmailAddresses: "abc@gmail.com"
+              },
+           requestId: "abc"
+         }
+       */
+        userGroupId);
+    return updatedUserGroup;
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testUpdateUserGroup() {
+    final Randomizer.Seed seed = new Randomizer.Seed(0);
+    final OwnerManager.Owners owners = ownerManager.create();
+    owners.add(EmbeddedUser.builder().uuid(generateUuid()).build());
+    String name = "AccountPermission-UserGroup-" + System.currentTimeMillis();
+    String description = "\"Test UserGroup\"";
+    UserGroup userGroup = createUserGroup(name, description);
+
+    {
+      String query = $GQL(/*
+mutation{
+  updateUserGroup(input:%s){
+    requestId
+  }
+}*/ getUpdatedUserGroupGQL(userGroup.getUuid()));
+      final ExecutionResult result = qlResult(query, accountId);
+      UserGroup updatedUserGroup = userGroupService.get(userGroup.getAccountId(), userGroup.getUuid());
+      assertThat(userGroup.getUuid()).isEqualTo(updatedUserGroup.getUuid());
+      assertThat(updatedUserGroup.getName()).isEqualTo("gqltests");
+      assertThat(updatedUserGroup.getDescription()).isEqualTo("descc");
+      assertThat(updatedUserGroup.getNotificationSettings().isUseIndividualEmails()).isEqualTo(true);
+      assertThat(updatedUserGroup.getNotificationSettings().isSendMailToNewMembers()).isEqualTo(true);
+      assertThat(updatedUserGroup.getNotificationSettings().getSlackConfig().getOutgoingWebhookUrl())
+          .isEqualTo("https://abc");
+      assertThat(updatedUserGroup.getNotificationSettings().getSlackConfig().getName()).isEqualTo("cool");
+      assertThat(updatedUserGroup.getNotificationSettings().getEmailAddresses().contains("abc@gmail.com")).isTrue();
+    }
+  }
+
   @Test
   @Owner(developers = DEEPAK)
   @Category({GraphQLTests.class, UnitTests.class})
@@ -181,8 +239,7 @@ public class UserGroupTest extends GraphQLTest {
                        requestId: "abc",
                        userGroupId: "%s"
                        }){
-                          status
-                          message
+                      requestId
                     }
             }*/ userGroup1.getUuid());
     final QLTestObject qlTestObject = qlExecute(query, accountId);

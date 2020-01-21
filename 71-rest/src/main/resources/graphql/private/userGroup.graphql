@@ -1,5 +1,6 @@
 extend type Mutation {
   createUserGroup(input: CreateUserGroupInput!): CreateUserGroupPayload @dataFetcher(name: createUserGroup)
+  updateUserGroup(input: UpdateUserGroupInput!): UpdateUserGroupPayload @dataFetcher(name: updateUserGroup)
   updateUserGroupPermissions(userGroupId: String!, permissions: Permissions!): UserGroupPermissions
     @dataFetcher(name: userGroupUpdatePermissions)
   deleteUserGroup(input: DeleteUserGroupInput!): DeleteUserGroupPayload @dataFetcher(name: deleteUserGroup)
@@ -11,11 +12,22 @@ extend type Query {
 }
 
 input CreateUserGroupInput {
+  requestId: String
   name: String!
   description: String
+  userIds: [String]
   permissions: Permissions
   notificationSettings: NotificationSettingsInput
+}
+
+input UpdateUserGroupInput {
   requestId: String
+  name: String!
+  userGroupId: String!
+  description: String
+  userIds: [String]
+  permissions: Permissions
+  notificationSettings: NotificationSettingsInput
 }
 
 input DeleteUserGroupInput {
@@ -27,27 +39,27 @@ type UserGroup {
   id: String
   name: String
   description: String
+  users(limit: Int!, offset: Int): UserConnection
+    @dataFetcher(name: userConnection, contextFieldArgsMap: "{ \"userGroup\": \"id\"}")
   importedByScim: Boolean
   isSSOLinked: Boolean
-  notificationSettings: NotificationSettingsPayload
+  notificationSettings: NotificationSettings
   permissions: UserGroupPermissions
-  requestId: String
-}
-
-type CreateUserGroupPayload {
-  id: String
-  name: String
-  description: String
-  importedByScim: Boolean
-  isSSOLinked: Boolean
-  notificationSettings: NotificationSettingsPayload
-  permissions: UserGroupPermissions
-  requestId: String
 }
 
 type UserGroupConnection {
   pageInfo: PageInfo
   nodes: [UserGroup]
+}
+
+type CreateUserGroupPayload {
+  requestId: String
+  userGroup: UserGroup
+}
+
+type UpdateUserGroupPayload {
+  requestId: String
+  userGroup: UserGroup
 }
 
 input NotificationSettingsInput {
@@ -63,19 +75,14 @@ input SlackNotificationSettingInput {
   slackWebhookURL: String
 }
 
-type NotificationSettingsPayload {
+type NotificationSettings {
   sendNotificationToMembers: Boolean
   sendMailToNewMembers: Boolean
   groupEmailAddresses: [String]
-  slackNotificationSetting: SlackNotificationSettingPayload
+  slackNotificationSetting: SlackNotificationSetting
 }
 
-input SlackNotificationSetting {
-  slackChannelName: String
-  slackWebhookURL: String
-}
-
-type SlackNotificationSettingPayload {
+type SlackNotificationSetting {
   slackChannelName: String
   slackWebhookURL: String
 }
@@ -86,6 +93,5 @@ enum RequestStatus {
 }
 
 type DeleteUserGroupPayload {
-  status: RequestStatus
-  message: String
+  requestId: String
 }

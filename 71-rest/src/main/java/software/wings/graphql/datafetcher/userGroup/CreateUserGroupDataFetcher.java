@@ -30,6 +30,6 @@ public class CreateUserGroupDataFetcher
     UserGroup userGroup = userGroupController.populateUserGroupEntity(parameter);
     userGroup.setAccountId(mutationContext.getAccountId());
     userGroupService.save(userGroup);
-    return userGroupController.populateCreateUserGroupPayload(userGroup);
+    return userGroupController.populateCreateUserGroupPayload(userGroup, parameter.getRequestId());
   }
 }

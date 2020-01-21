@@ -93,6 +93,7 @@ import software.wings.graphql.datafetcher.user.UserConnectionDataFetcher;
 import software.wings.graphql.datafetcher.user.UserDataFetcher;
 import software.wings.graphql.datafetcher.userGroup.CreateUserGroupDataFetcher;
 import software.wings.graphql.datafetcher.userGroup.DeleteUserGroupDataFetcher;
+import software.wings.graphql.datafetcher.userGroup.UpdateUserGroupDataFetcher;
 import software.wings.graphql.datafetcher.userGroup.UserGroupConnectionDataFetcher;
 import software.wings.graphql.datafetcher.userGroup.UserGroupDataFetcher;
 import software.wings.graphql.datafetcher.userGroup.UserGroupUpdatePermissionsDataFetcher;
@@ -223,6 +224,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(UserGroupConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(DeleteUserGroupDataFetcher.class);
     bindDataFetcherWithAnnotation(CreateUserGroupDataFetcher.class);
+    bindDataFetcherWithAnnotation(UpdateUserGroupDataFetcher.class);
     bindDataFetcherWithAnnotation(UserDataFetcher.class);
     bindDataFetcherWithAnnotation(UserConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(UpdateApplicationGitConfigDataFetcher.class);
