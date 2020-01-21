@@ -38,6 +38,9 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -833,5 +836,41 @@ public class AccountServiceTest extends WingsBaseTest {
     accountService.setSubdomainUrl(account, subdomainUrl);
     assertThat(wingsPersistence.get(Account.class, account.getUuid()).getSubdomainUrl())
         .isEqualTo(subdomainUrl.getUrl());
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void testAddSubdomainUrl() {
+    Account account1 = accountService.save(anAccount()
+                                               .withCompanyName("CompanyName 1")
+                                               .withAccountName("Account Name 1")
+                                               .withSubdomainUrl("https://initialDomain.com")
+                                               .withLicenseInfo(getLicenseInfo())
+                                               .build(),
+        false);
+    Account account2 = accountService.save(anAccount()
+                                               .withCompanyName("CompanyName 2")
+                                               .withAccountName("Account Name 2")
+                                               .withLicenseInfo(getLicenseInfo())
+                                               .build(),
+        false);
+    SubdomainUrl validUrl = new SubdomainUrl("https://domain.io");
+    SubdomainUrl invalidUrl = new SubdomainUrl("domain.com");
+    User user1 = User.Builder.anUser().uuid("userId1").name("name1").email("user1@harness.io").build();
+    User user2 = User.Builder.anUser().uuid("userId2").name("name2").email("user2@harness.io").build();
+    when(harnessUserGroupService.isHarnessSupportUser("userId1")).thenReturn(Boolean.FALSE);
+    when(harnessUserGroupService.isHarnessSupportUser("userId2")).thenReturn(Boolean.TRUE);
+
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> accountService.addSubdomainUrl(user1.getUuid(), account1.getUuid(), validUrl));
+    assertThatExceptionOfType(UnauthorizedException.class)
+        .isThrownBy(() -> accountService.addSubdomainUrl(user1.getUuid(), account2.getUuid(), validUrl));
+    assertThatExceptionOfType(InvalidArgumentsException.class)
+        .isThrownBy(() -> accountService.addSubdomainUrl(user2.getUuid(), account2.getUuid(), invalidUrl));
+
+    Boolean result1 = accountService.addSubdomainUrl(user2.getUuid(), account2.getUuid(), validUrl);
+    assertThat(wingsPersistence.get(Account.class, account2.getUuid()).getSubdomainUrl()).isEqualTo(validUrl.getUrl());
+    assertThat(result1).isTrue();
   }
 }
