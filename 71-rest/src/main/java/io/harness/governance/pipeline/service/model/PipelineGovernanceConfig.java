@@ -52,7 +52,6 @@ public class PipelineGovernanceConfig implements PersistentEntity, UuidAccess {
     } else {
       this.uuid = uuid;
     }
-
     this.description = trimToEmpty(description);
     this.accountId = Objects.requireNonNull(accountId, "accountId must be present");
     this.name = name;

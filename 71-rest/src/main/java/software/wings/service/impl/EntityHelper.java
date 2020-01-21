@@ -27,6 +27,7 @@ import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
 import io.harness.globalcontex.PurgeGlobalContextData;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.UuidAccess;
 import lombok.extern.slf4j.Slf4j;
@@ -500,13 +501,20 @@ public class EntityHelper {
       affectedResourceOperation =
           getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
     } else if (entity instanceof GovernanceConfig) {
-      GovernanceConfig governanceConfig = (GovernanceConfig) entity;
-      entityType = ResourceType.GOVERNANCE.name();
-      entityName = ResourceType.GOVERNANCE.name();
+      GovernanceConfig config = (GovernanceConfig) entity;
+      entityType = ResourceType.DEPLOYMENT_FREEZE.name();
       appId = Application.GLOBAL_APP_ID;
-      affectedResourceId = governanceConfig.getUuid();
-      affectedResourceName = ResourceType.GOVERNANCE.name();
-      affectedResourceType = ResourceType.GOVERNANCE.name();
+      affectedResourceId = config.getUuid();
+      affectedResourceType = entityType;
+      affectedResourceOperation = type.name();
+    } else if (entity instanceof PipelineGovernanceConfig) {
+      PipelineGovernanceConfig config = (PipelineGovernanceConfig) entity;
+      entityType = EntityType.PIPELINE_GOVERNANCE_STANDARD.name();
+      entityName = config.getName();
+      appId = Application.GLOBAL_APP_ID;
+      affectedResourceId = config.getUuid();
+      affectedResourceType = entityType;
+      affectedResourceName = config.getName();
       affectedResourceOperation = type.name();
     } else if (entity instanceof HarnessTag) {
       HarnessTag harnessTag = (HarnessTag) entity;

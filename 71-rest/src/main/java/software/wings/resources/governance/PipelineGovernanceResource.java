@@ -20,7 +20,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -55,16 +54,6 @@ public class PipelineGovernanceResource {
       @NotNull(message = "governanceConfig missing while trying to add pipeline governance config")
       PipelineGovernanceConfig governanceConfig) {
     return new RestResponse<>(pipelineGovernanceService.add(accountId, governanceConfig));
-  }
-
-  @PUT
-  @Path("{uuid}")
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
-  public RestResponse<PipelineGovernanceConfig> update(@QueryParam("accountId") @NotEmpty String accountId,
-      @PathParam("uuid") String uuid,
-      @NotNull(message = "governanceConfig missing while trying to update pipeline governance config")
-      PipelineGovernanceConfig governanceConfig) {
-    return new RestResponse<>(pipelineGovernanceService.update(accountId, uuid, governanceConfig));
   }
 
   @DELETE
