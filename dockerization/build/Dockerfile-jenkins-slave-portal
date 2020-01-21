@@ -1,4 +1,4 @@
-FROM harness/serverjre_8:191
+FROM base_jdk
 
 RUN yum install -y git-core hostname unzip wget
 RUN curl -o gsutil.tar.gz https://storage.googleapis.com/pub/gsutil.tar.gz
@@ -41,10 +41,6 @@ RUN curl -O https://releases.hashicorp.com/terraform/0.11.11/terraform_0.11.11_l
     && unzip terraform_0.11.11_linux_amd64.zip \
     && chmod 755 terraform \
     && mv terraform /usr/local/bin
-
-RUN yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-2.noarch.rpm \
-    && yum install -y git \
-    && git version
 
 RUN wget -O /etc/yum.repos.d/cloudfoundry-cli.repo https://packages.cloudfoundry.org/fedora/cloudfoundry-cli.repo \
     && yum install -y cf-cli
