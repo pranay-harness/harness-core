@@ -62,7 +62,7 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupByList);
 
     queryData = billingDataQueryBuilder.formQuery(
-        accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria);
+        accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria, true);
 
     logger.info("BillingStatsEntityDataFetcher query!! {}", queryData.getQuery());
     logger.info(queryData.getQuery());
@@ -232,7 +232,7 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcherWithA
       List<QLBillingSortCriteria> sortCriteria) {
     BillingDataQueryMetadata queryData = billingDataQueryBuilder.formQuery(accountId,
         billingDataQueryBuilder.prepareFiltersForUnallocatedCostData(filters), aggregateFunction, groupBy, groupByTime,
-        sortCriteria);
+        sortCriteria, true);
     String query = queryData.getQuery();
     logger.info("Unallocated cost data query {}", query);
     ResultSet resultSet = null;

@@ -34,6 +34,7 @@ enum DataFetcherEnum {
   service
   serviceConnection
   serviceStats
+  sunburstChartStats
   tagsInUseConnection
   tags
   trigger
