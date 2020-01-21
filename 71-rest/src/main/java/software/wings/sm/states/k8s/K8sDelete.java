@@ -64,6 +64,7 @@ public class K8sDelete extends State {
   }
 
   @Getter @Setter @Attributes(title = "Resources") private String resources;
+  @Getter @Setter private boolean deleteNamespacesForRelease;
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
@@ -78,6 +79,7 @@ public class K8sDelete extends State {
                                                 .commandName(K8S_DELETE_COMMAND_NAME)
                                                 .k8sTaskType(K8sTaskType.DELETE)
                                                 .resources(context.renderExpression(this.resources))
+                                                .deleteNamespacesForRelease(deleteNamespacesForRelease)
                                                 .timeoutIntervalInMin(10)
                                                 .build();
 

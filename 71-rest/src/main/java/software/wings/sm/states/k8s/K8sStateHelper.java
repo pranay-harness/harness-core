@@ -454,6 +454,7 @@ public class K8sStateHelper {
   public ExecutionResponse queueK8sDelegateTask(ExecutionContext context, K8sTaskParameters k8sTaskParameters) {
     Application app = appService.get(context.getAppId());
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    notNullCheck("WorkflowStandardParams should not be null", workflowStandardParams);
     Environment env = workflowStandardParams.getEnv();
     ContainerInfrastructureMapping infraMapping = getContainerInfrastructureMapping(context);
     String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infraMapping);

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.k8s.model.KubernetesResourceId.createKubernetesResourceIdsFromKindName;
 import static software.wings.beans.Log.LogColor.Gray;
+import static software.wings.beans.Log.LogColor.GrayDark;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -24,20 +25,24 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sDeleteResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
+import java.io.IOException;
 import java.util.List;
 
 @NoArgsConstructor
 @Slf4j
 public class K8sDeleteTaskHandler extends K8sTaskHandler {
   @Inject private transient K8sTaskHelper k8sTaskHelper;
+  @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   private Kubectl client;
   private List<KubernetesResourceId> resourceIdsToDelete;
@@ -65,9 +70,11 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
           K8sDeleteResponse.builder().build(), CommandExecutionStatus.SUCCESS);
     }
 
-    k8sTaskHelper.delete(client, k8sDelegateTaskParams, resourceIdsToDelete,
+    ExecutionLogCallback executionLogCallback =
         new ExecutionLogCallback(delegateLogService, k8sDeleteTaskParameters.getAccountId(),
-            k8sDeleteTaskParameters.getAppId(), k8sDeleteTaskParameters.getActivityId(), Delete));
+            k8sDeleteTaskParameters.getAppId(), k8sDeleteTaskParameters.getActivityId(), Delete);
+
+    k8sTaskHelper.delete(client, k8sDelegateTaskParams, resourceIdsToDelete, executionLogCallback);
 
     return k8sTaskHelper.getK8sTaskExecutionResponse(
         K8sDeleteResponse.builder().build(), CommandExecutionStatus.SUCCESS);
@@ -78,15 +85,25 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
     executionLogCallback.saveExecutionLog("Initializing..\n");
 
     try {
-      client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
-
       if (StringUtils.isEmpty(k8sDeleteTaskParameters.getResources())) {
         executionLogCallback.saveExecutionLog("\nNo resources found to delete.");
         executionLogCallback.saveExecutionLog("\nDone.", INFO, SUCCESS);
         return true;
       }
 
-      resourceIdsToDelete = createKubernetesResourceIdsFromKindName(k8sDeleteTaskParameters.getResources());
+      client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
+
+      if ("*".equals(k8sDeleteTaskParameters.getResources().trim())) {
+        executionLogCallback.saveExecutionLog("All Resources are selected for deletion");
+        executionLogCallback.saveExecutionLog(color("Delete Namespace is set to: "
+                + k8sDeleteTaskParameters.isDeleteNamespacesForRelease() + ", Skipping deleting Namespace resources",
+            GrayDark, Bold));
+        executionLogCallback.saveExecutionLog(
+            "Delete Namespace is set to: " + k8sDeleteTaskParameters.isDeleteNamespacesForRelease());
+        resourceIdsToDelete = fetchAllCreatedResourceIdsForDeletion(k8sDeleteTaskParameters, executionLogCallback);
+      } else {
+        resourceIdsToDelete = createKubernetesResourceIdsFromKindName(k8sDeleteTaskParameters.getResources());
+      }
 
       executionLogCallback.saveExecutionLog(color("\nResources to delete are: ", White, Bold)
           + color(getResourcesInStringFormat(resourceIdsToDelete), Gray));
@@ -100,5 +117,12 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
       executionLogCallback.saveExecutionLog("\nFailed.", ERROR, CommandExecutionStatus.FAILURE);
       return false;
     }
+  }
+
+  List<KubernetesResourceId> fetchAllCreatedResourceIdsForDeletion(
+      K8sDeleteTaskParameters k8sDeleteTaskParameters, ExecutionLogCallback executionLogCallback) throws IOException {
+    KubernetesConfig kubernetesConfig =
+        containerDeploymentDelegateHelper.getKubernetesConfig(k8sDeleteTaskParameters.getK8sClusterConfig());
+    return k8sTaskHelper.getResourceIdsForDeletion(k8sDeleteTaskParameters, kubernetesConfig, executionLogCallback);
   }
 }
