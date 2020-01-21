@@ -2164,6 +2164,12 @@ public class WorkflowServiceHelper {
           "Service [" + newService.getName() + "] is not compatible with the service [" + oldService.getName() + "]",
           USER);
     }
+
+    if (oldService.isK8sV2() != newService.isK8sV2()) {
+      throw new InvalidRequestException("Service [" + newService.getName() + "] is not compatible with the service ["
+              + oldService.getName() + "] due to different kubernetes version",
+          USER);
+    }
   }
 
   /**

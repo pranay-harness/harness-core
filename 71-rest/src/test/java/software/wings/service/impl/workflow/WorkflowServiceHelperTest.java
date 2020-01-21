@@ -54,6 +54,7 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -154,6 +155,20 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
         + "      targetAverageUtilization: 80\n";
 
     assertThat(hpaString).isEqualTo(yamlForHPAWithCustomMetric);
+  }
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldValidateK8ServiceType() throws Exception {
+    String oldServiceId = SERVICE_ID + "_Old";
+
+    Service service = Service.builder().name(SERVICE_NAME).isK8sV2(true).uuid(SERVICE_ID).build();
+    Service oldService = Service.builder().name(SERVICE_NAME + "_Old").isK8sV2(false).uuid(oldServiceId).build();
+
+    doReturn(service).when(serviceResourceService).get(APP_ID, SERVICE_ID, false);
+    doReturn(oldService).when(serviceResourceService).get(APP_ID, oldServiceId, false);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> workflowServiceHelper.validateServiceCompatibility(APP_ID, SERVICE_ID, oldServiceId));
   }
 
   @Test
