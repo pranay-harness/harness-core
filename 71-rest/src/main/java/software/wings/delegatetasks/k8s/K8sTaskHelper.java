@@ -16,6 +16,7 @@ import static io.harness.k8s.manifest.ManifestHelper.yaml_file_extension;
 import static io.harness.k8s.manifest.ManifestHelper.yml_file_extension;
 import static io.harness.k8s.model.K8sExpressions.canaryDestinationExpression;
 import static io.harness.k8s.model.K8sExpressions.stableDestinationExpression;
+import static io.harness.k8s.model.Kind.Namespace;
 import static io.harness.k8s.model.Release.Status.Failed;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -36,6 +37,7 @@ import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 import static software.wings.delegatetasks.k8s.taskhandler.K8sTrafficSplitTaskHandler.ISTIO_DESTINATION_TEMPLATE;
 import static software.wings.sm.states.k8s.K8sApplyState.SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT;
+import static software.wings.utils.KubernetesConvention.ReleaseHistoryKeyName;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -44,6 +46,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
@@ -112,6 +115,7 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
+import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
@@ -133,6 +137,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Singleton
@@ -1452,5 +1457,83 @@ public class K8sTaskHelper {
       targetInstances = 1;
     }
     return targetInstances;
+  }
+
+  public List<KubernetesResourceId> fetchAllResourcesForRelease(K8sDeleteTaskParameters k8sDeleteTaskParameters,
+      KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback) throws IOException {
+    String releaseName = k8sDeleteTaskParameters.getReleaseName();
+    executionLogCallback.saveExecutionLog("Fetching all resources created for release: " + releaseName);
+
+    ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, emptyList(), releaseName);
+
+    if (isEmpty(configMap.getData()) || isBlank(configMap.getData().get(ReleaseHistoryKeyName))) {
+      executionLogCallback.saveExecutionLog("No resource history was available");
+      return emptyList();
+    }
+
+    String releaseHistoryDataString = configMap.getData().get(ReleaseHistoryKeyName);
+    ReleaseHistory releaseHistory = ReleaseHistory.createFromData(releaseHistoryDataString);
+
+    if (isEmpty(releaseHistory.getReleases())) {
+      return emptyList();
+    }
+
+    Map<String, KubernetesResourceId> kubernetesResourceIdMap = new HashMap<>();
+    for (Release release : releaseHistory.getReleases()) {
+      if (isNotEmpty(release.getResources())) {
+        release.getResources().forEach(
+            resource -> kubernetesResourceIdMap.put(generateResourceIdentifier(resource), resource));
+      }
+    }
+
+    KubernetesResourceId harnessGeneratedCMResource = KubernetesResourceId.builder()
+                                                          .kind(configMap.getKind())
+                                                          .name(releaseName)
+                                                          .namespace(kubernetesConfig.getNamespace())
+                                                          .build();
+    kubernetesResourceIdMap.put(generateResourceIdentifier(harnessGeneratedCMResource), harnessGeneratedCMResource);
+    return new ArrayList<>(kubernetesResourceIdMap.values());
+  }
+
+  /**
+   * This method arranges resources to be deleted in the reverse order of their creation.
+   * To see order of create, please refer to KubernetesResourceComparer.kindOrder
+   */
+  public List<KubernetesResourceId> arrangeResourceIdsInDeletionOrder(List<KubernetesResourceId> resourceIdsToDelete) {
+    List<KubernetesResource> kubernetesResources =
+        resourceIdsToDelete.stream()
+            .map(resourceId -> KubernetesResource.builder().resourceId(resourceId).build())
+            .collect(Collectors.toList());
+    kubernetesResources =
+        kubernetesResources.stream().sorted(new KubernetesResourceComparer().reversed()).collect(Collectors.toList());
+    return kubernetesResources.stream()
+        .map(kubernetesResource -> kubernetesResource.getResourceId())
+        .collect(Collectors.toList());
+  }
+
+  public List<KubernetesResourceId> getResourceIdsForDeletion(K8sDeleteTaskParameters k8sDeleteTaskParameters,
+      KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback) throws IOException {
+    List<KubernetesResourceId> kubernetesResourceIds =
+        fetchAllResourcesForRelease(k8sDeleteTaskParameters, kubernetesConfig, executionLogCallback);
+
+    // If namespace deletion is NOT selected,remove all Namespace resources from deletion list
+    if (!k8sDeleteTaskParameters.isDeleteNamespacesForRelease()) {
+      kubernetesResourceIds =
+          kubernetesResourceIds.stream()
+              .filter(kubernetesResourceId -> !Namespace.name().equals(kubernetesResourceId.getKind()))
+              .collect(toList());
+    }
+
+    return arrangeResourceIdsInDeletionOrder(kubernetesResourceIds);
+  }
+
+  String generateResourceIdentifier(KubernetesResourceId resourceId) {
+    return new StringBuilder(128)
+        .append(resourceId.getNamespace())
+        .append('/')
+        .append(resourceId.getKind())
+        .append('/')
+        .append(resourceId.getName())
+        .toString();
   }
 }
