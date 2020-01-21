@@ -10,10 +10,10 @@ import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLUser;
 import software.wings.graphql.schema.type.QLUser.QLUserBuilder;
-import software.wings.graphql.schema.type.User.QLUserConnection;
-import software.wings.graphql.schema.type.User.QLUserConnection.QLUserConnectionBuilder;
 import software.wings.graphql.schema.type.aggregation.QLNoOpFilterCriteria;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
+import software.wings.graphql.schema.type.user.QLUserConnection;
+import software.wings.graphql.schema.type.user.QLUserConnection.QLUserConnectionBuilder;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 

@@ -1,4 +1,4 @@
-package software.wings.graphql.schema.type.User;
+package software.wings.graphql.schema.type.user;
 
 import lombok.Builder;
 import lombok.Singular;
