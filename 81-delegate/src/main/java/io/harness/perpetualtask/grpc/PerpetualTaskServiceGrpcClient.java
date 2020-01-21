@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 @Slf4j
@@ -26,19 +27,20 @@ public class PerpetualTaskServiceGrpcClient {
   }
 
   public List<PerpetualTaskId> listTaskIds(String delegateId) {
-    PerpetualTaskIdList perpetualTaskIdList =
-        serviceBlockingStub.listTaskIds(DelegateId.newBuilder().setId(delegateId).build());
+    PerpetualTaskIdList perpetualTaskIdList = serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+                                                  .listTaskIds(DelegateId.newBuilder().setId(delegateId).build());
     return perpetualTaskIdList.getTaskIdsList();
   }
 
   public PerpetualTaskContext getTaskContext(PerpetualTaskId taskId) {
-    return serviceBlockingStub.getTaskContext(taskId);
+    return serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).getTaskContext(taskId);
   }
 
   public void publishHeartbeat(PerpetualTaskId taskId, Instant taskStartTime) {
-    serviceBlockingStub.publishHeartbeat(HeartbeatRequest.newBuilder()
-                                             .setId(taskId.getId())
-                                             .setHeartbeatTimestamp(HTimestamps.fromInstant(taskStartTime))
-                                             .build());
+    serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+        .publishHeartbeat(HeartbeatRequest.newBuilder()
+                              .setId(taskId.getId())
+                              .setHeartbeatTimestamp(HTimestamps.fromInstant(taskStartTime))
+                              .build());
   }
 }

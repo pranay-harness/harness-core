@@ -22,6 +22,8 @@ import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.RollCycles;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
 
+import java.time.Duration;
+
 public class TailerModule extends ProviderModule {
   private final Config config;
 
@@ -35,6 +37,7 @@ public class TailerModule extends ProviderModule {
   RollingChronicleQueue chronicleQueue(FileDeletionManager fileDeletionManager) {
     return ChronicleQueue.singleBuilder(config.queueFilePath)
         .rollCycle(RollCycles.MINUTELY)
+        .timeoutMS(Duration.ofSeconds(30).toMillis())
         .storeFileListener(fileDeletionManager)
         .build();
   }
