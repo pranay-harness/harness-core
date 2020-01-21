@@ -46,6 +46,7 @@ import org.junit.BeforeClass;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
+import software.wings.beans.LoginRequest;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.Service;
@@ -183,7 +184,8 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
     response = client.target(API_BASE + "/users/login")
                    .request()
                    .header("Authorization", basicAuthValue)
-                   .get(new GenericType<RestResponse<User>>() {});
+                   .post(entity(LoginRequest.builder().authorization(basicAuthValue).build(), APPLICATION_JSON),
+                       new GenericType<RestResponse<User>>() {});
     if (response.getResource() != null) {
       User loggedInUser = response.getResource();
       userToken = loggedInUser.getToken();
