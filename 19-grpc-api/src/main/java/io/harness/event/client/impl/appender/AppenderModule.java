@@ -14,6 +14,8 @@ import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.RollCycles;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
 
+import java.time.Duration;
+
 @Slf4j
 public class AppenderModule extends AbstractModule {
   private final Config config;
@@ -34,7 +36,10 @@ public class AppenderModule extends AbstractModule {
   @Singleton
   @Named("appender")
   RollingChronicleQueue chronicleQueue() {
-    return ChronicleQueue.singleBuilder(config.queueFilePath).rollCycle(RollCycles.MINUTELY).build();
+    return ChronicleQueue.singleBuilder(config.queueFilePath)
+        .rollCycle(RollCycles.MINUTELY)
+        .timeoutMS(Duration.ofSeconds(30).toMillis())
+        .build();
   }
 
   @Override

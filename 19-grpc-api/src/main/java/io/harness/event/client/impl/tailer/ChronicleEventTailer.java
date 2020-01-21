@@ -76,7 +76,7 @@ public class ChronicleEventTailer extends AbstractScheduledService {
       if (!batchToSend.isEmpty()) {
         PublishRequest publishRequest = PublishRequest.newBuilder().addAllMessages(batchToSend).build();
         try {
-          blockingStub.publish(publishRequest);
+          blockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).publish(publishRequest);
           logger.debug("Published {} messages successfully", batchToSend.size());
           fileDeletionManager.setSentCycle(readTailer.cycle());
         } catch (Exception e) {

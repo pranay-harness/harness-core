@@ -20,11 +20,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 class ChronicleEventAppender extends EventPublisher {
   private final RollingChronicleQueue queue;
   private final AtomicBoolean shutDown;
+  private final ChronicleQueueMonitor queueMonitor;
 
   @Inject
-  ChronicleEventAppender(@Named("appender") RollingChronicleQueue queue) {
+  ChronicleEventAppender(@Named("appender") RollingChronicleQueue queue, ChronicleQueueMonitor queueMonitor) {
     this.queue = Preconditions.checkNotNull(queue);
+    this.queueMonitor = queueMonitor;
     this.shutDown = new AtomicBoolean(false);
+    queueMonitor.startAsync().awaitRunning();
   }
 
   @Override
@@ -37,6 +40,7 @@ class ChronicleEventAppender extends EventPublisher {
   public final void shutdown() {
     if (!shutDown.getAndSet(true)) {
       logger.info("Shutting down publisher");
+      queueMonitor.stopAsync().awaitTerminated();
       queue.close();
     }
   }
