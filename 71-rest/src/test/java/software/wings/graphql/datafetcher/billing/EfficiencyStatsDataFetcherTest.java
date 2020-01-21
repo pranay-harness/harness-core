@@ -88,7 +88,7 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTest {
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNotNull();
     assertThat(data.getContext().getTotalCost()).isEqualTo(200.0);
-    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(37);
+    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(46);
     assertThat(data.getContext().getContextName()).isEqualTo(ACCOUNT1_ID);
     assertThat(data.getEfficiencyBreakdown().getTotal()).isEqualTo(200.0);
     assertThat(data.getEfficiencyBreakdown().getIdle()).isEqualTo(80.0);
@@ -114,7 +114,7 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTest {
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNotNull();
     assertThat(data.getContext().getTotalCost()).isEqualTo(200.0);
-    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(37);
+    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(92);
     assertThat(data.getContext().getContextName()).isEqualTo(CLUSTER1_ID);
     assertThat(data.getEfficiencyBreakdown().getTotal()).isEqualTo(200.0);
     assertThat(data.getEfficiencyBreakdown().getIdle()).isEqualTo(80.0);
@@ -140,7 +140,7 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTest {
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNotNull();
     assertThat(data.getContext().getTotalCost()).isEqualTo(200.0);
-    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(37);
+    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(92);
     assertThat(data.getContext().getContextName()).isEqualTo(NAMESPACE1);
     assertThat(data.getEfficiencyBreakdown().getTotal()).isEqualTo(200.0);
     assertThat(data.getEfficiencyBreakdown().getIdle()).isEqualTo(80.0);
@@ -168,7 +168,7 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTest {
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNotNull();
     assertThat(data.getContext().getTotalCost()).isEqualTo(200.0);
-    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(37);
+    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(92);
     assertThat(data.getContext().getContextName()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
     assertThat(data.getEfficiencyBreakdown().getTotal()).isEqualTo(200.0);
     assertThat(data.getEfficiencyBreakdown().getIdle()).isEqualTo(80.0);
@@ -193,7 +193,7 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTest {
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNotNull();
     assertThat(data.getContext().getTotalCost()).isEqualTo(200.0);
-    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(37);
+    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(92);
     assertThat(data.getContext().getContextName()).isEqualTo(ACCOUNT1_ID);
     assertThat(data.getEfficiencyBreakdown().getTotal()).isEqualTo(200.0);
     assertThat(data.getEfficiencyBreakdown().getIdle()).isEqualTo(80.0);
@@ -221,7 +221,7 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTest {
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNotNull();
     assertThat(data.getContext().getTotalCost()).isEqualTo(200.0);
-    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(37);
+    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(92);
     assertThat(data.getContext().getContextName()).isEqualTo(SERVICE1_ID_APP1_ACCOUNT1);
     assertThat(data.getEfficiencyBreakdown().getTotal()).isEqualTo(200.0);
     assertThat(data.getEfficiencyBreakdown().getIdle()).isEqualTo(80.0);
@@ -248,7 +248,7 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTest {
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNotNull();
     assertThat(data.getContext().getTotalCost()).isEqualTo(200.0);
-    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(37);
+    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(92);
     assertThat(data.getContext().getContextName()).isEqualTo(ENV1_ID_APP1_ACCOUNT1);
     assertThat(data.getEfficiencyBreakdown().getTotal()).isEqualTo(200.0);
     assertThat(data.getEfficiencyBreakdown().getIdle()).isEqualTo(80.0);

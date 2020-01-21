@@ -45,6 +45,8 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
   private static final String CPU_CONSTANT = "CPU";
   private static final String MEMORY_CONSTANT = "MEMORY";
   private static final String TOTAL_COST_DESCRIPTION = "Total Cost between %s - %s";
+  private static int IDLE_COST_BASELINE = 30;
+  private static int UNALLOCATED_COST_BASELINE = 5;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -154,12 +156,22 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
 
     String totalCostDescription = String.format(TOTAL_COST_DESCRIPTION, startTime, endTime);
 
+    int efficiencyScore = calculateEfficiencyScore(costStats);
+
     return QLContextInfo.builder()
         .contextName(getContextNameFromFilter(filters, accountId))
-        .efficiencyScore(37) // Will have to finalise the formula to get the score
+        .efficiencyScore(efficiencyScore < 100 ? efficiencyScore : 100)
         .totalCost(costStats.getTotal())
         .totalCostDescription(totalCostDescription)
         .build();
+  }
+
+  private int calculateEfficiencyScore(QLStatsBreakdownInfo costStats) {
+    int utilizedBaseline = 100 - IDLE_COST_BASELINE - UNALLOCATED_COST_BASELINE;
+    double utilized = costStats.getUtilized().doubleValue();
+    double total = costStats.getTotal().doubleValue();
+    double utilizedPercentage = utilized / total * 100;
+    return (int) ((1 - ((utilizedBaseline - utilizedPercentage) / utilizedBaseline)) * 100);
   }
 
   private String getContextNameFromFilter(List<QLBillingDataFilter> filters, String accountId) {
