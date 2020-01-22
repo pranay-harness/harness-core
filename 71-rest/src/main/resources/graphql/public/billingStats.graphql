@@ -61,6 +61,7 @@ input CCMGroupBy {
   entityGroupBy: CCMEntityGroupBy
   timeAggregation: CCMTimeSeriesAggregation
   tagAggregation: BillingDataTagAggregation
+  labelAggregation: BillingDataLabelAggregation
 }
 
 enum CCMEntityGroupBy {
@@ -93,6 +94,10 @@ enum TimeGroupType {
 input BillingDataTagAggregation {
   entityType: BillingDataTagType
   tagName: String
+}
+
+input BillingDataLabelAggregation {
+  name: String
 }
 
 input BillingSortCriteria {
@@ -168,6 +173,7 @@ type BillingFilterDataPoint {
   environments: [EntityData]
   services: [EntityData]
   clusters: [EntityData]
+  k8sLabels: [K8sLabel]
 }
 
 type EntityData {
@@ -216,8 +222,6 @@ type BillingStackedTimeSeriesDataPoint {
 type BillingDataPoint {
   key: Reference # Key refers to the label
   value: Number
-  Avg: Number
-  Max: Number
 }
 
 type BillingStatsInfo {
@@ -259,11 +263,21 @@ input CCMFilter {
   startTime: TimeFilter
   cloudProvider: IdFilter
   tag: BillingDataTagFilter
+  label: BillingDataLabelFilter
+}
+
+input BillingDataLabelFilter {
+  labels: [K8sLabelInput]
 }
 
 input BillingDataTagFilter {
   entityType: BillingDataTagType
   tags: [TagInput]
+}
+
+input K8sLabelInput {
+  name: String
+  values: [String]
 }
 
 enum BillingDataTagType {

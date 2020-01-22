@@ -6,9 +6,16 @@ import static java.util.function.Function.identity;
 import com.google.api.client.util.ArrayMap;
 import com.google.inject.Inject;
 
+import io.harness.ccm.cluster.entities.K8sWorkload;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTagLink;
+import software.wings.graphql.datafetcher.billing.BillingDataHelper;
+import software.wings.graphql.datafetcher.billing.BillingDataTableSchema.BillingDataTableKeys;
+import software.wings.graphql.datafetcher.billing.QLCCMAggregateOperation;
+import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
+import software.wings.graphql.datafetcher.k8sLabel.K8sLabelHelper;
+import software.wings.graphql.schema.type.aggregation.LabelAggregation;
 import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLBillingStackedTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLBillingStackedTimeSeriesDataPoint;
@@ -26,42 +33,91 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G, S, E, TA extends TagAggregation, EA>
+public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G, S, E, TA extends TagAggregation, LA
+                                                                             extends LabelAggregation, EA>
     extends AbstractStatsDataFetcherWithAggregationList<A, F, G, S> {
   @Inject protected HarnessTagService tagService;
+  @Inject protected K8sLabelHelper k8sLabelHelper;
+  @Inject protected BillingDataHelper billingDataHelper;
+  private static final String TYPE_LABEL = "K8sLabel";
+  private static final String TYPE_UTILIZATION = "Utilization";
   protected abstract TA getTagAggregation(G groupBy);
+  protected abstract LA getLabelAggregation(G groupBy);
   protected abstract EA getEntityAggregation(G groupBy);
   protected abstract EntityType getEntityType(E entityType);
 
   @Override
-  public QLData postFetch(String accountId, List<G> groupByList, QLData qlData) {
+  public QLData postFetch(String accountId, List<G> groupByList, List<A> aggregateFunctions, QLData qlData) {
     List<TA> groupByTagList = getGroupByTag(groupByList);
-    if (groupByTagList.isEmpty()) {
-      return qlData;
-    }
-    TA groupByTagLevel1 = groupByTagList.get(0);
+    List<LA> groupByLabelList = getGroupByLabel(groupByList);
+    if (!groupByTagList.isEmpty()) {
+      TA groupByTagLevel1 = groupByTagList.get(0);
 
-    if (qlData instanceof QLBillingStackedTimeSeriesData) {
-      QLBillingStackedTimeSeriesData billingStackedTimeSeriesData = (QLBillingStackedTimeSeriesData) qlData;
-      List<QLBillingStackedTimeSeriesDataPoint> billingStackedTimeSeriesDataPoints =
-          billingStackedTimeSeriesData.getData();
-      if (isEmpty(billingStackedTimeSeriesDataPoints)) {
-        return qlData;
+      if (qlData instanceof QLBillingStackedTimeSeriesData) {
+        QLBillingStackedTimeSeriesData billingStackedTimeSeriesData = (QLBillingStackedTimeSeriesData) qlData;
+        List<QLBillingStackedTimeSeriesDataPoint> billingStackedTimeSeriesDataPoints =
+            billingStackedTimeSeriesData.getData();
+        if (isEmpty(billingStackedTimeSeriesDataPoints)) {
+          return qlData;
+        }
+        billingStackedTimeSeriesDataPoints.forEach(billingStackedTimeSeriesDataPoint -> {
+          List<QLBillingDataPoint> dataPoints =
+              getTagDataPoints(accountId, billingStackedTimeSeriesDataPoint.getValues(), groupByTagLevel1);
+          billingStackedTimeSeriesDataPoint.setValues(dataPoints);
+        });
+      } else if (qlData instanceof QLEntityTableListData) {
+        QLEntityTableListData entityTableListData = (QLEntityTableListData) qlData;
+        List<QLEntityTableData> entityTableDataPoints = entityTableListData.getData();
+        if (isEmpty(entityTableDataPoints)) {
+          return qlData;
+        }
+        getTagEntityTableDataPoints(accountId, entityTableDataPoints, groupByTagLevel1);
       }
-      billingStackedTimeSeriesDataPoints.forEach(billingStackedTimeSeriesDataPoint -> {
-        List<QLBillingDataPoint> dataPoints =
-            getTagDataPoints(accountId, billingStackedTimeSeriesDataPoint.getValues(), groupByTagLevel1);
-        billingStackedTimeSeriesDataPoint.setValues(dataPoints);
-      });
+    } else if (!groupByLabelList.isEmpty()) {
+      LA groupByLabelLevel1 = groupByLabelList.get(0);
+      prepareDataAfterLabelGroupBy(accountId, qlData, aggregateFunctions, groupByLabelLevel1);
+    }
+    return qlData;
+  }
+
+  private void prepareDataAfterLabelGroupBy(
+      String accountId, QLData qlData, List<A> aggregateFunctions, LA groupByLabelLevel1) {
+    if (qlData instanceof QLBillingStackedTimeSeriesData) {
+      List<QLCCMAggregationFunction> billingDataAggregations = (List<QLCCMAggregationFunction>) aggregateFunctions;
+      QLBillingStackedTimeSeriesData billingStackedTimeSeriesData = (QLBillingStackedTimeSeriesData) qlData;
+      prepareStackedTimeSeriesDataAfterLabelGroupBy(
+          accountId, billingStackedTimeSeriesData, billingDataAggregations, groupByLabelLevel1);
     } else if (qlData instanceof QLEntityTableListData) {
       QLEntityTableListData entityTableListData = (QLEntityTableListData) qlData;
       List<QLEntityTableData> entityTableDataPoints = entityTableListData.getData();
-      if (isEmpty(entityTableDataPoints)) {
-        return qlData;
-      }
-      getTagEntityTableDataPoints(accountId, entityTableDataPoints, groupByTagLevel1);
+      getLabelEntityTableDataPoints(accountId, entityTableDataPoints, groupByLabelLevel1);
     }
-    return qlData;
+  }
+
+  private void prepareStackedTimeSeriesDataAfterLabelGroupBy(String accountId,
+      QLBillingStackedTimeSeriesData billingStackedTimeSeriesData,
+      List<QLCCMAggregationFunction> billingDataAggregations, LA groupByLabelLevel1) {
+    billingDataAggregations.forEach(aggregateFunction -> {
+      List<QLBillingStackedTimeSeriesDataPoint> billingStackedTimeSeriesDataPoints = new ArrayList<>();
+      if (aggregateFunction.getColumnName().equalsIgnoreCase(BillingDataTableKeys.billingAmount)) {
+        billingStackedTimeSeriesDataPoints = billingStackedTimeSeriesData.getData();
+      } else if (aggregateFunction.getColumnName().equalsIgnoreCase(BillingDataTableKeys.cpuIdleCost)) {
+        billingStackedTimeSeriesDataPoints = billingStackedTimeSeriesData.getCpuIdleCost();
+      } else if (aggregateFunction.getColumnName().equalsIgnoreCase(BillingDataTableKeys.memoryIdleCost)) {
+        billingStackedTimeSeriesDataPoints = billingStackedTimeSeriesData.getMemoryIdleCost();
+      } else if (aggregateFunction.getColumnName().equalsIgnoreCase(BillingDataTableKeys.maxCpuUtilization)
+          || aggregateFunction.getColumnName().equalsIgnoreCase(BillingDataTableKeys.avgCpuUtilization)) {
+        billingStackedTimeSeriesDataPoints = billingStackedTimeSeriesData.getCpuUtilMetrics();
+      } else if (aggregateFunction.getColumnName().equalsIgnoreCase(BillingDataTableKeys.maxMemoryUtilization)
+          || aggregateFunction.getColumnName().equalsIgnoreCase(BillingDataTableKeys.avgMemoryUtilization)) {
+        billingStackedTimeSeriesDataPoints = billingStackedTimeSeriesData.getMemoryUtilMetrics();
+      }
+      billingStackedTimeSeriesDataPoints.forEach(billingStackedTimeSeriesDataPoint -> {
+        List<QLBillingDataPoint> dataPoints = getLabelDataPoints(accountId,
+            billingStackedTimeSeriesDataPoint.getValues(), groupByLabelLevel1, aggregateFunction.getOperationType());
+        billingStackedTimeSeriesDataPoint.setValues(dataPoints);
+      });
+    });
   }
 
   protected int findFirstGroupByTagPosition(List<G> groupByList) {
@@ -70,6 +126,18 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       index++;
       TA tagAggregation = getTagAggregation(groupByEntry);
       if (tagAggregation != null) {
+        return index;
+      }
+    }
+    return -1;
+  }
+
+  protected int findFirstGroupByLabelPosition(List<G> groupByList) {
+    int index = -1;
+    for (G groupByEntry : groupByList) {
+      index++;
+      LA labelAggregation = getLabelAggregation(groupByEntry);
+      if (labelAggregation != null) {
         return index;
       }
     }
@@ -89,6 +157,21 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       }
     }
     return groupByTagList;
+  }
+
+  protected List<LA> getGroupByLabel(List<G> groupByList) {
+    List<LA> groupByLabelList = new ArrayList<>();
+    if (isEmpty(groupByList)) {
+      return groupByLabelList;
+    }
+
+    for (G groupBy : groupByList) {
+      LA labelAggregation = getLabelAggregation(groupBy);
+      if (labelAggregation != null) {
+        groupByLabelList.add(labelAggregation);
+      }
+    }
+    return groupByLabelList;
   }
 
   protected int findFirstGroupByEntityPosition(List<G> groupByList) {
@@ -127,6 +210,30 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
     return groupByEntityList;
   }
 
+  protected List<EA> getGroupByEntityListFromLabels(
+      List<G> groupByList, List<EA> groupByEntityList, List<LA> groupByLabelList) {
+    if (!groupByLabelList.isEmpty()) {
+      if (groupByEntityList == null) {
+        groupByEntityList = new ArrayList<>();
+      }
+      // We need to determine the order so that the correct grouping happens at each level.
+      if (!groupByEntityList.isEmpty() && groupByLabelList.size() == 1) {
+        int entityIndex = findFirstGroupByEntityPosition(groupByList);
+        int labelIndex = findFirstGroupByLabelPosition(groupByList);
+        if (entityIndex > labelIndex) {
+          groupByEntityList.add(0, getGroupByEntityFromLabel(groupByLabelList.get(0)));
+        } else {
+          groupByEntityList.add(getGroupByEntityFromLabel(groupByLabelList.get(0)));
+        }
+      } else {
+        for (LA groupByLabelEntry : groupByLabelList) {
+          groupByEntityList.add(getGroupByEntityFromLabel(groupByLabelEntry));
+        }
+      }
+    }
+    return groupByEntityList;
+  }
+
   private List<QLBillingDataPoint> getTagDataPoints(
       String accountId, List<QLBillingDataPoint> dataPoints, TA groupByTag) {
     Set<String> entityIdSet =
@@ -158,6 +265,81 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       return false;
     });
     return new ArrayList<>(tagNameDataPointMap.values());
+  }
+
+  private List<QLBillingDataPoint> getLabelDataPoints(
+      String accountId, List<QLBillingDataPoint> dataPoints, LA groupByLabel, QLCCMAggregateOperation operation) {
+    Set<String> entityIdSet =
+        dataPoints.stream().map(dataPoint -> dataPoint.getKey().getId()).collect(Collectors.toSet());
+    Set<K8sWorkload> labelLinks = k8sLabelHelper.getLabelLinks(accountId, entityIdSet, groupByLabel.getName());
+    Map<String, K8sWorkload> entityIdLabelLinkMap =
+        labelLinks.stream().collect(Collectors.toMap(K8sWorkload::getName, identity()));
+
+    ArrayMap<String, QLBillingDataPoint> labelNameDataPointMap = new ArrayMap<>();
+    ArrayMap<String, Long> numberOfDataPoints = new ArrayMap<>();
+    String labelName = groupByLabel.getName();
+    dataPoints.removeIf(dataPoint -> {
+      String entityId = dataPoint.getKey().getId();
+      if (dataPoint.getKey().getType().equals(TYPE_LABEL)
+          || (dataPoint.getKey().getType().equals(TYPE_UTILIZATION)
+                 && !dataPoint.getKey().getName().equals(operation.name()))) {
+        labelNameDataPointMap.put(entityId, dataPoint);
+        return false;
+      }
+      K8sWorkload workload = entityIdLabelLinkMap.get(entityId);
+      if (workload == null) {
+        return true;
+      }
+
+      String label = labelName + ":" + workload.getLabels().get(labelName);
+      return updateDataPointsForLabelAggregation(
+          dataPoint, labelNameDataPointMap, numberOfDataPoints, label, operation);
+    });
+
+    labelNameDataPointMap.forEach((key, dataPoint) -> {
+      if (key.contains("AVG")) {
+        dataPoint.setValue(billingDataHelper.getRoundedDoubleValue(dataPoint.getValue().doubleValue()
+            / numberOfDataPoints.get(dataPoint.getKey().getId() + operation.name())));
+      }
+    });
+
+    return new ArrayList<>(labelNameDataPointMap.values());
+  }
+
+  private boolean updateDataPointsForLabelAggregation(QLBillingDataPoint dataPoint,
+      ArrayMap<String, QLBillingDataPoint> labelNameDataPointMap, ArrayMap<String, Long> numberOfDataPoints,
+      String label, QLCCMAggregateOperation operation) {
+    String labelMapKey = label + operation.name();
+    QLBillingDataPoint existingDataPoint = labelNameDataPointMap.get(labelMapKey);
+    if (existingDataPoint != null) {
+      switch (operation) {
+        case SUM:
+          existingDataPoint.setValue(existingDataPoint.getValue().doubleValue() + dataPoint.getValue().doubleValue());
+          break;
+        case MAX:
+          existingDataPoint.setValue(
+              Math.max(existingDataPoint.getValue().doubleValue(), dataPoint.getValue().doubleValue()));
+          break;
+        case AVG:
+          existingDataPoint.setValue(existingDataPoint.getValue().doubleValue() + dataPoint.getValue().doubleValue());
+          numberOfDataPoints.put(labelMapKey, numberOfDataPoints.get(labelMapKey) + 1);
+          break;
+        default:
+          break;
+      }
+      return true;
+    }
+
+    String name = (operation == QLCCMAggregateOperation.MAX || operation == QLCCMAggregateOperation.AVG)
+        ? operation.name()
+        : label;
+    QLReference labelRef = QLReference.builder().id(label).name(name).type(TYPE_LABEL).build();
+    dataPoint.setKey(labelRef);
+    labelNameDataPointMap.put(labelMapKey, dataPoint);
+    if (operation == QLCCMAggregateOperation.AVG) {
+      numberOfDataPoints.put(labelMapKey, 1L);
+    }
+    return false;
   }
 
   private void getTagEntityTableDataPoints(String accountId, List<QLEntityTableData> dataPoints, TA groupByTag) {
@@ -198,5 +380,65 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
     });
   }
 
+  private void getLabelEntityTableDataPoints(String accountId, List<QLEntityTableData> dataPoints, LA groupByLabel) {
+    if (dataPoints.isEmpty()) {
+      return;
+    }
+    Set<String> entityIdSet = dataPoints.stream().map(QLEntityTableData::getWorkloadName).collect(Collectors.toSet());
+    Set<K8sWorkload> labelLinks = k8sLabelHelper.getLabelLinks(accountId, entityIdSet, groupByLabel.getName());
+    Map<String, K8sWorkload> entityIdLabelLinkMap =
+        labelLinks.stream().collect(Collectors.toMap(K8sWorkload::getName, identity()));
+
+    ArrayMap<String, QLEntityTableData> labelNameDataPointMap = new ArrayMap<>();
+    ArrayMap<String, Long> numberOfDataPoints = new ArrayMap<>();
+    String labelName = groupByLabel.getName();
+    dataPoints.removeIf(dataPoint -> {
+      String entityId = dataPoint.getWorkloadName();
+      K8sWorkload workload = entityIdLabelLinkMap.get(entityId);
+      if (workload == null) {
+        return true;
+      }
+
+      String label = labelName + ":" + workload.getLabels().get(labelName);
+      QLEntityTableData existingDataPoint = labelNameDataPointMap.get(label);
+      if (existingDataPoint != null) {
+        existingDataPoint.setTotalCost(
+            existingDataPoint.getTotalCost().doubleValue() + dataPoint.getTotalCost().doubleValue());
+        existingDataPoint.setIdleCost(
+            existingDataPoint.getIdleCost().doubleValue() + dataPoint.getIdleCost().doubleValue());
+        existingDataPoint.setCpuIdleCost(
+            existingDataPoint.getCpuIdleCost().doubleValue() + dataPoint.getCpuIdleCost().doubleValue());
+        existingDataPoint.setMemoryIdleCost(
+            existingDataPoint.getMemoryIdleCost().doubleValue() + dataPoint.getMemoryIdleCost().doubleValue());
+        existingDataPoint.setMaxCpuUtilization(Math.max(
+            existingDataPoint.getMaxCpuUtilization().doubleValue(), dataPoint.getMaxCpuUtilization().doubleValue()));
+        existingDataPoint.setMaxMemoryUtilization(Math.max(existingDataPoint.getMaxMemoryUtilization().doubleValue(),
+            dataPoint.getMaxMemoryUtilization().doubleValue()));
+        existingDataPoint.setAvgCpuUtilization(
+            existingDataPoint.getAvgCpuUtilization().doubleValue() + dataPoint.getAvgCpuUtilization().doubleValue());
+        existingDataPoint.setAvgMemoryUtilization(existingDataPoint.getAvgMemoryUtilization().doubleValue()
+            + dataPoint.getAvgMemoryUtilization().doubleValue());
+        numberOfDataPoints.put(label, numberOfDataPoints.get(label) + 1);
+        return true;
+      }
+
+      dataPoint.setId(label);
+      dataPoint.setName(label);
+      dataPoint.setType(TYPE_LABEL);
+      numberOfDataPoints.put(label, 1L);
+      labelNameDataPointMap.put(label, dataPoint);
+      return false;
+    });
+
+    labelNameDataPointMap.forEach((key, dataPoint) -> {
+      dataPoint.setAvgCpuUtilization(billingDataHelper.getRoundedDoubleValue(
+          dataPoint.getAvgCpuUtilization().doubleValue() / numberOfDataPoints.get(dataPoint.getId())));
+      dataPoint.setAvgMemoryUtilization(billingDataHelper.getRoundedDoubleValue(
+          dataPoint.getAvgMemoryUtilization().doubleValue() / numberOfDataPoints.get(dataPoint.getId())));
+    });
+  }
+
   protected abstract EA getGroupByEntityFromTag(TA groupByTag);
+
+  protected abstract EA getGroupByEntityFromLabel(LA groupByLabel);
 }

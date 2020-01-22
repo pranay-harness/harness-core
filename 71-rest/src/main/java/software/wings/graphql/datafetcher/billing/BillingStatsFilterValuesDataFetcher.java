@@ -2,13 +2,22 @@ package software.wings.graphql.datafetcher.billing;
 
 import com.google.inject.Inject;
 
+import graphql.execution.MergedSelectionSet;
+import graphql.schema.DataFetchingFieldSelectionSet;
+import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.SelectedField;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
+import software.wings.graphql.datafetcher.k8sLabel.K8sLabelConnectionDataFetcher;
+import software.wings.graphql.schema.query.QLK8sLabelQueryParameters;
+import software.wings.graphql.schema.type.QLK8sLabel;
 import software.wings.graphql.schema.type.aggregation.QLData;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
@@ -16,6 +25,8 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLFilterValuesData;
 import software.wings.graphql.schema.type.aggregation.billing.QLFilterValuesData.QLFilterValuesDataBuilder;
 import software.wings.graphql.schema.type.aggregation.billing.QLFilterValuesListData;
+import software.wings.graphql.schema.type.aggregation.k8sLabel.QLK8sLabelFilter;
+import software.wings.graphql.schema.type.aggregation.k8sLabel.QLK8sLabelFilter.QLK8sLabelFilterBuilder;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
@@ -24,8 +35,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
@@ -36,6 +50,7 @@ public class BillingStatsFilterValuesDataFetcher
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject QLBillingStatsHelper statsHelper;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
+  @Inject K8sLabelConnectionDataFetcher k8sLabelConnectionDataFetcher;
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -63,7 +78,7 @@ public class BillingStatsFilterValuesDataFetcher
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(queryData.getQuery());
-      return generateFilterValuesData(queryData, resultSet);
+      return generateFilterValuesData(queryData, resultSet, accountId);
     } catch (SQLException e) {
       logger.error("BillingStatsFilterValuesDataFetcher Error exception", e);
     } finally {
@@ -72,8 +87,8 @@ public class BillingStatsFilterValuesDataFetcher
     return null;
   }
 
-  private QLFilterValuesListData generateFilterValuesData(BillingDataQueryMetadata queryData, ResultSet resultSet)
-      throws SQLException {
+  private QLFilterValuesListData generateFilterValuesData(
+      BillingDataQueryMetadata queryData, ResultSet resultSet, String accountId) throws SQLException {
     QLFilterValuesDataBuilder filterValuesDataBuilder = QLFilterValuesData.builder();
     Set<String> cloudServiceNames = new HashSet<>();
     Set<String> workloadNames = new HashSet<>();
@@ -85,6 +100,8 @@ public class BillingStatsFilterValuesDataFetcher
     Set<String> cloudProviders = new HashSet<>();
     Set<String> serviceIds = new HashSet<>();
     List<QLEntityData> clusters = new ArrayList<>();
+    List<QLK8sLabel> k8sLabels = new ArrayList<>();
+
     while (resultSet != null && resultSet.next()) {
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
@@ -128,6 +145,16 @@ public class BillingStatsFilterValuesDataFetcher
       }
     }
 
+    // Fetching K8s labels if workload names are fetched
+    if (!workloadNames.isEmpty()) {
+      k8sLabels =
+          k8sLabelConnectionDataFetcher
+              .fetchConnection(Arrays.asList(prepareLabelFilters(getClusterIdsFromFilters(queryData.getFilters()),
+                                   workloadNames.toArray(new String[0]), namespaces.toArray(new String[0]))),
+                  preparePageQueryParametersForK8sLabels(accountId), null)
+              .getNodes();
+    }
+
     filterValuesDataBuilder.cloudServiceNames(getEntity(BillingDataMetaDataFields.CLOUDSERVICENAME, cloudServiceNames))
         .taskIds(getEntity(BillingDataMetaDataFields.TASKID, taskIds))
         .launchTypes(getEntity(BillingDataMetaDataFields.LAUNCHTYPE, launchTypes))
@@ -137,7 +164,8 @@ public class BillingStatsFilterValuesDataFetcher
         .applications(getEntity(BillingDataMetaDataFields.APPID, applicationIds))
         .environments(getEntity(BillingDataMetaDataFields.ENVID, environmentIds))
         .services(getEntity(BillingDataMetaDataFields.SERVICEID, serviceIds))
-        .cloudProviders(getEntity(BillingDataMetaDataFields.CLOUDPROVIDERID, cloudProviders));
+        .cloudProviders(getEntity(BillingDataMetaDataFields.CLOUDPROVIDERID, cloudProviders))
+        .k8sLabels(k8sLabels);
 
     List<QLFilterValuesData> filterValuesDataList = new ArrayList<>();
     filterValuesDataList.add(filterValuesDataBuilder.build());
@@ -156,8 +184,67 @@ public class BillingStatsFilterValuesDataFetcher
     return entityData;
   }
 
+  private String[] getClusterIdsFromFilters(List<QLBillingDataFilter> filters) {
+    List<String> clusterIds = new ArrayList<>();
+    filters.forEach(filter -> {
+      if (filter.getCluster() != null) {
+        for (String value : filter.getCluster().getValues()) {
+          clusterIds.add(value);
+        }
+      }
+    });
+    return clusterIds.toArray(new String[0]);
+  }
+
+  private QLK8sLabelFilter prepareLabelFilters(String[] clusterIds, String[] workloadNames, String[] namespaces) {
+    QLK8sLabelFilterBuilder builder = QLK8sLabelFilter.builder();
+    if (clusterIds.length != 0) {
+      builder.cluster(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(clusterIds).build());
+    }
+    if (workloadNames.length != 0) {
+      builder.workloadName(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(workloadNames).build());
+    }
+    if (namespaces.length != 0) {
+      builder.namespace(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(namespaces).build());
+    }
+    return builder.build();
+  }
+
+  private QLK8sLabelQueryParameters preparePageQueryParametersForK8sLabels(String accountId) {
+    final DataFetchingFieldSelectionSet selectionSet = new DataFetchingFieldSelectionSet() {
+      public MergedSelectionSet get() {
+        return MergedSelectionSet.newMergedSelectionSet().build();
+      }
+      public Map<String, Map<String, Object>> getArguments() {
+        return Collections.emptyMap();
+      }
+      public Map<String, GraphQLFieldDefinition> getDefinitions() {
+        return Collections.emptyMap();
+      }
+      public boolean contains(String fieldGlobPattern) {
+        return false;
+      }
+      public SelectedField getField(String fieldName) {
+        return null;
+      }
+      public List<SelectedField> getFields() {
+        return Collections.emptyList();
+      }
+      public List<SelectedField> getFields(String fieldGlobPattern) {
+        return Collections.emptyList();
+      }
+    };
+    return QLK8sLabelQueryParameters.builder()
+        .accountId(accountId)
+        .limit(Integer.MAX_VALUE - 1)
+        .offset(0)
+        .selectionSet(selectionSet)
+        .build();
+  }
+
   @Override
-  protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList, QLData qlData) {
+  protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList,
+      List<QLCCMAggregationFunction> aggregationFunctions, QLData qlData) {
     return null;
   }
 

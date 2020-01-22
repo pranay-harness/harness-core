@@ -24,6 +24,7 @@ import software.wings.beans.EntityType;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataQueryMetadataBuilder;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.ResultType;
+import software.wings.graphql.datafetcher.k8sLabel.K8sLabelHelper;
 import software.wings.graphql.datafetcher.tag.TagHelper;
 import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLAggregationKind;
@@ -34,6 +35,8 @@ import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilterType;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataLabelAggregation;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataLabelFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagType;
@@ -56,6 +59,7 @@ public class BillingDataQueryBuilder {
   private BillingDataTableSchema schema = new BillingDataTableSchema();
   private static final String STANDARD_TIME_ZONE = "GMT";
   @Inject TagHelper tagHelper;
+  @Inject K8sLabelHelper k8sLabelHelper;
 
   protected BillingDataQueryMetadata formQuery(String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
@@ -80,7 +84,7 @@ public class BillingDataQueryBuilder {
     selectQuery.addCustomFromTable(schema.getBillingDataTable());
 
     if (!Lists.isNullOrEmpty(filters)) {
-      filters = processFilterForTags(accountId, filters);
+      filters = processFilterForTagsAndLabels(accountId, filters);
       decorateQueryWithFilters(selectQuery, filters);
     }
 
@@ -130,7 +134,7 @@ public class BillingDataQueryBuilder {
     }
 
     if (!Lists.isNullOrEmpty(filters)) {
-      filters = processFilterForTags(accountId, filters);
+      filters = processFilterForTagsAndLabels(accountId, filters);
       decorateQueryWithFilters(selectQuery, filters);
     }
 
@@ -166,7 +170,7 @@ public class BillingDataQueryBuilder {
     selectQuery.addCustomFromTable(schema.getBillingDataTable());
 
     if (!Lists.isNullOrEmpty(filters)) {
-      filters = processFilterForTags(accountId, filters);
+      filters = processFilterForTagsAndLabels(accountId, filters);
       decorateQueryWithFilters(selectQuery, filters);
     }
 
@@ -691,7 +695,7 @@ public class BillingDataQueryBuilder {
     return modifiedFilterList;
   }
 
-  private List<QLBillingDataFilter> processFilterForTags(String accountId, List<QLBillingDataFilter> filters) {
+  private List<QLBillingDataFilter> processFilterForTagsAndLabels(String accountId, List<QLBillingDataFilter> filters) {
     List<QLBillingDataFilter> newList = new ArrayList<>();
     for (QLBillingDataFilter filter : filters) {
       Set<QLBillingDataFilterType> filterTypes = QLBillingDataFilter.getFilterTypes(filter);
@@ -734,6 +738,19 @@ public class BillingDataQueryBuilder {
               }
             }
           }
+        } else if (type == QLBillingDataFilterType.Label) {
+          QLBillingDataLabelFilter labelFilter = filter.getLabel();
+          if (labelFilter != null) {
+            Set<String> workloadNames = k8sLabelHelper.getWorkloadNamesFromLabels(accountId, labelFilter);
+            if (isNotEmpty(workloadNames)) {
+              newList.add(QLBillingDataFilter.builder()
+                              .workloadName(QLIdFilter.builder()
+                                                .operator(QLIdOperator.IN)
+                                                .values(workloadNames.toArray(new String[0]))
+                                                .build())
+                              .build());
+            }
+          }
         } else {
           newList.add(filter);
         }
@@ -768,5 +785,9 @@ public class BillingDataQueryBuilder {
         logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
         throw new InvalidRequestException("Unsupported entity type " + groupByTag.getEntityType());
     }
+  }
+
+  protected QLCCMEntityGroupBy getGroupByEntityFromLabel(QLBillingDataLabelAggregation groupByLabel) {
+    return QLCCMEntityGroupBy.WorkloadName;
   }
 }

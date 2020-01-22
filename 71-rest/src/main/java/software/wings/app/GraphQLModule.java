@@ -72,6 +72,7 @@ import software.wings.graphql.datafetcher.instance.instanceInfo.K8SPodController
 import software.wings.graphql.datafetcher.instance.instanceInfo.KubernetesContainerController;
 import software.wings.graphql.datafetcher.instance.instanceInfo.PcfInstanceController;
 import software.wings.graphql.datafetcher.instance.instanceInfo.PhysicalHostInstanceController;
+import software.wings.graphql.datafetcher.k8sLabel.K8sLabelConnectionDataFetcher;
 import software.wings.graphql.datafetcher.outcome.OutcomeConnectionDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineConnectionDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineDataFetcher;
@@ -170,6 +171,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ApplicationStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingStatsEntityDataFetcher.class);
+    bindDataFetcherWithAnnotation(BillingStatsFilterValuesDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingStatsTimeSeriesDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingTrendStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(BudgetDataFetcher.class);
@@ -193,6 +195,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(InstanceConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceCountDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(K8sLabelConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(OutcomeConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineDataFetcher.class);
@@ -210,7 +213,6 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(WorkflowConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowStatsDataFetcher.class);
-    bindDataFetcherWithAnnotation(BillingStatsFilterValuesDataFetcher.class);
     bindDataFetcherWithAnnotation(ChangeSetConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ChangeContentConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(CreateApplicationDataFetcher.class);

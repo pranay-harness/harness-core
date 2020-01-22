@@ -52,7 +52,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationList<A, F, G, S>
   protected abstract QLData fetch(
       String accountId, List<A> aggregateFunction, List<F> filters, List<G> groupBy, List<S> sort);
 
-  protected abstract QLData postFetch(String accountId, List<G> groupByList, QLData qlData);
+  protected abstract QLData postFetch(String accountId, List<G> groupByList, List<A> aggregations, QLData qlData);
 
   @Override
   public final Object get(DataFetchingEnvironment dataFetchingEnvironment) {
@@ -79,7 +79,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationList<A, F, G, S>
            AutoLogContext ignore3 = new FilterLogContext(filterClass.getSimpleName(), OVERRIDE_ERROR);
            AutoLogContext ignore4 = new GroupByLogContext(groupByClass.getSimpleName(), OVERRIDE_ERROR)) {
         QLData qlData = fetch(accountId, aggregateFunctions, filters, groupBy, sort);
-        QLData postFetchResult = postFetch(accountId, groupBy, qlData);
+        QLData postFetchResult = postFetch(accountId, groupBy, aggregateFunctions, qlData);
         result = qlData;
         if (postFetchResult != null) {
           result = postFetchResult;

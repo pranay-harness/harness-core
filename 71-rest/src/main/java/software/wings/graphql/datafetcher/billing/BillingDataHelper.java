@@ -35,7 +35,7 @@ public class BillingDataHelper {
     return Math.round(value.doubleValue() * 100D) / 100D;
   }
 
-  protected double getRoundedDoubleValue(double value) {
+  public double getRoundedDoubleValue(double value) {
     return Math.round(value * 100D) / 100D;
   }
 

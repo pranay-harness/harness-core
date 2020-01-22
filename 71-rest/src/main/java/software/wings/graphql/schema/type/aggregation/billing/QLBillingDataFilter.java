@@ -30,6 +30,7 @@ public class QLBillingDataFilter implements EntityFilter {
   private QLTimeFilter endTime;
   private QLTimeFilter startTime;
   private QLBillingDataTagFilter tag;
+  private QLBillingDataLabelFilter label;
 
   public static Set<QLBillingDataFilterType> getFilterTypes(QLBillingDataFilter filter) {
     Set<QLBillingDataFilterType> filterTypes = new HashSet<>();
@@ -75,6 +76,9 @@ public class QLBillingDataFilter implements EntityFilter {
     if (filter.getCloudProvider() != null) {
       filterTypes.add(QLBillingDataFilterType.CloudProvider);
     }
+    if (filter.getLabel() != null) {
+      filterTypes.add(QLBillingDataFilterType.Label);
+    }
     return filterTypes;
   }
 
@@ -108,6 +112,8 @@ public class QLBillingDataFilter implements EntityFilter {
         return filter.getTag();
       case CloudProvider:
         return filter.getCloudProvider();
+      case Label:
+        return filter.getLabel();
       default:
         throw new InvalidRequestException("Unsupported type " + type);
     }

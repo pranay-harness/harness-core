@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.K8sWorkloadDao;
+import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -33,6 +35,8 @@ import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataLabelAggregation;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataLabelFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagType;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
@@ -40,6 +44,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortType;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
+import software.wings.graphql.schema.type.aggregation.billing.QLK8sLabelInput;
 import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
 import software.wings.security.UserThreadLocal;
 
@@ -51,13 +56,16 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;
   @Mock QLBillingStatsHelper statsHelper;
   @Inject @InjectMocks BillingStatsTimeSeriesDataFetcher billingStatsTimeSeriesDataFetcher;
+  @Inject private K8sWorkloadDao k8sWorkloadDao;
 
   @Mock Statement statement;
   @Mock ResultSet resultSet;
@@ -91,6 +99,9 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     // Account1
     createAccount(ACCOUNT1_ID, getLicenseInfo());
     createApp(ACCOUNT1_ID, APP1_ID_ACCOUNT1, APP1_ID_ACCOUNT1, TAG_TEAM, TAG_VALUE_TEAM1);
+    Map<String, String> labels = new HashMap<>();
+    labels.put(LABEL_NAME, LABEL_VALUE);
+    k8sWorkloadDao.save(getTestWorkload(WORKLOAD_NAME_ACCOUNT1, labels));
     aggregationFunction = Collections.singletonList(makeBillingAmtAggregation());
 
     Connection mockConnection = mock(Connection.class);
@@ -489,7 +500,8 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("APPID");
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
 
-    data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(ACCOUNT1_ID, groupBy, data);
+    data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
+        ACCOUNT1_ID, groupBy, aggregationFunction, data);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(TAG_TEAM1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("TAG");
@@ -497,7 +509,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
 
     // checking post fetch in case of no tag group by
     data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
-        ACCOUNT1_ID, Collections.emptyList(), data);
+        ACCOUNT1_ID, Collections.emptyList(), aggregationFunction, data);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(TAG_TEAM1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("TAG");
@@ -506,8 +518,8 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     // checking post fetch when data is empty
     QLBillingStackedTimeSeriesData emptyData =
         QLBillingStackedTimeSeriesData.builder().data(Collections.emptyList()).build();
-    emptyData =
-        (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(ACCOUNT1_ID, groupBy, emptyData);
+    emptyData = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
+        ACCOUNT1_ID, groupBy, aggregationFunction, emptyData);
     assertThat(emptyData).isNotNull();
     assertThat(emptyData.getData()).hasSize(0);
   }
@@ -533,9 +545,93 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("APPID");
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
 
-    data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(ACCOUNT1_ID, groupBy, data);
+    data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
+        ACCOUNT1_ID, groupBy, aggregationFunction, data);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues()).hasSize(0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchAndPostFetchMethodsInBillingTimeSeriesDataFetcherWithLabelAggregation() {
+    String[] clusterValues = new String[] {CLUSTER1_ID};
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeLabelGroupBy(LABEL_NAME));
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeClusterFilter(clusterValues));
+    aggregationFunction = Arrays.asList(makeBillingAmtAggregation(), makeCpuIdleCostAggregation(),
+        makeMemoryIdleCostAggregation(), makeAvgCpuUtilizationAggregation(), makeMaxCpuUtilizationAggregation(),
+        makeAvgMemoryUtilizationAggregation(), makeMaxMemoryUtilizationAggregation());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("WORKLOADNAME");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
+
+    data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
+        ACCOUNT1_ID, groupBy, aggregationFunction, data);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(LABEL);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("K8sLabel");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(95.0);
+
+    assertThat(data.getCpuIdleCost().get(0).getValues().get(0).getKey().getId()).isEqualTo(LABEL);
+    assertThat(data.getCpuIdleCost().get(0).getValues().get(0).getKey().getType()).isEqualTo("K8sLabel");
+    assertThat(data.getCpuIdleCost().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
+
+    assertThat(data.getMemoryIdleCost().get(0).getValues().get(0).getKey().getId()).isEqualTo(LABEL);
+    assertThat(data.getMemoryIdleCost().get(0).getValues().get(0).getKey().getType()).isEqualTo("K8sLabel");
+    assertThat(data.getMemoryIdleCost().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
+
+    assertThat(data.getCpuUtilMetrics().get(0).getValues().get(0).getKey().getId()).isEqualTo(LABEL);
+    assertThat(data.getCpuUtilMetrics().get(0).getValues().get(0).getKey().getName()).isEqualTo("MAX");
+    assertThat(data.getCpuUtilMetrics().get(0).getValues().get(0).getKey().getType()).isEqualTo("K8sLabel");
+    assertThat(data.getCpuUtilMetrics().get(0).getValues().get(0).getValue()).isEqualTo(50.0);
+    assertThat(data.getCpuUtilMetrics().get(0).getValues().get(1).getKey().getId()).isEqualTo(LABEL);
+    assertThat(data.getCpuUtilMetrics().get(0).getValues().get(1).getKey().getName()).isEqualTo("AVG");
+    assertThat(data.getCpuUtilMetrics().get(0).getValues().get(1).getKey().getType()).isEqualTo("K8sLabel");
+    assertThat(data.getCpuUtilMetrics().get(0).getValues().get(1).getValue()).isEqualTo(50.0);
+
+    assertThat(data.getMemoryUtilMetrics().get(0).getValues().get(0).getKey().getId()).isEqualTo(LABEL);
+    assertThat(data.getMemoryUtilMetrics().get(0).getValues().get(0).getKey().getName()).isEqualTo("MAX");
+    assertThat(data.getMemoryUtilMetrics().get(0).getValues().get(0).getKey().getType()).isEqualTo("K8sLabel");
+    assertThat(data.getMemoryUtilMetrics().get(0).getValues().get(0).getValue()).isEqualTo(50.0);
+    assertThat(data.getMemoryUtilMetrics().get(0).getValues().get(1).getKey().getId()).isEqualTo(LABEL);
+    assertThat(data.getMemoryUtilMetrics().get(0).getValues().get(1).getKey().getName()).isEqualTo("AVG");
+    assertThat(data.getMemoryUtilMetrics().get(0).getValues().get(1).getKey().getType()).isEqualTo("K8sLabel");
+    assertThat(data.getMemoryUtilMetrics().get(0).getValues().get(1).getValue()).isEqualTo(50.0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingTimeSeriesDataFetcherWithLabelFilter() {
+    String[] clusterValues = new String[] {CLUSTER1_ID};
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeWorkloadNameEntityGroupBy());
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeClusterFilter(clusterValues));
+    filters.add(makeLabelFilter(LABEL_NAME, LABEL_VALUE));
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("WORKLOADNAME");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
   }
 
   private QLCCMAggregationFunction makeBillingAmtAggregation() {
@@ -565,28 +661,28 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
 
   private QLCCMAggregationFunction makeMaxCpuUtilizationAggregation() {
     return QLCCMAggregationFunction.builder()
-        .operationType(QLCCMAggregateOperation.SUM)
+        .operationType(QLCCMAggregateOperation.MAX)
         .columnName(MAXCPUUTILIZATION)
         .build();
   }
 
   private QLCCMAggregationFunction makeAvgCpuUtilizationAggregation() {
     return QLCCMAggregationFunction.builder()
-        .operationType(QLCCMAggregateOperation.SUM)
+        .operationType(QLCCMAggregateOperation.AVG)
         .columnName(AVGCPUUTILIZATION)
         .build();
   }
 
   private QLCCMAggregationFunction makeMaxMemoryUtilizationAggregation() {
     return QLCCMAggregationFunction.builder()
-        .operationType(QLCCMAggregateOperation.SUM)
+        .operationType(QLCCMAggregateOperation.MAX)
         .columnName(MAXMEMORYUTILIZATION)
         .build();
   }
 
   private QLCCMAggregationFunction makeAvgMemoryUtilizationAggregation() {
     return QLCCMAggregationFunction.builder()
-        .operationType(QLCCMAggregateOperation.SUM)
+        .operationType(QLCCMAggregateOperation.AVG)
         .columnName(AVGMEMORYUTILIZATION)
         .build();
   }
@@ -668,6 +764,17 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     return QLCCMGroupBy.builder().tagAggregation(tagAggregation).build();
   }
 
+  private QLCCMGroupBy makeWorkloadNameEntityGroupBy() {
+    QLCCMEntityGroupBy workloadNameGroupBy = QLCCMEntityGroupBy.WorkloadName;
+    return QLCCMGroupBy.builder().entityGroupBy(workloadNameGroupBy).build();
+  }
+
+  private QLCCMGroupBy makeLabelGroupBy(String labelName) {
+    return QLCCMGroupBy.builder()
+        .labelAggregation(QLBillingDataLabelAggregation.builder().name(labelName).build())
+        .build();
+  }
+
   private QLBillingDataFilter makeApplicationFilter(String[] values) {
     QLIdFilter applicationFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().application(applicationFilter).build();
@@ -729,6 +836,13 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     return QLBillingDataFilter.builder().workloadName(workloadNameFilter).build();
   }
 
+  private QLBillingDataFilter makeLabelFilter(String labelName, String labelValue) {
+    QLK8sLabelInput input = QLK8sLabelInput.builder().name(labelName).values(Arrays.asList(labelValue)).build();
+    return QLBillingDataFilter.builder()
+        .label(QLBillingDataLabelFilter.builder().labels(Arrays.asList(input)).build())
+        .build();
+  }
+
   private void mockResultSet() throws SQLException {
     Connection connection = mock(Connection.class);
     statement = mock(Statement.class);
@@ -744,6 +858,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
         .thenAnswer((Answer<String>) invocation -> CLOUD_SERVICE_NAME_ACCOUNT1);
     when(resultSet.getString("SERVICEID")).thenAnswer((Answer<String>) invocation -> SERVICE1_ID_APP1_ACCOUNT1);
     when(resultSet.getString("CLUSTERID")).thenAnswer((Answer<String>) invocation -> CLUSTER1_ID);
+    when(resultSet.getString("WORKLOADNAME")).thenAnswer((Answer<String>) invocation -> WORKLOAD_NAME_ACCOUNT1);
     when(resultSet.getString("REGION")).thenAnswer((Answer<String>) invocation -> REGION1);
     when(resultSet.getString("LAUNCHTYPE")).thenAnswer((Answer<String>) invocation -> LAUNCH_TYPE1);
     when(resultSet.getString("ENVID")).thenAnswer((Answer<String>) invocation -> ENV1_ID_APP1_ACCOUNT1);
@@ -758,7 +873,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getDouble("MAXMEMORYUTILIZATION"))
         .thenAnswer((Answer<Double>) invocation -> MAXMEMORYUTILIZATION_VALUE);
     when(resultSet.getDouble("AVGCPUUTILIZATION")).thenAnswer((Answer<Double>) invocation -> AVGCPUUTILIZATION_VALUE);
-    when(resultSet.getDouble("AVGMEMORYTILIZATION"))
+    when(resultSet.getDouble("AVGMEMORYUTILIZATION"))
         .thenAnswer((Answer<Double>) invocation -> AVGMEMORYTILIZATION_VALUE);
 
     when(resultSet.getString("TASKID"))
@@ -788,5 +903,19 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   private void resetValues() {
     count[0] = 0;
     doubleVal[0] = 0;
+  }
+
+  private K8sWorkload getTestWorkload(String workloadName, Map<String, String> labels) {
+    return K8sWorkload.builder()
+        .accountId(ACCOUNT1_ID)
+        .clusterId(CLUSTER1_ID)
+        .settingId(SETTING_ID1)
+        .kind("WORKLOAD_KIND")
+        .labels(labels)
+        .name(workloadName)
+        .namespace(NAMESPACE1)
+        .uid("UID")
+        .uuid("UUID")
+        .build();
   }
 }

@@ -10,4 +10,5 @@ public class QLCCMGroupBy implements Aggregation {
   private QLCCMEntityGroupBy entityGroupBy;
   private QLCCMTimeSeriesAggregation timeAggregation;
   private QLBillingDataTagAggregation tagAggregation;
+  private QLBillingDataLabelAggregation labelAggregation;
 }

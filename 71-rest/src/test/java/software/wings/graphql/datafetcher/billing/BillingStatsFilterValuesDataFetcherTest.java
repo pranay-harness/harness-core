@@ -10,6 +10,8 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.K8sWorkloadDao;
+import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -40,12 +42,15 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;
   @Inject @InjectMocks BillingStatsFilterValuesDataFetcher billingStatsFilterValuesDataFetcher;
+  @Inject private K8sWorkloadDao k8sWorkloadDao;
 
   @Mock Statement statement;
   @Mock ResultSet resultSet;
@@ -61,6 +66,9 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     // Account1
     createAccount(ACCOUNT1_ID, getLicenseInfo());
     createApp(ACCOUNT1_ID, APP1_ID_ACCOUNT1, APP1_ID_ACCOUNT1, TAG_TEAM, TAG_VALUE_TEAM1);
+    Map<String, String> labels = new HashMap<>();
+    labels.put(LABEL_NAME, LABEL_VALUE);
+    k8sWorkloadDao.save(getTestWorkload(WORKLOAD_NAME_ACCOUNT1, labels));
 
     Connection mockConnection = mock(Connection.class);
     Statement mockStatement = mock(Statement.class);
@@ -232,6 +240,39 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     assertThat(data.getData().get(0).getCloudProviders().size()).isEqualTo(0);
   }
 
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingStatsFilterValuesDataFetcherForLabels() {
+    String[] clusterValues = new String[] {CLUSTER1_ID};
+    String[] workloadNameValues = new String[] {WORKLOAD_NAME_ACCOUNT1};
+    String[] namespaceValues = new String[] {NAMESPACE1};
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeClusterFilter(clusterValues));
+    filters.add(makeWorkloadNameFilter(workloadNameValues));
+    filters.add(makeNamespaceFilter(namespaceValues));
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeWorkloadNameEntityGroupBy());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetch(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria);
+
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getK8sLabels().get(0).getName()).isEqualTo(LABEL_NAME);
+    assertThat(data.getData().get(0).getWorkloadNames().get(0).getName()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
+    assertThat(data.getData().get(0).getApplications().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getEnvironments().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getServices().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getNamespaces().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getTaskIds().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getLaunchTypes().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getNamespaces().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getCloudProviders().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getClusters().size()).isEqualTo(0);
+  }
+
   public QLBillingSortCriteria makeDescByTimeSortingCriteria() {
     return QLBillingSortCriteria.builder().sortOrder(QLSortOrder.DESCENDING).sortType(QLBillingSortType.Time).build();
   }
@@ -299,6 +340,30 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
   public QLBillingDataFilter makeClusterFilter(String[] values) {
     QLIdFilter clusterFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().cluster(clusterFilter).build();
+  }
+
+  public QLBillingDataFilter makeWorkloadNameFilter(String[] values) {
+    QLIdFilter workloadNameFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().workloadName(workloadNameFilter).build();
+  }
+
+  public QLBillingDataFilter makeNamespaceFilter(String[] values) {
+    QLIdFilter namespaceFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().namespace(namespaceFilter).build();
+  }
+
+  private K8sWorkload getTestWorkload(String workloadName, Map<String, String> labels) {
+    return K8sWorkload.builder()
+        .accountId(ACCOUNT1_ID)
+        .clusterId(CLUSTER1_ID)
+        .settingId(SETTING_ID1)
+        .kind("WORKLOAD_KIND")
+        .labels(labels)
+        .name(workloadName)
+        .namespace(NAMESPACE1)
+        .uid("UID")
+        .uuid("UUID")
+        .build();
   }
 
   private void mockResultSet() throws SQLException {

@@ -1,0 +1,113 @@
+package io.harness.ccm.cluster;
+
+import static io.harness.rule.OwnerRule.SHUBHANSHU;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.google.inject.Inject;
+
+import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.entities.K8sWorkload;
+import io.harness.rule.Owner;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import software.wings.WingsBaseTest;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+public class K8sWorkloadDaoTest extends WingsBaseTest {
+  @Inject private K8sWorkloadDao k8sWorkloadDao;
+  private static final String ACCOUNT_ID = "accountId";
+  private static final String CLUSTER_ID = "clusterId";
+  private static final String SETTING_ID = "settingId";
+  private static final String WORKLOAD_KIND = "kind";
+  private static final String NAMESPACE = "namespace";
+  private static final String UID = "uid";
+  private static final String UUID = "uuid";
+
+  @Before
+  public void setUp() {
+    Map<String, String> labels = new HashMap<>();
+    labels.put("key", "value");
+    k8sWorkloadDao.save(getTestWorkload("testWorkload", labels));
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void shouldListAllWorkloadsWithLabelFilter() {
+    Map<String, List<String>> labels = new HashMap<>();
+    labels.put("key", Arrays.asList("value"));
+    List<K8sWorkload> workloads = k8sWorkloadDao.list(ACCOUNT_ID, labels);
+    assertThat(workloads).hasSize(1);
+    assertThat(workloads.get(0).getName()).isEqualTo("testWorkload");
+    assertThat(workloads.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(workloads.get(0).getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(workloads.get(0).getSettingId()).isEqualTo(SETTING_ID);
+    assertThat(workloads.get(0).getUuid()).isEqualTo(UUID);
+    assertThat(workloads.get(0).getUid()).isEqualTo(UID);
+    assertThat(workloads.get(0).getKind()).isEqualTo(WORKLOAD_KIND);
+    assertThat(workloads.get(0).getNamespace()).isEqualTo(NAMESPACE);
+  }
+
+  // should not list any workloads as label{ "different key" : "different value"} is not present in test workload
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void shouldNotListWorkloadsWithLabelFilter() {
+    Map<String, List<String>> labels = new HashMap<>();
+    labels.put("different key", Arrays.asList("different value"));
+    List<K8sWorkload> workloads = k8sWorkloadDao.list(ACCOUNT_ID, labels);
+    assertThat(workloads).hasSize(0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void shouldListAllWorkloadsWithWorkloadNameAndLabelFilter() {
+    Set<String> workloadNames = new HashSet<>();
+    workloadNames.add("testWorkload");
+    String labelName = "key";
+    List<K8sWorkload> workloads = k8sWorkloadDao.list(ACCOUNT_ID, workloadNames, labelName);
+    assertThat(workloads).hasSize(1);
+    assertThat(workloads.get(0).getName()).isEqualTo("testWorkload");
+    assertThat(workloads.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(workloads.get(0).getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(workloads.get(0).getSettingId()).isEqualTo(SETTING_ID);
+    assertThat(workloads.get(0).getUuid()).isEqualTo(UUID);
+    assertThat(workloads.get(0).getUid()).isEqualTo(UID);
+    assertThat(workloads.get(0).getKind()).isEqualTo(WORKLOAD_KIND);
+    assertThat(workloads.get(0).getNamespace()).isEqualTo(NAMESPACE);
+  }
+
+  // should not list any workloads as workload name of test workload is different
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void shouldNotListWorkloadsWithWorkloadNameAndLabelFilter() {
+    Set<String> workloadNames = new HashSet<>();
+    workloadNames.add("differentTestWorkload");
+    String labelName = "key";
+    List<K8sWorkload> workloads = k8sWorkloadDao.list(ACCOUNT_ID, workloadNames, labelName);
+    assertThat(workloads).hasSize(0);
+  }
+
+  private K8sWorkload getTestWorkload(String workloadName, Map<String, String> labels) {
+    return K8sWorkload.builder()
+        .accountId(ACCOUNT_ID)
+        .clusterId(CLUSTER_ID)
+        .settingId(SETTING_ID)
+        .kind(WORKLOAD_KIND)
+        .labels(labels)
+        .name(workloadName)
+        .namespace(NAMESPACE)
+        .uid(UID)
+        .uuid(UUID)
+        .build();
+  }
+}

@@ -21,6 +21,7 @@ import software.wings.graphql.schema.type.aggregation.QLBillingTimeDataPoint.QLB
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLReference;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataLabelAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagType;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
@@ -47,7 +48,8 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 public class BillingStatsTimeSeriesDataFetcher
     extends AbstractStatsDataFetcherWithAggregationListAndTags<QLCCMAggregationFunction, QLBillingDataFilter,
-        QLCCMGroupBy, QLBillingSortCriteria, QLBillingDataTagType, QLBillingDataTagAggregation, QLCCMEntityGroupBy> {
+        QLCCMGroupBy, QLBillingSortCriteria, QLBillingDataTagType, QLBillingDataTagAggregation,
+        QLBillingDataLabelAggregation, QLCCMEntityGroupBy> {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject QLBillingStatsHelper statsHelper;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
@@ -75,8 +77,14 @@ public class BillingStatsTimeSeriesDataFetcher
     ResultSet resultSet = null;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
     List<QLBillingDataTagAggregation> groupByTagList = getGroupByTag(groupByList);
+    List<QLBillingDataLabelAggregation> groupByLabelList = getGroupByLabel(groupByList);
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupByList);
 
+    if (!groupByTagList.isEmpty()) {
+      groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList);
+    } else if (!groupByLabelList.isEmpty()) {
+      groupByEntityList = getGroupByEntityListFromLabels(groupByList, groupByEntityList, groupByLabelList);
+    }
     groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList);
 
     if (filters == null) {
@@ -135,19 +143,15 @@ public class BillingStatsTimeSeriesDataFetcher
                 break;
               case MAXCPUUTILIZATION:
                 cpuMaxUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
-                cpuMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX"));
                 break;
               case AVGCPUUTILIZATION:
                 cpuAvgUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
-                cpuAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG"));
                 break;
               case MAXMEMORYUTILIZATION:
                 memoryMaxUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
-                memoryMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX"));
                 break;
               case AVGMEMORYUTILIZATION:
                 memoryAvgUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
-                memoryAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG"));
                 break;
               default:
                 dataPointBuilder.value(roundingDoubleFieldValue(field, resultSet));
@@ -158,6 +162,10 @@ public class BillingStatsTimeSeriesDataFetcher
             cpuPointBuilder.key(buildQLReference(field, entityId));
             memoryPointBuilder.key(buildQLReference(field, entityId));
             dataPointBuilder.key(buildQLReference(field, entityId));
+            cpuMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX", entityId));
+            cpuAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG", entityId));
+            memoryMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX", entityId));
+            memoryAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG", entityId));
             break;
           case TIMESTAMP:
             long time = resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime();
@@ -278,8 +286,8 @@ public class BillingStatsTimeSeriesDataFetcher
     return QLReference.builder().type(field.getFieldName()).id(key).name(statsHelper.getEntityName(field, key)).build();
   }
 
-  private QLReference buildQLReferenceForUtilization(String type) {
-    return QLReference.builder().name(type).build();
+  private QLReference buildQLReferenceForUtilization(String name, String id) {
+    return QLReference.builder().name(name).id(id).type("Utilization").build();
   }
 
   private List<QLBillingStackedTimeSeriesDataPoint> prepareStackedTimeSeriesData(
@@ -334,8 +342,18 @@ public class BillingStatsTimeSeriesDataFetcher
   }
 
   @Override
+  protected QLBillingDataLabelAggregation getLabelAggregation(QLCCMGroupBy groupBy) {
+    return groupBy.getLabelAggregation();
+  }
+
+  @Override
   protected QLCCMEntityGroupBy getGroupByEntityFromTag(QLBillingDataTagAggregation groupByTag) {
     return billingDataQueryBuilder.getGroupByEntityFromTag(groupByTag);
+  }
+
+  @Override
+  protected QLCCMEntityGroupBy getGroupByEntityFromLabel(QLBillingDataLabelAggregation groupByLabel) {
+    return billingDataQueryBuilder.getGroupByEntityFromLabel(groupByLabel);
   }
 
   @Override
