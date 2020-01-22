@@ -34,6 +34,10 @@ if [[ "" != "$UI_SERVER_URL" ]]; then
   yq write -i $CONFIG_FILE portal.url "$UI_SERVER_URL"
 fi
 
+if [[ "" != "$AUTHTOKENEXPIRYINMILLIS" ]]; then
+  yq write -i $CONFIG_FILE portal.authTokenExpiryInMillis "$AUTHTOKENEXPIRYINMILLIS"
+fi
+
 if [[ "" != "$EXTERNAL_GRAPHQL_RATE_LIMIT" ]]; then
   yq write -i $CONFIG_FILE portal.externalGraphQLRateLimitPerMinute "$EXTERNAL_GRAPHQL_RATE_LIMIT"
 fi
