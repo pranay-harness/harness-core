@@ -240,7 +240,6 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
   }
 
   private PropertyFilter createFilter(SearchFilter searchFilter) {
-    String field = searchFilter.getFieldName().equals("uuid") ? "__key__" : searchFilter.getFieldName();
     switch (searchFilter.getOp()) {
       case EQ:
         if (searchFilter.getFieldValues()[0] instanceof String) {
@@ -285,16 +284,6 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     List list = entity.contains(fieldName) ? entity.getList(fieldName) : null;
     if (list == null) {
       return null;
-    }
-    Class gdsType = StringValue.class;
-    if (clazz.equals(String.class)) {
-      gdsType = StringValue.class;
-    } else if (clazz.equals(Double.class)) {
-      gdsType = DoubleValue.class;
-    } else if (clazz.equals(Long.class)) {
-      gdsType = LongValue.class;
-    } else if (clazz.equals(Boolean.class)) {
-      gdsType = BooleanValue.class;
     }
 
     List output = new ArrayList<>();

@@ -774,15 +774,13 @@ public class EntityHelper {
       if (isEmpty(yamlPrefix)) {
         return EMPTY;
       }
-      String finalYaml = EMPTY;
+      String finalYaml;
       if (entity instanceof Environment) {
-        Environment environment = (Environment) entity;
         finalYaml = format("%s/%s", yamlPrefix, INDEX_YAML);
       } else if (entity instanceof Pipeline) {
         Pipeline pipeline = (Pipeline) entity;
         finalYaml = format("%s/%s%s", yamlPrefix, pipeline.getName(), YAML_EXTENSION);
       } else if (entity instanceof Application) {
-        Application application = (Application) entity;
         finalYaml = format("%s/%s", yamlPrefix, INDEX_YAML);
       } else if (entity instanceof InfrastructureMapping) {
         InfrastructureMapping mapping = (InfrastructureMapping) entity;
@@ -797,7 +795,6 @@ public class EntityHelper {
         ArtifactStream artifactStream = (ArtifactStream) entity;
         finalYaml = format("%s/%s%s", yamlPrefix, artifactStream.getName(), YAML_EXTENSION);
       } else if (entity instanceof Service) {
-        Service service = (Service) entity;
         finalYaml = format("%s/%s", yamlPrefix, INDEX_YAML);
       } else if (entity instanceof Trigger) {
         Trigger trigger = (Trigger) entity;
@@ -825,7 +822,6 @@ public class EntityHelper {
           }
         }
       } else if (entity instanceof ApplicationManifest) {
-        ApplicationManifest applicationManifest = (ApplicationManifest) entity;
         finalYaml = format("%s/%s", yamlPrefix, INDEX_YAML);
       } else if (entity instanceof ManifestFile) {
         ManifestFile manifestFile = (ManifestFile) entity;

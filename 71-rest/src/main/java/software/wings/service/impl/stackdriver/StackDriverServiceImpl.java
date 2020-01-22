@@ -93,8 +93,6 @@ public class StackDriverServiceImpl implements StackDriverService {
                                             .build();
 
       if (StateType.STACK_DRIVER_LOG == setupTestNodeData.getStateType()) {
-        long startTime = setupTestNodeData.getFromTime() * TimeUnit.SECONDS.toMillis(1);
-        long endTime = setupTestNodeData.getToTime() * TimeUnit.SECONDS.toMillis(1);
         return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
             .getLogWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, hostName,
                 setupTestNodeData, createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));

@@ -176,7 +176,7 @@ public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetche
 
   public String getGroupByTimeQueryWithGapFill(
       QLTimeSeriesAggregation groupByTime, String dbFieldName, String from, String to) {
-    String unit = "days";
+    String unit;
     int value = groupByTime.getTimeAggregationValue();
 
     switch (groupByTime.getTimeAggregationType()) {

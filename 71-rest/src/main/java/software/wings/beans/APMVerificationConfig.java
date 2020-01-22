@@ -276,7 +276,6 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
       Pattern secretPattern = Pattern.compile(SECRET_REGEX);
       Matcher matcher = secretPattern.matcher(url);
       while (matcher.find()) {
-        String fullMatch = matcher.group();
         String name = matcher.group(1);
         String id = matcher.group(2);
         keyValuesList.add(

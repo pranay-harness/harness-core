@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import software.wings.beans.trigger.Condition;
 import software.wings.beans.trigger.PayloadSource;
 import software.wings.beans.trigger.WebhookCondition;
-import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
@@ -38,9 +37,6 @@ public class WebhookConditionYamlHandler extends ConditionYamlHandler<WebhookCon
   @Override
   public Condition upsertFromYaml(
       ChangeContext<WebhookConditionYaml> changeContext, List<ChangeContext> changeSetContext) {
-    Change change = changeContext.getChange();
-    String accountId = change.getAccountId();
-    String appId = yamlHelper.getAppId(accountId, change.getFilePath());
     WebhookConditionYaml yaml = changeContext.getYaml();
 
     PayloadSourceYamlHandler payloadSourceYamlHandler =

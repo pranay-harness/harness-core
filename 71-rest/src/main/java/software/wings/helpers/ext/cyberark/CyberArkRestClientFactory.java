@@ -141,7 +141,8 @@ public class CyberArkRestClientFactory {
 
   private static byte[] readPemContent(String pem) throws IOException {
     final byte[] content;
-    try (PemReader pemReader = new PemReader(new StringReader(pem))) {
+    StringReader stringReaderForPem = new StringReader(pem);
+    try (PemReader pemReader = new PemReader(stringReaderForPem)) {
       final PemObject pemObject = pemReader.readPemObject();
       content = pemObject.getContent();
     }

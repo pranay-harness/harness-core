@@ -256,8 +256,8 @@ public class AwsAmiServiceDeployState extends State {
     // For canary Wfs we will downscale old ASGs
     List<AwsAmiResizeData> newDesiredCapacities = emptyList();
     List<ContainerServiceData> oldInstanceData = newArrayList();
-    List<String> classicLbs = newArrayList();
-    List<String> targetGroupArns = newArrayList();
+    List<String> classicLbs;
+    List<String> targetGroupArns;
     if (blueGreen) {
       classicLbs = infrastructureMapping.getStageClassicLoadBalancers();
       targetGroupArns = infrastructureMapping.getStageTargetGroupArns();

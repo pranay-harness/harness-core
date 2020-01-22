@@ -5,7 +5,6 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -186,6 +185,7 @@ public class AwsAmiServiceSetup extends State {
     }
 
     Application app = workflowStandardParams.getApp();
+    notNullCheck("Application cannot be null", app);
     Environment env = workflowStandardParams.getEnv();
     Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
 
@@ -247,8 +247,8 @@ public class AwsAmiServiceSetup extends State {
     try {
       executionLogCallback.saveExecutionLog("Starting AWS AMI Setup");
 
-      List<String> classicLbs = emptyList();
-      List<String> targetGroupARNs = emptyList();
+      List<String> classicLbs;
+      List<String> targetGroupARNs;
       if (blueGreen) {
         // The new ASG should point to stage LBs and Target Groups
         classicLbs = infrastructureMapping.getStageClassicLoadBalancers();

@@ -361,8 +361,6 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     List<LabeledLogRecord> labeledLogRecordList = dataStoreService.list(LabeledLogRecord.class, logRecordPageRequest);
     Map<String, List<String>> labelLogTextMap = new HashMap<>();
     if (isNotEmpty(labeledLogRecordList)) {
-      Map<String, LabeledLogRecord> labelRecordMap = new HashMap<>();
-
       labeledLogRecordList.forEach(record -> {
         List<String> feedbacksToFetch = new ArrayList<>(), l2IdsToFetch = new ArrayList<>();
         Random rand = new Random();

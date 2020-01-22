@@ -147,7 +147,6 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
       apiResponse = request.execute();
       logger.info("Response received from serviceNow: {}", apiResponse);
       handleResponse(apiResponse, "Failed to create ServiceNow ticket");
-      JsonNode responseObj = apiResponse.body().get("result");
       String importSetNumber = apiResponse.body().get("import_set").textValue();
       ObjectMapper mapper = new ObjectMapper();
 

@@ -18,7 +18,7 @@ public class AppMigrationService {
   @Inject private HPersistence persistence;
 
   private void upsertMigrationJobInstance(MigrationJob job) {
-    final String inserted = persistence.insert(
+    persistence.insert(
         MigrationJobInstance.builder().id(job.getId()).metadata(job.getMetadata()).status(PENDING).build());
 
     // It was there from before
