@@ -24,6 +24,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.DelegateScope.DelegateScopeKeys;
+import software.wings.beans.Event;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
@@ -40,6 +41,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class DelegateScopeServiceImpl implements DelegateScopeService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DelegateService delegateService;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Override
   public PageResponse<DelegateScope> list(PageRequest<DelegateScope> pageRequest) {
@@ -76,6 +78,10 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
     wingsPersistence.update(query, updateOperations);
     DelegateScope updatedDelegateScope = get(delegateScope.getAccountId(), delegateScope.getUuid());
     logger.info("Updated delegate scope: {}", updatedDelegateScope.getUuid());
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        updatedDelegateScope.getAccountId(), null, updatedDelegateScope, Event.Type.UPDATE);
+    logger.info(
+        "Auditing updation of DelegateScope={} for account={}", delegateScope.getUuid(), delegateScope.getAccountId());
 
     List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class)
                                    .filter(DelegateKeys.accountId, updatedDelegateScope.getAccountId())
@@ -120,6 +126,9 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
     delegateScope.setAppId(GLOBAL_APP_ID);
     DelegateScope persistedScope = wingsPersistence.saveAndGet(DelegateScope.class, delegateScope);
     logger.info("Added delegate scope: {}", persistedScope.getUuid());
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        delegateScope.getAccountId(), null, delegateScope, Event.Type.CREATE);
+    logger.info("Auditing adding of DelegateScope for accountId={}", delegateScope.getAccountId());
     return persistedScope;
   }
 
@@ -133,6 +142,8 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
       ensureScopeSafeToDelete(accountId, delegateScope);
       logger.info("Deleting delegate scope: {}", delegateScopeId);
       wingsPersistence.delete(delegateScope);
+      auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, delegateScope);
+      logger.info("Auditing deletion of DelegateScope for accountId={}", accountId);
     }
   }
 

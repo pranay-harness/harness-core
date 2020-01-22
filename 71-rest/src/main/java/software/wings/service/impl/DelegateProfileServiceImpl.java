@@ -22,6 +22,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateProfile.DelegateProfileKeys;
+import software.wings.beans.Event;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateProfileService;
 
@@ -36,6 +37,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class DelegateProfileServiceImpl implements DelegateProfileService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Override
   public PageResponse<DelegateProfile> list(PageRequest<DelegateProfile> pageRequest) {
@@ -63,7 +65,9 @@ public class DelegateProfileServiceImpl implements DelegateProfileService {
     wingsPersistence.update(query, updateOperations);
     DelegateProfile updatedDelegateProfile = get(delegateProfile.getAccountId(), delegateProfile.getUuid());
     logger.info("Updated delegate profile: {}", updatedDelegateProfile.getUuid());
-
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        delegateProfile.getAccountId(), delegateProfile, updatedDelegateProfile, Event.Type.UPDATE);
+    logger.info("Auditing update of Delegate Profile for accountId={}", delegateProfile.getAccountId());
     return updatedDelegateProfile;
   }
 
@@ -72,6 +76,9 @@ public class DelegateProfileServiceImpl implements DelegateProfileService {
     delegateProfile.setAppId(GLOBAL_APP_ID);
     DelegateProfile persistedProfile = wingsPersistence.saveAndGet(DelegateProfile.class, delegateProfile);
     logger.info("Added delegate profile: {}", persistedProfile.getUuid());
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        delegateProfile.getAccountId(), null, delegateProfile, Event.Type.CREATE);
+    logger.info("Auditing adding of Delegate Profile for accountId={}", delegateProfile.getAccountId());
     return persistedProfile;
   }
 
@@ -85,6 +92,8 @@ public class DelegateProfileServiceImpl implements DelegateProfileService {
       ensureProfileSafeToDelete(accountId, delegateProfile);
       logger.info("Deleting delegate profile: {}", delegateProfileId);
       wingsPersistence.delete(delegateProfile);
+      auditServiceHelper.reportDeleteForAuditingUsingAccountId(delegateProfile.getAccountId(), delegateProfile);
+      logger.info("Auditing deleting of Delegate Profile for accountId={}", delegateProfile.getAccountId());
     }
   }
 

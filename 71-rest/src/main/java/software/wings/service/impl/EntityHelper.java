@@ -38,6 +38,9 @@ import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.Delegate;
+import software.wings.beans.DelegateProfile;
+import software.wings.beans.DelegateScope;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
@@ -98,8 +101,8 @@ public class EntityHelper {
   private static final String DEPLOYMENT_SPECIFICATION_YAML_PATH_FORMAT =
       "Setup/Application/%s/Services/%s/Deloyment Specifications/%s.yaml";
   private static final String COMMANDS_YAML_PATH_FORMAT = "Setup/Application/%s/Services/%s/Commands/%s.yaml";
-  private static final String STRENGTH_POLICY = "PASSWORD STRENGTH POLICY";
-  private static final String EXPIRATION_POLICY = "PASSWORD EXPIRATION POLICY";
+  private static final String STRENGTH_POLICY = "Password Strength Policy";
+  private static final String EXPIRATION_POLICY = "Password Expiration Policy";
   private static final String LDAP_SETTINGS = "LDAP_SETTINGS";
   private static final String OAUTH_SETTINGS = "OAUTH_SETTINGS";
   private static final String SAML_SETTINGS = "SAML_SETTINGS";
@@ -135,6 +138,30 @@ public class EntityHelper {
       entityName = apiKeyEntry.getName();
       affectedResourceId = apiKeyEntry.getUuid();
       affectedResourceName = apiKeyEntry.getName();
+      affectedResourceType = entityType;
+      affectedResourceOperation = type.name();
+    } else if (entity instanceof Delegate) {
+      Delegate delegate = (Delegate) entity;
+      entityType = EntityType.DELEGATE.name();
+      entityName = delegate.getHostName();
+      affectedResourceId = delegate.getUuid();
+      affectedResourceName = delegate.getHostName();
+      affectedResourceType = entityType;
+      affectedResourceOperation = type.name();
+    } else if (entity instanceof DelegateScope) {
+      DelegateScope delegateScope = (DelegateScope) entity;
+      entityType = EntityType.DELEGATE_SCOPE.name();
+      entityName = delegateScope.getName();
+      affectedResourceId = delegateScope.getUuid();
+      affectedResourceName = delegateScope.getName();
+      affectedResourceType = entityType;
+      affectedResourceOperation = type.name();
+    } else if (entity instanceof DelegateProfile) {
+      DelegateProfile delegateProfile = (DelegateProfile) entity;
+      entityType = EntityType.DELEGATE_PROFILE.name();
+      entityName = delegateProfile.getName();
+      affectedResourceId = delegateProfile.getUuid();
+      affectedResourceName = delegateProfile.getName();
       affectedResourceType = entityType;
       affectedResourceOperation = type.name();
     } else if (entity instanceof UserGroup) {

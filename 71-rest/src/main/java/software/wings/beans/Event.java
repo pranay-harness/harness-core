@@ -219,10 +219,21 @@ public class Event {
      */
     UPDATE_NOTIFICATION_SETTING,
     /**
-     * Update Notification Setting type.
+     * Modify Permission type.
      */
     MODIFY_PERMISSIONS,
-    TEST
+    /**
+     * Test Connection type.
+     */
+    TEST,
+    /**
+     * Update type.
+     */
+    UPDATE_TAG,
+    /**
+     * Update Delegate Scope type.
+     */
+    UPDATE_SCOPE
   }
 
   /**
