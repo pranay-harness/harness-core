@@ -494,7 +494,6 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       JiraClient jira = getJiraClient(parameters);
       issue = jira.getIssue(parameters.getIssueId());
     } catch (JiraException e) {
-      CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.FAILURE;
       String errorMessage = "Failed to fetch jira issue for " + parameters.getIssueId();
       logger.error(errorMessage, e);
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();

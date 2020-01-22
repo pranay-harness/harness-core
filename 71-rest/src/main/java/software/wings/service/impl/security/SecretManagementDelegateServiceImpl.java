@@ -40,7 +40,6 @@ import com.amazonaws.services.secretsmanager.model.Tag;
 import com.amazonaws.services.secretsmanager.model.UpdateSecretRequest;
 import com.amazonaws.services.secretsmanager.model.UpdateSecretResult;
 import com.microsoft.azure.keyvault.KeyVaultClient;
-import com.microsoft.azure.keyvault.models.DeletedSecretBundle;
 import com.microsoft.azure.keyvault.models.SecretBundle;
 import com.microsoft.azure.keyvault.requests.SetSecretRequest;
 import io.harness.beans.EmbeddedUser;
@@ -737,7 +736,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     KeyVaultClient azureVaultClient = getAzureVaultClient(secretsManagerConfig);
 
     try {
-      SecretBundle secret = azureVaultClient.getSecret(secretsManagerConfig.getEncryptionServiceUrl(), fullSecretName);
+      azureVaultClient.getSecret(secretsManagerConfig.getEncryptionServiceUrl(), fullSecretName);
       logger.info("Updating the key: {} in account Id: {}", fullSecretName, accountId);
     } catch (Exception ex) {
       // reaching here means the value doesn't exists.
@@ -787,7 +786,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   public boolean delete(AzureVaultConfig config, String key) {
     KeyVaultClient azureVaultClient = getAzureVaultClient(config);
     try {
-      DeletedSecretBundle deletedSecretBundle = azureVaultClient.deleteSecret(config.getEncryptionServiceUrl(), key);
+      azureVaultClient.deleteSecret(config.getEncryptionServiceUrl(), key);
       logger.info("deletion of key {} in azure vault {} was successful.", key, config.getVaultName());
       return true;
     } catch (Exception ex) {

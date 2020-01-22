@@ -265,12 +265,10 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       }
     });
 
-    boolean countSort = false;
     QLSortOrder countSortOrder = null;
     if (queryData.getSortCriteria() != null) {
       for (QLDeploymentSortCriteria sortCriteria : queryData.getSortCriteria()) {
         if (sortCriteria.getSortType() == QLDeploymentSortType.Count) {
-          countSort = true;
           countSortOrder = sortCriteria.getSortOrder();
           stackedDataPoints.sort(new QLStackedDataPointComparator(countSortOrder));
           break;

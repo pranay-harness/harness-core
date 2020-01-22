@@ -150,7 +150,6 @@ public class SetInfraDefinitionWorkflows {
   }
 
   private void migrateTemplateExpressions(WorkflowPhase workflowPhase) {
-    List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
     TemplateExpression infraMappingTemplateExpression =
         workflowPhase.getTemplateExpressions()
             .stream()
@@ -176,7 +175,6 @@ public class SetInfraDefinitionWorkflows {
   }
 
   private void migrateTemplateExpressions(Workflow workflow) {
-    List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
     TemplateExpression infraMappingTemplateExpression =
         workflow.getTemplateExpressions()
             .stream()

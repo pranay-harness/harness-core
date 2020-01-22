@@ -297,11 +297,6 @@ public class KubernetesContainerTask extends ContainerTask {
       });
     }
 
-    if (wingsContainerDefinition.getLogConfiguration() != null) {
-      LogConfiguration wingsLogConfiguration = wingsContainerDefinition.getLogConfiguration();
-      // TODO:: Check about kubernetes logs.  See https://kubernetes.io/docs/concepts/clusters/logging/
-    }
-
     if (wingsContainerDefinition.getStorageConfigurations() != null) {
       wingsContainerDefinition.getStorageConfigurations()
           .stream()

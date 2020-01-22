@@ -28,7 +28,6 @@ import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
-import software.wings.api.PhaseElement;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -85,7 +84,6 @@ public class EcsSteadyStateCheck extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       Application app = appService.get(context.getAppId());
       Environment env = workflowStandardParams.getEnv();
@@ -188,6 +186,7 @@ public class EcsSteadyStateCheck extends State {
 
   private Activity createActivity(ExecutionContext executionContext) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
+    notNullCheck("Application not be null", app);
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);

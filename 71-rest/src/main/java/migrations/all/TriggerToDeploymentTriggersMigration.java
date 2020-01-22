@@ -355,6 +355,7 @@ public class TriggerToDeploymentTriggersMigration implements Migration {
       Variable var =
           pipelineVariables.stream().filter(t -> t.getName().equals(variable.getKey())).findFirst().orElse(null);
       if (var != null) {
+        notNullCheck("Condition cannot be null", trigger.getCondition());
         var.setValue(getVariableValue(variable, trigger.getCondition().getConditionType()));
         triggerVariables.add(var);
       }
@@ -377,6 +378,7 @@ public class TriggerToDeploymentTriggersMigration implements Migration {
         Variable var =
             userVariables.stream().filter(t -> t.getName().equals(variable.getKey())).findFirst().orElse(null);
         if (var != null) {
+          notNullCheck("Condition cannot be null", trigger.getCondition());
           var.setValue(getVariableValue(variable, trigger.getCondition().getConditionType()));
           triggerVariables.add(var);
         }
@@ -411,13 +413,11 @@ public class TriggerToDeploymentTriggersMigration implements Migration {
               artifactSelectionValue =
                   TriggerArtifactSelectionLastDeployed.builder().id(workflowId).type(WORKFLOW).build();
             } else {
-              String pipelineId = artifactSelection.getWorkflowId();
               Pipeline pipeline =
                   pipelineService.readPipelineWithVariables(trigger.getAppId(), trigger.getWorkflowId());
               notNullCheck(StringUtils.join(DEBUG_LINE, "Pipeline not found for Id in artifact selection",
                                trigger.getWorkflowId(), "Trigger: ", trigger.getUuid()),
                   pipeline);
-              String serviceId = artifactSelection.getServiceId();
               // how to get WorkflowId from ServiceId and pipelineId: @Srinivas Todo
               artifactSelectionValue = TriggerArtifactSelectionLastDeployed.builder().id(null).type(PIPELINE).build();
             }

@@ -58,7 +58,6 @@ public class UserUtils {
     assertThat(StringUtils.isNotBlank(inviteUrl)).isTrue();
     logger.info("Email read and Signup URL is available for user signup");
 
-    messageDetails = null;
     messageDetails = MailinatorRestUtils.deleteEmail(emailId, emailFetchId);
     logger.info("Email deleted for the inbox : " + emailId);
     assertThat(messageDetails.getAdditionalProperties()).isNotNull();
@@ -113,7 +112,6 @@ public class UserUtils {
     int statusCode = Setup.signOut(completed.getUuid(), bearerToken);
     assertThat(statusCode == HttpStatus.SC_OK).isTrue();
     // Delete Email
-    messageDetails = null;
     messageDetails = MailinatorRestUtils.deleteEmail(emailId, emailFetchId);
     logger.info("Email deleted for the inbox : " + emailId);
     assertThat(messageDetails.getAdditionalProperties()).isNotNull();

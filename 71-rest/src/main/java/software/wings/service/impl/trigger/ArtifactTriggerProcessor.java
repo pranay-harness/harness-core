@@ -265,8 +265,7 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
             artifactVariables.stream().map(ArtifactVariable::getName).collect(toList()));
       }
       try {
-        WorkflowExecution WorkflowExecution =
-            triggerDeploymentExecution.triggerDeployment(artifactVariables, null, trigger, null);
+        triggerDeploymentExecution.triggerDeployment(artifactVariables, null, trigger, null);
       } catch (WingsException exception) {
         exception.addContext(Application.class, trigger.getAppId());
         exception.addContext(ArtifactStream.class, artifactStreamId);

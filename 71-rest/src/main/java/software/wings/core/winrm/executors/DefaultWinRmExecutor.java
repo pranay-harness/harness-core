@@ -288,7 +288,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
 
   @Override
   public CommandExecutionStatus copyConfigFiles(ConfigFileMetaData configFileMetaData) {
-    CommandExecutionStatus commandExecutionStatus = FAILURE;
+    CommandExecutionStatus commandExecutionStatus;
     if (isBlank(configFileMetaData.getFileId()) || isBlank(configFileMetaData.getFilename())) {
       saveExecutionLog("There is no config file to copy. " + configFileMetaData.toString(), INFO);
       return CommandExecutionStatus.SUCCESS;
