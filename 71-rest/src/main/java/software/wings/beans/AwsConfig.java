@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.ccm.AwsS3SyncConfig;
 import io.harness.ccm.CCMConfig;
 import io.harness.ccm.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -42,6 +43,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
   @Attributes(title = "Use Ec2 Iam role") private boolean useEc2IamCredentials;
   @Attributes(title = "Ec2 Iam role tags") private String tag;
   @JsonInclude(Include.NON_NULL) @SchemaIgnore private CCMConfig ccmConfig;
+  @JsonInclude(Include.NON_NULL) @SchemaIgnore private AwsS3SyncConfig awsS3SyncConfig;
   private boolean assumeCrossAccountRole;
   private AwsCrossAccountAttributes crossAccountAttributes;
 
@@ -50,8 +52,8 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
   }
 
   public AwsConfig(String accessKey, char[] secretKey, String accountId, String encryptedSecretKey,
-      boolean useEc2IamCredentials, String tag, CCMConfig ccmConfig, boolean assumeCrossAccountRole,
-      AwsCrossAccountAttributes crossAccountAttributes) {
+      boolean useEc2IamCredentials, String tag, CCMConfig ccmConfig, AwsS3SyncConfig awsS3SyncConfig,
+      boolean assumeCrossAccountRole, AwsCrossAccountAttributes crossAccountAttributes) {
     this();
     this.accessKey = accessKey;
     this.secretKey = secretKey == null ? null : secretKey.clone();
@@ -60,6 +62,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
     this.useEc2IamCredentials = useEc2IamCredentials;
     this.tag = tag;
     this.ccmConfig = ccmConfig;
+    this.awsS3SyncConfig = awsS3SyncConfig;
     this.assumeCrossAccountRole = assumeCrossAccountRole;
     this.crossAccountAttributes = crossAccountAttributes;
   }
