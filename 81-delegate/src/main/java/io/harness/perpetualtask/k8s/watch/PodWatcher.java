@@ -114,7 +114,9 @@ public class PodWatcher implements Watcher<Pod> {
   @Override
   public void onClose(KubernetesClientException e) {
     logger.info("Watcher onClose");
-    watch.close();
+    if (watch != null) {
+      watch.close();
+    }
     if (e != null) {
       logger.error(e.getMessage(), e);
     }

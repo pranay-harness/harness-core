@@ -49,6 +49,7 @@ import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -266,6 +267,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private PersistentLocker persistentLocker;
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
+  @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
 
   final ConcurrentMap<String, AtomicLong> syncTaskWaitMap = new ConcurrentHashMap<>();
@@ -328,6 +330,15 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
     return wingsPersistence.query(Delegate.class, pageRequest);
+  }
+
+  @Override
+  public boolean isDelegateConnected(Delegate delegate) {
+    Preconditions.checkNotNull(delegate.getUuid());
+    if (delegate.isConnected() && !delegateConnectionDao.list(delegate).isEmpty()) {
+      return true;
+    }
+    return false;
   }
 
   @Override
