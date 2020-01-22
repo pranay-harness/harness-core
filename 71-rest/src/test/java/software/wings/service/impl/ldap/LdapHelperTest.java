@@ -30,6 +30,7 @@ import org.ldaptive.auth.SearchDnResolver;
 import org.mockito.Matchers;
 import org.mockito.MockitoAnnotations;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
@@ -51,6 +52,7 @@ import java.util.List;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({LdapSearch.class, LdapHelper.class})
+@PowerMockIgnore({"javax.net.*"})
 public class LdapHelperTest extends WingsBaseTest {
   private LdapSettings ldapSettings;
   private LdapHelper helper;

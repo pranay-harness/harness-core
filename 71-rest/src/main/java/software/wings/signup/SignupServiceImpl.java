@@ -14,6 +14,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -48,6 +49,7 @@ public class SignupServiceImpl implements SignupService {
   @Inject WingsPersistence wingsPersistence;
   @Inject BlackListedDomainChecker blackListedDomainChecker;
   @Inject MainConfiguration mainConfiguration;
+  @Inject PwnedPasswordChecker pwnedPasswordChecker;
 
   private static final String TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME = "trial_signup_completed";
   private static final String SETUP_PASSWORD_FOR_SIGNUP = "setup_password_for_signup";
@@ -199,11 +201,30 @@ public class SignupServiceImpl implements SignupService {
   @Override
   public void validatePassword(char[] password) {
     if (isEmpty(password)) {
-      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Empty password has been provided.");
+      throw new InvalidArgumentsException("Password cannot be empty.", USER);
     }
 
     if (password.length < 8) {
-      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Password should at least be 8 characters");
+      throw new InvalidArgumentsException("Password should at least be 8 characters.", USER);
+    }
+
+    if (password.length > 64) {
+      throw new InvalidArgumentsException("Password should be less than or equal to 64 characters.", USER);
+    }
+
+    if (!mainConfiguration.isPwnedPasswordsAllowed()) {
+      boolean isPasswordPwned = false;
+
+      try {
+        isPasswordPwned = pwnedPasswordChecker.checkIfPwned(password);
+      } catch (Exception e) {
+        logger.error("Received exception while checking for pwned passwords. Logging and ignoring the check", e);
+      }
+
+      if (isPasswordPwned) {
+        throw new InvalidArgumentsException(
+            "Please choose a stronger password. Don't use common patterns like password, abcdef, or 123456.", USER);
+      }
     }
   }
 

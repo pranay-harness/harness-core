@@ -28,6 +28,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
@@ -42,6 +43,7 @@ import software.wings.sm.StateMachineExecutor;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({WorkflowExecutionMonitorHandler.class, PersistenceIteratorFactory.class})
+@PowerMockIgnore({"javax.net.*"})
 public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
   @Mock PersistenceIteratorFactory persistenceIteratorFactory;
   @Mock private ExecutionInterruptManager executionInterruptManager;

@@ -371,6 +371,10 @@ if [[ "" != "$ALLOW_BLACKLISTED_EMAIL_DOMAINS" ]]; then
   yq write -i $CONFIG_FILE blacklistedEmailDomainsAllowed "$ALLOW_BLACKLISTED_EMAIL_DOMAINS"
 fi
 
+if [[ "" != "$ALLOW_PWNED_PASSWORDS" ]]; then
+  yq write -i $CONFIG_FILE pwnedPasswordsAllowed "$ALLOW_PWNED_PASSWORDS"
+fi
+
 if [[ "" != "$TIMESCALEDB_URI" ]]; then
   yq write -i $CONFIG_FILE timescaledb.timescaledbUrl "$TIMESCALEDB_URI"
 fi
