@@ -196,6 +196,13 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       UpdateResults updatedResults = wingsPersistence.update(query,
           wingsPersistence.createUpdateOperations(LogDataRecord.class)
               .set(LogDataRecordKeys.clusterLevel, ClusterLevel.getHeartBeatLevel(toLevel)));
+
+      if (updatedResults.getUpdatedCount() > 0 && host == null) {
+        logger.info("Updated heartbeat record from {} to {} for min {} and cvConfigId {}",
+            ClusterLevel.getHeartBeatLevel(fromLevel), ClusterLevel.getHeartBeatLevel(toLevel), logCollectionMinute,
+            cvConfigId);
+      }
+
       if (updatedResults.getUpdatedCount() == 0 && DUMMY_HOST_NAME.equals(host)) {
         logger.error("did not update heartbeat from {} to {}  for min {} host {}", fromLevel, toLevel,
             logCollectionMinute, host);

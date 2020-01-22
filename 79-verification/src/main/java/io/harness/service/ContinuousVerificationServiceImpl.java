@@ -834,6 +834,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               minLogRecordMinute = currentMinute - PREDECTIVE_HISTORY_MINUTES;
             }
 
+            logger.info("Clustering pending between {} and {}", minLogRecordMinute, lastCVDataCollectionMinute);
+
             for (long logRecordMinute = minLogRecordMinute;
                  logRecordMinute > 0 && logRecordMinute <= lastCVDataCollectionMinute; logRecordMinute++) {
               Set<String> hosts = logAnalysisService.getHostsForMinute(cvConfiguration.getAppId(),
