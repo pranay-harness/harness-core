@@ -81,7 +81,7 @@ public class SettingUtils {
         .withAccountId(githubKey.getAccountId())
         .withValue(GitConfig.builder()
                        .repoUrl("https://github.com/wings-software/terraform.git")
-                       .username("test-harness")
+                       .username("bot-harness")
                        .password(password)
                        .branch("master")
                        .accountId(githubKey.getAccountId())
