@@ -14,6 +14,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
+import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.service.intfc.DelegateService;
@@ -44,18 +45,21 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
 
   @Override
   public void handle(PerpetualTaskRecord taskRecord) {
+    String taskId = taskRecord.getUuid();
+    PerpetualTaskType taskType = taskRecord.getPerpetualTaskType();
+    logger.info("Assigning Delegate to the inactive {} perpetual task with id={}.", taskType, taskId);
     PerpetualTaskServiceClient client = clientRegistry.getClient(taskRecord.getPerpetualTaskType());
     DelegateTask validationTask = client.getValidationTask(taskRecord.getClientContext(), taskRecord.getAccountId());
     try {
       DelegateTaskNotifyResponseData response = delegateService.executeTask(validationTask);
       String delegateId = response.getDelegateMetaInfo().getId();
-      logger.info("Delegate {} is assigned to the inactive {} perpetual task with id {}.", delegateId,
-          taskRecord.getPerpetualTaskType(), taskRecord.getUuid());
-      perpetualTaskRecordDao.setDelegateId(taskRecord.getUuid(), delegateId);
+      logger.info(
+          "Delegate {} is assigned to the inactive {} perpetual task with id={}.", delegateId, taskType, taskId);
+      perpetualTaskRecordDao.setDelegateId(taskId, delegateId);
     } catch (Exception e) {
       // TODO: add more granular exception handling
       // TODO: add exponential backoff retries
-      logger.error("Failed to assign any Delegate to perpetual task {} ", taskRecord.getUuid(), e);
+      logger.error("Failed to assign any Delegate to perpetual task {} ", taskId, e);
     }
   }
 }

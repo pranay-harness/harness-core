@@ -105,6 +105,8 @@ public class NodeWatcher implements Watcher<Node> {
     if (cause != null) {
       logger.error("Closing node watch with error ", cause);
     }
-    watch.close();
+    if (watch != null) {
+      watch.close();
+    }
   }
 }
