@@ -100,7 +100,7 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
         infrastructureMapping.getEnvId(), serviceSetupElement.getMinInstances(), serviceSetupElement.getMaxInstances(),
         serviceSetupElement.getPreDeploymentData(), infrastructureMapping.getClassicLoadBalancers(),
         infrastructureMapping.getTargetGroupArns(), true, serviceSetupElement.getBaseScalingPolicyJSONs(),
-        serviceSetupElement.getDesiredInstances());
+        serviceSetupElement.getDesiredInstances(), serviceSetupElement.getOldAutoScalingGroupName());
 
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData = prepareStateExecutionData(activity.getUuid(),
         serviceSetupElement, amiServiceDeployElement.getInstanceCount(), amiServiceDeployElement.getInstanceUnitType(),

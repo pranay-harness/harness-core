@@ -289,7 +289,8 @@ public class AwsAmiServiceDeployState extends State {
         newAsgFinalDesiredCount, newDesiredCapacities, serviceSetupElement.getAutoScalingSteadyStateTimeout(),
         infrastructureMapping.getEnvId(), serviceSetupElement.getMinInstances(), serviceSetupElement.getMaxInstances(),
         serviceSetupElement.getPreDeploymentData(), classicLbs, targetGroupArns, false,
-        serviceSetupElement.getBaseScalingPolicyJSONs(), serviceSetupElement.getDesiredInstances());
+        serviceSetupElement.getBaseScalingPolicyJSONs(), serviceSetupElement.getDesiredInstances(),
+        serviceSetupElement.getOldAutoScalingGroupName());
 
     return ExecutionResponse.builder()
         .async(true)
@@ -327,7 +328,7 @@ public class AwsAmiServiceDeployState extends State {
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, List<AwsAmiResizeData> resizeData,
       Integer autoScalingSteadyStateTimeout, String envId, int minInstaces, int maxInstances,
       AwsAmiPreDeploymentData preDeploymentData, List<String> classicLBs, List<String> targetGroupArns,
-      boolean rollback, List<String> baseScalingPolicyJSONs, int desiredInstances) {
+      boolean rollback, List<String> baseScalingPolicyJSONs, int desiredInstances, String oldAsgName) {
     AwsAmiServiceDeployRequest request = AwsAmiServiceDeployRequest.builder()
                                              .awsConfig(awsConfig)
                                              .encryptionDetails(encryptionDetails)
@@ -339,6 +340,7 @@ public class AwsAmiServiceDeployState extends State {
                                              .resizeNewFirst(resizeNewFirst)
                                              .newAutoScalingGroupName(newAutoScalingGroupName)
                                              .newAsgFinalDesiredCount(newAsgFinalDesiredCount)
+                                             .oldAutoScalingGroupName(oldAsgName)
                                              .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
                                              .minInstances(minInstaces)
                                              .maxInstances(maxInstances)
