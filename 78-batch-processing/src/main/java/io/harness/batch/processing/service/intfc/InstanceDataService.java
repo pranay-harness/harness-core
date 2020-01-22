@@ -17,10 +17,10 @@ public interface InstanceDataService {
 
   InstanceData fetchInstanceData(String accountId, String instanceId);
 
-  InstanceData fetchInstanceDataWithName(String accountId, String settingId, String instanceId, Long occurredAt);
+  InstanceData fetchInstanceDataWithName(String accountId, String clusterId, String instanceId, Long occurredAt);
 
   PrunedInstanceData fetchPrunedInstanceDataWithName(
-      String accountId, String settingId, String instanceId, Long occurredAt);
+      String accountId, String clusterId, String instanceId, Long occurredAt);
 
   List<InstanceData> fetchClusterActiveInstanceData(String accountId, String clusterId, Instant startTime);
 }

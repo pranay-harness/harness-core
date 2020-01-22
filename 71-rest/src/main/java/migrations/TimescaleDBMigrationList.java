@@ -10,6 +10,7 @@ import migrations.timescaledb.AddInstancesDeployedToDeployment;
 import migrations.timescaledb.AddRollbackToDeployment;
 import migrations.timescaledb.AddSchemaForServiceGuardStats;
 import migrations.timescaledb.AddingToCVDeploymentMetrics;
+import migrations.timescaledb.AlterCEUtilizationDataTables;
 import migrations.timescaledb.ChangeToTimeStampTZ;
 import migrations.timescaledb.CreateBillingData;
 import migrations.timescaledb.CreateKubernetesUtilizationData;
@@ -45,6 +46,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(15, CreateBillingData.class))
         .add(Pair.of(16, CreateKubernetesUtilizationData.class))
         .add(Pair.of(17, CreateUtilizationData.class))
+        .add(Pair.of(18, AlterCEUtilizationDataTables.class))
         .build();
   }
 }
