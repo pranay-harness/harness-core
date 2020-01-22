@@ -2,6 +2,7 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
@@ -353,13 +354,16 @@ public class TriggerServiceHelper {
       }
     }
 
-    // Current updated variables present in pipeline/workflow
-    List<String> updatedVariablesNames = updatedVariables != null
-        ? updatedVariables.stream().map(Variable::getName).collect(toList())
-        : new ArrayList<>();
-    if (isNotEmpty(triggerWorkflowVariableValues)) {
-      triggerWorkflowVariableValues.entrySet().removeIf(
-          entry -> !updatedVariablesNames.contains(entry.getKey()) || isEmpty(entry.getValue()));
+    // Current update variables present in only Workflow
+    // Do not update for pipeline as Pipeline Variables are collection of workflow variables
+    if (ORCHESTRATION == trigger.getWorkflowType()) {
+      List<String> updatedVariablesNames = updatedVariables != null
+          ? updatedVariables.stream().map(Variable::getName).collect(toList())
+          : new ArrayList<>();
+      if (isNotEmpty(triggerWorkflowVariableValues)) {
+        triggerWorkflowVariableValues.entrySet().removeIf(
+            entry -> !updatedVariablesNames.contains(entry.getKey()) || isEmpty(entry.getValue()));
+      }
     }
     return triggerWorkflowVariableValues;
   }
