@@ -111,4 +111,14 @@ public enum ExecutionStatus {
         throw new IllegalArgumentException("invalid status: " + executionStatus);
     }
   }
+
+  public static ExecutionStatusCategory getStatusCategory(ExecutionStatus status) {
+    if (ExecutionStatus.isPositiveStatus(status)) {
+      return ExecutionStatusCategory.SUCCEEDED;
+    } else if (ExecutionStatus.isNegativeStatus(status)) {
+      return ExecutionStatusCategory.ERROR;
+    } else {
+      return ExecutionStatusCategory.ACTIVE;
+    }
+  }
 }
