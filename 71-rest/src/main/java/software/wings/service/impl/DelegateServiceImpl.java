@@ -268,6 +268,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private PersistentLocker persistentLocker;
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject private DelegateConnectionDao delegateConnectionDao;
+  @Inject private AuditServiceHelper auditServiceHelper;
+
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
 
   final ConcurrentMap<String, AtomicLong> syncTaskWaitMap = new ConcurrentHashMap<>();
@@ -448,6 +450,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   public Delegate update(Delegate delegate) {
     UpdateOperations<Delegate> updateOperations = getDelegateUpdateOperations(delegate);
 
+    auditServiceHelper.reportForAuditingUsingAccountId(delegate.getAccountId(), null, delegate, Type.UPDATE);
+    logger.info("Auditing updation of Delegate={} for account={}", delegate.getUuid(), delegate.getAccountId());
+
     if (ECS.equals(delegate.getDelegateType())) {
       return updateEcsDelegate(delegate, true);
     } else {
@@ -520,6 +525,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     setUnset(updateOperations, DelegateKeys.tags, delegate.getTags());
     logger.info("Updating delegate tags : Delegate:{} tags:{}", delegate.getUuid(), delegate.getTags());
 
+    auditServiceHelper.reportForAuditingUsingAccountId(delegate.getAccountId(), null, delegate, Type.UPDATE_TAG);
+    logger.info("Auditing updation of Tags for delegate={} in account={}", delegate.getUuid(), delegate.getAccountId());
+
     if (ECS.equals(delegate.getDelegateType())) {
       return updateAllDelegatesIfECSType(delegate, updateOperations, "TAGS");
     } else {
@@ -540,6 +548,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     logger.info("Updating delegate scopes : Delegate:{} includeScopes:{} excludeScopes:{}", delegate.getUuid(),
         delegate.getIncludeScopes(), delegate.getExcludeScopes());
+
+    auditServiceHelper.reportForAuditingUsingAccountId(delegate.getAccountId(), null, delegate, Type.UPDATE_SCOPE);
+    logger.info(
+        "Auditing updation of scope for delegateId={} in accountId={}", delegate.getUuid(), delegate.getAccountId());
 
     if (ECS.equals(delegate.getDelegateType())) {
       return updateAllDelegatesIfECSType(delegate, updateOperations, "SCOPES");
@@ -932,6 +944,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
       readme = new File(readme.getAbsolutePath());
       TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, DOCKER_DELEGATE + README_TXT);
+
       out.putArchiveEntry(readmeTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(readme)) {
         IOUtils.copy(fis, out);
@@ -1084,6 +1097,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       try (FileInputStream fis = new FileInputStream(readme)) {
         IOUtils.copy(fis, out);
       }
+
       out.closeArchiveEntry();
 
       out.flush();
