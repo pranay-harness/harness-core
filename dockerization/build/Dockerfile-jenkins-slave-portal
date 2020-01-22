@@ -1,5 +1,7 @@
 FROM base_jdk
 
+USER root
+
 RUN yum install -y git-core hostname unzip wget
 RUN curl -o gsutil.tar.gz https://storage.googleapis.com/pub/gsutil.tar.gz
 RUN tar -xzf gsutil.tar.gz -C /opt
