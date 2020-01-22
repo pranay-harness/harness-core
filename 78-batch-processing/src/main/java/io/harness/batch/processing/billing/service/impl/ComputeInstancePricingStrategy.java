@@ -22,6 +22,7 @@ import java.util.Map;
 public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
   private final VMPricingService vmPricingService;
   private final AwsCustomPricingService awsCustomPricingService;
+  private static final String GCP_CUSTOM_INSTANCE_PREFIX = "custom-";
 
   @Autowired
   public ComputeInstancePricingStrategy(
@@ -37,11 +38,15 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
     String zone = instanceMetaData.get(InstanceMetaDataConstants.ZONE);
     InstanceCategory instanceCategory =
         InstanceCategory.valueOf(instanceMetaData.get(InstanceMetaDataConstants.INSTANCE_CATEGORY));
+    String instanceFamily = instanceMetaData.get(InstanceMetaDataConstants.INSTANCE_FAMILY);
+
+    if (instanceFamily.startsWith(GCP_CUSTOM_INSTANCE_PREFIX) && cloudProvider == CloudProvider.GCP) {
+      return getGCPCustomInstancePricingData(instanceFamily, instanceCategory);
+    }
 
     // TODO(Hitesh) check if cloud provider has s3 billing enabled
     VMComputePricingInfo vmComputePricingInfo = getCustomVMPricing(instanceData, startTime, cloudProvider);
     if (null == vmComputePricingInfo) {
-      String instanceFamily = instanceMetaData.get(InstanceMetaDataConstants.INSTANCE_FAMILY);
       String region = instanceMetaData.get(InstanceMetaDataConstants.REGION);
       vmComputePricingInfo = vmPricingService.getComputeVMPricingInfo(instanceFamily, region, cloudProvider);
     }
@@ -50,6 +55,20 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
         .cpuUnit(vmComputePricingInfo.getCpusPerVm() * 1024)
         .memoryMb(vmComputePricingInfo.getMemPerVm() * 1024)
         .build();
+  }
+
+  private PricingData getGCPCustomInstancePricingData(String instanceFamily, InstanceCategory instanceCategory) {
+    double cpuPricePerHr = 0.033174;
+    double memoryPricePerHr = 0.004446;
+    if (instanceCategory == InstanceCategory.SPOT) {
+      cpuPricePerHr = 0.00698;
+      memoryPricePerHr = 0.00094;
+    }
+    String[] split = instanceFamily.split("-");
+    double cpu = Double.parseDouble(split[1]);
+    double memory = Double.parseDouble(split[2]);
+    double pricePerHr = (cpuPricePerHr * cpu) + ((memoryPricePerHr / 1024) * memory);
+    return PricingData.builder().pricePerHour(pricePerHr).cpuUnit(cpu * 1024).memoryMb(memory).build();
   }
 
   private double getPricePerHour(

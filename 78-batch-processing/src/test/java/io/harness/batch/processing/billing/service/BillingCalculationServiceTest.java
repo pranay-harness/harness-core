@@ -58,6 +58,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   private final String GCP_ZONE_2 = "us-central1-b";
   private final String DEFAULT_INSTANCE_FAMILY = "c4.8xlarge";
   private final String GCP_INSTANCE_FAMILY = "n1-standard-4";
+  private final String GCP_CUSTOM_INSTANCE_FAMILY = "custom-8-20480";
   private final double DEFAULT_INSTANCE_CPU = 36;
   private final double DEFAULT_INSTANCE_MEMORY = 60;
   private final double DEFAULT_INSTANCE_PRICE = 1.60;
@@ -412,6 +413,29 @@ public class BillingCalculationServiceTest extends CategoryTest {
     assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
     assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(320 * HALF_DAY_SECONDS);
     assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(2048 * HALF_DAY_SECONDS);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetInstanceBillingAmountGCPCustomInstance() throws IOException {
+    when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_POD))
+        .thenReturn(new ComputeInstancePricingStrategy(vmPricingService, awsCustomPricingService));
+    Resource instanceResource = getInstanceResource(4 * 1024, 5 * 1024);
+    Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.GCP.name());
+    metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, GCP_CUSTOM_INSTANCE_FAMILY);
+    metaData.put(InstanceMetaDataConstants.REGION, REGION);
+    metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceCategory.SPOT.name());
+    metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
+    addParentResource(metaData, 8 * 1024, 20 * 1024);
+    InstanceData instanceData = getInstance(instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+        INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_POD);
+    UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
+    BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
+        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
+        .isEqualTo(new BigDecimal("0.3358799999999999625"));
   }
 
   private InstanceData getInstanceWithTime(Instant startInstant, Instant endInstant) {
