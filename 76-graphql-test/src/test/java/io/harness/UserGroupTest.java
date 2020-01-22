@@ -1,5 +1,6 @@
 package io.harness;
 
+import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,12 +15,15 @@ import io.harness.generator.AccountGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.rule.Owner;
+import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
+import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
 import software.wings.graphql.schema.type.usergroup.QLUserGroup.QLUserGroupKeys;
@@ -27,19 +31,22 @@ import software.wings.graphql.schema.type.usergroup.QLUserGroupConnection;
 import software.wings.service.intfc.UserGroupService;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 public class UserGroupTest extends GraphQLTest {
   @Inject UserGroupService userGroupService;
   @Inject private OwnerManager ownerManager;
   private String accountId;
+  private Account account;
   @Inject AccountGenerator accountGenerator;
 
   @Before
   public void setup() {
     final Randomizer.Seed seed = new Randomizer.Seed(0);
     final OwnerManager.Owners owners = ownerManager.create();
-    final Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
+    account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     accountId = account.getUuid();
   }
 
@@ -59,6 +66,19 @@ public class UserGroupTest extends GraphQLTest {
     return userGroupService.save(userGroup);
   }
 
+  private UserGroup createUserGroup(String name, String description, List<String> userIds) {
+    UserGroup userGroup = UserGroup.builder()
+                              .accountId(accountId)
+                              .isSsoLinked(false)
+                              .name(name)
+                              .description(description)
+                              .notificationSettings(getNotificationSettings())
+                              .memberIds(userIds)
+                              .importedByScim(false)
+                              .build();
+    return userGroupService.save(userGroup);
+  }
+
   @Test
   @Owner(developers = DEEPAK)
   @Category({GraphQLTests.class, UnitTests.class})
@@ -68,7 +88,9 @@ public class UserGroupTest extends GraphQLTest {
     owners.add(EmbeddedUser.builder().uuid(generateUuid()).build());
     String name = "AccountPermission-UserGroup-" + System.currentTimeMillis();
     String description = "\"Test UserGroup\"";
-    UserGroup userGroup = createUserGroup(name, description);
+    final User user = accountGenerator.ensureUser(
+        "userId", random(String.class), random(String.class), random(String.class).toCharArray(), account);
+    UserGroup userGroup = createUserGroup(name, description, Collections.singletonList(user.getUuid()));
 
     {
       String query = $GQL(/*
@@ -88,16 +110,34 @@ public class UserGroupTest extends GraphQLTest {
                             slackWebhookURL
                       }
                   }
+                  users(limit:1,offset:0){
+                    nodes{
+                      id
+                      name
+                      email
+                      isEmailVerified
+                    }
+                 }
              }
         }*/ userGroup.getUuid());
 
       final QLTestObject qlTestObject = qlExecute(query, accountId);
+      final UserGroupResult userGroupResult = JsonUtils.convertValue(qlTestObject.getMap(), UserGroupResult.class);
       assertThat(qlTestObject.get(QLUserGroupKeys.id)).isEqualTo(userGroup.getUuid());
       assertThat(qlTestObject.get(QLUserGroupKeys.name)).isEqualTo(userGroup.getName());
       assertThat(qlTestObject.get(QLUserGroupKeys.description)).isEqualTo(userGroup.getDescription());
       assertThat(qlTestObject.get(QLUserGroupKeys.isSSOLinked)).isEqualTo(userGroup.isSsoLinked());
       assertThat(qlTestObject.get(QLUserGroupKeys.importedByScim)).isEqualTo(userGroup.isImportedByScim());
+      assertThat(userGroupResult.users.getNodes().size()).isEqualTo(1);
+      assertThat(userGroupResult.users.getNodes().get(0).getId()).isEqualTo(user.getUuid());
     }
+  }
+  @Data
+  private static class UserGroupResult {
+    String id;
+    String name;
+
+    software.wings.graphql.schema.type.user.QLUserConnection users;
   }
 
   private String getUpdatedUserGroupGQL(String userGroupId) {
@@ -163,7 +203,7 @@ mutation{
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingUserGroup() {
     String query =
-        $GQL(/*
+            $GQL(/*
             query{
                 userGroup(userGroupId:"blah"){
                     id
@@ -210,17 +250,17 @@ mutation{
     }
 
     {
-      String query =
-          $GQL(/*
-            query{
-              userGroups(limit: 2, offset: 1){
-                  nodes {
-                         id
-                         name
-                         description
-                       }
-                 }
-            }*/);
+      String query = $GQL(
+          /*
+   query{
+     userGroups(limit: 2, offset: 1){
+         nodes {
+                id
+                name
+                description
+              }
+        }
+   }*/);
 
       QLUserGroupConnection userGroupConnection =
           qlExecute(QLUserGroupConnection.class, query, userGroup1.getAccountId());
