@@ -7,9 +7,11 @@ import com.healthmarketscience.sqlbuilder.dbspec.basic.DbTable;
 import lombok.AccessLevel;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 
 @Value
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldNameConstants(innerTypeName = "BillingDataTableKeys")
 public class BillingDataTableSchema {
   /**
    *  EXECUTIONID TEXT NOT NULL,

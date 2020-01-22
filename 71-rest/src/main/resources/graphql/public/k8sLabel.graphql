@@ -1,0 +1,23 @@
+extend type Query {
+  # Get details about K8s labels.
+  k8sLabels(filters: [K8sLabelFilter], limit: Int!, offset: Int): K8sLabelConnection
+    @dataFetcher(name: k8sLabelConnection)
+}
+
+input K8sLabelFilter {
+  cluster: IdFilter
+  namespace: IdFilter
+  workloadName: IdFilter
+  endTime: TimeFilter
+  startTime: TimeFilter
+}
+
+type K8sLabel {
+  name: String
+  values: [String]
+}
+
+type K8sLabelConnection {
+  pageInfo: PageInfo
+  nodes: [K8sLabel]
+}

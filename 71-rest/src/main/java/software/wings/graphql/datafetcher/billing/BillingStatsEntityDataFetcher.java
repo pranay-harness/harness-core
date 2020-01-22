@@ -11,6 +11,7 @@ import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregatio
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataLabelAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagType;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
@@ -37,10 +38,10 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 public class BillingStatsEntityDataFetcher
     extends AbstractStatsDataFetcherWithAggregationListAndTags<QLCCMAggregationFunction, QLBillingDataFilter,
-        QLCCMGroupBy, QLBillingSortCriteria, QLBillingDataTagType, QLBillingDataTagAggregation, QLCCMEntityGroupBy> {
+        QLCCMGroupBy, QLBillingSortCriteria, QLBillingDataTagType, QLBillingDataTagAggregation,
+        QLBillingDataLabelAggregation, QLCCMEntityGroupBy> {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
-  @Inject BillingDataHelper billingDataHelper;
   @Inject QLBillingStatsHelper statsHelper;
 
   @Override
@@ -65,9 +66,14 @@ public class BillingStatsEntityDataFetcher
     ResultSet resultSet = null;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
     List<QLBillingDataTagAggregation> groupByTagList = getGroupByTag(groupByList);
+    List<QLBillingDataLabelAggregation> groupByLabelList = getGroupByLabel(groupByList);
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupByList);
 
-    groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList);
+    if (!groupByTagList.isEmpty()) {
+      groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList);
+    } else if (!groupByLabelList.isEmpty()) {
+      groupByEntityList = getGroupByEntityListFromLabels(groupByList, groupByEntityList, groupByLabelList);
+    }
 
     queryData = billingDataQueryBuilder.formQuery(
         accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria, true);
@@ -289,6 +295,11 @@ public class BillingStatsEntityDataFetcher
   }
 
   @Override
+  protected QLBillingDataLabelAggregation getLabelAggregation(QLCCMGroupBy groupBy) {
+    return groupBy.getLabelAggregation();
+  }
+
+  @Override
   protected EntityType getEntityType(QLBillingDataTagType entityType) {
     return billingDataQueryBuilder.getEntityType(entityType);
   }
@@ -296,6 +307,11 @@ public class BillingStatsEntityDataFetcher
   @Override
   protected QLCCMEntityGroupBy getGroupByEntityFromTag(QLBillingDataTagAggregation groupByTag) {
     return billingDataQueryBuilder.getGroupByEntityFromTag(groupByTag);
+  }
+
+  @Override
+  protected QLCCMEntityGroupBy getGroupByEntityFromLabel(QLBillingDataLabelAggregation groupByLabel) {
+    return billingDataQueryBuilder.getGroupByEntityFromLabel(groupByLabel);
   }
 
   @Override

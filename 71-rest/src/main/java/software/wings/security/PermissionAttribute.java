@@ -224,7 +224,9 @@ public class PermissionAttribute {
 
     BUDGET(PermissionType.LOGGED_IN),
 
-    CLUSTERRECORD(ACCOUNT);
+    CLUSTERRECORD(ACCOUNT),
+
+    K8S_LABEL(ACCOUNT);
 
     private ImmutableMap<Action, PermissionType> actionPermissionScopeMap;
 

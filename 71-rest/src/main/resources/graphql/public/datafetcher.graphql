@@ -28,6 +28,7 @@ enum DataFetcherEnum {
   instanceConnection
   instanceCount
   instanceStats
+  k8sLabelConnection
   outcomeConnection
   pipeline
   pipelineConnection

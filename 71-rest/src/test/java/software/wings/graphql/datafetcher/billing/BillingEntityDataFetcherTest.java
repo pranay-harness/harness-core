@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.K8sWorkloadDao;
+import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -33,6 +35,7 @@ import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataLabelAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagType;
@@ -53,8 +56,10 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
@@ -63,6 +68,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
   @Mock TagHelper tagHelper;
   @InjectMocks BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject @InjectMocks BillingStatsEntityDataFetcher billingStatsEntityDataFetcher;
+  @Inject private K8sWorkloadDao k8sWorkloadDao;
 
   @Mock Statement statement;
   @Mock ResultSet resultSet;
@@ -80,6 +86,9 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     // Account1
     createAccount(ACCOUNT1_ID, getLicenseInfo());
     createApp(ACCOUNT1_ID, APP1_ID_ACCOUNT1, APP1_ID_ACCOUNT1, TAG_TEAM, TAG_VALUE_TEAM1);
+    Map<String, String> labels = new HashMap<>();
+    labels.put(LABEL_NAME, LABEL_VALUE);
+    k8sWorkloadDao.save(getTestWorkload(WORKLOAD_NAME_ACCOUNT1, labels));
 
     Connection mockConnection = mock(Connection.class);
     Statement mockStatement = mock(Statement.class);
@@ -420,11 +429,50 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getMemoryIdleCost()).isEqualTo(BillingStatsDefaultKeys.MEMORYIDLECOST);
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
 
-    data = (QLEntityTableListData) billingStatsEntityDataFetcher.postFetch(ACCOUNT1_ID, groupBy, data);
+    data = (QLEntityTableListData) billingStatsEntityDataFetcher.postFetch(
+        ACCOUNT1_ID, groupBy, aggregationFunction, data);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getName()).isEqualTo(TAG_TEAM1);
     assertThat(data.getData().get(0).getId()).isEqualTo(TAG_TEAM1);
     assertThat(data.getData().get(0).getType()).isEqualTo("TAG");
+    assertThat(data.getData().get(0).getTotalCost()).isEqualTo(60.0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchAndPostFetchMethodInBillingEntitySeriesDataFetcherWithLabelGroupBy() {
+    List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeWorkloadNameEntityGroupBy(), makeLabelGroupBy(LABEL_NAME));
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+
+    QLEntityTableListData data = (QLEntityTableListData) billingStatsEntityDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, null);
+
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getWorkloadName()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
+    assertThat(data.getData().get(0).getRegion()).isEqualTo(BillingStatsDefaultKeys.REGION);
+    assertThat(data.getData().get(0).getWorkloadType()).isEqualTo(BillingStatsDefaultKeys.WORKLOADTYPE);
+    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(BillingStatsDefaultKeys.IDLECOST);
+    assertThat(data.getData().get(0).getTrendType()).isEqualTo(BillingStatsDefaultKeys.TRENDTYPE);
+    assertThat(data.getData().get(0).getClusterType()).isEqualTo(BillingStatsDefaultKeys.CLUSTERTYPE);
+    assertThat(data.getData().get(0).getClusterId()).isEqualTo(BillingStatsDefaultKeys.CLUSTERID);
+    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(BillingStatsDefaultKeys.IDLECOST);
+    assertThat(data.getData().get(0).getCpuIdleCost()).isEqualTo(BillingStatsDefaultKeys.CPUIDLECOST);
+    assertThat(data.getData().get(0).getMemoryIdleCost()).isEqualTo(BillingStatsDefaultKeys.MEMORYIDLECOST);
+    assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
+
+    data = (QLEntityTableListData) billingStatsEntityDataFetcher.postFetch(
+        ACCOUNT1_ID, groupBy, aggregationFunction, data);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getName()).isEqualTo(LABEL);
+    assertThat(data.getData().get(0).getId()).isEqualTo(LABEL);
+    assertThat(data.getData().get(0).getType()).isEqualTo("K8sLabel");
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(60.0);
   }
 
@@ -538,6 +586,12 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     return QLCCMGroupBy.builder().tagAggregation(tagAggregation).build();
   }
 
+  private QLCCMGroupBy makeLabelGroupBy(String labelName) {
+    return QLCCMGroupBy.builder()
+        .labelAggregation(QLBillingDataLabelAggregation.builder().name(labelName).build())
+        .build();
+  }
+
   public QLBillingDataFilter makeTimeFilter(Long filterTime) {
     QLTimeFilter timeFilter = QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build();
     return QLBillingDataFilter.builder().startTime(timeFilter).build();
@@ -611,6 +665,20 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
           return new Timestamp(calendar[0]);
         });
     returnResultSet(5);
+  }
+
+  private K8sWorkload getTestWorkload(String workloadName, Map<String, String> labels) {
+    return K8sWorkload.builder()
+        .accountId(ACCOUNT1_ID)
+        .clusterId(CLUSTER1_ID)
+        .settingId(SETTING_ID1)
+        .kind("WORKLOAD_KIND")
+        .labels(labels)
+        .name(workloadName)
+        .namespace(NAMESPACE1)
+        .uid("UID")
+        .uuid("UUID")
+        .build();
   }
 
   private void returnResultSet(int limit) throws SQLException {

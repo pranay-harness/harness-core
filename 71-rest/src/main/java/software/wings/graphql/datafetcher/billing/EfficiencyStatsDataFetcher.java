@@ -211,7 +211,8 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
   }
 
   @Override
-  protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList, QLData qlData) {
+  protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList,
+      List<QLCCMAggregationFunction> aggregationFunctions, QLData qlData) {
     return null;
   }
 
