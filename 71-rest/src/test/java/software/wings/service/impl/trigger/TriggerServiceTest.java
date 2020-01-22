@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
+import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
@@ -1896,6 +1897,48 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(environmentService).getEnvironmentByName(APP_ID, ENV_NAME, false);
     verify(infrastructureMappingService).get(APP_ID, INFRA_MAPPING_ID);
     verify(serviceResourceService).get(APP_ID, SERVICE_ID, false);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldTriggerTemplatedWorkflowExecutionWithoutArtifactSelection() {
+    when(artifactStreamService.fetchArtifactStreamIdsForService(APP_ID, SERVICE_ID))
+        .thenReturn(Arrays.asList(ARTIFACT_STREAM_ID));
+
+    Map<String, String> workflowVariables = new HashMap<>();
+    workflowVariables.put("Environment", ENV_NAME);
+    workflowVariables.put("ServiceInfra_Ssh", INFRA_MAPPING_ID);
+    workflowVariables.put("Service", SERVICE_ID);
+    setTemplatedWorkflow();
+
+    Map<String, String> parameters = new HashMap<>();
+    parameters.put("MyVar", "MyValue");
+
+    workflowWebhookConditionTrigger.setWorkflowVariables(workflowVariables);
+
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) workflowWebhookConditionTrigger.getCondition();
+
+    webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
+
+    webHookTriggerCondition.setWebhookSource(WebhookSource.BITBUCKET);
+
+    Trigger trigger = triggerService.save(workflowWebhookConditionTrigger);
+
+    assertThat(trigger).isNotNull();
+
+    triggerService.triggerExecutionByWebHook(APP_ID, trigger.getWebHookToken(),
+        ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo(BUILD_NO).build()), parameters,
+        TriggerExecution.builder().build());
+
+    verify(environmentService).getEnvironmentByName(APP_ID, ENV_NAME, false);
+
+    verify(workflowExecutionService)
+        .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+
+    verify(serviceResourceService).get(APP_ID, SERVICE_ID, false);
+    verify(infrastructureMappingService).get(APP_ID, INFRA_MAPPING_ID);
   }
 
   private void setTemplatedWorkflow() {
