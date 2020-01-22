@@ -442,8 +442,8 @@ public class WebHookServiceImpl implements WebHookService {
                 WebHookResponse.builder().error("Service Name [" + serviceName + "] does not exist").build(),
                 Response.Status.BAD_REQUEST);
           }
-          serviceArtifactMapping.put(service.getUuid(),
-              ArtifactSummary.builder().artifactSourceName(artifactStreamName).buildNo(buildNumber).build());
+          serviceArtifactMapping.put(
+              service.getUuid(), ArtifactSummary.builder().name(artifactStreamName).buildNo(buildNumber).build());
         }
       }
     }

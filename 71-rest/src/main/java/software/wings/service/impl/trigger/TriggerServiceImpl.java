@@ -1398,6 +1398,38 @@ public class TriggerServiceImpl implements TriggerService {
         }
       }
     }
+
+    try {
+      if (!collectedArtifactsFromPayload && isNotEmpty(serviceArtifactMapping)
+          && (trigger.getCondition().getConditionType() == WEBHOOK)) {
+        collectArtifactsForTemplatizedService(trigger, serviceArtifactMapping, artifacts, services);
+      }
+    } catch (Exception e) {
+      logger.error("failed to process artifacts and services from webhook", e);
+    }
+  }
+
+  private void collectArtifactsForTemplatizedService(Trigger trigger,
+      Map<String, ArtifactSummary> serviceArtifactMapping, List<Artifact> artifacts, Map<String, String> services) {
+    Map<String, ArtifactSummary> filteredServiceArtifactMapping =
+        serviceArtifactMapping.entrySet()
+            .stream()
+            .filter(map -> {
+              String serviceId = map.getKey();
+              for (ArtifactSelection artifactSelection : trigger.getArtifactSelections()) {
+                if (artifactSelection.getServiceId().equals(serviceId)) {
+                  return false;
+                }
+              }
+              return true;
+            })
+            .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+
+    if (isNotEmpty(filteredServiceArtifactMapping)) {
+      List<Artifact> artifactList =
+          collectArtifactsFromPayload(trigger.getAppId(), filteredServiceArtifactMapping, services);
+      artifacts.addAll(artifactList);
+    }
   }
 
   private List<Artifact> collectArtifactsFromPayload(
