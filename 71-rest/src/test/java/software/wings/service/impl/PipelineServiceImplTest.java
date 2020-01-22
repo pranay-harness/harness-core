@@ -44,6 +44,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mongodb.morphia.query.Query;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
@@ -68,6 +69,7 @@ import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PipelineServiceImpl.class)
+@PowerMockIgnore({"javax.net.*"})
 public class PipelineServiceImplTest extends WingsBaseTest {
   @Mock AppService mockAppService;
   @Mock WingsPersistence mockWingsPersistence;

@@ -44,6 +44,7 @@ serviceScheduler:
 enableIterators: true
 trialRegistrationAllowed: true
 blacklistedEmailDomainsAllowed: true
+pwnedPasswordsAllowed: true
 executionLogStorageMode: MONGO
 fileStorageMode: MONGO
 clusterName: ""

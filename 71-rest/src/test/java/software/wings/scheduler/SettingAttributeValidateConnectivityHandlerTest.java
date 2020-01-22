@@ -23,6 +23,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
@@ -33,6 +34,7 @@ import software.wings.service.intfc.SettingsService;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PersistenceIteratorFactory.class)
+@PowerMockIgnore({"javax.net.*"})
 public class SettingAttributeValidateConnectivityHandlerTest extends WingsBaseTest {
   @Mock private PersistenceIteratorFactory persistenceIteratorFactory;
   @Mock private SettingsService settingsService;

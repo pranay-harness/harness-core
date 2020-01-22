@@ -32,6 +32,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
@@ -46,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(
     {ArtifactCollectionHandler.class, ExceptionLogger.class, Logger.class, PersistenceIteratorFactory.class})
+@PowerMockIgnore({"javax.net.*"})
 public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID = "ARTIFACT_STREAM_ID";
 
