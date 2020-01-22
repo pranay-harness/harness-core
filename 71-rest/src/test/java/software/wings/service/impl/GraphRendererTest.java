@@ -16,10 +16,14 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.POOJA;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.ExecutionStrategy.PARALLEL;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.PHASE;
@@ -28,25 +32,50 @@ import static software.wings.sm.StateType.REPEAT;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.ExecutionDataValue;
 import software.wings.api.HostElement;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.sm.ContextElement;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
 public class GraphRendererTest extends WingsBaseTest {
-  @Inject GraphRenderer graphRenderer;
+  @Inject @InjectMocks GraphRenderer graphRenderer;
+  @Mock FeatureFlagService featureFlagService;
+  @Mock AppService appService;
+  @Mock WorkflowExecutionService workflowExecutionService;
+  @Mock Injector injector;
+
+  @Before
+  public void setup() {
+    when(workflowExecutionService.getExecutionInterruptCount(any())).thenReturn(2);
+    when(appService.getAccountIdByAppId(any())).thenReturn("ACCOUNT_ID");
+    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
+  }
 
   @Test
   @Owner(developers = GEORGE)
@@ -250,5 +279,129 @@ public class GraphRendererTest extends WingsBaseTest {
     assertThat(GraphRenderer.aggregateNodeName(false, 5, true)).isEqualTo("5 more instances");
     assertThat(GraphRenderer.aggregateNodeName(true, 5, false)).isEqualTo("5 instances");
     assertThat(GraphRenderer.aggregateNodeName(false, 5, false)).isEqualTo("5 instances");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testGenerateHierarchyNodeWithAggregation() {
+    final StateExecutionInstance parent = aStateExecutionInstance()
+                                              .displayName("Deploy Service")
+                                              .uuid("deploy")
+                                              .stateType(PHASE.name())
+                                              .contextTransition(true)
+                                              .status(SUCCESS)
+                                              .build();
+
+    RepeatStateExecutionData sed = new RepeatStateExecutionData();
+    sed.setExecutionStrategy(PARALLEL);
+    List<ContextElement> contextElements = new ArrayList<>();
+    contextElements.add(HostElement.builder().hostName("host1").build());
+    contextElements.add(HostElement.builder().hostName("host2").build());
+    contextElements.add(HostElement.builder().hostName("host3").build());
+    contextElements.add(HostElement.builder().hostName("host4").build());
+    contextElements.add(HostElement.builder().hostName("host5").build());
+    contextElements.add(HostElement.builder().hostName("host6").build());
+    contextElements.add(HostElement.builder().hostName("host7").build());
+    contextElements.add(HostElement.builder().hostName("host8").build());
+    contextElements.add(HostElement.builder().hostName("host9").build());
+    contextElements.add(HostElement.builder().hostName("host10").build());
+
+    sed.setRepeatElements(contextElements);
+    sed.setStatus(SUCCESS);
+    Map<String, StateExecutionData> stateExecutionDataMap = new HashMap<>();
+    stateExecutionDataMap.put("Repeat deploy on hosts", sed);
+
+    final StateExecutionInstance repeat = aStateExecutionInstance()
+                                              .displayName("Repeat deploy on hosts")
+                                              .uuid("repeat")
+                                              .stateType(REPEAT.name())
+                                              .contextTransition(true)
+                                              .stateExecutionMap(stateExecutionDataMap)
+                                              .status(SUCCESS)
+                                              .parentInstanceId(parent.getUuid())
+                                              .build();
+    List<StateExecutionInstance> stateExecutionInstances = new ArrayList<>();
+    stateExecutionInstances.add(parent);
+    stateExecutionInstances.add(repeat);
+
+    addHostElements(stateExecutionInstances, "host1", repeat.getUuid(), SUCCESS);
+    addHostElements(stateExecutionInstances, "host2", repeat.getUuid(), SUCCESS);
+    addHostElements(stateExecutionInstances, "host3", repeat.getUuid(), SUCCESS);
+    addHostElements(stateExecutionInstances, "host4", repeat.getUuid(), SUCCESS);
+    addHostElements(stateExecutionInstances, "host5", repeat.getUuid(), SUCCESS);
+    addHostElements(stateExecutionInstances, "host6", repeat.getUuid(), SUCCESS);
+    addHostElements(stateExecutionInstances, "host7", repeat.getUuid(), SUCCESS);
+    addHostElements(stateExecutionInstances, "host8", repeat.getUuid(), SUCCESS);
+    addHostElements(stateExecutionInstances, "host9", repeat.getUuid(), SUCCESS);
+    addHostElements(stateExecutionInstances, "host10", repeat.getUuid(), FAILED);
+
+    Map<String, StateExecutionInstance> stateExecutionInstanceMap =
+        stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
+
+    final GraphNode node = graphRenderer.generateHierarchyNode(stateExecutionInstanceMap);
+    assertThat(node).isNotNull();
+    assertThat(node.getName()).isEqualTo(parent.getDisplayName());
+
+    final GraphGroup deployGroup = node.getGroup();
+    assertThat(deployGroup).isNotNull();
+
+    final List<GraphNode> deployChildElements = deployGroup.getElements();
+    assertThat(deployChildElements.size()).isEqualTo(1);
+    assertThat(deployChildElements.get(0).getName()).isEqualTo(repeat.getDisplayName());
+
+    final GraphGroup repeatGroup = deployChildElements.get(0).getGroup();
+    assertThat(repeatGroup).isNotNull();
+
+    final List<GraphNode> repeatChildElements = repeatGroup.getElements();
+    assertThat(repeatChildElements.size()).isEqualTo(1);
+    assertThat(repeatChildElements.get(0).getName()).isEqualTo("10 instances");
+    Map<String, ExecutionDataValue> executionDetails =
+        (Map<String, ExecutionDataValue>) repeatChildElements.get(0).getExecutionDetails();
+    assertThat(executionDetails).isNotEmpty();
+    assertThat(executionDetails.get("Total instances").getValue()).isEqualTo(10);
+    assertThat(executionDetails.get("Succeeded").getValue()).isEqualTo(9);
+    assertThat(executionDetails.get("Error").getValue()).isEqualTo(1);
+    assertThat(executionDetails.get("startTs").getValue()).isEqualTo(123L);
+    assertThat(executionDetails.get("endTs").getValue()).isEqualTo(456L);
+    assertThat(executionDetails.get("Execution Strategy").getValue()).isEqualTo(PARALLEL);
+  }
+
+  private void addHostElements(
+      List<StateExecutionInstance> stateExecutionInstances, String hostname, String repeatId, ExecutionStatus status) {
+    StateExecutionData sed = new StateExecutionData();
+    sed.setStatus(SUCCESS);
+    sed.setStartTs(123L);
+    sed.setEndTs(456L);
+
+    Map<String, StateExecutionData> stateExecutionDataMap = new HashMap<>();
+    stateExecutionDataMap.put("install1 on" + hostname, sed);
+    final StateExecutionInstance command1 = aStateExecutionInstance()
+                                                .displayName("install1 on" + hostname)
+                                                .uuid(hostname + "_1")
+                                                .stateType(COMMAND.name())
+                                                .stateExecutionMap(stateExecutionDataMap)
+                                                .contextElement(HostElement.builder().hostName(hostname).build())
+                                                .contextTransition(true)
+                                                .status(SUCCESS)
+                                                .parentInstanceId(repeatId)
+                                                .build();
+    stateExecutionInstances.add(command1);
+
+    sed.setStatus(status);
+    Map<String, StateExecutionData> stateExecutionDataMap2 = new HashMap<>();
+    stateExecutionDataMap.put("install2 on" + hostname, sed);
+    final StateExecutionInstance command2 = aStateExecutionInstance()
+                                                .displayName("install2 on" + hostname)
+                                                .uuid(hostname + "_2")
+                                                .stateType(COMMAND.name())
+                                                .stateExecutionMap(stateExecutionDataMap2)
+                                                .contextElement(HostElement.builder().hostName(hostname).build())
+                                                .status(status)
+                                                .parentInstanceId(repeatId)
+                                                .prevInstanceId(command1.getUuid())
+                                                .build();
+
+    stateExecutionInstances.add(command2);
   }
 }
