@@ -91,3 +91,24 @@ message K8SClusterSyncEvent {
   repeated string active_node_uids = 5;
   google.protobuf.Timestamp last_processed_timestamp = 6;
 }
+
+// Cluster events
+message K8sClusterEvent {
+  // cluster details
+  string cluster_id = 1;
+  string cluster_name = 2;
+  string cloud_provider_id = 3;
+  // event details
+  string reason = 4;
+  string message = 5;
+  string source_component = 6;
+  message InvolvedObject {
+    string kind = 1;
+    string name = 2;
+    string namespace = 3;
+    string uid = 4;
+    string resource_version = 5;
+  }
+  InvolvedObject involved_object = 7;
+  bytes involved_object_details = 8;
+}

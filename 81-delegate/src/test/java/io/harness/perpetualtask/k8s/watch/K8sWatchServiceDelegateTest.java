@@ -32,6 +32,7 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
 
   private PodWatcher podWatcher;
   private NodeWatcher nodeWatcher;
+  private ClusterEventWatcher clusterEventWatcher;
 
   @Before
   public void setUp() throws Exception {
@@ -40,8 +41,10 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     this.k8sWatchServiceDelegate = new K8sWatchServiceDelegate(watcherFactory, kubernetesClientFactory);
     podWatcher = mock(PodWatcher.class);
     nodeWatcher = mock(NodeWatcher.class);
+    clusterEventWatcher = mock(ClusterEventWatcher.class);
     when(watcherFactory.createPodWatcher(any(), any())).thenReturn(podWatcher);
     when(watcherFactory.createNodeWatcher(any(), any())).thenReturn(nodeWatcher);
+    when(watcherFactory.createClusterEventWatcher(any(), any())).thenReturn(clusterEventWatcher);
   }
 
   @Test
@@ -76,6 +79,23 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     assertThat(watchId).isNotNull();
     assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
     verify(watcherFactory, atLeastOnce()).createNodeWatcher(any(), any());
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldCreateClusterEventWatch() throws Exception {
+    String cloudProviderId = UUID.randomUUID().toString();
+    ByteString k8sClusterConfig = ByteString.copyFrom(KryoUtils.asBytes(
+        K8sClusterConfig.builder().clusterName("test-cluster").namespace("namespace").cloudProvider(null).build()));
+    K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
+                                                .setK8SClusterConfig(k8sClusterConfig)
+                                                .setCloudProviderId(cloudProviderId)
+                                                .build();
+    String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
+    assertThat(watchId).isNotNull();
+    assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
+    verify(watcherFactory, atLeastOnce()).createClusterEventWatcher(any(), any());
   }
 
   @Test

@@ -18,7 +18,7 @@ public class K8sWatchServiceDelegate {
   private final WatcherFactory watcherFactory;
   private final KubernetesClientFactory kubernetesClientFactory;
 
-  private final Map<String, NodePodWatcher> watchMap; // <id, Watch>
+  private final Map<String, WatcherGroup> watchMap; // <id, Watch>
 
   @Inject
   public K8sWatchServiceDelegate(WatcherFactory watcherFactory, KubernetesClientFactory kubernetesClientFactory) {
@@ -28,9 +28,10 @@ public class K8sWatchServiceDelegate {
   }
 
   @Builder
-  static class NodePodWatcher {
+  static class WatcherGroup {
     private Watcher nodeWatcher;
     private Watcher podWatcher;
+    private Watcher clusterEventWatcher;
   }
 
   public Iterable<String> watchIds() {
@@ -46,7 +47,12 @@ public class K8sWatchServiceDelegate {
       KubernetesClient client = kubernetesClientFactory.newKubernetesClient(k8sClusterConfig);
       Watcher podWatcher = watcherFactory.createPodWatcher(client, params);
       Watcher nodeWatcher = watcherFactory.createNodeWatcher(client, params);
-      return NodePodWatcher.builder().nodeWatcher(nodeWatcher).podWatcher(podWatcher).build();
+      Watcher eventWatcher = watcherFactory.createClusterEventWatcher(client, params);
+      return WatcherGroup.builder()
+          .nodeWatcher(nodeWatcher)
+          .podWatcher(podWatcher)
+          .clusterEventWatcher(eventWatcher)
+          .build();
     });
 
     return watchId;
@@ -54,9 +60,10 @@ public class K8sWatchServiceDelegate {
 
   public void delete(String watchId) {
     // computeIfPresent form required for lookup & delete to be atomic.
-    watchMap.computeIfPresent(watchId, (id, nodePodWatcher) -> {
-      nodePodWatcher.nodeWatcher.onClose(null);
-      nodePodWatcher.podWatcher.onClose(null);
+    watchMap.computeIfPresent(watchId, (id, watcherGroup) -> {
+      watcherGroup.nodeWatcher.onClose(null);
+      watcherGroup.podWatcher.onClose(null);
+      watcherGroup.clusterEventWatcher.onClose(null);
       return null;
     });
   }

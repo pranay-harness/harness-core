@@ -71,6 +71,14 @@ public final class K8SMessages {
       .Descriptor internal_static_io_harness_perpetualtask_k8s_watch_K8SClusterSyncEvent_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_perpetualtask_k8s_watch_K8SClusterSyncEvent_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_InvolvedObject_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_InvolvedObject_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -143,7 +151,17 @@ public final class K8SMessages {
         + "\n\021cloud_provider_id\030\003 \001(\t\022\027\n\017active_pod_"
         + "uids\030\004 \003(\t\022\030\n\020active_node_uids\030\005 \003(\t\022<\n\030"
         + "last_processed_timestamp\030\006 \001(\0132\032.google."
-        + "protobuf.TimestampB\002P\001b\006proto3"};
+        + "protobuf.Timestamp\"\367\002\n\017K8sClusterEvent\022\022"
+        + "\n\ncluster_id\030\001 \001(\t\022\024\n\014cluster_name\030\002 \001(\t"
+        + "\022\031\n\021cloud_provider_id\030\003 \001(\t\022\016\n\006reason\030\004 "
+        + "\001(\t\022\017\n\007message\030\005 \001(\t\022\030\n\020source_component"
+        + "\030\006 \001(\t\022[\n\017involved_object\030\007 \001(\0132B.io.har"
+        + "ness.perpetualtask.k8s.watch.K8sClusterE"
+        + "vent.InvolvedObject\022\037\n\027involved_object_d"
+        + "etails\030\010 \001(\014\032f\n\016InvolvedObject\022\014\n\004kind\030\001"
+        + " \001(\t\022\014\n\004name\030\002 \001(\t\022\021\n\tnamespace\030\003 \001(\t\022\013\n"
+        + "\003uid\030\004 \001(\t\022\030\n\020resource_version\030\005 \001(\tB\002P\001"
+        + "b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -315,6 +333,33 @@ public final class K8SMessages {
                 "ActivePodUids",
                 "ActiveNodeUids",
                 "LastProcessedTimestamp",
+            });
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_descriptor =
+        getDescriptor().getMessageTypes().get(8);
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_descriptor,
+            new java.lang.String[] {
+                "ClusterId",
+                "ClusterName",
+                "CloudProviderId",
+                "Reason",
+                "Message",
+                "SourceComponent",
+                "InvolvedObject",
+                "InvolvedObjectDetails",
+            });
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_InvolvedObject_descriptor =
+        internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_descriptor.getNestedTypes().get(0);
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_InvolvedObject_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_InvolvedObject_descriptor,
+            new java.lang.String[] {
+                "Kind",
+                "Name",
+                "Namespace",
+                "Uid",
+                "ResourceVersion",
             });
     com.google.protobuf.TimestampProto.getDescriptor();
   }
