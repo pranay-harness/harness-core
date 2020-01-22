@@ -16,13 +16,12 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 @UtilityClass
 @Slf4j
 public class K8sWorkloadUtils {
   private static final Cache<CacheKey, HasMetadata> resourceCache =
-      Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build();
+      Caffeine.newBuilder().expireAfterWrite(5, TimeUnit.SECONDS).build();
 
   @Value
   private static class CacheKey {
@@ -53,40 +52,37 @@ public class K8sWorkloadUtils {
     while (hasController(resource)) {
       final OwnerReference ownerReference = requireNonNull(getController(resource));
       final String ownerKind = ownerReference.getKind();
-      final CacheKey cacheKey = new CacheKey(client.getMasterUrl().toString(), resource.getMetadata().getNamespace(),
-          ownerReference.getKind(), ownerReference.getName());
-      Function<CacheKey, HasMetadata> ownerMapper = key -> null;
-      switch (ownerKind) {
-        case "Deployment":
-          ownerMapper = key -> client.extensions().deployments().inNamespace(key.namespace).withName(key.name).get();
-          break;
-        case "DaemonSet":
-          ownerMapper = key -> client.extensions().daemonSets().inNamespace(key.namespace).withName(key.name).get();
-          break;
-        case "StatefulSet":
-          ownerMapper = key -> client.apps().statefulSets().inNamespace(key.namespace).withName(key.name).get();
-          break;
-        case "ReplicaSet":
-          ownerMapper = key -> client.extensions().replicaSets().inNamespace(key.namespace).withName(key.name).get();
-          break;
-        case "Job":
-          ownerMapper = key -> client.extensions().jobs().inNamespace(key.namespace).withName(key.name).get();
-          break;
-        case "CronJob":
-          ownerMapper = key
-              -> client.adapt(K8sCronJobClient.class).cronJobs().inNamespace(key.namespace).withName(key.name).get();
-          break;
-        default:
-          logger.warn("Unsupported owner: {}", ownerReference);
-          break;
-      }
-      HasMetadata newResource = resourceCache.get(cacheKey, ownerMapper);
-      if (newResource == null) {
+      HasMetadata ownerResource =
+          getWorkload(client, resource.getMetadata().getNamespace(), ownerKind, ownerReference.getName());
+      if (ownerResource == null) {
         break;
       }
-      resource = newResource;
+      resource = ownerResource;
     }
     return resource;
+  }
+
+  public HasMetadata getWorkload(KubernetesClient client, String namespace, String kind, String name) {
+    final CacheKey cacheKey = new CacheKey(client.getMasterUrl().toString(), namespace, kind, name);
+    return resourceCache.get(cacheKey, key -> {
+      switch (key.kind) {
+        case "Deployment":
+          return client.extensions().deployments().inNamespace(key.namespace).withName(key.name).get();
+        case "DaemonSet":
+          return client.extensions().daemonSets().inNamespace(key.namespace).withName(key.name).get();
+        case "StatefulSet":
+          return client.apps().statefulSets().inNamespace(key.namespace).withName(key.name).get();
+        case "ReplicaSet":
+          return client.extensions().replicaSets().inNamespace(key.namespace).withName(key.name).get();
+        case "Job":
+          return client.extensions().jobs().inNamespace(key.namespace).withName(key.name).get();
+        case "CronJob":
+          return client.adapt(K8sCronJobClient.class).cronJobs().inNamespace(key.namespace).withName(key.name).get();
+        default:
+          logger.warn("Not a controller workload kind: {} (namespace: {}, name: {})", kind, namespace, name);
+          return null;
+      }
+    });
   }
 
   public Owner getTopLevelOwner(KubernetesClient client, Pod pod) {
