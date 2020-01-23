@@ -5,4 +5,5 @@ public interface K8sGlobalConfigService {
   String getGoTemplateClientPath();
   String getHelmPath();
   String getChartMuseumPath();
+  String getOcPath();
 }

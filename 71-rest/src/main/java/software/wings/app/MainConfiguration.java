@@ -95,6 +95,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;
   @JsonProperty("featuresEnabled") private String featureNames;
   @JsonProperty("kubectlVersion") private String kubectlVersion;
+  @JsonProperty("ocVersion") private String ocVersion;
   @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
   @JsonProperty("blacklistedEmailDomainsAllowed") private boolean blacklistedEmailDomainsAllowed;
   @JsonProperty("pwnedPasswordsAllowed") private boolean pwnedPasswordsAllowed;

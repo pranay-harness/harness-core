@@ -16,6 +16,7 @@ import org.zeroturnaround.exec.ProcessResult;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
@@ -34,10 +35,14 @@ public class InstallUtils {
   private static final String chartMuseumVersion = "v0.8.2";
   private static final String chartMuseumBaseDir = "./client-tools/chartmuseum/";
 
+  private static final String ocVersion = "v4.2.16";
+  private static final String ocBaseDir = "./client-tools/oc/";
+
   private static String kubectlPath = "kubectl";
   private static String goTemplateToolPath = "go-template";
   private static String helmPath = "helm";
   private static String chartMuseumPath = "chartmuseum";
+  private static String ocPath = "oc";
 
   private static final String terraformConfigInspectBaseDir = "./client-tools/tf-config"
       + "-inspect";
@@ -64,6 +69,10 @@ public class InstallUtils {
 
   public static String getChartMuseumPath() {
     return chartMuseumPath;
+  }
+
+  public static String getOcPath() {
+    return ocPath;
   }
 
   public static boolean installKubectl(DelegateConfiguration configuration) {
@@ -535,5 +544,102 @@ public class InstallUtils {
       return true;
     }
     return false;
+  }
+
+  public static boolean installOc(DelegateConfiguration configuration) {
+    try {
+      if (StringUtils.isNotEmpty(configuration.getOcPath())) {
+        ocPath = configuration.getOcPath();
+        logger.info("Found user configured oc at {}. Skipping Install.", ocPath);
+        return true;
+      }
+
+      if (SystemUtils.IS_OS_WINDOWS) {
+        logger.info("Skipping oc install on Windows");
+        return true;
+      }
+
+      String version = System.getenv().get("OC_VERSION");
+      if (StringUtils.isEmpty(version)) {
+        version = ocVersion;
+        logger.info("No version configured. Using default oc version {}", version);
+      }
+
+      String ocDirectory = ocBaseDir + version;
+      if (validateOcExists(ocDirectory)) {
+        ocPath = Paths.get(ocDirectory, "oc").toAbsolutePath().normalize().toString();
+        logger.info("oc version {} already installed", version);
+        return true;
+      }
+
+      logger.info("Installing oc");
+      createDirectoryIfDoesNotExist(ocDirectory);
+
+      String downloadUrl = getOcDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()), version);
+      logger.info("download url is {}", downloadUrl);
+
+      String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
+          + "chmod +x ./oc\n"
+          + "./oc version --client\n";
+
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(10, TimeUnit.MINUTES)
+                                            .directory(new File(ocDirectory))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+
+      if (result.getExitValue() == 0) {
+        ocPath = Paths.get(ocDirectory, "oc").toAbsolutePath().normalize().toString();
+        logger.info(result.outputString());
+        if (validateOcExists(ocDirectory)) {
+          logger.info("oc path: {}", ocPath);
+          return true;
+        } else {
+          logger.error("oc not validated after download: {}", ocPath);
+          return false;
+        }
+      } else {
+        logger.error("oc install failed");
+        logger.error(result.outputString());
+        return false;
+      }
+    } catch (Exception e) {
+      logger.error("Error installing oc", e);
+      return false;
+    }
+  }
+
+  private static boolean validateOcExists(String ocDirectory) {
+    try {
+      Path path = Paths.get(ocDirectory, "oc");
+      if (!path.toFile().exists()) {
+        return false;
+      }
+
+      String script = "./oc version --client\n";
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(1, TimeUnit.MINUTES)
+                                            .directory(new File(ocDirectory))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+
+      if (result.getExitValue() == 0) {
+        logger.info(result.outputString());
+        return true;
+      } else {
+        logger.error(result.outputString());
+        return false;
+      }
+    } catch (Exception e) {
+      logger.error("Error checking oc", e);
+      return false;
+    }
+  }
+
+  private static String getOcDownloadUrl(String managerBaseUrl, String version) {
+    return managerBaseUrl + "storage/harness-download/harness-oc/release/" + version + "/bin/" + getOsPath()
+        + "/amd64/oc";
   }
 }
