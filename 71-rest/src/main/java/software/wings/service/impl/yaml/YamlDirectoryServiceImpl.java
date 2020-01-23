@@ -494,11 +494,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     configFolder.addChild(new YamlNode(accountId, GLOBAL_APP_ID, defaultVarsYamlFileName, Defaults.class,
         directoryPath.clone().add(defaultVarsYamlFileName), yamlGitSyncService, Type.ACCOUNT_DEFAULTS));
 
-    if (featureFlagService.isEnabled(FeatureName.TAGS_YAML, accountId)) {
-      String tagsFileName = TAGS_YAML;
-      configFolder.addChild(new YamlNode(accountId, GLOBAL_APP_ID, tagsFileName, HarnessTag.class,
-          directoryPath.clone().add(tagsFileName), yamlGitSyncService, Type.TAGS));
-    }
+    String tagsFileName = TAGS_YAML;
+    configFolder.addChild(new YamlNode(accountId, GLOBAL_APP_ID, tagsFileName, HarnessTag.class,
+        directoryPath.clone().add(tagsFileName), yamlGitSyncService, Type.TAGS));
 
     List<Future<FolderNode>> futureList = new ArrayList<>();
 
