@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.user;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.InvalidRequestException;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.type.user.QLDeleteUserInput;
@@ -25,7 +26,12 @@ public class DeleteUserDataFetcher extends BaseMutatorDataFetcher<QLDeleteUserIn
   protected QLDeleteUserPayload mutateAndFetch(QLDeleteUserInput qlDeleteUserInput, MutationContext mutationContext) {
     QLDeleteUserPayloadBuilder qlDeleteUserPayloadBuilder =
         QLDeleteUserPayload.builder().requestId(qlDeleteUserInput.getRequestId());
-    userService.delete(mutationContext.getAccountId(), qlDeleteUserInput.getId());
-    return qlDeleteUserPayloadBuilder.build();
+    final String userId = qlDeleteUserInput.getId();
+    try {
+      userService.delete(mutationContext.getAccountId(), userId);
+      return qlDeleteUserPayloadBuilder.build();
+    } catch (Exception ex) {
+      throw new InvalidRequestException("User not found");
+    }
   }
 }

@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.utils.RequestField;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -19,6 +19,7 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.UserService;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,10 +39,11 @@ public class UpdateUserDataFetcher extends BaseMutatorDataFetcher<QLUpdateUserIn
   protected QLUpdateUserPayload mutateAndFetch(QLUpdateUserInput qlUpdateUserInput, MutationContext mutationContext) {
     validate(qlUpdateUserInput);
     String existingUserId = qlUpdateUserInput.getId();
-    final User existingUser = userService.get(existingUserId);
-    if (existingUser == null) {
-      throw new InvalidRequestException(
-          String.format("No user found for id: %s", existingUserId), WingsException.USER_SRE);
+    User existingUser;
+    try {
+      existingUser = userService.get(existingUserId);
+    } catch (UnauthorizedException ex) {
+      throw new InvalidRequestException("User not found", ex);
     }
     final User updatedUser =
         userService.update(prepareUserToUpdate(qlUpdateUserInput, existingUser, mutationContext.getAccountId()));
@@ -57,6 +59,10 @@ public class UpdateUserDataFetcher extends BaseMutatorDataFetcher<QLUpdateUserIn
     }
     if (StringUtils.isBlank(qlUpdateUserInput.getRequestId())) {
       throw new InvalidArgumentsException(Pair.of("requestId", INVALID_INP_ERR_MSSG));
+    }
+    final RequestField<List<String>> userGroupIds = qlUpdateUserInput.getUserGroupIds();
+    if (isInitialized(userGroupIds) && getValue(userGroupIds).orElse(Collections.emptyList()).contains("")) {
+      throw new InvalidArgumentsException(Pair.of("userGroupId", INVALID_INP_ERR_MSSG));
     }
   }
 

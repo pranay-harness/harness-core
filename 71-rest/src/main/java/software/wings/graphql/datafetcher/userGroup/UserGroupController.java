@@ -13,7 +13,6 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.User;
@@ -35,7 +34,6 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -181,25 +179,7 @@ public class UserGroupController {
   }
 
   public void addUserToUserGroups(final User user, final List<String> userGroupIds, final String accountId) {
-    if (userGroupIds == null || EmptyPredicate.isEmpty(userGroupIds)) {
-      return;
-    }
-    userGroupIds.forEach(userGroupId -> addUserToUserGroup(user, userGroupId, accountId));
-  }
-
-  private void addUserToUserGroup(final User user, final String userGroupId, final String accountId) {
-    UserGroup userGroup = userGroupService.get(accountId, userGroupId);
-    if (userGroup == null) {
-      return;
-    } else {
-      if (userGroup.getMemberIds() != null) {
-        if (!userGroup.getMemberIds().contains(user.getUuid())) {
-          userGroup.getMemberIds().add(user.getUuid());
-        }
-      } else {
-        userGroup.setMemberIds(Arrays.asList(user.getUuid()));
-      }
-      userGroupService.save(userGroup);
-    }
+    final List<UserGroup> userGroups = userGroupService.fetchUserGroupNamesFromIds(userGroupIds);
+    userService.updateUserGroupsOfUser(user.getUuid(), userGroups, accountId, true);
   }
 }
