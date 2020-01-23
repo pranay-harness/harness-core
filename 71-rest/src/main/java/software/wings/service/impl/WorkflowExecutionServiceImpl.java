@@ -859,7 +859,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private Tree calculateTree(String appId, String workflowExecutionId) {
     Map<String, StateExecutionInstance> allInstancesIdMap =
         stateExecutionService.executionStatesMap(appId, workflowExecutionId);
-
     Long lastUpdate = allInstancesIdMap.values()
                           .stream()
                           .map(StateExecutionInstance::getLastUpdatedAt)
@@ -885,7 +884,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           executionInterruptManager.checkForExecutionInterrupt(appId, workflowExecutionId);
       if (executionInterrupts != null
           && executionInterrupts.stream().anyMatch(
-                 e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL)) {
+                 e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL && !e.isSeized())) {
         treeBuilder.overrideStatus(ExecutionStatus.PAUSED);
       }
     }

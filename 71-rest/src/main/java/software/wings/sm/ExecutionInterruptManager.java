@@ -18,6 +18,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eraro.ErrorCode.ABORT_ALL_ALREADY;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.PAUSE_ALL_ALREADY;
 import static io.harness.eraro.ErrorCode.RESUME_ALL_ALREADY;
@@ -48,6 +49,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.waiter.WaitNotifyEngine;
@@ -145,6 +147,13 @@ public class ExecutionInterruptManager {
       }
       seize(pauseAll);
       waitNotifyEngine.doneWith(pauseAll.getUuid(), ExecutionStatusData.builder().executionStatus(SUCCESS).build());
+    }
+
+    if (executionInterruptType == ABORT_ALL) {
+      if (isPresent(res, ABORT_ALL)) {
+        throw new InvalidRequestException("Execution has already been Aborted", ABORT_ALL_ALREADY, USER);
+      }
+      seizeAllInterrupts(res);
     }
 
     wingsPersistence.save(executionInterrupt);
@@ -318,5 +327,11 @@ public class ExecutionInterruptManager {
       return null;
     }
     return res.getResponse();
+  }
+
+  private void seizeAllInterrupts(List<ExecutionInterrupt> executionInterrupts) {
+    for (ExecutionInterrupt executionInterrupt : executionInterrupts) {
+      seize(executionInterrupt);
+    }
   }
 }
