@@ -63,6 +63,7 @@ public class PodUtilizationMetricsWriterTest extends CategoryTest implements Ecs
     assertThat(k8sGranularUtilizationData.getInstanceId()).isEqualTo(INSTANCEID);
     assertThat(k8sGranularUtilizationData.getInstanceType()).isEqualTo(INSTANCETYPE);
     assertThat(k8sGranularUtilizationData.getClusterId()).isEqualTo(CLUSTERID);
+    assertThat(k8sGranularUtilizationData.getSettingId()).isEqualTo(SETTINGID);
   }
 
   PublishedMessage getPodUtilizationMetricsMessages() {

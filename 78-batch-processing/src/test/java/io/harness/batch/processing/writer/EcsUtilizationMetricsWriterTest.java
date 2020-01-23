@@ -66,6 +66,7 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
     assertThat(instanceUtilizationDataPoint0.getInstanceId()).isEqualTo(INSTANCEID);
     assertThat(instanceUtilizationDataPoint0.getInstanceType()).isEqualTo(INSTANCETYPE);
     assertThat(instanceUtilizationDataPoint0.getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(instanceUtilizationDataPoint0.getSettingId()).isEqualTo(SETTING_ID);
     assertThat(instanceUtilizationDataPoint0.getCpuUtilizationAvg()).isEqualTo(0.5);
     assertThat(instanceUtilizationDataPoint0.getCpuUtilizationMax()).isEqualTo(0.5);
     assertThat(instanceUtilizationDataPoint0.getMemoryUtilizationAvg()).isEqualTo(10.24);
@@ -77,6 +78,7 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
     assertThat(instanceUtilizationDataPoint1.getInstanceId()).isEqualTo(INSTANCEID);
     assertThat(instanceUtilizationDataPoint1.getInstanceType()).isEqualTo(INSTANCETYPE);
     assertThat(instanceUtilizationDataPoint1.getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(instanceUtilizationDataPoint1.getSettingId()).isEqualTo(SETTING_ID);
     assertThat(instanceUtilizationDataPoint1.getCpuUtilizationAvg()).isEqualTo(0.6);
     assertThat(instanceUtilizationDataPoint1.getCpuUtilizationMax()).isEqualTo(0.6);
     assertThat(instanceUtilizationDataPoint1.getMemoryUtilizationAvg()).isEqualTo(20.48);

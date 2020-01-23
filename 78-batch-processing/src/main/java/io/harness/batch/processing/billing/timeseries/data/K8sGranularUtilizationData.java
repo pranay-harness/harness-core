@@ -10,6 +10,7 @@ public class K8sGranularUtilizationData {
   private String instanceId;
   private String instanceType;
   private String clusterId;
+  private String settingId;
   private double cpu;
   private double memory;
   private long endTimestamp;

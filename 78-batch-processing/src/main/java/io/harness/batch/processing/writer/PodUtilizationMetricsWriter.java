@@ -45,16 +45,18 @@ public class PodUtilizationMetricsWriter extends EventWriter implements ItemWrit
             memoryMb += K8sResourceUtils.getMemoryMb(container.getUsage().getMemoryByte());
           }
 
-          K8sGranularUtilizationData k8sGranularUtilizationData = K8sGranularUtilizationData.builder()
-                                                                      .accountId(accountId)
-                                                                      .instanceId(podUtilizationMetric.getName())
-                                                                      .instanceType(K8S_POD)
-                                                                      .clusterId(podUtilizationMetric.getClusterId())
-                                                                      .startTimestamp(startTime)
-                                                                      .endTimestamp(endTime)
-                                                                      .cpu(cpuUnits)
-                                                                      .memory(memoryMb)
-                                                                      .build();
+          K8sGranularUtilizationData k8sGranularUtilizationData =
+              K8sGranularUtilizationData.builder()
+                  .accountId(accountId)
+                  .instanceId(podUtilizationMetric.getName())
+                  .instanceType(K8S_POD)
+                  .clusterId(podUtilizationMetric.getClusterId())
+                  .settingId(podUtilizationMetric.getCloudProviderId())
+                  .startTimestamp(startTime)
+                  .endTimestamp(endTime)
+                  .cpu(cpuUnits)
+                  .memory(memoryMb)
+                  .build();
 
           k8sGranularUtilizationDataList.add(k8sGranularUtilizationData);
         });
