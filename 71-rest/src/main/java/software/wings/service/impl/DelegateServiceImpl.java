@@ -765,11 +765,15 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .put("delegateCheckLocation", delegateCheckLocation)
               .put("deployMode", mainConfiguration.getDeployMode().name())
               .put("kubectlVersion", mainConfiguration.getKubectlVersion())
-              .put("ocVersion", mainConfiguration.getOcVersion())
               .put("kubernetesAccountLabel", getAccountIdentifier(inquiry.getAccountId()));
       if (isNotBlank(inquiry.getDelegateName())) {
         params.put("delegateName", inquiry.getDelegateName());
       }
+
+      if (isNotBlank(mainConfiguration.getOcVersion())) {
+        params.put("ocVersion", mainConfiguration.getOcVersion());
+      }
+
       if (inquiry.getDelegateProfile() != null) {
         params.put("delegateProfile", inquiry.getDelegateProfile());
       }
