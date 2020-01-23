@@ -1,33 +1,39 @@
 extend type Mutation {
+  #Creates a new Application and returns it
   createApplication(input: CreateApplicationInput!): CreateApplicationPayload @dataFetcher(name: createApplication)
+  #Updates an application and returns it.
   updateApplication(input: UpdateApplicationInput!): UpdateApplicationPayload @dataFetcher(name: updateApplication)
+  #Deletes an application.
   deleteApplication(input: DeleteApplicationInput!): DeleteApplicationPayload @dataFetcher(name: deleteApplication)
-  updateApplicationGitConfig(input: UpdateApplicationGitConfigInput!): UpdateApplicationGitConfigPayload
-    @dataFetcher(name: updateApplicationGitConfig)
-  removeApplicationGitConfig(input: RemoveApplicationGitConfigInput!): RemoveApplicationGitConfigPayload
-    @dataFetcher(name: removeApplicationGitConfig)
-  updateApplicationGitConfigStatus(
-    input: UpdateApplicationGitConfigStatusInput!
-  ): UpdateApplicationGitConfigStatusPayload @dataFetcher(name: updateApplicationGitConfigStatus)
+  #Updates  Application Git Sync Configuration. Creates the configuration, in case it does not exist. Returns updated git sync configuration.
+  updateApplicationGitSyncConfig(input: UpdateApplicationGitSyncConfigInput!): UpdateApplicationGitSyncConfigPayload
+    @dataFetcher(name: updateApplicationGitSyncConfig)
+  #Removes Git Sync Configuration associated with an application. Returns updated application.
+  removeApplicationGitSyncConfig(input: RemoveApplicationGitSyncConfigInput!): RemoveApplicationGitSyncConfigPayload
+    @dataFetcher(name: removeApplicationGitSyncConfig)
+  #Enable/disable Git Sync for an application. Returns updated application.
+  updateApplicationGitSyncConfigStatus(
+    input: UpdateApplicationGitSyncConfigStatusInput!
+  ): UpdateApplicationGitSyncConfigStatusPayload @dataFetcher(name: updateApplicationGitSyncConfigStatus)
 }
 
-type UpdateApplicationGitConfigPayload {
+type UpdateApplicationGitSyncConfigPayload {
   requestId: String
-  gitConfig: GitConfig
+  gitSyncConfig: GitSyncConfig
 }
 
-input UpdateApplicationGitConfigStatusInput {
+input UpdateApplicationGitSyncConfigStatusInput {
   requestId: String!
   applicationId: String!
   syncEnabled: Boolean!
 }
 
-input RemoveApplicationGitConfigInput {
+input RemoveApplicationGitSyncConfigInput {
   requestId: String!
   applicationId: String!
 }
 
-input UpdateApplicationGitConfigInput {
+input UpdateApplicationGitSyncConfigInput {
   requestId: String!
   applicationId: String!
   gitConnectorId: String!
@@ -66,7 +72,7 @@ type DeleteApplicationPayload {
   requestId: String
 }
 
-type GitConfig {
+type GitSyncConfig {
   gitConnector: GitConnector
     @dataFetcher(name: connector, contextFieldArgsMap: "{ \"connectorId\": \"gitConnectorId\"}")
   branch: String
@@ -74,15 +80,16 @@ type GitConfig {
 }
 
 extend type Application {
-  gitConfig: GitConfig @dataFetcher(name: applicationGitConfig, contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
+  gitSyncConfig: GitSyncConfig
+    @dataFetcher(name: applicationGitSyncConfig, contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
 }
 
-type UpdateApplicationGitConfigStatusPayload {
+type UpdateApplicationGitSyncConfigStatusPayload {
   requestId: String
-  gitConfig: GitConfig
+  gitSyncConfig: GitSyncConfig
 }
 
-type RemoveApplicationGitConfigPayload {
+type RemoveApplicationGitSyncConfigPayload {
   requestId: String
   application: Application
 }
