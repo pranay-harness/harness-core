@@ -2,7 +2,7 @@ package io.harness.serializer;
 
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -134,7 +134,7 @@ public class JsonUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldUseClassNameWhenUsingMapperForCloning() {
     BaseA baseA = new BaseA();
@@ -166,7 +166,7 @@ public class JsonUtilsTest extends CategoryTest {
    * Should generate json schema.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGenerateJsonSchema() {
     JsonFluentAssert.assertThatJson(JsonUtils.jsonSchema(BaseA.class))
@@ -176,7 +176,7 @@ public class JsonUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testGetBuildDetails() throws IOException {
     File file = new File(System.getProperty("java.io.tmpdir") + "/"

@@ -2,7 +2,6 @@ package io.harness.persistence;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableSet;
@@ -28,7 +27,7 @@ public class MorphiaMoveTest extends PersistenceTest {
   @Inject private HPersistence persistence;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @SuppressWarnings("PMD")
   public void shouldCacheMissingClass() {

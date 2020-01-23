@@ -1,7 +1,6 @@
 package io.harness.security;
 
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,15 +18,12 @@ import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.Cipher;
 
-/**
- * Created by mike@ on 4/24/17.
- */
 @Slf4j
 public class SimpleEncryptionTest extends CategoryTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void shouldEncryptAndDecrypt() {
     String testInput = "abc";
@@ -41,7 +37,7 @@ public class SimpleEncryptionTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void shouldEncryptAndDecryptWithCustomKey() {
     char[] KEY = "abcdefghijklmnopabcdefghijklmnop".toCharArray();

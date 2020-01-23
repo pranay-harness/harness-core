@@ -7,7 +7,6 @@ import static io.harness.delegate.message.MessageServiceImpl.SECONDARY_DELIMITER
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.rule.OwnerRule.BRETT;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -192,7 +191,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   @SuppressWarnings({"unchecked"})
   public void shouldReadData() throws IOException {
@@ -214,7 +213,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   @SuppressWarnings({"unchecked"})
   public void shouldRemoveData() throws IOException {
