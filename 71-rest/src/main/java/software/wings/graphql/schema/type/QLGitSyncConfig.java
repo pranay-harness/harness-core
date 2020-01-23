@@ -8,9 +8,9 @@ import software.wings.security.annotations.Scope;
 
 @Value
 @Builder
-@FieldNameConstants(innerTypeName = "QLGitConfigKeys")
+@FieldNameConstants(innerTypeName = "QLGitSyncConfigKeys")
 @Scope(ResourceType.APPLICATION)
-public class QLGitConfig implements QLObject {
+public class QLGitSyncConfig implements QLObject {
   String gitConnectorId;
   String branch;
   Boolean syncEnabled;

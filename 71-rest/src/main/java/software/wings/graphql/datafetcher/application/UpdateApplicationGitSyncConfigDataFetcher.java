@@ -14,10 +14,10 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.mutation.application.input.QLUpdateApplicationGitConfigInput;
-import software.wings.graphql.schema.mutation.application.input.QLUpdateApplicationGitConfigInput.QLUpdateApplicationGitConfigInputKeys;
-import software.wings.graphql.schema.mutation.application.payload.QLUpdateApplicationGitConfigPayload;
-import software.wings.graphql.schema.type.QLGitConfig;
+import software.wings.graphql.schema.mutation.application.input.QLUpdateApplicationGitSyncConfigInput;
+import software.wings.graphql.schema.mutation.application.input.QLUpdateApplicationGitSyncConfigInput.QLUpdateApplicationGitSyncConfigInputKeys;
+import software.wings.graphql.schema.mutation.application.payload.QLUpdateApplicationGitSyncConfigPayload;
+import software.wings.graphql.schema.type.QLGitSyncConfig;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
@@ -31,15 +31,15 @@ import software.wings.yaml.gitSync.YamlGitConfig.YamlGitConfigBuilder;
 import java.util.Optional;
 
 @Slf4j
-public class UpdateApplicationGitConfigDataFetcher
-    extends BaseMutatorDataFetcher<QLUpdateApplicationGitConfigInput, QLUpdateApplicationGitConfigPayload> {
+public class UpdateApplicationGitSyncConfigDataFetcher
+    extends BaseMutatorDataFetcher<QLUpdateApplicationGitSyncConfigInput, QLUpdateApplicationGitSyncConfigPayload> {
   private final AppService appService;
   private final YamlGitService yamlGitService;
   private HPersistence persistence;
   @Inject
-  public UpdateApplicationGitConfigDataFetcher(
+  public UpdateApplicationGitSyncConfigDataFetcher(
       AppService appService, YamlGitService yamlGitService, HPersistence persistence) {
-    super(QLUpdateApplicationGitConfigInput.class, QLUpdateApplicationGitConfigPayload.class);
+    super(QLUpdateApplicationGitSyncConfigInput.class, QLUpdateApplicationGitSyncConfigPayload.class);
     this.appService = appService;
     this.yamlGitService = yamlGitService;
     this.persistence = persistence;
@@ -47,8 +47,8 @@ public class UpdateApplicationGitConfigDataFetcher
 
   @Override
   @AuthRule(permissionType = PermissionType.APPLICATION_CREATE_DELETE, action = PermissionAttribute.Action.CREATE)
-  protected QLUpdateApplicationGitConfigPayload mutateAndFetch(
-      QLUpdateApplicationGitConfigInput input, MutationContext mutationContext) {
+  protected QLUpdateApplicationGitSyncConfigPayload mutateAndFetch(
+      QLUpdateApplicationGitSyncConfigInput input, MutationContext mutationContext) {
     validate(input);
     final Application application = getApplication(input.getApplicationId());
     validateGitConnector(strip(input.getGitConnectorId()), mutationContext.getAccountId());
@@ -64,13 +64,13 @@ public class UpdateApplicationGitConfigDataFetcher
       updatedYamlGitConfig = updateYamlGitConfig(input, savedYamlGitConfig);
     }
 
-    return QLUpdateApplicationGitConfigPayload.builder()
+    return QLUpdateApplicationGitSyncConfigPayload.builder()
         .requestId(input.getRequestId())
-        .gitConfig(getGitConfigFrom(updatedYamlGitConfig))
+        .gitSyncConfig(getGitConfigFrom(updatedYamlGitConfig))
         .build();
   }
-  private QLGitConfig getGitConfigFrom(YamlGitConfig yamlGitConfig) {
-    return YamlGitConfigController.populateQLGitConfig(yamlGitConfig, QLGitConfig.builder()).build();
+  private QLGitSyncConfig getGitConfigFrom(YamlGitConfig yamlGitConfig) {
+    return YamlGitConfigController.populateQLGitConfig(yamlGitConfig, QLGitSyncConfig.builder()).build();
   }
 
   private void validateGitConnector(String connectorId, String accountId) {
@@ -93,19 +93,20 @@ public class UpdateApplicationGitConfigDataFetcher
     }
   }
 
-  private YamlGitConfig updateYamlGitConfig(QLUpdateApplicationGitConfigInput input, YamlGitConfig savedYamlGitConfig) {
+  private YamlGitConfig updateYamlGitConfig(
+      QLUpdateApplicationGitSyncConfigInput input, YamlGitConfig savedYamlGitConfig) {
     savedYamlGitConfig.setGitConnectorId(input.getGitConnectorId());
     savedYamlGitConfig.setBranchName(input.getBranch());
     savedYamlGitConfig.setEnabled(input.getSyncEnabled());
     return yamlGitService.update(savedYamlGitConfig);
   }
 
-  private void validate(QLUpdateApplicationGitConfigInput input) {
-    utils.ensureNotBlankField(input.getApplicationId(), QLUpdateApplicationGitConfigInputKeys.applicationId);
-    utils.ensureNotBlankField(input.getGitConnectorId(), QLUpdateApplicationGitConfigInputKeys.gitConnectorId);
-    utils.ensureNotBlankField(input.getBranch(), QLUpdateApplicationGitConfigInputKeys.branch);
-    utils.ensureNotBlankField(input.getRequestId(), QLUpdateApplicationGitConfigInputKeys.requestId);
-    utils.ensureNotNullField(input.getSyncEnabled(), QLUpdateApplicationGitConfigInputKeys.syncEnabled);
+  private void validate(QLUpdateApplicationGitSyncConfigInput input) {
+    utils.ensureNotBlankField(input.getApplicationId(), QLUpdateApplicationGitSyncConfigInputKeys.applicationId);
+    utils.ensureNotBlankField(input.getGitConnectorId(), QLUpdateApplicationGitSyncConfigInputKeys.gitConnectorId);
+    utils.ensureNotBlankField(input.getBranch(), QLUpdateApplicationGitSyncConfigInputKeys.branch);
+    utils.ensureNotBlankField(input.getRequestId(), QLUpdateApplicationGitSyncConfigInputKeys.requestId);
+    utils.ensureNotNullField(input.getSyncEnabled(), QLUpdateApplicationGitSyncConfigInputKeys.syncEnabled);
   }
 
   private YamlGitConfig getSavedYamlGitConfig(String applicationId, String accountId) {
@@ -116,7 +117,8 @@ public class UpdateApplicationGitConfigDataFetcher
     return appService.get(applicationId);
   }
 
-  private YamlGitConfig createAndSaveYamlGitConfig(QLUpdateApplicationGitConfigInput input, Application application) {
+  private YamlGitConfig createAndSaveYamlGitConfig(
+      QLUpdateApplicationGitSyncConfigInput input, Application application) {
     final YamlGitConfigBuilder configBuilder = YamlGitConfig.builder();
     final YamlGitConfig yamlGitConfig = configBuilder.accountId(application.getAccountId())
                                             .gitConnectorId(strip(input.getGitConnectorId()))

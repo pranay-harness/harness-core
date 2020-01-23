@@ -59,7 +59,7 @@ public class ApplicationMutationTest extends GraphQLTest {
           JsonUtils.convertValue(qlTestObject.getMap(), QLUpdateApplicationGitConfigResult.class);
 
       assertThat(result.getRequestId()).isEqualTo("req123");
-      final QLGitConfigResult gitConfig = result.getGitConfig();
+      final QLGitConfigResult gitConfig = result.getGitSyncConfig();
       final QLGitConnector gitConnectorResult = gitConfig.getGitConnector();
       assertThat(gitConnectorResult.getId()).isEqualTo(gitConnector.getUuid());
       assertThat(gitConnectorResult.getName()).isEqualTo("TERRAFORM_CITY_GIT_REPO");
@@ -77,7 +77,7 @@ public class ApplicationMutationTest extends GraphQLTest {
           JsonUtils.convertValue(qlTestObject.getMap(), QLUpdateApplicationGitConfigResult.class);
 
       assertThat(result.getRequestId()).isEqualTo("req1234");
-      final QLGitConfigResult gitConfig = result.getGitConfig();
+      final QLGitConfigResult gitConfig = result.getGitSyncConfig();
       final QLGitConnector gitConnectorResult = gitConfig.getGitConnector();
       assertThat(gitConnectorResult.getId()).isEqualTo(gitConnector1.getUuid());
       assertThat(gitConnectorResult.getName()).isEqualTo("TERRAFORM_MAIN_GIT_REPO");
@@ -92,7 +92,7 @@ public class ApplicationMutationTest extends GraphQLTest {
       final QLUpdateApplicationGitConfigResult result =
           JsonUtils.convertValue(qlTestObject.getMap(), QLUpdateApplicationGitConfigResult.class);
       assertThat(result.getRequestId()).isEqualTo("req12345");
-      final QLGitConfigResult gitConfig = result.getGitConfig();
+      final QLGitConfigResult gitConfig = result.getGitSyncConfig();
       final QLGitConnector gitConnectorResult = gitConfig.getGitConnector();
       assertThat(gitConnectorResult.getId()).isEqualTo(gitConnector1.getUuid());
       assertThat(gitConnectorResult.getName()).isEqualTo("TERRAFORM_MAIN_GIT_REPO");
@@ -105,7 +105,7 @@ public class ApplicationMutationTest extends GraphQLTest {
       final QLTestObject qlTestObject = qlExecute(applicationQuery, application.getAccountId());
       final QLUpdateApplicationGitConfigResult result =
           JsonUtils.convertValue(qlTestObject.getMap(), QLUpdateApplicationGitConfigResult.class);
-      final QLGitConfigResult gitConfig = result.getGitConfig();
+      final QLGitConfigResult gitConfig = result.getGitSyncConfig();
       final QLGitConnector gitConnectorResult = gitConfig.getGitConnector();
       assertThat(gitConnectorResult.getId()).isEqualTo(gitConnector1.getUuid());
       assertThat(gitConnectorResult.getName()).isEqualTo("TERRAFORM_MAIN_GIT_REPO");
@@ -117,7 +117,7 @@ public class ApplicationMutationTest extends GraphQLTest {
       final String mutation = removeApplicationGitConfigQuery("req1", application.getUuid());
       final QLTestObject qlTestObject = qlExecute(mutation, application.getAccountId());
       final QLTestObject applicationMap = qlTestObject.sub("application");
-      assertThat(applicationMap.get("gitConfig")).isNull();
+      assertThat(applicationMap.get("gitSyncConfig")).isNull();
       assertThat(applicationMap.get("id")).isEqualTo(application.getUuid());
       assertThat(qlTestObject.get("requestId")).isEqualTo("req1");
     }
@@ -132,11 +132,11 @@ public class ApplicationMutationTest extends GraphQLTest {
 
     return $GQL(/*
  mutation{
-     removeApplicationGitConfig(input:%s) {
+     removeApplicationGitSyncConfig(input:%s) {
      requestId
      application{
        id
-       gitConfig {
+       gitSyncConfig {
          branch
          syncEnabled
          gitConnector {
@@ -168,9 +168,9 @@ syncEnabled: %s
 
     return $GQL(/*
 mutation{
-   updateApplicationGitConfig(input:%s) {
+   updateApplicationGitSyncConfig(input:%s) {
    requestId
-   gitConfig {
+   gitSyncConfig {
      branch
      syncEnabled
      gitConnector {
@@ -198,9 +198,9 @@ mutation{
 
     return $GQL(/*
  mutation{
-     updateApplicationGitConfigStatus(input:%s) {
+     updateApplicationGitSyncConfigStatus(input:%s) {
      requestId
-     gitConfig {
+     gitSyncConfig {
        branch
        syncEnabled
        gitConnector {
@@ -222,7 +222,7 @@ mutation{
     return $GQL(/*
  query{
      application(applicationId:"%s") {
-     gitConfig {
+     gitSyncConfig {
        branch
        syncEnabled
        gitConnector {
@@ -249,6 +249,6 @@ mutation{
   @Data
   private static class QLUpdateApplicationGitConfigResult {
     private String requestId;
-    private QLGitConfigResult gitConfig;
+    private QLGitConfigResult gitSyncConfig;
   }
 }

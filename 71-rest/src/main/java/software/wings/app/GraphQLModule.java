@@ -23,14 +23,14 @@ import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInf
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.datafetcher.application.ApplicationConnectionDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
-import software.wings.graphql.datafetcher.application.ApplicationGitConfigDataFetcher;
+import software.wings.graphql.datafetcher.application.ApplicationGitSyncConfigDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationStatsDataFetcher;
 import software.wings.graphql.datafetcher.application.CreateApplicationDataFetcher;
 import software.wings.graphql.datafetcher.application.DeleteApplicationDataFetcher;
-import software.wings.graphql.datafetcher.application.RemoveApplicationGitConfigDataFetcher;
+import software.wings.graphql.datafetcher.application.RemoveApplicationGitSyncConfigDataFetcher;
 import software.wings.graphql.datafetcher.application.UpdateApplicationDataFetcher;
-import software.wings.graphql.datafetcher.application.UpdateApplicationGitConfigDataFetcher;
-import software.wings.graphql.datafetcher.application.UpdateApplicationGitConfigStatusDataFetcher;
+import software.wings.graphql.datafetcher.application.UpdateApplicationGitSyncConfigDataFetcher;
+import software.wings.graphql.datafetcher.application.UpdateApplicationGitSyncConfigStatusDataFetcher;
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataFetcher;
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataLoader;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
@@ -229,10 +229,10 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(UpdateUserGroupDataFetcher.class);
     bindDataFetcherWithAnnotation(UserDataFetcher.class);
     bindDataFetcherWithAnnotation(UserConnectionDataFetcher.class);
-    bindDataFetcherWithAnnotation(UpdateApplicationGitConfigDataFetcher.class);
-    bindDataFetcherWithAnnotation(RemoveApplicationGitConfigDataFetcher.class);
-    bindDataFetcherWithAnnotation(UpdateApplicationGitConfigStatusDataFetcher.class);
-    bindDataFetcherWithAnnotation(ApplicationGitConfigDataFetcher.class);
+    bindDataFetcherWithAnnotation(UpdateApplicationGitSyncConfigDataFetcher.class);
+    bindDataFetcherWithAnnotation(RemoveApplicationGitSyncConfigDataFetcher.class);
+    bindDataFetcherWithAnnotation(UpdateApplicationGitSyncConfigStatusDataFetcher.class);
+    bindDataFetcherWithAnnotation(ApplicationGitSyncConfigDataFetcher.class);
   }
 
   @NotNull

@@ -3,6 +3,6 @@ package software.wings.graphql.schema.query;
 import lombok.Value;
 
 @Value
-public class QLApplicationGitConfigQueryParameters {
+public class QLApplicationGitSyncConfigQueryParameters {
   private String applicationId;
 }
