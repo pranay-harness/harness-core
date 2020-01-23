@@ -37,6 +37,8 @@ public class DelegateConfiguration {
 
   private String helmPath;
 
+  private String ocPath;
+
   private boolean enablePerpetualTasks;
 
   private String managerTarget;

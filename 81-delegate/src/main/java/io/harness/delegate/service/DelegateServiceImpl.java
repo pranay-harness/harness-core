@@ -8,6 +8,7 @@ import static io.harness.delegate.configuration.InstallUtils.installChartMuseum;
 import static io.harness.delegate.configuration.InstallUtils.installGoTemplateTool;
 import static io.harness.delegate.configuration.InstallUtils.installHelm;
 import static io.harness.delegate.configuration.InstallUtils.installKubectl;
+import static io.harness.delegate.configuration.InstallUtils.installOc;
 import static io.harness.delegate.configuration.InstallUtils.installTerraformConfigInspect;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_GO_AHEAD;
@@ -320,6 +321,7 @@ public class DelegateServiceImpl implements DelegateService {
       boolean helmInstalled = installHelm(delegateConfiguration);
       boolean chartMuseumInstalled = installChartMuseum(delegateConfiguration);
       boolean tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
+      boolean ocInstalled = installOc(delegateConfiguration);
 
       long start = clock.millis();
       String description = "description here".equals(delegateConfiguration.getDescription())
@@ -460,6 +462,7 @@ public class DelegateServiceImpl implements DelegateService {
           boolean helm = helmInstalled;
           boolean chartMuseum = chartMuseumInstalled;
           boolean tfConfigInspect = tfConfigInspectInstalled;
+          boolean oc = ocInstalled;
 
           int retries = CLIENT_TOOL_RETRIES;
           while ((!kubectl || !goTemplate || !helm || !chartMuseum || !tfConfigInspect) && retries > 0) {
@@ -478,6 +481,12 @@ public class DelegateServiceImpl implements DelegateService {
             }
             if (!tfConfigInspect) {
               tfConfigInspect = installTerraformConfigInspect(delegateConfiguration);
+            }
+            if (!tfConfigInspect) {
+              tfConfigInspect = installTerraformConfigInspect(delegateConfiguration);
+            }
+            if (!oc) {
+              oc = installOc(delegateConfiguration);
             }
 
             retries--;

@@ -149,6 +149,20 @@ function setupDelegateJars(){
 
       done
 
+      for version in v4.2.16; do
+
+        echo "Copying oc ${version} binaries for ${platform}"
+
+        sudo mkdir -p ${STORAGE_DIR}/harness-download/harness-oc/release/${version}/bin/${platform}/amd64/
+
+        curl  -s -L -o oc https://app.harness.io/storage/harness-download/harness-oc/release/${version}/bin/${platform}/amd64/oc
+
+        echo $(ls -sh oc  | cut -d ' ' -f1)
+
+        sudo cp oc ${STORAGE_DIR}/harness-download/harness-oc/release/${version}/bin/${platform}/amd64/
+
+      done
+
     done
 }
 

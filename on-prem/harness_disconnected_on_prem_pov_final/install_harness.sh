@@ -472,7 +472,7 @@ function setupDelegateJars(){
 function setupClientUtils(){
    echo "################################ Setting up Client Utils ################################"
 
-   echo "Copying kubectl go-template helm chartmuseum and tf-config-inspect"
+   echo "Copying kubectl go-template helm chartmuseum tf-config-inspect and oc"
 
     for platform in linux darwin; do
         for kubectlversion in v1.13.2; do
@@ -499,6 +499,11 @@ function setupClientUtils(){
            mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-terraform-config-inspect/"$tfConfigInspectVersion"/${platform}/amd64/
            cp images/tf-config-inspect/${platform}/"$tfConfigInspectVersion"/terraform-config-inspect ${STORAGE_DIR_LOCATION}/harness-download/harness-terraform-config-inspect/"$tfConfigInspectVersion"/${platform}/amd64/
          done
+
+        for ocversion in v4.2.16; do
+            mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-oc/release/$ocversion/bin/${platform}/amd64/
+            cp images/oc/${platform}/$ocversion/oc ${STORAGE_DIR_LOCATION}/harness-download/harness-oc/release/$ocversion/bin/${platform}/amd64/
+        done
     done
 }
 

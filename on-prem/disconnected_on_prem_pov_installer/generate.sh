@@ -49,6 +49,19 @@ echo "$KUBECTL_LINUX_DIR"
 KUBECTL_LINUX_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/linux/amd64/kubectl
 KUBECTL_MAC_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/darwin/amd64/kubectl
 
+
+
+OC_VERSION=v4.2.16
+OC_LINUX_DIR="${IMAGES_DIR}/oc/linux/$OC_VERSION/"
+OC_MAC_DIR="${IMAGES_DIR}/oc/darwin/$OC_VERSION/"
+
+echo "$OC_MAC_DIR"
+echo "$OC_LINUX_DIR"
+
+OC_LINUX_URL=https://app.harness.io/storage/harness-download/harness-oc/release/"$OC_VERSION"/bin/linux/amd64/oc
+OC_MAC_URL=https://app.harness.io/storage/harness-download/harness-oc/release/"$OC_VERSION"/bin/darwin/amd64/oc
+
+
 rm -f "${INSTALLER_COMPRESSED_FILE}"
 
 rm -rf "${INSTALLER_DIR}"
@@ -66,12 +79,15 @@ echo "Proxy version is ${PROXY_VERSION}"
 echo "UI version is ${UI_VERSION}"
 echo "Learning Engine version is ${LEARNING_ENGINE_VERSION}"
 echo "kubectl version is ${KUBECTL_VERSION}"
+echo "oc version is ${OC_VERSION}"
 
 cp -r ../${INSTALLER_TEMPLATE_DIR}/* ${INSTALLER_DIR}/
 cp "${VERSION_PROPERTIES_FILE}" "${INSTALLER_DIR}/"
 
 mkdir -p $KUBECTL_LINUX_DIR
 mkdir -p $KUBECTL_MAC_DIR
+mkdir -p $OC_LINUX_DIR
+mkdir -p $OC_MAC_DIR
 
 if [[ -z $1 ]]; then
    echo "No license file supplied, skipping setting the license file in the installer"
@@ -107,6 +123,9 @@ curl "${JRE_SOURCE_URL_2}/${JRE_LINUX_2}" > "${JRE_LINUX_2}"
 
 curl -L -o "${KUBECTL_MAC_DIR}kubectl" "${KUBECTL_MAC_URL}"
 curl -L -o "${KUBECTL_LINUX_DIR}kubectl" "${KUBECTL_LINUX_URL}"
+
+curl -L -o "${OC_MAC_DIR}oc" "${OC_MAC_URL}"
+curl -L -o "${OC_LINUX_DIR}oc" "${OC_LINUX_URL}"
 
 for goversion in v0.2 v0.3; do
     echo "Adding goversion $goversion"

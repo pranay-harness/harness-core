@@ -188,6 +188,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(mainConfiguration.getDelegateMetadataUrl()).thenReturn("http://localhost:8888/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
     when(mainConfiguration.getKubectlVersion()).thenReturn("v1.12.2");
+    when(mainConfiguration.getOcVersion()).thenReturn("v4.2.16");
     when(mainConfiguration.getWatcherMetadataUrl()).thenReturn("http://localhost:8888/watcherci.txt");
     FileUploadLimit fileUploadLimit = new FileUploadLimit();
     fileUploadLimit.setProfileResultLimit(1000000000L);

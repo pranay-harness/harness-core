@@ -24,4 +24,9 @@ public class K8sGlobalConfigServiceUnsupported implements K8sGlobalConfigService
   public String getChartMuseumPath() {
     throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_MSG);
   }
+
+  @Override
+  public String getOcPath() {
+    throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_MSG);
+  }
 }
