@@ -2936,6 +2936,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
     verify(triggerService).updateByArtifactStream(updatedArtifactStream.getUuid());
+    verify(buildSourceService, times(1)).validateArtifactSource(savedArtifactSteam);
   }
 
   @Test
@@ -3019,6 +3020,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
     verify(triggerService).updateByArtifactStream(updatedArtifactStream.getUuid());
+    verify(buildSourceService, times(1)).validateArtifactSource(savedArtifactSteam);
   }
 
   @Test
@@ -3098,6 +3100,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(artifactStreamService.get(updatedArtifactStream.getUuid())).isNull();
 
     verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
+    verify(buildSourceService, times(1)).validateArtifactSource(savedArtifactSteam);
   }
 
   @Test
@@ -3157,7 +3160,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     savedCustomArtifactStream.getScripts().get(0).setScriptString(SCRIPT_STRING_UPDATED);
     savedArtifactSteam.setTemplateVariables(
         asList(aVariable().name("var1").value("another overridden value").type(TEXT).build()));
-    ArtifactStream updatedArtifactStream = artifactStreamService.update(savedArtifactSteam, true, true);
+    ArtifactStream updatedArtifactStream = artifactStreamService.update(savedArtifactSteam, false, true);
 
     assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
     assertThat(updatedArtifactStream.getSourceName()).isEqualTo(updatedArtifactStream.getName());
@@ -3178,6 +3181,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(artifactStreamService.get(updatedArtifactStream.getUuid())).isNull();
 
     verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
+    verify(buildSourceService, times(0)).validateArtifactSource(savedArtifactSteam);
   }
 
   @Test
@@ -3263,13 +3267,14 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .thenReturn(artifactStreamFromTemplate);
 
     CustomArtifactStream updatedStream =
-        (CustomArtifactStream) artifactStreamService.update(artifactStream, true, false);
+        (CustomArtifactStream) artifactStreamService.update(artifactStream, false, false);
     assertThat(updatedStream).isNotNull();
     assertThat(updatedStream.getTemplateVersion()).isEqualTo("2");
     assertThat(updatedStream.getTemplateVariables().size()).isEqualTo(1);
     assertThat(updatedStream.getTemplateVariables())
         .extracting(Variable::getName, Variable::getValue)
         .contains(tuple("path", "pp11"));
+    verify(buildSourceService, times(0)).validateArtifactSource(artifactStream);
   }
 
   @NotNull
