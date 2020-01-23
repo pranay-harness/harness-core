@@ -38,16 +38,18 @@ public class NodeUtilizationMetricsWriter extends EventWriter implements ItemWri
           double cpuUnits = K8sResourceUtils.getCpuUnits(nodeUtilizationMetric.getUsage().getCpuNano());
           double memoryMb = K8sResourceUtils.getMemoryMb(nodeUtilizationMetric.getUsage().getMemoryByte());
 
-          K8sGranularUtilizationData k8sGranularUtilizationData = K8sGranularUtilizationData.builder()
-                                                                      .accountId(accountId)
-                                                                      .instanceId(nodeUtilizationMetric.getName())
-                                                                      .instanceType(K8S_NODE)
-                                                                      .clusterId(nodeUtilizationMetric.getClusterId())
-                                                                      .startTimestamp(startTime)
-                                                                      .endTimestamp(endTime)
-                                                                      .cpu(cpuUnits)
-                                                                      .memory(memoryMb)
-                                                                      .build();
+          K8sGranularUtilizationData k8sGranularUtilizationData =
+              K8sGranularUtilizationData.builder()
+                  .accountId(accountId)
+                  .instanceId(nodeUtilizationMetric.getName())
+                  .instanceType(K8S_NODE)
+                  .clusterId(nodeUtilizationMetric.getClusterId())
+                  .settingId(nodeUtilizationMetric.getCloudProviderId())
+                  .startTimestamp(startTime)
+                  .endTimestamp(endTime)
+                  .cpu(cpuUnits)
+                  .memory(memoryMb)
+                  .build();
 
           k8sGranularUtilizationDataList.add(k8sGranularUtilizationData);
         });

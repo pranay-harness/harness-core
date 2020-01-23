@@ -62,6 +62,7 @@ public class NodeUtilizationMetricsWriterTest extends CategoryTest implements Ec
     assertThat(k8sGranularUtilizationData.getInstanceId()).isEqualTo(INSTANCEID);
     assertThat(k8sGranularUtilizationData.getInstanceType()).isEqualTo(INSTANCETYPE);
     assertThat(k8sGranularUtilizationData.getClusterId()).isEqualTo(CLUSTERID);
+    assertThat(k8sGranularUtilizationData.getSettingId()).isEqualTo(SETTINGID);
   }
 
   private PublishedMessage getNodeUtilizationMetricsMessages() {

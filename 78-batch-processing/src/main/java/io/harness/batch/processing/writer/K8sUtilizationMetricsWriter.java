@@ -48,6 +48,7 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
       for (Map.Entry<String, InstanceUtilizationData> entry : aggregatedUtilizationData.entrySet()) {
         InstanceUtilizationData instanceUtilizationData = entry.getValue();
         String clusterId = instanceUtilizationData.getClusterId();
+        String settingId = instanceUtilizationData.getSettingId();
         String instanceId = entry.getKey();
 
         PrunedInstanceData instanceData =
@@ -77,6 +78,8 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
             }
           }
           instanceUtilizationData.setInstanceId(instanceData.getInstanceId());
+          instanceUtilizationData.setSettingId(settingId);
+          instanceUtilizationData.setClusterId(clusterId);
           instanceUtilizationData.setCpuUtilizationAvg(cpuAvgPercentage);
           instanceUtilizationData.setCpuUtilizationMax(cpuMaxPercentage);
           instanceUtilizationData.setMemoryUtilizationAvg(memoryAvgPercentage);
