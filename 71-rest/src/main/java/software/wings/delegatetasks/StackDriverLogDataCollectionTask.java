@@ -16,13 +16,10 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.http.HttpStatus;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.GcpHelperService;
-import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;
@@ -31,7 +28,6 @@ import software.wings.service.intfc.stackdriver.StackDriverDelegateService;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -116,15 +112,13 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
           logger.info("starting log data collection for {} for minute {}", dataCollectionInfo, collectionStartTime);
 
           List<LogElement> logElements = new ArrayList<>();
-          ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
-
           for (String host : dataCollectionInfo.getHosts()) {
             addHeartbeat(host, dataCollectionInfo, logCollectionMinute, logElements);
           }
 
           try {
-            List<LogEntry> entries = stackDriverDelegateService.fetchLogs(dataCollectionInfo.getQuery(),
-                collectionStartTime, collectionEndTime, apiCallLog, dataCollectionInfo.getHosts(),
+            List<LogEntry> entries = stackDriverDelegateService.fetchLogs(dataCollectionInfo.getStateExecutionId(),
+                dataCollectionInfo.getQuery(), collectionStartTime, collectionEndTime, dataCollectionInfo.getHosts(),
                 dataCollectionInfo.getHostnameField(), dataCollectionInfo.getGcpConfig(),
                 dataCollectionInfo.getEncryptedDataDetails(), is24X7Task(), true);
             int clusterLabel = 0;
@@ -162,10 +156,6 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
 
           } catch (Exception e) {
             logger.info("Search job was cancelled. Retrying ...", e);
-            apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-            apiCallLog.addFieldToResponse(
-                HttpStatus.SC_REQUEST_TIMEOUT, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-            delegateLogService.save(getAccountId(), apiCallLog);
             if (++retry == RETRIES) {
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
               taskResult.setErrorMessage("Stackdriver cancelled search job " + RETRIES + " times");

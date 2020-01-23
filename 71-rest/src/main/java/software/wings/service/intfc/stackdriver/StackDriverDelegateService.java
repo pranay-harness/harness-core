@@ -41,16 +41,15 @@ public interface StackDriverDelegateService {
 
   String getDateFormatTime(long time);
 
-  List<LogEntry> fetchLogs(String query, long startTime, long endTime, ThirdPartyApiCallLog apiCallLog,
-      Set<String> hosts, String hostnameField, GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      boolean is24X7Task, boolean fetchNextPage);
+  List<LogEntry> fetchLogs(String stateExecutionId, String query, long startTime, long endTime, Set<String> hosts,
+      String hostnameField, GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, boolean is24X7Task,
+      boolean fetchNextPage);
 
   @DelegateTaskType(TaskType.STACKDRIVER_LOG_DATA_FOR_NODE)
-  VerificationNodeDataSetupResponse getLogWithDataForNode(GcpConfig gcpConfig,
-      List<EncryptedDataDetail> encryptionDetails, String hostName, StackDriverSetupTestNodeData setupTestNodeData,
-      ThirdPartyApiCallLog apiCallLog);
+  VerificationNodeDataSetupResponse getLogWithDataForNode(String stateExecutionId, GcpConfig gcpConfig,
+      List<EncryptedDataDetail> encryptionDetails, String hostName, StackDriverSetupTestNodeData setupTestNodeData);
 
   @DelegateTaskType(TaskType.STACKDRIVER_GET_LOG_SAMPLE)
-  Object getLogSample(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String query,
-      ThirdPartyApiCallLog apiCallLog, long startTime, long endTime);
+  Object getLogSample(String guid, GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String query,
+      long startTime, long endTime);
 }
