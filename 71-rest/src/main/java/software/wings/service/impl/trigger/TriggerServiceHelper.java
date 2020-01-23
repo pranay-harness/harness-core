@@ -353,6 +353,10 @@ public class TriggerServiceHelper {
         }
       }
     }
+    triggerWorkflowVariableValues = triggerWorkflowVariableValues.entrySet()
+                                        .stream()
+                                        .filter(variableEntry -> isNotEmpty(variableEntry.getValue()))
+                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
     // Current update variables present in only Workflow
     // Do not update for pipeline as Pipeline Variables are collection of workflow variables
