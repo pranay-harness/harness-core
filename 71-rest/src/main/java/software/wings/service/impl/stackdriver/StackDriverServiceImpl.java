@@ -94,8 +94,8 @@ public class StackDriverServiceImpl implements StackDriverService {
 
       if (StateType.STACK_DRIVER_LOG == setupTestNodeData.getStateType()) {
         return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
-            .getLogWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, hostName,
-                setupTestNodeData, createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));
+            .getLogWithDataForNode(setupTestNodeData.getGuid(), (GcpConfig) settingAttribute.getValue(),
+                encryptionDetails, hostName, setupTestNodeData);
       } else {
         return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
             .getMetricsWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
@@ -121,9 +121,8 @@ public class StackDriverServiceImpl implements StackDriverService {
                                             .build();
 
       return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
-          .getLogSample((GcpConfig) settingAttribute.getValue(), encryptionDetails, query,
-              createApiCallLog(accountId, guid), System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1),
-              System.currentTimeMillis());
+          .getLogSample(guid, (GcpConfig) settingAttribute.getValue(), encryptionDetails, query,
+              System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), System.currentTimeMillis());
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
       throw new WingsException(STACKDRIVER_ERROR)
@@ -199,8 +198,8 @@ public class StackDriverServiceImpl implements StackDriverService {
             .build();
     VerificationNodeDataSetupResponse nodeDataSetupResponse =
         delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
-            .getLogWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, null,
-                stackDriverSetupTestNodeData, createApiCallLog(settingAttribute.getAccountId(), null));
+            .getLogWithDataForNode(
+                null, (GcpConfig) settingAttribute.getValue(), encryptionDetails, null, stackDriverSetupTestNodeData);
     List<LogElement> response = nodeDataSetupResponse.getDataForNode() != null
         ? (List<LogElement>) nodeDataSetupResponse.getDataForNode()
         : Collections.emptyList();

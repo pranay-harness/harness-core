@@ -78,7 +78,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     } catch (HttpException httpException) {
       if (httpException.getStatus() == HttpStatus.SC_NOT_FOUND) {
         throw new IllegalArgumentException(
-            "Can not reach url " + splunkConfig.getSplunkUrl() + " to create splunk serach job");
+            "Can not reach url " + splunkConfig.getSplunkUrl() + " to create splunk serach job", httpException);
       }
       throw new VerificationOperationException(
           ErrorCode.APM_CONFIGURATION_ERROR, ExceptionUtils.getMessage(httpException), httpException);
