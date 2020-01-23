@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.AADITI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
-import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -93,7 +93,7 @@ public class ArtifactSourceTemplateProcessorTest extends TemplateBaseTestHelper 
     when(artifactStreamIterator.next()).thenReturn(artifactStream);
     templateService.updateLinkedEntities(savedTemplate);
     ArgumentCaptor<ArtifactStream> argument = ArgumentCaptor.forClass(ArtifactStream.class);
-    verify(artifactStreamService).update(argument.capture(), anyBoolean(), anyBoolean());
+    verify(artifactStreamService).update(argument.capture(), eq(false), eq(true));
     CustomArtifactStream updatedStream = (CustomArtifactStream) argument.getValue();
     assertThat(updatedStream.getScripts().get(0).getScriptString()).isEqualTo("updated script");
   }
