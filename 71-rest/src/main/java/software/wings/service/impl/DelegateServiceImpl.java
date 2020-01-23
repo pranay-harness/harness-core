@@ -93,6 +93,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.LimitsExceededException;
 import io.harness.exception.TimeoutException;
+import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.lock.AcquiredLock;
@@ -219,7 +220,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   public static final String DOCKER_DELEGATE = HARNESS_DELEGATE + "-docker";
   public static final String KUBERNETES_DELEGATE = HARNESS_DELEGATE + "-kubernetes";
   public static final String ECS_DELEGATE = HARNESS_DELEGATE + "-ecs";
-  private static final Configuration cfg = new Configuration(VERSION_2_3_23);
+  private static final Configuration templateConfiguration = new Configuration(VERSION_2_3_23);
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
   private static final Set<DelegateTask.Status> TASK_COMPLETED_STATUSES = ImmutableSet.of(FINISHED, ABORTED, ERROR);
   private static final String HARNESS_ECS_DELEGATE = "Harness-ECS-Delegate";
@@ -238,7 +239,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private static final String EMPTY_VERSION = "0.0.0";
 
   static {
-    cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
+    templateConfiguration.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
   }
 
   private static final long VALIDATION_TIMEOUT = TimeUnit.SECONDS.toMillis(12);
@@ -617,9 +618,18 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
   }
 
+  private String processTemplate(Map<String, String> scriptParams, String template) throws IOException {
+    try (StringWriter stringWriter = new StringWriter()) {
+      templateConfiguration.getTemplate(template).process(scriptParams, stringWriter);
+      return stringWriter.toString();
+    } catch (TemplateException ex) {
+      throw new UnexpectedException("This templates are included in the jar, they should be safe to process", ex);
+    }
+  }
+
   @Override
-  public DelegateScripts getDelegateScripts(String accountId, String version, String managerHost,
-      String verificationHost) throws IOException, TemplateException {
+  public DelegateScripts getDelegateScripts(
+      String accountId, String version, String managerHost, String verificationHost) throws IOException {
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
                                                                                    .accountId(accountId)
                                                                                    .version(version)
@@ -633,22 +643,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       delegateScripts.setDoUpgrade(true);
       delegateScripts.setVersion(scriptParams.get(UPGRADE_VERSION));
 
-      try (StringWriter stringWriter = new StringWriter()) {
-        cfg.getTemplate("start.sh.ftl").process(scriptParams, stringWriter);
-        delegateScripts.setStartScript(stringWriter.toString());
-      }
-      try (StringWriter stringWriter = new StringWriter()) {
-        cfg.getTemplate("delegate.sh.ftl").process(scriptParams, stringWriter);
-        delegateScripts.setDelegateScript(stringWriter.toString());
-      }
-      try (StringWriter stringWriter = new StringWriter()) {
-        cfg.getTemplate("stop.sh.ftl").process(scriptParams, stringWriter);
-        delegateScripts.setStopScript(stringWriter.toString());
-      }
-      try (StringWriter stringWriter = new StringWriter()) {
-        cfg.getTemplate("setup-proxy.sh.ftl").process(scriptParams, stringWriter);
-        delegateScripts.setSetupProxyScript(stringWriter.toString());
-      }
+      delegateScripts.setStartScript(processTemplate(scriptParams, "start.sh.ftl"));
+      delegateScripts.setDelegateScript(processTemplate(scriptParams, "delegate.sh.ftl"));
+      delegateScripts.setStopScript(processTemplate(scriptParams, "stop.sh.ftl"));
+      delegateScripts.setSetupProxyScript(processTemplate(scriptParams, "setup-proxy.sh.ftl"));
     }
     return delegateScripts;
   }
@@ -808,8 +806,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public File downloadScripts(String managerHost, String verificationUrl, String accountId)
-      throws IOException, TemplateException {
+  public File downloadScripts(String managerHost, String verificationUrl, String accountId) throws IOException {
     File delegateFile = File.createTempFile(DELEGATE_DIR, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(delegateFile))) {
@@ -836,9 +833,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
 
       File start = File.createTempFile("start", ".sh");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(start), UTF_8)) {
-        cfg.getTemplate("start.sh.ftl").process(scriptParams, fileWriter);
-      }
+      saveProcessedTemplate(scriptParams, start, "start.sh.ftl");
       start = new File(start.getAbsolutePath());
       TarArchiveEntry startTarArchiveEntry = new TarArchiveEntry(start, DELEGATE_DIR + "/start.sh");
       startTarArchiveEntry.setMode(0755);
@@ -849,9 +844,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       out.closeArchiveEntry();
 
       File delegate = File.createTempFile("delegate", ".sh");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(delegate), UTF_8)) {
-        cfg.getTemplate("delegate.sh.ftl").process(scriptParams, fileWriter);
-      }
+      saveProcessedTemplate(scriptParams, delegate, "delegate.sh.ftl");
       delegate = new File(delegate.getAbsolutePath());
       TarArchiveEntry delegateTarArchiveEntry = new TarArchiveEntry(delegate, DELEGATE_DIR + "/delegate.sh");
       delegateTarArchiveEntry.setMode(0755);
@@ -862,9 +855,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       out.closeArchiveEntry();
 
       File stop = File.createTempFile("stop", ".sh");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(stop), UTF_8)) {
-        cfg.getTemplate("stop.sh.ftl").process(scriptParams, fileWriter);
-      }
+      saveProcessedTemplate(scriptParams, stop, "stop.sh.ftl");
       stop = new File(stop.getAbsolutePath());
       TarArchiveEntry stopTarArchiveEntry = new TarArchiveEntry(stop, DELEGATE_DIR + "/stop.sh");
       stopTarArchiveEntry.setMode(0755);
@@ -875,9 +866,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       out.closeArchiveEntry();
 
       File setupProxy = File.createTempFile("setup-proxy", ".sh");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(setupProxy), UTF_8)) {
-        cfg.getTemplate("setup-proxy.sh.ftl").process(scriptParams, fileWriter);
-      }
+      saveProcessedTemplate(scriptParams, setupProxy, "setup-proxy.sh.ftl");
       setupProxy = new File(setupProxy.getAbsolutePath());
       TarArchiveEntry setupProxyTarArchiveEntry = new TarArchiveEntry(setupProxy, DELEGATE_DIR + "/setup-proxy.sh");
       setupProxyTarArchiveEntry.setMode(0755);
@@ -888,9 +877,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       out.closeArchiveEntry();
 
       File readme = File.createTempFile(README, ".txt");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme), UTF_8)) {
-        cfg.getTemplate("readme.txt.ftl").process(emptyMap(), fileWriter);
-      }
+      saveProcessedTemplate(emptyMap(), readme, "readme.txt.ftl");
       readme = new File(readme.getAbsolutePath());
       TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, DELEGATE_DIR + README_TXT);
       out.putArchiveEntry(readmeTarArchiveEntry);
@@ -908,6 +895,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     return gzipDelegateFile;
   }
 
+  private void saveProcessedTemplate(Map<String, String> scriptParams, File start, String template) throws IOException {
+    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(start), UTF_8)) {
+      templateConfiguration.getTemplate(template).process(scriptParams, fileWriter);
+    } catch (TemplateException ex) {
+      throw new UnexpectedException("This templates are included in the jar, they should be safe to process", ex);
+    }
+  }
+
   private static void compressGzipFile(File file, File gzipFile) {
     try (FileInputStream fis = new FileInputStream(file); FileOutputStream fos = new FileOutputStream(gzipFile);
          GZIPOutputStream gzipOS = new GZIPOutputStream(fos)) {
@@ -922,8 +917,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public File downloadDocker(String managerHost, String verificationUrl, String accountId)
-      throws IOException, TemplateException {
+  public File downloadDocker(String managerHost, String verificationUrl, String accountId) throws IOException {
     File dockerDelegateFile = File.createTempFile(DOCKER_DELEGATE, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(dockerDelegateFile))) {
@@ -950,9 +944,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
 
       File launch = File.createTempFile("launch-" + HARNESS_DELEGATE, ".sh");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(launch), UTF_8)) {
-        cfg.getTemplate("launch-" + HARNESS_DELEGATE + ".sh.ftl").process(scriptParams, fileWriter);
-      }
+      saveProcessedTemplate(scriptParams, launch, "launch-" + HARNESS_DELEGATE + ".sh.ftl");
       launch = new File(launch.getAbsolutePath());
       TarArchiveEntry launchTarArchiveEntry =
           new TarArchiveEntry(launch, DOCKER_DELEGATE + "/launch-" + HARNESS_DELEGATE + ".sh");
@@ -964,9 +956,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       out.closeArchiveEntry();
 
       File readme = File.createTempFile(README, ".txt");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme), UTF_8)) {
-        cfg.getTemplate("readme-docker.txt.ftl").process(emptyMap(), fileWriter);
-      }
+      saveProcessedTemplate(emptyMap(), readme, "readme-docker.txt.ftl");
       readme = new File(readme.getAbsolutePath());
       TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, DOCKER_DELEGATE + README_TXT);
 
@@ -987,7 +977,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public File downloadKubernetes(String managerHost, String verificationUrl, String accountId, String delegateName,
-      String delegateProfile) throws IOException, TemplateException {
+      String delegateProfile) throws IOException {
     File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(kubernetesDelegateFile))) {
@@ -1013,9 +1003,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                              .build());
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml), UTF_8)) {
-        cfg.getTemplate(HARNESS_DELEGATE + ".yaml.ftl").process(scriptParams, fileWriter);
-      }
+      saveProcessedTemplate(scriptParams, yaml, HARNESS_DELEGATE + ".yaml.ftl");
       yaml = new File(yaml.getAbsolutePath());
       TarArchiveEntry yamlTarArchiveEntry =
           new TarArchiveEntry(yaml, KUBERNETES_DELEGATE + "/" + HARNESS_DELEGATE + YAML);
@@ -1026,9 +1014,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       out.closeArchiveEntry();
 
       File readme = File.createTempFile(README, ".txt");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme), UTF_8)) {
-        cfg.getTemplate("readme-kubernetes.txt.ftl").process(emptyMap(), fileWriter);
-      }
+      saveProcessedTemplate(emptyMap(), readme, "readme-kubernetes.txt.ftl");
       readme = new File(readme.getAbsolutePath());
       TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, KUBERNETES_DELEGATE + README_TXT);
       out.putArchiveEntry(readmeTarArchiveEntry);
@@ -1049,7 +1035,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public File downloadDelegateValuesYamlFile(String managerHost, String verificationUrl, String accountId,
-      String delegateName, String delegateProfile) throws IOException, TemplateException {
+      String delegateName, String delegateProfile) throws IOException {
     String version;
 
     if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
@@ -1070,16 +1056,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                            .build());
 
     File yaml = File.createTempFile(HARNESS_DELEGATE_VALUES_YAML, YAML);
-    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml), UTF_8)) {
-      cfg.getTemplate("delegate-helm-values.yaml.ftl").process(params, fileWriter);
-    }
+    saveProcessedTemplate(params, yaml, "delegate-helm-values.yaml.ftl");
 
     return yaml;
   }
 
   @Override
   public File downloadECSDelegate(String managerHost, String verificationUrl, String accountId, boolean awsVpcMode,
-      String hostname, String delegateGroupName, String delegateProfile) throws IOException, TemplateException {
+      String hostname, String delegateGroupName, String delegateProfile) throws IOException {
     File ecsDelegateFile = File.createTempFile(ECS_DELEGATE, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(ecsDelegateFile))) {
@@ -1107,9 +1091,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       // Add Task Spec Json file
       File yaml = File.createTempFile("ecs-spec", ".json");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml), UTF_8)) {
-        cfg.getTemplate("harness-ecs-delegate.json.ftl").process(scriptParams, fileWriter);
-      }
+      saveProcessedTemplate(scriptParams, yaml, "harness-ecs-delegate.json.ftl");
       yaml = new File(yaml.getAbsolutePath());
       TarArchiveEntry yamlTarArchiveEntry = new TarArchiveEntry(yaml, ECS_DELEGATE + "/ecs-task-spec.json");
       out.putArchiveEntry(yamlTarArchiveEntry);
@@ -1120,9 +1102,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       // Add Task "Service Spec Json for awsvpc mode" file
       File serviceJson = File.createTempFile("ecs-service-spec", ".json");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(serviceJson), UTF_8)) {
-        cfg.getTemplate("harness-ecs-delegate-service.json.ftl").process(scriptParams, fileWriter);
-      }
+      saveProcessedTemplate(scriptParams, serviceJson, "harness-ecs-delegate-service.json.ftl");
       serviceJson = new File(serviceJson.getAbsolutePath());
       TarArchiveEntry serviceJsonTarArchiveEntry =
           new TarArchiveEntry(serviceJson, ECS_DELEGATE + "/service-spec-for-awsvpc-mode.json");
@@ -1134,9 +1114,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       // Add Readme file
       File readme = File.createTempFile(README, ".txt");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme), UTF_8)) {
-        cfg.getTemplate("readme-ecs.txt.ftl").process(emptyMap(), fileWriter);
-      }
+      saveProcessedTemplate(emptyMap(), readme, "readme-ecs.txt.ftl");
       readme = new File(readme.getAbsolutePath());
       TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, ECS_DELEGATE + README_TXT);
       out.putArchiveEntry(readmeTarArchiveEntry);
@@ -1157,7 +1135,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   private ImmutableMap<String, String> updateMapForEcsDelegate(
-      boolean awsVpcMode, String hostname, String delegateGroupName, ImmutableMap<String, String> scriptParams) {
+      boolean awsVpcMode, String hostname, String delegateGroupName, Map<String, String> scriptParams) {
     Map<String, String> map = new HashMap<>(scriptParams);
     // AWSVPC mode, hostname must be null
     if (awsVpcMode) {
