@@ -1231,6 +1231,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .analysis_comparison_strategy(logsCVConfiguration.getComparisonStrategy())
                 .shouldUseSupervisedModel(true)
                 .experiment_name(experiment.getExperimentName())
+                .is24x7Task(logsCVConfiguration.isEnabled24x7())
                 .build();
 
         expTask.setAppId(logsCVConfiguration.getAppId());
@@ -1274,6 +1275,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 SupervisedTrainingStatusKeys.serviceId, logsCVConfiguration.getServiceId()))
             .analysis_minute(logCollectionMinute)
             .stateType(logsCVConfiguration.getStateType())
+            .is24x7Task(logsCVConfiguration.isEnabled24x7())
             .build();
 
     feedbackTask.setAppId(logsCVConfiguration.getAppId());
@@ -1285,7 +1287,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       int nextBackoffCount = learningEngineService.getNextServiceGuardBackoffCount(stateExecutionIdForLETask,
           logsCVConfiguration.getUuid(), logCollectionMinute, MLAnalysisType.FEEDBACK_ANALYSIS);
       feedbackTask.setService_guard_backoff_count(nextBackoffCount);
-      learningEngineService.addLearningEngineAnalysisTask(feedbackTask);
+      return learningEngineService.addLearningEngineAnalysisTask(feedbackTask);
     }
     return false;
   }

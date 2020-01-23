@@ -1,5 +1,6 @@
 package io.harness.jobs;
 
+import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -25,6 +26,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.sm.StateType;
 
@@ -123,5 +125,19 @@ public class LogAnalysisGeneratorTest extends CategoryTest {
 
     verify(learningEngineService).addLearningEngineAnalysisTask(taskCaptor.capture());
     assertThat(taskCaptor.getValue().getFeature_name()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testFeedbackAnalsyisRecordIs24x7FlagFalse() {
+    analysisContext.setStateType(StateType.APP_DYNAMICS);
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(new RestResponse<Boolean>(false));
+    logMLAnalysisGenerator = new LogMLAnalysisGenerator(analysisContext, logAnalysisMinute, false, analysisService,
+        learningEngineService, managerClient, managerClientHelper, MLAnalysisType.FEEDBACK_ANALYSIS);
+    logMLAnalysisGenerator.run();
+    ArgumentCaptor<LearningEngineAnalysisTask> taskCaptor = ArgumentCaptor.forClass(LearningEngineAnalysisTask.class);
+    verify(learningEngineService).addLearningEngineAnalysisTask(taskCaptor.capture());
+    assertThat(taskCaptor.getValue().is24x7Task()).isEqualTo(Boolean.FALSE);
   }
 }

@@ -1613,6 +1613,49 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testCreateFeedbackAnalysisTaskCheckIfIs24x7FlagTrue() throws Exception {
+    setupFeedbacks(true);
+
+    int analysisMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 15;
+
+    LogMLAnalysisRecord logAnalysisRecord =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(analysisMinute).build();
+
+    logAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+
+    wingsPersistence.save(logAnalysisRecord);
+
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+            .asList();
+    assertThat(learningEngineAnalysisTasks).hasSize(1);
+    assertThat(learningEngineAnalysisTasks.get(0).getAnalysis_minute()).isEqualTo(analysisMinute);
+    assertThat(learningEngineAnalysisTasks.get(0).is24x7Task()).isEqualTo(Boolean.TRUE);
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testCreateFeedbackAnalysisTaskExperimentalFeedbackTaskCheckIfIs24x7FlagTrue() throws Exception {
+    wingsPersistence.save(
+        MLExperiments.builder().experimentName("textExp").ml_analysis_type(FEEDBACK_ANALYSIS).is24x7(true).build());
+    testCreateFeedbackAnalysisTaskCheckIfIs24x7FlagTrue();
+
+    LearningEngineExperimentalAnalysisTask expTask =
+        wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
+            .filter(LearningEngineExperimentalAnalysisTaskKeys.cvConfigId, cvConfigId)
+            .get();
+
+    assertThat(expTask).isNotNull();
+    assertThat(expTask.getExperiment_name()).isEqualTo("textExp");
+    assertThat(expTask.is24x7Task()).isEqualTo(Boolean.TRUE);
+  }
+
+  @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testDataCollectionAfter2Hours() throws Exception {
