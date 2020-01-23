@@ -1,6 +1,5 @@
 package software.wings.service.intfc;
 
-import freemarker.template.TemplateException;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -28,9 +27,6 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
 
-/**
- * Created by peeyushaggarwal on 11/28/16.
- */
 public interface DelegateService extends OwnedByAccount {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 
@@ -55,18 +51,16 @@ public interface DelegateService extends OwnedByAccount {
   Delegate updateScopes(@Valid Delegate delegate);
 
   DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost)
-      throws IOException, TemplateException;
+      throws IOException;
 
   String getLatestDelegateVersion(String accountId);
 
-  File downloadScripts(String managerHost, String verificationServiceUrl, String accountId)
-      throws IOException, TemplateException;
-  File downloadDocker(String managerHost, String verificationServiceUrl, String accountId)
-      throws IOException, TemplateException;
+  File downloadScripts(String managerHost, String verificationServiceUrl, String accountId) throws IOException;
+  File downloadDocker(String managerHost, String verificationServiceUrl, String accountId) throws IOException;
   File downloadKubernetes(String managerHost, String verificationServiceUrl, String accountId, String delegateName,
-      String delegateProfile) throws IOException, TemplateException;
+      String delegateProfile) throws IOException;
   File downloadECSDelegate(String managerHost, String verificationUrl, String accountId, boolean awsVpcMode,
-      String hostname, String delegateGroupName, String delegateProfile) throws IOException, TemplateException;
+      String hostname, String delegateGroupName, String delegateProfile) throws IOException;
   Delegate add(Delegate delegate);
 
   void delete(String accountId, String delegateId);
@@ -117,5 +111,5 @@ public interface DelegateService extends OwnedByAccount {
   Delegate handleEcsDelegateRequest(Delegate delegate);
 
   File downloadDelegateValuesYamlFile(String managerHost, String verificationUrl, String accountId, String delegateName,
-      String delegateProfile) throws IOException, TemplateException;
+      String delegateProfile) throws IOException;
 }
