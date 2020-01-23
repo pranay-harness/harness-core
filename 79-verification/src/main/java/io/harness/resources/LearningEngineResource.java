@@ -45,31 +45,15 @@ public class LearningEngineResource {
    * @return
    */
   @GET
-  @Path("/get-next-task")
-  @Timed
-  @ExceptionMetered
-  @LearningEngineAuth
-  @Produces({"application/json", "application/v1+json"})
-  public RestResponse<LearningEngineAnalysisTask> getNextTask(@HeaderParam("Accept") String acceptHeaders) {
-    return new RestResponse<>(learningEngineService.getNextLearningEngineAnalysisTask(
-        parseApisVersion(acceptHeaders), Optional.empty(), Optional.empty()));
-  }
-
-  /**
-   * API to fetch next available task.
-   * @param acceptHeaders
-   * @return
-   */
-  @GET
   @Path("/get-next-cv-task")
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
   @Produces({"application/json", "application/v1+json"})
   public RestResponse<LearningEngineAnalysisTask> getNext24x7Task(@HeaderParam("Accept") String acceptHeaders,
-      @QueryParam("is24x7") boolean is24x7, @QueryParam("taskTypes") List<MLAnalysisType> taskTypes) {
+      @QueryParam("is24x7") String is24x7, @QueryParam("taskTypes") List<MLAnalysisType> taskTypes) {
     return new RestResponse<>(learningEngineService.getNextLearningEngineAnalysisTask(
-        parseApisVersion(acceptHeaders), Optional.of(is24x7), Optional.of(taskTypes)));
+        parseApisVersion(acceptHeaders), Optional.ofNullable(is24x7), Optional.of(taskTypes)));
   }
 
   /**

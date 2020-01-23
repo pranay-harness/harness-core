@@ -2,6 +2,7 @@ package io.harness.service;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PARNIAN;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
@@ -82,6 +83,36 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
         .analysis_minute(0)
         .version(serviceApiVersion)
         .build();
+  }
+
+  private List<MLAnalysisType> getMLAnalysisTypeList() {
+    return Lists.newArrayList(MLAnalysisType.LOG_CLUSTER, MLAnalysisType.LOG_ML, MLAnalysisType.TIME_SERIES,
+        MLAnalysisType.FEEDBACK_ANALYSIS);
+  }
+
+  private void setUpCreateMLAnalysisTaks() {
+    List<MLAnalysisType> mlAnalysisTypeList = getMLAnalysisTypeList();
+    for (MLAnalysisType mlAnalysisType : mlAnalysisTypeList) {
+      LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
+                                                                  .state_execution_id(generateUUID())
+                                                                  .workflow_execution_id(generateUUID())
+                                                                  .executionStatus(ExecutionStatus.QUEUED)
+                                                                  .ml_analysis_type(mlAnalysisType)
+                                                                  .is24x7Task(true)
+                                                                  .build();
+      learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
+    }
+
+    for (MLAnalysisType mlAnalysisType : mlAnalysisTypeList) {
+      LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
+                                                                  .state_execution_id(generateUUID())
+                                                                  .workflow_execution_id(generateUUID())
+                                                                  .executionStatus(ExecutionStatus.QUEUED)
+                                                                  .ml_analysis_type(mlAnalysisType)
+                                                                  .is24x7Task(false)
+                                                                  .build();
+      learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
+    }
   }
 
   @Before
@@ -260,7 +291,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
 
     for (int i = 1; i <= numOfTasks; i++) {
       LearningEngineAnalysisTask leTask = learningEngineService.getNextLearningEngineAnalysisTask(
-          ServiceApiVersion.V1, Optional.of(false), Optional.empty());
+          ServiceApiVersion.V1, Optional.of("false"), Optional.empty());
       assertThat(leTask.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
       assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
@@ -297,7 +328,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
 
     for (int i = 1; i <= numOfTasks; i++) {
       LearningEngineAnalysisTask task = learningEngineService.getNextLearningEngineAnalysisTask(
-          ServiceApiVersion.V1, Optional.of(true), Optional.empty());
+          ServiceApiVersion.V1, Optional.of("true"), Optional.empty());
       assertThat(task.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
       assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
@@ -328,10 +359,10 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
     assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count()).isEqualTo(numOfTasks);
 
     LearningEngineAnalysisTask task = learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1,
-        Optional.of(true), Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES, MLAnalysisType.LOG_ML)));
+        Optional.of("true"), Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES, MLAnalysisType.LOG_ML)));
     assertThat(task).isNull();
 
-    task = learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1, Optional.of(true),
+    task = learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1, Optional.of("true"),
         Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES, MLAnalysisType.LOG_CLUSTER, MLAnalysisType.LOG_ML)));
     assertThat(task).isNotNull();
     assertThat(task.getMl_analysis_type()).isEqualTo(MLAnalysisType.LOG_CLUSTER);
@@ -341,7 +372,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
         .isEqualTo(numOfTasks - 1);
 
     task = learningEngineService.getNextLearningEngineAnalysisTask(
-        ServiceApiVersion.V1, Optional.of(true), Optional.empty());
+        ServiceApiVersion.V1, Optional.of("true"), Optional.empty());
     assertThat(task).isNotNull();
     assertThat(task.getMl_analysis_type()).isEqualTo(MLAnalysisType.LOG_CLUSTER);
     assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
@@ -350,7 +381,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
         .isEqualTo(numOfTasks - 2);
 
     task = learningEngineService.getNextLearningEngineAnalysisTask(
-        ServiceApiVersion.V1, Optional.of(true), Optional.of(Lists.newArrayList()));
+        ServiceApiVersion.V1, Optional.of("true"), Optional.of(Lists.newArrayList()));
     assertThat(task).isNotNull();
     assertThat(task.getMl_analysis_type()).isEqualTo(MLAnalysisType.LOG_CLUSTER);
     assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
@@ -421,7 +452,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
     learningEngineService.addLearningEngineAnalysisTask(analysisTask);
 
     LearningEngineAnalysisTask nextTask = learningEngineService.getNextLearningEngineAnalysisTask(
-        serviceApiVersion, Optional.of(Boolean.TRUE), Optional.empty());
+        serviceApiVersion, Optional.of("true"), Optional.empty());
     assertThat(nextTask).isNull();
   }
 
@@ -739,7 +770,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
 
     for (int i = 0; i < LearningEngineAnalysisTask.RETRIES - 1; i++) {
       LearningEngineAnalysisTask leTask = learningEngineService.getNextLearningEngineAnalysisTask(
-          ServiceApiVersion.V1, Optional.of(false), Optional.empty());
+          ServiceApiVersion.V1, Optional.of("false"), Optional.empty());
       assertThat(leTask.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
       assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
@@ -765,7 +796,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
     }
 
     LearningEngineAnalysisTask leTask = learningEngineService.getNextLearningEngineAnalysisTask(
-        ServiceApiVersion.V1, Optional.of(false), Optional.empty());
+        ServiceApiVersion.V1, Optional.of("false"), Optional.empty());
     assertThat(leTask.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
     assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
@@ -795,7 +826,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
         .isEqualTo(1);
 
     assertThat(learningEngineService.getNextLearningEngineAnalysisTask(
-                   ServiceApiVersion.V1, Optional.of(false), Optional.empty()))
+                   ServiceApiVersion.V1, Optional.of("false"), Optional.empty()))
         .isNull();
   }
 
@@ -976,5 +1007,125 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
     boolean result =
         learningEngineService.isEligibleToCreateTask(stateExecutionId, cvConfigId, 0, MLAnalysisType.LOG_ML);
     assertThat(result).isFalse();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testGetNextLearningEngineAnalysisTaskWhenIs24x7isTrueTaskTypesEmpty() {
+    setUpCreateMLAnalysisTaks();
+    List<MLAnalysisType> mlAnalysisTypeList = getMLAnalysisTypeList();
+    for (MLAnalysisType mlAnalysisType : mlAnalysisTypeList) {
+      LearningEngineAnalysisTask task = learningEngineService.getNextLearningEngineAnalysisTask(
+          ServiceApiVersion.V1, Optional.of("true"), Optional.of(Lists.newArrayList()));
+      assertThat(task.is24x7Task()).isEqualTo(Boolean.TRUE);
+      assertThat(task.getMl_analysis_type()).isEqualTo(mlAnalysisType);
+    }
+
+    LearningEngineAnalysisTask task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.of("true"), Optional.of(Lists.newArrayList()));
+
+    assertThat(task).isNull();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testGetNextLearningEngineAnalysisTaskWhenIs24x7isTrueTaskTypesNotEmpty() {
+    setUpCreateMLAnalysisTaks();
+
+    LearningEngineAnalysisTask task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.of("true"), Optional.of(Lists.newArrayList(MLAnalysisType.FEEDBACK_ANALYSIS)));
+
+    assertThat(task.is24x7Task()).isEqualTo(Boolean.TRUE);
+    assertThat(task.getMl_analysis_type()).isEqualTo(MLAnalysisType.FEEDBACK_ANALYSIS);
+
+    task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.of("true"), Optional.of(Lists.newArrayList(MLAnalysisType.FEEDBACK_ANALYSIS)));
+
+    assertThat(task).isNull();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testGetNextLearningEngineAnalysisTaskWhenIs24x7isFalseTaskTypesEmpty() {
+    setUpCreateMLAnalysisTaks();
+    List<MLAnalysisType> mlAnalysisTypeList = getMLAnalysisTypeList();
+    for (MLAnalysisType mlAnalysisType : mlAnalysisTypeList) {
+      LearningEngineAnalysisTask task = learningEngineService.getNextLearningEngineAnalysisTask(
+          ServiceApiVersion.V1, Optional.of("false"), Optional.of(Lists.newArrayList()));
+      assertThat(task.is24x7Task()).isEqualTo(Boolean.FALSE);
+      assertThat(task.getMl_analysis_type()).isEqualTo(mlAnalysisType);
+    }
+
+    LearningEngineAnalysisTask task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.of("false"), Optional.of(Lists.newArrayList()));
+
+    assertThat(task).isNull();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testGetNextLearningEngineAnalysisTaskWhenIs24x7isFalseTaskTypesNotEmpty() {
+    setUpCreateMLAnalysisTaks();
+
+    LearningEngineAnalysisTask task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.of("false"), Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES)));
+
+    assertThat(task.is24x7Task()).isEqualTo(Boolean.FALSE);
+    assertThat(task.getMl_analysis_type()).isEqualTo(MLAnalysisType.TIME_SERIES);
+
+    task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.of("false"), Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES)));
+
+    assertThat(task).isNull();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testGetNextLearningEngineAnalysisTaskWhenIs24x7isEmptyTaskTypesEmpty() {
+    setUpCreateMLAnalysisTaks();
+
+    List<MLAnalysisType> mlAnalysisTypeList = getMLAnalysisTypeList();
+    for (MLAnalysisType mlAnalysisType : mlAnalysisTypeList) {
+      LearningEngineAnalysisTask task = learningEngineService.getNextLearningEngineAnalysisTask(
+          ServiceApiVersion.V1, Optional.empty(), Optional.of(Lists.newArrayList()));
+      assertThat(task.is24x7Task()).isEqualTo(Boolean.TRUE);
+      assertThat(task.getMl_analysis_type()).isEqualTo(mlAnalysisType);
+    }
+
+    for (MLAnalysisType mlAnalysisType : mlAnalysisTypeList) {
+      LearningEngineAnalysisTask task = learningEngineService.getNextLearningEngineAnalysisTask(
+          ServiceApiVersion.V1, Optional.empty(), Optional.of(Lists.newArrayList()));
+      assertThat(task.is24x7Task()).isEqualTo(Boolean.FALSE);
+      assertThat(task.getMl_analysis_type()).isEqualTo(mlAnalysisType);
+    }
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testGetNextLearningEngineAnalysisTaskWhenIs24x7isEmptyTaskTypesNotEmpty() {
+    setUpCreateMLAnalysisTaks();
+
+    LearningEngineAnalysisTask task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.empty(), Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES)));
+
+    assertThat(task.is24x7Task()).isEqualTo(Boolean.TRUE);
+    assertThat(task.getMl_analysis_type()).isEqualTo(MLAnalysisType.TIME_SERIES);
+
+    task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.empty(), Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES)));
+
+    assertThat(task.is24x7Task()).isEqualTo(Boolean.FALSE);
+    assertThat(task.getMl_analysis_type()).isEqualTo(MLAnalysisType.TIME_SERIES);
+
+    task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.of("false"), Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES)));
+
+    assertThat(task).isNull();
   }
 }

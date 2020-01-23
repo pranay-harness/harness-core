@@ -191,22 +191,19 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
   @Override
   public LearningEngineAnalysisTask getNextLearningEngineAnalysisTask(
-      ServiceApiVersion serviceApiVersion, Optional<Boolean> is24x7Task, Optional<List<MLAnalysisType>> taskTypes) {
+      ServiceApiVersion serviceApiVersion, Optional<String> is24x7Task, Optional<List<MLAnalysisType>> taskTypes) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                                   .filter(LearningEngineAnalysisTaskKeys.version, serviceApiVersion)
                                                   .field(LearningEngineAnalysisTaskKeys.retry)
                                                   .lessThanOrEq(LearningEngineAnalysisTask.RETRIES);
 
     if (is24x7Task.isPresent()) {
-      query.filter(LearningEngineAnalysisTaskKeys.is24x7Task, is24x7Task.get());
+      boolean task24x7 = Boolean.parseBoolean(is24x7Task.get());
+      query.filter(LearningEngineAnalysisTaskKeys.is24x7Task, task24x7);
     }
 
     if (taskTypes.isPresent() && isNotEmpty(taskTypes.get())) {
       query.field(LearningEngineAnalysisTaskKeys.ml_analysis_type).in(taskTypes.get());
-    } else {
-      // this is to ensure that we do not send any Feedback tasks to LE.
-      // Feedback tasks should only go to FeedbackEngine
-      query.field(LearningEngineAnalysisTaskKeys.ml_analysis_type).notEqual(MLAnalysisType.FEEDBACK_ANALYSIS.name());
     }
 
     query.or(query.criteria(LearningEngineAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.QUEUED),

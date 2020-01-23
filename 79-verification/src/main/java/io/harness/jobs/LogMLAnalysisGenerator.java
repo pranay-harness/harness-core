@@ -291,6 +291,7 @@ public class LogMLAnalysisGenerator implements Runnable {
             .analysis_failure_url(failureUrl)
             .analysis_minute(logAnalysisMinute)
             .stateType(context.getStateType())
+            .is24x7Task(false)
             .build();
 
     feedbackTask.setAppId(context.getAppId());
