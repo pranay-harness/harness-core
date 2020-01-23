@@ -11,7 +11,6 @@ import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRIRAM;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.service.LearningEngineAnalysisServiceImpl.BACKOFF_LIMIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -261,7 +260,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @RealMongo
   public void saveLogDataValid() throws Exception {
@@ -314,7 +313,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @RealMongo
   public void getLogDataNoPreviousAnalysis() throws Exception {
@@ -340,7 +339,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @RealMongo
   public void getLogDataPreviousAnalysis() throws Exception {
@@ -385,7 +384,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @RealMongo
   public void getLogDataSuccessfulWorkflowExecution() throws Exception {
@@ -441,7 +440,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @RealMongo
   public void testBumpClusterLevel() throws Exception {
@@ -506,7 +505,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @RealMongo
   public void testIsLogDataCollected() throws Exception {
@@ -923,7 +922,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @RealMongo
   public void hasDataRecords() throws Exception {
@@ -996,7 +995,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @RealMongo
   public void deleteClusterLevel() throws Exception {

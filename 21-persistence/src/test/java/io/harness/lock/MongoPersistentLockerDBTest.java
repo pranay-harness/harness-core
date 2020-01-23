@@ -3,7 +3,6 @@ package io.harness.lock;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -83,7 +82,7 @@ public class MongoPersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @RealMongo
   public void testConcurrentAcquireEphemeralLock() {

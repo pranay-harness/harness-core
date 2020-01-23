@@ -1,6 +1,6 @@
 package io.harness.mongo;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mongodb.DBCollection;
@@ -24,7 +24,7 @@ import java.util.Map;
 
 public class IndexManagerTest extends PersistenceTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @RealMongo
   public void testIndexCreators() {

@@ -146,7 +146,7 @@ public class ShellScriptProvisionerTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ABHINAV)
+  @Owner(developers = ABHINAV, intermittent = true)
   @Category({FunctionalTests.class})
   public void runShellScriptWorkflowWithoutProvisioner() {
     workflow_without_provisioner = buildWorkflowWithoutProvisioner();

@@ -1,7 +1,7 @@
 package io.harness.service.guard;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static javax.ws.rs.client.Entity.entity;
@@ -51,7 +51,7 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testLogsConfigurationResetBaseline() {
     final String appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());

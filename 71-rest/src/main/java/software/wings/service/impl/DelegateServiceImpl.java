@@ -107,6 +107,7 @@ import io.harness.serializer.KryoUtils;
 import io.harness.stream.BoundedInputStream;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request.Builder;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -619,8 +620,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public DelegateScripts getDelegateScripts(String accountId, String version, String managerHost,
       String verificationHost) throws IOException, TemplateException {
-    ImmutableMap<String, String> scriptParams =
-        getJarAndScriptRunTimeParamMap(accountId, version, managerHost, verificationHost);
+    ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
+                                                                                   .accountId(accountId)
+                                                                                   .version(version)
+                                                                                   .managerHost(managerHost)
+                                                                                   .verificationHost(verificationHost)
+                                                                                   .build());
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
@@ -672,13 +677,18 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     return null;
   }
 
-  private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
-      String accountId, String version, String managerHost, String verificationHost) {
-    return getJarAndScriptRunTimeParamMap(accountId, version, managerHost, verificationHost, null, null);
+  @Value
+  @lombok.Builder
+  public static class ScriptRuntimeParamMapInquiry {
+    private String accountId;
+    private String version;
+    private String managerHost;
+    private String verificationHost;
+    private String delegateName;
+    private String delegateProfile;
   }
 
-  private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(String accountId, String version,
-      String managerHost, String verificationHost, String delegateName, String delegateProfile) {
+  private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry inquiry) {
     String latestVersion = null;
     String jarRelativePath;
     String delegateJarDownloadUrl = null;
@@ -695,18 +705,18 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         logger.info("Multi-Version is enabled");
-        latestVersion = version;
-        String minorVersion = Optional.ofNullable(getMinorVersion(version)).orElse(0).toString();
+        latestVersion = inquiry.getVersion();
+        String minorVersion = Optional.ofNullable(getMinorVersion(inquiry.getVersion())).orElse(0).toString();
         delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(minorVersion);
         versionChanged = true;
       } else {
         logger.info("Delegate metadata URL is " + delegateMetadataUrl);
-        String delegateMatadata = delegateVersionCache.get(accountId);
+        String delegateMatadata = delegateVersionCache.get(inquiry.getAccountId());
         logger.info("Delegate metadata: [{}]", delegateMatadata);
         latestVersion = substringBefore(delegateMatadata, " ").trim();
         jarRelativePath = substringAfter(delegateMatadata, " ").trim();
         delegateJarDownloadUrl = delegateStorageUrl + "/" + jarRelativePath;
-        versionChanged = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
+        versionChanged = !(Version.valueOf(inquiry.getVersion()).equals(Version.valueOf(latestVersion)));
       }
 
       if (versionChanged) {
@@ -720,8 +730,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
     } catch (IOException | ExecutionException e) {
       logger.warn("Unable to fetch delegate version information", e);
-      logger.warn("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", version, latestVersion,
-          delegateJarDownloadUrl);
+      logger.warn("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", inquiry.getVersion(),
+          latestVersion, delegateJarDownloadUrl);
     }
 
     logger.info("Found delegate latest version: [{}] url: [{}]", latestVersion, delegateJarDownloadUrl);
@@ -730,43 +740,45 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       String watcherStorageUrl = watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/'));
       String watcherCheckLocation = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
 
-      Account account = accountService.get(accountId);
+      Account account = accountService.get(inquiry.getAccountId());
 
-      String hexkey = format("%040x", new BigInteger(1, accountId.substring(0, 6).getBytes(Charsets.UTF_8)))
-                          .replaceFirst("^0+(?!$)", "");
+      String hexkey =
+          format("%040x", new BigInteger(1, inquiry.getAccountId().substring(0, 6).getBytes(Charsets.UTF_8)))
+              .replaceFirst("^0+(?!$)", "");
 
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES_ONPREM) {
         delegateDockerImage = mainConfiguration.getPortal().getDelegateDockerImage();
       }
 
-      ImmutableMap.Builder<String, String> params = ImmutableMap.<String, String>builder()
-                                                        .put("delegateDockerImage", delegateDockerImage)
-                                                        .put("accountId", accountId)
-                                                        .put("accountSecret", account.getAccountKey())
-                                                        .put("hexkey", hexkey)
-                                                        .put(UPGRADE_VERSION, latestVersion)
-                                                        .put("managerHostAndPort", managerHost)
-                                                        .put("verificationHostAndPort", verificationHost)
-                                                        .put("watcherStorageUrl", watcherStorageUrl)
-                                                        .put("watcherCheckLocation", watcherCheckLocation)
-                                                        .put("delegateStorageUrl", delegateStorageUrl)
-                                                        .put("delegateCheckLocation", delegateCheckLocation)
-                                                        .put("deployMode", mainConfiguration.getDeployMode().name())
-                                                        .put("kubectlVersion", mainConfiguration.getKubectlVersion())
-                                                        .put("ocVersion", mainConfiguration.getOcVersion())
-                                                        .put("kubernetesAccountLabel", getAccountIdentifier(accountId));
-      if (isNotBlank(delegateName)) {
-        params.put("delegateName", delegateName);
+      ImmutableMap.Builder<String, String> params =
+          ImmutableMap.<String, String>builder()
+              .put("delegateDockerImage", delegateDockerImage)
+              .put("accountId", inquiry.getAccountId())
+              .put("accountSecret", account.getAccountKey())
+              .put("hexkey", hexkey)
+              .put(UPGRADE_VERSION, latestVersion)
+              .put("managerHostAndPort", inquiry.getManagerHost())
+              .put("verificationHostAndPort", inquiry.getVerificationHost())
+              .put("watcherStorageUrl", watcherStorageUrl)
+              .put("watcherCheckLocation", watcherCheckLocation)
+              .put("delegateStorageUrl", delegateStorageUrl)
+              .put("delegateCheckLocation", delegateCheckLocation)
+              .put("deployMode", mainConfiguration.getDeployMode().name())
+              .put("kubectlVersion", mainConfiguration.getKubectlVersion())
+              .put("ocVersion", mainConfiguration.getOcVersion())
+              .put("kubernetesAccountLabel", getAccountIdentifier(inquiry.getAccountId()));
+      if (isNotBlank(inquiry.getDelegateName())) {
+        params.put("delegateName", inquiry.getDelegateName());
       }
-      if (delegateProfile != null) {
-        params.put("delegateProfile", delegateProfile);
+      if (inquiry.getDelegateProfile() != null) {
+        params.put("delegateProfile", inquiry.getDelegateProfile());
       }
-      params.put("managerTarget", extractTarget(managerHost));
-      params.put("managerAuthority", extractAuthority(managerHost, "manager"));
-      if (featureFlagService.isEnabled(CCM_EVENT_COLLECTION, accountId)) {
+      params.put("managerTarget", extractTarget(inquiry.getManagerHost()));
+      params.put("managerAuthority", extractAuthority(inquiry.getManagerHost(), "manager"));
+      if (featureFlagService.isEnabled(CCM_EVENT_COLLECTION, inquiry.getAccountId())) {
         params.put("CCM_EVENT_COLLECTION", "enabled");
-        params.put("publishTarget", extractTarget(managerHost));
-        params.put("publishAuthority", extractAuthority(managerHost, "events"));
+        params.put("publishTarget", extractTarget(inquiry.getManagerHost()));
+        params.put("publishAuthority", extractAuthority(inquiry.getManagerHost(), "events"));
         params.put("queueFilePath", mainConfiguration.getDelegateConfigParams().getQueueFilePath());
         params.put("enablePerpetualTasks", "true");
       }
@@ -808,8 +820,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         version = EMPTY_VERSION;
       }
 
-      ImmutableMap<String, String> scriptParams =
-          getJarAndScriptRunTimeParamMap(accountId, version, managerHost, verificationUrl);
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
+                                                                                     .accountId(accountId)
+                                                                                     .version(version)
+                                                                                     .managerHost(managerHost)
+                                                                                     .verificationHost(verificationUrl)
+                                                                                     .build());
 
       if (isEmpty(scriptParams)) {
         throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
@@ -918,8 +934,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         version = EMPTY_VERSION;
       }
 
-      ImmutableMap<String, String> scriptParams =
-          getJarAndScriptRunTimeParamMap(accountId, version, managerHost, verificationUrl);
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
+                                                                                     .accountId(accountId)
+                                                                                     .version(version)
+                                                                                     .managerHost(managerHost)
+                                                                                     .verificationHost(verificationUrl)
+                                                                                     .build());
 
       if (isEmpty(scriptParams)) {
         throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
@@ -978,8 +998,15 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         version = EMPTY_VERSION;
       }
 
-      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost,
-          verificationUrl, delegateName, delegateProfile == null ? "" : delegateProfile);
+      ImmutableMap<String, String> scriptParams =
+          getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
+                                             .accountId(accountId)
+                                             .version(version)
+                                             .managerHost(managerHost)
+                                             .verificationHost(verificationUrl)
+                                             .delegateName(delegateName)
+                                             .delegateProfile(delegateProfile == null ? "" : delegateProfile)
+                                             .build());
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml), UTF_8)) {
@@ -1028,8 +1055,15 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       version = EMPTY_VERSION;
     }
 
-    ImmutableMap<String, String> params = getJarAndScriptRunTimeParamMap(
-        accountId, version, managerHost, verificationUrl, delegateName, delegateProfile == null ? "" : delegateProfile);
+    ImmutableMap<String, String> params =
+        getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
+                                           .accountId(accountId)
+                                           .version(version)
+                                           .managerHost(managerHost)
+                                           .verificationHost(verificationUrl)
+                                           .delegateName(delegateName)
+                                           .delegateProfile(delegateProfile == null ? "" : delegateProfile)
+                                           .build());
 
     File yaml = File.createTempFile(HARNESS_DELEGATE_VALUES_YAML, YAML);
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml), UTF_8)) {
@@ -1056,8 +1090,15 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         version = EMPTY_VERSION;
       }
 
-      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost,
-          verificationUrl, StringUtils.EMPTY, delegateProfile == null ? "" : delegateProfile);
+      ImmutableMap<String, String> scriptParams =
+          getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
+                                             .accountId(accountId)
+                                             .version(version)
+                                             .managerHost(managerHost)
+                                             .verificationHost(verificationUrl)
+                                             .delegateName(StringUtils.EMPTY)
+                                             .delegateProfile(delegateProfile == null ? "" : delegateProfile)
+                                             .build());
       scriptParams = updateMapForEcsDelegate(awsVpcMode, hostname, delegateGroupName, scriptParams);
 
       // Add Task Spec Json file
