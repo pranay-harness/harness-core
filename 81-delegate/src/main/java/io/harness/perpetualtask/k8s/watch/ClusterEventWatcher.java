@@ -2,6 +2,7 @@ package io.harness.perpetualtask.k8s.watch;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
+import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.protobuf.ByteString;
 
@@ -70,6 +71,7 @@ public class ClusterEventWatcher implements Watcher<Event> {
     }
   }
 
+  @Inject
   public ClusterEventWatcher(
       @Assisted KubernetesClient client, @Assisted K8sWatchTaskParams params, EventPublisher eventPublisher) {
     this.client = client;
