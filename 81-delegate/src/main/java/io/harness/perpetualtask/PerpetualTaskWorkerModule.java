@@ -14,6 +14,7 @@ import io.harness.perpetualtask.ecs.EcsPerpetualTaskExecutor;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskParams;
 import io.harness.perpetualtask.example.SamplePerpetualTaskExecutor;
 import io.harness.perpetualtask.example.SamplePerpetualTaskParams;
+import io.harness.perpetualtask.k8s.watch.ClusterEventWatcher;
 import io.harness.perpetualtask.k8s.watch.K8SWatchTaskExecutor;
 import io.harness.perpetualtask.k8s.watch.K8sWatchTaskParams;
 import io.harness.perpetualtask.k8s.watch.NodeWatcher;
@@ -23,8 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PerpetualTaskWorkerModule extends AbstractModule {
-  public PerpetualTaskWorkerModule() {}
-
   @Override
   protected void configure() {
     MapBinder<String, PerpetualTaskExecutor> mapBinder =
@@ -36,6 +35,7 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
     install(new FactoryModuleBuilder()
                 .implement(PodWatcher.class, PodWatcher.class)
                 .implement(NodeWatcher.class, NodeWatcher.class)
+                .implement(ClusterEventWatcher.class, ClusterEventWatcher.class)
                 .build(WatcherFactory.class));
   }
 
