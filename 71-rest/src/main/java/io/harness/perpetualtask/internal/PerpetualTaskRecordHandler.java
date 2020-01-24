@@ -30,7 +30,11 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-        PumpExecutorOptions.builder().name("PerpetualTaskRecordProcessor").poolSize(3).interval(ofSeconds(3)).build(),
+        PumpExecutorOptions.builder()
+            .name("PerpetualTaskRecordProcessor")
+            .poolSize(3)
+            .interval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
+            .build(),
         PerpetualTaskRecordHandler.class,
         MongoPersistenceIterator.<PerpetualTaskRecord>builder()
             .clazz(PerpetualTaskRecord.class)
