@@ -2,6 +2,9 @@ package io.harness.event.handler.impl.account;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.event.model.EventConstants.EMAIL;
+import static io.harness.event.model.EventConstants.FIRST_NAME;
+import static io.harness.event.model.EventConstants.LAST_NAME;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.common.collect.ImmutableMap;
@@ -13,6 +16,7 @@ import com.google.inject.Singleton;
 import com.segment.analytics.messages.GroupMessage;
 import com.segment.analytics.messages.IdentifyMessage;
 import io.harness.event.handler.EventHandler;
+import io.harness.event.handler.impl.Utils;
 import io.harness.event.handler.impl.segment.SalesforceAccountCheck;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.event.handler.impl.segment.SegmentHelper;
@@ -60,8 +64,10 @@ public class AccountChangeHandler implements EventHandler {
   @Inject private AccountService accountService;
   @Inject private SalesforceAccountCheck salesforceAccountCheck;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private Utils utils;
 
   private Map<String, Boolean> integrations = new HashMap<>();
+  private static final String NAME = "name";
 
   public AccountChangeHandler(EventListener eventListener) {
     eventListener.registerEventHandler(this, Sets.newHashSet(EventType.ACCOUNT_ENTITY_CHANGE));
@@ -106,12 +112,17 @@ public class AccountChangeHandler implements EventHandler {
     integrations.put(SegmentHandler.Keys.NATERO, true);
     integrations.put(SegmentHandler.Keys.SALESFORCE, false);
 
-    IdentifyMessage.Builder identity = IdentifyMessage.builder()
-                                           .userId(user.getId())
-                                           .traits(identityTraits.put("name", user.getUserName())
-                                                       .put("email", user.getEmail())
-                                                       .put("groupId", accountId)
-                                                       .build());
+    String firstName = utils.getFirstName(user.getUserName(), user.getEmail());
+    String lastName = utils.getLastName(user.getUserName(), user.getEmail());
+
+    IdentifyMessage.Builder identity =
+        IdentifyMessage.builder()
+            .userId(user.getId())
+            .traits(identityTraits.put(NAME, user.getUserName())
+                        .put(EMAIL, user.getEmail())
+                        .put(FIRST_NAME, isNotEmpty(firstName) ? firstName : user.getEmail())
+                        .put(LAST_NAME, isNotEmpty(lastName) ? lastName : "")
+                        .build());
 
     integrations.forEach((k, v) -> {
       boolean value = false;

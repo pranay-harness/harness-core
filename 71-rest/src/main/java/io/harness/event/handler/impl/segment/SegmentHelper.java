@@ -3,7 +3,6 @@ package io.harness.event.handler.impl.segment;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.model.EventConstants.ACCOUNT_STATUS;
-import static io.harness.event.model.EventConstants.COMPANY_NAME;
 import static io.harness.event.model.EventConstants.DAYS_LEFT_IN_TRIAL;
 import static io.harness.event.model.EventConstants.EMAIL;
 import static io.harness.event.model.EventConstants.FIRST_NAME;
@@ -23,7 +22,6 @@ import com.segment.analytics.messages.TrackMessage;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.event.handler.impl.Utils;
 import io.harness.event.handler.segment.SegmentConfig;
-import io.harness.event.model.EventConstants;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -78,8 +76,6 @@ public class SegmentHelper {
 
     if (account != null) {
       traits.put(GROUP_ID, account.getUuid());
-      traits.put(COMPANY_NAME, account.getCompanyName());
-      traits.put(EventConstants.ACCOUNT_ID, account.getUuid());
 
       LicenseInfo licenseInfo = account.getLicenseInfo();
       if (licenseInfo != null) {

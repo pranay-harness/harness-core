@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.segment.analytics.messages.GroupMessage;
 import com.segment.analytics.messages.IdentifyMessage;
 import io.harness.category.element.UnitTests;
+import io.harness.event.handler.impl.Utils;
 import io.harness.event.handler.impl.account.AccountChangeHandler;
 import io.harness.event.handler.impl.segment.SalesforceAccountCheck;
 import io.harness.event.handler.impl.segment.SegmentHelper;
@@ -69,6 +70,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
   @Mock private SecretManagerConfigService secretManagerConfigService;
   @Mock private SalesforceAccountCheck salesforceAccountCheck;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private Utils utils;
   @Inject private HPersistence hPersistence;
   @Inject private TestUtils eventTestHelper;
 
@@ -94,6 +96,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
     FieldUtils.writeField(accountChangeHandler, "accountService", accountService, true);
     FieldUtils.writeField(accountChangeHandler, "salesforceAccountCheck", salesforceAccountCheck, true);
     FieldUtils.writeField(accountChangeHandler, "featureFlagService", featureFlagService, true);
+    FieldUtils.writeField(accountChangeHandler, "utils", utils, true);
 
     when(accountService.get(anyString())).thenReturn(account);
     when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
@@ -143,6 +146,8 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(secretManagerConfigService.getDefaultSecretManager(anyString())).thenReturn(secretManagerConfig);
       when(userService.getUsersOfAccount(anyString())).thenReturn(Arrays.asList(user));
       accountChangeHandler.handleEvent(event);
+      verify(utils, times(1)).getFirstName(anyString(), anyString());
+      verify(utils, times(1)).getLastName(anyString(), anyString());
       verify(segmentHelper, times(1)).enqueue(any(IdentifyMessage.Builder.class));
       verify(segmentHelper, times(1)).enqueue(any(GroupMessage.Builder.class));
     } finally {
@@ -178,6 +183,8 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(secretManagerConfigService.getDefaultSecretManager(anyString())).thenReturn(secretManagerConfig);
       when(userService.getUsersOfAccount(anyString())).thenReturn(Arrays.asList(user));
       accountChangeHandler.handleEvent(event);
+      verify(utils, times(1)).getFirstName(anyString(), anyString());
+      verify(utils, times(1)).getLastName(anyString(), anyString());
       verify(segmentHelper, times(1)).enqueue(any(IdentifyMessage.Builder.class));
       verify(segmentHelper, times(1)).enqueue(any(GroupMessage.Builder.class));
     } finally {
@@ -213,6 +220,8 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(secretManagerConfigService.getDefaultSecretManager(anyString())).thenReturn(secretManagerConfig);
       when(userService.getUsersOfAccount(anyString())).thenReturn(Arrays.asList(user));
       accountChangeHandler.handleEvent(event);
+      verify(utils, times(1)).getFirstName(anyString(), anyString());
+      verify(utils, times(1)).getLastName(anyString(), anyString());
       verify(segmentHelper, times(1)).enqueue(any(IdentifyMessage.Builder.class));
       verify(segmentHelper, times(1)).enqueue(any(GroupMessage.Builder.class));
     } finally {
@@ -248,6 +257,45 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(secretManagerConfigService.getDefaultSecretManager(anyString())).thenReturn(secretManagerConfig);
       when(userService.getUsersOfAccount(anyString())).thenReturn(Arrays.asList(user));
       accountChangeHandler.handleEvent(event);
+      verify(utils, times(1)).getFirstName(anyString(), anyString());
+      verify(utils, times(1)).getLastName(anyString(), anyString());
+      verify(segmentHelper, times(1)).enqueue(any(IdentifyMessage.Builder.class));
+      verify(segmentHelper, times(1)).enqueue(any(GroupMessage.Builder.class));
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAccountIdentityMessageToSegment() {
+    UserThreadLocal.set(user);
+    try {
+      EventType eventType = EventType.ACCOUNT_ENTITY_CHANGE;
+      Map<String, String> properties = new HashMap<>();
+      properties.put("ACCOUNT_ID", "ACCOUNT_ID");
+      properties.put("EMAIL_ID", "admin@harness.io");
+
+      AccountEntityEvent accountEntityEvent = new AccountEntityEvent(account);
+      EventData eventData = EventData.builder().eventInfo(accountEntityEvent).build();
+      Event event = Event.builder().eventData(eventData).eventType(eventType).build();
+
+      User user = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
+      when(userService.getUserByEmail(anyString())).thenReturn(user);
+      when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(false);
+      when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(false);
+      when(userService.update(any(User.class))).thenReturn(user);
+      when(accountService.get(anyString())).thenReturn(account);
+      when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
+      when(instanceStatService.percentile(anyString(), any(Instant.class), any(Instant.class), anyDouble()))
+          .thenReturn(50.0);
+      SecretManagerConfig secretManagerConfig = KmsConfig.builder().build();
+      when(secretManagerConfigService.getDefaultSecretManager(anyString())).thenReturn(secretManagerConfig);
+      when(userService.getUsersOfAccount(anyString())).thenReturn(Arrays.asList(this.user));
+      accountChangeHandler.handleEvent(event);
+      verify(utils, times(1)).getFirstName(anyString(), anyString());
+      verify(utils, times(1)).getLastName(anyString(), anyString());
       verify(segmentHelper, times(1)).enqueue(any(IdentifyMessage.Builder.class));
       verify(segmentHelper, times(1)).enqueue(any(GroupMessage.Builder.class));
     } finally {
