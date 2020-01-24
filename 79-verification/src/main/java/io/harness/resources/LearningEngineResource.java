@@ -85,4 +85,19 @@ public class LearningEngineResource {
       @QueryParam("taskId") String taskId, @Valid LearningEngineError learningEngineError) {
     return new RestResponse<>(learningEngineService.notifyFailure(taskId, learningEngineError));
   }
+
+  /**
+   * API to fetch next available task.
+   * @param acceptHeaders
+   * @return
+   */
+  @GET
+  @Path("/get-next-task")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  @Produces({"application/json", "application/v1+json"})
+  public RestResponse<LearningEngineAnalysisTask> getNextTask(@HeaderParam("Accept") String acceptHeaders) {
+    return new RestResponse<>(learningEngineService.getNextLearningEngineAnalysisTask(parseApisVersion(acceptHeaders)));
+  }
 }

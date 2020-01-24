@@ -190,6 +190,14 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   }
 
   @Override
+  public LearningEngineAnalysisTask getNextLearningEngineAnalysisTask(ServiceApiVersion serviceApiVersion) {
+    List<MLAnalysisType> taskTypesOtherThanFeedback =
+        Arrays.asList(MLAnalysisType.LOG_ML, MLAnalysisType.TIME_SERIES, MLAnalysisType.LOG_CLUSTER);
+    return getNextLearningEngineAnalysisTask(
+        serviceApiVersion, Optional.empty(), Optional.of(taskTypesOtherThanFeedback));
+  }
+
+  @Override
   public LearningEngineAnalysisTask getNextLearningEngineAnalysisTask(
       ServiceApiVersion serviceApiVersion, Optional<String> is24x7Task, Optional<List<MLAnalysisType>> taskTypes) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
