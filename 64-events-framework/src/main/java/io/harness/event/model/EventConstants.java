@@ -6,8 +6,8 @@ public interface EventConstants {
   String GROUP_ID = "groupId";
   String ACCOUNT_NAME = "ACCOUNT_NAME";
   String COMPANY_NAME = "COMPANY_NAME";
-  String FIRST_NAME = "FIRST_NAME";
-  String LAST_NAME = "LAST_NAME";
+  String FIRST_NAME = "first_name";
+  String LAST_NAME = "last_name";
   String ACCOUNT_TYPE = "ACCOUNT_TYPE";
   String ACCOUNT_STATUS = "accountStatus";
   String DAYS_LEFT_IN_TRIAL = "daysLeftInTrial";
