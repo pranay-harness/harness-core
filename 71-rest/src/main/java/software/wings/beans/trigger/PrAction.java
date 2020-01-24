@@ -1,6 +1,6 @@
 package software.wings.beans.trigger;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,7 +35,7 @@ public enum PrAction {
   public static PrAction find(String val) {
     PrAction prAction = PrActionHolder.map.get(val);
     if (prAction == null) {
-      throw new WingsException(String.format("Unsupported Pull Request action %s.", val));
+      throw new InvalidRequestException(String.format("Unsupported Pull Request action %s.", val));
     }
     return prAction;
   }
