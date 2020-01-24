@@ -558,7 +558,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                 + "    Authorization = \"Basic YWRtaW46ZHVtbXkxMjMh\"\n"
                 + "}\n"
                 + " [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n"
-                + " Invoke-WebRequest -Uri \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -OutFile \"DESTINATION_DIR_PATH\\todolist-7.0.war\""}};
+                + " Invoke-WebRequest -Uri \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -Headers $Headers -OutFile \"DESTINATION_DIR_PATH\\todolist-7.0.war\""}};
   }
 
   private Object[][] getNexus2MavenDataAnon() {
@@ -600,7 +600,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                 + "    Authorization = \"Basic YWRtaW46YWRtaW4=\"\n"
                 + "}\n"
                 + " [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n"
-                + " Invoke-WebRequest -Uri \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar\" -OutFile \"DESTINATION_DIR_PATH\\todolist.tar\"\n"
-                + " Invoke-WebRequest -Uri \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war\" -OutFile \"DESTINATION_DIR_PATH\\todolist.war\""}};
+                + " Invoke-WebRequest -Uri \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar\" -Headers $Headers -OutFile \"DESTINATION_DIR_PATH\\todolist.tar\"\n"
+                + " Invoke-WebRequest -Uri \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war\" -Headers $Headers -OutFile \"DESTINATION_DIR_PATH\\todolist.war\""}};
   }
 }

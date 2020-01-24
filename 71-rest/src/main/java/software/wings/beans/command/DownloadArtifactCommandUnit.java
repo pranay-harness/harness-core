@@ -561,17 +561,26 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
                   + "    Authorization = \"")
               .append(authHeader)
               .append("\"\n}\n [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12");
+          for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
+            command.append("\n Invoke-WebRequest -Uri \"")
+                .append(downloadMetadata.getUrl())
+                .append("\" -Headers $Headers -OutFile \"")
+                .append(getCommandPath().trim())
+                .append('\\')
+                .append(downloadMetadata.getFileName())
+                .append('"');
+          }
         } else {
           command.append("[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12");
-        }
-        for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
-          command.append("\n Invoke-WebRequest -Uri \"")
-              .append(downloadMetadata.getUrl())
-              .append("\" -OutFile \"")
-              .append(getCommandPath().trim())
-              .append('\\')
-              .append(downloadMetadata.getFileName())
-              .append('"');
+          for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
+            command.append("\n Invoke-WebRequest -Uri \"")
+                .append(downloadMetadata.getUrl())
+                .append("\" -OutFile \"")
+                .append(getCommandPath().trim())
+                .append('\\')
+                .append(downloadMetadata.getFileName())
+                .append('"');
+          }
         }
         break;
       default:
@@ -671,7 +680,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
           command.append("\n Invoke-WebRequest -Uri \"")
               .append(downloadMetadata.getUrl())
-              .append("\" -OutFile \"")
+              .append("\" -Headers $Headers -OutFile \"")
               .append(getCommandPath().trim())
               .append('\\')
               .append(downloadMetadata.getFileName())
