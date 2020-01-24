@@ -22,7 +22,7 @@ input CreateUserGroupInput {
 
 input UpdateUserGroupInput {
   requestId: String
-  name: String!
+  name: String
   userGroupId: String!
   description: String
   userIds: [String]
