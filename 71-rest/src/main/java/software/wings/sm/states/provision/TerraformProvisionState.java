@@ -244,9 +244,15 @@ public abstract class TerraformProvisionState extends State {
   }
 
   private void markApplyExecutionCompleted(ExecutionContext context) {
+    String markerName = getMarkerName();
     SweepingOutputInstance sweepingOutputInstance =
+        sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(markerName).build());
+    if (sweepingOutputInstance != null) {
+      return;
+    }
+    sweepingOutputInstance =
         context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-            .name(getMarkerName())
+            .name(markerName)
             .value(TerraformApplyMarkerParam.builder().applyCompleted(true).provisionerId(provisionerId).build())
             .build();
     sweepingOutputService.save(sweepingOutputInstance);
