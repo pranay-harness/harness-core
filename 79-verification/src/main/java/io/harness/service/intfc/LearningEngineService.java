@@ -27,6 +27,7 @@ public interface LearningEngineService {
 
   LearningEngineAnalysisTask getNextLearningEngineAnalysisTask(
       ServiceApiVersion serviceApiVersion, Optional<String> is24x7Task, Optional<List<MLAnalysisType>> taskTypes);
+  LearningEngineAnalysisTask getNextLearningEngineAnalysisTask(ServiceApiVersion serviceApiVersion);
   LearningEngineExperimentalAnalysisTask getNextLearningEngineExperimentalAnalysisTask(
       ServiceApiVersion serviceApiVersion, String experimentName, Optional<List<MLAnalysisType>> taskTypes);
 
