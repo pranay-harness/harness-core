@@ -1,4 +1,4 @@
-package software.wings.service.intfc;
+package software.wings.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.beans.ExecutionStatus.RUNNING;
@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
@@ -32,15 +33,16 @@ import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Answers;
@@ -75,6 +77,12 @@ import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.trigger.WebhookTriggerDeploymentExecution;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.WebHookService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.utils.CryptoUtils;
 
@@ -88,7 +96,7 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.HttpHeaders;
 
-public class WebHookServiceTest extends WingsBaseTest {
+public class WebHookServiceImplTest extends WingsBaseTest {
   @Mock private TriggerService triggerService;
   @Mock private DeploymentTriggerService deploymentTriggerService;
   @Mock private AppService appService;
@@ -239,7 +247,6 @@ public class WebHookServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldExecuteByEventTriggerInvalidJson() {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
     String payLoad = "Some payload";
@@ -631,18 +638,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS, intermittent = true)
   @Category(UnitTests.class)
   public void shouldTriggerGitHubPushRequest() throws IOException {
-    Trigger webhookTrigger = Trigger.builder()
-                                 .workflowId(PIPELINE_ID)
-                                 .uuid(TRIGGER_ID)
-                                 .appId(APP_ID)
-                                 .name(TRIGGER_NAME)
-                                 .webHookToken(token)
-                                 .condition(WebHookTriggerCondition.builder()
-                                                .webhookSource(WebhookSource.GITHUB)
-                                                .eventTypes(Collections.singletonList(WebhookEventType.PUSH))
-                                                .webHookToken(WebHookToken.builder().webHookToken(token).build())
-                                                .build())
-                                 .build();
+    Trigger webhookTrigger = constructWebhookPushTrigger();
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
@@ -682,5 +678,89 @@ public class WebHookServiceTest extends WingsBaseTest {
     assertThat(response.getUiUrl())
         .isEqualTo(String.format("%s/#/account/%s/app/%s/env/%s/executions/%s/details", PORTAL_URL, ACCOUNT_ID, APP_ID,
             ENV_ID, WORKFLOW_EXECUTION_ID));
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldValidateGitHubWebhookEventMissing() {
+    Trigger webhookTrigger = constructWebhookPushTrigger();
+    WebHookServiceImpl webHookServiceImpl = new WebHookServiceImpl();
+    webHookServiceImpl.validateWebHook(WebhookSource.GITHUB, webhookTrigger,
+        (WebHookTriggerCondition) webhookTrigger.getCondition(), new HashMap<>(), null);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldValidateGitHubEventTypeMisMatch() {
+    Trigger webhookTrigger = constructWebhookPushTrigger();
+    WebHookServiceImpl webHookServiceImpl = new WebHookServiceImpl();
+    doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+    webHookServiceImpl.validateWebHook(WebhookSource.GITHUB, webhookTrigger,
+        (WebHookTriggerCondition) webhookTrigger.getCondition(), new HashMap<>(), httpHeaders);
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldValidateGitHubPrActionMisMatch() {
+    Trigger webhookTrigger = Trigger.builder()
+                                 .workflowId(PIPELINE_ID)
+                                 .uuid(TRIGGER_ID)
+                                 .appId(APP_ID)
+                                 .name(TRIGGER_NAME)
+                                 .webHookToken(token)
+                                 .condition(WebHookTriggerCondition.builder()
+                                                .webhookSource(WebhookSource.GITHUB)
+                                                .eventTypes(Collections.singletonList(WebhookEventType.PULL_REQUEST))
+                                                .actions(Arrays.asList(PrAction.OPENED))
+                                                .webHookToken(WebHookToken.builder().webHookToken(token).build())
+                                                .build())
+                                 .build();
+    WebHookServiceImpl webHookServiceImpl = new WebHookServiceImpl();
+    doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+
+    assertThatThrownBy(()
+                           -> webHookServiceImpl.validateWebHook(WebhookSource.GITHUB, webhookTrigger,
+                               (WebHookTriggerCondition) webhookTrigger.getCondition(),
+                               ImmutableMap.of("action", PrAction.CLOSED.getValue()), httpHeaders))
+        .hasMessageContaining(" is not associated with the received GitHub action");
+  }
+
+  private Trigger constructWebhookPushTrigger() {
+    return Trigger.builder()
+        .workflowId(PIPELINE_ID)
+        .uuid(TRIGGER_ID)
+        .appId(APP_ID)
+        .name(TRIGGER_NAME)
+        .webHookToken(token)
+        .condition(WebHookTriggerCondition.builder()
+                       .webhookSource(WebhookSource.GITHUB)
+                       .eventTypes(Collections.singletonList(WebhookEventType.PUSH))
+                       .webHookToken(WebHookToken.builder().webHookToken(token).build())
+                       .build())
+        .build();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldValidateBitBucketWebhookEventMissing() {
+    Trigger webhookTrigger = Trigger.builder()
+                                 .workflowId(PIPELINE_ID)
+                                 .uuid(TRIGGER_ID)
+                                 .appId(APP_ID)
+                                 .name(TRIGGER_NAME)
+                                 .webHookToken(token)
+                                 .condition(WebHookTriggerCondition.builder()
+                                                .webhookSource(WebhookSource.BITBUCKET)
+                                                .eventTypes(Collections.singletonList(WebhookEventType.PUSH))
+                                                .webHookToken(WebHookToken.builder().webHookToken(token).build())
+                                                .build())
+                                 .build();
+    WebHookServiceImpl webHookServiceImpl = new WebHookServiceImpl();
+    webHookServiceImpl.validateWebHook(WebhookSource.BITBUCKET, webhookTrigger,
+        (WebHookTriggerCondition) webhookTrigger.getCondition(), new HashMap<>(), null);
   }
 }

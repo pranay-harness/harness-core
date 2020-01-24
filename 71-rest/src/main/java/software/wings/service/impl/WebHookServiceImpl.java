@@ -11,6 +11,7 @@ import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.WorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.AutoLogContext;
@@ -130,10 +132,10 @@ public class WebHookServiceImpl implements WebHookService {
         return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
       }
 
-      logger.info("Received input Webhook Request {}  ", String.valueOf(webHookRequest));
+      logger.info("Received input Webhook Request {}  ", webHookRequest);
       Trigger trigger = triggerService.getTriggerByWebhookToken(token);
       DeploymentTrigger deploymentTrigger = deploymentTriggerService.getTriggerByWebhookToken(token);
-      String accountId = getAccountId(token, trigger, deploymentTrigger);
+      String accountId = getAccountId(trigger, deploymentTrigger);
       try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
         logger.info("Received the Webhook Request {} with accountId {}", webHookRequest, accountId);
       }
@@ -238,7 +240,7 @@ public class WebHookServiceImpl implements WebHookService {
     try {
       Trigger trigger = triggerService.getTriggerByWebhookToken(token);
       DeploymentTrigger deploymentTrigger = deploymentTriggerService.getTriggerByWebhookToken(token);
-      String accountId = getAccountId(token, trigger, deploymentTrigger);
+      String accountId = getAccountId(trigger, deploymentTrigger);
       if (accountId == null) {
         WebHookResponse webHookResponse =
             WebHookResponse.builder().error("Trigger or account not associated to the given token").build();
@@ -271,7 +273,7 @@ public class WebHookServiceImpl implements WebHookService {
     }
   }
 
-  private String getAccountId(String token, Trigger trigger, DeploymentTrigger deploymentTrigger) {
+  private String getAccountId(Trigger trigger, DeploymentTrigger deploymentTrigger) {
     if (trigger == null) {
       if (deploymentTrigger != null) {
         return deploymentTrigger.getAccountId();
@@ -354,7 +356,7 @@ public class WebHookServiceImpl implements WebHookService {
     } else if (actionType == ActionType.PIPELINE) {
       return PIPELINE;
     } else {
-      throw new WingsException("Invalid action type " + actionType.name());
+      throw new InvalidRequestException("Invalid action type " + actionType.name());
     }
   }
 
@@ -364,7 +366,7 @@ public class WebHookServiceImpl implements WebHookService {
     } else if (action.getActionType() == ActionType.PIPELINE) {
       return ((PipelineAction) action).getPipelineId();
     } else {
-      throw new WingsException("Invalid action type " + action.getActionType().name());
+      throw new InvalidRequestException("Invalid action type " + action.getActionType().name());
     }
   }
 
@@ -519,7 +521,7 @@ public class WebHookServiceImpl implements WebHookService {
       String msg = "Trigger [" + trigger.getName() + "] is set for source ["
           + webhookTriggerCondition.getWebhookSource() + "] not associate with the in coming source   [" + webhookSource
           + "]";
-      throw new WingsException(msg, USER);
+      throw new InvalidRequestException(msg, USER);
     }
 
     Map<String, Object> payLoadMap = JsonUtils.asObject(payload, new TypeReference<Map<String, Object>>() {});
@@ -559,12 +561,13 @@ public class WebHookServiceImpl implements WebHookService {
     return resolvedParameters;
   }
 
-  private void validateWebHook(WebhookSource webhookSource, Trigger trigger, WebHookTriggerCondition triggerCondition,
+  @VisibleForTesting
+  void validateWebHook(WebhookSource webhookSource, Trigger trigger, WebHookTriggerCondition triggerCondition,
       Map<String, Object> payLoadMap, HttpHeaders httpHeaders) {
     if (WebhookSource.GITHUB == webhookSource) {
       validateGitHubWebhook(trigger, triggerCondition, payLoadMap, httpHeaders);
     } else if (WebhookSource.BITBUCKET == webhookSource) {
-      validateBitBucketWebhook(trigger, triggerCondition, payLoadMap, httpHeaders);
+      validateBitBucketWebhook(trigger, triggerCondition, httpHeaders);
     }
   }
 
@@ -575,18 +578,18 @@ public class WebHookServiceImpl implements WebHookService {
     String msg = String.format(
         "WebHook event branch name filter [%s] does not match with the trigger condition branch name [%s]",
         inputBranchName, storedBranch);
-    throw new WingsException(msg, WingsException.USER);
+    throw new InvalidRequestException(msg, WingsException.USER);
   }
 
   private void validateBitBucketWebhook(
-      Trigger trigger, WebHookTriggerCondition triggerCondition, Map<String, Object> content, HttpHeaders headers) {
+      Trigger trigger, WebHookTriggerCondition triggerCondition, HttpHeaders headers) {
     WebhookSource webhookSource = triggerCondition.getWebhookSource();
     if (BITBUCKET == webhookSource) {
       logger.info("Trigger is set for BitBucket. Checking the http headers for the request type");
       String bitBucketEvent = headers == null ? null : headers.getHeaderString(X_BIT_BUCKET_EVENT);
       logger.info("X-Event-Key is {} ", bitBucketEvent);
       if (bitBucketEvent == null) {
-        throw new WingsException("Header [X-Event-Key] is missing", USER);
+        throw new InvalidRequestException("Header [X-Event-Key] is missing", USER);
       }
 
       BitBucketEventType bitBucketEventType = BitBucketEventType.find(bitBucketEvent);
@@ -598,7 +601,7 @@ public class WebHookServiceImpl implements WebHookService {
                  || (BitBucketEventType.containsAllEvent(triggerCondition.getBitBucketEvents()))))) {
         return;
       } else {
-        throw new WingsException(errorMsg, USER);
+        throw new InvalidRequestException(errorMsg, USER);
       }
     }
   }
@@ -611,7 +614,7 @@ public class WebHookServiceImpl implements WebHookService {
       String gitHubEvent = headers == null ? null : headers.getHeaderString(X_GIT_HUB_EVENT);
       logger.info("X-GitHub-Event is {} ", gitHubEvent);
       if (gitHubEvent == null) {
-        throw new WingsException("Header [X-GitHub-Event] is missing", USER);
+        throw new InvalidRequestException("Header [X-GitHub-Event] is missing", USER);
       }
       WebhookEventType webhookEventType = WebhookEventType.find(gitHubEvent);
 
@@ -625,7 +628,7 @@ public class WebHookServiceImpl implements WebHookService {
             && !triggerCondition.getActions().contains(PrAction.find(prAction.toString()))) {
           String msg = "Trigger [" + trigger.getName() + "] is not associated with the received GitHub action ["
               + prAction + "]";
-          throw new WingsException(msg, USER);
+          throw new InvalidRequestException(msg, USER);
         }
       }
     }
@@ -634,7 +637,7 @@ public class WebHookServiceImpl implements WebHookService {
   private void validateEventType(WebHookTriggerCondition triggerCondition, Map<String, Object> content,
       String errorMessage, WebhookEventType webhookEventType) {
     if (triggerCondition.getEventTypes() != null && !triggerCondition.getEventTypes().contains(webhookEventType)) {
-      throw new WingsException(errorMessage, USER);
+      throw new InvalidRequestException(errorMessage, USER);
     }
   }
 

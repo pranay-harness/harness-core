@@ -1,6 +1,6 @@
 package software.wings.beans.trigger;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
 
 import java.util.HashMap;
@@ -30,7 +30,7 @@ public enum WebhookEventType {
   public static WebhookEventType find(String val) {
     WebhookEventType t = WebhookHolder.map.get(val);
     if (t == null) {
-      throw new WingsException(String.format("Unsupported Webhook Event Type %s.", val));
+      throw new InvalidRequestException(String.format("Unsupported Webhook Event Type %s.", val));
     }
     return t;
   }
