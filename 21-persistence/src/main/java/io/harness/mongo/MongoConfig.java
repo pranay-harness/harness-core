@@ -2,6 +2,7 @@ package io.harness.mongo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
+import lombok.ToString;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -12,6 +13,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Value
 @Builder
+@ToString(onlyExplicitlyIncluded = true)
 public class MongoConfig {
   @JsonProperty(defaultValue = "mongodb://localhost:27017/wings")
   @Builder.Default
