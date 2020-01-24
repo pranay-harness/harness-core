@@ -305,6 +305,11 @@ public class UserGroupPermissionsController {
     if (accountPermissionsInput == null) {
       return null;
     }
+    if (accountPermissionsInput.contains(MANAGE_USERS_AND_GROUPS)
+        && !accountPermissionsInput.contains(READ_USERS_AND_GROUPS)) {
+      throw new InvalidRequestException(
+          "The permission MANAGE_USERS_AND_GROUPS cannot be set without setting READ_USERS_AND_GROUPS");
+    }
     Set<PermissionType> accountPermissions = accountPermissionsInput.stream()
                                                  .map(UserGroupPermissionsController::mapAccountPermissions)
                                                  .collect(Collectors.toSet());
