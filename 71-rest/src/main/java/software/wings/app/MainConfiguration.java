@@ -37,6 +37,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import software.wings.DataStorageMode;
 import software.wings.beans.DefaultSalesContacts;
+import software.wings.beans.HttpMethod;
 import software.wings.beans.UrlInfo;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -49,6 +50,8 @@ import software.wings.security.authentication.oauth.GitlabConfig;
 import software.wings.security.authentication.oauth.GoogleConfig;
 import software.wings.security.authentication.oauth.LinkedinConfig;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -118,7 +121,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("sampleTargetEnv") private String sampleTargetEnv;
   @JsonProperty("sampleTargetStatusHost") private String sampleTargetStatusHost;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
-
   @JsonProperty("disabledCache") private Set<String> disabledCache;
   @JsonProperty("techStacks") private Map<String, UrlInfo> techStackLinks;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
@@ -129,6 +131,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
 
   private int applicationPort;
   private boolean sslEnabled;
+
+  private static final String IS_OPTION_HEAD_HTTP_METHOD_BLOCKED = "IS_OPTION_HEAD_REQUEST_METHOD_BLOCKED";
 
   /**
    * Instantiates a new Main configuration.
@@ -141,6 +145,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
     defaultServerFactory.setAdminConnectors(singletonList(getDefaultAdminConnectorFactory()));
     defaultServerFactory.setApplicationConnectors(singletonList(getDefaultApplicationConnectorFactory()));
     defaultServerFactory.setRequestLogFactory(getDefaultlogbackAccessRequestLogFactory());
+    defaultServerFactory.setAllowedMethods(getAllowedMethods());
 
     super.setServerFactory(defaultServerFactory);
   }
@@ -185,6 +190,16 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
     final HttpConnectorFactory factory = new HttpConnectorFactory();
     factory.setPort(9090);
     return factory;
+  }
+
+  private Set<String> getAllowedMethods() {
+    if (System.getenv(IS_OPTION_HEAD_HTTP_METHOD_BLOCKED) != null
+        && Boolean.parseBoolean(System.getenv(IS_OPTION_HEAD_HTTP_METHOD_BLOCKED))) {
+      return new HashSet<>(Arrays.asList(HttpMethod.GET.name(), HttpMethod.PUT.name(), HttpMethod.POST.name(),
+          HttpMethod.PATCH.name(), HttpMethod.DELETE.name()));
+    }
+    return new HashSet<>(Arrays.asList(HttpMethod.OPTIONS.name(), HttpMethod.POST.name(), HttpMethod.GET.name(),
+        HttpMethod.PUT.name(), HttpMethod.HEAD.name(), HttpMethod.PATCH.name(), HttpMethod.DELETE.name()));
   }
 
   private RequestLogFactory getDefaultlogbackAccessRequestLogFactory() {
