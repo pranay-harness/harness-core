@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 @Value
 @Builder
 public class TerraformProvisionParameters implements ExecutionCapabilityDemander {
-  private static final long TIMEOUT_IN_MINUTES = 30;
+  public static final long TIMEOUT_IN_MINUTES = 100;
   public static final String TERRAFORM = "terraform";
 
   public enum TerraformCommand { APPLY, DESTROY }
@@ -45,7 +45,7 @@ public class TerraformProvisionParameters implements ExecutionCapabilityDemander
 
   private final TerraformCommand command;
   private final TerraformCommandUnit commandUnit;
-  private final long timeoutInMillis = TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES);
+  @Builder.Default private long timeoutInMillis = TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES);
 
   private final List<String> targets;
   private final List<String> tfVarFiles;

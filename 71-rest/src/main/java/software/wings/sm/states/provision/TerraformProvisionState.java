@@ -6,7 +6,6 @@ import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.context.ContextElementType.TERRAFORM_INHERIT_PLAN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
@@ -22,6 +21,7 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.FeatureName.TF_USE_VAR_CL;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
+import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEOUT_IN_MINUTES;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
 
 import com.google.common.collect.Maps;
@@ -101,6 +101,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -474,6 +475,7 @@ public abstract class TerraformProvisionState extends State {
     TerraformProvisionParameters parameters =
         TerraformProvisionParameters.builder()
             .accountId(executionContext.getApp().getAccountId())
+            .timeoutInMillis(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES)))
             .activityId(activityId)
             .appId(executionContext.getAppId())
             .currentStateFileId(fileId)
@@ -520,7 +522,7 @@ public abstract class TerraformProvisionState extends State {
             .data(TaskData.builder()
                       .taskType(TERRAFORM_PROVISION_TASK.name())
                       .parameters(new Object[] {parameters})
-                      .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                      .timeout(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES)))
                       .build())
             .build();
 
@@ -657,6 +659,7 @@ public abstract class TerraformProvisionState extends State {
         TerraformProvisionParameters.builder()
             .accountId(executionContext.getApp().getAccountId())
             .activityId(activityId)
+            .timeoutInMillis(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES)))
             .appId(executionContext.getAppId())
             .currentStateFileId(fileId)
             .entityId(entityId)

@@ -6,6 +6,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.FeatureName.TF_USE_VAR_CL;
+import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEOUT_IN_MINUTES;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
 
 import com.google.inject.Inject;
@@ -42,6 +43,7 @@ import software.wings.utils.GitUtilsManager;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 @Setter
@@ -160,6 +162,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
       ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
       TerraformProvisionParameters parameters =
           TerraformProvisionParameters.builder()
+              .timeoutInMillis(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES)))
               .accountId(executionContext.getApp().getAccountId())
               .activityId(activityId)
               .appId(executionContext.getAppId())
