@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
@@ -52,78 +53,90 @@ public class UserGroupPermissionValidator {
           String.format("Invalid id/s %s provided in the request", String.join(", ", idsInput)));
     }
   }
-  private void checkApplicationsExists(Set<String> appIds) {
+  private void checkApplicationsExists(Set<String> appIds, String accountId) {
     if (isEmpty(appIds)) {
       return;
     }
     List<String> ids = new ArrayList<>(appIds);
-    PageRequest<Application> req =
-        aPageRequest().addFieldsIncluded("_id").addFilter("_id", IN, appIds.toArray()).build();
+    PageRequest<Application> req = aPageRequest()
+                                       .addFieldsIncluded("_id")
+                                       .addFilter("accountId", SearchFilter.Operator.EQ, accountId)
+                                       .addFilter("_id", IN, appIds.toArray())
+                                       .build();
     PageResponse<Application> res = appService.list(req);
     // This Ids are wrong
     List<String> idsPresent = res.stream().map(Application::getUuid).collect(Collectors.toList());
     checkForInvalidIds(ids, idsPresent);
   }
 
-  private void checkServiceExists(Set<String> serviceIds) {
+  private void checkServiceExists(Set<String> serviceIds, String accountId) {
     if (isEmpty(serviceIds)) {
       return;
     }
     List<String> ids = new ArrayList<>(serviceIds);
-    PageRequest<Service> req =
-        aPageRequest().addFieldsIncluded("_id").addFilter("_id", IN, serviceIds.toArray()).build();
+    PageRequest<Service> req = aPageRequest()
+                                   .addFieldsIncluded("_id")
+                                   .addFilter("accountId", SearchFilter.Operator.EQ, accountId)
+                                   .addFilter("_id", IN, serviceIds.toArray())
+                                   .build();
     PageResponse<Service> res = serviceResourceService.list(req, false, false, false, null);
     // This Ids are wrong
     List<String> idsPresent = res.stream().map(Service::getUuid).collect(Collectors.toList());
     checkForInvalidIds(ids, idsPresent);
   }
 
-  private void checkEnvExists(Set<String> envIds) {
+  private void checkEnvExists(Set<String> envIds, String accountId) {
     if (isEmpty(envIds)) {
       return;
     }
     List<String> ids = new ArrayList<>(envIds);
-    PageRequest<Environment> req =
-        aPageRequest().addFieldsIncluded("_id").addFilter("_id", IN, envIds.toArray()).build();
+    PageRequest<Environment> req = aPageRequest()
+                                       .addFieldsIncluded("_id")
+                                       .addFilter("accountId", SearchFilter.Operator.EQ, accountId)
+                                       .addFilter("_id", IN, envIds.toArray())
+                                       .build();
     PageResponse<Environment> res = environmentService.list(req, false, false, null);
     // This Ids are wrong
     List<String> idsPresent = res.stream().map(Environment::getUuid).collect(Collectors.toList());
     checkForInvalidIds(ids, idsPresent);
   }
 
-  private void checkProvisionerExists(Set<String> provisionersIds) {
+  private void checkProvisionerExists(Set<String> provisionersIds, String accountId) {
     if (isEmpty(provisionersIds)) {
       return;
     }
     List<String> ids = new ArrayList<>(provisionersIds);
-    PageRequest<InfrastructureProvisioner> req =
-        aPageRequest().addFieldsIncluded("_id").addFilter("_id", IN, provisionersIds.toArray()).build();
+    PageRequest<InfrastructureProvisioner> req = aPageRequest()
+                                                     .addFieldsIncluded("_id")
+                                                     .addFilter("accountId", SearchFilter.Operator.EQ, accountId)
+                                                     .addFilter("_id", IN, provisionersIds.toArray())
+                                                     .build();
     PageResponse<InfrastructureProvisioner> res = infrastructureProvisionerService.list(req);
     // This Ids are wrong
     List<String> idsPresent = res.stream().map(InfrastructureProvisioner::getUuid).collect(Collectors.toList());
     checkForInvalidIds(ids, idsPresent);
   }
 
-  private void checkWhetherIdsAreCorrect(QLAppPermissions appPermissions) {
-    checkApplicationsExists(appPermissions.getApplications().getAppIds());
+  private void checkWhetherIdsAreCorrect(QLAppPermissions appPermissions, String accountId) {
+    checkApplicationsExists(appPermissions.getApplications().getAppIds(), accountId);
     switch (appPermissions.getPermissionType()) {
       case SERVICE:
-        checkServiceExists(appPermissions.getServices().getServiceIds());
+        checkServiceExists(appPermissions.getServices().getServiceIds(), accountId);
         break;
       case ENV:
-        checkEnvExists(appPermissions.getEnvironments().getEnvIds());
+        checkEnvExists(appPermissions.getEnvironments().getEnvIds(), accountId);
         break;
       case WORKFLOW:
-        checkEnvExists(appPermissions.getWorkflows().getEnvIds());
+        checkEnvExists(appPermissions.getWorkflows().getEnvIds(), accountId);
         break;
       case PIPELINE:
-        checkEnvExists(appPermissions.getPipelines().getEnvIds());
+        checkEnvExists(appPermissions.getPipelines().getEnvIds(), accountId);
         break;
       case DEPLOYMENT:
-        checkEnvExists(appPermissions.getDeployments().getEnvIds());
+        checkEnvExists(appPermissions.getDeployments().getEnvIds(), accountId);
         break;
       case PROVISIONER:
-        checkProvisionerExists(appPermissions.getProvisioners().getProvisionerIds());
+        checkProvisionerExists(appPermissions.getProvisioners().getProvisionerIds(), accountId);
         break;
       default:
         break;
@@ -286,7 +299,7 @@ public class UserGroupPermissionValidator {
   }
 
   // it is clear form where the error is happening
-  public void validatePermission(QLUserGroupPermissions permissions) {
+  public void validatePermission(QLUserGroupPermissions permissions, String accountId) {
     // check if the userGroup Exists
     if (permissions == null || permissions.getAppPermissions() == null) {
       return;
@@ -299,7 +312,7 @@ public class UserGroupPermissionValidator {
       // Check that ids should not be supplied when filterType ALL is selected for the application
       checkAllAppPermissionFilter(appPermission);
       // Check that the user supplied the correct id
-      checkWhetherIdsAreCorrect(appPermission);
+      checkWhetherIdsAreCorrect(appPermission, accountId);
     }
   }
 }

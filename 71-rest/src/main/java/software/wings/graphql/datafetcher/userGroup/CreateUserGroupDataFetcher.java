@@ -27,7 +27,7 @@ public class CreateUserGroupDataFetcher
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT)
   protected QLCreateUserGroupPayload mutateAndFetch(QLCreateUserGroupInput parameter, MutationContext mutationContext) {
-    UserGroup userGroup = userGroupController.populateUserGroupEntity(parameter);
+    UserGroup userGroup = userGroupController.populateUserGroupEntity(parameter, mutationContext.getAccountId());
     userGroup.setAccountId(mutationContext.getAccountId());
     userGroupService.save(userGroup);
     return userGroupController.populateCreateUserGroupPayload(userGroup, parameter.getRequestId());

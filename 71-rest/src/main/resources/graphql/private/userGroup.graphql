@@ -1,8 +1,8 @@
 extend type Mutation {
   createUserGroup(input: CreateUserGroupInput!): CreateUserGroupPayload @dataFetcher(name: createUserGroup)
   updateUserGroup(input: UpdateUserGroupInput!): UpdateUserGroupPayload @dataFetcher(name: updateUserGroup)
-  updateUserGroupPermissions(userGroupId: String!, permissions: Permissions!): UserGroupPermissions
-    @dataFetcher(name: userGroupUpdatePermissions)
+  updateUserGroupPermissions(input: UpdateUserGroupPermissionsInput): UpdateUserGroupPermissionsPayload
+    @dataFetcher(name: updateUserGroupPermissions)
   deleteUserGroup(input: DeleteUserGroupInput!): DeleteUserGroupPayload @dataFetcher(name: deleteUserGroup)
 }
 
@@ -28,6 +28,12 @@ input UpdateUserGroupInput {
   userIds: [String]
   permissions: Permissions
   notificationSettings: NotificationSettingsInput
+}
+
+input UpdateUserGroupPermissionsInput {
+  requestId: String
+  userGroupId: String!
+  permissions: Permissions!
 }
 
 input DeleteUserGroupInput {
@@ -60,6 +66,11 @@ type CreateUserGroupPayload {
 type UpdateUserGroupPayload {
   requestId: String
   userGroup: UserGroup
+}
+
+type UpdateUserGroupPermissionsPayload {
+  requestId: String
+  permissions: UserGroupPermissions
 }
 
 input NotificationSettingsInput {
