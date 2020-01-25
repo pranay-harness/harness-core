@@ -98,8 +98,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<JobDetails> jobs = getBuildService(settingAttribute, appId)
                                 .getJobs(settingValue, encryptedDataDetails, Optional.ofNullable(parentJobName));
     // Sorting the job details by name before returning
-    Set<JobDetails> jobDetailsSet =
-        Sets.newTreeSet(Comparator.comparing(JobDetails::getJobName, String::compareToIgnoreCase));
+    Set<JobDetails> jobDetailsSet = Sets.newTreeSet(Comparator.comparing(JobDetails::getJobName, String::compareTo));
     jobDetailsSet.addAll(jobs);
     return jobDetailsSet;
   }
@@ -401,8 +400,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<JobDetails> jobs = getBuildService(settingAttribute)
                                 .getJobs(settingValue, encryptedDataDetails, Optional.ofNullable(parentJobName));
     // Sorting the job details by name before returning
-    Set<JobDetails> jobDetailsSet =
-        Sets.newTreeSet(Comparator.comparing(JobDetails::getJobName, String::compareToIgnoreCase));
+    Set<JobDetails> jobDetailsSet = Sets.newTreeSet(Comparator.comparing(JobDetails::getJobName, String::compareTo));
     jobDetailsSet.addAll(jobs);
     return jobDetailsSet;
   }
