@@ -122,11 +122,14 @@ public class UserGroupPermissionTest extends GraphQLTest {
     return new HashSet<>(permissionTypeList);
   }
 
-  private String createAccountPermissionGQL() {
+  private String createAccountPermissionGQL(String userGroupId) {
     String accountPermissions =
         $GQL(/*
 {
-accountPermissions : [
+userGroupId: "%s",
+permissions: {
+accountPermissions : {
+accountPermissionTypes: [
 CREATE_AND_DELETE_APPLICATION,
 READ_USERS_AND_GROUPS,
 MANAGE_USERS_AND_GROUPS,
@@ -135,7 +138,9 @@ ADMINISTER_OTHER_ACCOUNT_FUNCTIONS,
 VIEW_AUDITS,
 MANAGE_TAGS
 ]
-}*/);
+}
+}
+}*/ userGroupId);
     return accountPermissions;
   }
 
@@ -148,10 +153,14 @@ MANAGE_TAGS
     String mutation =
         $GQL(/*
 mutation {
-    updateUserGroupPermissions(userGroupId: "%s", permissions : %s){
-        accountPermissions
+    updateUserGroupPermissions(input: %s){
+      permissions{
+        accountPermissions{
+          accountPermissionTypes
+         }
+       }
     }
-}*/ userGroupId, permissionsVariable);
+}*/ permissionsVariable);
     return mutation;
   }
 
@@ -166,7 +175,7 @@ mutation {
     UserGroup userGroup = createUserGroup(accountPermissions, null);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
-    String accountPermissionsString = createAccountPermissionGQL();
+    String accountPermissionsString = createAccountPermissionGQL(userGroupId);
     String mutationAccountPermissions = createMutation(userGroupId, accountPermissionsString);
 
     {
@@ -196,22 +205,25 @@ mutation {
     userGroupService.delete(accountId, userGroupId, true);
   }
 
-  private String createAllEntityAllAppsPermissionGQL() {
+  private String createAllEntityAllAppsPermissionGQL(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
+       userGroupId: "%s",
+       permissions: {
        appPermissions :
-     		             [
+                             [
                           {
                              permissionType : ALL,
                               applications:    {
                                                   filterType: ALL
-											   },
+                                                                                           },
                               actions:        [
                                                 CREATE,DELETE,READ]
-              			  		 }
-              			  ]
-    }*/);
+                                                 }
+                                  ]
+        }
+    }*/ userGroupId);
 
     return appPermissionString;
   }
@@ -249,7 +261,7 @@ mutation {
     UserGroup userGroup = createUserGroup(null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
-    String appPermissionString = createAllEntityAllAppsPermissionGQL();
+    String appPermissionString = createAllEntityAllAppsPermissionGQL(userGroupId);
     testAppPermissions(userGroup, appPermissionString);
   }
 
@@ -257,11 +269,13 @@ mutation {
     return String.format("appIds: [\"%s\", \"%s\"]", application1.getUuid(), application2.getUuid());
   }
 
-  private String createAllEntitySelectedAppsPermissionGQL() {
+  private String createAllEntitySelectedAppsPermissionGQL(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
-       appPermissions :
+       userGroupId: "%s",
+       permissions: {
+            appPermissions :
                             [
                               {
                               permissionType : ALL,
@@ -271,7 +285,8 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                               }
                             ]
-    }*/ getAppIdsFilter());
+       }
+    }*/ userGroupId, getAppIdsFilter());
 
     return appPermissionString;
   }
@@ -286,15 +301,17 @@ mutation {
     UserGroup userGroup = createUserGroup(null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
-    String appPermissionString = createAllEntitySelectedAppsPermissionGQL();
+    String appPermissionString = createAllEntitySelectedAppsPermissionGQL(userGroupId);
     testAppPermissions(userGroup, appPermissionString);
   }
 
-  private String createServiceAllAppsPermissionGQL() {
+  private String createServiceAllAppsPermissionGQL(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
-       appPermissions :
+       userGroupId: "%s",
+       permissions: {
+          appPermissions :
                           [
                           {
                              permissionType : SERVICE,
@@ -307,7 +324,8 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                                   }
                                  ]
-}*/);
+       }
+}*/ userGroupId);
 
     return appPermissionString;
   }
@@ -334,7 +352,7 @@ mutation {
     UserGroup userGroup = createUserGroup(null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
-    String appPermissionString = createServiceAllAppsPermissionGQL();
+    String appPermissionString = createServiceAllAppsPermissionGQL(userGroupId);
     testAppPermissions(userGroup, appPermissionString);
   }
 
@@ -342,11 +360,13 @@ mutation {
     return String.format("serviceIds: [\"%s\", \"%s\"]", service1.getUuid(), service2.getUuid());
   }
 
-  private String createServiceWithIdPermissionGQL() {
+  private String createServiceWithIdPermissionGQL(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
-       appPermissions :
+       userGroupId: "%s",
+       permissions: {
+           appPermissions :
                              [
                           {
                              permissionType : SERVICE,
@@ -359,7 +379,8 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                                   }
                                  ]
-}*/ getAppIdsFilter(), getServiceIds());
+       }
+}*/ userGroupId, getAppIdsFilter(), getServiceIds());
 
     return appPermissionString;
   }
@@ -385,14 +406,16 @@ mutation {
     UserGroup userGroup = createUserGroup(null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
-    String appPermissionString = createServiceWithIdPermissionGQL();
+    String appPermissionString = createServiceWithIdPermissionGQL(userGroupId);
     testAppPermissions(userGroup, appPermissionString);
   }
 
-  private String createEnvAllAppsPermissionGQL() {
+  private String createEnvAllAppsPermissionGQL(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
+       userGroupId: "%s",
+       permissions: {
        appPermissions :
                              [
                           {
@@ -407,7 +430,8 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                                   }
                                  ]
-}*/);
+      }
+}*/ userGroupId);
 
     return appPermissionString;
   }
@@ -436,7 +460,7 @@ mutation {
     UserGroup userGroup = createUserGroup(null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
-    String appPermissionString = createEnvAllAppsPermissionGQL();
+    String appPermissionString = createEnvAllAppsPermissionGQL(userGroupId);
     testAppPermissions(userGroup, appPermissionString);
   }
 
@@ -444,11 +468,13 @@ mutation {
     return String.format("envIds: [\"%s\", \"%s\"]", environment1.getUuid(), environment2.getUuid());
   }
 
-  private String createEnvWithIdsPermissionGQL() {
+  private String createEnvWithIdsPermissionGQL(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
-       appPermissions :
+       userGroupId: "%s",
+       permissions: {
+          appPermissions :
                              [
                           {
                              permissionType : ENV,
@@ -461,7 +487,8 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                                   }
                                  ]
-}*/ getAppIdsFilter(), getEnvFilter());
+        }
+}*/ userGroupId, getAppIdsFilter(), getEnvFilter());
 
     return appPermissionString;
   }
@@ -490,14 +517,16 @@ mutation {
     UserGroup userGroup = createUserGroup(null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
-    String appPermissionString = createEnvWithIdsPermissionGQL();
+    String appPermissionString = createEnvWithIdsPermissionGQL(userGroupId);
     testAppPermissions(userGroup, appPermissionString);
   }
 
-  private String createWorkflowAllAppsPermissionGQL() {
+  private String createWorkflowAllAppsPermissionGQL(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
+       userGroupId: "%s",
+       permissions: {
        appPermissions :
                              [
                           {
@@ -512,7 +541,8 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                                   }
                                  ]
-}*/);
+       }
+}*/ userGroupId);
 
     return appPermissionString;
   }
@@ -541,15 +571,17 @@ mutation {
     UserGroup userGroup = createUserGroup(null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
-    String appPermissionString = createWorkflowAllAppsPermissionGQL();
+    String appPermissionString = createWorkflowAllAppsPermissionGQL(userGroupId);
     testAppPermissions(userGroup, appPermissionString);
   }
 
-  private String createDeploymentAllAppsPermissionGQL() {
+  private String createDeploymentAllAppsPermissionGQL(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
-       appPermissions :
+       userGroupId: "%s",
+       permissions: {
+          appPermissions :
                              [
                           {
                              permissionType : DEPLOYMENT ,
@@ -563,7 +595,8 @@ mutation {
                               actions:        [READ]
                                   }
                                  ]
-}*/);
+        }
+}*/ userGroupId);
 
     return appPermissionString;
   }
@@ -592,14 +625,16 @@ mutation {
     UserGroup userGroup = createUserGroup(null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
-    String appPermissionString = createDeploymentAllAppsPermissionGQL();
+    String appPermissionString = createDeploymentAllAppsPermissionGQL(userGroupId);
     testAppPermissions(userGroup, appPermissionString);
   }
 
-  private String createPiplelineAllAppsPermissionGQL() {
+  private String createPiplelineAllAppsPermissionGQL(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
+       userGroupId: "%s",
+       permissions: {
        appPermissions :
                              [
                           {
@@ -614,7 +649,8 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                                   }
                                  ]
-}*/);
+       }
+}*/ userGroupId);
 
     return appPermissionString;
   }
@@ -642,14 +678,16 @@ mutation {
     UserGroup userGroup = createUserGroup(null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
-    String appPermissionString = createPiplelineAllAppsPermissionGQL();
+    String appPermissionString = createPiplelineAllAppsPermissionGQL(userGroupId);
     testAppPermissions(userGroup, appPermissionString);
   }
 
-  private String createProvisionerseAllAppsPermissionGQL() {
+  private String createProvisionerseAllAppsPermissionGQL(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
+       userGroupId: "%s",
+       permissions: {
        appPermissions :
                              [
                           {
@@ -663,7 +701,8 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                                   }
                                  ]
-}*/);
+       }
+}*/ userGroupId);
 
     return appPermissionString;
   }
@@ -689,7 +728,7 @@ mutation {
     UserGroup userGroup = createUserGroup(null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
-    String appPermissionString = createProvisionerseAllAppsPermissionGQL();
+    String appPermissionString = createProvisionerseAllAppsPermissionGQL(userGroupId);
     testAppPermissions(userGroup, appPermissionString);
   }
 
@@ -697,10 +736,12 @@ mutation {
     return String.format("provisionerIds: [\"%s\"]", infrastructureProvisioner.getUuid());
   }
 
-  private String createListOfAppPermissionsGQL() {
+  private String createListOfAppPermissionsGQL(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
+       userGroupId: "%s",
+       permissions: {
        appPermissions :
                           [
                             {
@@ -734,7 +775,9 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                              }
                            ]
-}*/ getAppIdsFilter(), getprovisionerFilter(), getAppIdsFilter(), getEnvFilter(), getAppIdsFilter(), getEnvFilter());
+     }
+}*/ userGroupId, getAppIdsFilter(), getprovisionerFilter(), getAppIdsFilter(), getEnvFilter(), getAppIdsFilter(),
+        getEnvFilter());
     return appPermissionString;
   }
 
@@ -782,7 +825,7 @@ mutation {
     UserGroup userGroup = createUserGroup(null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
-    String appPermissionString = createListOfAppPermissionsGQL();
+    String appPermissionString = createListOfAppPermissionsGQL(userGroupId);
     testAppPermissions(userGroup, appPermissionString);
   }
 
@@ -795,11 +838,13 @@ mutation {
     return result;
   }
 
-  private String createAppPermissionWithoutPermissionType() {
+  private String createAppPermissionWithoutPermissionType(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
-       appPermissions :
+       userGroupId: "%s",
+       permissions: {
+         appPermissions :
                              [
                           {
                              applications   : {
@@ -812,7 +857,8 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                                   }
                                  ]
-}*/);
+       }
+}*/ userGroupId);
 
     return appPermissionString;
   }
@@ -831,16 +877,18 @@ mutation {
   @Category({GraphQLTests.class, UnitTests.class})
   public void testWhenPermissionTypeNotGiven() {
     UserGroup userGroup = createUserGroup();
-    String appPermissionString = createAppPermissionWithoutPermissionType();
+    String appPermissionString = createAppPermissionWithoutPermissionType(userGroup.getUuid());
     ExecutionResult result = doGraphQLRequest(userGroup, appPermissionString);
     assertThat(result.getErrors().size()).isEqualTo(1);
   }
 
-  private String createAppPermissionWithoutApplications() {
+  private String createAppPermissionWithoutApplications(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
-       appPermissions :
+       userGroupId: "%s",
+       permissions: {
+          appPermissions :
                              [
                           {
                              permissionType :PROVISIONER,
@@ -850,7 +898,8 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                                   }
                                  ]
-}*/);
+       }
+}*/ userGroupId);
 
     return appPermissionString;
   }
@@ -862,16 +911,18 @@ mutation {
   @Category({GraphQLTests.class, UnitTests.class})
   public void testWhenApplicationsNotGiven() {
     UserGroup userGroup = createUserGroup();
-    String appPermissionString = createAppPermissionWithoutApplications();
+    String appPermissionString = createAppPermissionWithoutApplications(userGroup.getUuid());
     ExecutionResult result = doGraphQLRequest(userGroup, appPermissionString);
     assertThat(result.getErrors().size()).isEqualTo(1);
   }
 
-  private String createAppPermissionWithIncorrectFilter() {
+  private String createAppPermissionWithIncorrectFilter(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
-       appPermissions :
+       userGroupId: "%s",
+       permissions: {
+         appPermissions :
                              [
                           {
                              permissionType : ENV ,
@@ -885,7 +936,8 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                                   }
                                  ]
-}*/);
+       }
+}*/ userGroupId);
 
     return appPermissionString;
   }
@@ -895,7 +947,7 @@ mutation {
   @Category({GraphQLTests.class, UnitTests.class})
   public void testWhenCorrectFilterNotGiven() {
     UserGroup userGroup = createUserGroup();
-    String appPermissionString = createAppPermissionWithIncorrectFilter();
+    String appPermissionString = createAppPermissionWithIncorrectFilter(userGroup.getUuid());
     ExecutionResult result = doGraphQLRequest(userGroup, appPermissionString);
     assertThat(result.getErrors().size()).isEqualTo(1);
 
@@ -903,11 +955,13 @@ mutation {
         .isEqualTo(GenericErrorString + "Invalid filter given in ENV permissionType");
   }
 
-  private String createDeploymentWithWrongActionsGQL() {
+  private String createDeploymentWithWrongActionsGQL(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
-       appPermissions :
+       userGroupId: "%s",
+       permissions: {
+         appPermissions :
                              [
                           {
                              permissionType : DEPLOYMENT ,
@@ -921,7 +975,8 @@ mutation {
                               actions:        [DELETE,READ]
                                   }
                                  ]
-}*/);
+       }
+}*/ userGroupId);
     return appPermissionString;
   }
 
@@ -930,7 +985,7 @@ mutation {
   @Category({GraphQLTests.class, UnitTests.class})
   public void testInvalidActionInDeployment() {
     UserGroup userGroup = createUserGroup();
-    String appPermissionString = createDeploymentWithWrongActionsGQL();
+    String appPermissionString = createDeploymentWithWrongActionsGQL(userGroup.getUuid());
     ExecutionResult result = doGraphQLRequest(userGroup, appPermissionString);
     assertThat(result.getErrors().size()).isEqualTo(1);
 
@@ -938,11 +993,13 @@ mutation {
         .isEqualTo(GenericErrorString + "Invalid action DELETE for the DEPLOYMENT permission type");
   }
 
-  private String createAllAppWithProvisionerIdPermission() {
+  private String createAllAppWithProvisionerIdPermission(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
-       appPermissions :
+       userGroupId: "%s",
+       permissions: {
+          appPermissions :
                        [
                           {
                              permissionType :PROVISIONER,
@@ -955,7 +1012,8 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                            }
                         ]
-}*/);
+       }
+}*/ userGroupId);
 
     return appPermissionString;
   }
@@ -965,7 +1023,7 @@ mutation {
   @Category({GraphQLTests.class, UnitTests.class})
   public void testNoIdsForAllAppsPermission() {
     UserGroup userGroup = createUserGroup();
-    String appPermissionString = createAllAppWithProvisionerIdPermission();
+    String appPermissionString = createAllAppWithProvisionerIdPermission(userGroup.getUuid());
     ExecutionResult result = doGraphQLRequest(userGroup, appPermissionString);
     assertThat(result.getErrors().size()).isEqualTo(1);
 
@@ -974,11 +1032,13 @@ mutation {
             + "PROVISIONER Ids should not be supplied with AppFilter=\"ALL Applications\" for filterType PROVISIONER");
   }
 
-  private String createPermissionWithInvalidAppId() {
+  private String createPermissionWithInvalidAppId(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
-       appPermissions :
+       userGroupId: "%s",
+       permissions: {
+          appPermissions :
                         [
                           {
                              permissionType : ENV,
@@ -992,7 +1052,8 @@ mutation {
                               actions:        [CREATE,DELETE,READ]
                            }
                          ]
-}*/);
+       }
+}*/ userGroupId);
 
     return appPermissionString;
   }
@@ -1002,7 +1063,7 @@ mutation {
   @Category({GraphQLTests.class, UnitTests.class})
   public void testWhetherAppIdIsCorrect() {
     UserGroup userGroup = createUserGroup();
-    String appPermissionString = createPermissionWithInvalidAppId();
+    String appPermissionString = createPermissionWithInvalidAppId(userGroup.getUuid());
     ExecutionResult result = doGraphQLRequest(userGroup, appPermissionString);
     assertThat(result.getErrors().size()).isEqualTo(1);
 
@@ -1010,11 +1071,13 @@ mutation {
         .isEqualTo(GenericErrorString + "Invalid id/s abc provided in the request");
   }
 
-  private String createPermissionWithInvalidEnvId() {
+  private String createPermissionWithInvalidEnvId(String userGroupId) {
     String appPermissionString = $GQL(
         /*
 {
-       appPermissions :
+       userGroupId: "%s",
+       permissions: {
+          appPermissions :
                         [
                           {
                              permissionType : PIPELINE ,
@@ -1027,7 +1090,8 @@ mutation {
                              actions:        [CREATE,DELETE,READ]
                            }
                          ]
-}*/ getAppIdsFilter());
+      }
+}*/ userGroupId, getAppIdsFilter());
 
     return appPermissionString;
   }
@@ -1037,7 +1101,7 @@ mutation {
   @Category({GraphQLTests.class, UnitTests.class})
   public void testWhetherEnvIdIsCorrect() {
     UserGroup userGroup = createUserGroup();
-    String appPermissionString = createPermissionWithInvalidEnvId();
+    String appPermissionString = createPermissionWithInvalidEnvId(userGroup.getUuid());
     ExecutionResult result = doGraphQLRequest(userGroup, appPermissionString);
     assertThat(result.getErrors().size()).isEqualTo(1);
 

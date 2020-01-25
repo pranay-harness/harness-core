@@ -146,7 +146,9 @@ public class UserGroupTest extends GraphQLTest {
               name: "gqltests",
               description: "descc",
               permissions: {
-                   accountPermissions: ADMINISTER_OTHER_ACCOUNT_FUNCTIONS
+                   accountPermissions: {
+                    accountPermissionTypes: ADMINISTER_OTHER_ACCOUNT_FUNCTIONS
+                  }
               },
               userGroupId : "%s",
               notificationSettings: {

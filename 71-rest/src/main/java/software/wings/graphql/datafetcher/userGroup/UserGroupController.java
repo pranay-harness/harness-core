@@ -162,8 +162,8 @@ public class UserGroupController {
     return userGroupIds.stream().map(id -> userService.get(id)).collect(Collectors.toList());
   }
 
-  public UserGroup populateUserGroupEntity(QLCreateUserGroupInput userGroupInput) {
-    userGroupPermissionValidator.validatePermission(userGroupInput.getPermissions());
+  public UserGroup populateUserGroupEntity(QLCreateUserGroupInput userGroupInput, String accountId) {
+    userGroupPermissionValidator.validatePermission(userGroupInput.getPermissions(), accountId);
     AccountPermissions accountPermissions = populateUserGroupAccountPermissionEntity(userGroupInput.getPermissions());
     Set<AppPermission> appPermissions = populateUserGroupAppPermissionEntity(userGroupInput.getPermissions());
     validateTheUserIds(userGroupInput.getUserIds());

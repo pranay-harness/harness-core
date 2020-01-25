@@ -50,7 +50,7 @@ enum DataFetcherEnum {
   createApplication
   updateApplication
   deleteApplication
-  userGroupUpdatePermissions
+  updateUserGroupPermissions
   createUser
   updateUser
   deleteUser

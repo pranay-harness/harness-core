@@ -54,7 +54,8 @@ public class UpdateUserGroupDataFetcher
 
     // Update Permissions
     if (userGroupInput.getPermissions().hasBeenSet()) {
-      userGroupPermissionValidator.validatePermission(userGroupInput.getPermissions().getValue().orElse(null));
+      userGroupPermissionValidator.validatePermission(
+          userGroupInput.getPermissions().getValue().orElse(null), mutationContext.getAccountId());
       existingUserGroup.setAccountPermissions(UserGroupPermissionsController.populateUserGroupAccountPermissionEntity(
           userGroupInput.getPermissions().getValue().orElse(null)));
       existingUserGroup.setAppPermissions(UserGroupPermissionsController.populateUserGroupAppPermissionEntity(

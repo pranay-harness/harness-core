@@ -10,5 +10,5 @@ import java.util.Set;
 @Builder
 @FieldNameConstants(innerTypeName = "QLAccountPermissionsKeys")
 public class QLAccountPermissions {
-  private Set<QLAccountPermissionType> accountPermissions;
+  private Set<QLAccountPermissionType> accountPermissionTypes;
 }

@@ -38,6 +38,7 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.graphql.schema.type.permissions.QLAccountPermissionType;
+import software.wings.graphql.schema.type.permissions.QLAccountPermissions;
 import software.wings.graphql.schema.type.permissions.QLActions;
 import software.wings.graphql.schema.type.permissions.QLAppFilter;
 import software.wings.graphql.schema.type.permissions.QLAppPermissions;
@@ -298,10 +299,12 @@ public class UserGroupPermissionsController {
 
   // Populate the AccountPermission entity
   public static AccountPermissions populateUserGroupAccountPermissionEntity(QLUserGroupPermissions permissions) {
-    if (permissions == null) {
+    if (permissions == null || permissions.getAccountPermissions() == null) {
       return null;
     }
-    Set<QLAccountPermissionType> accountPermissionsInput = permissions.getAccountPermissions();
+
+    Set<QLAccountPermissionType> accountPermissionsInput =
+        permissions.getAccountPermissions().getAccountPermissionTypes();
     if (accountPermissionsInput == null) {
       return null;
     }
@@ -519,7 +522,7 @@ public class UserGroupPermissionsController {
     }
   }
 
-  public static Set<QLAccountPermissionType> populateUserGroupAccountPermission(AccountPermissions permissions) {
+  public static QLAccountPermissions populateUserGroupAccountPermission(AccountPermissions permissions) {
     Set<QLAccountPermissionType> outputPermissions = null;
     if (permissions == null) {
       return null;
@@ -530,12 +533,11 @@ public class UserGroupPermissionsController {
                               .map(UserGroupPermissionsController::mapAccountPermissionsToOutput)
                               .collect(Collectors.toSet());
     }
-    return outputPermissions;
+    return QLAccountPermissions.builder().accountPermissionTypes(outputPermissions).build();
   }
 
   public static QLGroupPermissions populateUserGroupPermissions(UserGroup userGroup) {
-    Set<QLAccountPermissionType> accountPermissions =
-        populateUserGroupAccountPermission(userGroup.getAccountPermissions());
+    QLAccountPermissions accountPermissions = populateUserGroupAccountPermission(userGroup.getAccountPermissions());
     List<QLAppPermissions> appPermissions = populateUserGroupAppPermissionOutput(userGroup.getAppPermissions());
     return QLGroupPermissions.builder().appPermissions(appPermissions).accountPermissions(accountPermissions).build();
   }
