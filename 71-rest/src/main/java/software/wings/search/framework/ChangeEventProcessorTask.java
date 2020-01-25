@@ -41,8 +41,8 @@ public class ChangeEventProcessorTask implements Runnable {
   }
 
   public void run() {
-    executorService =
-        Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("change-processor-%d").build());
+    executorService = Executors.newFixedThreadPool(
+        searchEntities.size(), new ThreadFactoryBuilder().setNameFormat("change-processor-%d").build());
     try {
       boolean isRunningSuccessfully = true;
       while (isRunningSuccessfully) {

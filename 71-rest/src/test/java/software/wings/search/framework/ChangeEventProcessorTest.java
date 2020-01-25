@@ -35,7 +35,6 @@ public class ChangeEventProcessorTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testProcessChange() {
-    changeEventProcessor.startProcessingChangeEvents();
     SearchEntity searchEntity = mock(SearchEntity.class);
     ChangeHandler changeHandler = mock(ChangeHandler.class);
     Class<? extends PersistentEntity> sourceClass = PersistentEntity.class;
@@ -46,6 +45,7 @@ public class ChangeEventProcessorTest extends WingsBaseTest {
     subscriptionEntities.add(sourceClass);
     searchEntities.add(searchEntity);
 
+    changeEventProcessor.startProcessingChangeEvents();
     when(searchEntity.getSubscriptionEntities()).thenReturn(subscriptionEntities);
     when(searchEntity.getChangeHandler()).thenReturn(changeHandler);
     when(changeHandler.handleChange(changeEvent)).thenReturn(true).thenThrow(new RuntimeException("Dummy error"));
