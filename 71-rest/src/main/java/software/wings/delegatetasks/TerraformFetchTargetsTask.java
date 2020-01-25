@@ -1,5 +1,7 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
@@ -48,6 +50,9 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     try {
       GitConfig gitConfig = parameters.getSourceRepo();
+      if (isNotEmpty(parameters.getSourceRepoBranch())) {
+        gitConfig.setBranch(parameters.getSourceRepoBranch());
+      }
       GitOperationContext gitOperationContext = gitUtilsDelegate.cloneRepo(gitConfig,
           GitFileConfig.builder().connectorId(parameters.getSourceRepoSettingId()).build(),
           parameters.getSourceRepoEncryptionDetails());
