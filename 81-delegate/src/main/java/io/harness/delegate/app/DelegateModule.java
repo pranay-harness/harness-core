@@ -290,8 +290,8 @@ public class DelegateModule extends DependencyModule {
             new ThreadFactoryBuilder().setNameFormat("UpgradeCheck-Thread").setPriority(Thread.MAX_PRIORITY).build()));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(
-            1, new ThreadFactoryBuilder().setNameFormat("TaskPoll-Thread").setPriority(Thread.MAX_PRIORITY).build()));
+        .toInstance(new ScheduledThreadPoolExecutor(4,
+            new ThreadFactoryBuilder().setNameFormat("TaskPoll-Thread-%d").setPriority(Thread.MAX_PRIORITY).build()));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("inputExecutor"))
         .toInstance(new ScheduledThreadPoolExecutor(1,
