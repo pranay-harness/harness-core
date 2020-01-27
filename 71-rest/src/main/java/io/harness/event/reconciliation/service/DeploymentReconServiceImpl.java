@@ -22,7 +22,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.api.DeploymentTimeSeriesEvent;
@@ -303,22 +302,16 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
   }
 
   protected DeploymentReconRecord getLatestDeploymentReconRecord(@NotNull String accountId) {
-    MorphiaIterator<DeploymentReconRecord, DeploymentReconRecord> iterator = null;
-    try {
-      iterator = wingsPersistence.createQuery(DeploymentReconRecord.class)
-                     .field(DeploymentReconRecordKeys.accountId)
-                     .equal(accountId)
-                     .order(Sort.descending(DeploymentReconRecordKeys.durationEndTs))
-                     .fetch();
-      if (iterator.hasNext()) {
-        return iterator.next();
-      } else {
+    try (HIterator<DeploymentReconRecord> iterator =
+             new HIterator<>(wingsPersistence.createQuery(DeploymentReconRecord.class)
+                                 .field(DeploymentReconRecordKeys.accountId)
+                                 .equal(accountId)
+                                 .order(Sort.descending(DeploymentReconRecordKeys.durationEndTs))
+                                 .fetch())) {
+      if (!iterator.hasNext()) {
         return null;
       }
-    } finally {
-      if (iterator != null) {
-        iterator.close();
-      }
+      return iterator.next();
     }
   }
 

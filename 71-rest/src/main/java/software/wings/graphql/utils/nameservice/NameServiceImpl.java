@@ -4,6 +4,7 @@ import static java.util.function.Function.identity;
 
 import com.google.inject.Inject;
 
+import io.harness.persistence.HIterator;
 import io.harness.persistence.HQuery;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -79,86 +80,101 @@ public class NameServiceImpl implements NameService {
   private NameResult getAppNames(Set<String> ids) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     Map<String, String> names = new HashMap<>();
-    wingsPersistence.createQuery(Application.class, HQuery.excludeAuthority)
-        .project(ApplicationKeys.name, true)
-        .field(ApplicationKeys.uuid)
-        .in(ids)
-        .fetch()
-        .forEachRemaining(application -> { names.put(application.getUuid(), application.getName()); });
+    try (HIterator<Application> applications =
+             new HIterator<>(wingsPersistence.createQuery(Application.class, HQuery.excludeAuthority)
+                                 .project(ApplicationKeys.name, true)
+                                 .field(ApplicationKeys.uuid)
+                                 .in(ids)
+                                 .fetch())) {
+      applications.forEachRemaining(application -> { names.put(application.getUuid(), application.getName()); });
+    }
+
     return nameResultBuilder.idNameMap(names).build();
   }
 
   private NameResult getServiceNames(Set<String> ids) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     Map<String, String> names = new HashMap<>();
-    wingsPersistence.createQuery(Service.class, HQuery.excludeAuthority)
-        .project(ServiceKeys.name, true)
-        .field(ServiceKeys.uuid)
-        .in(ids)
-        .fetch()
-        .forEachRemaining(service -> { names.put(service.getUuid(), service.getName()); });
+    try (HIterator<Service> services =
+             new HIterator<>(wingsPersistence.createQuery(Service.class, HQuery.excludeAuthority)
+                                 .project(ServiceKeys.name, true)
+                                 .field(ServiceKeys.uuid)
+                                 .in(ids)
+                                 .fetch())) {
+      services.forEachRemaining(service -> { names.put(service.getUuid(), service.getName()); });
+    }
     return nameResultBuilder.idNameMap(names).build();
   }
 
   private NameResult getEnvironmentNames(Set<String> ids) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     Map<String, String> names = new HashMap<>();
-    wingsPersistence.createQuery(Environment.class, HQuery.excludeAuthority)
-        .project(EnvironmentKeys.name, true)
-        .field(EnvironmentKeys.uuid)
-        .in(ids)
-        .fetch()
-        .forEachRemaining(environment -> { names.put(environment.getUuid(), environment.getName()); });
+    try (HIterator<Environment> environments =
+             new HIterator<>(wingsPersistence.createQuery(Environment.class, HQuery.excludeAuthority)
+                                 .project(EnvironmentKeys.name, true)
+                                 .field(EnvironmentKeys.uuid)
+                                 .in(ids)
+                                 .fetch())) {
+      environments.forEachRemaining(environment -> { names.put(environment.getUuid(), environment.getName()); });
+    }
     return nameResultBuilder.idNameMap(names).build();
   }
 
   private NameResult getCloudProviderNames(Set<String> ids) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     Map<String, String> names = new HashMap<>();
-    wingsPersistence.createQuery(SettingAttribute.class, HQuery.excludeAuthority)
-        .field(SettingAttributeKeys.category)
-        .equal(SettingCategory.CLOUD_PROVIDER)
-        .project(SettingAttributeKeys.name, true)
-        .field(SettingAttributeKeys.uuid)
-        .in(ids)
-        .fetch()
-        .forEachRemaining(cloudProvider -> { names.put(cloudProvider.getUuid(), cloudProvider.getName()); });
+    try (HIterator<SettingAttribute> settingAttributes =
+             new HIterator<>(wingsPersistence.createQuery(SettingAttribute.class, HQuery.excludeAuthority)
+                                 .field(SettingAttributeKeys.category)
+                                 .equal(SettingCategory.CLOUD_PROVIDER)
+                                 .project(SettingAttributeKeys.name, true)
+                                 .field(SettingAttributeKeys.uuid)
+                                 .in(ids)
+                                 .fetch())) {
+      settingAttributes.forEachRemaining(
+          cloudProvider -> { names.put(cloudProvider.getUuid(), cloudProvider.getName()); });
+    }
     return nameResultBuilder.idNameMap(names).build();
   }
 
   private NameResult getTriggerNames(Set<String> ids) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     Map<String, String> names = new HashMap<>();
-    wingsPersistence.createQuery(Trigger.class, HQuery.excludeAuthority)
-        .project(TriggerKeys.name, true)
-        .field(TriggerKeys.uuid)
-        .in(ids)
-        .fetch()
-        .forEachRemaining(trigger -> { names.put(trigger.getUuid(), trigger.getName()); });
+    try (HIterator<Trigger> triggers =
+             new HIterator<>(wingsPersistence.createQuery(Trigger.class, HQuery.excludeAuthority)
+                                 .project(TriggerKeys.name, true)
+                                 .field(TriggerKeys.uuid)
+                                 .in(ids)
+                                 .fetch())) {
+      triggers.forEachRemaining(trigger -> { names.put(trigger.getUuid(), trigger.getName()); });
+    }
     return nameResultBuilder.idNameMap(names).build();
   }
 
   private NameResult getUserNames(Set<String> ids) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     Map<String, String> names = new HashMap<>();
-    wingsPersistence.createQuery(User.class, HQuery.excludeAuthority)
-        .project(UserKeys.name, true)
-        .field("_id")
-        .in(ids)
-        .fetch()
-        .forEachRemaining(user -> { names.put(user.getUuid(), user.getName()); });
+    try (HIterator<User> users = new HIterator<>(wingsPersistence.createQuery(User.class, HQuery.excludeAuthority)
+                                                     .project(UserKeys.name, true)
+                                                     .field("_id")
+                                                     .in(ids)
+                                                     .fetch())) {
+      users.forEachRemaining(user -> { names.put(user.getUuid(), user.getName()); });
+    }
     return nameResultBuilder.idNameMap(names).build();
   }
 
   private NameResult getWorkflowNames(Set<String> ids) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     Map<String, String> names = new HashMap<>();
-    wingsPersistence.createQuery(Workflow.class, HQuery.excludeAuthority)
-        .project(WorkflowKeys.name, true)
-        .field(WorkflowKeys.uuid)
-        .in(ids)
-        .fetch()
-        .forEachRemaining(user -> { names.put(user.getUuid(), user.getName()); });
+    try (HIterator<Workflow> workflows =
+             new HIterator<>(wingsPersistence.createQuery(Workflow.class, HQuery.excludeAuthority)
+                                 .project(WorkflowKeys.name, true)
+                                 .field(WorkflowKeys.uuid)
+                                 .in(ids)
+                                 .fetch())) {
+      workflows.forEachRemaining(workflow -> { names.put(workflow.getUuid(), workflow.getName()); });
+    }
     return nameResultBuilder.idNameMap(names).build();
   }
 }
