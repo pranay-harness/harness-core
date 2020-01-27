@@ -37,7 +37,7 @@ import software.wings.service.intfc.security.SecretManager;
 @Slf4j
 public class JiraHelperService {
   private static final String WORKFLOW_EXECUTION_ID = "workflow";
-  private static final long JIRA_DELEGATE_TIMEOUT_MILLIS = 60 * 1000;
+  private static final long JIRA_DELEGATE_TIMEOUT_MILLIS = 60 * 1000 * 5;
   @Inject private DelegateServiceImpl delegateService;
   @Inject @Transient private transient SecretManager secretManager;
   @Inject SettingsService settingService;
