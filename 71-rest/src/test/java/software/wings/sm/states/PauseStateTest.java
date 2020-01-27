@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -31,6 +32,7 @@ import software.wings.api.EmailStateExecutionData;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContextImpl;
@@ -39,6 +41,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Created by peeyushaggarwal on 6/7/16.
@@ -57,6 +60,7 @@ public class PauseStateTest extends WingsBaseTest {
 
   @Mock private EmailNotificationService emailNotificationService;
   @Mock private AccountService accountService;
+  @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   @InjectMocks private PauseState pauseState = new PauseState(stateName);
 
@@ -79,6 +83,7 @@ public class PauseStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("env", anEnvironment().uuid(ENV_ID).build());
     on(workflowStandardParams).set("configuration", configuration);
     on(workflowStandardParams).set("accountService", accountService);
+    on(workflowStandardParams).set("subdomainUrlHelper", subdomainUrlHelper);
 
     context.pushContextElement(workflowStandardParams);
 
@@ -88,6 +93,8 @@ public class PauseStateTest extends WingsBaseTest {
     PortalConfig portalConfig = new PortalConfig();
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
+    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
+    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
   }
 
   /**

@@ -28,6 +28,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.alert.AlertType;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.WorkflowStandardParams;
@@ -39,6 +40,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -50,6 +52,7 @@ public class NotificationMessageResolver {
   private Map<String, ChannelTemplate> templateMap;
 
   @Inject private MainConfiguration configuration;
+  @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
   private final DateFormat dateFormat = new SimpleDateFormat("MMM d");
   private final DateFormat timeFormat = new SimpleDateFormat("HH:mm z");
 
@@ -326,10 +329,16 @@ public class NotificationMessageResolver {
     }
   }
 
-  public static String buildAbsoluteUrl(MainConfiguration configuration, String fragment) {
-    String baseUrl = configuration.getPortal().getUrl().trim();
-    if (!baseUrl.endsWith("/")) {
-      baseUrl += "/";
+  public static String buildAbsoluteUrl(
+      MainConfiguration configuration, String fragment, Optional<String> subdomainUrl) {
+    String baseUrl = null;
+    if (subdomainUrl.isPresent()) {
+      baseUrl = subdomainUrl.get();
+    } else {
+      baseUrl = configuration.getPortal().getUrl().trim();
+      if (!baseUrl.endsWith("/")) {
+        baseUrl += "/";
+      }
     }
     try {
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
@@ -342,11 +351,14 @@ public class NotificationMessageResolver {
   }
 
   private String generateUrl(Application app, ExecutionContext context, AlertType alertType) {
+    Optional<String> subdomainUrl =
+        subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(context.getAccountId()));
     if (alertType == AlertType.ApprovalNeeded) {
       if (context.getWorkflowType() == WorkflowType.PIPELINE) {
         return buildAbsoluteUrl(configuration,
             format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details", app.getAccountId(),
-                app.getUuid(), context.getWorkflowExecutionId()));
+                app.getUuid(), context.getWorkflowExecutionId()),
+            subdomainUrl);
       } else if (context.getWorkflowType() == WorkflowType.ORCHESTRATION) {
         WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
         String pipelineExecutionId = null;
@@ -362,12 +374,14 @@ public class NotificationMessageResolver {
           }
           return buildAbsoluteUrl(configuration,
               format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(), app.getUuid(), envId,
-                  context.getWorkflowExecutionId()));
+                  context.getWorkflowExecutionId()),
+              subdomainUrl);
         } else {
           // WF in a Pipeline execution
           return buildAbsoluteUrl(configuration,
               format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/%s/details", app.getAccountId(),
-                  app.getUuid(), pipelineExecutionId, context.getWorkflowExecutionId()));
+                  app.getUuid(), pipelineExecutionId, context.getWorkflowExecutionId()),
+              subdomainUrl);
         }
       } else {
         logger.error("Unhandled Approval case. No URL can be generated for alertType ", alertType.name());
@@ -381,7 +395,8 @@ public class NotificationMessageResolver {
 
       return buildAbsoluteUrl(configuration,
           format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(), app.getUuid(), envId,
-              context.getWorkflowExecutionId()));
+              context.getWorkflowExecutionId()),
+          subdomainUrl);
     } else {
       logger.warn("Unhandled case. No URL can be generated for alertType ", alertType.name());
       return "";
@@ -404,7 +419,7 @@ public class NotificationMessageResolver {
   public Map<String, String> getPlaceholderValues(ExecutionContext context, String userName, long startTs, long endTs,
       String timeout, String statusMsg, String artifactsMessage, ExecutionStatus status, AlertType alertType) {
     Application app = ((ExecutionContextImpl) context).getApp();
-    String workflowUrl = generateUrl(app, context, alertType);
+    String workflowUrl = (app == null) ? null : generateUrl(app, context, alertType);
     String startTime = format("%s at %s", dateFormat.format(new Date(startTs)), timeFormat.format(new Date(startTs)));
     String endTime = format("%s at %s", dateFormat.format(new Date(endTs)), timeFormat.format(new Date(endTs)));
 

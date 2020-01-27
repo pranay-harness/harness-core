@@ -99,6 +99,7 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest.CloudFormationCommandType;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteStackRequest;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.ServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
@@ -129,6 +130,7 @@ import software.wings.sm.states.provision.CloudFormationState.CloudFormationStat
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class CloudFormationStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
@@ -159,6 +161,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   @Mock private ExecutionContextImpl executionContext;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   @InjectMocks
   private CloudFormationCreateStackState cloudFormationCreateStackState = new CloudFormationCreateStackState("name");
@@ -291,6 +294,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("accountService", accountService);
     on(workflowStandardParams).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
     on(workflowStandardParams).set("featureFlagService", featureFlagService);
+    on(workflowStandardParams).set("subdomainUrlHelper", subdomainUrlHelper);
 
     workflowStandardParams.setCurrentUser(EmbeddedUser.builder().name("test").email("test@harness.io").build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
@@ -331,6 +335,8 @@ public class CloudFormationStateTest extends WingsBaseTest {
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
     when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
+    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
   }
 
   @Test

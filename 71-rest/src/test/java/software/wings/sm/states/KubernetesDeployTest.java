@@ -96,6 +96,7 @@ import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -120,6 +121,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by brett on 3/10/17
@@ -148,6 +150,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AwsCommandHelper mockAwsCommandHelper;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   @InjectMocks
   private KubernetesDeploy kubernetesDeploy = aKubernetesDeploy(STATE_NAME)
@@ -233,6 +236,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME)).thenReturn(serviceCommand);
     on(workflowStandardParams).set("appService", appService);
     on(workflowStandardParams).set("environmentService", environmentService);
+    on(workflowStandardParams).set("subdomainUrlHelper", subdomainUrlHelper);
 
     InfrastructureMapping infrastructureMapping = aGcpKubernetesInfrastructureMapping()
                                                       .withUuid(INFRA_MAPPING_ID)
@@ -269,6 +273,8 @@ public class KubernetesDeployTest extends WingsBaseTest {
         .thenAnswer(i -> i.getArguments()[0]);
     when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
     doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
+    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
+    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
   }
 
   @Test

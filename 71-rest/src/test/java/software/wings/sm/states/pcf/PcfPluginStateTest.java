@@ -104,6 +104,7 @@ import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.ServiceHelper;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
@@ -133,6 +134,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class PcfPluginStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
@@ -158,6 +160,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
   @Mock private ApplicationManifestUtils applicationManifestUtils;
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private transient ServiceTemplateHelper serviceTemplateHelper;
+  @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @InjectMocks @Spy private PcfStateHelper pcfStateHelper;
   @Mock private MainConfiguration configuration;
   @Spy @InjectMocks private PcfPluginState pcfPluginState = new PcfPluginState("name");
@@ -248,6 +251,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);
     on(workflowStandardParams).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
     on(workflowStandardParams).set("featureFlagService", featureFlagService);
+    on(workflowStandardParams).set("subdomainUrlHelper", subdomainUrlHelper);
 
     Activity activity = Activity.builder().build();
     activity.setUuid(ACTIVITY_ID);
@@ -291,6 +295,8 @@ public class PcfPluginStateTest extends WingsBaseTest {
     when(configuration.getPortal()).thenReturn(portalConfig);
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
     when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
+    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
+    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
   }
 
   @Test

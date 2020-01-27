@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,12 +37,15 @@ import software.wings.api.HostElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
+
+import java.util.Optional;
 
 /**
  * The Class EmailStateTest.
@@ -69,6 +73,7 @@ public class EmailStateTest extends WingsBaseTest {
   @InjectMocks private EmailState emailState = new EmailState(stateName);
 
   @Mock private MainConfiguration configuration;
+  @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   private ExecutionContextImpl context;
 
@@ -88,6 +93,7 @@ public class EmailStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("configuration", configuration);
     on(workflowStandardParams).set("currentUser", EmbeddedUser.builder().name("admin").build());
     on(workflowStandardParams).set("accountService", accountService);
+    on(workflowStandardParams).set("subdomainUrlHelper", subdomainUrlHelper);
 
     context.pushContextElement(workflowStandardParams);
 
@@ -101,6 +107,8 @@ public class EmailStateTest extends WingsBaseTest {
     PortalConfig portalConfig = new PortalConfig();
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
+    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
+    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
   }
 
   /**
