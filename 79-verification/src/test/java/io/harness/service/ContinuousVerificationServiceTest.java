@@ -1615,6 +1615,94 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Test
   @Owner(developers = NANDAN)
   @Category(UnitTests.class)
+  public void testCreateFeedbackAnalysisTaskCheckIfFeatureName247V2IsSetIfLogsV2Enabled() throws Exception {
+    setupFeedbacks(true);
+
+    LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.set247LogsV2(true);
+    wingsPersistence.save(cvConfiguration);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfiguration));
+
+    int analysisMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 15;
+    LogMLAnalysisRecord logAnalysisRecord =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(analysisMinute).build();
+
+    logAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(logAnalysisRecord);
+
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    List<LearningEngineAnalysisTask> feedbackTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+            .asList();
+    assertThat(feedbackTasks).hasSize(1);
+    assertThat(feedbackTasks.get(0).getAnalysis_minute()).isEqualTo(analysisMinute);
+    assertThat(feedbackTasks.get(0).getFeature_name()).isEqualTo("247_V2");
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testCreateFeedbackAnalysisTaskCheckIfFeatureName247V2IsNotSetWhenLogsV2NotEnabled() throws Exception {
+    setupFeedbacks(true);
+
+    int analysisMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 15;
+    LogMLAnalysisRecord logAnalysisRecord =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(analysisMinute).build();
+
+    logAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(logAnalysisRecord);
+
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    List<LearningEngineAnalysisTask> feedbackTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+            .asList();
+    assertThat(feedbackTasks).hasSize(1);
+    assertThat(feedbackTasks.get(0).getAnalysis_minute()).isEqualTo(analysisMinute);
+    assertThat(feedbackTasks.get(0).getFeature_name()).isNull();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testCreateExperimentalFeedbackAnalysisTaskCheckIfFeatureName247V2IsSetIfLogsV2Enabled() throws Exception {
+    wingsPersistence.save(
+        MLExperiments.builder().experimentName("textExp").ml_analysis_type(FEEDBACK_ANALYSIS).is24x7(true).build());
+    testCreateFeedbackAnalysisTaskCheckIfFeatureName247V2IsSetIfLogsV2Enabled();
+
+    LearningEngineExperimentalAnalysisTask expTask =
+        wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
+            .filter(LearningEngineExperimentalAnalysisTaskKeys.cvConfigId, cvConfigId)
+            .get();
+
+    assertThat(expTask).isNotNull();
+    assertThat(expTask.getExperiment_name()).isEqualTo("textExp");
+    assertThat(expTask.getFeature_name()).isEqualTo("247_V2");
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testCreateExperimentalFeedbackAnalysisTaskCheckIfFeatureName247V2IsNotSetWhenLogsV2NotEnabled()
+      throws Exception {
+    wingsPersistence.save(
+        MLExperiments.builder().experimentName("textExp").ml_analysis_type(FEEDBACK_ANALYSIS).is24x7(true).build());
+    testCreateFeedbackAnalysisTaskCheckIfFeatureName247V2IsNotSetWhenLogsV2NotEnabled();
+
+    LearningEngineExperimentalAnalysisTask expTask =
+        wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
+            .filter(LearningEngineExperimentalAnalysisTaskKeys.cvConfigId, cvConfigId)
+            .get();
+
+    assertThat(expTask).isNotNull();
+    assertThat(expTask.getExperiment_name()).isEqualTo("textExp");
+    assertThat(expTask.getFeature_name()).isNull();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
   public void testCreateFeedbackAnalysisTaskCheckIfIs24x7FlagTrue() throws Exception {
     setupFeedbacks(true);
 
