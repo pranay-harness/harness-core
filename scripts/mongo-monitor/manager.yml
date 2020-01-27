@@ -66,3 +66,11 @@ metrics:
   - instance_count:
       check_interval:   600      # seconds
       query:            "db.instance.find({}).count()"
+
+  - alerts_count:
+      check_interval:   10      # seconds
+      query:            "db.alerts.find({}).count()"
+
+  - alerts_open_count:
+      check_interval:   10      # seconds
+      query:            "db.alerts.find({status: 'Open'}).count()"
