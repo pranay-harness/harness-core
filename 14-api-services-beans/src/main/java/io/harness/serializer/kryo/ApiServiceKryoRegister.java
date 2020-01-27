@@ -21,15 +21,18 @@ import com.amazonaws.services.ec2.model.CpuOptions;
 import com.amazonaws.services.ec2.model.EbsInstanceBlockDevice;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.GroupIdentifier;
+import com.amazonaws.services.ec2.model.HibernationOptions;
 import com.amazonaws.services.ec2.model.IamInstanceProfile;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceBlockDeviceMapping;
 import com.amazonaws.services.ec2.model.InstanceIpv6Address;
+import com.amazonaws.services.ec2.model.InstanceMetadataOptionsResponse;
 import com.amazonaws.services.ec2.model.InstanceNetworkInterface;
 import com.amazonaws.services.ec2.model.InstanceNetworkInterfaceAssociation;
 import com.amazonaws.services.ec2.model.InstanceNetworkInterfaceAttachment;
 import com.amazonaws.services.ec2.model.InstancePrivateIpAddress;
 import com.amazonaws.services.ec2.model.InstanceState;
+import com.amazonaws.services.ec2.model.LicenseConfiguration;
 import com.amazonaws.services.ec2.model.Monitoring;
 import com.amazonaws.services.ec2.model.Placement;
 import com.amazonaws.services.ec2.model.ProductCode;
@@ -111,5 +114,8 @@ public class ApiServiceKryoRegister implements KryoRegistrar {
     kryo.register(ElastiGroupCapacity.class, 1026);
     kryo.register(EncryptedRecordData.class, 1401);
     kryo.register(ManifestType.class, 1402);
+    kryo.register(HibernationOptions.class, 1403);
+    kryo.register(InstanceMetadataOptionsResponse.class, 1404);
+    kryo.register(LicenseConfiguration.class, 1405);
   }
 }

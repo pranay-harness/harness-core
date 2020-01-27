@@ -39,7 +39,7 @@
     <properties>
         <alpnboot.version>8.1.13.v20181017</alpnboot.version>
         <argLine>-Xmx1024m</argLine>
-        <aws.sdk.version>1.11.455</aws.sdk.version>
+        <aws.sdk.version>1.11.711</aws.sdk.version>
         <buildTimeStamp>${maven.build.timestamp}</buildTimeStamp>
         <categories>io.harness.category.element.UnitTests.class</categories>
         <categories.integration>io.harness.category.element.IntegrationTests.class</categories.integration>
