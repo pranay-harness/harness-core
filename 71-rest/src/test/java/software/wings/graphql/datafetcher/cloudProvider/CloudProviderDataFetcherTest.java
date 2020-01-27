@@ -40,6 +40,6 @@ public class CloudProviderDataFetcherTest extends AbstractDataFetcherTest {
 
     assertThat(((QLPhysicalDataCenterCloudProvider) qlCloudProvider).getId()).isEqualTo(CLOUD_PROVIDER1_ID_ACCOUNT1);
     assertThat(((QLPhysicalDataCenterCloudProvider) qlCloudProvider).getName()).isEqualTo(CLOUD_PROVIDER1_ID_ACCOUNT1);
-    assertThat(((QLPhysicalDataCenterCloudProvider) qlCloudProvider).isCloudCostEnabled()).isFalse();
+    assertThat(((QLPhysicalDataCenterCloudProvider) qlCloudProvider).isContinuousEfficiencyEnabled()).isFalse();
   }
 }

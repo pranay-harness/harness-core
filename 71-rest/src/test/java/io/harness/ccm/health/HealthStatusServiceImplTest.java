@@ -31,6 +31,7 @@ import org.mockito.junit.MockitoRule;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 
 import java.time.Instant;
@@ -48,6 +49,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   private Cluster k8sCluster;
   private ClusterRecord clusterRecord;
   private String[] perpetualTaskIds = new String[] {"1", "2"};
+  private String delegateId = "DELEGATE_ID";
   private PerpetualTaskRecord taskRecord;
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -56,6 +58,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Mock CCMSettingService ccmSettingService;
   @Mock ClusterRecordService clusterRecordService;
   @Mock PerpetualTaskService perpetualTaskService;
+  @Mock DelegateService delegateService;
 
   @InjectMocks HealthStatusServiceImpl healthStatusService;
 
@@ -81,11 +84,14 @@ public class HealthStatusServiceImplTest extends CategoryTest {
     clusterRecord =
         ClusterRecord.builder().accountId(accountId).cluster(k8sCluster).perpetualTaskIds(perpetualTaskIds).build();
 
-    taskRecord = PerpetualTaskRecord.builder().lastHeartbeat(Instant.now().toEpochMilli()).build();
+    taskRecord =
+        PerpetualTaskRecord.builder().delegateId(delegateId).lastHeartbeat(Instant.now().toEpochMilli()).build();
 
     when(settingsService.get(eq(cloudProviderId))).thenReturn(cloudProvider);
+    when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
     when(clusterRecordService.list(eq(accountId), eq(cloudProviderId))).thenReturn(Arrays.asList(clusterRecord));
     when(perpetualTaskService.getTaskRecord(anyString())).thenReturn(taskRecord);
+    when(delegateService.isDelegateConnected(eq(delegateId))).thenReturn(true);
   }
 
   @Test
@@ -100,10 +106,10 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldReturnHealthyForCloudProvidersWithHeatbeat() {
-    when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
+  public void shouldReturnUnhealthyForWhenDelegateDisconnected() {
+    when(delegateService.isDelegateConnected(eq(delegateId))).thenReturn(false);
     CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
-    assertThat(status.isHealthy()).isTrue();
+    assertThat(status.isHealthy()).isFalse();
   }
 
   @Test
@@ -114,5 +120,14 @@ public class HealthStatusServiceImplTest extends CategoryTest {
     taskRecord.setLastHeartbeat(0);
     CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
     assertThat(status.isHealthy()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldReturnHealthyForCloudProvidersWithHeatbeat() {
+    when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
+    CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
+    assertThat(status.isHealthy()).isTrue();
   }
 }

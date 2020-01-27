@@ -19,6 +19,7 @@ public class QLPcfCloudProvider implements QLCloudProvider {
   private Long createdAt;
   private QLUser createdBy;
   private String type;
+  private boolean isContinuousEfficiencyEnabled;
   private boolean isCloudCostEnabled;
   private CEHealthStatus ceHealthStatus;
 

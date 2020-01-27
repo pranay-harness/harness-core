@@ -1,5 +1,6 @@
 package io.harness.ccm.health;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
 
 import com.google.common.base.Preconditions;
@@ -13,6 +14,7 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 
 import java.time.Instant;
@@ -32,6 +34,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
   @Inject CCMSettingService ccmSettingService;
   @Inject ClusterRecordService clusterRecordService;
   @Inject PerpetualTaskService perpetualTaskService;
+  @Inject DelegateService delegateService;
 
   @Override
   public CEHealthStatus getHealthStatus(String cloudProviderId) {
@@ -53,10 +56,11 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       clusterIds.add(clusterRecord.getUuid());
     }
 
-    Map<String, List<CEError>> clusterErrorMap = new HashMap<>();
+    Map<String, List<String>> clusterErrorMap = new HashMap<>();
 
     for (ClusterRecord clusterRecord : clusterRecords) {
-      clusterErrorMap.put(clusterRecord.getUuid(), getErrors(clusterRecord));
+      List<String> errors = getErrors(clusterRecord);
+      clusterErrorMap.put(clusterRecord.getUuid(), errors);
     }
 
     boolean isHealthy = clusterErrorMap.values().stream().allMatch(List::isEmpty);
@@ -68,20 +72,34 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         .build();
   }
 
-  private List<CEError> getErrors(ClusterRecord clusterRecord) {
+  private List<String> getErrors(ClusterRecord clusterRecord) {
+    List<String> errorsMessages = new ArrayList<>();
     if (null == clusterRecord.getPerpetualTaskIds()) {
-      return new ArrayList<>(Arrays.asList(CEError.PERPETUAL_TASK_CREATION_FAILURE));
+      errorsMessages.add(String.format(CEError.PERPETUAL_TASK_CREATION_FAILURE.getMessage(), clusterRecord.getUuid()));
+      return errorsMessages;
     }
 
-    List<CEError> errors = new ArrayList<>();
     List<String> perpetualTaskIds = Arrays.asList(clusterRecord.getPerpetualTaskIds());
     for (String taskId : perpetualTaskIds) {
       PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
+      String delegateId = perpetualTaskRecord.getDelegateId();
+      if (isNullOrEmpty(delegateId)) {
+        errorsMessages.add(String.format(CEError.PERPETUAL_TASK_NOT_ASSIGNED.getMessage(), clusterRecord.getUuid()));
+        continue;
+      }
+
+      if (!delegateService.isDelegateConnected(delegateId)) {
+        errorsMessages.add(String.format(CEError.DELEGATE_NOT_AVAILABLE.getMessage(), clusterRecord.getUuid()));
+        continue;
+      }
+
       if (!hasRecentHeartbeat(perpetualTaskRecord.getLastHeartbeat())) {
-        errors.add(CEError.PERPETUAL_TASK_MISSING_HEARTBEAT);
+        errorsMessages.add(
+            String.format(CEError.PERPETUAL_TASK_MISSING_HEARTBEAT.getMessage(), clusterRecord.getUuid()));
+        continue;
       }
     }
-    return errors;
+    return errorsMessages;
   }
 
   private boolean hasRecentHeartbeat(long lastHeartbeat) {

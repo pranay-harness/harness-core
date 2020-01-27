@@ -337,6 +337,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
+  public boolean isDelegateConnected(String delegateId) {
+    Delegate delegate = wingsPersistence.get(Delegate.class, delegateId);
+    return isDelegateConnected(delegate);
+  }
+
+  @Override
   public boolean isDelegateConnected(Delegate delegate) {
     Preconditions.checkNotNull(delegate.getUuid());
     if (delegate.isConnected() && !delegateConnectionDao.list(delegate).isEmpty()) {
