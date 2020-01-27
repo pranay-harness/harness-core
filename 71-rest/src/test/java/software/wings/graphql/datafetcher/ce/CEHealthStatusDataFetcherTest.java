@@ -32,8 +32,8 @@ import java.util.Map;
 public class CEHealthStatusDataFetcherTest extends CategoryTest {
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
   private String clusterId = "CLUSTER_ID";
-  private CEError error = CEError.PERPETUAL_TASK_MISSING_HEARTBEAT;
-  private Map<String, List<CEError>> clusterErrorMap = new HashMap<>();
+  private String errorMessage = String.format(CEError.PERPETUAL_TASK_MISSING_HEARTBEAT.getMessage(), clusterId);
+  private Map<String, List<String>> clusterErrorMap = new HashMap<>();
   private CEHealthStatus ceHealthStatus =
       CEHealthStatus.builder().isHealthy(false).clusterErrors(clusterErrorMap).build();
   @Mock private DataFetchingEnvironment environment;
@@ -48,8 +48,8 @@ public class CEHealthStatusDataFetcherTest extends CategoryTest {
 
   @Before
   public void setUp() {
-    clusterErrorMap.put(clusterId, Arrays.asList(error));
-    clusterErrorsDTO = ClusterErrorsDTO.builder().clusterErrors(Arrays.asList(error)).build();
+    clusterErrorMap.put(clusterId, Arrays.asList(errorMessage));
+    clusterErrorsDTO = ClusterErrorsDTO.builder().clusterErrors(Arrays.asList(errorMessage)).build();
     ceHealthStatusDTO =
         CEHealthStatusDTO.builder().isHealthy(false).clusterErrors(Arrays.asList(clusterErrorsDTO)).build();
     when(environment.getSource()).thenReturn(cloudProvider);

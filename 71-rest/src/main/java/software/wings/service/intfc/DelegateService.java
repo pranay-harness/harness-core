@@ -30,6 +30,8 @@ import javax.validation.Valid;
 public interface DelegateService extends OwnedByAccount {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 
+  boolean isDelegateConnected(String delegateId);
+
   boolean isDelegateConnected(Delegate delegate);
 
   List<String> getKubernetesDelegateNames(String accountId);

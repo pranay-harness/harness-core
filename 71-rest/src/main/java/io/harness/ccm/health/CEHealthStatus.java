@@ -13,5 +13,5 @@ public class CEHealthStatus {
   boolean isHealthy;
   List<String> clusterIds;
   List<ClusterRecord> clusterRecords;
-  Map<String, List<CEError>> clusterErrors;
+  Map<String, List<String>> clusterErrors;
 }

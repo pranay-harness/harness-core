@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
-import io.harness.ccm.health.CEError;
 import io.harness.ccm.health.CEHealthStatus;
 import io.harness.ccm.health.HealthStatusService;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.CEHealthStatusDTO;
@@ -38,9 +37,9 @@ public class CEHealthStatusDataFetcher implements DataFetcher<CEHealthStatusDTO>
     }
   }
 
-  private static List<ClusterErrorsDTO> from(Map<String, List<CEError>> clusterErrorMap) {
+  private static List<ClusterErrorsDTO> from(Map<String, List<String>> clusterErrorMap) {
     List<ClusterErrorsDTO> clusterErrors = new ArrayList<>();
-    for (Map.Entry<String, List<CEError>> entry : clusterErrorMap.entrySet()) {
+    for (Map.Entry<String, List<String>> entry : clusterErrorMap.entrySet()) {
       clusterErrors.add(ClusterErrorsDTO.builder().clusterId(entry.getKey()).clusterErrors(entry.getValue()).build());
     }
     return clusterErrors;

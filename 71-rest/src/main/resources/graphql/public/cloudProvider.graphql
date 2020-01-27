@@ -35,6 +35,7 @@ interface CloudProvider {
   createdBy: User
   type: String
   # The field is work in progress.
+  isContinuousEfficiencyEnabled: Boolean
   isCloudCostEnabled: Boolean
   ceHealthStatus: CEHealthStatus
 }
@@ -52,15 +53,7 @@ type CEHealthStatus {
 
 type ClusterError {
   clusterId: String
-  clusterErrors: [CEError]
-}
-
-enum CEError {
-  DELEGATE_NOT_AVAILABLE
-  CREDENTIALS_INCORRECT
-  PERPETUAL_TASK_MISSING_HEARTBEAT
-  BILLING_REPORTS_MISSING
-  INTERNAL_ERROR
+  clusterErrors: [String]
 }
 
 type AwsCloudProvider implements CloudProvider {
@@ -70,6 +63,7 @@ type AwsCloudProvider implements CloudProvider {
   createdAt: DateTime
   createdBy: User
   type: String
+  isContinuousEfficiencyEnabled: Boolean
   isCloudCostEnabled: Boolean
   ceHealthStatus: CEHealthStatus
 }
@@ -81,6 +75,7 @@ type PhysicalDataCenterCloudProvider implements CloudProvider {
   createdAt: DateTime
   createdBy: User
   type: String
+  isContinuousEfficiencyEnabled: Boolean
   isCloudCostEnabled: Boolean
   ceHealthStatus: CEHealthStatus
 }
@@ -92,6 +87,7 @@ type AzureCloudProvider implements CloudProvider {
   createdAt: DateTime
   createdBy: User
   type: String
+  isContinuousEfficiencyEnabled: Boolean
   isCloudCostEnabled: Boolean
   ceHealthStatus: CEHealthStatus
 }
@@ -103,6 +99,7 @@ type GcpCloudProvider implements CloudProvider {
   createdAt: DateTime
   createdBy: User
   type: String
+  isContinuousEfficiencyEnabled: Boolean
   isCloudCostEnabled: Boolean
   ceHealthStatus: CEHealthStatus
 }
@@ -114,6 +111,7 @@ type KubernetesCloudProvider implements CloudProvider {
   createdAt: DateTime
   createdBy: User
   type: String
+  isContinuousEfficiencyEnabled: Boolean
   isCloudCostEnabled: Boolean
   ceHealthStatus: CEHealthStatus
 }
@@ -125,6 +123,7 @@ type PcfCloudProvider implements CloudProvider {
   createdAt: DateTime
   createdBy: User
   type: String
+  isContinuousEfficiencyEnabled: Boolean
   isCloudCostEnabled: Boolean
   ceHealthStatus: CEHealthStatus
 }
