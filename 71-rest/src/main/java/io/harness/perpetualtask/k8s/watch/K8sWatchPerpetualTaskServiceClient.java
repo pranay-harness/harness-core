@@ -47,8 +47,8 @@ public class K8sWatchPerpetualTaskServiceClient
     PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(clientParamMap);
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
-                                         .setInterval(Durations.fromSeconds(600))
-                                         .setTimeout(Durations.fromMillis(30000))
+                                         .setInterval(Durations.fromMinutes(1))
+                                         .setTimeout(Durations.fromSeconds(30))
                                          .build();
     return perpetualTaskService.createTask(PerpetualTaskType.K8S_WATCH, accountId, clientContext, schedule, false);
   }
