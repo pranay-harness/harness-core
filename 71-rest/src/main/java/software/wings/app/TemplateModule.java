@@ -7,6 +7,7 @@ import software.wings.beans.template.TemplateType;
 import software.wings.service.impl.template.AbstractTemplateProcessor;
 import software.wings.service.impl.template.ArtifactSourceTemplateProcessor;
 import software.wings.service.impl.template.HttpTemplateProcessor;
+import software.wings.service.impl.template.PcfCommandTemplateProcessor;
 import software.wings.service.impl.template.ShellScriptTemplateProcessor;
 import software.wings.service.impl.template.SshCommandTemplateProcessor;
 import software.wings.service.impl.template.TemplateFolderServiceImpl;
@@ -33,5 +34,6 @@ public class TemplateModule extends AbstractModule {
     templateServiceBinder.addBinding(TemplateType.HTTP.name()).to(HttpTemplateProcessor.class);
     templateServiceBinder.addBinding(TemplateType.SHELL_SCRIPT.name()).to(ShellScriptTemplateProcessor.class);
     templateServiceBinder.addBinding(TemplateType.ARTIFACT_SOURCE.name()).to(ArtifactSourceTemplateProcessor.class);
+    templateServiceBinder.addBinding(TemplateType.PCF_PLUGIN.name()).to(PcfCommandTemplateProcessor.class);
   }
 }

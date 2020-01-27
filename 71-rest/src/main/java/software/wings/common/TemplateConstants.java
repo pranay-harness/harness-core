@@ -67,4 +67,6 @@ public interface TemplateConstants {
   List<String> TEMPLATE_TYPES_WITH_YAML_SUPPORT = ImmutableList.of(SHELL_SCRIPT, HTTP, SSH);
 
   String TEMPLATE_REF_COMMAND = "TEMPLATE_REF_COMMAND";
+
+  String PCF_PLUGIN = "PCF_PLUGIN";
 }

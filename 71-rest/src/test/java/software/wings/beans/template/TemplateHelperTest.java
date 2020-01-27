@@ -19,8 +19,8 @@ public class TemplateHelperTest extends TemplateBaseTestHelper {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_mappedEntity() {
-    final List<TemplateType> supportedTemplateTypes =
-        Arrays.asList(TemplateType.HTTP, TemplateType.SHELL_SCRIPT, TemplateType.ARTIFACT_SOURCE, TemplateType.SSH);
+    final List<TemplateType> supportedTemplateTypes = Arrays.asList(TemplateType.HTTP, TemplateType.SHELL_SCRIPT,
+        TemplateType.ARTIFACT_SOURCE, TemplateType.SSH, TemplateType.PCF_PLUGIN);
     for (TemplateType supportedTemplateType : supportedTemplateTypes) {
       assertThat(TemplateHelper.mappedEntity(supportedTemplateType)).isNotNull();
     }

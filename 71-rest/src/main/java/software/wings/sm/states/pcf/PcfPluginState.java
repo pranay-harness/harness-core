@@ -57,6 +57,7 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.PcfDummyCommandUnit;
+import software.wings.beans.template.TemplateUtils;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
@@ -78,6 +79,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
@@ -103,6 +105,7 @@ public class PcfPluginState extends State {
   @Inject private transient SettingsService settingsService;
   @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject private transient ApplicationManifestUtils applicationManifestUtils;
+  @Inject private transient TemplateUtils templateUtils;
 
   public static final String PCF_PLUGIN_COMMAND = "Execute CF Command";
   public static final String FILE_START_REPO_ROOT_REGEX = PcfConstants.FILE_START_REPO_ROOT_REGEX;
@@ -141,8 +144,14 @@ public class PcfPluginState extends State {
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
+    PcfPluginStateExecutionData pcfPluginStateExecutionData = PcfPluginStateExecutionData.builder().build();
+    // resolve template variables
+    pcfPluginStateExecutionData.setTemplateVariable(
+        templateUtils.processTemplateVariables(context, getTemplateVariables()));
+
     // render script
-    final String renderedScript = renderedScript(removeCommentedLineFromScript(scriptString), context);
+    final String renderedScript = renderedScript(removeCommentedLineFromScript(scriptString), context,
+        StateExecutionContext.builder().stateExecutionData(pcfPluginStateExecutionData).build());
     // find out the paths from the script
     final ApplicationManifest serviceManifest = applicationManifestUtils.getApplicationManifestForService(context);
     final boolean serviceManifestRemote = isServiceManifestRemote(serviceManifest);
@@ -176,8 +185,9 @@ public class PcfPluginState extends State {
         .collect(Collectors.joining("\n"));
   }
 
-  private String renderedScript(String scriptString, ExecutionContext context) {
-    return context.renderExpression(scriptString);
+  private String renderedScript(
+      String scriptString, ExecutionContext context, StateExecutionContext stateExecutionContext) {
+    return context.renderExpression(scriptString, stateExecutionContext);
   }
 
   @VisibleForTesting
@@ -233,21 +243,28 @@ public class PcfPluginState extends State {
     final DelegateTask gitFetchFileTask =
         pcfStateHelper.createGitFetchFileAsyncTask(context, appManifestMap, activityId);
     gitFetchFileTask.setTags(resolveTags(getTags(), null));
+
+    PcfPluginStateExecutionData stateExecutionData =
+        PcfPluginStateExecutionData.builder()
+            .activityId(activityId)
+            .commandName(PCF_PLUGIN_COMMAND)
+            .taskType(GIT_FETCH_FILES_TASK)
+            .appManifestMap(appManifestMap)
+            .filePathsInScript(pathsFromScript)
+            .renderedScriptString(renderedScriptString)
+            .timeoutIntervalInMinutes(resolveTimeoutIntervalInMinutes(null))
+            .tagList(getTags())
+            .repoRoot(repoRoot)
+            .build();
+
+    // resolve template variables
+    stateExecutionData.setTemplateVariable(templateUtils.processTemplateVariables(context, getTemplateVariables()));
+
     final String delegateTaskId = delegateService.queueTask(gitFetchFileTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(gitFetchFileTask.getWaitId()))
-        .stateExecutionData(PcfPluginStateExecutionData.builder()
-                                .activityId(activityId)
-                                .commandName(PCF_PLUGIN_COMMAND)
-                                .taskType(GIT_FETCH_FILES_TASK)
-                                .appManifestMap(appManifestMap)
-                                .filePathsInScript(pathsFromScript)
-                                .renderedScriptString(renderedScriptString)
-                                .timeoutIntervalInMinutes(resolveTimeoutIntervalInMinutes(null))
-                                .tagList(getTags())
-                                .repoRoot(repoRoot)
-                                .build())
+        .stateExecutionData(stateExecutionData)
         .delegateTaskId(delegateTaskId)
         .build();
   }
@@ -311,6 +328,22 @@ public class PcfPluginState extends State {
     // get all tags
     final List<String> renderedTags = getRenderedTags(context, resolveTags(getTags(), pcfPluginStateExecutionData));
     final int timeoutIntervalInMin = resolveTimeoutIntervalInMinutes(pcfPluginStateExecutionData);
+
+    PcfPluginStateExecutionData stateExecutionData = PcfPluginStateExecutionData.builder()
+                                                         .activityId(activityId)
+                                                         .accountId(app.getAccountId())
+                                                         .appId(app.getUuid())
+                                                         .envId(env.getUuid())
+                                                         .serviceId(serviceElement.getUuid())
+                                                         .infraMappingId(pcfInfrastructureMapping.getUuid())
+                                                         .commandName(PCF_PLUGIN_COMMAND)
+                                                         .taskType(PCF_COMMAND_TASK)
+                                                         .repoRoot(repoRoot)
+                                                         .build();
+
+    // resolve template variables
+    stateExecutionData.setTemplateVariable(templateUtils.processTemplateVariables(context, getTemplateVariables()));
+
     PcfCommandRequest commandRequest =
         PcfRunPluginCommandRequest.builder()
             .activityId(activityId)
@@ -330,19 +363,7 @@ public class PcfPluginState extends State {
             .repoRoot(repoRoot)
             .build();
 
-    PcfPluginStateExecutionData stateExecutionData = PcfPluginStateExecutionData.builder()
-                                                         .activityId(activityId)
-                                                         .accountId(app.getAccountId())
-                                                         .appId(app.getUuid())
-                                                         .envId(env.getUuid())
-                                                         .serviceId(serviceElement.getUuid())
-                                                         .infraMappingId(pcfInfrastructureMapping.getUuid())
-                                                         .pcfCommandRequest(commandRequest)
-                                                         .commandName(PCF_PLUGIN_COMMAND)
-                                                         .taskType(PCF_COMMAND_TASK)
-                                                         .repoRoot(repoRoot)
-                                                         .build();
-
+    stateExecutionData.setPcfCommandRequest(commandRequest);
     String waitId = generateUuid();
 
     DelegateTask delegateTask =

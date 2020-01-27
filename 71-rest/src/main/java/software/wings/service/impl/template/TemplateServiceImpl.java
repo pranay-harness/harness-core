@@ -23,6 +23,7 @@ import static software.wings.beans.template.TemplateHelper.obtainTemplateFolderP
 import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
 import static software.wings.beans.template.TemplateType.ARTIFACT_SOURCE;
 import static software.wings.beans.template.TemplateType.HTTP;
+import static software.wings.beans.template.TemplateType.PCF_PLUGIN;
 import static software.wings.beans.template.TemplateType.SHELL_SCRIPT;
 import static software.wings.beans.template.TemplateType.SSH;
 import static software.wings.beans.template.TemplateVersion.ChangeType.CREATED;
@@ -65,6 +66,7 @@ import software.wings.beans.template.VersionedTemplate;
 import software.wings.beans.template.VersionedTemplate.VersionedTemplateBuilder;
 import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
 import software.wings.beans.template.command.HttpTemplate;
+import software.wings.beans.template.command.PcfCommandTemplate;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
@@ -404,6 +406,9 @@ public class TemplateServiceImpl implements TemplateService {
     if (templateHelper.templatesLinked(ARTIFACT_SOURCE, templateUuids)) {
       throwException(templateFolder, ARTIFACT_SOURCE, ARTIFACT_STREAM);
     }
+    if (templateHelper.templatesLinked(PCF_PLUGIN, templateUuids)) {
+      throwException(templateFolder, PCF_PLUGIN, WORKFLOW);
+    }
     // Delete templates
     return wingsPersistence.delete(wingsPersistence.createQuery(Template.class)
                                        .filter(Template.ACCOUNT_ID_KEY, templateFolder.getAccountId())
@@ -573,6 +578,8 @@ public class TemplateServiceImpl implements TemplateService {
       return SHELL_SCRIPT;
     } else if (templateObject instanceof ArtifactSourceTemplate) {
       return ARTIFACT_SOURCE;
+    } else if (templateObject instanceof PcfCommandTemplate) {
+      return PCF_PLUGIN;
     }
     throw new InvalidRequestException("Template Type not yet supported", USER);
   }

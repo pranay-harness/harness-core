@@ -96,6 +96,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.template.TemplateUtils;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
@@ -161,6 +162,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private transient ServiceTemplateHelper serviceTemplateHelper;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private TemplateUtils templateUtils;
   @InjectMocks @Spy private PcfStateHelper pcfStateHelper;
   @Mock private MainConfiguration configuration;
   @Spy @InjectMocks private PcfPluginState pcfPluginState = new PcfPluginState("name");
@@ -341,6 +343,45 @@ public class PcfPluginStateTest extends WingsBaseTest {
     assertThat(stateExecutionData.getRenderedScriptString()).isNotEmpty();
     verify(delegateService, times(1)).queueTask(delegateTask);
   }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_executeGitTaskForLinkedCommand() {
+    final DelegateTask delegateTask = DelegateTask.builder().build();
+    doReturn(delegateTask)
+        .when(pcfStateHelper)
+        .createGitFetchFileAsyncTask(any(ExecutionContext.class), anyMap(), anyString());
+    when(applicationManifestUtils.createGitFetchFilesTaskParams(any(), any(), any()))
+        .thenReturn(GitFetchFilesTaskParams.builder().build());
+    final ApplicationManifest applicationManifest =
+        ApplicationManifest.builder()
+            .storeType(Remote)
+            .gitFileConfig(GitFileConfig.builder().filePath("app/sample_application").build())
+            .build();
+    when(applicationManifestUtils.getApplicationManifestForService(context)).thenReturn(applicationManifest);
+    on(context).set("serviceTemplateService", serviceTemplateService);
+
+    Map<String, Object> variableMap = new HashMap<>();
+    variableMap.put("manifest", "manifest.yml");
+    when(templateUtils.processTemplateVariables(any(), any())).thenReturn(variableMap);
+    when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
+        .thenAnswer(i -> ((String) (i.getArguments()[0])).replace("${manifest}", "manifest.yml"));
+
+    pcfPluginState.setScriptString(
+        "echo '${service.manifest.repoRoot}/abc/test any ${service.manifest}/${manifest} text sfkjsdfk \n /wrong/path \\${service.manifest}/xyz.json some text' ");
+    final ExecutionResponse executionResponse = pcfPluginState.execute(context);
+    assertThat(executionResponse.isAsync()).isTrue();
+    final PcfPluginStateExecutionData stateExecutionData =
+        (PcfPluginStateExecutionData) (executionResponse.getStateExecutionData());
+
+    assertThat(stateExecutionData.getRepoRoot()).isEqualTo("/app/sample_application");
+    assertThat(stateExecutionData.getFilePathsInScript()).contains("/app/sample_application/manifest.yml");
+    assertThat(stateExecutionData.getFilePathsInScript()).isNotEmpty();
+    assertThat(stateExecutionData.getRenderedScriptString()).isNotEmpty();
+    verify(delegateService, times(1)).queueTask(delegateTask);
+  }
+
   @Test
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
@@ -355,6 +396,34 @@ public class PcfPluginStateTest extends WingsBaseTest {
         .thenReturn(GitFetchFilesTaskParams.builder().build());
     pcfPluginState.setScriptString(
         "echo '${service.manifest}/abc/test any text sfkjsdfk \n /wrong/path \\${service.manifest}/xyz.json some text' ");
+    final ExecutionResponse executionResponse = pcfPluginState.execute(context);
+    assertThat(executionResponse.isAsync()).isTrue();
+    final PcfPluginStateExecutionData stateExecutionData =
+        (PcfPluginStateExecutionData) (executionResponse.getStateExecutionData());
+    verify(delegateService, times(1)).queueTask(any(DelegateTask.class));
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_executePcfPluginTaskForLinkedCommand() {
+    on(context).set("serviceTemplateService", serviceTemplateService);
+
+    final ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).gitFileConfig(GitFileConfig.builder().build()).build();
+    when(applicationManifestUtils.getApplicationManifestForService(context)).thenReturn(applicationManifest);
+    on(context).set("serviceTemplateService", serviceTemplateService);
+    when(applicationManifestUtils.createGitFetchFilesTaskParams(any(), any(), any()))
+        .thenReturn(GitFetchFilesTaskParams.builder().build());
+
+    Map<String, Object> variableMap = new HashMap<>();
+    variableMap.put("json", "xyz.json");
+    when(templateUtils.processTemplateVariables(any(), any())).thenReturn(variableMap);
+    when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
+        .thenAnswer(i -> ((String) (i.getArguments()[0])).replace("${json}", "xyz.json"));
+
+    pcfPluginState.setScriptString(
+        "echo '${service.manifest}/abc/test any text sfkjsdfk \n /wrong/path \\${service.manifest}/${json} some text' ");
     final ExecutionResponse executionResponse = pcfPluginState.execute(context);
     assertThat(executionResponse.isAsync()).isTrue();
     final PcfPluginStateExecutionData stateExecutionData =
