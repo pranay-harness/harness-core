@@ -363,6 +363,18 @@ if [[ "" != "$AWS_MARKETPLACE_SECRETKEY" ]]; then
   yq write -i $CONFIG_FILE mktPlaceConfig.awsSecretKey "$AWS_MARKETPLACE_SECRETKEY"
 fi
 
+if [[ "" != "$S3_SYNC_CONFIG_ACCESSKEY" ]]; then
+  yq write -i $CONFIG_FILE awsS3SyncConfig.awsAccessKey "$S3_SYNC_CONFIG_ACCESSKEY"
+fi
+
+if [[ "" != "$S3_SYNC_CONFIG_SECRETKEY" ]]; then
+  yq write -i $CONFIG_FILE awsS3SyncConfig.awsSecretKey "$S3_SYNC_CONFIG_SECRETKEY"
+fi
+
+if [[ "" != "$S3_SYNC_CONFIG_REGION" ]]; then
+  yq write -i $CONFIG_FILE awsS3SyncConfig.region "$S3_SYNC_CONFIG_REGION"
+fi
+
 if [[ "" != "$AWS_MARKETPLACE_PRODUCTCODE" ]]; then
   yq write -i $CONFIG_FILE mktPlaceConfig.awsMarketPlaceProductCode "$AWS_MARKETPLACE_PRODUCTCODE"
 fi
