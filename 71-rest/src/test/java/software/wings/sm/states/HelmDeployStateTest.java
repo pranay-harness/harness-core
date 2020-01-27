@@ -109,6 +109,7 @@ import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.GitFileConfigHelperService;
@@ -143,6 +144,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class HelmDeployStateTest extends WingsBaseTest {
   private static final String HELM_CONTROLLER_NAME = "helm-controller-name";
@@ -181,6 +183,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private GitFileConfigHelperService gitFileConfigHelperService;
+  @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("helmRollbackState");
@@ -298,7 +301,10 @@ public class HelmDeployStateTest extends WingsBaseTest {
     on(context).set("featureFlagService", featureFlagService);
     on(context).set("stateExecutionInstance", stateExecutionInstance);
     on(context).set("sweepingOutputService", sweepingOutputService);
+    on(workflowStandardParams).set("subdomainUrlHelper", subdomainUrlHelper);
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
+    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
   }
 
   @Test

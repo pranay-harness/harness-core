@@ -129,6 +129,7 @@ import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.licensing.LicenseService;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.PermissionAttribute.Action;
@@ -241,6 +242,7 @@ public class UserServiceImpl implements UserService {
   @Inject private SignupService signupService;
   @Inject private SignupSpamChecker spamChecker;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -480,7 +482,8 @@ public class UserServiceImpl implements UserService {
   private void sendSuccessfullyAddedToNewAccountEmail(User user, Account account) {
     try {
       String loginUrl = buildAbsoluteUrl(format("/login?company=%s&account=%s&email=%s", account.getCompanyName(),
-          account.getAccountName(), user.getEmail()));
+                                             account.getAccountName(), user.getEmail()),
+          account.getUuid());
 
       Map<String, String> templateModel = new HashMap<>();
       templateModel.put("name", user.getName());
@@ -580,7 +583,8 @@ public class UserServiceImpl implements UserService {
         wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(user.getUuid()));
     try {
       String verificationUrl =
-          buildAbsoluteUrl(configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken());
+          buildAbsoluteUrl(configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken(),
+              user.getDefaultAccountId());
 
       Map<String, String> templateModel = new HashMap();
       templateModel.put("name", user.getName());
@@ -606,19 +610,12 @@ public class UserServiceImpl implements UserService {
     return user.getAccounts().get(0);
   }
 
-  private String buildAbsoluteUrl(String fragment) throws URISyntaxException {
-    String baseUrl = getBaseUrl();
+  private String buildAbsoluteUrl(String fragment, String accountId) throws URISyntaxException {
+    Optional<String> subdomainUrl = subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(accountId));
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(subdomainUrl);
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();
-  }
-
-  private String getBaseUrl() {
-    String baseUrl = configuration.getPortal().getUrl().trim();
-    if (!baseUrl.endsWith("/")) {
-      baseUrl += "/";
-    }
-    return baseUrl;
   }
 
   @Override
@@ -896,8 +893,10 @@ public class UserServiceImpl implements UserService {
     if (userInvite == null) {
       return null;
     }
-    return buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
-        account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
+    return buildAbsoluteUrl(
+        format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
+            account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()),
+        account.getUuid());
   }
 
   @Override
@@ -905,21 +904,26 @@ public class UserServiceImpl implements UserService {
     if (userInvite == null) {
       return null;
     }
-    return buildAbsoluteUrl(format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid()));
+    return buildAbsoluteUrl(
+        format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid()), userInvite.getAccountId());
   }
 
-  private Map<String, String> getEmailVerificationTemplateModel(String email, String url) throws URISyntaxException {
+  private Map<String, String> getEmailVerificationTemplateModel(String email, String url, String accountId)
+      throws URISyntaxException {
     Map<String, String> model = new HashMap<>();
     model.put("name", email);
-    model.put("url", buildAbsoluteUrl(url));
+    model.put("url", buildAbsoluteUrl(url, accountId));
     return model;
   }
 
-  private Map<String, String> getEmailVerificationTemplateModel(String email, String url, Map<String, String> params) {
+  private Map<String, String> getEmailVerificationTemplateModel(
+      String email, String url, Map<String, String> params, String accountId) {
     Map<String, String> model = new HashMap<>();
     model.put("name", email);
+    Optional<String> subdomainUrl = subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(accountId));
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(subdomainUrl);
     // This uses the setPath. The method above uses setFragment() which adds a # to the url.
-    model.put("url", authenticationUtils.buildAbsoluteUrl(getBaseUrl(), url, params).toString());
+    model.put("url", authenticationUtils.buildAbsoluteUrl(baseUrl, url, params).toString());
     return model;
   }
 
@@ -935,7 +939,8 @@ public class UserServiceImpl implements UserService {
 
   private void sendVerificationEmail(UserInvite userInvite, String url) {
     try {
-      Map<String, String> templateModel = getEmailVerificationTemplateModel(userInvite.getEmail(), url);
+      Map<String, String> templateModel =
+          getEmailVerificationTemplateModel(userInvite.getEmail(), url, userInvite.getAccountId());
       signupService.sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
     } catch (URISyntaxException e) {
       logger.error("Verification email couldn't be sent ", e);
@@ -944,7 +949,8 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void sendVerificationEmail(UserInvite userInvite, String url, Map<String, String> params) {
-    Map<String, String> templateModel = getEmailVerificationTemplateModel(userInvite.getEmail(), url, params);
+    Map<String, String> templateModel =
+        getEmailVerificationTemplateModel(userInvite.getEmail(), url, params, userInvite.getAccountId());
     signupService.sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
   }
 
@@ -961,8 +967,9 @@ public class UserServiceImpl implements UserService {
       throws URISyntaxException {
     List<String> userGroupNamesList = new ArrayList<>();
     userGroups.forEach(userGroup -> { userGroupNamesList.add(userGroup.getName()); });
-    String loginUrl = buildAbsoluteUrl(format(
-        "/login?company=%s&account=%s&email=%s", account.getCompanyName(), account.getAccountName(), user.getEmail()));
+    String loginUrl = buildAbsoluteUrl(format("/login?company=%s&account=%s&email=%s", account.getCompanyName(),
+                                           account.getAccountName(), user.getEmail()),
+        account.getUuid());
     Map<String, Object> model = new HashMap<>();
     model.put("name", user.getName());
     model.put("url", loginUrl);
@@ -1594,7 +1601,7 @@ public class UserServiceImpl implements UserService {
 
   private String getResetPasswordUrl(String token, User user) throws URISyntaxException {
     String accountIdParam = "?accountId=" + user.getDefaultAccountId();
-    return buildAbsoluteUrl("/reset-password/" + token + accountIdParam);
+    return buildAbsoluteUrl("/reset-password/" + token + accountIdParam, user.getDefaultAccountId());
   }
 
   /* (non-Javadoc)

@@ -26,6 +26,8 @@ import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.signup.SignupException;
@@ -39,6 +41,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -49,6 +52,8 @@ public class SignupServiceImpl implements SignupService {
   @Inject WingsPersistence wingsPersistence;
   @Inject BlackListedDomainChecker blackListedDomainChecker;
   @Inject MainConfiguration mainConfiguration;
+  @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Inject AccountService accountService;
   @Inject PwnedPasswordChecker pwnedPasswordChecker;
 
   private static final String TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME = "trial_signup_completed";
@@ -69,25 +74,19 @@ public class SignupServiceImpl implements SignupService {
 
   private Map<String, String> getTrialSignupCompletedTemplateModel(UserInvite userInvite) throws URISyntaxException {
     Map<String, String> model = new HashMap<>();
-    String loginUrl = buildAbsoluteUrl("/login");
+    String loginUrl = buildAbsoluteUrl("/login", userInvite);
     model.put("name", userInvite.getEmail());
     model.put("url", loginUrl);
     return model;
   }
 
-  private String buildAbsoluteUrl(String fragment) throws URISyntaxException {
-    String baseUrl = getBaseUrl();
+  private String buildAbsoluteUrl(String fragment, UserInvite userInvite) throws URISyntaxException {
+    Optional<String> subdomainUrl =
+        subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(userInvite.getAccountId()));
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(subdomainUrl);
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();
-  }
-
-  private String getBaseUrl() {
-    String baseUrl = configuration.getPortal().getUrl().trim();
-    if (!baseUrl.endsWith("/")) {
-      baseUrl += "/";
-    }
-    return baseUrl;
   }
 
   @Override
@@ -158,7 +157,7 @@ public class SignupServiceImpl implements SignupService {
     String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
     try {
       String token = createSignupTokeFromSecret(jwtPasswordSecret, userInvite.getEmail(), 30);
-      String resetPasswordUrl = getResetPasswordUrl(token);
+      String resetPasswordUrl = getResetPasswordUrl(token, userInvite);
       sendMail(userInvite, resetPasswordUrl, SETUP_PASSWORD_FOR_SIGNUP);
     } catch (URISyntaxException | UnsupportedEncodingException e) {
       logger.error("Password setup mail for signup could't be sent", e);
@@ -192,10 +191,10 @@ public class SignupServiceImpl implements SignupService {
     emailNotificationService.send(emailData);
   }
 
-  private String getResetPasswordUrl(String token) throws URISyntaxException {
+  private String getResetPasswordUrl(String token, UserInvite userInvite) throws URISyntaxException {
     // always the call should go to the free cluster because a trial account will be created.
     String mode = "?mode=signup";
-    return buildAbsoluteUrl("/complete-signup/" + token + mode);
+    return buildAbsoluteUrl("/complete-signup/" + token + mode, userInvite);
   }
 
   @Override

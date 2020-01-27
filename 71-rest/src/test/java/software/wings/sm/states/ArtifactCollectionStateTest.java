@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
@@ -49,6 +50,7 @@ import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -63,6 +65,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.WorkflowStandardParams.Builder;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class ArtifactCollectionStateTest extends CategoryTest {
@@ -77,6 +80,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   @Mock DelayEventHelper delayEventHelper;
   @Mock AccountService accountService;
   @Mock FeatureFlagService featureFlagService;
+  @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   private ManagerExpressionEvaluator expressionEvaluator = new ManagerExpressionEvaluator();
 
@@ -116,6 +120,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
     FieldUtils.writeField(workflowStandardParams, "appService", appService, true);
     FieldUtils.writeField(workflowStandardParams, "configuration", configuration, true);
     FieldUtils.writeField(workflowStandardParams, "accountService", accountService, true);
+    on(workflowStandardParams).set("subdomainUrlHelper", subdomainUrlHelper);
 
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(portalConfig.getUrl()).thenReturn("http://portalUrl");
@@ -128,6 +133,8 @@ public class ArtifactCollectionStateTest extends CategoryTest {
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
     when(delayEventHelper.delay(anyInt(), any())).thenReturn("anyGUID");
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
+    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
   }
 
   @Test

@@ -19,6 +19,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
@@ -26,6 +27,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Optional;
 
 @Singleton
 @Slf4j
@@ -34,6 +36,7 @@ public class AuthenticationUtils {
   @Inject private UserService userService;
   @Inject private MainConfiguration configuration;
   @Inject private AccountService accountService;
+  @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   public User getUserOrReturnNullIfUserDoesNotExists(String userName) {
     if (Strings.isNullOrEmpty(userName)) {
@@ -79,8 +82,8 @@ public class AuthenticationUtils {
     return buildAbsoluteUrlInternal(baseUrl, path, params);
   }
 
-  public URI buildAbsoluteUrl(String path, Map<String, String> params) {
-    String baseUrl = getBaseUrl();
+  public URI buildAbsoluteUrl(String path, Map<String, String> params, String accountId) {
+    String baseUrl = getBaseUrl(accountId);
     return buildAbsoluteUrlInternal(baseUrl, path, params);
   }
 
@@ -98,10 +101,11 @@ public class AuthenticationUtils {
   }
 
   public String getBaseUrl() {
-    String baseUrl = configuration.getApiUrl();
-    if (!baseUrl.endsWith("/")) {
-      baseUrl += "/";
-    }
-    return baseUrl;
+    return subdomainUrlHelper.getAPIUrl();
+  }
+
+  public String getBaseUrl(String accountId) {
+    Optional<String> subdomainUrl = subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(accountId));
+    return subdomainUrlHelper.getApiBaseUrl(subdomainUrl);
   }
 }

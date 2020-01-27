@@ -123,6 +123,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.ServiceHelper;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
@@ -155,6 +156,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class PcfSetupStateTest extends WingsBaseTest {
@@ -192,6 +194,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @InjectMocks @Spy private PcfStateHelper pcfStateHelper;
 
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
@@ -284,6 +287,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);
     on(workflowStandardParams).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
     on(workflowStandardParams).set("featureFlagService", featureFlagService);
+    on(workflowStandardParams).set("subdomainUrlHelper", subdomainUrlHelper);
 
     when(artifactService.get(any())).thenReturn(artifact);
     when(artifactStreamService.get(any())).thenReturn(artifactStream);
@@ -338,6 +342,8 @@ public class PcfSetupStateTest extends WingsBaseTest {
             PcfServiceSpecification.builder().manifestYaml(MANIFEST_YAML_CONTENT).serviceId(service.getUuid()).build());
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
+    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
   }
 
   @Test

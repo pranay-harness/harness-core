@@ -401,7 +401,7 @@ public class AuthenticationManager {
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
       Map<String, String> params = getRedirectParamsForSsoRedirection(jwtToken, encodedApiUrl);
-      URI redirectUrl = authenticationUtils.buildAbsoluteUrl("/saml.html", params);
+      URI redirectUrl = authenticationUtils.buildAbsoluteUrl("/saml.html", params, user.getDefaultAccountId());
       return Response.seeOther(redirectUrl).build();
     } catch (WingsException e) {
       if (e.getCode() == ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED) {
@@ -464,7 +464,7 @@ public class AuthenticationManager {
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
       Map<String, String> params = getRedirectParamsForSsoRedirection(jwtToken, encodedApiUrl);
-      URI redirectUrl = authenticationUtils.buildAbsoluteUrl("/saml.html", params);
+      URI redirectUrl = authenticationUtils.buildAbsoluteUrl("/saml.html", params, user.getDefaultAccountId());
 
       return Response.seeOther(redirectUrl).build();
     } catch (Exception e) {

@@ -48,6 +48,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -95,6 +96,7 @@ public class WorkflowNotificationHelper {
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private UserGroupService userGroupService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   private final DateFormat dateFormat = new SimpleDateFormat("MMM d");
   private final DateFormat timeFormat = new SimpleDateFormat("HH:mm z");
@@ -360,9 +362,12 @@ public class WorkflowNotificationHelper {
     if (workflowExecution.getPipelineExecutionId() != null) {
       String pipelineName = workflowExecution.getPipelineSummary().getPipelineName();
       if (isNotBlank(pipelineName)) {
+        Optional<String> subdomainUrl =
+            subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(context.getAccountId()));
         String pipelineUrl = NotificationMessageResolver.buildAbsoluteUrl(configuration,
             format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/%s/details", app.getAccountId(),
-                app.getUuid(), workflowExecution.getPipelineExecutionId(), context.getWorkflowExecutionId()));
+                app.getUuid(), workflowExecution.getPipelineExecutionId(), context.getWorkflowExecutionId()),
+            subdomainUrl);
         pipelineMsg = format(" as part of <<<%s|-|%s>>> pipeline", pipelineUrl, pipelineName);
       }
     }
@@ -397,9 +402,11 @@ public class WorkflowNotificationHelper {
 
   public String calculateWorkflowUrl(String workflowExecutionId, OrchestrationWorkflowType type, String accountId,
       String appId, String environmentId) {
+    Optional<String> subdomainUrl = subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(accountId));
     return NotificationMessageResolver.buildAbsoluteUrl(configuration,
         format("/account/%s/app/%s/env/%s/executions/%s/details", accountId, appId,
-            BUILD == type ? "build" : environmentId, workflowExecutionId));
+            BUILD == type ? "build" : environmentId, workflowExecutionId),
+        subdomainUrl);
   }
 
   public String getArtifactsMessage(ExecutionContext context, WorkflowExecution workflowExecution, ExecutionScope scope,

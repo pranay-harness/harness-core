@@ -158,6 +158,8 @@ import software.wings.helpers.ext.sftp.SftpService;
 import software.wings.helpers.ext.sftp.SftpServiceImpl;
 import software.wings.helpers.ext.smb.SmbService;
 import software.wings.helpers.ext.smb.SmbServiceImpl;
+import software.wings.helpers.ext.url.SubdomainUrlHelper;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.licensing.DatabaseLicenseProviderImpl;
 import software.wings.licensing.LicenseProvider;
 import software.wings.licensing.LicenseService;
@@ -586,6 +588,11 @@ public class WingsModule extends DependencyModule {
     return CacheManagerConfig.builder().disabled(configuration.getDisabledCache()).build();
   }
 
+  @Provides
+  public UrlConfiguration urlConfiguration() {
+    return new UrlConfiguration(configuration.getPortal().getUrl(), configuration.getApiUrl());
+  }
+
   @Override
   protected void configure() {
     bind(MainConfiguration.class).toInstance(configuration);
@@ -864,6 +871,7 @@ public class WingsModule extends DependencyModule {
     bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
     bind(CVActivityLogService.class).to(CVActivityLogServiceImpl.class);
     bind(CvValidationService.class).to(CvValidationServiceImpl.class);
+    bind(SubdomainUrlHelperIntfc.class).to(SubdomainUrlHelper.class);
 
     bind(LimitCheckerFactory.class).to(LimitCheckerFactoryImpl.class);
     bind(LimitConfigurationService.class).to(LimitConfigurationServiceMongo.class);

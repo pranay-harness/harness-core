@@ -105,6 +105,7 @@ import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -131,6 +132,7 @@ import software.wings.sm.WorkflowStandardParams;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class KubernetesSetupTest extends WingsBaseTest {
   private static final String KUBERNETES_CONTROLLER_NAME = "kubernetes-rc-name.1";
@@ -159,6 +161,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Mock private AwsCommandHelper mockAwsCommandHelper;
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   @InjectMocks private KubernetesSetup kubernetesSetup = new KubernetesSetup("name");
 
@@ -278,6 +281,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);
     on(workflowStandardParams).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
     on(workflowStandardParams).set("featureFlagService", featureFlagService);
+    on(workflowStandardParams).set("subdomainUrlHelper", subdomainUrlHelper);
 
     when(artifactService.get(any())).thenReturn(artifact);
     when(artifactStreamService.get(any())).thenReturn(artifactStream);
@@ -321,6 +325,8 @@ public class KubernetesSetupTest extends WingsBaseTest {
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
     doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
+    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
+    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
   }
 
   @Test

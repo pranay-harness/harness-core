@@ -32,6 +32,7 @@ import software.wings.beans.ExecutionCredential;
 import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.InstanceExpressionProcessor;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -48,6 +49,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * The Class WorkflowStandardParams.
@@ -77,6 +79,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   @Inject private transient SweepingOutputService sweepingOutputService;
 
   @Inject private transient FeatureFlagService featureFlagService;
+  @Inject private transient SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   private String appId;
   private String envId;
@@ -141,7 +144,8 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     }
     map.put(DEPLOYMENT_URL,
         buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(), app.getUuid(),
-            envUrlId, context.getWorkflowExecutionId())));
+                             envUrlId, context.getWorkflowExecutionId()),
+            context.getAccountId()));
 
     if (currentUser != null) {
       map.put(DEPLOYMENT_TRIGGERED_BY, currentUser.getName());
@@ -170,11 +174,9 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     return map;
   }
 
-  private String buildAbsoluteUrl(String fragment) {
-    String baseUrl = configuration.getPortal().getUrl().trim();
-    if (!baseUrl.endsWith("/")) {
-      baseUrl += "/";
-    }
+  private String buildAbsoluteUrl(String fragment, String accountId) {
+    Optional<String> subdomainUrl = subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(accountId));
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(subdomainUrl);
     try {
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
       uriBuilder.setFragment(fragment);
