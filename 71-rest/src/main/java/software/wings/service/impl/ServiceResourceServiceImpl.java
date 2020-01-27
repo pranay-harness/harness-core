@@ -2190,8 +2190,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private List<ServiceCommand> getServiceCommandsByOrder(List<ServiceCommand> serviceCommands) {
-    serviceCommands = serviceCommands.stream().sorted(comparingDouble(ServiceCommand::getOrder)).collect(toList());
-    return serviceCommands;
+    return serviceCommands.stream().sorted(comparingDouble(ServiceCommand::getOrder)).collect(toList());
   }
 
   @Override

@@ -40,7 +40,6 @@ public class ArtifactCollectionCallback implements NotifyCallback {
   @Inject private ArtifactStreamService artifactStreamService;
 
   private String artifactId;
-  private boolean acs;
 
   public ArtifactCollectionCallback() {}
 

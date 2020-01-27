@@ -335,10 +335,10 @@ public abstract class NodeSelectState extends State {
                                             .addFilter("lastArtifactBuildNum", EQ, artifact.getBuildNo())
                                             .build();
     List<Instance> instances = instanceService.list(pageRequest).getResponse();
-    List<String> hostNames =
+    List<String> hostNameList =
         instances.stream().map(instance -> instance.getHostInstanceKey().getHostName()).collect(toList());
     return serviceInstances.stream()
-        .filter(serviceInstance -> !hostNames.contains(serviceInstance.getHostName()))
+        .filter(serviceInstance -> !hostNameList.contains(serviceInstance.getHostName()))
         .collect(toList());
   }
 

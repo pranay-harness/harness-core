@@ -500,19 +500,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Map<StateTypeScope, List<Stencil>> filterArtifactCollectionState(Map<StateTypeScope, List<Stencil>> maps) {
     Predicate<Stencil> buildWorkflowPredicate = stencil -> stencil.getStencilCategory() != StencilCategory.COLLECTIONS;
-    maps = maps.entrySet().stream().collect(toMap(Entry::getKey,
+    return maps.entrySet().stream().collect(toMap(Entry::getKey,
         stateTypeScopeListEntry
         -> stateTypeScopeListEntry.getValue().stream().filter(buildWorkflowPredicate).collect(toList())));
-    return maps;
   }
 
   private Map<StateTypeScope, List<Stencil>> getStateTypeForApp(
       String appId, Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap, Map<String, String> entityMap) {
-    Map<StateTypeScope, List<Stencil>> mapByScope;
-    mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
+    return stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
         stateTypeScopeListEntry
         -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId, entityMap)));
-    return mapByScope;
   }
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> loadStateTypes(String accountId) {
