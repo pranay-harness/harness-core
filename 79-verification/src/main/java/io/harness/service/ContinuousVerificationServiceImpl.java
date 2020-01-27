@@ -1234,6 +1234,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .is24x7Task(logsCVConfiguration.isEnabled24x7())
                 .build();
 
+        if (logsCVConfiguration.is247LogsV2()) {
+          expTask.setFeature_name("247_V2");
+        }
+
         expTask.setAppId(logsCVConfiguration.getAppId());
         expTask.setUuid(taskId);
 
@@ -1277,6 +1281,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .stateType(logsCVConfiguration.getStateType())
             .is24x7Task(logsCVConfiguration.isEnabled24x7())
             .build();
+
+    if (logsCVConfiguration.is247LogsV2()) {
+      feedbackTask.setFeature_name("247_V2");
+    }
 
     feedbackTask.setAppId(logsCVConfiguration.getAppId());
     feedbackTask.setUuid(taskId);
