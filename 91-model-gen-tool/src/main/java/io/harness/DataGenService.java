@@ -55,9 +55,7 @@ import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.mongo.IndexManager;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import io.harness.seeddata.SampleDataProviderService;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.rules.TemporaryFolder;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.Morphia;
@@ -82,14 +80,10 @@ import software.wings.beans.SystemCatalog;
 import software.wings.beans.Workflow;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppContainerService;
-import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.HarnessUserGroupService;
-import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
@@ -98,7 +92,6 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateGalleryService;
-import software.wings.service.intfc.template.TemplateService;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.ArtifactType;
 
@@ -106,8 +99,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -116,22 +107,12 @@ import java.util.stream.Collectors;
 public class DataGenService {
   private static final String NEW_RELIC_CONNECTOR_NAME = "NewRelic";
   private static final int NUM_APPS = 1; /* Max 1000 */
-  private static final int NUM_APP_CONTAINER_PER_APP = 2; /* Max 1000 */
   private static final int NUM_SERVICES_PER_APP = 1; /* Max 1000 */
   public static final String AWS_PLAY_GROUND = "aws-playground";
   public static final String WINGS_KEY = "Wings Key";
 
-  private static Random random = new Random();
-
-  /**
-   * The Test folder.
-   */
-  public TemporaryFolder testFolder = new TemporaryFolder();
-
   private List<String> appNames = new ArrayList<>(seedNames);
   private List<String> serviceNames;
-  private List<String> configFileNames;
-  private SettingAttribute envAttr;
 
   @Inject private Morphia morphia;
   @Inject @Named("primaryDatastore") private AdvancedDatastore primaryDatastore;
@@ -162,19 +143,12 @@ public class DataGenService {
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private SettingGenerator settingGenerator;
   @Inject private ScmSecret scmSecret;
-  @Inject private LearningEngineService learningEngineService;
-  @Inject protected AuthHandler authHandler;
   @Inject private AppContainerService appContainerService;
   @Inject private TemplateGalleryService templateGalleryService;
-  @Inject private TemplateService templateService;
-  @Inject private ExecutorService executorService;
-  @Inject private ConfigService configService;
-  @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private SampleDataProviderService sampleDataProviderService;
   @Inject private LoginSettingsService loginSettingsService;
 
-  public void populateData() throws IOException {
+  public void populateData() {
     dropDBAndEnsureIndexes();
     templateGalleryService.loadHarnessGallery();
     templateGalleryService.copyHarnessTemplates();
@@ -229,24 +203,6 @@ public class DataGenService {
     settingGenerator.ensureAllPredefined(seed, owners);
 
     UsageRestrictions defaultUsageRestrictions = getAllAppAllEnvUsageRestrictions();
-
-    //    SettingAttribute smtpSettingAttribute =
-    //        aSettingAttribute()
-    //            .withCategory(SettingCategory.CONNECTOR)
-    //            .name("SMTP")
-    //            .withAccountId(account.getUuid())
-    //            .withValue(SmtpConfig.builder()
-    //                           .accountId(account.getUuid())
-    //                           .fromAddress("systemsupport2@harness.io")
-    //                           .username("systemsupport2@harness.io")
-    //                           .host("smtp.gmail.com")
-    //                           .password(scmSecret.decryptToCharArray(new SecretName("smtp_config_password")))
-    //                           .port(465)
-    //                           .useSSL(true)
-    //                           .build())
-    //            .withUsageRestrictions(defaultUsageRestrictions)
-    //            .build();
-    //    wingsPersistence.save(smtpSettingAttribute);
 
     SettingAttribute splunkSettingAttribute =
         aSettingAttribute()
@@ -429,13 +385,6 @@ public class DataGenService {
 
   private static final String AWS_S3_CATALOG_TOMCAT7 =
       "https://s3.amazonaws.com/harness-catalogs/appstack/apache-tomcat-7.0.78.tar.gz";
-  private static final String AWS_S3_CATALOG_TOMCAT8 =
-      "https://s3.amazonaws.com/harness-catalogs/appstack/apache-tomcat-8.5.15.tar.gz";
-
-  private static final String AWS_S3_CATALOG_TOMCAT7_HARDENED =
-      "https://s3.amazonaws.com/harness-catalogs/appstack/apache-tomcat-7.0.78-hardened.tar.gz";
-  private static final String AWS_S3_CATALOG_TOMCAT8_HARDENED =
-      "https://s3.amazonaws.com/harness-catalogs/appstack/apache-tomcat-8.5.15-hardened.tar.gz";
 
   /**
    * Loads default application containers

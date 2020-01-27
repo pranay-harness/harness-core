@@ -22,12 +22,7 @@ import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.security.annotations.Scope;
-import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.TriggerService;
-import software.wings.service.intfc.WorkflowService;
 
 import java.util.Map;
 import javax.ws.rs.BeanParam;
@@ -53,21 +48,10 @@ import javax.ws.rs.QueryParam;
 @Scope(APPLICATION)
 public class TriggerResource {
   private TriggerService triggerService;
-  private AuthHandler authHandler;
-  private AuthService authService;
-  private WorkflowService workflowService;
-  private PipelineService pipelineService;
-  private EnvironmentService environmentService;
 
   @Inject
-  public TriggerResource(TriggerService triggerService, AuthHandler authHandler, AuthService authService,
-      WorkflowService workflowService, PipelineService pipelineService, EnvironmentService environmentService) {
+  public TriggerResource(TriggerService triggerService) {
     this.triggerService = triggerService;
-    this.authHandler = authHandler;
-    this.authService = authService;
-    this.workflowService = workflowService;
-    this.pipelineService = pipelineService;
-    this.environmentService = environmentService;
   }
 
   /**
