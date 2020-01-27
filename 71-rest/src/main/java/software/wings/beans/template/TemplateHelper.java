@@ -54,6 +54,7 @@ public class TemplateHelper {
         return ServiceCommand.class;
       case HTTP:
       case SHELL_SCRIPT:
+      case PCF_PLUGIN:
         return Workflow.class;
       case ARTIFACT_SOURCE:
         return ArtifactStream.class;
@@ -69,6 +70,7 @@ public class TemplateHelper {
         return SERVICE;
       case HTTP:
       case SHELL_SCRIPT:
+      case PCF_PLUGIN:
         return WORKFLOW;
       case ARTIFACT_SOURCE:
         return ARTIFACT_STREAM;
@@ -111,6 +113,7 @@ public class TemplateHelper {
         return ServiceCommand.TEMPLATE_UUID_KEY;
       case HTTP:
       case SHELL_SCRIPT:
+      case PCF_PLUGIN:
         return Workflow.LINKED_TEMPLATE_UUIDS_KEY;
       case ARTIFACT_SOURCE:
         return ArtifactStreamKeys.templateUuid;

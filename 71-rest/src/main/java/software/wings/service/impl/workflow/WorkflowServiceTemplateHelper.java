@@ -108,7 +108,7 @@ public class WorkflowServiceTemplateHelper {
               (GraphNode) templateService.constructEntityFromTemplate(template, EntityType.WORKFLOW);
           List<String> templateProperties = templateService.fetchTemplateProperties(template);
           if (templateProperties != null) {
-            if (!step.getType().equals("COMMAND")) {
+            if (!"COMMAND".equals(step.getType())) {
               step.getProperties().keySet().removeAll(templateProperties);
               step.getProperties().putAll(templateStep.getProperties());
             }

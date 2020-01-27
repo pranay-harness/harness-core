@@ -62,6 +62,10 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   private static final String COMMAND_PATH = "commandPath";
   private static final String ACCOUNT = "Account";
   private static final String APPLICATION = "Application";
+  private static final String VARIABLES = "variables";
+  private static final String TEMPLATE_UUID = "templateUuid";
+  private static final String TEMPLATE_VERSION = "templateVersion";
+  private static final String TEMPLATE_VARIABLES = "templateVariables";
 
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject ServiceResourceService serviceResourceService;
@@ -316,7 +320,8 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
 
   @Override
   public List<String> fetchTemplateProperties() {
-    return asList(COMMAND_UNITS, REFERENCED_TEMPLATE_LIST, COMMAND_TYPE, COMMAND_PATH);
+    return asList(COMMAND_UNITS, REFERENCED_TEMPLATE_LIST, COMMAND_TYPE, COMMAND_PATH, VARIABLES, TEMPLATE_UUID,
+        TEMPLATE_VERSION, TEMPLATE_VARIABLES);
   }
 
   @Override

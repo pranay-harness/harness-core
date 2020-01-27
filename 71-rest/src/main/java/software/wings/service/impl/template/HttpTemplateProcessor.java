@@ -21,6 +21,8 @@ public class HttpTemplateProcessor extends StateTemplateProcessor {
   private static final String BODY = "body";
   private static final String ASSERTION = "assertion";
   private static final String SOCKET_TIMEOUT_MILLIS = "socketTimeoutMillis";
+  private static final String VARIABLES = "variables";
+
   @Override
   public TemplateType getTemplateType() {
     return TemplateType.HTTP;
@@ -54,6 +56,8 @@ public class HttpTemplateProcessor extends StateTemplateProcessor {
 
   @Override
   public List<String> fetchTemplateProperties() {
-    return asList(URL, METHOD, HEADER, BODY, ASSERTION);
+    List<String> templateProperties = super.fetchTemplateProperties();
+    templateProperties.addAll(asList(URL, METHOD, HEADER, BODY, ASSERTION, VARIABLES));
+    return templateProperties;
   }
 }

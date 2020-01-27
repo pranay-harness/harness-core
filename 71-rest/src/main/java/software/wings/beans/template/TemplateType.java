@@ -8,7 +8,8 @@ public enum TemplateType {
   WORKFLOW("Workflow"),
   PIPELINE("Pipeline"),
   SHELL_SCRIPT("Shell Script"),
-  ARTIFACT_SOURCE("Artifact Source");
+  ARTIFACT_SOURCE("Artifact Source"),
+  PCF_PLUGIN("PCF Command");
 
   String displayName;
 

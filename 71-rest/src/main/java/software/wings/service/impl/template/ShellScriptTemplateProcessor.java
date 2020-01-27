@@ -18,6 +18,8 @@ public class ShellScriptTemplateProcessor extends StateTemplateProcessor {
   private static final String SCRIPT_STRING = "scriptString";
   private static final String OUTPUT_VARS = "outputVars";
   private static final String TIMEOUT_MILLIS = "timeoutMillis";
+  private static final String VARIABLES = "variables";
+
   @Override
   public TemplateType getTemplateType() {
     return TemplateType.SHELL_SCRIPT;
@@ -46,6 +48,8 @@ public class ShellScriptTemplateProcessor extends StateTemplateProcessor {
 
   @Override
   public List<String> fetchTemplateProperties() {
-    return asList(SCRIPT_TYPE, SCRIPT_STRING, OUTPUT_VARS);
+    List<String> templateProperties = super.fetchTemplateProperties();
+    templateProperties.addAll(asList(SCRIPT_TYPE, SCRIPT_STRING, OUTPUT_VARS, VARIABLES));
+    return templateProperties;
   }
 }
