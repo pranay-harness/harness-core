@@ -1043,6 +1043,14 @@ public class YamlResource {
     return yamlGitService.listGitSyncErrors(accountId);
   }
 
+  @GET
+  @Path("git-sync-errors/count")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Long> gitSyncErrorCount(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(yamlGitService.getGitSyncErrorCount(accountId));
+  }
+
   @POST
   @Path("git-sync-errors")
   @Timed
