@@ -34,7 +34,8 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
   public String getPortalBaseUrl(Optional<String> subdomainUrl) {
     // Set baseUrl = subDomainUrl only if subDomainUrl is not null, otherwise
     // set baseUrl equal to URL of portal
-    return subdomainUrl.isPresent() ? subdomainUrl.get() : getPortalUrl();
+    String portalUrl = subdomainUrl.isPresent() ? subdomainUrl.get() : getPortalUrl();
+    return appendSeparatorToUrl(portalUrl);
   }
 
   /**
@@ -46,7 +47,8 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
   public String getApiBaseUrl(Optional<String> subdomainUrl) {
     // Set baseUrl = subDomainUrl only if subDomainUrl is not null, otherwise
     // set baseUrl equal to API URL
-    return subdomainUrl.isPresent() ? subdomainUrl.get() : getAPIUrl();
+    String apiUrl = subdomainUrl.isPresent() ? subdomainUrl.get() : getAPIUrl();
+    return appendSeparatorToUrl(apiUrl);
   }
 
   /**
@@ -55,10 +57,7 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
    */
   private String getPortalUrl() {
     String baseUrl = urlConfiguration.getPortalUrl().trim();
-    if (!baseUrl.endsWith("/")) {
-      baseUrl += "/";
-    }
-    return baseUrl;
+    return appendSeparatorToUrl(baseUrl);
   }
 
   /**
@@ -67,10 +66,7 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
    */
   public String getAPIUrl() {
     String baseUrl = urlConfiguration.getApiUrl();
-    if (!baseUrl.endsWith("/")) {
-      baseUrl += "/";
-    }
-    return baseUrl;
+    return appendSeparatorToUrl(baseUrl);
   }
 
   public Optional<String> getCustomSubDomainUrl(Optional<String> accountId) {
@@ -93,5 +89,17 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
       logger.info("Exception occurred at getCustomSubdomainUrl", e);
       return Optional.ofNullable(null);
     }
+  }
+
+  /**
+   * Appends / at the end of URL
+   * @param url
+   * @return
+   */
+  private String appendSeparatorToUrl(String url) {
+    if (!url.endsWith("/")) {
+      url += "/";
+    }
+    return url;
   }
 }
