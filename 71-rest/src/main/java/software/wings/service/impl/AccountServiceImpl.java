@@ -330,8 +330,6 @@ public class AccountServiceImpl implements AccountService {
     featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, account.getUuid());
     if (!fromDataGen) {
       featureFlagService.enableAccount(FeatureName.USE_PCF_CLI, account.getUuid());
-      featureFlagService.enableAccount(FeatureName.PCF_MANIFEST_REDESIGN, account.getUuid());
-      featureFlagService.enableAccount(FeatureName.PCF_CUSTOM_PLUGIN_SUPPORT, account.getUuid());
     }
   }
 
