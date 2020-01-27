@@ -33,7 +33,7 @@ public class SubdomainUrlHelperIntfcTest extends WingsBaseTest {
   @InjectMocks @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   private static final String PORTAL_URL_TO_VERIFY = PORTAL_URL + "/";
-  private static final String SUBDOMAIN_URL1 = "https://domain.com";
+  private static final String SUBDOMAIN_URL1 = "https://domain.com/";
   private static final String API_URL_TO_VERIFY = "http:localhost:8080/";
 
   protected LicenseInfo getLicenseInfo() {

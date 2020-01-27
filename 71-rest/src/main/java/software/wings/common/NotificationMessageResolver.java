@@ -331,14 +331,9 @@ public class NotificationMessageResolver {
 
   public static String buildAbsoluteUrl(
       MainConfiguration configuration, String fragment, Optional<String> subdomainUrl) {
-    String baseUrl = null;
-    if (subdomainUrl.isPresent()) {
-      baseUrl = subdomainUrl.get();
-    } else {
-      baseUrl = configuration.getPortal().getUrl().trim();
-      if (!baseUrl.endsWith("/")) {
-        baseUrl += "/";
-      }
+    String baseUrl = subdomainUrl.isPresent() ? subdomainUrl.get() : configuration.getPortal().getUrl().trim();
+    if (!baseUrl.endsWith("/")) {
+      baseUrl += "/";
     }
     try {
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
