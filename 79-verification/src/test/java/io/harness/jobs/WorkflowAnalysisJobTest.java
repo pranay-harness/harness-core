@@ -149,8 +149,6 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
         .thenReturn(featureFlagRestMock);
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
         .thenReturn(featureFlagRestMock);
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.LOGML_NEURAL_NET, accountId))
-        .thenReturn(featureFlagRestMock);
 
     final Call<RestResponse<List<String>>> managerVersionsCall = mock(Call.class);
     when(managerVersionsCall.execute()).thenReturn(Response.success(new RestResponse<>(null)));

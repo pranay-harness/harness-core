@@ -98,7 +98,6 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     accountId = generateUuid();
     appId = generateUuid();
     MockitoAnnotations.initMocks(this);
-    when(featureFlagService.isEnabled(FeatureName.STACKDRIVER_SERVICEGUARD, accountId)).thenReturn(true);
     when(featureFlagService.isEnabled(FeatureName.CUSTOM_LOGS_SERVICEGUARD, accountId)).thenReturn(true);
     FieldUtils.writeField(cvConfigurationService, "featureFlagService", featureFlagService, true);
   }
@@ -425,14 +424,6 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
       assertThat(logMLAnalysisRecord.getCvConfigId()).isEqualTo(newCvConfigId);
       assertThat(logMLAnalysisRecord.isDeprecated()).isTrue();
     });
-  }
-
-  @Test(expected = UnsupportedOperationException.class)
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testStackDriverFeatureFlagOff() throws Exception {
-    when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
-    testCreateStackDriverMetrics();
   }
 
   @Test

@@ -13,7 +13,6 @@ import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
 import software.wings.security.UserThreadLocal;
@@ -193,9 +192,6 @@ public class ContinuousVerificationDashboardResource {
       @QueryParam("metricNames") @Valid final List<String> metricNames,
       @QueryParam("tags") @Valid final List<String> tags, @QueryParam("offset") final Integer offset,
       @QueryParam("pageSize") final Integer pageSize) {
-    if (!featureFlagService.isEnabled(FeatureName.TIME_SERIES_SERVICEGUARD_V2, accountId)) {
-      throw new UnsupportedOperationException("This feature is not enabled for account " + accountId);
-    }
     return new RestResponse<>(
         continuousVerificationService.getTimeSeriesOfHeatMapUnitV2(TimeSeriesFilter.builder()
                                                                        .cvConfigId(cvConfigId)

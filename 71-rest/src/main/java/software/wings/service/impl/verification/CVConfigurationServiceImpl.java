@@ -184,11 +184,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
 
       case STACK_DRIVER:
-        if (!featureFlagService.isEnabled(FeatureName.STACKDRIVER_SERVICEGUARD, accountId)) {
-          logger.info("Stackdriver metrics service guard 24/7 is not enabled for account {}", accountId);
-          throw new UnsupportedOperationException(
-              "Stackdriver metrics service guard 24/7 is not enabled for account " + accountId);
-        }
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), StackDriverMetricCVConfiguration.class);
         ((StackDriverMetricCVConfiguration) cvConfiguration).setMetricFilters();
         Map<String, String> stackDriverInvalidFields = StackDriverState.validateMetricDefinitions(
@@ -734,12 +729,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         }
         break;
       case STACK_DRIVER:
-        if (!featureFlagService.isEnabled(FeatureName.STACKDRIVER_SERVICEGUARD, savedConfiguration.getAccountId())) {
-          logger.info("Stackdriver metrics service guard 24/7 is not enabled for account {}",
-              savedConfiguration.getAccountId());
-          throw new UnsupportedOperationException(
-              "Stackdriver metrics service guard 24/7 is not enabled for account " + savedConfiguration.getAccountId());
-        }
         StackDriverMetricCVConfiguration stackDriverMetricCVConfiguration =
             (StackDriverMetricCVConfiguration) cvConfiguration;
         stackDriverMetricCVConfiguration.setMetricFilters();
