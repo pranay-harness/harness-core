@@ -701,7 +701,14 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
 
       WorkflowExecutionBaseline baselineDetails = workflowExecutionService.getBaselineDetails(
           appId, workflowExecutionIds.get(i), stateExecutionIds.get(i), workflowExecutionIds.get(i));
-      assertThat(baselineDetails).isNull();
+      assertThat(baselineDetails)
+          .isEqualTo(WorkflowExecutionBaseline.builder()
+                         .workflowId(workflowId)
+                         .envId(envIds.get(i))
+                         .serviceId(serviceIds.get(i))
+                         .workflowExecutionId(workflowExecutionIds.get(i))
+                         .pipelineExecutionId(workflowExecution.getPipelineExecutionId())
+                         .build());
     }
 
     WorkflowExecution workflowExecution = WorkflowExecution.builder()

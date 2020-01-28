@@ -66,7 +66,6 @@ import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -182,6 +181,7 @@ import software.wings.beans.alert.DeploymentRateApproachingLimitAlert;
 import software.wings.beans.alert.UsageLimitExceededAlert;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
+import software.wings.beans.baseline.WorkflowExecutionBaseline.WorkflowExecutionBaselineKeys;
 import software.wings.beans.concurrency.ConcurrentExecutionResponse;
 import software.wings.beans.concurrency.ConcurrentExecutionResponse.ConcurrentExecutionResponseBuilder;
 import software.wings.beans.deployment.DeploymentMetadata;
@@ -3275,7 +3275,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public WorkflowExecutionBaseline getBaselineDetails(
-      String appId, String workflowExecutionId, String stateExecutionId, String currentExecId) {
+      String appId, String baselineWorkflowExecutionId, String stateExecutionId, String currentExecId) {
     DeploymentExecutionContext executionContext =
         stateMachineExecutor.getExecutionContext(appId, currentExecId, stateExecutionId);
     if (executionContext == null) {
@@ -3287,22 +3287,29 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     String envId = workflowStandardParams.fetchRequiredEnv().getUuid();
     PhaseElement phaseElement = executionContext.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
-    PageRequest<WorkflowExecutionBaseline> pageRequest = aPageRequest()
-                                                             .addFilter("workflowExecutionId", EQ, workflowExecutionId)
-                                                             .addFilter("envId", EQ, envId)
-                                                             .addFilter("serviceId", EQ, serviceId)
-                                                             .addFilter("appId", EQ, appId)
-                                                             .build();
-    PageResponse<WorkflowExecutionBaseline> pageResponse =
-        wingsPersistence.query(WorkflowExecutionBaseline.class, pageRequest);
-    Preconditions.checkState(
-        pageResponse.size() <= 1, "workflowExecutionId " + workflowExecutionId + " exists in more than one baselines");
 
-    if (isEmpty(pageResponse.getResponse())) {
+    final WorkflowExecutionBaseline workflowExecutionBaseline =
+        wingsPersistence.createQuery(WorkflowExecutionBaseline.class, excludeAuthority)
+            .filter(WorkflowExecutionBaselineKeys.workflowExecutionId, baselineWorkflowExecutionId)
+            .filter(WorkflowExecutionBaselineKeys.envId, envId)
+            .filter(WorkflowExecutionBaselineKeys.serviceId, serviceId)
+            .get();
+    if (workflowExecutionBaseline != null) {
+      return workflowExecutionBaseline;
+    }
+
+    final WorkflowExecution baselineWorkflowExecution = getWorkflowExecution(appId, baselineWorkflowExecutionId);
+    if (baselineWorkflowExecution == null) {
       return null;
     }
 
-    return pageResponse.getResponse().get(0);
+    return WorkflowExecutionBaseline.builder()
+        .workflowId(baselineWorkflowExecution.getWorkflowId())
+        .envId(baselineWorkflowExecution.getEnvId())
+        .serviceId(serviceId)
+        .workflowExecutionId(baselineWorkflowExecutionId)
+        .pipelineExecutionId(baselineWorkflowExecution.getPipelineExecutionId())
+        .build();
   }
 
   @Override
