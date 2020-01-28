@@ -1,5 +1,6 @@
 package io.harness.queue;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -17,7 +18,8 @@ import java.util.stream.IntStream;
 @Slf4j
 @Singleton
 public class QueueListenerController implements Managed {
-  private ExecutorService executorService = Executors.newCachedThreadPool();
+  private ExecutorService executorService =
+      Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("queue-listener-%d").build());
   private List<QueueListener<?>> abstractQueueListeners = new ArrayList<>();
   @Inject private WorkersConfiguration workersConfiguration;
   public void register(QueueListener<?> listener, int threads) {

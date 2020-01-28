@@ -3,6 +3,7 @@ package migrations.all;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 
 import migrations.Migration;
@@ -26,7 +27,8 @@ public class TriggerFullAppGitSync implements Migration {
                                         .get();
     Set<String> accounts = featureFlag.getAccountIds();
     if (isNotEmpty(accounts)) {
-      ExecutorService executorService = Executors.newFixedThreadPool(10);
+      ExecutorService executorService = Executors.newFixedThreadPool(
+          10, new ThreadFactoryBuilder().setNameFormat("migrate-TriggerFullAppGitSync").build());
       for (String accountId : accounts) {
         executorService.submit(() -> yamlGitService.fullSyncForEntireAccount(accountId));
       }

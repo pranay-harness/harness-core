@@ -65,6 +65,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -265,23 +266,25 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Override
   public RestResponse processYamlFilesAsZip(String accountId, InputStream fileInputStream, String yamlPath) {
     try {
-      Future<RestResponse> future = Executors.newSingleThreadExecutor().submit(() -> {
-        try {
-          List changeList = getChangesForZipFile(accountId, fileInputStream, yamlPath);
+      Future<RestResponse> future =
+          Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("process-yamls-as-zip").build())
+              .submit(() -> {
+                try {
+                  List changeList = getChangesForZipFile(accountId, fileInputStream, yamlPath);
 
-          List<ChangeContext> changeSets = processChangeSet(changeList);
-          Map<String, Object> metaDataMap = Maps.newHashMap();
-          metaDataMap.put("yamlFilesProcessed", changeSets.size());
-          return Builder.aRestResponse().withMetaData(metaDataMap).build();
-        } catch (YamlProcessingException ex) {
-          logger.warn("Unable to process zip upload for account {}.", accountId, ex);
-          // gitToHarness is false, as this is not initiated from git
-          yamlGitService.processFailedChanges(accountId, ex.getFailedYamlFileChangeMap(), false);
-        }
-        return Builder.aRestResponse()
-            .withResponseMessages(asList(ResponseMessage.builder().code(ErrorCode.DEFAULT_ERROR_CODE).build()))
-            .build();
-      });
+                  List<ChangeContext> changeSets = processChangeSet(changeList);
+                  Map<String, Object> metaDataMap = Maps.newHashMap();
+                  metaDataMap.put("yamlFilesProcessed", changeSets.size());
+                  return Builder.aRestResponse().withMetaData(metaDataMap).build();
+                } catch (YamlProcessingException ex) {
+                  logger.warn("Unable to process zip upload for account {}.", accountId, ex);
+                  // gitToHarness is false, as this is not initiated from git
+                  yamlGitService.processFailedChanges(accountId, ex.getFailedYamlFileChangeMap(), false);
+                }
+                return Builder.aRestResponse()
+                    .withResponseMessages(asList(ResponseMessage.builder().code(ErrorCode.DEFAULT_ERROR_CODE).build()))
+                    .build();
+              });
       return future.get(30, TimeUnit.SECONDS);
     } catch (Exception e) {
       return Builder.aRestResponse()

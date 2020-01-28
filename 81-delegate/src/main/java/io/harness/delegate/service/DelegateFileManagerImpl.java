@@ -8,6 +8,7 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -71,8 +72,10 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   public DelegateFileManagerImpl(ManagerClientV2 managerClient, DelegateConfiguration delegateConfiguration) {
     this.managerClient = managerClient;
     this.delegateConfiguration = delegateConfiguration;
-    Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this ::deleteCachedArtifacts, 1000, 5 * 60 * 1000,
-        TimeUnit.MILLISECONDS); // periodic cleanup for cached artifacts
+    Executors
+        .newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("delegate-file-manager").build())
+        .scheduleAtFixedRate(this ::deleteCachedArtifacts, 1000, 5 * 60 * (long) 1000,
+            TimeUnit.MILLISECONDS); // periodic cleanup for cached artifacts
   }
 
   @Override

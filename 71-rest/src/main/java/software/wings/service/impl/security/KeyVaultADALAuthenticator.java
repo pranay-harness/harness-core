@@ -1,11 +1,14 @@
 package software.wings.service.impl.security;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import com.microsoft.aad.adal4j.AuthenticationContext;
 import com.microsoft.aad.adal4j.AuthenticationResult;
 import com.microsoft.aad.adal4j.ClientCredential;
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.keyvault.authentication.KeyVaultCredentials;
 import com.microsoft.rest.credentials.ServiceClientCredentials;
+import io.harness.exception.UnexpectedException;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,7 +50,8 @@ public class KeyVaultADALAuthenticator {
     // Starts a service to fetch access token.
     ExecutorService service = null;
     try {
-      service = Executors.newFixedThreadPool(1);
+      service = Executors.newFixedThreadPool(
+          1, new ThreadFactoryBuilder().setNameFormat("keyvault-get-access-token").build());
       AuthenticationContext context = new AuthenticationContext(authorization, false, service);
 
       Future<AuthenticationResult> future = null;
@@ -57,14 +61,17 @@ public class KeyVaultADALAuthenticator {
         ClientCredential credentials = new ClientCredential(clientId, clientKey);
         future = context.acquireToken(resource, credentials, null);
       }
-
-      result = future.get();
+      if (future != null) {
+        result = future.get();
+      }
     } finally {
-      service.shutdown();
+      if (service != null) {
+        service.shutdown();
+      }
     }
 
     if (result == null) {
-      throw new RuntimeException("Authentication results were null.");
+      throw new UnexpectedException("Authentication results were null.");
     }
     return result;
   }
