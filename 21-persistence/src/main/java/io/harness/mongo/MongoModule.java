@@ -29,16 +29,16 @@ import java.util.Set;
 
 @Slf4j
 public class MongoModule extends DependencyProviderModule {
-  public static final MongoClientOptions mongoClientOptions = MongoClientOptions.builder()
-                                                                  .retryWrites(true)
-                                                                  .connectTimeout(30000)
-                                                                  .serverSelectionTimeout(90000)
-                                                                  .maxConnectionIdleTime(600000)
-                                                                  .connectionsPerHost(300)
-                                                                  .build();
+  public static final MongoClientOptions defaultMongoClientOptions = MongoClientOptions.builder()
+                                                                         .retryWrites(true)
+                                                                         .connectTimeout(30000)
+                                                                         .serverSelectionTimeout(90000)
+                                                                         .maxConnectionIdleTime(600000)
+                                                                         .connectionsPerHost(300)
+                                                                         .build();
 
   public static AdvancedDatastore createDatastore(Morphia morphia, String uri) {
-    MongoClientURI clientUri = new MongoClientURI(uri, MongoClientOptions.builder(mongoClientOptions));
+    MongoClientURI clientUri = new MongoClientURI(uri, MongoClientOptions.builder(defaultMongoClientOptions));
     MongoClient mongoClient = new MongoClient(clientUri);
 
     AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, clientUri.getDatabase());
@@ -75,7 +75,15 @@ public class MongoModule extends DependencyProviderModule {
   @Provides
   @Named("primaryDatastore")
   public AdvancedDatastore primaryDatastore(MongoConfig mongoConfig, Morphia morphia, HObjectFactory objectFactory) {
-    MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(mongoClientOptions));
+    MongoClientOptions primaryMongoClientOptions = MongoClientOptions.builder()
+                                                       .retryWrites(defaultMongoClientOptions.getRetryWrites())
+                                                       .connectTimeout(mongoConfig.getConnectTimeout())
+                                                       .serverSelectionTimeout(mongoConfig.getServerSelectionTimeout())
+                                                       .maxConnectionIdleTime(mongoConfig.getMaxConnectionIdleTime())
+                                                       .connectionsPerHost(mongoConfig.getConnectionsPerHost())
+                                                       .build();
+    MongoClientURI uri =
+        new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(primaryMongoClientOptions));
     MongoClient mongoClient = new MongoClient(uri);
 
     AdvancedDatastore primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
@@ -94,9 +102,9 @@ public class MongoModule extends DependencyProviderModule {
   public DistributedLockSvc distributedLockSvc(MongoConfig mongoConfig) {
     MongoClientURI uri;
     if (isNotEmpty(mongoConfig.getLocksUri())) {
-      uri = new MongoClientURI(mongoConfig.getLocksUri(), MongoClientOptions.builder(mongoClientOptions));
+      uri = new MongoClientURI(mongoConfig.getLocksUri(), MongoClientOptions.builder(defaultMongoClientOptions));
     } else {
-      uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(mongoClientOptions));
+      uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(defaultMongoClientOptions));
     }
     MongoClient mongoClient = new MongoClient(uri);
 

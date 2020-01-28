@@ -24,4 +24,9 @@ public class MongoConfig {
 
   private byte[] encryptedUri;
   private byte[] encryptedLocksUri;
+
+  private int connectTimeout = 30000;
+  private int serverSelectionTimeout = 90000;
+  private int maxConnectionIdleTime = 600000;
+  private int connectionsPerHost = 300;
 }

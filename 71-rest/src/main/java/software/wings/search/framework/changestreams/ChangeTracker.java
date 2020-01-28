@@ -60,8 +60,8 @@ public class ChangeTracker {
           mainConfiguration.getElasticsearchConfig().getMongoTagValue()));
       readPreference = ReadPreference.secondary(tags);
     }
-    return new MongoClientURI(
-        mongoClientUrl, MongoClientOptions.builder(MongoModule.mongoClientOptions).readPreference(readPreference));
+    return new MongoClientURI(mongoClientUrl,
+        MongoClientOptions.builder(MongoModule.defaultMongoClientOptions).readPreference(readPreference));
   }
 
   private void connectToMongoDatabase() {

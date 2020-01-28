@@ -54,6 +54,22 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
+if [[ "" != "$MONGO_CONNECT_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE mongo.connectTimeout $MONGO_CONNECT_TIMEOUT
+fi
+
+if [[ "" != "$MONGO_SERVER_SELECTION_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE mongo.serverSelectionTimeout $MONGO_SERVER_SELECTION_TIMEOUT
+fi
+
+if [[ "" != "$MAX_CONNECTION_IDLE_TIME" ]]; then
+  yq write -i $CONFIG_FILE mongo.maxConnectionIdleTime $MAX_CONNECTION_IDLE_TIME
+fi
+
+if [[ "" != "$MONGO_CONNECTIONS_PER_HOST" ]]; then
+  yq write -i $CONFIG_FILE mongo.connectionsPerHost $MONGO_CONNECTIONS_PER_HOST
+fi
+
 if [[ "" != "$EVENTS_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE events-mongo.uri "$EVENTS_MONGO_URI"
 else
