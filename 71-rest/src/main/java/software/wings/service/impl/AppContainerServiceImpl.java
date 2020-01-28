@@ -7,7 +7,6 @@ import static java.lang.String.format;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
-import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -36,6 +35,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.executable.ValidateOnExecution;
@@ -122,7 +122,7 @@ public class AppContainerServiceImpl implements AppContainerService {
   public AppContainer update(AppContainer appContainer) {
     AppContainer storedAppContainer = get(appContainer.getAccountId(), appContainer.getUuid());
     notNullCheck("App Stack", storedAppContainer);
-    Map<String, Object> updatedFields = Maps.newHashMap();
+    Map<String, Object> updatedFields = new HashMap<>();
     if (appContainer.getStackRootDirectory() != null) {
       updatedFields.put("stackRootDirectory", appContainer.getStackRootDirectory());
     }

@@ -253,7 +253,6 @@ public class JenkinsImpl implements Jenkins {
       return result;
     } catch (Exception ex) {
       logger.error("Error in fetching job lists ", ex);
-      // handleException(ex);
       return result;
     }
   }
@@ -285,7 +284,6 @@ public class JenkinsImpl implements Jenkins {
 
     relativeUrl = url.replaceFirst(pattern, "");
 
-    // URI uri = new URI(relativeUrl);
     String[] parts = relativeUrl.split("/");
     StringBuilder nameBuilder = new StringBuilder();
     // We start with index 0 since /job/ has already been

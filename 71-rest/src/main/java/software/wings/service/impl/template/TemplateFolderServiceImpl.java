@@ -211,11 +211,6 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     // Generic commands folder
     save(constructTemplateBuilder(harnessFolder, GENERIC_COMMANDS));
 
-    // Adding Load Balancer folder
-    //    TemplateFolder loadBalancer = save(constructTemplateBuilder(harnessFolder, LOAD_BALANCERS));
-    //    save(constructTemplateBuilder(loadBalancer, F5_LOAD_BALANCER, FILE));
-
-    // Power Shell commands folder
     save(constructTemplateBuilder(harnessFolder, POWER_SHELL_COMMANDS));
 
     // Tomcat Commands Folder
@@ -223,9 +218,6 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
 
     // Http Verifications
     save(constructTemplateBuilder(harnessFolder, HTTP_VERIFICATION));
-
-    // Shell Script commands folder
-    //    save(constructTemplateBuilder(harnessFolder, SHELL_SCRIPTS));
   }
 
   private TemplateFolder constructTemplateBuilder(TemplateFolder parentFolder, String folderName) {
@@ -382,7 +374,6 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
           templateFolder.addChild(folder);
         } else {
           logger.error("Failed to construct tree from partial list");
-          //          throw new WingsException("Failed to construct tree from partial list", USER);
         }
       } else {
         folder.setNodeType(FOLDER.name());
