@@ -22,7 +22,7 @@ public class ApplicationBudgetScope implements BudgetScope {
   EnvironmentType environmentType;
 
   @Override
-  public QLBillingDataFilter getBudgetFilter() {
+  public QLBillingDataFilter getBudgetScopeFilter() {
     return QLBillingDataFilter.builder()
         .application(QLIdFilter.builder().operator(QLIdOperator.IN).values(applicationIds).build())
         .build();

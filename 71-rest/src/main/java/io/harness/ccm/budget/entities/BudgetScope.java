@@ -13,5 +13,5 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilte
   , @JsonSubTypes.Type(value = ClusterBudgetScope.class, name = CLUSTER)
 })
 public interface BudgetScope {
-  QLBillingDataFilter getBudgetFilter();
+  QLBillingDataFilter getBudgetScopeFilter();
 }

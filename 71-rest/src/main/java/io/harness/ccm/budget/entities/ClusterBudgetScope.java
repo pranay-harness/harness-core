@@ -21,7 +21,7 @@ public class ClusterBudgetScope implements BudgetScope {
   String[] clusterIds;
 
   @Override
-  public QLBillingDataFilter getBudgetFilter() {
+  public QLBillingDataFilter getBudgetScopeFilter() {
     return QLBillingDataFilter.builder()
         .cluster(QLIdFilter.builder().operator(QLIdOperator.IN).values(clusterIds).build())
         .build();

@@ -16,6 +16,8 @@ import software.wings.graphql.datafetcher.billing.BillingTrendStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.QLBillingAmountData;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
 import software.wings.graphql.datafetcher.budget.BudgetDefaultKeys;
+import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
@@ -28,6 +30,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
@@ -87,7 +90,7 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public double getForecastCost(Budget budget) {
     List<QLBillingDataFilter> filters = new ArrayList<>();
-    filters.add(budget.getScope().getBudgetFilter());
+    filters.add(budget.getScope().getBudgetScopeFilter());
     QLCCMAggregationFunction aggregationFunction = BudgetUtils.makeBillingAmtAggregation();
     QLBillingAmountData billingAmountData =
         billingTrendStatsDataFetcher.getBillingAmountData(budget.getAccountId(), aggregationFunction, filters);
@@ -103,7 +106,8 @@ public class BudgetServiceImpl implements BudgetService {
   public QLBudgetTableListData getBudgetData(Budget budget) {
     Preconditions.checkNotNull(budget.getAccountId());
     List<QLBillingDataFilter> filters = new ArrayList<>();
-    filters.add(budget.getScope().getBudgetFilter());
+    filters.add(budget.getScope().getBudgetScopeFilter());
+    filters.add(getFilterForCurrentBillingCycle());
     QLCCMAggregationFunction aggregationFunction = BudgetUtils.makeBillingAmtAggregation();
 
     QLCCMTimeSeriesAggregation groupBy = BudgetUtils.makeStartTimeEntityGroupBy();
@@ -175,5 +179,14 @@ public class BudgetServiceImpl implements BudgetService {
       budgetVariancePercentage = 0.0;
     }
     return budgetVariancePercentage;
+  }
+
+  private QLBillingDataFilter getFilterForCurrentBillingCycle() {
+    Calendar c = Calendar.getInstance();
+    c.set(Calendar.DAY_OF_MONTH, 1);
+    long startTime = c.getTimeInMillis();
+    return QLBillingDataFilter.builder()
+        .startTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(startTime).build())
+        .build();
   }
 }
