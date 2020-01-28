@@ -60,7 +60,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
     if (schedulerConfig.getJobStoreClass().equals(
             com.novemberain.quartz.mongodb.DynamicMongoDBJobStore.class.getCanonicalName())) {
       MongoClientURI uri =
-          new MongoClientURI(getMongoUri(), MongoClientOptions.builder(MongoModule.mongoClientOptions));
+          new MongoClientURI(getMongoUri(), MongoClientOptions.builder(MongoModule.defaultMongoClientOptions));
       try (MongoClient mongoClient = new MongoClient(uri)) {
         final String databaseName = uri.getDatabase();
         if (databaseName == null) {
