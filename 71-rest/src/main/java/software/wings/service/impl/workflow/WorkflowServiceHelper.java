@@ -251,13 +251,13 @@ public class WorkflowServiceHelper {
   public static final String PROVISION_SHELL_SCRIPT = "Shell Script Provision";
   public static final String ROLLBACK_CLOUD_FORMATION = "CloudFormation Rollback Stack";
   public static final String ROLLBACK_TERRAFORM_NAME = "Terraform Rollback";
-  public static final String ECS_STEADY_STATE_CHK = "Ecs Steady State Check";
+  public static final String ECS_STEADY_STATE_CHK = "ECS Steady State Check";
   public static final String KUBERNETES_STEADY_STATE_CHECK = "Steady State Check";
   public static final String ECS_UPGRADE_CONTAINERS = "ECS Upgrade Containers";
   public static final String ECS_ROLLBACK_CONTAINERS = "ECS Rollback Containers";
   public static final String KUBERNETES_UPGRADE_CONTAINERS = "Kubernetes Upgrade Containers";
   public static final String KUBERNETES_ROLLBACK_CONTAINERS = "Kubernetes Rollback Containers";
-  public static final String GCP_CLUSTER_SETUP_NAME = "Gcp Cluster Setup";
+  public static final String GCP_CLUSTER_SETUP_NAME = "GCP Cluster Setup";
   public static final String SWAP_SERVICE_SELECTORS = "Swap Service Selectors";
   public static final String ROLLING_SELECT_NODES = "Rolling Select Nodes";
   public static final String CF_CREATE_STACK = "CloudFormation Create Stack";
