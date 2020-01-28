@@ -107,7 +107,7 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getClusters().get(0).getId()).isEqualTo(CLUSTER1_ID);
-    assertThat(data.getData().get(0).getClusters().get(0).getName()).isEqualTo(CLUSTER1_NAME);
+    assertThat(data.getData().get(0).getClusters().get(0).getName()).isEqualTo(CLUSTER1_ID);
     assertThat(data.getData().get(0).getClusters().get(0).getType()).isEqualTo(CLUSTER_TYPE1);
     assertThat(data.getData().get(0).getCloudProviders().get(0).getName()).isEqualTo(CLOUD_PROVIDER1_ID_ACCOUNT1);
     assertThat(data.getData().get(0).getCloudServiceNames().size()).isEqualTo(0);
@@ -136,7 +136,7 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getClusters().get(0).getId()).isEqualTo(CLUSTER1_ID);
-    assertThat(data.getData().get(0).getClusters().get(0).getName()).isEqualTo(CLUSTER1_NAME);
+    assertThat(data.getData().get(0).getClusters().get(0).getName()).isEqualTo(CLUSTER1_ID);
     assertThat(data.getData().get(0).getClusters().get(0).getType()).isEqualTo(CLUSTER_TYPE1);
     assertThat(data.getData().get(0).getCloudProviders().get(0).getName()).isEqualTo(CLOUD_PROVIDER1_ID_ACCOUNT1);
     assertThat(data.getData().get(0).getCloudServiceNames().size()).isEqualTo(0);

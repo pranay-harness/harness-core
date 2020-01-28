@@ -116,7 +116,7 @@ public class BillingStatsFilterValuesDataFetcher
             break;
           case CLUSTERID:
             clusters.add(QLEntityData.builder()
-                             .name(resultSet.getString(BillingDataMetaDataFields.CLUSTERNAME.getFieldName()))
+                             .name(statsHelper.getEntityName(field, resultSet.getString(field.getFieldName())))
                              .id(resultSet.getString(field.getFieldName()))
                              .type(resultSet.getString(BillingDataMetaDataFields.CLUSTERTYPE.getFieldName()))
                              .build());

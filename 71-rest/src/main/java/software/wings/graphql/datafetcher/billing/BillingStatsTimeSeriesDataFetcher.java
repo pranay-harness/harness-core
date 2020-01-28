@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.EntityType;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndTags;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
-import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.DataType;
 import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLBillingStackedTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLBillingStackedTimeSeriesData.QLBillingStackedTimeSeriesDataBuilder;
@@ -238,11 +237,15 @@ public class BillingStatsTimeSeriesDataFetcher
       String id = "";
       String timeFieldName = BillingDataMetaDataFields.STARTTIME.getFieldName();
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
-        if (field.getFieldName().contains("ID")) {
-          id = resultSet.getString(field.getFieldName());
-        }
-        if (field.getDataType() == DataType.TIMESTAMP) {
-          timeFieldName = field.getFieldName();
+        switch (field.getDataType()) {
+          case STRING:
+            id = resultSet.getString(field.getFieldName());
+            break;
+          case TIMESTAMP:
+            timeFieldName = field.getFieldName();
+            break;
+          default:
+            break;
         }
       }
       if (checkStartTimeFilterIsValid(startTimeFromFilters)) {
