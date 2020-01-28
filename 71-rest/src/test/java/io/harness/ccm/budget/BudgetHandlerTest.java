@@ -6,6 +6,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
@@ -37,7 +38,7 @@ public class BudgetHandlerTest extends CategoryTest {
   private String applicationId1 = "APPLICATION_ID_1";
   private String applicationId2 = "APPLICATION_ID_2";
   private AlertThreshold alertThreshold;
-  private String userGroupId = "USER_GROUP_ID";
+  private String[] userGroupIds = {"USER_GROUP_ID"};
   @Mock private UserGroup userGroup;
   private Budget budget;
 
@@ -61,9 +62,9 @@ public class BudgetHandlerTest extends CategoryTest {
                  .type(SPECIFIED_AMOUNT)
                  .budgetAmount(0.0)
                  .alertThresholds(new AlertThreshold[] {alertThreshold})
-                 .userGroupId(userGroupId)
+                 .userGroupIds(userGroupIds)
                  .build();
-    when(userGroupService.get(eq(accountId), eq(userGroupId), anyBoolean())).thenReturn(userGroup);
+    when(userGroupService.get(eq(accountId), anyString(), anyBoolean())).thenReturn(userGroup);
     doNothing().when(userGroupBasedDispatcher).dispatch(anyList(), isA(UserGroup.class));
   }
 

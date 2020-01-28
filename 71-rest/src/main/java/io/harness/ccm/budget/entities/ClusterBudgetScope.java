@@ -1,5 +1,6 @@
 package io.harness.ccm.budget.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -13,6 +14,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilte
 @Data
 @Builder
 @JsonTypeName("CLUSTER")
+@JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "ClusterBudgetScopeKeys")
 public class ClusterBudgetScope implements BudgetScope {
@@ -21,7 +23,7 @@ public class ClusterBudgetScope implements BudgetScope {
   @Override
   public QLBillingDataFilter getBudgetFilter() {
     return QLBillingDataFilter.builder()
-        .cluster(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(clusterIds).build())
+        .cluster(QLIdFilter.builder().operator(QLIdOperator.IN).values(clusterIds).build())
         .build();
   }
 }

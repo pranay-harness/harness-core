@@ -1,5 +1,6 @@
 package io.harness.ccm.budget.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -13,6 +14,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilte
 @Data
 @Builder
 @JsonTypeName("APPLICATION")
+@JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "ApplicationBudgetScopeKeys")
 public class ApplicationBudgetScope implements BudgetScope {
