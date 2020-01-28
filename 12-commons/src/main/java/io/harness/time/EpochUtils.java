@@ -13,7 +13,7 @@ public class EpochUtils {
 
   public static long calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(int days, String zoneId) {
     return LocalDate.now(ZoneId.of(zoneId))
-        .minus(days - 1, ChronoUnit.DAYS)
+        .minus(days - 1L, ChronoUnit.DAYS)
         .atStartOfDay(ZoneId.of(zoneId))
         .toInstant()
         .toEpochMilli();

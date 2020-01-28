@@ -1631,7 +1631,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       EntityVersion entityVersion =
           entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
               serviceCommand.getName(), EntityVersion.ChangeType.UPDATED, serviceCommand.getNotes());
-      newcommand.setVersion(Long.valueOf(entityVersion.getVersion().intValue()));
+      newcommand.setVersion(Long.valueOf(entityVersion.getVersion()));
       if (newcommand.getDeploymentType() == null) {
         // Copy the old newcommand values
         newcommand.setDeploymentType(oldCommand.getDeploymentType());

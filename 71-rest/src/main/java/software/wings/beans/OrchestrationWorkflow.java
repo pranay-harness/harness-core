@@ -142,7 +142,7 @@ public abstract class OrchestrationWorkflow {
     return asList();
   }
 
-  public void updateUserVariables() {}
+  public abstract void updateUserVariables();
 
   /**
    * Checks if any one of InfraMapping is templatized

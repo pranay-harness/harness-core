@@ -115,6 +115,10 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
     // do nothing
   }
 
+  public void updateUserVariables() {
+    // do nothing
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {

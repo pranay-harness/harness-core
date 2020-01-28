@@ -308,7 +308,7 @@ public class Artifact extends Base {
   }
 
   public static final class Builder {
-    public transient String entityYamlPath; // TODO:: remove it with changeSet batching
+    private transient String entityYamlPath; // TODO:: remove it with changeSet batching
     protected String appId;
     private String artifactStreamId;
     private String artifactSourceName;
