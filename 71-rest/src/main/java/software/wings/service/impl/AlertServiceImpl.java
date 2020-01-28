@@ -40,6 +40,7 @@ import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
+import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -254,11 +255,13 @@ public class AlertServiceImpl implements AlertService {
   public Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
     try (AutoLogContext ignore = new AlertLogContext(accountId, alertType, appId, OVERRIDE_ERROR)) {
       logger.info("Finding existing alerts");
-      Query<Alert> alertQuery = getAlertsQuery(accountId, appId, alertType, alertData);
-      for (Alert alert : alertQuery) {
-        injector.injectMembers(alert.getAlertData());
-        if (alertData.matches(alert.getAlertData())) {
-          return Optional.of(alert);
+      Query<Alert> query = getAlertsQuery(accountId, appId, alertType, alertData);
+      try (HIterator<Alert> iterator = new HIterator<>(query.fetch())) {
+        for (Alert alert : iterator) {
+          injector.injectMembers(alert.getAlertData());
+          if (alertData.matches(alert.getAlertData())) {
+            return Optional.of(alert);
+          }
         }
       }
     }
@@ -268,12 +271,14 @@ public class AlertServiceImpl implements AlertService {
   private List<Alert> findAllExistingAlerts(String accountId, String appId, AlertType alertType, AlertData alertData) {
     try (AutoLogContext ignore = new AlertLogContext(accountId, alertType, appId, OVERRIDE_ERROR)) {
       logger.info("Finding all existing alerts");
-      Query<Alert> alertQuery = getAlertsQuery(accountId, appId, alertType, alertData);
+      Query<Alert> query = getAlertsQuery(accountId, appId, alertType, alertData);
       List<Alert> alerts = new ArrayList<>();
-      for (Alert alert : alertQuery) {
-        injector.injectMembers(alert.getAlertData());
-        if (alertData.matches(alert.getAlertData())) {
-          alerts.add(alert);
+      try (HIterator<Alert> iterator = new HIterator<>(query.fetch())) {
+        for (Alert alert : iterator) {
+          injector.injectMembers(alert.getAlertData());
+          if (alertData.matches(alert.getAlertData())) {
+            alerts.add(alert);
+          }
         }
       }
       return alerts;
