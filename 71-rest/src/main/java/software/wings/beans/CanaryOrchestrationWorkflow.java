@@ -601,7 +601,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   @Override
   public void updateUserVariables() {
-    List<String> templateVariables = getTemplateVariables();
     List<Variable> newVariables = new ArrayList<>();
     if (userVariables != null) {
       // First get all Entity type user variables

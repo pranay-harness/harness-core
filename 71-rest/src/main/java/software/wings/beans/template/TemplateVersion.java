@@ -36,7 +36,7 @@ import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
 @HarnessEntity(exportable = true)
 public class TemplateVersion extends Base {
   public static final long INITIAL_VERSION = 1;
-  public static String TEMPLATE_UUID_KEY = "templateUuid";
+  public static final String TEMPLATE_UUID_KEY = "templateUuid";
   private String changeType;
   private String templateUuid;
   private String templateName;

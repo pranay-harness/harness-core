@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.PersistentEntity;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -253,7 +254,7 @@ public class TemplateHelper {
   private static String[] fetchTemplateUris(String templateUri) {
     String[] templateUris = templateUri.split(":");
     if (templateUris.length < 1) {
-      throw new WingsException("Invalid TemplateUri [" + templateUri + "]", WingsException.USER);
+      throw new InvalidRequestException("Invalid TemplateUri [" + templateUri + "]", WingsException.USER);
     }
     return templateUris;
   }
