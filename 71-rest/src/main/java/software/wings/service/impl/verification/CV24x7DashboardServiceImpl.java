@@ -23,6 +23,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
+import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
@@ -61,6 +62,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -73,6 +75,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
   @Inject CVConfigurationService cvConfigurationService;
   @Inject AnalysisService analysisService;
   @Inject FeatureFlagService featureFlagService;
+  @Inject private DataCollectionExecutorService dataCollectionService;
 
   @Override
   public List<HeatMap> getHeatMapForLogs(
@@ -84,19 +87,22 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
       return new ArrayList<>();
     }
 
-    cvConfigurations.parallelStream().forEach(cvConfig -> {
-      if (VerificationConstants.getLogAnalysisStates().contains(cvConfig.getStateType())) {
-        cvConfigurationService.fillInServiceAndConnectorNames(cvConfig);
-        String envName = cvConfig.getEnvName();
-        logger.info("Environment name {}", envName);
-        final HeatMap heatMap = HeatMap.builder().cvConfiguration(cvConfig).build();
-        rv.add(heatMap);
+    List<Callable<Void>> callables = new ArrayList<>();
+    cvConfigurations.stream()
+        .filter(cvConfig -> VerificationConstants.getLogAnalysisStates().contains(cvConfig.getStateType()))
+        .forEach(cvConfig -> callables.add(() -> {
+          cvConfigurationService.fillInServiceAndConnectorNames(cvConfig);
+          String envName = cvConfig.getEnvName();
+          logger.info("Environment name {}", envName);
+          final HeatMap heatMap = HeatMap.builder().cvConfiguration(cvConfig).build();
+          rv.add(heatMap);
 
-        List<HeatMapUnit> units = createAllHeatMapUnits(startTime, endTime, cvConfig);
-        List<HeatMapUnit> resolvedUnits = resolveHeatMapUnits(units, startTime, endTime);
-        heatMap.getRiskLevelSummary().addAll(resolvedUnits);
-      }
-    });
+          List<HeatMapUnit> units = createAllHeatMapUnits(startTime, endTime, cvConfig);
+          List<HeatMapUnit> resolvedUnits = resolveHeatMapUnits(units, startTime, endTime);
+          heatMap.getRiskLevelSummary().addAll(resolvedUnits);
+          return null;
+        }));
+    dataCollectionService.executeParrallel(callables);
 
     return rv;
   }
