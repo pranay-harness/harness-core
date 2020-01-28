@@ -43,8 +43,8 @@ public class BudgetDao {
     if (null != budget.getAlertThresholds()) {
       updateOperations.set(BudgetKeys.alertThresholds, budget.getAlertThresholds());
     }
-    if (null != budget.getUserGroupId()) {
-      updateOperations.set(BudgetKeys.userGroupId, budget.getUserGroupId());
+    if (null != budget.getUserGroupIds()) {
+      updateOperations.set(BudgetKeys.userGroupIds, budget.getUserGroupIds());
     }
     persistence.update(query, updateOperations);
   }

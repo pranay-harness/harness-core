@@ -1,6 +1,7 @@
 package io.harness.ccm.budget;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.BUDGET_NOTIFICATION;
 
@@ -16,6 +17,7 @@ import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.security.UserGroup;
@@ -23,9 +25,12 @@ import software.wings.service.impl.notifications.UserGroupBasedDispatcher;
 import software.wings.service.intfc.UserGroupService;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 public class BudgetHandler implements Handler<Budget> {
+  private static final int THRESHOLD_CHECK_INTERVAL_MINUTE = 60;
+
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject UserGroupService userGroupService;
   @Inject UserGroupBasedDispatcher userGroupBasedDispatcher;
@@ -33,12 +38,16 @@ public class BudgetHandler implements Handler<Budget> {
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-        PumpExecutorOptions.builder().name("BudgetProcessor").poolSize(3).interval(ofSeconds(3)).build(),
+        PumpExecutorOptions.builder()
+            .name("BudgetProcessor")
+            .poolSize(3)
+            .interval(ofMinutes(THRESHOLD_CHECK_INTERVAL_MINUTE))
+            .build(),
         BudgetHandler.class,
         MongoPersistenceIterator.<Budget>builder()
             .clazz(Budget.class)
             .fieldName(BudgetKeys.alertIteration)
-            .targetInterval(ofSeconds(60))
+            .targetInterval(ofMinutes(THRESHOLD_CHECK_INTERVAL_MINUTE))
             .acceptableNoAlertDelay(ofSeconds(60))
             .handler(this)
             .filterExpander(q -> q.field(BudgetKeys.alertThresholds).exists())
@@ -51,9 +60,8 @@ public class BudgetHandler implements Handler<Budget> {
     Preconditions.checkNotNull(budget.getAlertThresholds());
     Preconditions.checkNotNull(budget.getAccountId());
 
-    String userGroupId = budget.getUserGroupId();
-    UserGroup userGroup = userGroupService.get(budget.getAccountId(), userGroupId, true);
-    if (null == userGroupId || null == userGroup) {
+    List<String> userGroupIds = Arrays.asList(budget.getUserGroupIds());
+    if (CollectionUtils.isEmpty(userGroupIds)) {
       logger.warn("The budget with id={} has no associated UserGroup.", budget.getUuid());
       return;
     }
@@ -64,7 +72,7 @@ public class BudgetHandler implements Handler<Budget> {
         break;
       }
 
-      double currentCost = 0;
+      double currentCost;
       try {
         currentCost = budgetService.getActualCost(budget);
         logger.info("{} has been spent under the budget with id={} ", currentCost, budget.getUuid());
@@ -74,10 +82,13 @@ public class BudgetHandler implements Handler<Budget> {
       }
 
       if (exceedsThreshold(currentCost, getThresholdAmount(budget, alertThresholds[i]))) {
-        Notification budgetNotification =
-            getBudgetNotification(budget.getAccountId(), budget.getName(), alertThresholds[i], currentCost);
-        userGroupBasedDispatcher.dispatch(Arrays.asList(budgetNotification), userGroup);
-        budgetService.incAlertCount(budget, i);
+        for (String userGroupId : userGroupIds) {
+          UserGroup userGroup = userGroupService.get(budget.getAccountId(), userGroupId, true);
+          Notification budgetNotification =
+              getBudgetNotification(budget.getAccountId(), budget.getName(), alertThresholds[i], currentCost);
+          userGroupBasedDispatcher.dispatch(Arrays.asList(budgetNotification), userGroup);
+          budgetService.incAlertCount(budget, i);
+        }
       }
     }
   }
