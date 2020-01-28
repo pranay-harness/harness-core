@@ -601,7 +601,8 @@ public class AnalysisServiceImpl implements AnalysisService {
         String workflowExecutionId = cvMetaData.getWorkflowExecutionId();
         WorkflowExecution execution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
         if (execution != null) {
-          if (!execution.getInfraMappingIds().contains(infraMappingId) || !execution.getEnvId().equals(envId)) {
+          if (!execution.getInfraMappingIds().contains(infraMappingId) || !execution.getEnvId().equals(envId)
+              || !execution.getServiceIds().contains(serviceId)) {
             // infra mapping ID should also match, for us to call it a potential baseline.
             logger.info("Execution {} does not have infraMappingID {} or envId {}. So moving on.", execution.getUuid(),
                 infraMappingId, envId);
