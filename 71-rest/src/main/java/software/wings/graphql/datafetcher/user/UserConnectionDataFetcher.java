@@ -58,6 +58,7 @@ public class UserConnectionDataFetcher
 
   @Override
   protected void populateFilters(List<QLUserFilter> filters, Query query) {
+    userQueryHelper.setAccountFilter(query, getAccountId());
     userQueryHelper.setQuery(filters, query);
   }
 

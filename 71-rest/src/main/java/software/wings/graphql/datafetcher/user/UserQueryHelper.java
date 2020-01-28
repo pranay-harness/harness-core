@@ -34,4 +34,8 @@ public class UserQueryHelper {
       }
     });
   }
+
+  public void setAccountFilter(Query query, final String accountId) {
+    query.field("accounts").equal(accountId);
+  }
 }
