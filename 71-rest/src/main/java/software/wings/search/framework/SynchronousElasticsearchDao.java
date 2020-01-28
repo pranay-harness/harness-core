@@ -1,5 +1,6 @@
 package software.wings.search.framework;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ import java.util.concurrent.Future;
 public class SynchronousElasticsearchDao implements SearchDao {
   @Inject private ElasticsearchDao elasticsearchDao;
   private final ExecutorService executorService = Executors.newFixedThreadPool(1, task -> {
-    Thread t = Executors.defaultThreadFactory().newThread(task);
+    Thread t = new ThreadFactoryBuilder().setNameFormat("sync-elasticsearch-dao").build().newThread(task);
     t.setDaemon(true);
     return t;
   });

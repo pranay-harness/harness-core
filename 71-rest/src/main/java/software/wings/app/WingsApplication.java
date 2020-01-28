@@ -258,7 +258,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
-    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(20, 1000, 500L, TimeUnit.MILLISECONDS));
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
+        20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
 
     List<Module> modules = new ArrayList<>();
 

@@ -19,6 +19,7 @@ import static software.wings.beans.Log.color;
 import static software.wings.beans.Log.doneColoring;
 
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -83,15 +84,16 @@ public class DelegateLogServiceImpl implements DelegateLogService {
                                   .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
                                   .removalListener(this ::dispatchCVActivityLogs)
                                   .build();
-    Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-        ()
-            -> {
-          this.cache.cleanUp();
-          this.apiCallLogCache.cleanUp();
-          this.cvActivityLogCache.cleanUp();
-        },
-        1000, 1000,
-        TimeUnit.MILLISECONDS); // periodic cleanup for expired keys
+    Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("delegate-log-service").build())
+        .scheduleAtFixedRate(
+            ()
+                -> {
+              this.cache.cleanUp();
+              this.apiCallLogCache.cleanUp();
+              this.cvActivityLogCache.cleanUp();
+            },
+            1000, 1000,
+            TimeUnit.MILLISECONDS); // periodic cleanup for expired keys
   }
 
   @Override

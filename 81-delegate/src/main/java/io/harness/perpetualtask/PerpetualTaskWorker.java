@@ -4,6 +4,7 @@ import static io.harness.delegate.service.DelegateServiceImpl.getDelegateId;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -41,7 +42,8 @@ public class PerpetualTaskWorker extends AbstractScheduledService {
     this.factoryMap = factoryMap;
     this.timeLimiter = timeLimiter;
     this.perpetualTaskServiceGrpcClient = perpetualTaskServiceGrpcClient;
-    scheduledService = Executors.newSingleThreadScheduledExecutor();
+    scheduledService = Executors.newSingleThreadScheduledExecutor(
+        new ThreadFactoryBuilder().setNameFormat("perpetual-task-worker").build());
   }
 
   private void handleTasks() {

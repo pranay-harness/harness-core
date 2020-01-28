@@ -9,6 +9,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -46,7 +47,8 @@ public class RestLogAppender<E> extends AppenderBase<E> {
   private String localhostName = "localhost";
   private Layout<E> layout;
   private BlockingQueue<LogLine> logQueue;
-  private ExecutorService appenderPool = Executors.newSingleThreadScheduledExecutor();
+  private ExecutorService appenderPool =
+      Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("rest-log-appender").build());
 
   /**
    * Instantiates a new Rest log appender.
@@ -167,8 +169,9 @@ public class RestLogAppender<E> extends AppenderBase<E> {
         super.start();
         localhostName = getLocalHostName();
         logQueue = Queues.newLinkedBlockingQueue(500000);
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-            this ::submitLogs, 1000, 1000, TimeUnit.MILLISECONDS);
+        Executors
+            .newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("rest-log-submitter").build())
+            .scheduleAtFixedRate(this ::submitLogs, 1000, 1000, TimeUnit.MILLISECONDS);
       }
     }
   }

@@ -1,5 +1,6 @@
 package software.wings.search.framework;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
@@ -36,7 +37,8 @@ public class ElasticsearchSyncJob implements Runnable {
     try {
       ElasticsearchBulkSyncTask elasticsearchBulkSyncTask = elasticsearchBulkSyncTaskProvider.get();
       perpetualSearchLocker = perpetualSearchLockerProvider.get();
-      scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+      scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
+          new ThreadFactoryBuilder().setNameFormat("search-heartbeat").build());
       elasticsearchRealtimeSyncTask = elasticsearchRealtimeSyncTaskProvider.get();
       String uuid = UUID.randomUUID().toString();
 

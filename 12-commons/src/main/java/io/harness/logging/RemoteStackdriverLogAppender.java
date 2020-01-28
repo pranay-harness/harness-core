@@ -21,6 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Queues;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -57,7 +58,8 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   private BlockingQueue<LogEntry> logQueue;
   private Map<String, String> logLabels;
   private final LogLines logLines = new LogLines();
-  private final ExecutorService appenderPool = Executors.newSingleThreadExecutor();
+  private final ExecutorService appenderPool = Executors.newSingleThreadExecutor(
+      new ThreadFactoryBuilder().setNameFormat("remote-stackdriver-log-appender").build());
   private final VersionInfoManager versionInfoManager = new VersionInfoManager();
   private final String processId =
       Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
@@ -79,7 +81,10 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
       super.start();
       localhostName = getLocalHostName();
       logQueue = Queues.newLinkedBlockingQueue(500000);
-      Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(this ::submitLogs, 1L, 1L, TimeUnit.SECONDS);
+      Executors
+          .newSingleThreadScheduledExecutor(
+              new ThreadFactoryBuilder().setNameFormat("remote-stackdriver-log-submitter").build())
+          .scheduleWithFixedDelay(this ::submitLogs, 1L, 1L, TimeUnit.SECONDS);
     }
   }
 

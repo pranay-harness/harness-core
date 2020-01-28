@@ -34,7 +34,8 @@ public class ScheduleTriggerHandler implements Handler<DeploymentTrigger> {
 
   PersistenceIterator<DeploymentTrigger> iterator;
 
-  private static ExecutorService executor = Executors.newSingleThreadExecutor();
+  private static ExecutorService executor =
+      Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("scheduled-trigger-handler").build());
   private static final ScheduledThreadPoolExecutor executorService = new ScheduledThreadPoolExecutor(
       POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-ScheduleTriggerThread").build());
 
