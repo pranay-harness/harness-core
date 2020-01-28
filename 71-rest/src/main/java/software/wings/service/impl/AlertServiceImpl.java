@@ -127,7 +127,11 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public void closeAlertsOfType(String accountId, String appId, AlertType alertType) {
-    executorService.submit(() -> findExistingAlertsOfType(accountId, appId, alertType).forEach(this ::close));
+    executorService.submit(() -> {
+      try (HIterator<Alert> iterator = findExistingAlertsOfType(accountId, appId, alertType)) {
+        iterator.forEach(this ::close);
+      }
+    });
   }
 
   @Override
@@ -304,7 +308,7 @@ public class AlertServiceImpl implements AlertService {
     return alertQuery;
   }
 
-  private Iterable<Alert> findExistingAlertsOfType(String accountId, String appId, AlertType alertType) {
+  private HIterator<Alert> findExistingAlertsOfType(String accountId, String appId, AlertType alertType) {
     Query<Alert> alertQuery = wingsPersistence.createQuery(Alert.class)
                                   .filter(AlertKeys.accountId, accountId)
                                   .filter(AlertKeys.type, alertType)
@@ -313,7 +317,7 @@ public class AlertServiceImpl implements AlertService {
     if (appId != null) {
       alertQuery.filter(AlertKeys.appId, appId);
     }
-    return alertQuery;
+    return new HIterator<>(alertQuery.fetch());
   }
 
   private void close(Alert alert) {
@@ -354,7 +358,7 @@ public class AlertServiceImpl implements AlertService {
   @Override
   public void pruneByArtifactStream(String appId, String artifactStreamId) {
     // NOTE: this pruning is done only for ArtifactCollectionFailedAlert
-    Iterable<Alert> alerts;
+    String accountId;
     if (GLOBAL_APP_ID.equals(appId)) {
       ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
       if (artifactStream == null || artifactStream.getSettingId() == null) {
@@ -366,16 +370,17 @@ public class AlertServiceImpl implements AlertService {
       }
 
       // NOTE: appId not known at this point, hence set to null - appId will be removed from this alert type later
-      alerts = findExistingAlertsOfType(settingAttribute.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED);
+      accountId = settingAttribute.getAccountId();
     } else {
-      alerts =
-          findExistingAlertsOfType(appService.getAccountIdByAppId(appId), null, AlertType.ARTIFACT_COLLECTION_FAILED);
+      accountId = appService.getAccountIdByAppId(appId);
     }
 
-    for (Alert alert : alerts) {
-      ArtifactCollectionFailedAlert data = (ArtifactCollectionFailedAlert) alert.getAlertData();
-      if (data.getArtifactStreamId().equals(artifactStreamId)) {
-        wingsPersistence.delete(alert);
+    try (HIterator<Alert> alerts = findExistingAlertsOfType(accountId, null, AlertType.ARTIFACT_COLLECTION_FAILED)) {
+      for (Alert alert : alerts) {
+        ArtifactCollectionFailedAlert data = (ArtifactCollectionFailedAlert) alert.getAlertData();
+        if (data.getArtifactStreamId().equals(artifactStreamId)) {
+          wingsPersistence.delete(alert);
+        }
       }
     }
   }
