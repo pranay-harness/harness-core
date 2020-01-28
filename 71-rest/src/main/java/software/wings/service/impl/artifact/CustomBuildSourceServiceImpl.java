@@ -39,14 +39,11 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
   public List<BuildDetails> getBuilds(String artifactStreamId) {
     logger.info("Retrieving the builds for Custom Repository artifactStreamId {}", artifactStreamId);
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
-    return getBuildDetails(artifactStream);
+    notNullCheck("Artifact source does not exist", artifactStream, USER);
+    return getBuildDetails((CustomArtifactStream) artifactStream);
   }
 
-  private List<BuildDetails> getBuildDetails(ArtifactStream artifactStream) {
-    notNullCheck("Artifact source does not exist", artifactStream, USER);
-
-    CustomArtifactStream customArtifactStream = (CustomArtifactStream) artifactStream;
-
+  private List<BuildDetails> getBuildDetails(CustomArtifactStream customArtifactStream) {
     // TODO: The rendering expression should be moved to delegate once the Framework is ready
     ArtifactStreamAttributes artifactStreamAttributes =
         artifactCollectionUtils.renderCustomArtifactScriptString(customArtifactStream);
@@ -63,7 +60,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
 
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(artifactStreamAttributes.getAccountId())
-                                          .appId(artifactStream.fetchAppId())
+                                          .appId(customArtifactStream.fetchAppId())
                                           .timeout(Duration.ofSeconds(timeout).toMillis())
                                           .tags(tags)
                                           .build();

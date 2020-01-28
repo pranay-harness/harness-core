@@ -5,7 +5,6 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toMap;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -16,13 +15,11 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.stencils.DataProvider;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-/**
- * Created by peeyushaggarwal on 6/30/16.
- */
 @Singleton
 public class CommandStateEnumDataProvider implements DataProvider {
   @Inject private ServiceResourceService serviceResourceService;
@@ -33,7 +30,7 @@ public class CommandStateEnumDataProvider implements DataProvider {
     if (appId != null) {
       List<Service> services;
       if (params.get("NONE") != null) {
-        return Maps.newHashMap();
+        return new HashMap<>();
       }
       if (isEmpty(serviceId)) {
         services =
@@ -50,6 +47,6 @@ public class CommandStateEnumDataProvider implements DataProvider {
           .distinct()
           .collect(toMap(Function.identity(), Function.identity()));
     }
-    return Maps.newHashMap();
+    return new HashMap<>();
   }
 }

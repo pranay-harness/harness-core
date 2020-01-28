@@ -75,7 +75,7 @@ public class BambooTaskTest extends CategoryTest {
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
     when(bambooService.getBuildResult(bambooConfig, null, planKey))
         .thenReturn(Result.builder().buildResultKey(buildResultKey).buildState("Successful").build());
-    bambooTask.run(bambooConfig, null, planKey, parameters, filePathAssertionEntries);
+    bambooTask.run(bambooConfig, null, planKey, parameters);
     verify(bambooService).triggerPlan(bambooConfig, null, planKey, Collections.emptyMap());
     verify(bambooService).getBuildResult(bambooConfig, null, buildResultKey);
   }

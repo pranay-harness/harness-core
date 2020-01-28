@@ -82,7 +82,6 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateUtils;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
@@ -90,7 +89,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -100,7 +98,6 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
@@ -140,7 +137,6 @@ public class CommandState extends State {
   @Inject @Transient private transient ArtifactService artifactService;
   @Inject @Transient private transient ArtifactStreamService artifactStreamService;
   @Inject @Transient private transient DelegateService delegateService;
-  @Inject @Transient private transient EnvironmentService environmentService;
   @Inject @Transient private transient HostService hostService;
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient private transient SecretManager secretManager;
@@ -152,11 +148,8 @@ public class CommandState extends State {
   @Inject @Transient private transient FeatureFlagService featureFlagService;
   @Inject @Transient private transient AwsCommandHelper awsCommandHelper;
   @Inject @Transient private transient TemplateService templateService;
-  @Inject @Transient private transient SweepingOutputService sweepingOutputService;
   @Inject @Transient private transient TemplateUtils templateUtils;
   @Inject @Transient private transient ServiceTemplateHelper serviceTemplateHelper;
-
-  @Inject @Transient private transient WingsPersistence wingsPersistence;
 
   @Attributes(title = "Command") @Expand(dataProvider = CommandStateEnumDataProvider.class) private String commandName;
 
@@ -166,7 +159,6 @@ public class CommandState extends State {
   @SchemaIgnore private boolean executeOnDelegate;
 
   @NotEmpty @SchemaIgnore private String host;
-  private List<EncryptedDataDetail> encryptionDetails;
 
   public enum ConnectionType { SSH, WINRM }
 
