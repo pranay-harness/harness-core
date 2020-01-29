@@ -113,7 +113,7 @@ public class ApplicationManifestUtils {
     Map<String, GitFetchFilesConfig> gitFetchFileConfigMap = getGitFetchFileConfigMap(context, app, appManifestMap);
 
     ContainerServiceParams containerServiceParams = null;
-    String infrastructureMappingId = context.fetchInfraMappingId();
+    String infrastructureMappingId = context == null ? null : context.fetchInfraMappingId();
 
     if (infrastructureMappingId != null) {
       InfrastructureMapping infraMapping =

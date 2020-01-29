@@ -10,7 +10,10 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
+import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
+import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.manifestFilesFromGitFetchFilesResult;
@@ -467,10 +470,21 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   private void validateAppManifestForEnvironment(ApplicationManifest appManifest) {
     if (isNotBlank(appManifest.getEnvId())) {
-      if (StoreType.Local != appManifest.getStoreType() && StoreType.Remote != appManifest.getStoreType()) {
-        throw new InvalidRequestException(
-            "Only local and remote store types are allowed for values.yaml in environment");
+      if (HELM_CHART_OVERRIDE == appManifest.getKind()) {
+        validateStoreTypeForHelmChartOverride(appManifest.getStoreType());
+      } else {
+        if (StoreType.Local != appManifest.getStoreType() && StoreType.Remote != appManifest.getStoreType()) {
+          throw new InvalidRequestException(
+              "Only local and remote store types are allowed for values.yaml in environment");
+        }
       }
+    }
+  }
+
+  void validateStoreTypeForHelmChartOverride(StoreType storeType) {
+    if (HelmChartRepo != storeType && HelmSourceRepo != storeType) {
+      throw new InvalidRequestException(
+          "Only HelmChartRepo and HelmSourceRepo store types are allowed for Helm Chart Override in environment");
     }
   }
 
@@ -480,15 +494,22 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
           "gitFileConfig cannot be used with HelmChartRepo. Use helmChartConfig instead.", USER);
     }
 
-    Service service =
-        serviceResourceService.get(applicationManifest.getAppId(), applicationManifest.getServiceId(), false);
-
-    if (service.isK8sV2()) {
+    if (shouldValidateHelmChartRepoAppManifestForK8sv2(applicationManifest)) {
       validateHelmChartRepoAppManifestForK8sv2Service(applicationManifest);
       return;
     }
 
     validateHelmChartRepoAppManifestForHelmService(applicationManifest);
+  }
+
+  private boolean shouldValidateHelmChartRepoAppManifestForK8sv2(ApplicationManifest applicationManifest) {
+    if (HELM_CHART_OVERRIDE == applicationManifest.getKind()) {
+      return true;
+    }
+
+    Service service =
+        serviceResourceService.get(applicationManifest.getAppId(), applicationManifest.getServiceId(), false);
+    return service.isK8sV2();
   }
 
   private void validateHelmChartRepoAppManifestForHelmService(ApplicationManifest applicationManifest) {
