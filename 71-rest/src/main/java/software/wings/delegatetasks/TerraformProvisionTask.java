@@ -224,8 +224,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       File tfOutputsFile =
           Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
       String targetArgs = getTargetArgs(parameters.getTargets());
-      String tfVarFiles = getAllTfVarFilesArgument(System.getProperty(USER_DIR_KEY),
-          gitClientHelper.getRepoDirectory(gitOperationContext), parameters.getTfVarFiles());
+      String tfVarFiles =
+          getAllTfVarFilesArgument(System.getProperty(USER_DIR_KEY), workingDir, parameters.getTfVarFiles());
       varParams = format("%s %s", tfVarFiles, varParams);
       uiLogs = format("%s %s", tfVarFiles, uiLogs);
 
