@@ -47,12 +47,12 @@ public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
   public void handle(InfrastructureMapping infrastructureMapping) {
     try (AutoLogContext ignore1 = new AccountLogContext(infrastructureMapping.getAccountId(), OVERRIDE_ERROR);
          AutoLogContext ignore2 = new InfraMappingLogContext(infrastructureMapping.getUuid(), OVERRIDE_ERROR)) {
-      logger.info("Performing instance sync for infra mapping");
+      logger.info("Performing instance sync for infra mapping {}", infrastructureMapping.getUuid());
       try {
         instanceHelper.syncNow(infrastructureMapping.getAppId(), infrastructureMapping);
-        logger.info("Performed instance sync for infra mapping");
+        logger.info("Performed instance sync for infra mapping {}", infrastructureMapping.getUuid());
       } catch (Exception ex) {
-        logger.error("Error while syncing instances for infra mapping", ex);
+        logger.error("Error while syncing instances for infra mapping {}", infrastructureMapping.getUuid(), ex);
       }
     }
   }

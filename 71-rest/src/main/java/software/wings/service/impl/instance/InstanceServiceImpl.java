@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
 import software.wings.api.InstanceEvent;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -172,11 +171,9 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   private void pruneByEntity(String fieldName, String value) {
-    Query<Instance> deleteQuery = wingsPersistence.createQuery(Instance.class);
-    deleteQuery.filter(fieldName, value);
-
-    Query<Instance> getQuery = wingsPersistence.createQuery(Instance.class);
-    getQuery.filter(fieldName, value);
+    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
+    query.filter(fieldName, value);
+    delete(query);
 
     if ("appId".equals(fieldName)) {
       Query<SyncStatus> syncStatusQuery = wingsPersistence.createQuery(SyncStatus.class);
@@ -186,12 +183,9 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   private void pruneByEntity(Map<String, String> inputs) {
-    Query<Instance> deleteQuery = wingsPersistence.createQuery(Instance.class);
-    Query<Instance> getQuery = wingsPersistence.createQuery(Instance.class);
-    inputs.forEach((key, value) -> {
-      deleteQuery.filter(key, value);
-      getQuery.filter(key, value);
-    });
+    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
+    inputs.forEach((key, value) -> query.filter(key, value));
+    delete(query);
 
     Query<SyncStatus> syncStatusQuery = wingsPersistence.createQuery(SyncStatus.class);
     inputs.forEach(syncStatusQuery::filter);
@@ -236,12 +230,16 @@ public class InstanceServiceImpl implements InstanceService {
   public boolean delete(Set<String> instanceIdSet) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     query.field("_id").in(instanceIdSet);
+    return delete(query);
+  }
+
+  private boolean delete(Query<Instance> query) {
     long currentTimeMillis = System.currentTimeMillis();
     UpdateOperations<Instance> updateOperations = wingsPersistence.createUpdateOperations(Instance.class);
     setUnset(updateOperations, "deletedAt", currentTimeMillis);
     setUnset(updateOperations, "isDeleted", true);
-    UpdateResults updateResults = wingsPersistence.update(query, updateOperations);
-    return updateResults.getUpdatedCount() > 0;
+    wingsPersistence.update(query, updateOperations);
+    return true;
   }
 
   @Override
@@ -310,7 +308,8 @@ public class InstanceServiceImpl implements InstanceService {
     SyncStatus syncStatus = getSyncStatus(appId, serviceId, envId, infraMappingId);
     if (syncStatus != null) {
       if ((timestamp - syncStatus.getLastSuccessfullySyncedAt()) >= Duration.ofDays(7).toMillis()) {
-        logger.info("Deleting the instances since sync has been failing for more than a week");
+        logger.info("Deleting the instances since sync has been failing for more than a week for infraMappingId: {}",
+            infraMappingId);
         wingsPersistence.delete(SyncStatus.class, syncStatus.getUuid());
         pruneByInfrastructureMapping(appId, infraMappingId);
         return;

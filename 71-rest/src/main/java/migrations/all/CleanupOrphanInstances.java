@@ -13,6 +13,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.dl.WingsPersistence;
@@ -47,6 +48,11 @@ public class CleanupOrphanInstances implements Migration {
       List<Key<Environment>> envKeyList = wingsPersistence.createQuery(Environment.class, excludeAuthority).asKeyList();
       Set<String> envs = envKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toSet());
 
+      List<Key<SettingAttribute>> settingAttributeKeyList =
+          wingsPersistence.createQuery(SettingAttribute.class, excludeAuthority).asKeyList();
+      Set<String> settingAttributes =
+          settingAttributeKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toSet());
+
       List<Key<InfrastructureMapping>> infraKeyList =
           wingsPersistence.createQuery(InfrastructureMapping.class).asKeyList();
       Set<String> infraMappings = infraKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toSet());
@@ -57,13 +63,15 @@ public class CleanupOrphanInstances implements Migration {
                                   .project("appId", true)
                                   .project("envId", true)
                                   .project("serviceId", true)
+                                  .project("computeProviderId", true)
                                   .project("infraMappingId", true);
 
       Set<String> orphanInstances = new HashSet<>();
       try (HIterator<Instance> iterator = new HIterator<>(query.fetch())) {
         for (Instance instance : iterator) {
           if (!apps.contains(instance.getAppId()) || !services.contains(instance.getServiceId())
-              || !envs.contains(instance.getEnvId()) || !infraMappings.contains(instance.getInfraMappingId())) {
+              || !envs.contains(instance.getEnvId()) || !infraMappings.contains(instance.getInfraMappingId())
+              || !settingAttributes.contains(instance.getComputeProviderId())) {
             orphanInstances.add(instance.getUuid());
           }
         }
