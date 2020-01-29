@@ -11,6 +11,7 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.AccountType.COMMUNITY;
 import static software.wings.beans.AccountType.ESSENTIALS;
 import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
+import static software.wings.common.TemplateExpressionProcessor.checkFieldTemplatized;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.URL_STRING;
@@ -1004,18 +1005,15 @@ public abstract class AbstractAnalysisState extends State {
     return Optional.empty();
   }
 
-  protected boolean hasExpression(List<TemplateExpression> templateExpressions, String fieldName) {
-    if (templateExpressions == null) {
+  protected boolean isExpression(String fieldName, String fieldValue, List<TemplateExpression> templateExpressions) {
+    if (checkFieldTemplatized(fieldName, templateExpressions)) {
+      return false;
+    }
+    if (isEmpty(fieldValue)) {
       return false;
     }
 
-    for (TemplateExpression templateExpression : templateExpressions) {
-      if (templateExpression.getFieldName().equals(fieldName)) {
-        return true;
-      }
-    }
-
-    return false;
+    return fieldValue.contains("$");
   }
 
   protected ExecutionResponse createExecutionResponse(

@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
+import static software.wings.common.TemplateExpressionProcessor.checkFieldTemplatized;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APP_DYNAMICS_24X7_VALUES_TO_ANALYZE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE;
@@ -20,6 +20,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
@@ -30,7 +31,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
-import software.wings.common.TemplateExpressionProcessor;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -52,7 +52,6 @@ import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
-import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -70,6 +69,7 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 8/4/16.
  */
 @Slf4j
+@FieldNameConstants(innerTypeName = "AppDynamicsStateKeys")
 public class AppDynamicsState extends AbstractMetricAnalysisState {
   @Transient @Inject protected AppdynamicsService appdynamicsService;
 
@@ -159,18 +159,26 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
       return results;
     }
 
-    if (hasExpression(getTemplateExpressions(), "analysisServerConfigId")) {
-      if (!hasExpression(getTemplateExpressions(), "applicationId")) {
+    if (checkFieldTemplatized(AppDynamicsStateKeys.analysisServerConfigId, getTemplateExpressions())) {
+      if (!checkFieldTemplatized(AppDynamicsStateKeys.applicationId, getTemplateExpressions())
+          && !isExpression(AppDynamicsStateKeys.applicationId, applicationId, getTemplateExpressions())) {
         results.put("Invalid templatization for application",
-            "If connector is templatized then application should be templatized as well");
+            "If connector is templatized then application should be either templatized or should be an expression");
       }
     }
 
-    if (hasExpression(getTemplateExpressions(), "applicationId")) {
-      if (!hasExpression(getTemplateExpressions(), "tierId")) {
-        results.put(
-            "Invalid templatization for tier", "If application is templatized then tier should be templatized as well");
+    if (checkFieldTemplatized(AppDynamicsStateKeys.applicationId, getTemplateExpressions())) {
+      if (!checkFieldTemplatized(AppDynamicsStateKeys.tierId, getTemplateExpressions())
+          && !isExpression(AppDynamicsStateKeys.tierId, tierId, getTemplateExpressions())) {
+        results.put("Invalid templatization for tier",
+            "If application is templatized then tier should be either templatized or should be an expression");
       }
+    }
+
+    if (isExpression(AppDynamicsStateKeys.applicationId, applicationId, getTemplateExpressions())
+        && !isExpression(AppDynamicsStateKeys.tierId, tierId, getTemplateExpressions())) {
+      results.put(
+          "Invalid expression for tier", "If application is an expression then tier should be an expression as well");
     }
 
     logger.info("AppDynamics State Validated");
@@ -187,14 +195,14 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     SettingAttribute settingAttribute = null;
     if (!isEmpty(getTemplateExpressions())) {
       boolean isTriggerBased = workflowExecutionService.isTriggerBasedDeployment(context);
-      TemplateExpression configIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
+      TemplateExpression configIdExpression = templateExpressionProcessor.getTemplateExpression(
+          getTemplateExpressions(), AppDynamicsStateKeys.analysisServerConfigId);
       if (configIdExpression != null) {
         settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
         analysisServerConfigId = settingAttribute.getUuid();
       }
-      TemplateExpression appIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "applicationId");
+      TemplateExpression appIdExpression = templateExpressionProcessor.getTemplateExpression(
+          getTemplateExpressions(), AppDynamicsStateKeys.applicationId);
       if (appIdExpression != null) {
         applicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
         if (isTriggerBased) {
@@ -210,7 +218,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
         }
       }
       TemplateExpression tierIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "tierId");
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), AppDynamicsStateKeys.tierId);
       if (tierIdExpression != null) {
         tierId = templateExpressionProcessor.resolveTemplateExpression(context, tierIdExpression);
         if (isTriggerBased) {
@@ -424,15 +432,15 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   @Override
   public Map<String, String> parentTemplateFields(String fieldName) {
     Map<String, String> parentTemplateFields = new LinkedHashMap<>();
-    if (fieldName.equals("applicationId")) {
-      if (!configIdTemplatized()) {
-        parentTemplateFields.put("analysisServerConfigId", analysisServerConfigId);
+    if (fieldName.equals(AppDynamicsStateKeys.applicationId)) {
+      if (!checkFieldTemplatized(AppDynamicsStateKeys.analysisServerConfigId, getTemplateExpressions())) {
+        parentTemplateFields.put(AppDynamicsStateKeys.analysisServerConfigId, analysisServerConfigId);
       }
-    } else if (fieldName.equals("tierId")) {
-      if (!configIdTemplatized()) {
-        parentTemplateFields.put("analysisServerConfigId", analysisServerConfigId);
-        if (!appIdTemplatized()) {
-          parentTemplateFields.put("applicationId", applicationId);
+    } else if (fieldName.equals(AppDynamicsStateKeys.tierId)) {
+      if (!checkFieldTemplatized(AppDynamicsStateKeys.analysisServerConfigId, getTemplateExpressions())) {
+        parentTemplateFields.put(AppDynamicsStateKeys.analysisServerConfigId, analysisServerConfigId);
+        if (!checkFieldTemplatized(AppDynamicsStateKeys.applicationId, getTemplateExpressions())) {
+          parentTemplateFields.put(AppDynamicsStateKeys.applicationId, applicationId);
         }
       }
     }
@@ -448,14 +456,6 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   @Override
   public void setHostnameTemplate(String hostnameTemplate) {
     this.hostnameTemplate = hostnameTemplate;
-  }
-
-  private boolean appIdTemplatized() {
-    return TemplateExpressionProcessor.checkFieldTemplatized("applicationId", getTemplateExpressions());
-  }
-
-  private boolean configIdTemplatized() {
-    return TemplateExpressionProcessor.checkFieldTemplatized("analysisServerConfigId", getTemplateExpressions());
   }
 
   public static Double getNormalizedValue(String metricName, NewRelicMetricDataRecord metricDataRecord) {
@@ -475,17 +475,6 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
       return metricDataRecord.getValues().get(metricName);
     }
     return null;
-  }
-
-  public static String formDeeplinkUrl(AppDynamicsConfig appDconfig, AppDynamicsCVServiceConfiguration cvConfig,
-      long startTime, long endTime, String metricString) {
-    String url = appDconfig.getControllerUrl().endsWith("/") ? appDconfig.getControllerUrl()
-                                                             : appDconfig.getControllerUrl() + "/";
-    return url
-        + APPDYNAMICS_DEEPLINK_FORMAT.replace("{applicationId}", cvConfig.getAppDynamicsApplicationId())
-              .replace("{metricString}", metricString)
-              .replace("{startTimeMs}", String.valueOf(startTime))
-              .replace("{endTimeMs}", String.valueOf(endTime));
   }
 
   public static String getMetricTypeForMetric(String metricName) {
