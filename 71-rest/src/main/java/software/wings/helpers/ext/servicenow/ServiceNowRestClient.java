@@ -39,48 +39,52 @@ public interface ServiceNowRestClient {
       @Query("sysparm_query") String query);
 
   @GET(
-      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHstate%5EnameSTARTSWITHincident%5EinactiveSTARTSWITHfalse")
+      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHstate%5EnameSTARTSWITHincident%5EinactiveSTARTSWITHfalse%5ElanguageSTARTSWITHen")
   Call<JsonNode>
   getIncidentStates(@Header("Authorization") String authorization);
 
   @GET(
-      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHrisk%5EnameSTARTSWITHchange_request%5EinactiveSTARTSWITHfalse")
+      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHrisk%5EnameSTARTSWITHchange_request%5EinactiveSTARTSWITHfalse%5ElanguageSTARTSWITHen")
   Call<JsonNode>
   getRisk(@Header("Authorization") String authorization);
 
   @GET(
-      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHpriority%5EnameSTARTSWITHchange_request%5EinactiveSTARTSWITHfalse")
+      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHpriority%5EnameSTARTSWITHchange_request%5EinactiveSTARTSWITHfalse%5ElanguageSTARTSWITHen")
   Call<JsonNode>
   getPriority(@Header("Authorization") String authorization);
 
-  @GET("/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHimpact%5EinactiveSTARTSWITHfalse")
-  Call<JsonNode> getImpact(@Header("Authorization") String authorization);
-
-  @GET("/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHurgency%5EinactiveSTARTSWITHfalse")
-  Call<JsonNode> getUrgency(@Header("Authorization") String authorization);
+  @GET(
+      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHimpact%5EinactiveSTARTSWITHfalse%5ElanguageSTARTSWITHen")
+  Call<JsonNode>
+  getImpact(@Header("Authorization") String authorization);
 
   @GET(
-      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHstate%5EnameSTARTSWITHproblem%5EinactiveSTARTSWITHfalse")
+      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHurgency%5EinactiveSTARTSWITHfalse%5ElanguageSTARTSWITHen")
+  Call<JsonNode>
+  getUrgency(@Header("Authorization") String authorization);
+
+  @GET(
+      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHstate%5EnameSTARTSWITHproblem%5EinactiveSTARTSWITHfalse%5ElanguageSTARTSWITHen")
   Call<JsonNode>
   getProblemStates(@Header("Authorization") String authorization);
 
   @GET(
-      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHstate%5EnameSTARTSWITHchange_request%5EinactiveSTARTSWITHfalse")
+      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHstate%5EnameSTARTSWITHchange_request%5EinactiveSTARTSWITHfalse%5ElanguageSTARTSWITHen")
   Call<JsonNode>
   getChangeRequestStates(@Header("Authorization") String authorization);
 
   @GET(
-      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHstate%5EnameSTARTSWITHchange_task%5EinactiveSTARTSWITHfalse")
+      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHstate%5EnameSTARTSWITHchange_task%5EinactiveSTARTSWITHfalse%5ElanguageSTARTSWITHen")
   Call<JsonNode>
   getChangeTaskStates(@Header("Authorization") String authorization);
 
   @GET(
-      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHtype%5EnameSTARTSWITHchange_request%5EinactiveSTARTSWITHfalse")
+      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHtype%5EnameSTARTSWITHchange_request%5EinactiveSTARTSWITHfalse%5ElanguageSTARTSWITHen")
   Call<JsonNode>
   getChangeRequestTypes(@Header("Authorization") String authorization);
 
   @GET(
-      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHchange_task_type%5EnameSTARTSWITHchange_task%5EinactiveSTARTSWITHfalse")
+      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHchange_task_type%5EnameSTARTSWITHchange_task%5EinactiveSTARTSWITHfalse%5ElanguageSTARTSWITHen")
   Call<JsonNode>
   getChangeTaskTypes(@Header("Authorization") String authorization);
 
