@@ -9,4 +9,5 @@ public class AlertThreshold {
   double percentage;
   AlertThresholdBase basedOn;
   int alertsSent;
+  long crossedAt;
 }

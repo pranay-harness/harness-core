@@ -168,6 +168,22 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
+  public void testSetThresholdCrossedTimestamp() {
+    ArgumentCaptor<Budget> argument = ArgumentCaptor.forClass(Budget.class);
+    long timestamp1 = Instant.now().toEpochMilli();
+    budgetService.setThresholdCrossedTimestamp(budget, 0, timestamp1);
+    verify(budgetDao).update(eq(budgetId), argument.capture());
+    assertThat(argument.getValue().getAlertThresholds()[0].getCrossedAt()).isEqualTo(timestamp1);
+
+    long timestamp2 = Instant.now().toEpochMilli();
+    budgetService.setThresholdCrossedTimestamp(budget, 0, timestamp2);
+    verify(budgetDao).update(eq(budgetId), argument.capture());
+    assertThat(argument.getValue().getAlertThresholds()[0].getCrossedAt()).isEqualTo(timestamp1);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
   public void shouldGetBudgetDataForApplicationType() throws SQLException {
     when(budgetDao.get(budgetId)).thenReturn(mockBudget("APPLICATION"));
     QLBudgetTableListData data = budgetService.getBudgetData(budget);
