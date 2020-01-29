@@ -276,4 +276,20 @@ public class UserGroupController {
     final List<UserGroup> userGroups = userGroupService.fetchUserGroupNamesFromIds(userGroupIds);
     userService.updateUserGroupsOfUser(user.getUuid(), userGroups, accountId, true);
   }
+
+  public void checkIfUserGroupIdsExist(final String accountId, List<String> userGroupIds) {
+    if (isEmpty(userGroupIds)) {
+      return;
+    }
+    List<String> idsInput = new ArrayList<>(userGroupIds);
+    PageRequest<UserGroup> req =
+        aPageRequest().addFieldsIncluded("_id").addFilter("_id", IN, userGroupIds.toArray()).build();
+    PageResponse<UserGroup> res = userGroupService.list(accountId, req, false);
+    List<String> idsPresent = res.stream().map(UserGroup::getUuid).collect(Collectors.toList());
+    idsInput.removeAll(idsPresent);
+    if (isNotEmpty(idsInput)) {
+      throw new InvalidRequestException(
+          String.format("Invalid userGroupId: %s provided in the request", String.join(", ", idsInput)));
+    }
+  }
 }

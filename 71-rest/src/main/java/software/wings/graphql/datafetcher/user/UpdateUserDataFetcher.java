@@ -27,6 +27,7 @@ public class UpdateUserDataFetcher extends BaseMutatorDataFetcher<QLUpdateUserIn
   @Inject private UserService userService;
   @Inject private UserGroupController userGroupController;
   private final String INVALID_INP_ERR_MSSG = "cannot be empty or blank";
+  private final String NOT_NULL_INP_ERR_MSSG = "cannot be null";
 
   @Inject
   public UpdateUserDataFetcher(UserService userService) {
@@ -37,13 +38,13 @@ public class UpdateUserDataFetcher extends BaseMutatorDataFetcher<QLUpdateUserIn
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT)
   protected QLUpdateUserPayload mutateAndFetch(QLUpdateUserInput qlUpdateUserInput, MutationContext mutationContext) {
-    validate(qlUpdateUserInput);
+    validate(qlUpdateUserInput, mutationContext.getAccountId());
     String existingUserId = qlUpdateUserInput.getId();
     User existingUser;
     try {
       existingUser = userService.get(existingUserId);
     } catch (UnauthorizedException ex) {
-      throw new InvalidRequestException("User not found", ex);
+      throw new InvalidRequestException("User not found");
     }
     final User updatedUser =
         userService.update(prepareUserToUpdate(qlUpdateUserInput, existingUser, mutationContext.getAccountId()));
@@ -53,14 +54,21 @@ public class UpdateUserDataFetcher extends BaseMutatorDataFetcher<QLUpdateUserIn
         .build();
   }
 
-  private void validate(QLUpdateUserInput qlUpdateUserInput) {
+  private void validate(QLUpdateUserInput qlUpdateUserInput, final String accountId) {
     if (StringUtils.isBlank(qlUpdateUserInput.getId())) {
       throw new InvalidArgumentsException(Pair.of("id", INVALID_INP_ERR_MSSG));
     }
-
+    final RequestField<String> name = qlUpdateUserInput.getName();
+    if (isInitialized(name) && !getValue(name).isPresent()) {
+      throw new InvalidArgumentsException(Pair.of("name", NOT_NULL_INP_ERR_MSSG));
+    }
     final RequestField<List<String>> userGroupIds = qlUpdateUserInput.getUserGroupIds();
-    if (isInitialized(userGroupIds) && getValue(userGroupIds).orElse(Collections.emptyList()).contains("")) {
-      throw new InvalidArgumentsException(Pair.of("userGroupId", INVALID_INP_ERR_MSSG));
+    if (isInitialized(userGroupIds)) {
+      final List<String> userGroupIdList = getValue(userGroupIds).orElse(Collections.emptyList());
+      if (userGroupIdList.contains("")) {
+        throw new InvalidArgumentsException(Pair.of("userGroupId", INVALID_INP_ERR_MSSG));
+      }
+      userGroupController.checkIfUserGroupIdsExist(accountId, userGroupIdList);
     }
   }
 
