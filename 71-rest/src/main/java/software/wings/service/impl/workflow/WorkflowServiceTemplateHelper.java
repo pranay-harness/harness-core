@@ -47,6 +47,7 @@ public class WorkflowServiceTemplateHelper {
   private static final String ENV_VAR_DESC = "Variable for Environment entity";
   private static final String SERVICE_VAR_DESC = "Variable for Service entity";
   private static final String SERVICE_INFRA_VAR_DESC = "Variable for Service Infra-structure entity";
+  private static final String INFRADEF_VAR_DESC = "Variable for Infrastructure Definition entity";
   private static final String APPD_SERVER_VAR_DESC = "Variable for AppDynamics Server entity";
   private static final String APPD_APP_VAR_DESC = "Variable for AppDynamics Application entity";
   private static final String APPD_TIER_VAR_DESC = "Variable for AppDynamics Tier entity";
@@ -573,6 +574,8 @@ public class WorkflowServiceTemplateHelper {
         case INFRASTRUCTURE_MAPPING:
           return BASIC == orchestrationWorkflowType ? SERVICE_INFRA_VAR_DESC
                                                     : SERVICE_INFRA_VAR_DESC + " in " + stateName;
+        case INFRASTRUCTURE_DEFINITION:
+          return BASIC == orchestrationWorkflowType ? INFRADEF_VAR_DESC : INFRADEF_VAR_DESC + " in " + stateName;
         case APPDYNAMICS_CONFIGID:
           return APPD_SERVER_VAR_DESC + " in " + stateName;
         case APPDYNAMICS_APPID:
