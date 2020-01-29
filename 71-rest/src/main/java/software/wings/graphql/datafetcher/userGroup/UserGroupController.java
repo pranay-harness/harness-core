@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.graphql.datafetcher.userGroup.UserGroupPermissionsController.populateUserGroupAccountPermissionEntity;
 import static software.wings.graphql.datafetcher.userGroup.UserGroupPermissionsController.populateUserGroupAppPermissionEntity;
 import static software.wings.graphql.datafetcher.userGroup.UserGroupPermissionsController.populateUserGroupPermissions;
@@ -13,23 +14,36 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.beans.User.UserKeys;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.sso.SSOSettings;
+import software.wings.beans.sso.SSOType;
 import software.wings.graphql.schema.mutation.userGroup.input.QLCreateUserGroupInput;
 import software.wings.graphql.schema.mutation.userGroup.payload.QLCreateUserGroupPayload;
 import software.wings.graphql.schema.mutation.userGroup.payload.QLUpdateUserGroupPayload;
 import software.wings.graphql.schema.type.permissions.QLGroupPermissions;
+import software.wings.graphql.schema.type.usergroup.QLLDAPSettings;
+import software.wings.graphql.schema.type.usergroup.QLLDAPSettingsInput;
+import software.wings.graphql.schema.type.usergroup.QLLinkedSSOSetting;
 import software.wings.graphql.schema.type.usergroup.QLNotificationSettings;
+import software.wings.graphql.schema.type.usergroup.QLSAMLSettings;
+import software.wings.graphql.schema.type.usergroup.QLSAMLSettingsInput;
+import software.wings.graphql.schema.type.usergroup.QLSSOSettingInput;
 import software.wings.graphql.schema.type.usergroup.QLSlackNotificationSetting;
 import software.wings.graphql.schema.type.usergroup.QLUserGroup;
 import software.wings.graphql.schema.type.usergroup.QLUserGroup.QLUserGroupBuilder;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 
@@ -45,6 +59,33 @@ public class UserGroupController {
   @Inject private UserGroupPermissionValidator userGroupPermissionValidator;
   @Inject private UserGroupService userGroupService;
   @Inject private UserService userService;
+  @Inject private SSOSettingService ssoSettingService;
+  @Inject private AccountService accountService;
+
+  private QLLinkedSSOSetting populateLDAPSettings(UserGroup userGroup) {
+    return QLLDAPSettings.builder()
+        .ssoProviderId(userGroup.getLinkedSsoId())
+        .groupName(userGroup.getSsoGroupName())
+        .groupDN(userGroup.getSsoGroupId())
+        .build();
+  }
+
+  private QLLinkedSSOSetting populateSAMLSettings(UserGroup userGroup) {
+    return QLSAMLSettings.builder()
+        .groupName(userGroup.getSsoGroupName())
+        .ssoProviderId(userGroup.getLinkedSsoId())
+        .build();
+  }
+
+  private QLLinkedSSOSetting populateSSOProvider(UserGroup userGroup) {
+    if (userGroup.getLinkedSsoType() == SSOType.LDAP) {
+      return populateLDAPSettings(userGroup);
+    } else if (userGroup.getLinkedSsoType() == SSOType.SAML) {
+      return populateSAMLSettings(userGroup);
+    }
+    return null;
+  }
+
   public QLUserGroupBuilder populateUserGroupOutput(UserGroup userGroup, QLUserGroupBuilder builder) {
     QLGroupPermissions permissions = populateUserGroupPermissions(userGroup);
     QLNotificationSettings notificationSettings = populateNotificationSettings(userGroup);
@@ -52,38 +93,21 @@ public class UserGroupController {
         .id(userGroup.getUuid())
         .description(userGroup.getDescription())
         .permissions(permissions)
+        .ssoSetting(populateSSOProvider(userGroup))
         .isSSOLinked(userGroup.isSsoLinked())
         .importedByScim(userGroup.isImportedByScim())
         .notificationSettings(notificationSettings);
   }
 
   public QLCreateUserGroupPayload populateCreateUserGroupPayload(UserGroup userGroup, String requestId) {
-    QLGroupPermissions permissions = populateUserGroupPermissions(userGroup);
-    QLNotificationSettings notificationSettings = populateNotificationSettings(userGroup);
-    QLUserGroup userGroupOutput = QLUserGroup.builder()
-                                      .name(userGroup.getName())
-                                      .id(userGroup.getUuid())
-                                      .description(userGroup.getDescription())
-                                      .permissions(permissions)
-                                      .isSSOLinked(userGroup.isSsoLinked())
-                                      .importedByScim(userGroup.isImportedByScim())
-                                      .notificationSettings(notificationSettings)
-                                      .build();
+    QLUserGroupBuilder builder = QLUserGroup.builder();
+    QLUserGroup userGroupOutput = populateUserGroupOutput(userGroup, builder).build();
     return QLCreateUserGroupPayload.builder().requestId(requestId).userGroup(userGroupOutput).build();
   }
 
   public QLUpdateUserGroupPayload populateUpdateUserGroupPayload(UserGroup userGroup, String requestId) {
-    QLGroupPermissions permissions = populateUserGroupPermissions(userGroup);
-    QLNotificationSettings notificationSettings = populateNotificationSettings(userGroup);
-    QLUserGroup userGroupOutput = QLUserGroup.builder()
-                                      .name(userGroup.getName())
-                                      .id(userGroup.getUuid())
-                                      .description(userGroup.getDescription())
-                                      .permissions(permissions)
-                                      .isSSOLinked(userGroup.isSsoLinked())
-                                      .importedByScim(userGroup.isImportedByScim())
-                                      .notificationSettings(notificationSettings)
-                                      .build();
+    QLUserGroupBuilder builder = QLUserGroup.builder();
+    QLUserGroup userGroupOutput = populateUserGroupOutput(userGroup, builder).build();
     return QLUpdateUserGroupPayload.builder().requestId(requestId).userGroup(userGroupOutput).build();
   }
 
@@ -139,12 +163,17 @@ public class UserGroupController {
         slackConfig, notificationSetting.getPagerDutyIntegrationKey());
   }
 
-  public void validateTheUserIds(List<String> userIds) {
+  public void validateTheUserIds(List<String> userIds, String accountId) {
     if (isEmpty(userIds)) {
       return;
     }
     List<String> idsInput = new ArrayList<>(userIds);
-    PageRequest<User> req = aPageRequest().addFieldsIncluded("_id").addFilter("_id", IN, userIds.toArray()).build();
+    Account account = accountService.get(accountId);
+    PageRequest<User> req = aPageRequest()
+                                .addFieldsIncluded("_id")
+                                .addFilter(UserKeys.accounts, SearchFilter.Operator.IN, account)
+                                .addFilter("_id", IN, userIds.toArray())
+                                .build();
     PageResponse<User> res = userService.list(req, false);
     // This Ids are wrong
     List<String> idsPresent = res.stream().map(User::getUuid).collect(Collectors.toList());
@@ -162,17 +191,82 @@ public class UserGroupController {
     return userGroupIds.stream().map(id -> userService.get(id)).collect(Collectors.toList());
   }
 
+  public UserGroupSSOSettings populateUserGroupSSOSettings(QLSSOSettingInput ssoProvider) {
+    boolean isSSOLinked = false;
+    String linkedSSOId = null;
+    SSOType ssoType = null;
+    String ssoGroupName = null;
+    String linkedSsoDisplayName = null;
+    String ssoGroupId = null;
+    if (ssoProvider != null) {
+      if (ssoProvider.getLdapSettings() != null && ssoProvider.getSamlSettings() != null) {
+        throw new InvalidRequestException("Only one of saml/ldap setting can be set for a user group");
+      }
+      if (ssoProvider.getLdapSettings() != null || ssoProvider.getSamlSettings() != null) {
+        isSSOLinked = true;
+        QLLDAPSettingsInput ldapSettings = ssoProvider.getLdapSettings();
+        QLSAMLSettingsInput samlSettings = ssoProvider.getSamlSettings();
+        if (ldapSettings != null) {
+          ssoGroupName = ldapSettings.getGroupName();
+          linkedSSOId = ldapSettings.getSsoProviderId();
+          ssoGroupId = ldapSettings.getGroupDN();
+        }
+        if (samlSettings != null) {
+          ssoGroupName = samlSettings.getGroupName();
+          linkedSSOId = samlSettings.getSsoProviderId();
+          ssoGroupId = samlSettings.getGroupName();
+        }
+        if (isBlank(linkedSSOId)) {
+          throw new InvalidRequestException("Invalid sso provider id given in the request");
+        }
+        SSOSettings ssoSettings = ssoSettingService.getSsoSettings(linkedSSOId);
+        if (ssoSettings == null) {
+          throw new InvalidRequestException(String.format("No sso settings exists for the id %s", linkedSSOId));
+        }
+        linkedSsoDisplayName = ssoSettings.getDisplayName();
+        ssoType = ssoSettings.getType();
+        if (ssoType == SSOType.SAML && samlSettings == null) {
+          throw new InvalidRequestException(
+              String.format("No saml setting provided for the saml sso Provider with id %s", linkedSSOId));
+        }
+        if (ssoType == SSOType.LDAP && ldapSettings == null) {
+          throw new InvalidRequestException(
+              String.format("No ldap setting provided for the ldap sso Provider with id %s", linkedSSOId));
+        }
+      }
+    }
+    return UserGroupSSOSettings.builder()
+        .isSSOLinked(isSSOLinked)
+        .linkedSSOId(linkedSSOId)
+        .ssoType(ssoType)
+        .ssoGroupName(ssoGroupName)
+        .linkedSsoDisplayName(linkedSsoDisplayName)
+        .ssoGroupId(ssoGroupId)
+        .build();
+  }
+
   public UserGroup populateUserGroupEntity(QLCreateUserGroupInput userGroupInput, String accountId) {
     userGroupPermissionValidator.validatePermission(userGroupInput.getPermissions(), accountId);
     AccountPermissions accountPermissions = populateUserGroupAccountPermissionEntity(userGroupInput.getPermissions());
     Set<AppPermission> appPermissions = populateUserGroupAppPermissionEntity(userGroupInput.getPermissions());
-    validateTheUserIds(userGroupInput.getUserIds());
+    validateTheUserIds(userGroupInput.getUserIds(), accountId);
+    UserGroupSSOSettings userGroupSSOSettings = populateUserGroupSSOSettings(userGroupInput.getSsoSetting());
+    if (isBlank(userGroupInput.getName())) {
+      throw new InvalidRequestException("The user group name cannot be blank");
+    }
+
     return UserGroup.builder()
-        .name(userGroupInput.getName())
+        .name(userGroupInput.getName().trim())
         .description(userGroupInput.getDescription())
         .notificationSettings(populateNotificationSettingsEntity(userGroupInput.getNotificationSettings()))
         .memberIds(userGroupInput.getUserIds())
         .members(populateUserGroupMembersField(userGroupInput.getUserIds()))
+        .isSsoLinked(userGroupSSOSettings.isSSOLinked())
+        .linkedSsoId(userGroupSSOSettings.getLinkedSSOId())
+        .linkedSsoDisplayName(userGroupSSOSettings.getLinkedSsoDisplayName())
+        .linkedSsoType(userGroupSSOSettings.getSsoType())
+        .ssoGroupId(userGroupSSOSettings.getSsoGroupId())
+        .ssoGroupName(userGroupSSOSettings.getSsoGroupName())
         .appPermissions(appPermissions)
         .accountPermissions(accountPermissions)
         .build();

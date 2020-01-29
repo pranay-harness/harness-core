@@ -65,6 +65,8 @@ import software.wings.graphql.schema.type.instance.QLEcsContainerInstance;
 import software.wings.graphql.schema.type.instance.QLK8SPodInstance;
 import software.wings.graphql.schema.type.instance.QLPcfInstance;
 import software.wings.graphql.schema.type.instance.QLPhysicalHostInstance;
+import software.wings.graphql.schema.type.usergroup.QLLDAPSettings;
+import software.wings.graphql.schema.type.usergroup.QLSAMLSettings;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -84,6 +86,7 @@ public class TypeResolverManager {
     public static final String Outcome = "Outcome";
     public static final String PhysicalInstance = "PhysicalInstance";
     public static final String ChangeSet = "ChangeSet";
+    public static final String LinkedSSOSetting = "LinkedSSOSetting";
   }
 
   @UtilityClass
@@ -149,6 +152,8 @@ public class TypeResolverManager {
     public static final String GitChangeSet = "GitChangeSet";
     public static final String ApiKeyChangeSet = "ApiKeyChangeSet";
     public static final String GenericChangeSet = "GenericChangeSet";
+    public static final String ldapSettings = "LDAPSettings";
+    public static final String samlSettings = "SAMLSettings";
   }
 
   /**
@@ -255,6 +260,11 @@ public class TypeResolverManager {
                                       .put(QLGitChangeSet.class, TypeResolverManagerTypes.GitChangeSet)
                                       .put(QLApiKeyChangeSet.class, TypeResolverManagerTypes.ApiKeyChangeSet)
                                       .put(QLGenericChangeSet.class, TypeResolverManagerTypes.GenericChangeSet)
+                                      .build()))
+        .put(TypeResolverManagerUnifaces.LinkedSSOSetting,
+            getResultTypeResolver(ImmutableMap.<Class, String>builder()
+                                      .put(QLLDAPSettings.class, TypeResolverManagerTypes.ldapSettings)
+                                      .put(QLSAMLSettings.class, TypeResolverManagerTypes.samlSettings)
                                       .build()))
         .build();
   }

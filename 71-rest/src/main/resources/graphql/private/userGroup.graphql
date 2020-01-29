@@ -12,32 +12,50 @@ extend type Query {
 }
 
 input CreateUserGroupInput {
-  requestId: String
+  requestId: String!
   name: String!
   description: String
   userIds: [String]
+  ssoSetting: SSOSettingInput
   permissions: Permissions
   notificationSettings: NotificationSettingsInput
 }
 
 input UpdateUserGroupInput {
-  requestId: String
+  requestId: String!
   name: String
   userGroupId: String!
   description: String
   userIds: [String]
+  ssoSetting: SSOSettingInput
   permissions: Permissions
   notificationSettings: NotificationSettingsInput
 }
 
+input SSOSettingInput {
+  ldapSettings: LDAPSettingsInput
+  samlSettings: SAMLSettingsInput
+}
+
+input LDAPSettingsInput {
+  ssoProviderId: String!
+  groupName: String!
+  groupDN: String!
+}
+
+input SAMLSettingsInput {
+  ssoProviderId: String!
+  groupName: String!
+}
+
 input UpdateUserGroupPermissionsInput {
-  requestId: String
+  requestId: String!
   userGroupId: String!
   permissions: Permissions!
 }
 
 input DeleteUserGroupInput {
-  requestId: String
+  requestId: String!
   userGroupId: String!
 }
 
@@ -47,6 +65,7 @@ type UserGroup {
   description: String
   users(limit: Int!, offset: Int): UserConnection
     @dataFetcher(name: userConnection, contextFieldArgsMap: "{ \"userGroup\": \"id\"}")
+  ssoSetting: LinkedSSOSetting
   importedByScim: Boolean
   isSSOLinked: Boolean
   notificationSettings: NotificationSettings
@@ -66,6 +85,21 @@ type CreateUserGroupPayload {
 type UpdateUserGroupPayload {
   requestId: String
   userGroup: UserGroup
+}
+
+interface LinkedSSOSetting {
+  ssoProviderId: String
+}
+
+type LDAPSettings implements LinkedSSOSetting {
+  ssoProviderId: String
+  groupName: String
+  groupDN: String
+}
+
+type SAMLSettings implements LinkedSSOSetting {
+  ssoProviderId: String
+  groupName: String
 }
 
 type UpdateUserGroupPermissionsPayload {
