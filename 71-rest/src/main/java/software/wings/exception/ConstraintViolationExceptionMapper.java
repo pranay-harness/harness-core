@@ -186,24 +186,22 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
     boolean replaceArg = false;
     for (Path.Node node : v.getPropertyPath()) {
       switch (node.getKind()) {
-        case METHOD: {
+        case METHOD:
           message = message.replace(node + ".", "");
           replaceArg = true;
           break;
-        }
-        case PARAMETER: {
+        case PARAMETER:
           if (replaceArg) {
             message = message.replace(node + ".", "");
           }
           break;
-        }
-        case PROPERTY: {
+        case PROPERTY:
           if (replaceArg) {
             message = message.replace(node + ".", "");
           }
           break;
-        }
-        default: { break; }
+        default:
+          break;
       }
     }
     return message;

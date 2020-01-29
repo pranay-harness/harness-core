@@ -85,7 +85,7 @@ public class WebhookEventUtils {
   public String obtainBranchName(WebhookSource webhookSource, HttpHeaders httpHeaders, Map<String, Object> payload) {
     try {
       switch (webhookSource) {
-        case GITHUB: {
+        case GITHUB:
           GitHubEventType gitHubEventType = getGitHubEventType(httpHeaders);
           if (gitHubEventType == null) {
             return null;
@@ -98,8 +98,7 @@ public class WebhookEventUtils {
             default:
               return null;
           }
-        }
-        case GITLAB: {
+        case GITLAB:
           GitLabEventType gitLabEventType = getGitLabEventType(httpHeaders);
           if (gitLabEventType == null) {
             return null;
@@ -112,7 +111,6 @@ public class WebhookEventUtils {
             default:
               return null;
           }
-        }
         case BITBUCKET:
           BitBucketEventType bitBucketEventType = getBitBucketEventType(httpHeaders);
           if (bitBucketEventType == null) {
@@ -156,7 +154,7 @@ public class WebhookEventUtils {
   public String obtainCommitId(WebhookSource webhookSource, HttpHeaders httpHeaders, Map<String, Object> payload) {
     try {
       switch (webhookSource) {
-        case GITHUB: {
+        case GITHUB:
           GitHubEventType gitHubEventType = getGitHubEventType(httpHeaders);
           if (gitHubEventType == null) {
             return null;
@@ -167,7 +165,6 @@ public class WebhookEventUtils {
             default:
               return null;
           }
-        }
         case GITLAB:
           GitLabEventType gitLabEventType = getGitLabEventType(httpHeaders);
           if (gitLabEventType == null) {
@@ -240,25 +237,23 @@ public class WebhookEventUtils {
   public void validatePushEvent(WebhookSource webhookSource, HttpHeaders httpHeaders) {
     try {
       switch (webhookSource) {
-        case GITHUB: {
+        case GITHUB:
           GitHubEventType gitHubEventType = getGitHubEventType(httpHeaders);
           if (GitHubEventType.PUSH == gitHubEventType) {
             return;
           }
 
           throw new InvalidRequestException(format("Push event expected. Found %s event", gitHubEventType), USER);
-        }
 
-        case GITLAB: {
+        case GITLAB:
           GitLabEventType gitLabEventType = getGitLabEventType(httpHeaders);
           if (GitLabEventType.PUSH == gitLabEventType) {
             return;
           }
 
           throw new InvalidRequestException(format("Push event expected. Found %s event", gitLabEventType), USER);
-        }
 
-        case BITBUCKET: {
+        case BITBUCKET:
           BitBucketEventType bitBucketEventType = getBitBucketEventType(httpHeaders);
 
           if (BitBucketEventType.PUSH == bitBucketEventType || BitBucketEventType.REFS_CHANGED == bitBucketEventType) {
@@ -266,7 +261,6 @@ public class WebhookEventUtils {
           }
 
           throw new InvalidRequestException(format("Push event expected. Found %s event", bitBucketEventType), USER);
-        }
 
         default:
           unhandled(webhookSource);

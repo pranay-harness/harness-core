@@ -217,7 +217,7 @@ public class ExecutionInterruptManager {
         case MARK_SUCCESS:
         case MARK_FAILED:
         case END_EXECUTION:
-        case ABORT_ALL: {
+        case ABORT_ALL:
           // Close ManualIntervention alert
           ManualInterventionNeededAlert manualInterventionNeededAlert =
               ManualInterventionNeededAlert.builder()
@@ -226,7 +226,6 @@ public class ExecutionInterruptManager {
                   .build();
           alertService.closeAlert(null, appId, ManualInterventionNeeded, manualInterventionNeededAlert);
           break;
-        }
         case PAUSE:
         case PAUSE_ALL:
         case ROLLBACK_DONE:
