@@ -338,8 +338,12 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
     getLogger().info(
         "found analysisSummary with analysis records {}", deploymentTimeSeriesAnalysis.getMetricAnalyses().size());
+
+    // Fail state when either risk is high or tolerance is low but risk is not low
     for (NewRelicMetricAnalysis metricAnalysisRecord : deploymentTimeSeriesAnalysis.getMetricAnalyses()) {
-      if (metricAnalysisRecord.getRiskLevel() == RiskLevel.HIGH) {
+      if (metricAnalysisRecord.getRiskLevel() == RiskLevel.HIGH
+          || (AnalysisTolerance.fromInt(context.getTolerance()) == AnalysisTolerance.LOW
+                 && metricAnalysisRecord.getRiskLevel() != RiskLevel.LOW)) {
         executionStatus = ExecutionStatus.FAILED;
         break;
       }
