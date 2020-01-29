@@ -25,7 +25,7 @@ public class DeleteUserDataFetcher extends BaseMutatorDataFetcher<QLDeleteUserIn
   @AuthRule(permissionType = PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT)
   protected QLDeleteUserPayload mutateAndFetch(QLDeleteUserInput qlDeleteUserInput, MutationContext mutationContext) {
     QLDeleteUserPayloadBuilder qlDeleteUserPayloadBuilder =
-        QLDeleteUserPayload.builder().requestId(qlDeleteUserInput.getRequestId());
+        QLDeleteUserPayload.builder().clientMutationId(qlDeleteUserInput.getClientMutationId());
     final String userId = qlDeleteUserInput.getId();
     try {
       userService.delete(mutationContext.getAccountId(), userId);

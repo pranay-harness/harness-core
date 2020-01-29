@@ -46,7 +46,7 @@ public class UpdateUserDataFetcherTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_updateUser() {
     final QLUpdateUserInput updateUserInput = QLUpdateUserInput.builder()
-                                                  .requestId("requestId1")
+                                                  .clientMutationId("clientMutationId1")
                                                   .id("userId")
                                                   .name(RequestField.setToNullable("newUserName"))
                                                   .build();
@@ -57,7 +57,7 @@ public class UpdateUserDataFetcherTest extends CategoryTest {
 
     final QLUpdateUserPayload qlUpdateUserPayload =
         updateUserDataFetcher.mutateAndFetch(updateUserInput, mutationContext);
-    Assertions.assertThat(qlUpdateUserPayload.getRequestId()).isEqualTo("requestId1");
+    Assertions.assertThat(qlUpdateUserPayload.getClientMutationId()).isEqualTo("clientMutationId1");
 
     verify(userService, times(1)).get("userId");
     final ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);

@@ -12,7 +12,7 @@ extend type Query {
 }
 
 input CreateUserGroupInput {
-  requestId: String!
+  clientMutationId: String
   name: String!
   description: String
   userIds: [String]
@@ -22,7 +22,7 @@ input CreateUserGroupInput {
 }
 
 input UpdateUserGroupInput {
-  requestId: String!
+  clientMutationId: String
   name: String
   userGroupId: String!
   description: String
@@ -49,13 +49,13 @@ input SAMLSettingsInput {
 }
 
 input UpdateUserGroupPermissionsInput {
-  requestId: String!
+  clientMutationId: String
   userGroupId: String!
   permissions: Permissions!
 }
 
 input DeleteUserGroupInput {
-  requestId: String!
+  clientMutationId: String
   userGroupId: String!
 }
 
@@ -78,12 +78,12 @@ type UserGroupConnection {
 }
 
 type CreateUserGroupPayload {
-  requestId: String
+  clientMutationId: String
   userGroup: UserGroup
 }
 
 type UpdateUserGroupPayload {
-  requestId: String
+  clientMutationId: String
   userGroup: UserGroup
 }
 
@@ -103,7 +103,7 @@ type SAMLSettings implements LinkedSSOSetting {
 }
 
 type UpdateUserGroupPermissionsPayload {
-  requestId: String
+  clientMutationId: String
   permissions: UserGroupPermissions
 }
 
@@ -138,5 +138,5 @@ enum RequestStatus {
 }
 
 type DeleteUserGroupPayload {
-  requestId: String
+  clientMutationId: String
 }

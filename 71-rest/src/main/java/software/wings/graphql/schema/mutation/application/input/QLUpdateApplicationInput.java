@@ -10,7 +10,7 @@ import software.wings.graphql.schema.mutation.QLMutationInput;
 @Builder
 @FieldNameConstants(innerTypeName = "QLUpdateApplicationInputKeys")
 public class QLUpdateApplicationInput implements QLMutationInput {
-  private String requestId;
+  private String clientMutationId;
   private String applicationId;
   private RequestField<String> name;
   private RequestField<String> description;

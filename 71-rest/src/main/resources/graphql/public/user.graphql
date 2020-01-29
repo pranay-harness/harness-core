@@ -10,36 +10,36 @@ extend type Query {
 }
 
 input CreateUserInput {
-  requestId: String!
+  clientMutationId: String
   name: String!
   email: String!
   userGroupIds: [String!]
 }
 
 type CreateUserPayload {
-  requestId: String
+  clientMutationId: String
   user: User
 }
 
 input UpdateUserInput {
-  requestId: String!
+  clientMutationId: String
   id: String!
   name: String
   userGroupIds: [String!]
 }
 
 type UpdateUserPayload {
-  requestId: String
+  clientMutationId: String
   user: User
 }
 
 input DeleteUserInput {
-  requestId: String!
+  clientMutationId: String
   id: String!
 }
 
 type DeleteUserPayload {
-  requestId: String
+  clientMutationId: String
 }
 
 extend type User {

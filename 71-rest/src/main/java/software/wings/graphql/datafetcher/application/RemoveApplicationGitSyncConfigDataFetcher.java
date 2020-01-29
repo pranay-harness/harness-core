@@ -39,14 +39,13 @@ public class RemoveApplicationGitSyncConfigDataFetcher
     yamlGitService.delete(mutationContext.getAccountId(), application.getUuid(), EntityType.APPLICATION);
 
     return QLRemoveApplicationGitSyncConfigPayload.builder()
-        .requestId(input.getRequestId())
+        .clientMutationId(input.getClientMutationId())
         .application(ApplicationController.populateQLApplication(application, QLApplication.builder()).build())
         .build();
   }
 
   private void validate(QLUpdateApplicationGitSyncConfigInput input) {
     utils.ensureNotBlankField(input.getApplicationId(), QLUpdateApplicationGitSyncConfigInputKeys.applicationId);
-    utils.ensureNotBlankField(input.getRequestId(), QLUpdateApplicationGitSyncConfigInputKeys.requestId);
   }
 
   private Application getApplication(String applicationId) {

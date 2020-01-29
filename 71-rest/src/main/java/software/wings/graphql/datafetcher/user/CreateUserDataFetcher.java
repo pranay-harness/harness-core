@@ -40,7 +40,7 @@ public class CreateUserDataFetcher extends BaseMutatorDataFetcher<QLCreateUserIn
   }
 
   private QLCreateUserPayload prepareQLCreateUserPayload(QLUser user, String requestId) {
-    return QLCreateUserPayload.builder().user(user).requestId(requestId).build();
+    return QLCreateUserPayload.builder().user(user).clientMutationId(requestId).build();
   }
 
   @Override
@@ -52,7 +52,7 @@ public class CreateUserDataFetcher extends BaseMutatorDataFetcher<QLCreateUserIn
     final User savedUser = userService.getUserByEmail(qlCreateUserInput.getEmail(), accountId);
     userGroupController.addUserToUserGroups(savedUser, qlCreateUserInput.getUserGroupIds(), accountId);
 
-    return prepareQLCreateUserPayload(prepareQLUser(savedUser), qlCreateUserInput.getRequestId());
+    return prepareQLCreateUserPayload(prepareQLUser(savedUser), qlCreateUserInput.getClientMutationId());
   }
 
   private void inviteUser(QLCreateUserInput qlCreateUserInput, final String accountId) {
@@ -71,9 +71,6 @@ public class CreateUserDataFetcher extends BaseMutatorDataFetcher<QLCreateUserIn
     }
     if (StringUtils.isBlank(qlCreateUserInput.getName())) {
       throw new InvalidArgumentsException(Pair.of("name", INVALID_VAL_INP_PARAM_ERR_MSSG));
-    }
-    if (StringUtils.isBlank(qlCreateUserInput.getRequestId())) {
-      throw new InvalidArgumentsException(Pair.of("requestId", INVALID_VAL_INP_PARAM_ERR_MSSG));
     }
   }
 }

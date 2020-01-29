@@ -55,7 +55,7 @@ public class UpdateApplicationDataFetcherTest extends CategoryTest {
   public void test_mutateAndFetch() {
     final QLUpdateApplicationInput applicationParameters =
         QLUpdateApplicationInput.builder()
-            .requestId("req1")
+            .clientMutationId("req1")
             .applicationId("appid")
             .name(RequestField.setToNullable("   new app name   "))
             .description(RequestField.setToNullable("new app description"))
@@ -67,7 +67,7 @@ public class UpdateApplicationDataFetcherTest extends CategoryTest {
 
     final QLUpdateApplicationPayload qlUpdateApplicationPayload =
         updateApplicationDataFetcher.mutateAndFetch(applicationParameters, mutationContext);
-    Assertions.assertThat(qlUpdateApplicationPayload.getRequestId()).isEqualTo("req1");
+    Assertions.assertThat(qlUpdateApplicationPayload.getClientMutationId()).isEqualTo("req1");
 
     verify(appService, times(1)).get("appid");
     final ArgumentCaptor<Application> applicationArgumentCaptor = ArgumentCaptor.forClass(Application.class);
@@ -116,7 +116,8 @@ public class UpdateApplicationDataFetcherTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_mutateAndFetch_2() throws Exception {
     final DataFetchingEnvironment dataFetchingEnvironment = Mockito.mock(DataFetchingEnvironment.class);
-    doReturn(ImmutableMap.of("requestId", "req1", "applicationId", "appid", "description", "new app description"))
+    doReturn(
+        ImmutableMap.of("clientMutationId", "req1", "applicationId", "appid", "description", "new app description"))
         .when(dataFetchingEnvironment)
         .getArguments();
     doReturn("accountid").when(utils).getAccountId(dataFetchingEnvironment);
@@ -136,7 +137,7 @@ public class UpdateApplicationDataFetcherTest extends CategoryTest {
     {
       doReturn(new HashMap<String, String>() {
         {
-          put("requestId", "req1");
+          put("clientMutationId", "req1");
           put("applicationId", "appid");
           put("name", "new_app_name");
           put("description", null);

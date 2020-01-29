@@ -102,13 +102,13 @@ public class UserGroupController {
   public QLCreateUserGroupPayload populateCreateUserGroupPayload(UserGroup userGroup, String requestId) {
     QLUserGroupBuilder builder = QLUserGroup.builder();
     QLUserGroup userGroupOutput = populateUserGroupOutput(userGroup, builder).build();
-    return QLCreateUserGroupPayload.builder().requestId(requestId).userGroup(userGroupOutput).build();
+    return QLCreateUserGroupPayload.builder().clientMutationId(requestId).userGroup(userGroupOutput).build();
   }
 
   public QLUpdateUserGroupPayload populateUpdateUserGroupPayload(UserGroup userGroup, String requestId) {
     QLUserGroupBuilder builder = QLUserGroup.builder();
     QLUserGroup userGroupOutput = populateUserGroupOutput(userGroup, builder).build();
-    return QLUpdateUserGroupPayload.builder().requestId(requestId).userGroup(userGroupOutput).build();
+    return QLUpdateUserGroupPayload.builder().clientMutationId(requestId).userGroup(userGroupOutput).build();
   }
 
   private QLNotificationSettings populateNotificationSettings(UserGroup userGroup) {

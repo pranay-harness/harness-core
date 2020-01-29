@@ -28,6 +28,6 @@ public class DeleteApplicationDataFetcher
   protected QLDeleteApplicationPayload mutateAndFetch(
       QLUpdateApplicationInput parameter, MutationContext mutationContext) {
     appService.delete(parameter.getApplicationId());
-    return QLDeleteApplicationPayload.builder().requestId(parameter.getRequestId()).build();
+    return QLDeleteApplicationPayload.builder().clientMutationId(parameter.getClientMutationId()).build();
   }
 }

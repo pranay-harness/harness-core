@@ -53,7 +53,7 @@ public class CreateUserDataFetcherTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_createUser() throws Exception {
     final DataFetchingEnvironment dataFetchingEnvironment = Mockito.mock(DataFetchingEnvironment.class);
-    doReturn(ImmutableMap.of("requestId", "req1", "name", "userName", "email", "userEmail", "userGroupIds",
+    doReturn(ImmutableMap.of("clientMutationId", "req1", "name", "userName", "email", "userEmail", "userGroupIds",
                  Arrays.asList("userGroupId1")))
         .when(dataFetchingEnvironment)
         .getArguments();
@@ -63,7 +63,7 @@ public class CreateUserDataFetcherTest extends CategoryTest {
 
     final QLCreateUserPayload qlCreateUserPayload = createUserDataFetcher.get(dataFetchingEnvironment);
     final QLUser user = qlCreateUserPayload.getUser();
-    assertThat(qlCreateUserPayload.getRequestId()).isEqualTo("req1");
+    assertThat(qlCreateUserPayload.getClientMutationId()).isEqualTo("req1");
     verify(userService, times(1)).getUserByEmail(eq("userEmail"), eq("accountId1"));
     verify(authRuleInstrumentation, times(1))
         .instrumentDataFetcher(any(BaseDataFetcher.class), eq(dataFetchingEnvironment), eq(QLCreateUserPayload.class));

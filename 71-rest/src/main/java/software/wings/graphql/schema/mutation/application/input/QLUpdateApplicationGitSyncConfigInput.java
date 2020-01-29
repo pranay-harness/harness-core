@@ -9,7 +9,7 @@ import software.wings.graphql.schema.mutation.QLMutationInput;
 @Builder
 @FieldNameConstants(innerTypeName = "QLUpdateApplicationGitSyncConfigInputKeys")
 public class QLUpdateApplicationGitSyncConfigInput implements QLMutationInput {
-  private String requestId;
+  private String clientMutationId;
   private String applicationId;
   private String gitConnectorId;
   private String branch;

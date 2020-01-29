@@ -11,7 +11,7 @@ import java.util.List;
 @Data
 @Builder
 public class QLCreateUserInput implements QLMutationInput {
-  private String requestId;
+  private String clientMutationId;
   private String name;
   private String email;
   private List<String> userGroupIds;

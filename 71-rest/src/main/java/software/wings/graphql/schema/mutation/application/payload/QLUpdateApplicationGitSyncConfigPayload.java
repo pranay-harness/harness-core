@@ -11,6 +11,6 @@ import software.wings.security.annotations.Scope;
 @Builder
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
 public class QLUpdateApplicationGitSyncConfigPayload implements QLMutationPayload {
-  private String requestId;
+  private String clientMutationId;
   private QLGitSyncConfig gitSyncConfig;
 }

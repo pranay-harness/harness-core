@@ -66,7 +66,7 @@ public class UpdateApplicationDataFetcher
     final Application existingApplication = appService.get(parameter.getApplicationId());
     final Application updatedApp = appService.update(prepareApplication(parameter, existingApplication));
     return QLUpdateApplicationPayload.builder()
-        .requestId(parameter.getRequestId())
+        .clientMutationId(parameter.getClientMutationId())
         .application(prepareQLApplication(updatedApp))
         .build();
   }

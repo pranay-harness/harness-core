@@ -9,7 +9,7 @@ import software.wings.graphql.schema.mutation.QLMutationInput;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class QLCreateApplicationInput implements QLMutationInput {
-  String requestId;
+  String clientMutationId;
   String name;
   String description;
 }

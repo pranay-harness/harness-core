@@ -3,6 +3,7 @@ package software.wings.graphql.schema.type.user;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
+import software.wings.graphql.schema.mutation.QLMutationPayload;
 import software.wings.graphql.schema.type.QLUser;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
@@ -11,7 +12,7 @@ import software.wings.security.annotations.Scope;
 @Data
 @Builder
 @Scope(PermissionAttribute.ResourceType.USER)
-public class QLUpdateUserPayload {
+public class QLUpdateUserPayload implements QLMutationPayload {
   private QLUser user;
-  private String requestId;
+  private String clientMutationId;
 }
