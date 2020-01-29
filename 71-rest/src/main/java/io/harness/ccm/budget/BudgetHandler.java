@@ -24,6 +24,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.service.impl.notifications.UserGroupBasedDispatcher;
 import software.wings.service.intfc.UserGroupService;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
@@ -88,6 +89,7 @@ public class BudgetHandler implements Handler<Budget> {
               getBudgetNotification(budget.getAccountId(), budget.getName(), alertThresholds[i], currentCost);
           userGroupBasedDispatcher.dispatch(Arrays.asList(budgetNotification), userGroup);
           budgetService.incAlertCount(budget, i);
+          budgetService.setThresholdCrossedTimestamp(budget, i, Instant.now().toEpochMilli());
         }
       }
     }

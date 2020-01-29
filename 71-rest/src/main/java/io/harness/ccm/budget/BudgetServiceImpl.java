@@ -55,8 +55,21 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public void incAlertCount(Budget budget, int thresholdIndex) {
     AlertThreshold[] alertThresholds = budget.getAlertThresholds();
-    int prevAlertThreshold = alertThresholds[thresholdIndex].getAlertsSent();
-    alertThresholds[thresholdIndex].setAlertsSent(prevAlertThreshold + 1);
+    int prevAlertsSent = alertThresholds[thresholdIndex].getAlertsSent();
+    alertThresholds[thresholdIndex].setAlertsSent(prevAlertsSent + 1);
+    budget.setAlertThresholds(alertThresholds);
+    update(budget.getUuid(), budget);
+  }
+
+  @Override
+  public void setThresholdCrossedTimestamp(Budget budget, int thresholdIndex, long crossedAt) {
+    AlertThreshold[] alertThresholds = budget.getAlertThresholds();
+    long prevCrossedAt = alertThresholds[thresholdIndex].getCrossedAt();
+    if (prevCrossedAt > budget.getCreatedAt()) {
+      logger.info("The budget with id={} has already crossed the threshold #{}.", budget.getUuid(), thresholdIndex);
+      return;
+    }
+    alertThresholds[thresholdIndex].setCrossedAt(crossedAt);
     budget.setAlertThresholds(alertThresholds);
     update(budget.getUuid(), budget);
   }

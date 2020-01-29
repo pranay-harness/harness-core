@@ -8,10 +8,11 @@ import java.util.List;
 public interface BudgetService {
   String create(Budget budgetRecord);
 
-  void update(String budgetId, Budget budget);
-
   Budget get(String budgetId);
-  void incAlertCount(Budget budget, int threshold_index);
+
+  void update(String budgetId, Budget budget);
+  void setThresholdCrossedTimestamp(Budget budget, int thresholdIndex, long crossedAt);
+  void incAlertCount(Budget budget, int thresholdIndex);
 
   List<Budget> list(String accountId);
   List<Budget> list(String accountId, Integer count, Integer startIndex);
