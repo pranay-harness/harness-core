@@ -879,7 +879,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     // mocks
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(lambdaService);
 
-    workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSLambda(APP_ID, ENV_ID, workflowPhase);
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSLambda(APP_ID, workflowPhase);
     List<PhaseStepType> phaseStepTypes =
         workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
     assertThat(phaseStepTypes)
@@ -999,7 +999,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     // mock
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(helmService);
 
-    workflowServiceHelper.generateNewWorkflowPhaseStepsForHelm(APP_ID, workflowPhase, true);
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForHelm(APP_ID, workflowPhase);
     List<PhaseStepType> phaseStepTypes =
         workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
     assertThat(phaseStepTypes).containsExactly(PhaseStepType.HELM_DEPLOY, VERIFY_SERVICE, WRAP_UP);

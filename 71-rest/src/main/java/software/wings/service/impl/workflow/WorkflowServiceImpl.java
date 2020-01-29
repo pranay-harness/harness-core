@@ -385,7 +385,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Map<StateTypeScope, List<Stencil>> getStencils(
       String appId, String workflowId, String phaseId, StateTypeScope[] stateTypeScopes) {
-    Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap = loadStateTypes(appService.getAccountIdByAppId(appId));
+    Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap = loadStateTypes();
     return getStateTypeScopeListMap(appId, workflowId, phaseId, stateTypeScopes, stencilsMap);
   }
 
@@ -512,7 +512,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId, entityMap)));
   }
 
-  private Map<StateTypeScope, List<StateTypeDescriptor>> loadStateTypes(String accountId) {
+  private Map<StateTypeScope, List<StateTypeDescriptor>> loadStateTypes() {
     if (cachedStencils != null) {
       return cachedStencils;
     }
@@ -3006,12 +3006,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       case ROLLING:
       case BLUE_GREEN:
       case CANARY:
-      case MULTI_SERVICE: {
+      case MULTI_SERVICE:
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
         canaryOrchestrationWorkflow.setFailureStrategies(failureStrategies);
         break;
-      }
-      default: { noop(); }
+      default:
+        noop();
     }
   }
 

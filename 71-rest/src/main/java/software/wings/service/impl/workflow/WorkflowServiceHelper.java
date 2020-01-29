@@ -12,7 +12,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -792,7 +791,7 @@ public class WorkflowServiceHelper {
     phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
-  public void generateNewWorkflowPhaseStepsForAWSLambda(String appId, String envId, WorkflowPhase workflowPhase) {
+  public void generateNewWorkflowPhaseStepsForAWSLambda(String appId, WorkflowPhase workflowPhase) {
     Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
@@ -847,17 +846,12 @@ public class WorkflowServiceHelper {
   }
 
   public Map<String, String> getStateDefaults(String appId, String serviceId, StateType stateType) {
-    switch (stateType) {
-      case AWS_CODEDEPLOY_STATE: {
-        List<ArtifactStream> artifactStreams = artifactStreamService.fetchArtifactStreamsForService(appId, serviceId);
-        if (artifactStreams.stream().anyMatch(
-                artifactStream -> ArtifactStreamType.AMAZON_S3.name().equals(artifactStream.getArtifactStreamType()))) {
-          return AwsCodeDeployState.loadDefaults();
-        }
-        break;
+    if (AWS_CODEDEPLOY_STATE == stateType) {
+      List<ArtifactStream> artifactStreams = artifactStreamService.fetchArtifactStreamsForService(appId, serviceId);
+      if (artifactStreams.stream().anyMatch(
+              artifactStream -> ArtifactStreamType.AMAZON_S3.name().equals(artifactStream.getArtifactStreamType()))) {
+        return AwsCodeDeployState.loadDefaults();
       }
-      default:
-        unhandled(stateType);
     }
     return Collections.emptyMap();
   }
@@ -1194,8 +1188,7 @@ public class WorkflowServiceHelper {
     phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
-  public void generateNewWorkflowPhaseStepsForHelm(
-      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+  public void generateNewWorkflowPhaseStepsForHelm(String appId, WorkflowPhase workflowPhase) {
     Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
@@ -2447,11 +2440,11 @@ public class WorkflowServiceHelper {
         generateNewWorkflowPhaseStepsForKubernetes(appId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
       }
     } else if (deploymentType == HELM) {
-      generateNewWorkflowPhaseStepsForHelm(appId, workflowPhase, !serviceRepeat);
+      generateNewWorkflowPhaseStepsForHelm(appId, workflowPhase);
     } else if (deploymentType == AWS_CODEDEPLOY) {
       generateNewWorkflowPhaseStepsForAWSCodeDeploy(appId, workflowPhase);
     } else if (deploymentType == DeploymentType.AWS_LAMBDA) {
-      generateNewWorkflowPhaseStepsForAWSLambda(appId, envId, workflowPhase);
+      generateNewWorkflowPhaseStepsForAWSLambda(appId, workflowPhase);
     } else if (deploymentType == AMI) {
       if (featureFlagService.isEnabled(FeatureName.SPOTINST, accountId)
           && isSpotInstTypeInfra(infraMappingRefactorEnabled, workflowPhase.getInfraDefinitionId(),
