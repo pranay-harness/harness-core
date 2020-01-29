@@ -10,12 +10,12 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.datafetcher.billing.QLBillingStatsHelper;
 import software.wings.graphql.schema.query.QLBudgetQueryParameters;
-import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableListData;
+import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
 @Slf4j
-public class BudgetDataFetcher extends AbstractObjectDataFetcher<QLBudgetTableListData, QLBudgetQueryParameters> {
+public class BudgetDataFetcher extends AbstractObjectDataFetcher<QLBudgetDataList, QLBudgetQueryParameters> {
   public static final String BUDGET_DOES_NOT_EXIST_MSG = "Budget does not exist";
 
   @Inject BudgetService budgetService;
@@ -23,7 +23,7 @@ public class BudgetDataFetcher extends AbstractObjectDataFetcher<QLBudgetTableLi
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  protected QLBudgetTableListData fetch(QLBudgetQueryParameters qlQuery, String accountId) {
+  protected QLBudgetDataList fetch(QLBudgetQueryParameters qlQuery, String accountId) {
     Budget budget = null;
     if (qlQuery.getBudgetId() != null) {
       logger.info("Fetching budget data");

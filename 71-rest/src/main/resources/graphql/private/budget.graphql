@@ -1,6 +1,9 @@
 extend type Query {
   # Get details about CCM Budget.
   budget(budgetId: String!): BudgetDataList @dataFetcher(name: budget)
+
+  # Get list of budgets for an account.
+  budgetList: [BudgetTableData] @dataFetcher(name: budgetList)
 }
 
 type BudgetDataList {
@@ -13,4 +16,15 @@ type BudgetData {
   budgetVariance: Number
   budgeted: Number
   budgetVariancePercentage: Number
+}
+
+type BudgetTableData {
+  name: String
+  id: String
+  type: String
+  scopeType: String
+  appliesTo: [String]
+  alertAt: [Number]
+  budgetedAmount: Number
+  actualAmount: Number
 }

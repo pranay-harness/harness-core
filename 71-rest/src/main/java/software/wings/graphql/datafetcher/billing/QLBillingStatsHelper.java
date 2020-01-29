@@ -25,7 +25,7 @@ public class QLBillingStatsHelper {
   @Inject WingsPersistence wingsPersistence;
   @Inject ClusterRecordService clusterRecordService;
 
-  String getEntityName(BillingDataMetaDataFields field, String entityId) {
+  public String getEntityName(BillingDataMetaDataFields field, String entityId) {
     switch (field) {
       case APPID:
         return getApplicationName(entityId);

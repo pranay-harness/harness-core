@@ -222,7 +222,7 @@ public class PermissionAttribute {
 
     CUSTOM_DASHBOARD(ACCOUNT),
 
-    BUDGET(PermissionType.LOGGED_IN),
+    BUDGET(ACCOUNT),
 
     CLUSTERRECORD(ACCOUNT),
 

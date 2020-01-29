@@ -2,6 +2,7 @@ package io.harness.ccm.budget;
 
 import static io.harness.ccm.budget.entities.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -40,10 +41,12 @@ import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.billing.BillingTrendStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.QLBillingAmountData;
+import software.wings.graphql.datafetcher.billing.QLBillingStatsHelper;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
-import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableListData;
+import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
+import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -58,6 +61,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Mock private BillingDataQueryBuilder billingDataQueryBuilder;
   @Mock private DataFetcherUtils utils;
   @Mock private BillingTrendStatsDataFetcher billingTrendStatsDataFetcher;
+  @Mock private QLBillingStatsHelper statsHelper;
   @InjectMocks BudgetServiceImpl budgetService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -68,6 +72,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   private String[] clusterIds = {"CLUSTER_ID"};
   private String budgetId = "BUDGET_ID";
   private String budgetName = "BUDGET_NAME";
+  private String entityName = "ENTITY_NAME";
   private BudgetType budgetType = BudgetType.SPECIFIED_AMOUNT;
   private double budgetAmount = 25000.0;
   final EnvironmentType environmentType = EnvironmentType.PROD;
@@ -186,7 +191,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetBudgetDataForApplicationType() throws SQLException {
     when(budgetDao.get(budgetId)).thenReturn(mockBudget("APPLICATION"));
-    QLBudgetTableListData data = budgetService.getBudgetData(budget);
+    QLBudgetDataList data = budgetService.getBudgetData(budget);
     verify(timeScaleDBService).getDBConnection();
   }
 
@@ -209,5 +214,32 @@ public class BudgetServiceImplTest extends CategoryTest {
     budgetService.getForecastCost(budget);
     verify(billingTrendStatsDataFetcher)
         .getBillingAmountData(eq(accountId), isA(QLCCMAggregationFunction.class), anyListOf(QLBillingDataFilter.class));
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void shouldGetBudgetDetails() {
+    when(statsHelper.getEntityName(any(), any())).thenReturn(entityName);
+
+    QLBudgetTableData budgetDetails = budgetService.getBudgetDetails(budget);
+    assertThat(budgetDetails.getName()).isEqualTo("test_budget");
+    assertThat(budgetDetails.getId()).isEqualTo(budgetId);
+    assertThat(budgetDetails.getType()).isEqualTo(SPECIFIED_AMOUNT.toString());
+    assertThat(budgetDetails.getActualAmount()).isEqualTo(0.0);
+    assertThat(budgetDetails.getBudgetedAmount()).isEqualTo(100.0);
+    assertThat(budgetDetails.getScopeType()).isEqualTo("APPLICATION");
+    assertThat(budgetDetails.getAppliesTo()[0]).isEqualTo(entityName);
+    assertThat(budgetDetails.getAppliesTo()[1]).isEqualTo(entityName);
+
+    // when budget scope is cluster
+    budgetDetails = budgetService.getBudgetDetails(mockBudget("CLUSTER"));
+    assertThat(budgetDetails.getName()).isEqualTo(budgetName);
+    assertThat(budgetDetails.getId()).isEqualTo(budgetId);
+    assertThat(budgetDetails.getType()).isEqualTo(SPECIFIED_AMOUNT.toString());
+    assertThat(budgetDetails.getActualAmount()).isEqualTo(0.0);
+    assertThat(budgetDetails.getBudgetedAmount()).isEqualTo(budgetAmount);
+    assertThat(budgetDetails.getScopeType()).isEqualTo("CLUSTER");
+    assertThat(budgetDetails.getAppliesTo()[0]).isEqualTo(entityName);
   }
 }
