@@ -199,13 +199,13 @@ public class BillingStatsFilterValuesDataFetcher
   private QLK8sLabelFilter prepareLabelFilters(String[] clusterIds, String[] workloadNames, String[] namespaces) {
     QLK8sLabelFilterBuilder builder = QLK8sLabelFilter.builder();
     if (clusterIds.length != 0) {
-      builder.cluster(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(clusterIds).build());
+      builder.cluster(QLIdFilter.builder().operator(QLIdOperator.IN).values(clusterIds).build());
     }
     if (workloadNames.length != 0) {
-      builder.workloadName(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(workloadNames).build());
+      builder.workloadName(QLIdFilter.builder().operator(QLIdOperator.IN).values(workloadNames).build());
     }
     if (namespaces.length != 0) {
-      builder.namespace(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(namespaces).build());
+      builder.namespace(QLIdFilter.builder().operator(QLIdOperator.IN).values(namespaces).build());
     }
     return builder.build();
   }
