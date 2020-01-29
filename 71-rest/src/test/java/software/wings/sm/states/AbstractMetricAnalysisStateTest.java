@@ -49,7 +49,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-public class MetricAnalysisStateTest extends WingsBaseTest {
+public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private AppService appService;
   @Inject protected MetricDataAnalysisService metricAnalysisService;
@@ -149,16 +149,120 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
-  public void testHandleAsyncNoFailWithoutAnomaly() {
+  public void testHandleAsyncResponse_LowRiskWithLowTolerance() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
-    saveAnalysisContext(dataAnalysisResponse);
+    saveAnalysisContext(dataAnalysisResponse, 1);
+    saveMetricAnalysisRecord(RiskLevel.LOW);
+    ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
+
+    validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponse_LowRiskWithMediumTolerance() {
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    createMetaDataExecutionData(ExecutionStatus.RUNNING);
+    saveAnalysisContext(dataAnalysisResponse, 2);
+    saveMetricAnalysisRecord(RiskLevel.LOW);
+    ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
+
+    validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponse_LowRiskWithHighTolerance() {
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    createMetaDataExecutionData(ExecutionStatus.RUNNING);
+    saveAnalysisContext(dataAnalysisResponse, 3);
+    saveMetricAnalysisRecord(RiskLevel.LOW);
+    ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
+
+    validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponse_MediumRiskWithLowTolerance() {
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    createMetaDataExecutionData(ExecutionStatus.RUNNING);
+    saveAnalysisContext(dataAnalysisResponse, 1);
+    saveMetricAnalysisRecord(RiskLevel.MEDIUM);
+    ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
+
+    validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponse_MediumRiskWithMediumTolerance() {
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    createMetaDataExecutionData(ExecutionStatus.RUNNING);
+    saveAnalysisContext(dataAnalysisResponse, 2);
     saveMetricAnalysisRecord(RiskLevel.MEDIUM);
     ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
 
     validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponse_MediumRiskWithHighTolerance() {
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    createMetaDataExecutionData(ExecutionStatus.RUNNING);
+    saveAnalysisContext(dataAnalysisResponse, 3);
+    saveMetricAnalysisRecord(RiskLevel.MEDIUM);
+    ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
+
+    validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponse_HighRiskWithLowTolerance() {
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    createMetaDataExecutionData(ExecutionStatus.RUNNING);
+    saveAnalysisContext(dataAnalysisResponse, 1);
+    saveMetricAnalysisRecord(RiskLevel.HIGH);
+    ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
+
+    validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponse_HighRiskWithMediumTolerance() {
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    createMetaDataExecutionData(ExecutionStatus.RUNNING);
+    saveAnalysisContext(dataAnalysisResponse, 2);
+    saveMetricAnalysisRecord(RiskLevel.HIGH);
+    ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
+
+    validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponse_HighRiskWithHighTolerance() {
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    createMetaDataExecutionData(ExecutionStatus.RUNNING);
+    saveAnalysisContext(dataAnalysisResponse, 3);
+    saveMetricAnalysisRecord(RiskLevel.HIGH);
+    ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
+
+    validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.FAILED);
   }
 
   @Test
@@ -347,7 +451,8 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
             .build());
   }
 
-  private void saveAnalysisContext(Map<String, ResponseData> dataAnalysisResponse) {
+  private void saveAnalysisContext(Map<String, ResponseData> dataAnalysisResponse, int... optionalTolerance) {
+    int tolerence = optionalTolerance.length > 0 ? optionalTolerance[0] : 3;
     VerificationDataAnalysisResponse verificationDataAnalysisResponse =
         (VerificationDataAnalysisResponse) dataAnalysisResponse.values().iterator().next();
     final AnalysisContext analysisContext =
@@ -360,6 +465,7 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
             .comparisonStrategy(verificationDataAnalysisResponse.getStateExecutionData().getComparisonStrategy())
             .stateType(StateType.valueOf(verificationDataAnalysisResponse.getStateExecutionData().getStateType()))
             .appId(appId)
+            .tolerance(tolerence)
             .timeDuration(10)
             .build();
 
