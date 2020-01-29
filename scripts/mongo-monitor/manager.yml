@@ -1,9 +1,5 @@
 metrics:
-  - delegate_tasks_count:
-      check_interval:   10      # seconds
-      query:            "db.delegateTasks.find({}).count()"
-
-  - notify_responces_count:
+  - notify_responses_count:
       check_interval:   10      # seconds
       query:            "db.notifyResponses.find({}).count()"
 
@@ -18,10 +14,6 @@ metrics:
   - wait_instances_count:
       check_interval:   10      # seconds
       query:            "db.waitInstances.find({}).count()"
-
-  - whitelist_count:
-      check_interval:   10      # seconds
-      query:            "db.delegateConnectionResults.find({validated:true, lastUpdatedAt: {$gt: Date.now() - 6*60*60*1000}}).count()"
 
   - collector_queues_count:
       check_interval:   10      # seconds

@@ -52,9 +52,9 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private List<String> tags;
   @NotEmpty private String accountId;
   private String waitId;
-  private Status status;
+  @Indexed private Status status;
   private String delegateId;
-  private boolean async;
+  @Indexed private boolean async;
   private String envId;
   private String infrastructureMappingId;
   private Long validationStartedAt;
