@@ -27,6 +27,7 @@ import migrations.all.AwsAmiAsgDesiredInstancesMigration;
 import migrations.all.CVCollectionCronFrequencyMigration;
 import migrations.all.CleanUpDatadogCallLogMigration;
 import migrations.all.CleanupOrphanInstances;
+import migrations.all.CleanupSyncStatusForDeletedEntities;
 import migrations.all.CloudWatchCVMigration;
 import migrations.all.ConvertRestrictedTagsToNonRestrictedTagsForUnsupportedAccountTypes;
 import migrations.all.CreateDefaultAlertNotificationRule;
@@ -302,6 +303,8 @@ public class MigrationList {
         .add(Pair.of(288, DeleteServiceGuardAlertMigration.class))
         .add(Pair.of(289, HelmConnectorPathMigration.class))
         .add(Pair.of(290, PcfFeatureFlagMigration.class))
+        .add(Pair.of(291, CleanupOrphanInstances.class))
+        .add(Pair.of(292, CleanupSyncStatusForDeletedEntities.class))
         .build();
   }
 }
