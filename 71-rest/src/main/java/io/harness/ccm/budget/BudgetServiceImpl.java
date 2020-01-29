@@ -5,6 +5,8 @@ import com.google.inject.Inject;
 
 import io.harness.ccm.budget.entities.AlertThreshold;
 import io.harness.ccm.budget.entities.Budget;
+import io.harness.ccm.budget.entities.BudgetScope;
+import io.harness.ccm.budget.entities.BudgetScopeType;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
@@ -14,14 +16,16 @@ import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.billing.BillingTrendStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.QLBillingAmountData;
+import software.wings.graphql.datafetcher.billing.QLBillingStatsHelper;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
 import software.wings.graphql.datafetcher.budget.BudgetDefaultKeys;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
+import software.wings.graphql.schema.type.aggregation.budget.QLBudgetData;
+import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
-import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableListData;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -41,6 +45,7 @@ public class BudgetServiceImpl implements BudgetService {
   @Inject private BudgetDao budgetDao;
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private BillingDataQueryBuilder billingDataQueryBuilder;
+  @Inject QLBillingStatsHelper statsHelper;
 
   @Override
   public String create(Budget budget) {
@@ -81,7 +86,7 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public List<Budget> list(String accountId) {
-    return budgetDao.list(accountId, 0, 0);
+    return budgetDao.list(accountId, Integer.MAX_VALUE - 1, 0);
   }
 
   @Override
@@ -96,8 +101,11 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public double getActualCost(Budget budget) {
-    QLBudgetTableListData data = getBudgetData(budget);
-    return data.getData().get(0).getActualCost();
+    QLBudgetDataList data = getBudgetData(budget);
+    if (data == null || data.getData().isEmpty()) {
+      return 0;
+    }
+    return data.getData().get(data.getData().size() - 1).getActualCost();
   }
 
   @Override
@@ -116,17 +124,16 @@ public class BudgetServiceImpl implements BudgetService {
   }
 
   @Override
-  public QLBudgetTableListData getBudgetData(Budget budget) {
+  public QLBudgetDataList getBudgetData(Budget budget) {
     Preconditions.checkNotNull(budget.getAccountId());
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(budget.getScope().getBudgetScopeFilter());
     filters.add(getFilterForCurrentBillingCycle());
     QLCCMAggregationFunction aggregationFunction = BudgetUtils.makeBillingAmtAggregation();
-
     QLCCMTimeSeriesAggregation groupBy = BudgetUtils.makeStartTimeEntityGroupBy();
 
     BillingDataQueryMetadata queryData = billingDataQueryBuilder.formBudgetInsightQuery(
-        budget.getAccountId(), filters, aggregationFunction, groupBy, Collections.EMPTY_LIST);
+        budget.getAccountId(), filters, aggregationFunction, groupBy, Collections.emptyList());
     logger.info("BudgetDataFetcher query: {}", queryData.getQuery());
 
     ResultSet resultSet = null;
@@ -143,9 +150,29 @@ public class BudgetServiceImpl implements BudgetService {
     return null;
   }
 
-  private QLBudgetTableListData generateBudgetData(
+  @Override
+  public QLBudgetTableData getBudgetDetails(Budget budget) {
+    List<Double> alertAt = new ArrayList<>();
+    if (budget.getAlertThresholds() != null) {
+      for (AlertThreshold alertThreshold : budget.getAlertThresholds()) {
+        alertAt.add(alertThreshold.getPercentage());
+      }
+    }
+    return QLBudgetTableData.builder()
+        .name(budget.getName())
+        .id(budget.getUuid())
+        .type(budget.getType().toString())
+        .scopeType(getScopeType(budget.getScope()))
+        .appliesTo(getAppliesTo(budget.getScope()))
+        .alertAt(alertAt.toArray(new Double[0]))
+        .budgetedAmount(budget.getBudgetAmount())
+        .actualAmount(getActualCost(budget))
+        .build();
+  }
+
+  private QLBudgetDataList generateBudgetData(
       ResultSet resultSet, BillingDataQueryMetadata queryData, Double budgetedAmount) throws SQLException {
-    List<QLBudgetTableData> budgetTableDataList = new ArrayList<>();
+    List<QLBudgetData> budgetTableDataList = new ArrayList<>();
 
     Double actualCost = BudgetDefaultKeys.ACTUAL_COST;
     long time = BudgetDefaultKeys.TIME;
@@ -168,16 +195,16 @@ public class BudgetServiceImpl implements BudgetService {
 
       Double budgetVariancePercentage = getBudgetVariancePercentage(budgetVariance, budgetedAmount);
 
-      QLBudgetTableData qlBudgetTableData = QLBudgetTableData.builder()
-                                                .actualCost(actualCost)
-                                                .budgeted(budgetedAmount)
-                                                .budgetVariance(budgetVariance)
-                                                .budgetVariancePercentage(budgetVariancePercentage)
-                                                .time(time)
-                                                .build();
-      budgetTableDataList.add(qlBudgetTableData);
+      QLBudgetData qlBudgetData = QLBudgetData.builder()
+                                      .actualCost(actualCost)
+                                      .budgeted(budgetedAmount)
+                                      .budgetVariance(budgetVariance)
+                                      .budgetVariancePercentage(budgetVariancePercentage)
+                                      .time(time)
+                                      .build();
+      budgetTableDataList.add(qlBudgetData);
     }
-    return QLBudgetTableListData.builder().data(budgetTableDataList).build();
+    return QLBudgetDataList.builder().data(budgetTableDataList).build();
   }
 
   private static Double getBudgetVariance(Double budgetedAmount, Double actualCost) {
@@ -201,5 +228,37 @@ public class BudgetServiceImpl implements BudgetService {
     return QLBillingDataFilter.builder()
         .startTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(startTime).build())
         .build();
+  }
+
+  private String getScopeType(BudgetScope scope) {
+    String scopeType = "-";
+    if (scope != null) {
+      if (scope.getBudgetScopeFilter().getCluster() != null) {
+        scopeType = BudgetScopeType.CLUSTER;
+      } else {
+        scopeType = BudgetScopeType.APPLICATION;
+      }
+    }
+    return scopeType;
+  }
+
+  private String[] getAppliesTo(BudgetScope scope) {
+    String[] entityIds = {};
+    if (scope == null) {
+      return entityIds;
+    }
+    List<String> entityNames = new ArrayList<>();
+    BillingDataQueryMetadata.BillingDataMetaDataFields entityType =
+        BillingDataQueryMetadata.BillingDataMetaDataFields.CLUSTERID;
+    if (scope.getBudgetScopeFilter().getCluster() != null) {
+      entityIds = scope.getBudgetScopeFilter().getCluster().getValues();
+    } else if (scope.getBudgetScopeFilter().getApplication() != null) {
+      entityIds = scope.getBudgetScopeFilter().getApplication().getValues();
+      entityType = BillingDataQueryMetadata.BillingDataMetaDataFields.APPID;
+    }
+    for (String entityId : entityIds) {
+      entityNames.add(statsHelper.getEntityName(entityType, entityId));
+    }
+    return entityNames.toArray(new String[0]);
   }
 }

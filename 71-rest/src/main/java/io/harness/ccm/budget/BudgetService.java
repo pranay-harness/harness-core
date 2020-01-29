@@ -1,7 +1,8 @@
 package io.harness.ccm.budget;
 
 import io.harness.ccm.budget.entities.Budget;
-import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableListData;
+import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
+import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
 
 import java.util.List;
 
@@ -23,5 +24,7 @@ public interface BudgetService {
 
   double getForecastCost(Budget budget);
 
-  QLBudgetTableListData getBudgetData(Budget budget);
+  QLBudgetDataList getBudgetData(Budget budget);
+
+  QLBudgetTableData getBudgetDetails(Budget budget);
 }

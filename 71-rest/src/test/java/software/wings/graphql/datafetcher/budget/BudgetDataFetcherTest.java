@@ -7,8 +7,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.entities.ApplicationBudgetScope;
@@ -28,7 +26,7 @@ import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.query.QLBudgetQueryParameters;
-import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableListData;
+import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
 import software.wings.security.UserThreadLocal;
 
 import java.sql.SQLException;
@@ -36,9 +34,9 @@ import java.sql.SQLException;
 public class BudgetDataFetcherTest extends AbstractDataFetcherTest {
   @Mock BudgetService budgetService;
   @Mock private DataFetcherUtils utils;
-  @Inject @InjectMocks BudgetDataFetcher budgetDataFetcher;
+  @InjectMocks BudgetDataFetcher budgetDataFetcher;
 
-  QLBudgetTableListData data;
+  QLBudgetDataList data;
 
   final String budgetId = "budgetId";
   final String accountId = "accountId";

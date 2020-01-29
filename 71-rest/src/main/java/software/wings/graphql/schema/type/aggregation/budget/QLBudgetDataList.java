@@ -13,6 +13,6 @@ import java.util.List;
 @Builder
 @Scope(ResourceType.USER)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class QLBudgetTableListData {
-  List<QLBudgetTableData> data;
+public class QLBudgetDataList {
+  List<QLBudgetData> data;
 }
