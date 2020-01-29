@@ -73,8 +73,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-// import software.wings.common.Constants;
-
 /**
  * author Srinivas
  */
@@ -437,7 +435,8 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     final Map<String, String> validationResult = appDynamicsState.validateFields();
     assertThat(validationResult.size()).isEqualTo(1);
     assertThat(validationResult.get("Invalid templatization for application"))
-        .isEqualTo("If connector is templatized then application should be templatized as well");
+        .isEqualTo(
+            "If connector is templatized then application should be either templatized or should be an expression");
   }
 
   @Test
@@ -463,7 +462,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     final Map<String, String> validationResult = appDynamicsState.validateFields();
     assertThat(validationResult.size()).isEqualTo(1);
     assertThat(validationResult.get("Invalid templatization for tier"))
-        .isEqualTo("If application is templatized then tier should be templatized as well");
+        .isEqualTo("If application is templatized then tier should be either templatized or should be an expression");
   }
 
   @Test
@@ -488,6 +487,62 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
                 .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_TIERID"))
                 .build()));
 
+    final Map<String, String> validationResult = appDynamicsState.validateFields();
+    assertThat(validationResult.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testValidateFields_whenAppExpressionAndTierTemplatized() {
+    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
+    appDynamicsState.setAnalysisServerConfigId("${AppDynamics_Server}");
+    appDynamicsState.setApplicationId("${app.name}");
+    appDynamicsState.setTemplateExpressions(
+        Lists.newArrayList(TemplateExpression.builder()
+                               .fieldName("analysisServerConfigId")
+                               .expression("${AppDynamics_Server}")
+                               .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_CONFIGID"))
+                               .build(),
+            TemplateExpression.builder()
+                .fieldName("tierId")
+                .expression("${AppDynamics_Tier}")
+                .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_TIERID"))
+                .build()));
+
+    final Map<String, String> validationResult = appDynamicsState.validateFields();
+    assertThat(validationResult.size()).isEqualTo(1);
+    assertThat(validationResult.get("Invalid expression for tier"))
+        .isEqualTo("If application is an expression then tier should be an expression as well");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testValidateFields_whenAppAndTierExpressionAreValidExpressions() {
+    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
+    appDynamicsState.setAnalysisServerConfigId("${AppDynamics_Server}");
+    appDynamicsState.setApplicationId("${app.name}");
+    appDynamicsState.setTierId("${service.name}");
+    appDynamicsState.setTemplateExpressions(
+        Lists.newArrayList(TemplateExpression.builder()
+                               .fieldName("analysisServerConfigId")
+                               .expression("${AppDynamics_Server}")
+                               .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_CONFIGID"))
+                               .build()));
+
+    final Map<String, String> validationResult = appDynamicsState.validateFields();
+    assertThat(validationResult.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testValidateFields_whenAllFieldsSelected() {
+    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
+    appDynamicsState.setAnalysisServerConfigId(generateUuid());
+    appDynamicsState.setApplicationId("123");
+    appDynamicsState.setTierId("456");
     final Map<String, String> validationResult = appDynamicsState.validateFields();
     assertThat(validationResult.size()).isEqualTo(0);
   }
