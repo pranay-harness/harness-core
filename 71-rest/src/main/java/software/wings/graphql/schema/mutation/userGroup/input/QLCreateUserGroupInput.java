@@ -6,6 +6,7 @@ import lombok.experimental.FieldNameConstants;
 import software.wings.graphql.schema.type.QLObject;
 import software.wings.graphql.schema.type.permissions.QLUserGroupPermissions;
 import software.wings.graphql.schema.type.usergroup.QLNotificationSettings;
+import software.wings.graphql.schema.type.usergroup.QLSSOSettingInput;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
@@ -20,6 +21,7 @@ public class QLCreateUserGroupInput implements QLObject {
   String description;
   QLUserGroupPermissions permissions;
   List<String> userIds;
+  QLSSOSettingInput ssoSetting;
   QLNotificationSettings notificationSettings;
   String requestId;
 }

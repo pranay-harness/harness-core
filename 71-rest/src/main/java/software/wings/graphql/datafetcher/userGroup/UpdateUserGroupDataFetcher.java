@@ -10,8 +10,10 @@ import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.userGroup.input.QLUpdateUserGroupInput;
 import software.wings.graphql.schema.mutation.userGroup.payload.QLUpdateUserGroupPayload;
+import software.wings.graphql.schema.type.usergroup.QLSSOSettingInput;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 
 import java.util.List;
@@ -22,14 +24,17 @@ public class UpdateUserGroupDataFetcher
   @Inject UserGroupService userGroupService;
   @Inject UserGroupPermissionValidator userGroupPermissionValidator;
   @Inject UserGroupController userGroupController;
+  @Inject SSOSettingService ssoSettingService;
 
   @Inject
   public UpdateUserGroupDataFetcher(UserGroupService userGroupService,
-      UserGroupPermissionValidator userGroupPermissionValidator, UserGroupController userGroupController) {
+      UserGroupPermissionValidator userGroupPermissionValidator, UserGroupController userGroupController,
+      SSOSettingService ssoSettingService) {
     super(QLUpdateUserGroupInput.class, QLUpdateUserGroupPayload.class);
     this.userGroupService = userGroupService;
     this.userGroupPermissionValidator = userGroupPermissionValidator;
     this.userGroupController = userGroupController;
+    this.ssoSettingService = ssoSettingService;
   }
 
   @Override
@@ -66,7 +71,7 @@ public class UpdateUserGroupDataFetcher
     // Update the Users
     if (userGroupInput.getUserIds().hasBeenSet()) {
       List<String> userIds = userGroupInput.getUserIds().getValue().orElse(null);
-      userGroupController.validateTheUserIds(userIds);
+      userGroupController.validateTheUserIds(userIds, mutationContext.getAccountId());
       existingUserGroup.setMemberIds(userIds);
       existingUserGroup.setMembers(userGroupController.populateUserGroupMembersField(userIds));
       boolean sendNotification = false;
@@ -74,6 +79,18 @@ public class UpdateUserGroupDataFetcher
         sendNotification = existingUserGroup.getNotificationSettings().isSendMailToNewMembers();
       }
       userGroupService.updateMembers(existingUserGroup, sendNotification);
+    }
+
+    // Update SSOSettings
+    if (userGroupInput.getSsoSetting().hasBeenSet()) {
+      QLSSOSettingInput ssoProvider = userGroupInput.getSsoSetting().getValue().orElse(null);
+      UserGroupSSOSettings ssoSettings = userGroupController.populateUserGroupSSOSettings(ssoProvider);
+      if (ssoProvider.getLdapSettings() == null && ssoProvider.getSamlSettings() == null) {
+        userGroupService.unlinkSsoGroup(mutationContext.getAccountId(), userGroupId, false);
+      } else {
+        userGroupService.linkToSsoGroup(mutationContext.getAccountId(), userGroupId, ssoSettings.getSsoType(),
+            ssoSettings.getLinkedSSOId(), ssoSettings.getSsoGroupId(), ssoSettings.getSsoGroupName());
+      }
     }
 
     // Update NotificationSettings

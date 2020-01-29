@@ -127,6 +127,7 @@ public class UserGroupPermissionTest extends GraphQLTest {
         $GQL(/*
 {
 userGroupId: "%s",
+requestId: "abc",
 permissions: {
 accountPermissions : {
 accountPermissionTypes: [
@@ -210,6 +211,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
        appPermissions :
                              [
@@ -274,6 +276,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
             appPermissions :
                             [
@@ -310,6 +313,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
           appPermissions :
                           [
@@ -365,6 +369,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
            appPermissions :
                              [
@@ -415,6 +420,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
        appPermissions :
                              [
@@ -473,6 +479,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
           appPermissions :
                              [
@@ -526,6 +533,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
        appPermissions :
                              [
@@ -580,6 +588,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
           appPermissions :
                              [
@@ -634,6 +643,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
        appPermissions :
                              [
@@ -687,6 +697,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
        appPermissions :
                              [
@@ -741,6 +752,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
        appPermissions :
                           [
@@ -843,6 +855,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
          appPermissions :
                              [
@@ -887,6 +900,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
           appPermissions :
                              [
@@ -921,6 +935,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
          appPermissions :
                              [
@@ -960,6 +975,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
          appPermissions :
                              [
@@ -998,6 +1014,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
           appPermissions :
                        [
@@ -1037,6 +1054,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
           appPermissions :
                         [
@@ -1076,6 +1094,7 @@ mutation {
         /*
 {
        userGroupId: "%s",
+       requestId: "abc",
        permissions: {
           appPermissions :
                         [

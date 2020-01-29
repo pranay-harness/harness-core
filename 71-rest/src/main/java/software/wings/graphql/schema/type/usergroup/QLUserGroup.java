@@ -17,6 +17,7 @@ public class QLUserGroup implements QLObject {
   String id;
   String description;
   QLGroupPermissions permissions;
+  QLLinkedSSOSetting ssoSetting;
   Boolean isSSOLinked;
   Boolean importedByScim;
   QLNotificationSettings notificationSettings;

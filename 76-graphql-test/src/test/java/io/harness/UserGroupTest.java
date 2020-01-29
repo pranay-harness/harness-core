@@ -26,10 +26,22 @@ import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.sso.LdapConnectionSettings;
+import software.wings.beans.sso.LdapGroupSettings;
+import software.wings.beans.sso.LdapSettings;
+import software.wings.beans.sso.LdapUserSettings;
+import software.wings.beans.sso.SamlSettings;
+import software.wings.graphql.schema.type.permissions.QLGroupPermissions;
+import software.wings.graphql.schema.type.usergroup.QLLDAPSettings;
+import software.wings.graphql.schema.type.usergroup.QLNotificationSettings;
+import software.wings.graphql.schema.type.usergroup.QLSSOSetting;
 import software.wings.graphql.schema.type.usergroup.QLUserGroup.QLUserGroupKeys;
 import software.wings.graphql.schema.type.usergroup.QLUserGroupConnection;
+import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.UserService;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +53,13 @@ public class UserGroupTest extends GraphQLTest {
   private String accountId;
   private Account account;
   @Inject AccountGenerator accountGenerator;
+  private String samlGroupName = "eng";
+  private String groupDN = "groupDN";
+  private String groupName = "ldapGroup";
+  private SamlSettings samlSettings;
+  private LdapSettings ldapSettings;
+  @Inject SSOSettingService ssoSettingService;
+  @Inject UserService userService;
 
   @Before
   public void setup() {
@@ -138,6 +157,132 @@ public class UserGroupTest extends GraphQLTest {
     String name;
 
     software.wings.graphql.schema.type.user.QLUserConnection users;
+    QLSSOSetting ssoSetting;
+  }
+
+  private LdapSettings createLdapSettings() {
+    LdapConnectionSettings connectionSettings = new LdapConnectionSettings();
+    connectionSettings.setBindDN("testBindDN");
+    connectionSettings.setBindPassword("testBindPassword");
+    LdapUserSettings userSettings = new LdapUserSettings();
+    userSettings.setBaseDN("testBaseDN");
+    List<LdapUserSettings> userSettingsList = new ArrayList<>(Arrays.asList(userSettings));
+    LdapGroupSettings groupSettings = new LdapGroupSettings();
+    groupSettings.setBaseDN("testBaseDN");
+    ldapSettings =
+        new LdapSettings("testSettings", accountId, connectionSettings, userSettingsList, Arrays.asList(groupSettings));
+    return ssoSettingService.createLdapSettings(ldapSettings);
+  }
+
+  private String getCreateUserGroupGQL(String userId) {
+    String newUserGroup = $GQL(
+        /* {
+              name: "userGroupTest",
+              description: "descc",
+              permissions: {
+                   accountPermissions: {
+                    accountPermissionTypes: ADMINISTER_OTHER_ACCOUNT_FUNCTIONS
+                  }
+              },
+              notificationSettings: {
+                 sendMailToNewMembers: true,
+                 sendNotificationToMembers: true,
+                 slackNotificationSetting:
+                     {
+                       slackWebhookURL: "https://abc",
+                       slackChannelName: "cool"
+                     },
+                 groupEmailAddresses: "abc@gmail.com"
+              },
+              ssoSetting: {
+                ldapSettings:  {
+                    ssoProviderId: "%s",
+                    groupDN: "%s",
+                    groupName: "%s"
+                 }
+               },
+               userIds :"%s",
+              requestId: "abc"
+         }
+       */
+        ldapSettings.getUuid(), groupDN, groupName, userId);
+    return newUserGroup;
+  }
+
+  @Data
+  private static class TestUserGroup {
+    String name;
+    String id;
+    String description;
+    QLGroupPermissions permissions;
+    QLLDAPSettings ssoSetting;
+    Boolean isSSOLinked;
+    Boolean importedByScim;
+    QLNotificationSettings notificationSettings;
+    String requestId;
+  }
+  @Data
+  private static class CreateUserGroupResult {
+    TestUserGroup userGroup;
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testCreateUserGroup() {
+    ldapSettings = createLdapSettings();
+    final User user = accountGenerator.ensureUser(
+        "userId", random(String.class), random(String.class), random(String.class).toCharArray(), account);
+    {
+      String query = $GQL(/*
+        mutation{
+             createUserGroup(input:%s){
+             userGroup{
+                   id
+                   name
+                   description
+                   isSSOLinked
+                   importedByScim
+                   ssoSetting{
+                      ... on LDAPSettings{
+                          ssoProviderId
+                          groupDN
+                          groupName
+                       }
+                   }
+                   notificationSettings {
+                       sendNotificationToMembers
+                       sendMailToNewMembers
+                       groupEmailAddresses
+                       slackNotificationSetting {
+                            slackChannelName
+                            slackWebhookURL
+                      }
+                  }
+                  users(limit:1,offset:0){
+                    nodes{
+                      id
+                      name
+                      email
+                      isEmailVerified
+                    }
+                 }
+              }
+           }
+      }*/ getCreateUserGroupGQL(user.getUuid()));
+      final QLTestObject qlTestObject = qlExecute(query, accountId);
+      final CreateUserGroupResult userGroupResult =
+          JsonUtils.convertValue(qlTestObject.getMap(), CreateUserGroupResult.class);
+      assertThat(userGroupResult.getUserGroup().getId()).isNotNull();
+      assertThat(userGroupResult.getUserGroup().getName()).isEqualTo("userGroupTest");
+      assertThat(userGroupResult.getUserGroup().getDescription()).isEqualTo("descc");
+      assertThat(userGroupResult.getUserGroup().getIsSSOLinked()).isEqualTo(true);
+      assertThat(userGroupResult.getUserGroup().getImportedByScim()).isEqualTo(false);
+      QLLDAPSettings ldapSettingsOut = userGroupResult.getUserGroup().getSsoSetting();
+      assertThat(ldapSettingsOut.getGroupDN()).isEqualTo(groupDN);
+      assertThat(ldapSettingsOut.getGroupName()).isEqualTo(groupName);
+      assertThat(ldapSettingsOut.getSsoProviderId()).isEqualTo(ldapSettings.getUuid());
+    }
   }
 
   private String getUpdatedUserGroupGQL(String userGroupId) {
@@ -197,6 +342,73 @@ mutation{
           .isEqualTo("https://abc");
       assertThat(updatedUserGroup.getNotificationSettings().getSlackConfig().getName()).isEqualTo("cool");
       assertThat(updatedUserGroup.getNotificationSettings().getEmailAddresses().contains("abc@gmail.com")).isTrue();
+    }
+  }
+
+  private String getUpdatedSSOSettingsUserGroupGQL(String userGroupId) {
+    String updatedUserGroup = $GQL(
+        /* {
+              name: "gqltests",
+              description: "descc",
+              permissions: {
+                   accountPermissions: {
+                    accountPermissionTypes: ADMINISTER_OTHER_ACCOUNT_FUNCTIONS
+                  }
+              },
+              userGroupId : "%s",
+              ssoSetting:  {
+                  ldapSettings: null,
+                  samlSettings: {
+                      groupName: "%s",
+                      ssoProviderId: "%s"
+                   }
+              }
+              requestId: "abc"
+         }
+       */
+        userGroupId, samlGroupName, samlSettings.getUuid());
+    return updatedUserGroup;
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testUpdatingSSOSettingsUserGroup() {
+    final Randomizer.Seed seed = new Randomizer.Seed(0);
+    final OwnerManager.Owners owners = ownerManager.create();
+    owners.add(EmbeddedUser.builder().uuid(generateUuid()).build());
+    String name = "AccountPermission-UserGroup-" + System.currentTimeMillis();
+    String description = "\"Test UserGroup\"";
+
+    samlSettings = SamlSettings.builder()
+                       .metaDataFile("TestMetaDataFile")
+                       .url("TestURL")
+                       .accountId(accountId)
+                       .displayName("Okta")
+                       .origin("TestOrigin")
+                       .build();
+
+    samlSettings = ssoSettingService.saveSamlSettings(samlSettings);
+    UserGroup userGroup = createUserGroup(name, description);
+
+    {
+      String query = $GQL(/*
+mutation{
+  updateUserGroup(input:%s){
+    requestId
+  }
+}*/ getUpdatedSSOSettingsUserGroupGQL(userGroup.getUuid()));
+      final ExecutionResult result = qlResult(query, accountId);
+      UserGroup updatedUserGroup = userGroupService.get(userGroup.getAccountId(), userGroup.getUuid());
+      assertThat(userGroup.getUuid()).isEqualTo(updatedUserGroup.getUuid());
+      assertThat(updatedUserGroup.getName()).isEqualTo("gqltests");
+      assertThat(updatedUserGroup.getDescription()).isEqualTo("descc");
+      assertThat(updatedUserGroup.getSsoGroupName()).isEqualTo(samlGroupName);
+      assertThat(updatedUserGroup.getSsoGroupId()).isEqualTo(samlGroupName);
+      assertThat(updatedUserGroup.getLinkedSsoId()).isEqualTo(samlSettings.getUuid());
+      assertThat(updatedUserGroup.isSsoLinked()).isEqualTo(true);
+      assertThat(updatedUserGroup.getLinkedSsoDisplayName()).isEqualTo(samlSettings.getDisplayName());
+      assertThat(updatedUserGroup.getLinkedSsoType().toString()).isEqualTo("SAML");
     }
   }
 
