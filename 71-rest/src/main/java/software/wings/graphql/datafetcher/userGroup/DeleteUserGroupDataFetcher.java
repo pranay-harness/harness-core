@@ -36,6 +36,6 @@ public class DeleteUserGroupDataFetcher
           String.format("No user group exists with the id %s", parameter.getUserGroupId()));
     }
     userGroupService.delete(mutationContext.getAccountId(), userGroupId, false);
-    return QLDeleteUserGroupPayload.builder().requestId(parameter.getRequestId()).build();
+    return QLDeleteUserGroupPayload.builder().clientMutationId(parameter.getClientMutationId()).build();
   }
 }

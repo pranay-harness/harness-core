@@ -12,5 +12,5 @@ import software.wings.security.annotations.Scope;
 @FieldNameConstants(innerTypeName = "QLDeleteApplicationResultKeys")
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
 public class QLDeleteApplicationPayload implements QLMutationPayload {
-  private String requestId;
+  private String clientMutationId;
 }

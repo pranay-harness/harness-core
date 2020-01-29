@@ -202,7 +202,7 @@ public class UserGroupTest extends GraphQLTest {
                  }
                },
                userIds :"%s",
-              requestId: "abc"
+              clientMutationId: "abc"
          }
        */
         ldapSettings.getUuid(), groupDN, groupName, userId);
@@ -219,7 +219,7 @@ public class UserGroupTest extends GraphQLTest {
     Boolean isSSOLinked;
     Boolean importedByScim;
     QLNotificationSettings notificationSettings;
-    String requestId;
+    String clientMutationId;
   }
   @Data
   private static class CreateUserGroupResult {
@@ -306,7 +306,7 @@ public class UserGroupTest extends GraphQLTest {
                      },
                  groupEmailAddresses: "abc@gmail.com"
               },
-           requestId: "abc"
+           clientMutationId: "abc"
          }
        */
         userGroupId);
@@ -328,7 +328,7 @@ public class UserGroupTest extends GraphQLTest {
       String query = $GQL(/*
 mutation{
   updateUserGroup(input:%s){
-    requestId
+    clientMutationId
   }
 }*/ getUpdatedUserGroupGQL(userGroup.getUuid()));
       final ExecutionResult result = qlResult(query, accountId);
@@ -363,7 +363,7 @@ mutation{
                       ssoProviderId: "%s"
                    }
               }
-              requestId: "abc"
+              clientMutationId: "abc"
          }
        */
         userGroupId, samlGroupName, samlSettings.getUuid());
@@ -395,7 +395,7 @@ mutation{
       String query = $GQL(/*
 mutation{
   updateUserGroup(input:%s){
-    requestId
+    clientMutationId
   }
 }*/ getUpdatedSSOSettingsUserGroupGQL(userGroup.getUuid()));
       final ExecutionResult result = qlResult(query, accountId);
@@ -490,10 +490,10 @@ mutation{
     String query = $GQL(/*
                  mutation {
                     deleteUserGroup(input:{
-                       requestId: "abc",
+                       clientMutationId: "abc",
                        userGroupId: "%s"
                        }){
-                      requestId
+                      clientMutationId
                     }
             }*/ userGroup1.getUuid());
     final QLTestObject qlTestObject = qlExecute(query, accountId);

@@ -52,7 +52,7 @@ public class CreateApplicationDataFetcherTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_get() throws Exception {
     final DataFetchingEnvironment dataFetchingEnvironment = Mockito.mock(DataFetchingEnvironment.class);
-    doReturn(ImmutableMap.of("requestId", "req1", "name", "appname", "description", "app description"))
+    doReturn(ImmutableMap.of("clientMutationId", "req1", "name", "appname", "description", "app description"))
         .when(dataFetchingEnvironment)
         .getArguments();
     doReturn("accountid1").when(utils).getAccountId(dataFetchingEnvironment);
@@ -67,7 +67,7 @@ public class CreateApplicationDataFetcherTest extends CategoryTest {
     final QLCreateApplicationPayload qlCreateApplicationPayload =
         createApplicationDataFetcher.get(dataFetchingEnvironment);
     final QLApplication qlApplication = qlCreateApplicationPayload.getApplication();
-    assertThat(qlCreateApplicationPayload.getRequestId()).isEqualTo("req1");
+    assertThat(qlCreateApplicationPayload.getClientMutationId()).isEqualTo("req1");
     ArgumentCaptor<Application> applicationArgumentCaptor = ArgumentCaptor.forClass(Application.class);
     verify(appService, times(1)).save(applicationArgumentCaptor.capture());
     verify(authRuleInstrumentation, times(1))

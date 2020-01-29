@@ -40,7 +40,8 @@ public class DeleteUserDataFetcherTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_deleteUser() {
     doNothing().when(userService).delete(anyString(), eq("accountId"));
-    final QLDeleteUserInput qlDeleteUserInput = QLDeleteUserInput.builder().id("userId").requestId("request1").build();
+    final QLDeleteUserInput qlDeleteUserInput =
+        QLDeleteUserInput.builder().id("userId").clientMutationId("request1").build();
 
     final MutationContext mutationContext = MutationContext.builder()
                                                 .accountId("accountId")
@@ -49,6 +50,6 @@ public class DeleteUserDataFetcherTest extends CategoryTest {
 
     QLDeleteUserPayload qlDeleteUserPayload = deleteUserDataFetcher.mutateAndFetch(qlDeleteUserInput, mutationContext);
     verify(userService, times(1)).delete(eq("accountId"), eq("userId"));
-    Assertions.assertThat(qlDeleteUserPayload.getRequestId()).isEqualTo("request1");
+    Assertions.assertThat(qlDeleteUserPayload.getClientMutationId()).isEqualTo("request1");
   }
 }

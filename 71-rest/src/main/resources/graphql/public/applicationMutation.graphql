@@ -18,23 +18,23 @@ extend type Mutation {
 }
 
 type UpdateApplicationGitSyncConfigPayload {
-  requestId: String
+  clientMutationId: String
   gitSyncConfig: GitSyncConfig
 }
 
 input UpdateApplicationGitSyncConfigStatusInput {
-  requestId: String!
+  clientMutationId: String
   applicationId: String!
   syncEnabled: Boolean!
 }
 
 input RemoveApplicationGitSyncConfigInput {
-  requestId: String!
+  clientMutationId: String
   applicationId: String!
 }
 
 input UpdateApplicationGitSyncConfigInput {
-  requestId: String!
+  clientMutationId: String
   applicationId: String!
   gitConnectorId: String!
   branch: String!
@@ -42,34 +42,34 @@ input UpdateApplicationGitSyncConfigInput {
 }
 
 input CreateApplicationInput {
-  requestId: String!
+  clientMutationId: String
   name: String!
   description: String
 }
 input UpdateApplicationInput {
-  requestId: String!
+  clientMutationId: String
   applicationId: String!
   name: String
   description: String
 }
 
 input DeleteApplicationInput {
-  requestId: String!
+  clientMutationId: String
   applicationId: String!
 }
 
 type CreateApplicationPayload {
-  requestId: String
+  clientMutationId: String
   application: Application
 }
 
 type UpdateApplicationPayload {
-  requestId: String
+  clientMutationId: String
   application: Application
 }
 
 type DeleteApplicationPayload {
-  requestId: String
+  clientMutationId: String
 }
 
 type GitSyncConfig {
@@ -85,11 +85,11 @@ extend type Application {
 }
 
 type UpdateApplicationGitSyncConfigStatusPayload {
-  requestId: String
+  clientMutationId: String
   gitSyncConfig: GitSyncConfig
 }
 
 type RemoveApplicationGitSyncConfigPayload {
-  requestId: String
+  clientMutationId: String
   application: Application
 }

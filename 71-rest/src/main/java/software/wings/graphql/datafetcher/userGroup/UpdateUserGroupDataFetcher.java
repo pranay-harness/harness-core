@@ -102,6 +102,6 @@ public class UpdateUserGroupDataFetcher
     }
 
     UserGroup updatedUserGroup = userGroupService.get(mutationContext.getAccountId(), userGroupId);
-    return userGroupController.populateUpdateUserGroupPayload(updatedUserGroup, parameter.getRequestId());
+    return userGroupController.populateUpdateUserGroupPayload(updatedUserGroup, parameter.getClientMutationId());
   }
 }

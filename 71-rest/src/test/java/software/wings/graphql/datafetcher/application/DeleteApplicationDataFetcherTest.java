@@ -43,7 +43,7 @@ public class DeleteApplicationDataFetcherTest extends CategoryTest {
     doNothing().when(appService).delete(anyString());
     final QLUpdateApplicationInput applicationParameters =
 
-        QLUpdateApplicationInput.builder().applicationId("appid").requestId("req1").build();
+        QLUpdateApplicationInput.builder().applicationId("appid").clientMutationId("req1").build();
     final MutationContext mutationContext = MutationContext.builder()
                                                 .accountId("accountid")
                                                 .dataFetchingEnvironment(Mockito.mock(DataFetchingEnvironment.class))
@@ -52,6 +52,6 @@ public class DeleteApplicationDataFetcherTest extends CategoryTest {
     final QLDeleteApplicationPayload qlDeleteApplicationPayload =
         deleteApplicationDataFetcher.mutateAndFetch(applicationParameters, mutationContext);
     verify(appService, times(1)).delete("appid");
-    Assertions.assertThat(qlDeleteApplicationPayload.getRequestId()).isEqualTo("req1");
+    Assertions.assertThat(qlDeleteApplicationPayload.getClientMutationId()).isEqualTo("req1");
   }
 }

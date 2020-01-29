@@ -51,7 +51,7 @@ public class UpdateUserGroupPermissionsDataFetcher
     final UserGroup userGroup = updateUserGroupPermissions(parameters, mutationContext.getAccountId());
     QLGroupPermissions permissions = populateUserGroupPermissions(userGroup);
     return QLUpdateUserGroupPermissionsPayload.builder()
-        .requestId(parameters.getRequestId())
+        .clientMutationId(parameters.getClientMutationId())
         .permissions(permissions)
         .build();
   }

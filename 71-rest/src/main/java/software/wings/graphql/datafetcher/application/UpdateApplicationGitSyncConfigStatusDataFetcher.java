@@ -51,7 +51,7 @@ public class UpdateApplicationGitSyncConfigStatusDataFetcher
     final YamlGitConfig updatedYamlGitConfig = updateYamlGitConfig(input, savedYamlGitConfig);
 
     return QLUpdateApplicationGitSyncConfigPayload.builder()
-        .requestId(input.getRequestId())
+        .clientMutationId(input.getClientMutationId())
         .gitSyncConfig(getGitConfigFrom(updatedYamlGitConfig))
 
         .build();
@@ -69,7 +69,6 @@ public class UpdateApplicationGitSyncConfigStatusDataFetcher
 
   private void validate(QLUpdateApplicationGitSyncConfigInput input) {
     utils.ensureNotBlankField(input.getApplicationId(), QLUpdateApplicationGitSyncConfigInputKeys.applicationId);
-    utils.ensureNotBlankField(input.getRequestId(), QLUpdateApplicationGitSyncConfigInputKeys.requestId);
     utils.ensureNotNullField(input.getSyncEnabled(), QLUpdateApplicationGitSyncConfigInputKeys.syncEnabled);
   }
 

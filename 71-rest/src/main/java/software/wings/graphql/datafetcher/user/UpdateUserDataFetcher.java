@@ -48,7 +48,7 @@ public class UpdateUserDataFetcher extends BaseMutatorDataFetcher<QLUpdateUserIn
     final User updatedUser =
         userService.update(prepareUserToUpdate(qlUpdateUserInput, existingUser, mutationContext.getAccountId()));
     return QLUpdateUserPayload.builder()
-        .requestId(qlUpdateUserInput.getRequestId())
+        .clientMutationId(qlUpdateUserInput.getClientMutationId())
         .user(prepareQLUser(updatedUser))
         .build();
   }
@@ -57,9 +57,7 @@ public class UpdateUserDataFetcher extends BaseMutatorDataFetcher<QLUpdateUserIn
     if (StringUtils.isBlank(qlUpdateUserInput.getId())) {
       throw new InvalidArgumentsException(Pair.of("id", INVALID_INP_ERR_MSSG));
     }
-    if (StringUtils.isBlank(qlUpdateUserInput.getRequestId())) {
-      throw new InvalidArgumentsException(Pair.of("requestId", INVALID_INP_ERR_MSSG));
-    }
+
     final RequestField<List<String>> userGroupIds = qlUpdateUserInput.getUserGroupIds();
     if (isInitialized(userGroupIds) && getValue(userGroupIds).orElse(Collections.emptyList()).contains("")) {
       throw new InvalidArgumentsException(Pair.of("userGroupId", INVALID_INP_ERR_MSSG));

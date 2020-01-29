@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 public class QLUpdateUserInput implements QLMutationInput {
   private String id;
-  private String requestId;
+  private String clientMutationId;
   private RequestField<String> name;
   private RequestField<List<String>> userGroupIds;
 }

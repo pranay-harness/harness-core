@@ -42,7 +42,7 @@ public class CreateApplicationDataFetcher
       QLCreateApplicationInput parameter, MutationContext mutationContext) {
     final Application savedApplication = appService.save(prepareApplication(parameter, mutationContext.getAccountId()));
     return QLCreateApplicationPayload.builder()
-        .requestId(parameter.getRequestId())
+        .clientMutationId(parameter.getClientMutationId())
         .application(prepareQLApplication(savedApplication))
         .build();
   }
