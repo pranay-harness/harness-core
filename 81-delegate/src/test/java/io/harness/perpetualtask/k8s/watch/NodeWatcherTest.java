@@ -3,6 +3,7 @@ package io.harness.perpetualtask.k8s.watch;
 import static io.harness.grpc.utils.HTimestamps.toInstant;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_START;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_STOP;
+import static io.harness.perpetualtask.k8s.watch.NodeWatcher.IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static java.time.Instant.now;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,7 +38,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -53,6 +56,7 @@ public class NodeWatcherTest extends CategoryTest {
   private NodeWatcher nodeWatcher;
   private EventPublisher eventPublisher;
   private Watch watch;
+  @Captor ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
 
   @Before
   public void setUp() throws Exception {
@@ -71,6 +75,7 @@ public class NodeWatcherTest extends CategoryTest {
             .setCloudProviderId("cloud-provider-id")
             .build(),
         eventPublisher);
+    MockitoAnnotations.initMocks(this);
   }
 
   @Test
@@ -81,12 +86,14 @@ public class NodeWatcherTest extends CategoryTest {
     Node node = node(UID, NAME, creationTime.toString(), new HashMap<>(), nodeStatus(), GCP_PROVIDER_ID);
     nodeWatcher.eventReceived(Action.ADDED, node);
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-    verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
+    verify(eventPublisher, times(2))
+        .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(NodeEvent.class, nodeEvent -> {
       assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
       assertThat(nodeEvent.getNodeName()).isEqualTo(NAME);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
       assertThat(toInstant(nodeEvent.getTimestamp())).isEqualTo(creationTime);
+      assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
     });
   }
 
@@ -98,13 +105,15 @@ public class NodeWatcherTest extends CategoryTest {
     Node node = node(UID, NAME, creationTimestamp, new HashMap<>(), nodeStatus(), GCP_PROVIDER_ID);
     nodeWatcher.eventReceived(Action.DELETED, node);
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-    verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
+    verify(eventPublisher, times(2))
+        .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(NodeEvent.class, nodeEvent -> {
       assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
       assertThat(nodeEvent.getNodeName()).isEqualTo(NAME);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_STOP);
       // approximate check as the time is measured within the NodeWatcher code.
       assertThat(toInstant(nodeEvent.getTimestamp())).isCloseTo(now(), within(5, ChronoUnit.SECONDS));
+      assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
     });
   }
 
@@ -117,18 +126,21 @@ public class NodeWatcherTest extends CategoryTest {
     Node node = node(UID, NAME, creationTime.toString(), labels, nodeStatus(), GCP_PROVIDER_ID);
     nodeWatcher.eventReceived(Action.ADDED, node);
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-    verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
+    verify(eventPublisher, times(2))
+        .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
     assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(NodeInfo.class, nodeInfo -> {
       assertThat(nodeInfo.getNodeUid()).isEqualTo(UID);
       assertThat(nodeInfo.getNodeName()).isEqualTo(NAME);
       assertThat(toInstant(nodeInfo.getCreationTime())).isEqualTo(creationTime);
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(labels);
+      assertThat(mapArgumentCaptor.getValue().keySet().contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME));
     });
     Mockito.reset(eventPublisher);
     captor = ArgumentCaptor.forClass(Message.class);
     nodeWatcher.eventReceived(Action.DELETED, node);
-    verify(eventPublisher).publishMessage(captor.capture(), any(Timestamp.class));
+    verify(eventPublisher).publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
     assertThat(captor.getAllValues()).hasSize(1).isNotInstanceOfAny(NodeInfo.class);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
   }
 
   @Test

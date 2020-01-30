@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static io.harness.perpetualtask.k8s.watch.K8SWatchTaskExecutor.IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,11 +46,13 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactory;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
 import java.time.Instant;
+import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class K8SWatchTaskExecutorTest extends CategoryTest {
@@ -60,9 +63,10 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
   private K8SWatchTaskExecutor k8SWatchTaskExecutor;
 
   @Mock EventPublisher eventPublisher;
-  @Captor ArgumentCaptor<Message> messageArgumentCaptor;
   @Mock KubernetesClientFactory kubernetesClientFactory;
   @Mock K8sWatchServiceDelegate k8sWatchServiceDelegate;
+  @Captor ArgumentCaptor<Message> messageArgumentCaptor;
+  @Captor ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
 
   private final String WATCH_ID = "watch-id";
   private final String CLUSTER_ID = "cluster-id";
@@ -76,6 +80,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
 
   @Before
   public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
     k8SWatchTaskExecutor = new K8SWatchTaskExecutor(eventPublisher, kubernetesClientFactory, k8sWatchServiceDelegate);
     k8sMetricClient = new K8sMetricsExtensionAdapter().adapt(server.getClient());
     client = server.getClient();
@@ -159,7 +164,8 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
     Instant heartbeatTime = Instant.now();
     doNothing()
         .when(eventPublisher)
-        .publishMessage(messageArgumentCaptor.capture(), eq(HTimestamps.fromInstant(heartbeatTime)));
+        .publishMessage(
+            messageArgumentCaptor.capture(), eq(HTimestamps.fromInstant(heartbeatTime)), mapArgumentCaptor.capture());
     K8SWatchTaskExecutor.publishNodeMetrics(k8sMetricClient, eventPublisher, getK8sWatchTaskParams(), heartbeatTime);
     assertThat(messageArgumentCaptor.getAllValues())
         .hasSize(2)
@@ -185,6 +191,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                               .setMemoryByte(18281752L * 1024)
                               .build())
                 .build());
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
   }
 
   private K8sWatchTaskParams getK8sWatchTaskParams() {
@@ -207,7 +214,8 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
     Instant pollTime = Instant.now();
     doNothing()
         .when(eventPublisher)
-        .publishMessage(messageArgumentCaptor.capture(), eq(HTimestamps.fromInstant(pollTime)));
+        .publishMessage(
+            messageArgumentCaptor.capture(), eq(HTimestamps.fromInstant(pollTime)), mapArgumentCaptor.capture());
     K8SWatchTaskExecutor.publishClusterSyncEvent(client, eventPublisher, k8sWatchTaskParams, pollTime);
     assertThat(messageArgumentCaptor.getAllValues())
         .hasSize(1)
@@ -219,6 +227,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                       .addAllActiveNodeUids(ImmutableList.of(NODE_ONE_UID, NODE_TWO_UID))
                       .setLastProcessedTimestamp(HTimestamps.fromInstant(pollTime))
                       .build());
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
   }
 
   private NodeList getNodeList() {
@@ -258,7 +267,8 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
     Instant heartbeatTime = Instant.now();
     doNothing()
         .when(eventPublisher)
-        .publishMessage(messageArgumentCaptor.capture(), eq(HTimestamps.fromInstant(heartbeatTime)));
+        .publishMessage(
+            messageArgumentCaptor.capture(), eq(HTimestamps.fromInstant(heartbeatTime)), mapArgumentCaptor.capture());
     K8SWatchTaskExecutor.publishPodMetrics(k8sMetricClient, eventPublisher, getK8sWatchTaskParams(), heartbeatTime);
     assertThat(messageArgumentCaptor.getAllValues())
         .hasSize(2)
@@ -299,5 +309,6 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                                                  .build())
                                    .build())
                 .build());
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
   }
 }

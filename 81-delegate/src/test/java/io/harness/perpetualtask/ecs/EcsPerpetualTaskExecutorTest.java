@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.ecs;
 
+import static io.harness.perpetualtask.ecs.EcsPerpetualTaskExecutor.IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.HITESH;
 import static java.time.temporal.ChronoUnit.HOURS;
@@ -52,6 +53,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -63,6 +65,7 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
   private EcsPerpetualTaskExecutor ecsPerpetualTaskExecutor;
 
   @Captor private ArgumentCaptor<Message> messageCaptor;
+  @Captor ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
 
   private final String REGION = "us-east-1";
   private final String ACCOUNT_ID = "accountId";
@@ -112,8 +115,10 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
 
     then(eventPublisher)
         .should(times(2))
-        .publishMessage(messageCaptor.capture(), eq(HTimestamps.fromInstant(lastMetricCollectionTime)));
+        .publishMessage(messageCaptor.capture(), eq(HTimestamps.fromInstant(lastMetricCollectionTime)),
+            mapArgumentCaptor.capture());
     assertThat(messageCaptor.getAllValues()).hasSize(2).containsAll(utilizationMessages);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
   }
 
   @Test
@@ -129,8 +134,9 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
         activeContainerInstanceArns, activeTaskArns, pollTime);
     then(eventPublisher)
         .should(times(1))
-        .publishMessage(messageCaptor.capture(), eq(HTimestamps.fromInstant(pollTime)));
+        .publishMessage(messageCaptor.capture(), eq(HTimestamps.fromInstant(pollTime)), mapArgumentCaptor.capture());
     assertThat(messageCaptor.getAllValues()).hasSize(1);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
   }
 
   @Test

@@ -5,6 +5,7 @@ import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 import static java.util.function.Function.identity;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -70,6 +71,7 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
+  static final String IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME = "identifier_clusterId";
   public static final Duration METRIC_AGGREGATION_PERIOD = Duration.ofHours(1);
   private static final String INSTANCE_TERMINATED_NAME = "terminated";
   private static final String ECS_OS_TYPE = "ecs.os-type";
@@ -158,7 +160,9 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
     ecsMetricClient
         .getUtilizationMetrics(awsConfig, encryptionDetails, Date.from(startTime), Date.from(endTime), cluster,
             services, ecsPerpetualTaskParams)
-        .forEach(msg -> eventPublisher.publishMessage(msg, HTimestamps.fromInstant(lastMetricCollectionTime)));
+        .forEach(msg
+            -> eventPublisher.publishMessage(msg, HTimestamps.fromInstant(lastMetricCollectionTime),
+                ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, ecsPerpetualTaskParams.getClusterId())));
   }
 
   void publishEcsClusterSyncEvent(String clusterId, String settingId, String clusterName,
@@ -175,7 +179,8 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
                                     .build();
 
     logger.info("Esc sync published Message {} ", ecsSyncEvent.toString());
-    eventPublisher.publishMessage(ecsSyncEvent, ecsSyncEvent.getLastProcessedTimestamp());
+    eventPublisher.publishMessage(ecsSyncEvent, ecsSyncEvent.getLastProcessedTimestamp(),
+        ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, clusterId));
   }
 
   private void publishTaskEvent(String clusterId, String settingId, EcsPerpetualTaskParams ecsPerpetualTaskParams,
@@ -220,7 +225,8 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
                 .setEcsTaskResource(ReservedResource.newBuilder().setCpu(cpu).setMemory(memory).build())
                 .build();
         logger.debug("Task published Message {} ", ecsTaskInfo.toString());
-        eventPublisher.publishMessage(ecsTaskInfo, HTimestamps.fromDate(task.getStartedAt()));
+        eventPublisher.publishMessage(ecsTaskInfo, HTimestamps.fromDate(task.getStartedAt()),
+            ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, clusterId));
       }
 
       if (null != task.getStoppedAt() && taskStoppedEventRequired(lastProcessedTime, task, activeTaskArns)) {
@@ -259,7 +265,8 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
     Ec2Lifecycle ec2Lifecycle = Ec2Lifecycle.newBuilder()
                                     .setLifecycle(createLifecycle(clusterId, settingId, instanceId, date, eventType))
                                     .build();
-    eventPublisher.publishMessage(ec2Lifecycle, ec2Lifecycle.getLifecycle().getTimestamp());
+    eventPublisher.publishMessage(ec2Lifecycle, ec2Lifecycle.getLifecycle().getTimestamp(),
+        ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, clusterId));
   }
 
   private void publishContainerInstanceLifecycleEvent(
@@ -268,8 +275,9 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
         EcsContainerInstanceLifecycle.newBuilder()
             .setLifecycle(createLifecycle(clusterId, settingId, instanceId, date, eventType))
             .build();
-    eventPublisher.publishMessage(
-        ecsContainerInstanceLifecycle, ecsContainerInstanceLifecycle.getLifecycle().getTimestamp());
+    eventPublisher.publishMessage(ecsContainerInstanceLifecycle,
+        ecsContainerInstanceLifecycle.getLifecycle().getTimestamp(),
+        ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, clusterId));
   }
 
   private void publishTaskLifecycleEvent(
@@ -279,7 +287,8 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
             .setLifecycle(createLifecycle(clusterId, settingId, instanceId, date, eventType))
             .build();
     logger.debug("Task Lifecycle event {} ", ecsTaskLifecycle.toString());
-    eventPublisher.publishMessage(ecsTaskLifecycle, ecsTaskLifecycle.getLifecycle().getTimestamp());
+    eventPublisher.publishMessage(ecsTaskLifecycle, ecsTaskLifecycle.getLifecycle().getTimestamp(),
+        ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, clusterId));
   }
 
   private Set<String> getCurrentActiveContainerInstanceArns(List<ContainerInstance> containerInstances) {
@@ -326,8 +335,9 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
                 .build();
 
         logger.info("Container published Message {} ", ecsContainerInstanceInfo.toString());
-        eventPublisher.publishMessage(
-            ecsContainerInstanceInfo, HTimestamps.fromDate(containerInstance.getRegisteredAt()));
+        eventPublisher.publishMessage(ecsContainerInstanceInfo,
+            HTimestamps.fromDate(containerInstance.getRegisteredAt()),
+            ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, clusterId));
       }
     }
   }
@@ -390,7 +400,8 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
 
         Ec2InstanceInfo ec2InstanceInfo = ec2InstanceInfoBuilder.build();
         logger.info("EC2 published Message {} ", ec2InstanceInfo.toString());
-        eventPublisher.publishMessage(ec2InstanceInfo, HTimestamps.fromDate(instance.getLaunchTime()));
+        eventPublisher.publishMessage(ec2InstanceInfo, HTimestamps.fromDate(instance.getLaunchTime()),
+            ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, clusterId));
       }
     }
   }
