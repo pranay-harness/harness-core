@@ -686,8 +686,10 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     for (LogMLFeedbackRecord logMLFeedbackRecord : logMLFeedbackRecords) {
-      userFeedbackMap.get(logMLFeedbackRecord.getClusterType())
-          .put(logMLFeedbackRecord.getClusterLabel(), logMLFeedbackRecord);
+      if (userFeedbackMap.get(logMLFeedbackRecord.getClusterType()) != null) {
+        userFeedbackMap.get(logMLFeedbackRecord.getClusterType())
+            .put(logMLFeedbackRecord.getClusterLabel(), logMLFeedbackRecord);
+      }
     }
 
     return userFeedbackMap;
@@ -1015,6 +1017,8 @@ public class AnalysisServiceImpl implements AnalysisService {
           errorCode = ErrorCode.DEFAULT_ERROR_CODE;
           throw new IllegalStateException("Invalid state type: " + stateType);
       }
+    } catch (VerificationOperationException verificationException) {
+      throw verificationException;
     } catch (Exception e) {
       throw new WingsException(errorCode, USER, e).addParam("reason", ExceptionUtils.getMessage(e));
     }
@@ -1200,7 +1204,9 @@ public class AnalysisServiceImpl implements AnalysisService {
       if (!frequencyMap.containsKey(count)) {
         frequencyMap.put(count, 0);
       }
-      frequencyMap.put(count, frequencyMap.get(count) + 1);
+      if (frequencyMap.get(count) != null) {
+        frequencyMap.put(count, frequencyMap.get(count) + 1);
+      }
     }
     return frequencyMap;
   }
