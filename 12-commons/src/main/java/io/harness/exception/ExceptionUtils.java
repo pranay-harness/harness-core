@@ -1,5 +1,6 @@
 package io.harness.exception;
 
+import static io.harness.exception.VerificationOperationException.REASON_KEY;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static java.util.stream.Collectors.joining;
 
@@ -43,7 +44,14 @@ public class ExceptionUtils {
     return failureTypes;
   }
 
+  public static String getMessage(VerificationOperationException verificationException) {
+    return verificationException.getParams().get(REASON_KEY).toString();
+  }
+
   public static String getMessage(Throwable t) {
+    if (t instanceof VerificationOperationException) {
+      return getMessage((VerificationOperationException) t);
+    }
     if (t instanceof WingsException) {
       WingsException we = (WingsException) t;
       return ExceptionLogger.getResponseMessageList(we, REST_API)
