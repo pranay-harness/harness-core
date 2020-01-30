@@ -6,6 +6,7 @@ infrastructure:
 - type: AWS_ECS
   assignPublicIp: false
   cloudProviderName: TEST_CLOUD_PROVIDER
+  clusterName: ecs-cluster
   executionRole: arn:aws:iam::448640225317:role/OrganizationAccountAccessRole
   launchType: FARGATE
   region: us-east-1

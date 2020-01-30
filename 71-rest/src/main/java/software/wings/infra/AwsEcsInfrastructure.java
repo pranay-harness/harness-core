@@ -159,11 +159,12 @@ public class AwsEcsInfrastructure
     private String executionRole;
     private String launchType;
     private Map<String, String> expressions;
+    private String clusterName;
 
     @Builder
     public Yaml(String type, String cloudProviderName, String region, String vpcId, List<String> subnetIds,
         List<String> securityGroupIds, boolean assignPublicIp, String executionRole, String launchType,
-        Map<String, String> expressions) {
+        Map<String, String> expressions, String clusterName) {
       super(type);
       setCloudProviderName(cloudProviderName);
       setRegion(region);
@@ -174,6 +175,7 @@ public class AwsEcsInfrastructure
       setExecutionRole(executionRole);
       setLaunchType(launchType);
       setExpressions(expressions);
+      setClusterName(clusterName);
     }
 
     public Yaml() {
