@@ -855,6 +855,105 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnAddingCommandWithInvalidName() {
+    assertThatThrownBy(()
+                           -> srs.addCommand(APP_ID, SERVICE_ID,
+                               aServiceCommand()
+                                   .but()
+                                   .withName("test & 1")
+                                   .withTargetToAllEnv(true)
+                                   .withCommand(aCommand().withName("test & 1").build())
+                                   .build(),
+                               true))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Command Name can only have characters -, _, a-z, A-Z, 0-9 and space");
+    verify(mockWingsPersistence).getWithAppId(Service.class, APP_ID, SERVICE_ID);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnUpdatingCommandWithInvalidName() {
+    when(commandService.getServiceCommand(APP_ID, ID_KEY))
+        .thenReturn(aServiceCommand()
+                        .withName("ServiceCommand")
+                        .withUuid(ID_KEY)
+                        .withCommand(aCommand().withName("test").build())
+                        .build());
+    assertThatThrownBy(()
+                           -> srs.updateCommand(APP_ID, SERVICE_ID,
+                               aServiceCommand()
+                                   .withTargetToAllEnv(true)
+                                   .withUuid(ID_KEY)
+                                   .withName("test & 1")
+                                   .withCommand(aCommand().withName("test").build())
+                                   .build()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Command Name can only have characters -, _, a-z, A-Z, 0-9 and space");
+    verify(mockWingsPersistence).getWithAppId(Service.class, APP_ID, SERVICE_ID);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldUpdateExistingInvalidNameWithValidName() {
+    Command oldCommand = aCommand().withName("test & 1").build();
+    Command newCommand = aCommand().withName("test").build();
+    oldCommand.setVersion(1L);
+
+    ServiceCommand updatedServiceCommand =
+        aServiceCommand().withTargetToAllEnv(true).withUuid(ID_KEY).withName("test").withCommand(newCommand).build();
+
+    when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID))
+        .thenReturn(serviceBuilder
+                        .serviceCommands(ImmutableList.of(aServiceCommand()
+                                                              .withTargetToAllEnv(true)
+                                                              .withName("test & 1")
+                                                              .withUuid(ID_KEY)
+                                                              .withAppId(APP_ID)
+                                                              .withServiceId(SERVICE_ID)
+                                                              .withDefaultVersion(1)
+                                                              .withCommand(oldCommand)
+                                                              .build()))
+                        .build())
+        .thenReturn(serviceBuilder.serviceCommands(ImmutableList.of(updatedServiceCommand)).build());
+
+    when(commandService.getServiceCommand(APP_ID, ID_KEY))
+        .thenReturn(aServiceCommand().withName("test & 1").build())
+        .thenReturn(updatedServiceCommand);
+
+    when(mockWingsPersistence.createUpdateOperations(ServiceCommand.class))
+        .thenReturn(wingsPersistence.createUpdateOperations(ServiceCommand.class));
+    when(mockWingsPersistence.createUpdateOperations(Command.class))
+        .thenReturn(wingsPersistence.createUpdateOperations(Command.class));
+
+    when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID))
+        .thenReturn(anEntityVersion().withVersion(1).build());
+    when(mockWingsPersistence.createQuery(Command.class)).thenReturn(wingsPersistence.createQuery(Command.class));
+    when(commandService.getCommand(APP_ID, ID_KEY, 1)).thenReturn(oldCommand);
+    when(commandService.getCommand(APP_ID, ID_KEY, 2)).thenReturn(newCommand);
+
+    when(mockWingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
+        .thenReturn(aPageResponse()
+                        .withResponse(asList(aServiceCommand()
+                                                 .withUuid(ID_KEY)
+                                                 .withTargetToAllEnv(true)
+                                                 .withName("test")
+                                                 .withDefaultVersion(2)
+                                                 .withCommand(newCommand)
+                                                 .build()))
+                        .build());
+
+    Service updatedService = srs.updateCommand(APP_ID, SERVICE_ID, updatedServiceCommand);
+    assertThat(updatedService).isNotNull();
+    assertThat(updatedService.getServiceCommands().get(0).getName()).isEqualTo("test");
+    assertThat(updatedService.getServiceCommands().get(0).getCommand().getName()).isEqualTo("test");
+    verify(mockWingsPersistence, times(2)).getWithAppId(Service.class, APP_ID, SERVICE_ID);
+  }
+
+  @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldUpdateCommandWhenCommandChanged() {

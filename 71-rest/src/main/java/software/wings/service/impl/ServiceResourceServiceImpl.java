@@ -1408,8 +1408,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
     notNullCheck("service", service);
 
+    validateCommandName(serviceCommand.getName());
     verifyDuplicateServiceCommandName(appId, serviceId, serviceCommand);
-    validateCommandName(serviceCommand.getCommand());
     addServiceCommand(appId, serviceId, serviceCommand, pushToYaml);
 
     return getWithDetails(appId, serviceId);
@@ -1434,11 +1434,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return getWithDetails(appId, serviceId);
   }
 
-  private void validateCommandName(Command command) {
-    if (command != null) {
-      if (!EntityNameValidator.isValid(command.getName())) {
-        throw new InvalidRequestException("Command Name can only have characters -, _, a-z, A-Z, 0-9 and space");
-      }
+  private void validateCommandName(String commandName) {
+    if (!EntityNameValidator.isValid(commandName)) {
+      throw new InvalidRequestException("Command Name can only have characters -, _, a-z, A-Z, 0-9 and space");
     }
   }
 
@@ -1475,6 +1473,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     command.setSyncFromGit(serviceCommand.isSyncFromGit());
+    // validate service command name
+    validateCommandName(serviceCommand.getName());
 
     serviceCommand = wingsPersistence.saveAndGet(ServiceCommand.class, serviceCommand);
     entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
@@ -1513,6 +1513,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
     notNullCheck("Service was deleted", service, USER);
 
+    validateCommandName(serviceCommand.getName());
     ServiceCommand savedServiceCommand = commandService.getServiceCommand(appId, serviceCommand.getUuid());
     if (!StringUtils.equals(savedServiceCommand.getName(), serviceCommand.getName())) {
       verifyDuplicateServiceCommandName(appId, serviceId, serviceCommand);
@@ -1525,7 +1526,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (updateLinkedTemplateServiceCommand(appId, serviceCommand, updateOperation, lastEntityVersion, fromTemplate)) {
       updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion, false, true);
     } else if (serviceCommand.getCommand() != null) {
-      validateCommandName(serviceCommand.getCommand());
       updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion, false, fromTemplate);
     } else {
       logger.info(
