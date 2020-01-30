@@ -7,6 +7,7 @@ import static io.harness.eraro.ErrorCode.APM_CONFIGURATION_ERROR;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.persistence.HQuery.excludeValidate;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.CV_META_DATA;
@@ -19,8 +20,6 @@ import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
-import io.harness.beans.PageRequest.PageRequestBuilder;
-import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
@@ -38,9 +37,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
-import software.wings.beans.alert.AlertType;
-import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
-import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
+import software.wings.beans.alert.cv.ContinuousVerificationAlertData.ContinuousVerificationAlertDataKeys;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -531,9 +528,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     }
 
     wingsPersistence.delete(CVConfiguration.class, serviceConfigurationId);
-    deleteTemplate(accountId, serviceConfigurationId, ((CVConfiguration) savedConfig).getStateType());
-    closeCVAlertsForConfiguration(serviceConfigurationId);
     yamlPushService.pushYamlChangeSet(accountId, savedConfig, null, Type.DELETE, isSyncFromGit, false);
+    deleteTemplate(accountId, serviceConfigurationId, ((CVConfiguration) savedConfig).getStateType());
+    closeCVAlertsForConfiguration((CVConfiguration) savedConfig);
 
     try {
       harnessMetricRegistry.recordGaugeDec(CV_META_DATA,
@@ -1026,43 +1023,24 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     try (HIterator<CVConfiguration> configurations = new HIterator<>(cvConfigurationQuery.fetch())) {
       while (configurations.hasNext()) {
         CVConfiguration cvConfiguration = configurations.next();
-        closeCVAlertsForConfiguration(cvConfiguration.getUuid());
+        closeCVAlertsForConfiguration(cvConfiguration);
         wingsPersistence.delete(CVConfiguration.class, cvConfiguration.getUuid());
       }
     }
   }
 
-  private void closeCVAlertsForConfiguration(final String cvConfigurationId) {
-    PageResponse<Alert> pageResponse =
-        alertService.list(PageRequestBuilder.aPageRequest()
-                              .addFilter(AlertKeys.type, Operator.IN,
-                                  Arrays
-                                      .asList(AlertType.CONTINUOUS_VERIFICATION_ALERT,
-                                          AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT)
-                                      .toArray())
-                              .build());
-
-    if (pageResponse == null) {
-      logger.info("No CV alerts found to delete for cvConfigId: {}", cvConfigurationId);
-      return;
-    }
-
-    List<Alert> alertList = pageResponse.getResponse();
-    if (isNotEmpty(alertList)) {
-      alertList.forEach(alert -> {
-        CVConfiguration cvConfigurationInAlert = null;
-        if (alert.getType() == AlertType.CONTINUOUS_VERIFICATION_ALERT) {
-          cvConfigurationInAlert = ((ContinuousVerificationAlertData) alert.getAlertData()).getCvConfiguration();
-        } else {
-          cvConfigurationInAlert =
-              ((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfiguration();
-        }
-
-        if (cvConfigurationId.equals(cvConfigurationInAlert.getUuid())) {
-          alertService.closeAlert(
-              cvConfigurationInAlert.getAccountId(), alert.getAppId(), alert.getType(), alert.getAlertData());
-        }
-      });
+  private void closeCVAlertsForConfiguration(final CVConfiguration cvConfiguration) {
+    try (HIterator<Alert> alertIterator = new HIterator<>(
+             wingsPersistence.createQuery(Alert.class, excludeValidate)
+                 .filter(AlertKeys.accountId, cvConfiguration.getAccountId())
+                 .filter(AlertKeys.alertData + "." + ContinuousVerificationAlertDataKeys.cvConfiguration + "._id",
+                     cvConfiguration.getUuid())
+                 .fetch())) {
+      while (alertIterator.hasNext()) {
+        final Alert alert = alertIterator.next();
+        alertService.closeAlert(
+            cvConfiguration.getAccountId(), alert.getAppId(), alert.getType(), alert.getAlertData());
+      }
     }
   }
 
