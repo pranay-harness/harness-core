@@ -194,6 +194,7 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Pro
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SplunkConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SumoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
+import software.wings.service.impl.yaml.handler.templatelibrary.ArtifactSourceTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.CommandTemplateRefYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.CommandTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.HttpTemplateYamlHandler;
@@ -549,5 +550,7 @@ public class YamlModule extends AbstractModule {
         .to(ShellScriptTemplateYamlHandler.class);
     templateLibraryYamlHandlerMapBinder.addBinding(TemplateConstants.HTTP).to(HttpTemplateYamlHandler.class);
     templateLibraryYamlHandlerMapBinder.addBinding(TemplateConstants.SSH).to(CommandTemplateYamlHandler.class);
+    templateLibraryYamlHandlerMapBinder.addBinding(TemplateConstants.ARTIFACT_SOURCE)
+        .to(ArtifactSourceTemplateYamlHandler.class);
   }
 }

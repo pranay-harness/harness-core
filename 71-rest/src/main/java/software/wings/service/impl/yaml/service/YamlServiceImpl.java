@@ -714,6 +714,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   private BaseYaml getYaml(String yamlString, Class<? extends BaseYaml> yamlClass) throws IOException {
+    //    todo @abhinav: we can cache this object
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     return mapper.readValue(yamlString, yamlClass);
