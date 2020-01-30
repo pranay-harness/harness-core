@@ -25,7 +25,7 @@ public class HelmCommandHelper {
   public static final String HELM = "helm";
   public static final String CHART = "chart";
 
-  public String getDeploymentMessage(HelmCommandRequest helmCommandRequest) {
+  String getDeploymentMessage(HelmCommandRequest helmCommandRequest) {
     switch (helmCommandRequest.getHelmCommandType()) {
       case INSTALL:
         return "Installing";
@@ -88,7 +88,7 @@ public class HelmCommandHelper {
     return Optional.empty();
   }
 
-  public boolean checkValidChartSpecification(HelmChartSpecification chartSpec) {
+  public boolean isValidChartSpecification(HelmChartSpecification chartSpec) {
     return !(chartSpec == null || (isBlank(chartSpec.getChartName()) && isBlank(chartSpec.getChartUrl())));
   }
 }

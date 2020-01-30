@@ -191,7 +191,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
           k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory,
           k8sBlueGreenDeployTaskParameters.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(),
-          executionLogCallback);
+          executionLogCallback, k8sBlueGreenDeployTaskParameters);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
       k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());

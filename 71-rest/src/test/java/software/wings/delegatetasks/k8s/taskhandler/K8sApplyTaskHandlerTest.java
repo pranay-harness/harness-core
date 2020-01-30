@@ -42,7 +42,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
-    when(k8sTaskHelper.renderTemplateForApply(any(), any(), any(), any(), any(), any(), any(), any()))
+    when(k8sTaskHelper.renderTemplateForApply(any(), any(), any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(Arrays.asList(ManifestFile.builder().build()));
     doNothing().when(k8sTaskHelper).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(Collections.emptyList());
@@ -50,7 +50,8 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
     k8sApplyTaskHandler.init(k8sApplyTaskParameters, delegateTaskParams, executionLogCallback);
     verify(k8sTaskHelper, times(0)).dryRunManifests(any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).readManifests(any(), any());
-    verify(k8sTaskHelper, times(1)).renderTemplateForApply(any(), any(), any(), any(), any(), any(), any(), any());
+    verify(k8sTaskHelper, times(1))
+        .renderTemplateForApply(any(), any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }
@@ -66,7 +67,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
-    when(k8sTaskHelper.renderTemplateForApply(any(), any(), any(), any(), any(), any(), any(), any()))
+    when(k8sTaskHelper.renderTemplateForApply(any(), any(), any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(Arrays.asList(ManifestFile.builder().build()));
     doNothing().when(k8sTaskHelper).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(Collections.emptyList());
@@ -74,7 +75,8 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
     k8sApplyTaskHandler.init(k8sApplyTaskParameters, delegateTaskParams, executionLogCallback);
     verify(k8sTaskHelper, times(1)).dryRunManifests(any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).readManifests(any(), any());
-    verify(k8sTaskHelper, times(1)).renderTemplateForApply(any(), any(), any(), any(), any(), any(), any(), any());
+    verify(k8sTaskHelper, times(1))
+        .renderTemplateForApply(any(), any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }

@@ -41,6 +41,8 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_HELM_VALUE_YAML;
+import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V2;
+import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V3;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
@@ -147,6 +149,7 @@ import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
@@ -344,6 +347,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     return LimitEnforcementUtils.withLimitCheck(checker, () -> {
       setKeyWords(service);
+      checkAndSetHelmVersion(service);
       Service savedService =
           duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
 
@@ -689,6 +693,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .set(ServiceKeys.description, Optional.ofNullable(service.getDescription()).orElse(""))
             .set(ServiceKeys.keywords, keywords);
 
+    updateOperationsForHelmVersion(savedService, service, updateOperations);
+
     if (fromYaml) {
       if (isNotBlank(service.getConfigMapYaml())) {
         updateOperations.set("configMapYaml", service.getConfigMapYaml());
@@ -727,6 +733,32 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         accountId, savedService, updatedService, Type.UPDATE, service.isSyncFromGit(), isRename);
 
     return updatedService;
+  }
+
+  void updateOperationsForHelmVersion(
+      Service savedService, Service newService, UpdateOperations<Service> updateOperations) {
+    if (newService.getHelmVersion() != null) {
+      validateHelmVersion(savedService);
+      updateOperations.set(ServiceKeys.helmVersion, newService.getHelmVersion());
+    } else if (savedService.getHelmVersion() == null) {
+      // Lazy Migration
+      HelmVersion defaultHelmVersion = getDefaultHelmVersion(savedService.getDeploymentType());
+      if (defaultHelmVersion != null) {
+        updateOperations.set(ServiceKeys.helmVersion, defaultHelmVersion);
+      }
+    }
+  }
+
+  void validateHelmVersion(Service service) {
+    if (service.getDeploymentType() != null && !isHelmSupportedDeploymentType(service.getDeploymentType())) {
+      throw new InvalidRequestException(
+          format("helmVersion is only supported with Helm and Kubernetes type of services, found deployment type: [%s]",
+              service.getDeploymentType()));
+    }
+  }
+
+  private boolean isHelmSupportedDeploymentType(DeploymentType deploymentType) {
+    return deploymentType == HELM || deploymentType == KUBERNETES;
   }
 
   @Override
@@ -2204,6 +2236,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return wingsPersistence.query(ContainerTask.class, pageRequest).getResponse();
   }
 
+  void checkAndSetHelmVersion(Service service) {
+    if (service.getHelmVersion() == null) {
+      service.setHelmVersion(getDefaultHelmVersion(service.getDeploymentType()));
+    } else {
+      validateHelmVersion(service);
+    }
+  }
+
   private Service createDefaultHelmValueYaml(Service service, boolean createdFromYaml) {
     if (createdFromYaml) {
       return service;
@@ -2369,6 +2409,30 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       applicationManifestService.upsertApplicationManifestFile(manifestFile, applicationManifest, isCreate);
     } catch (Exception ex) {
       logger.warn("Failed to update the manifest file for PCF spec. ", ex);
+    }
+  }
+
+  @Override
+  public HelmVersion getHelmVersionWithDefault(String appId, String serviceId) {
+    Service service = get(appId, serviceId);
+    if (service.getHelmVersion() != null) {
+      return service.getHelmVersion();
+    } else {
+      return getDefaultHelmVersion(service.getDeploymentType());
+    }
+  }
+
+  HelmVersion getDefaultHelmVersion(DeploymentType deploymentType) {
+    if (deploymentType == null) {
+      return null;
+    }
+    switch (deploymentType) {
+      case HELM:
+        return V2;
+      case KUBERNETES:
+        return V3;
+      default:
+        return null;
     }
   }
 

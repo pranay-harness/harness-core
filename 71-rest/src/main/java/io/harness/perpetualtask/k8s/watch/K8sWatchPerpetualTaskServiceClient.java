@@ -91,7 +91,8 @@ public class K8sWatchPerpetualTaskServiceClient
     K8sClusterConfig k8sClusterConfig =
         (K8sClusterConfig) KryoUtils.asObject(params.getK8SClusterConfig().toByteArray());
 
-    K8sTaskParameters k8sTaskParameters = new K8sTaskParameters("", "", "", "", k8sClusterConfig, "", "", 0, APPLY);
+    K8sTaskParameters k8sTaskParameters =
+        new K8sTaskParameters("", "", "", "", k8sClusterConfig, "", "", 0, APPLY, null);
 
     return DelegateTask.builder()
         .async(false)

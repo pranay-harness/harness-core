@@ -16,7 +16,7 @@ import static software.wings.beans.TaskType.HELM_COMMAND_TASK;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
-import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS;
+import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER_REGEX;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.sm.StateType.HELM_DEPLOY;
@@ -77,6 +77,7 @@ import software.wings.common.TemplateExpressionProcessor;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
+import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
@@ -241,11 +242,11 @@ public class HelmDeployState extends State {
 
   protected void setNewAndPrevReleaseVersion(ExecutionContext context, Application app, String releaseName,
       ContainerServiceParams containerServiceParams, HelmDeployStateExecutionData stateExecutionData,
-      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails, String commandFlags)
+      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, HelmVersion helmVersion)
       throws InterruptedException {
     logger.info("Setting new and previous helm release version");
-    int prevVersion = getPreviousReleaseVersion(app.getUuid(), app.getAccountId(), releaseName, containerServiceParams,
-        gitConfig, encryptedDataDetails, commandFlags);
+    int prevVersion = getPreviousReleaseVersion(
+        app, releaseName, containerServiceParams, gitConfig, encryptedDataDetails, commandFlags, helmVersion);
 
     stateExecutionData.setReleaseOldVersion(prevVersion);
     stateExecutionData.setReleaseNewVersion(prevVersion + 1);
@@ -264,7 +265,7 @@ public class HelmDeployState extends State {
       String accountId, String appId, String activityId, ImageDetails imageDetails,
       ContainerInfrastructureMapping infrastructureMapping, String repoName, GitConfig gitConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig repoConfig,
-      Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap, HelmVersion helmVersion) {
     List<String> helmValueOverridesYamlFilesEvaluated = getValuesYamlOverrides(
         context, containerServiceParams, appId, imageDetails, infrastructureMapping, appManifestMap);
 
@@ -286,7 +287,8 @@ public class HelmDeployState extends State {
             .gitConfig(gitConfig)
             .encryptedDataDetails(encryptedDataDetails)
             .commandFlags(commandFlags)
-            .sourceRepoConfig(repoConfig);
+            .sourceRepoConfig(repoConfig)
+            .helmVersion(helmVersion);
 
     if (gitFileConfig != null) {
       helmInstallCommandRequestBuilder.gitFileConfig(gitFileConfig);
@@ -310,9 +312,10 @@ public class HelmDeployState extends State {
     return imageNameTag;
   }
 
-  protected int getPreviousReleaseVersion(String appId, String accountId, String releaseName,
+  protected int getPreviousReleaseVersion(Application app, String releaseName,
       ContainerServiceParams containerServiceParams, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags) throws InterruptedException {
+      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, HelmVersion helmVersion)
+      throws InterruptedException {
     int prevVersion = 0;
     HelmReleaseHistoryCommandRequest helmReleaseHistoryCommandRequest =
         HelmReleaseHistoryCommandRequest.builder()
@@ -321,27 +324,32 @@ public class HelmDeployState extends State {
             .gitConfig(gitConfig)
             .encryptedDataDetails(encryptedDataDetails)
             .commandFlags(commandFlags)
+            .helmVersion(helmVersion)
             .build();
 
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .data(TaskData.builder()
-                      .taskType(HELM_COMMAND_TASK.name())
-                      .parameters(new Object[] {helmReleaseHistoryCommandRequest})
-                      .timeout(Long.parseLong(DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS) * 2 * 1000)
-                      .build())
-            .accountId(accountId)
-            .appId(appId)
-            .async(false)
-            .build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .data(TaskData.builder()
+                                              .taskType(HELM_COMMAND_TASK.name())
+                                              .parameters(new Object[] {helmReleaseHistoryCommandRequest})
+                                              .timeout(DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS * 2)
+                                              .build())
+                                    .accountId(app.getAccountId())
+                                    .appId(app.getUuid())
+                                    .async(false)
+                                    .build();
 
     HelmCommandExecutionResponse helmCommandExecutionResponse;
     ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
     if (notifyResponseData instanceof HelmCommandExecutionResponse) {
       helmCommandExecutionResponse = (HelmCommandExecutionResponse) notifyResponseData;
     } else {
-      StringBuilder builder = new StringBuilder(256).append(
-          "Failed to find the previous helm release version. Make sure that the helm client and tiller is installed");
+      StringBuilder builder = new StringBuilder(256);
+      builder.append("Failed to find the previous helm release version. ");
+      if (helmVersion == HelmVersion.V3) {
+        builder.append("Make sure Helm 3 is installed");
+      } else {
+        builder.append("Make sure that the helm client and tiller is installed");
+      }
 
       if (gitConfig != null) {
         builder.append(" and delegate has git connectivity");
@@ -412,7 +420,10 @@ public class HelmDeployState extends State {
 
     if (ExecutionStatus.FAILED == executionStatus) {
       activityService.updateStatus(activityId, appId, executionStatus);
-      return ExecutionResponse.builder().executionStatus(executionStatus).build();
+      return ExecutionResponse.builder()
+          .executionStatus(executionStatus)
+          .errorMessage(executionResponse.getErrorMessage())
+          .build();
     }
 
     if (isNotBlank(executionResponse.getValuesFileContent())) {
@@ -637,6 +648,8 @@ public class HelmDeployState extends State {
         (ContainerInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
     String releaseName = obtainHelmReleaseNamePrefix(context);
+
+    HelmVersion helmVersion = getHelmVersionWithDefault(app, serviceElement);
     updateHelmReleaseNameInInfraMappingElement(context, releaseName);
 
     String cmdFlags = obtainCommandFlags(context);
@@ -745,10 +758,10 @@ public class HelmDeployState extends State {
     }
 
     setNewAndPrevReleaseVersion(context, app, releaseName, containerServiceParams, stateExecutionData, gitConfig,
-        encryptedDataDetails, cmdFlags);
+        encryptedDataDetails, cmdFlags, helmVersion);
     HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
         releaseName, app.getAccountId(), app.getUuid(), activityId, imageDetails, containerInfraMapping, repoName,
-        gitConfig, encryptedDataDetails, cmdFlags, repoConfig, appManifestMap);
+        gitConfig, encryptedDataDetails, cmdFlags, repoConfig, appManifestMap, helmVersion);
 
     delegateService.queueTask(DelegateTask.builder()
                                   .async(true)
@@ -768,6 +781,10 @@ public class HelmDeployState extends State {
         .stateExecutionData(stateExecutionData)
         .async(true)
         .build();
+  }
+
+  private HelmVersion getHelmVersionWithDefault(Application app, ServiceElement serviceElement) {
+    return serviceResourceService.getHelmVersionWithDefault(app.getUuid(), serviceElement.getUuid());
   }
 
   private ExecutionResponse executeGitTask(

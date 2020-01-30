@@ -3,16 +3,19 @@ package software.wings.delegatetasks.validation;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.network.Http.connectableHttpUrl;
+import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.helpers.ext.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import software.wings.beans.TaskType;
@@ -22,6 +25,9 @@ import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
+import software.wings.helpers.ext.helm.HelmCommandTemplateFactory;
+import software.wings.helpers.ext.helm.HelmCommandTemplateFactory.HelmCliCommandType;
+import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.HelmDeployService;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
@@ -42,6 +48,8 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   private static final String HELM_VERSION_COMMAND = "${HELM_PATH} version -c";
 
   private static final String CHART_MUSEUM_VERSION_COMMAND = "${CHART_MUSEUM_PATH} -v";
+
+  private static final HelmVersion defaultHelmVersion = HelmVersion.V3;
 
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   @Inject private HelmDeployService helmDeployService;
@@ -156,13 +164,16 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   }
 
   private boolean isHelmInstalled() {
-    String helmPath = k8sGlobalConfigService.getHelmPath();
+    String helmPath = k8sGlobalConfigService.getHelmPath(defaultHelmVersion);
     if (isBlank(helmPath)) {
       logger.info("Helm not installed in delegate for task {}", delegateTaskId);
       return false;
     }
 
-    String helmVersionCommand = HELM_VERSION_COMMAND.replace("${HELM_PATH}", encloseWithQuotesIfNeeded(helmPath));
+    String helmVersionCommand =
+        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.VERSION, defaultHelmVersion)
+            .replace(HELM_PATH_PLACEHOLDER, encloseWithQuotesIfNeeded(helmPath))
+            .replace("${COMMAND_FLAGS}", StringUtils.EMPTY);
 
     return executeCommand(helmVersionCommand);
   }
@@ -170,8 +181,13 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   private String getCriteriaForEmptyHelmRepoConfigInValuesFetch() {
     HelmValuesFetchTaskParameters valuesTaskParams = getHelmValuesFetchTaskParameters();
     HelmChartConfigParams helmChartConfigTaskParams = valuesTaskParams.getHelmChartConfigTaskParams();
+    HelmVersion helmVersion = helmChartConfigTaskParams.getHelmVersion();
 
-    StringBuilder builder = new StringBuilder(64).append("DIRECT_HELM_REPO: ");
+    StringBuilder builder = new StringBuilder(200);
+    if (helmVersion == null) {
+      logger.error("Unexpected null helm version in Values Fetch Task");
+    }
+    builder.append(format("DIRECT_HELM_%s_REPO: ", helmVersion));
     if (isNotBlank(helmChartConfigTaskParams.getChartName())) {
       builder.append(helmChartConfigTaskParams.getChartName());
     }
@@ -239,11 +255,14 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
       String configLocation = containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(containerServiceParams);
 
       HelmInstallCommandRequest commandRequest =
-          HelmInstallCommandRequest.builder().commandFlags(valuesTaskParams.getHelmCommandFlags()).build();
+          HelmInstallCommandRequest.builder()
+              .commandFlags(valuesTaskParams.getHelmCommandFlags())
+              .helmVersion(valuesTaskParams.getHelmChartConfigTaskParams().getHelmVersion())
+              .build();
       commandRequest.setKubeConfigLocation(configLocation);
 
-      HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmCliAndTillerInstalled(commandRequest);
-      if (helmCommandResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
+      HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmInstalled(commandRequest);
+      if (helmCommandResponse.getCommandExecutionStatus() == CommandExecutionResult.CommandExecutionStatus.SUCCESS) {
         validated = validateContainerParams();
         logger.info("Helm containerServiceParams validation result. Validated: " + validated);
       }

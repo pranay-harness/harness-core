@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.join;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.network.Http.getBaseUrl;
+import static java.lang.String.format;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -15,10 +16,16 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @UtilityClass
 @Slf4j
@@ -29,7 +36,12 @@ public class InstallUtils {
   private static final String goTemplateClientVersion = "v0.3";
   private static final String goTemplateClientBaseDir = "./client-tools/go-template/";
 
-  private static final String helmVersion = "v2.13.1";
+  private static final String helm3Version = "v3.0.2";
+
+  private static final String helm2Version = "v2.13.1";
+
+  private static final List<String> helmVersions = Arrays.asList(helm2Version, helm3Version);
+
   private static final String helmBaseDir = "./client-tools/helm/";
 
   private static final String chartMuseumVersion = "v0.8.2";
@@ -40,7 +52,13 @@ public class InstallUtils {
 
   private static String kubectlPath = "kubectl";
   private static String goTemplateToolPath = "go-template";
-  private static String helmPath = "helm";
+  private static Map<String, String> helmPaths = new HashMap<>();
+
+  static {
+    helmPaths.put(helm2Version, "helm");
+    helmPaths.put(helm3Version, "helm");
+  }
+
   private static String chartMuseumPath = "chartmuseum";
   private static String ocPath = "oc";
 
@@ -63,8 +81,12 @@ public class InstallUtils {
     return goTemplateToolPath;
   }
 
-  public static String getHelmPath() {
-    return helmPath;
+  public static String getHelm2Path() {
+    return helmPaths.get(helm2Version);
+  }
+
+  public static String getHelm3Path() {
+    return helmPaths.get(helm3Version);
   }
 
   public static String getChartMuseumPath() {
@@ -317,32 +339,54 @@ public class InstallUtils {
         + "/amd64/helm";
   }
 
-  private static boolean initHelmClient() throws Exception {
-    logger.info("Init helm client only");
+  private static boolean initHelmClient(String helmVersion) throws InterruptedException, TimeoutException, IOException {
+    if (isHelmV2(helmVersion)) {
+      logger.info("Init helm client only");
 
-    String helmDirectory = helmBaseDir + helmVersion;
-    String script = "./helm init -c --skip-refresh \n";
+      String helmDirectory = helmBaseDir + helmVersion;
+      String script = "./helm init -c --skip-refresh \n";
 
-    ProcessExecutor processExecutor = new ProcessExecutor()
-                                          .timeout(10, TimeUnit.MINUTES)
-                                          .directory(new File(helmDirectory))
-                                          .command("/bin/bash", "-c", script)
-                                          .readOutput(true);
-    ProcessResult result = processExecutor.execute();
-    if (result.getExitValue() == 0) {
-      logger.info("Successfully init helm client");
-      return true;
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(10, TimeUnit.MINUTES)
+                                            .directory(new File(helmDirectory))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+      if (result.getExitValue() == 0) {
+        logger.info("Successfully init helm client");
+        return true;
+      } else {
+        logger.error("Helm client init failed");
+        logger.error(result.outputString());
+        return false;
+      }
     } else {
-      logger.error("Helm client init failed");
-      logger.error(result.outputString());
-      return false;
+      logger.info("Init helm not needed for helm v3");
+      return true;
     }
   }
 
+  static boolean isHelmV2(String helmVersion) {
+    return helmVersion.toLowerCase().startsWith("v2");
+  }
+
+  static boolean isHelmV3(String helmVersion) {
+    return helmVersion.toLowerCase().startsWith("v3");
+  }
+
   public static boolean installHelm(DelegateConfiguration configuration) {
+    boolean helmInstalled = true;
+    for (String version : helmVersions) {
+      helmInstalled = helmInstalled && installHelm(configuration, version);
+    }
+    return helmInstalled;
+  }
+
+  private static boolean installHelm(DelegateConfiguration configuration, String helmVersion) {
     try {
       if (isNotEmpty(configuration.getHelmPath())) {
-        helmPath = configuration.getHelmPath();
+        String helmPath = configuration.getHelmPath();
+        helmPaths.put(helmVersion, helmPath);
         logger.info("Found user configured helm at {}. Skipping Install.", helmPath);
         return true;
       }
@@ -354,22 +398,23 @@ public class InstallUtils {
 
       String helmDirectory = helmBaseDir + helmVersion;
       if (validateHelmExists(helmDirectory)) {
-        helmPath = Paths.get(helmDirectory + "/helm").toAbsolutePath().normalize().toString();
-        logger.info("helm version %s already installed", helmVersion);
+        String helmPath = Paths.get(helmDirectory + "/helm").toAbsolutePath().normalize().toString();
+        helmPaths.put(helmVersion, helmPath);
+        logger.info(format("helm version %s already installed", helmVersion));
 
-        return initHelmClient();
+        return initHelmClient(helmVersion);
       }
 
-      logger.info("Installing helm");
+      logger.info(format("Installing helm %s", helmVersion));
       createDirectoryIfDoesNotExist(helmDirectory);
 
       String downloadUrl = getHelmDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()), helmVersion);
       logger.info("Download Url is " + downloadUrl);
 
+      String versionCommand = getHelmVersionCommand(helmVersion);
+      String initCommand = getHelmInitCommand(helmVersion);
       String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + " \n"
-          + "chmod +x ./helm \n"
-          + "./helm version -c \n"
-          + "./helm init -c --skip-refresh \n";
+          + "chmod +x ./helm \n" + versionCommand + initCommand;
 
       ProcessExecutor processExecutor = new ProcessExecutor()
                                             .timeout(10, TimeUnit.MINUTES)
@@ -379,7 +424,8 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
 
       if (result.getExitValue() == 0) {
-        helmPath = Paths.get(helmDirectory + "/helm").toAbsolutePath().normalize().toString();
+        String helmPath = Paths.get(helmDirectory + "/helm").toAbsolutePath().normalize().toString();
+        helmPaths.put(helmVersion, helmPath);
         logger.info(result.outputString());
 
         if (validateHelmExists(helmDirectory)) {
@@ -398,6 +444,14 @@ public class InstallUtils {
       logger.error("Error installing helm", e);
       return false;
     }
+  }
+
+  private static String getHelmInitCommand(String helmVersion) {
+    return isHelmV2(helmVersion) ? "./helm init -c --skip-refresh \n" : StringUtils.EMPTY;
+  }
+
+  private static String getHelmVersionCommand(String helmVersion) {
+    return isHelmV2(helmVersion) ? "./helm version -c \n" : "./helm version \n";
   }
 
   private static boolean validateChartMuseumExists(String chartMuseumDirectory) {

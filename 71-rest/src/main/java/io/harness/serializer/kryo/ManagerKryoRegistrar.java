@@ -392,6 +392,7 @@ import software.wings.helpers.ext.external.comm.CollaborationProviderRequest;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
 import software.wings.helpers.ext.external.comm.EmailRequest;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
+import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
@@ -1468,5 +1469,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InstanaMetricValues.class, 7300);
     kryo.register(InstanaDataCollectionInfo.class, 7301);
     kryo.register(AwsS3SyncConfig.class, 7302);
+    kryo.register(HelmVersion.class, 7303);
   }
 }

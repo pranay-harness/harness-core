@@ -18,6 +18,7 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.HelmDummyCommandUnit;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
+import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
@@ -52,7 +53,7 @@ public class HelmRollbackState extends HelmDeployState {
       String accountId, String appId, String activityId, ImageDetails imageTag,
       ContainerInfrastructureMapping infrastructureMapping, String repoName, GitConfig gitConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig repoConfig,
-      Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap, HelmVersion helmVersion) {
     Integer previousReleaseRevision = null;
 
     ContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
@@ -77,6 +78,7 @@ public class HelmRollbackState extends HelmDeployState {
         .encryptedDataDetails(encryptedDataDetails)
         .commandFlags(commandFlags)
         .sourceRepoConfig(repoConfig)
+        .helmVersion(helmVersion)
         .build();
   }
 
@@ -88,7 +90,8 @@ public class HelmRollbackState extends HelmDeployState {
   @Override
   protected void setNewAndPrevReleaseVersion(ExecutionContext context, Application app, String releaseName,
       ContainerServiceParams containerServiceParams, HelmDeployStateExecutionData stateExecutionData,
-      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails, String commandFlags) {
+      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails, String commandFlags,
+      HelmVersion helmVersion) {
     HelmDeployContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
     if (contextElement != null) {
       stateExecutionData.setReleaseOldVersion(contextElement.getNewReleaseRevision());

@@ -1,15 +1,19 @@
 package software.wings.helpers.ext.helm.request;
 
+import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V2;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.GitConfig;
 import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
 
@@ -37,6 +41,7 @@ public class HelmCommandRequest implements ExecutionCapabilityDemander {
   @JsonIgnore private transient LogCallback executionLogCallback;
   private String commandFlags;
   private K8sDelegateManifestConfig repoConfig;
+  @Builder.Default private HelmVersion helmVersion = V2;
 
   public HelmCommandRequest(HelmCommandType helmCommandType) {
     this.helmCommandType = helmCommandType;

@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.k8s.request;
 
+import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
+
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -21,6 +23,7 @@ public class K8sTaskParameters implements TaskParameters, ExecutionCapabilityDem
   private String releaseName;
   private Integer timeoutIntervalInMin;
   @NotEmpty private K8sTaskType commandType;
+  private HelmVersion helmVersion;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

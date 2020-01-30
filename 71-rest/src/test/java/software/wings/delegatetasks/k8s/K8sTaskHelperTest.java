@@ -9,6 +9,7 @@ import static io.harness.k8s.model.Kind.Service;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -32,6 +33,7 @@ import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.rule.Owner;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -43,6 +45,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
+import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.GitService;
@@ -226,5 +229,41 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     kubernetesResourceIds.add(
         KubernetesResourceId.builder().kind(Service.name()).name("s1").namespace("default").build());
     return kubernetesResourceIds;
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetHelmV2CommandForRender() {
+    String command = helper.getHelmCommandForRender(
+        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V2);
+    Assertions.assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetHelmV2CommandForRenderOneChartFile() {
+    String command = helper.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
+        " -f values-0.yaml", "template/service.yaml", HelmVersion.V2);
+    Assertions.assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetHelmV3CommandForRender() {
+    String command = helper.getHelmCommandForRender(
+        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V3);
+    Assertions.assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetHelmV3CommandForRenderOneChartFile() {
+    String command = helper.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
+        " -f values-0.yaml", "template/service.yaml", HelmVersion.V3);
+    Assertions.assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
   }
 }

@@ -260,6 +260,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     when(appService.get(APP_ID)).thenReturn(app);
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
 

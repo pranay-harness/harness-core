@@ -23,6 +23,7 @@ import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.SIGNAT
 
 import com.google.inject.Inject;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import lombok.extern.slf4j.Slf4j;
@@ -140,7 +141,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     }
 
     if (process == null || !process.getProcess().isAlive()) {
-      throw new WingsException(getErrorMessage(stringBuffer.toString()));
+      throw new InvalidRequestException(getErrorMessage(stringBuffer.toString()), WingsException.USER);
     }
 
     return ChartMuseumServer.builder().startedProcess(process).port(port).build();

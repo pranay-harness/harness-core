@@ -220,7 +220,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
           request.getK8sDelegateManifestConfig(), manifestFilesDirectory, request.getValuesYamlList(), releaseName,
-          kubernetesConfig.getNamespace(), executionLogCallback);
+          kubernetesConfig.getNamespace(), executionLogCallback, request);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
       k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());

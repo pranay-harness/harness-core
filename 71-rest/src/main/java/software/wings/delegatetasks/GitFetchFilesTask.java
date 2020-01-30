@@ -103,7 +103,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
         logger.error(msg, ex);
         executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);
         return GitCommandExecutionResponse.builder()
-            .errorMessage(msg)
+            .errorMessage(exceptionMsg)
             .gitCommandStatus(GitCommandStatus.FAILURE)
             .build();
       }

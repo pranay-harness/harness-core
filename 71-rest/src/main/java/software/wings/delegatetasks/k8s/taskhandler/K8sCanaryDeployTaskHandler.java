@@ -189,7 +189,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
           k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory,
           k8sCanaryDeployTaskParameters.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(),
-          executionLogCallback);
+          executionLogCallback, k8sCanaryDeployTaskParameters);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
       k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());

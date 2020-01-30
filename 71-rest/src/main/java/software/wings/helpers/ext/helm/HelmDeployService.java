@@ -37,7 +37,7 @@ public interface HelmDeployService {
    * @param helmCommandRequest   the helm command request
    * @return the helm command response
    */
-  HelmCommandResponse ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) throws Exception;
+  HelmCommandResponse ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest);
 
   /**
    * Last successful release version string.
@@ -57,4 +57,8 @@ public interface HelmDeployService {
 
   HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest)
       throws InterruptedException, IOException, TimeoutException;
+
+  HelmCommandResponse ensureHelm3Installed(HelmCommandRequest commandRequest);
+
+  HelmCommandResponse ensureHelmInstalled(HelmCommandRequest commandRequest);
 }

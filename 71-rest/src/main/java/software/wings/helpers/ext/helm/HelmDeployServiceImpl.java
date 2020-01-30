@@ -2,12 +2,15 @@ package software.wings.helpers.ext.helm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.replace;
-import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS;
+import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
+import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -114,39 +117,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
 
       fetchValuesYamlFromGitRepo(commandRequest, executionLogCallback);
-
-      K8sDelegateManifestConfig repoConfig = commandRequest.getRepoConfig();
-      if (repoConfig == null) {
-        addRepoForCommand(commandRequest);
-        repoUpdate(commandRequest);
-        if (!helmCommandHelper.checkValidChartSpecification(commandRequest.getChartSpecification())) {
-          String msg =
-              new StringBuilder("Couldn't find valid helm chart specification from service or values.yaml from git\n")
-                  .append((commandRequest.getChartSpecification() != null)
-                          ? commandRequest.getChartSpecification() + "\n"
-                          : "")
-                  .append("Please specify helm chart specification either in service or git repo\n")
-                  .toString();
-
-          logger.info(msg);
-          executionLogCallback.saveExecutionLog(msg);
-          return HelmInstallCommandResponse.builder()
-              .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-              .output(msg)
-              .build();
-        }
-      } else {
-        switch (repoConfig.getManifestStoreTypes()) {
-          case HelmSourceRepo:
-            fetchSourceRepo(commandRequest);
-            break;
-          case HelmChartRepo:
-            fetchChartRepo(commandRequest);
-            break;
-          default:
-            throw new WingsException("Unsupported store type: " + repoConfig.getManifestStoreTypes());
-        }
-      }
+      prepareRepoAndCharts(commandRequest);
 
       executionLogCallback =
           markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.InstallUpgrade);
@@ -212,7 +183,40 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
   }
 
-  private void fetchChartRepo(HelmInstallCommandRequest commandRequest) throws Exception {
+  private void prepareRepoAndCharts(HelmInstallCommandRequest commandRequest) throws Exception {
+    K8sDelegateManifestConfig repoConfig = commandRequest.getRepoConfig();
+    if (repoConfig == null) {
+      addRepoForCommand(commandRequest);
+      repoUpdate(commandRequest);
+      if (!helmCommandHelper.isValidChartSpecification(commandRequest.getChartSpecification())) {
+        String msg = "Couldn't find valid helm chart specification from service or values.yaml from git\n"
+            + ((commandRequest.getChartSpecification() != null) ? commandRequest.getChartSpecification() + "\n" : "")
+            + "Please specify helm chart specification either in service or git repo\n";
+
+        commandRequest.getExecutionLogCallback().saveExecutionLog(msg);
+        throw new InvalidRequestException(msg, USER);
+      }
+    } else {
+      fetchRepo(commandRequest);
+    }
+  }
+
+  void fetchRepo(HelmInstallCommandRequest commandRequest) throws Exception {
+    K8sDelegateManifestConfig repoConfig = commandRequest.getRepoConfig();
+    switch (repoConfig.getManifestStoreTypes()) {
+      case HelmSourceRepo:
+        fetchSourceRepo(commandRequest);
+        break;
+      case HelmChartRepo:
+        fetchChartRepo(commandRequest);
+        break;
+      default:
+        throw new InvalidRequestException("Unsupported store type: " + repoConfig.getManifestStoreTypes(), USER);
+    }
+  }
+
+  @VisibleForTesting
+  void fetchChartRepo(HelmInstallCommandRequest commandRequest) throws Exception {
     HelmChartConfigParams helmChartConfigParams = commandRequest.getRepoConfig().getHelmChartConfigParams();
     String workingDirectory = Paths.get(getWorkingDirectory(commandRequest)).toString();
 
@@ -222,7 +226,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     commandRequest.getExecutionLogCallback().saveExecutionLog("Helm Chart Repo checked-out locally");
   }
 
-  private void fetchSourceRepo(HelmInstallCommandRequest commandRequest) {
+  @VisibleForTesting
+  void fetchSourceRepo(HelmInstallCommandRequest commandRequest) {
     K8sDelegateManifestConfig sourceRepoConfig = commandRequest.getRepoConfig();
     if (sourceRepoConfig == null) {
       return;
@@ -306,19 +311,25 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   @Override
-  public HelmCommandResponse ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) throws Exception {
+  public HelmCommandResponse ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) {
     try {
       return timeLimiter.callWithTimeout(() -> {
         HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(helmCommandRequest);
         if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
           throw new InvalidRequestException(cliResponse.getOutput());
         }
-        return new HelmCommandResponse(cliResponse.getCommandExecutionStatus(), cliResponse.getOutput());
-      }, Long.parseLong(DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS), TimeUnit.SECONDS, true);
+
+        boolean helm3 = isHelm3(cliResponse.getOutput());
+        CommandExecutionStatus commandExecutionStatus =
+            helm3 ? CommandExecutionStatus.FAILURE : CommandExecutionStatus.SUCCESS;
+        return new HelmCommandResponse(commandExecutionStatus, cliResponse.getOutput());
+      }, DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS, true);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out while finding helm client and server version";
       logger.error(msg, e);
       throw new InvalidRequestException(msg);
+    } catch (Exception e) {
+      throw new InvalidRequestException("Some error occurred while finding Helm client and server version", e);
     }
   }
 
@@ -359,6 +370,44 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
 
     return new HelmCommandResponse(cliResponse.getCommandExecutionStatus(), responseMsg);
+  }
+
+  @Override
+  public HelmCommandResponse ensureHelm3Installed(HelmCommandRequest commandRequest) {
+    try {
+      HelmCliResponse helmCliResponse = helmClient.getClientAndServerVersion(commandRequest);
+
+      if (helmCliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
+        return new HelmCommandResponse(CommandExecutionStatus.FAILURE, helmCliResponse.getOutput());
+      }
+
+      boolean helm3 = isHelm3(helmCliResponse.getOutput());
+      CommandExecutionStatus commandExecutionStatus =
+          helm3 ? CommandExecutionStatus.SUCCESS : CommandExecutionStatus.FAILURE;
+      return new HelmCommandResponse(commandExecutionStatus, helmCliResponse.getOutput());
+
+    } catch (TimeoutException e) {
+      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, "Timed out while finding helm version");
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, "Interrupted while finding helm version");
+    } catch (IOException e) {
+      logger.info("IOException occurred while finding helm version", e);
+      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, "IO Error occurred while finding helm version");
+    }
+  }
+
+  @Override
+  public HelmCommandResponse ensureHelmInstalled(HelmCommandRequest commandRequest) {
+    if (commandRequest.getHelmVersion() == null) {
+      logger.error("Did not expect null value of helmVersion, defaulting to V2");
+    }
+    return commandRequest.getHelmVersion() == HelmVersion.V3 ? ensureHelm3Installed(commandRequest)
+                                                             : ensureHelmCliAndTillerInstalled(commandRequest);
+  }
+
+  boolean isHelm3(String cliResponse) {
+    return isNotEmpty(cliResponse) && cliResponse.toLowerCase().startsWith("v3.");
   }
 
   @Override
@@ -454,9 +503,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     return helmCliResponse.getOutput();
   }
 
-  private void deleteAndPurgeHelmRelease(HelmInstallCommandRequest commandRequest, LogCallback executionLogCallback) {
+  void deleteAndPurgeHelmRelease(HelmInstallCommandRequest commandRequest, LogCallback executionLogCallback) {
     try {
-      String message = "Cleaning up. Deleting the release with --purge option";
+      String message = "Cleaning up. Deleting the release, freeing it up for later use";
       executionLogCallback.saveExecutionLog(message);
 
       HelmCliResponse deleteCommandResponse = helmClient.deleteHelmRelease(commandRequest);
@@ -484,12 +533,17 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       }
 
       return commandResponse.getReleaseInfoList().stream().anyMatch(releaseInfo
-          -> releaseInfo.getRevision().equals("1") && releaseInfo.getStatus().equals("FAILED")
+          -> releaseInfo.getRevision().equals("1") && isFailedStatus(releaseInfo.getStatus())
               && releaseInfo.getName().equals(commandRequest.getReleaseName()));
     }
 
     return false;
   }
+
+  boolean isFailedStatus(String status) {
+    return status.equalsIgnoreCase("failed");
+  }
+
   private void fetchValuesYamlFromGitRepo(HelmInstallCommandRequest commandRequest, LogCallback executionLogCallback) {
     if (commandRequest.getGitConfig() == null) {
       return;
@@ -778,7 +832,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       chartInfo = getChartInfoForSpecWithRepoUrl(request);
     }
 
-    if (isBlank(chartInfo)) {
+    if (chartInfo == null || isBlank(chartInfo)) {
       return null;
     }
 
@@ -806,7 +860,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     return SearchInfo.builder()
         .name(releaseRecord.get("NAME"))
         .chartVersion(releaseRecord.get("CHART VERSION"))
-        .appVersion(releaseRecord.get("DESCRIPTION"))
+        .appVersion(releaseRecord.get("APP VERSION"))
         .build();
   }
 }

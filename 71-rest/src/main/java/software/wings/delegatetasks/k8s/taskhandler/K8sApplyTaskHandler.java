@@ -5,7 +5,6 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloadsForApplyState;
 import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogColor.Gray;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogColor.Yellow;
@@ -158,7 +157,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplateForApply(k8sDelegateTaskParams,
           k8sApplyTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory, applyFilePaths,
           k8sApplyTaskParameters.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(),
-          executionLogCallback);
+          executionLogCallback, k8sApplyTaskParameters);
 
       if (isEmpty(manifestFiles)) {
         executionLogCallback.saveExecutionLog(color("\nNo Manifests found after rendering", Yellow, Bold));

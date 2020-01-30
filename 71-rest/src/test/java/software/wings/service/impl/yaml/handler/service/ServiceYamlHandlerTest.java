@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.service;
 
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.doNothing;
@@ -17,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +26,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
 import software.wings.beans.NameValuePair;
@@ -33,6 +36,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
@@ -149,6 +153,47 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
   public void get() {
     when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(service);
     assertThat(serviceYamlHandler.get(ACCOUNT_ID, validYamlFilePath)).isEqualTo(service);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testUpdateHelmVersionFromYaml() {
+    Service.Yaml yaml = Service.Yaml.builder().helmVersion("V2").deploymentType(DeploymentType.HELM.toString()).build();
+    Service service = new Service();
+    serviceYamlHandler.setHelmVersion(yaml, service);
+    assertThat(service.getHelmVersion()).isEqualTo(HelmVersion.V2);
+
+    yaml.setHelmVersion("V3");
+    service.setHelmVersion(null);
+    serviceYamlHandler.setHelmVersion(yaml, service);
+    assertThat(service.getHelmVersion()).isEqualTo(HelmVersion.V3);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void shouldThrowIfInvalidHelmVersion() {
+    Service.Yaml yaml =
+        Service.Yaml.builder().helmVersion("garbage-text").deploymentType(DeploymentType.HELM.toString()).build();
+    Service service = new Service();
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> serviceYamlHandler.setHelmVersion(yaml, service))
+        .withMessageContaining("helmVersion");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testSetHelmVersionInYaml() {
+    Service helmService =
+        Service.builder().appId(APP_ID).helmVersion(HelmVersion.V2).artifactType(ArtifactType.DOCKER).build();
+    Yaml yaml = serviceYamlHandler.toYaml(helmService, APP_ID);
+    assertThat(yaml.getHelmVersion()).isEqualTo(HelmVersion.V2.toString());
+
+    Service sshService = Service.builder().deploymentType(DeploymentType.SSH).artifactType(ArtifactType.JAR).build();
+    yaml = serviceYamlHandler.toYaml(sshService, APP_ID);
+    assertThat(yaml.getHelmVersion()).isNull();
   }
 
   private ChangeContext<Yaml> getChangeContext(Yaml yaml) {
