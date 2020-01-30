@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.Timestamp;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
+  static final String IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME = "identifier_clusterId";
   private Map<String, String> taskWatchIdMap = new ConcurrentHashMap<>();
 
   private final EventPublisher eventPublisher;
@@ -99,7 +101,8 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                                                   .addAllActivePodUids(podUidList)
                                                   .setLastProcessedTimestamp(timestamp)
                                                   .build();
-    eventPublisher.publishMessage(k8SClusterSyncEvent, timestamp);
+    eventPublisher.publishMessage(k8SClusterSyncEvent, timestamp,
+        ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, watchTaskParams.getClusterName()));
   }
 
   @VisibleForTesting
@@ -121,7 +124,9 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                            .setCpuNano(K8sResourceStandardizer.getCpuNano(nodeMetric.getUsage().getCpu()))
                            .setMemoryByte(K8sResourceStandardizer.getMemoryByte(nodeMetric.getUsage().getMemory())))
                    .build())
-        .forEach(nodeMetric -> eventPublisher.publishMessage(nodeMetric, HTimestamps.fromInstant(heartbeatTime)));
+        .forEach(nodeMetric
+            -> eventPublisher.publishMessage(nodeMetric, HTimestamps.fromInstant(heartbeatTime),
+                ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, watchTaskParams.getClusterId())));
   }
 
   @VisibleForTesting
@@ -155,7 +160,9 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                                                     .build())
                                          .collect(toList()))
                    .build())
-        .forEach(podMetric -> eventPublisher.publishMessage(podMetric, HTimestamps.fromInstant(heartbeatTime)));
+        .forEach(podMetric
+            -> eventPublisher.publishMessage(podMetric, HTimestamps.fromInstant(heartbeatTime),
+                ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, watchTaskParams.getClusterId())));
   }
 
   @Override

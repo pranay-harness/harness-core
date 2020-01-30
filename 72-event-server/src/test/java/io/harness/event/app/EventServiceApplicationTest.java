@@ -52,7 +52,7 @@ public class EventServiceApplicationTest extends CategoryTest {
                             .setCreatedTimestamp(HTimestamps.fromInstant(Instant.now().minus(10, ChronoUnit.HOURS)))
                             .build();
     Map<String, String> attributes = ImmutableMap.of("k1", "v1", "k2", "v2");
-    eventPublisher.publishMessageWithAttributes(message, message.getTimestamp(), attributes);
+    eventPublisher.publishMessage(message, message.getTimestamp(), attributes);
     Awaitility.await().atMost(10, TimeUnit.SECONDS).pollInterval(100, TimeUnit.MILLISECONDS).until(() -> {
       PublishedMessage publishedMessage = hPersistence.createQuery(PublishedMessage.class).get();
       assertThat(publishedMessage).isNotNull();

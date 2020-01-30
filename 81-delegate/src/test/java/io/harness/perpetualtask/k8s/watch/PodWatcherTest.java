@@ -2,6 +2,7 @@ package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_DELETED;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
+import static io.harness.perpetualtask.k8s.watch.PodWatcher.IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -40,23 +41,25 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.MockitoAnnotations;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class PodWatcherTest extends CategoryTest {
   private PodWatcher podWatcher;
   private EventPublisher eventPublisher;
   private Watch watch;
-  public static final String POD_OWNER_ID = "948bcfca-d300-11e9-b63d-4201ac100a04";
-  public static final String POD_OWNER_KIND = "Job";
-  public static final String POD_OWNER_NAME = "PepetualTaskJob";
+  @Captor ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
 
   @Before
   public void setUp() throws Exception {
     KubernetesClient kubernetesClient = mock(KubernetesClient.class);
     eventPublisher = mock(EventPublisher.class);
     watch = mock(Watch.class);
+    MockitoAnnotations.initMocks(this);
     @SuppressWarnings("unchecked")
     MixedOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> podeOps = mock(MixedOperation.class);
     @SuppressWarnings("unchecked")
@@ -80,10 +83,12 @@ public class PodWatcherTest extends CategoryTest {
   public void shouldPublishPodScheduledAndPodInfo() throws Exception {
     podWatcher.eventReceived(Action.MODIFIED, scheduledPod());
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-    verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
+    verify(eventPublisher, times(2))
+        .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
     assertThat(captor.getAllValues()).hasSize(2);
     assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(PodInfo.class, this ::infoMessageAssertions);
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(PodEvent.class, this ::scheduledMessageAssertions);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
   }
 
   @Test
@@ -92,8 +97,10 @@ public class PodWatcherTest extends CategoryTest {
   public void shouldPublishPodDeleted() throws Exception {
     podWatcher.eventReceived(Action.DELETED, scheduledAndDeletedPod());
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-    verify(eventPublisher, atLeastOnce()).publishMessage(captor.capture(), any(Timestamp.class));
+    verify(eventPublisher, atLeastOnce())
+        .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
     assertThat(captor.getAllValues().get(2)).isInstanceOfSatisfying(PodEvent.class, this ::deletedMessageAssertions);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
   }
 
   @Test
@@ -105,12 +112,14 @@ public class PodWatcherTest extends CategoryTest {
     podWatcher.eventReceived(Action.MODIFIED, scheduledPod()); // none
     podWatcher.eventReceived(Action.DELETED, scheduledAndDeletedPod()); // deleted
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-    verify(eventPublisher, atLeastOnce()).publishMessage(captor.capture(), any(Timestamp.class));
+    verify(eventPublisher, atLeastOnce())
+        .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
     List<Message> publishedMessages = captor.getAllValues();
     assertThat(publishedMessages).hasSize(3);
     assertThat(publishedMessages.get(0)).isInstanceOfSatisfying(PodInfo.class, this ::infoMessageAssertions);
     assertThat(publishedMessages.get(1)).isInstanceOfSatisfying(PodEvent.class, this ::scheduledMessageAssertions);
     assertThat(publishedMessages.get(2)).isInstanceOfSatisfying(PodEvent.class, this ::deletedMessageAssertions);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
   }
 
   @Test

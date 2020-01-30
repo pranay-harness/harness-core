@@ -15,10 +15,10 @@ public abstract class EventPublisher {
   protected abstract void publish(PublishMessage publishMessage);
 
   public void publishMessage(Message message, Timestamp occurredAt) {
-    publishMessageWithAttributes(message, occurredAt, Collections.emptyMap());
+    publishMessage(message, occurredAt, Collections.emptyMap());
   }
 
-  public void publishMessageWithAttributes(Message message, Timestamp occurredAt, Map<String, String> attributes) {
+  public void publishMessage(Message message, Timestamp occurredAt, Map<String, String> attributes) {
     checkArgument(!(message instanceof PublishMessage)); // to avoid accidental nesting
     publish(PublishMessage.newBuilder()
                 .setPayload(Any.pack(message))
