@@ -282,8 +282,11 @@ public class UserGroupController {
       return;
     }
     List<String> idsInput = new ArrayList<>(userGroupIds);
-    PageRequest<UserGroup> req =
-        aPageRequest().addFieldsIncluded("_id").addFilter("_id", IN, userGroupIds.toArray()).build();
+    PageRequest<UserGroup> req = aPageRequest()
+                                     .addFieldsIncluded("_id")
+                                     .addFilter("_id", IN, userGroupIds.toArray())
+                                     .addFilter("accountId", SearchFilter.Operator.EQ, accountId)
+                                     .build();
     PageResponse<UserGroup> res = userGroupService.list(accountId, req, false);
     List<String> idsPresent = res.stream().map(UserGroup::getUuid).collect(Collectors.toList());
     idsInput.removeAll(idsPresent);
