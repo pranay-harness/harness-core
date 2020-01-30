@@ -32,6 +32,7 @@ public class AwsEcsInfrastructureYamlHandler
         .type(InfrastructureType.AWS_ECS)
         .cloudProviderName(cloudProvider.getName())
         .expressions(bean.getExpressions())
+        .clusterName(bean.getClusterName())
         .build();
   }
 
@@ -56,6 +57,7 @@ public class AwsEcsInfrastructureYamlHandler
     bean.setSubnetIds(yaml.getSubnetIds());
     bean.setVpcId(yaml.getVpcId());
     bean.setExpressions(yaml.getExpressions());
+    bean.setClusterName(yaml.getClusterName());
   }
 
   @Override
