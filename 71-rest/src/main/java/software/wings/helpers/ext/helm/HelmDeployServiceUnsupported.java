@@ -23,7 +23,7 @@ public class HelmDeployServiceUnsupported implements HelmDeployService {
   }
 
   @Override
-  public HelmCommandResponse ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) throws Exception {
+  public HelmCommandResponse ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) {
     throw new UnsupportedOperationException("Helm deploy service not supported on manager");
   }
 
@@ -40,6 +40,16 @@ public class HelmDeployServiceUnsupported implements HelmDeployService {
   @Override
   public HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest)
       throws InterruptedException, IOException, TimeoutException {
+    throw new UnsupportedOperationException("Helm deploy service not supported on manager");
+  }
+
+  @Override
+  public HelmCommandResponse ensureHelm3Installed(HelmCommandRequest commandRequest) {
+    throw new UnsupportedOperationException("Helm deploy service not supported on manager");
+  }
+
+  @Override
+  public HelmCommandResponse ensureHelmInstalled(HelmCommandRequest commandRequest) {
     throw new UnsupportedOperationException("Helm deploy service not supported on manager");
   }
 }

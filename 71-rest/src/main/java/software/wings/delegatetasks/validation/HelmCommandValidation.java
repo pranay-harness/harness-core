@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
+import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.HelmDeployService;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
@@ -57,7 +58,8 @@ public class HelmCommandValidation extends AbstractDelegateValidateTask {
       String configLocation =
           containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(commandRequest.getContainerServiceParams());
       commandRequest.setKubeConfigLocation(configLocation);
-      HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmCliAndTillerInstalled(commandRequest);
+
+      HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmInstalled(commandRequest);
       if (helmCommandResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
         validated = containerValidationHelper.validateContainerServiceParams(params);
         logger.info("Helm containerServiceParams validation result. Validated: " + validated);
@@ -68,15 +70,21 @@ public class HelmCommandValidation extends AbstractDelegateValidateTask {
 
     logger.info("HelmCommandValidation result. Validated: " + validated);
 
-    return singletonList(DelegateConnectionResult.builder().criteria(getCriteria(params)).validated(validated).build());
+    return singletonList(
+        DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(validated).build());
   }
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(getCriteria(((HelmCommandRequest) getParameters()[0]).getContainerServiceParams()));
+    HelmCommandRequest helmCommandRequest = (HelmCommandRequest) getParameters()[0];
+    return singletonList(
+        getCriteria(helmCommandRequest.getContainerServiceParams(), helmCommandRequest.getHelmVersion()));
   }
 
-  private String getCriteria(ContainerServiceParams containerServiceParams) {
+  String getCriteria(ContainerServiceParams containerServiceParams, HelmVersion helmVersion) {
+    if (helmVersion == HelmVersion.V3) {
+      return "helm3: " + containerValidationHelper.getCriteria(containerServiceParams);
+    }
     return "helm: " + containerValidationHelper.getCriteria(containerServiceParams);
   }
 

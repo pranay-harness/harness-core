@@ -23,6 +23,7 @@ import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
+import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.nio.file.Paths;
@@ -33,6 +34,7 @@ import java.util.function.Supplier;
 @Slf4j
 public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
   private static final String WORKING_DIR_BASE = "./repository/helm-validation/";
+  private static final HelmVersion defaultHelmVersion = HelmVersion.V3;
 
   @Inject private EncryptionService encryptionService;
   @Inject private HelmTaskHelper helmTaskHelper;
@@ -73,7 +75,8 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     encryptionService.decrypt(helmRepoConfig, encryptedDataDetails);
 
     String workingDirectory = helmTaskHelper.createNewDirectoryAtPath(Paths.get(WORKING_DIR_BASE).toString());
-    helmTaskHelper.initHelm(workingDirectory);
+
+    helmTaskHelper.initHelm(workingDirectory, defaultHelmVersion);
     String repoName = convertBase64UuidToCanonicalForm(generateUuid());
 
     switch (helmRepoConfig.getSettingType()) {
@@ -94,7 +97,7 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
         throw new WingsException("Unhandled type of helm repo config. Type : " + helmRepoConfig.getSettingType());
     }
 
-    helmTaskHelper.removeRepo(repoName, workingDirectory);
+    helmTaskHelper.removeRepo(repoName, workingDirectory, defaultHelmVersion);
     helmTaskHelper.cleanup(workingDirectory);
   }
 
@@ -105,7 +108,7 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     encryptionService.decrypt(gcpConfig, connectorEncryptedDataDetails);
 
     helmTaskHelper.addHelmRepo(
-        helmRepoConfig, gcpConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory, "");
+        helmRepoConfig, gcpConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory, "", defaultHelmVersion);
   }
 
   private void tryAddingHttpHelmRepo(HelmRepoConfig helmRepoConfig, String repoName, String repoDisplayName,
@@ -113,7 +116,7 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmRepoConfig;
 
     helmTaskHelper.addRepo(repoName, repoDisplayName, httpHelmRepoConfig.getChartRepoUrl(),
-        httpHelmRepoConfig.getUsername(), httpHelmRepoConfig.getPassword(), workingDirectory);
+        httpHelmRepoConfig.getUsername(), httpHelmRepoConfig.getPassword(), workingDirectory, defaultHelmVersion);
   }
 
   private void tryAddingAmazonS3HelmRepo(HelmRepoConfig helmRepoConfig, String repoName,
@@ -123,6 +126,6 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     encryptionService.decrypt(awsConfig, connectorEncryptedDataDetails);
 
     helmTaskHelper.addHelmRepo(
-        helmRepoConfig, awsConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory, "");
+        helmRepoConfig, awsConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory, "", defaultHelmVersion);
   }
 }

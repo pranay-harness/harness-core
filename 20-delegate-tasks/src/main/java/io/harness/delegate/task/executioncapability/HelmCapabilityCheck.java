@@ -16,7 +16,7 @@ public class HelmCapabilityCheck implements CapabilityCheck {
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     HelmCapability helmCapability = (HelmCapability) delegateCapability;
     String helmVersionCommand =
-        helmCapability.getHelmCommand().replace("${HELM_PATH}", encloseWithQuotesIfNeeded(InstallUtils.getHelmPath()));
+        helmCapability.getHelmCommand().replace("${HELM_PATH}", encloseWithQuotesIfNeeded(InstallUtils.getHelm2Path()));
 
     ProcessExecutor processExecutor = new ProcessExecutor().command("/bin/sh", "-c", helmVersionCommand);
     boolean valid = false;

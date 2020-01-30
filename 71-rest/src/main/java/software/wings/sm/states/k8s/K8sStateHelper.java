@@ -1,3 +1,4 @@
+
 package software.wings.sm.states.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -93,6 +94,7 @@ import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
@@ -137,6 +139,7 @@ public class K8sStateHelper {
   @Inject ApplicationManifestUtils applicationManifestUtils;
   @Inject private HelmChartConfigHelperService helmChartConfigHelperService;
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
+  @Inject private ServiceResourceService serviceResourceService;
 
   private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
   private static final long MAX_TASK_TIMEOUT_IN_MINUTES = 120L;
@@ -473,6 +476,7 @@ public class K8sStateHelper {
     k8sTaskParameters.setAppId(app.getUuid());
     k8sTaskParameters.setK8sClusterConfig(k8sClusterConfig);
     k8sTaskParameters.setWorkflowExecutionId(context.getWorkflowExecutionId());
+    k8sTaskParameters.setHelmVersion(serviceResourceService.getHelmVersionWithDefault(context.getAppId(), serviceId));
 
     long taskTimeoutInMillis = DEFAULT_ASYNC_CALL_TIMEOUT;
 

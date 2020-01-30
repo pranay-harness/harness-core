@@ -24,6 +24,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.sm.ContextElement;
 import software.wings.stencils.Stencil;
@@ -517,4 +518,6 @@ public interface ServiceResourceService extends OwnedByApplication {
   void createDefaultPcfV2Manifests(Service service);
 
   void upsertPCFSpecInManifestFile(PcfServiceSpecification pcfServiceSpecification);
+
+  HelmVersion getHelmVersionWithDefault(String appId, String serviceId);
 }

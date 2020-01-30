@@ -9,16 +9,20 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.api.PhaseElement;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.settings.helm.HelmRepoConfig;
+import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams.HelmChartConfigParamsBuilder;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
@@ -30,6 +34,7 @@ import java.util.List;
 public class HelmChartConfigHelperService {
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
+  @Inject private ServiceResourceService serviceResourceService;
 
   public HelmChartConfig getHelmChartConfigFromYaml(String accountId, String appId, HelmChartConfig helmChartConfig) {
     if (helmChartConfig == null) {
@@ -124,6 +129,8 @@ public class HelmChartConfigHelperService {
           .repoName(convertBase64UuidToCanonicalForm(context.getWorkflowExecutionId()));
     }
 
+    helmChartConfigParamsBuilder.helmVersion(getHelmVersionFromService(context));
+
     String connectorId = helmChartConfig.getConnectorId();
     if (isBlank(connectorId)) {
       return helmChartConfigParamsBuilder.build();
@@ -158,6 +165,13 @@ public class HelmChartConfigHelperService {
     }
 
     return helmChartConfigParamsBuilder.build();
+  }
+
+  private HelmConstants.HelmVersion getHelmVersionFromService(ExecutionContext context) {
+    return serviceResourceService.getHelmVersionWithDefault(context.getAppId(),
+        ((PhaseElement) context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM))
+            .getServiceElement()
+            .getUuid());
   }
 
   private String generateRepoName(

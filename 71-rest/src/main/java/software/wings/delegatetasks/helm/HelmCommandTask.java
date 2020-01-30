@@ -117,7 +117,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
     executionLogCallback.saveExecutionLog(
         "Setting KubeConfig\nKUBECONFIG_PATH=" + configLocation, LogLevel.INFO, CommandExecutionStatus.RUNNING);
 
-    ensureHelmCliAndTillerInstalled(helmCommandRequest);
+    ensureHelmInstalled(helmCommandRequest);
     executionLogCallback.saveExecutionLog("\nDone.", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
   }
 
@@ -127,12 +127,12 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
                      : new NoopExecutionCallback();
   }
 
-  private void ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) throws Exception {
+  private void ensureHelmInstalled(HelmCommandRequest helmCommandRequest) {
     LogCallback executionLogCallback = helmCommandRequest.getExecutionLogCallback();
 
-    executionLogCallback.saveExecutionLog(
-        "Finding helm client and server version", LogLevel.INFO, CommandExecutionStatus.RUNNING);
-    HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmCliAndTillerInstalled(helmCommandRequest);
+    executionLogCallback.saveExecutionLog("Finding helm version", LogLevel.INFO, CommandExecutionStatus.RUNNING);
+
+    HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmInstalled(helmCommandRequest);
     logger.info(helmCommandResponse.getOutput());
     executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
   }

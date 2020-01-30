@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.EncryptDecryptException;
+import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AllowedValueYaml;
@@ -33,6 +34,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableBuilder;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.service.impl.yaml.handler.ArtifactVariableYamlHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.ServiceVariableYamlHelper;
@@ -78,6 +80,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     AppContainer appContainer = service.getAppContainer();
     String applicationStack = appContainer != null ? appContainer.getName() : null;
     String deploymentType = service.getDeploymentType() != null ? service.getDeploymentType().name() : null;
+    String helmVersion = service.getHelmVersion() != null ? service.getHelmVersion().toString() : null;
 
     YamlBuilder yamlBuilder = Yaml.builder()
                                   .harnessApiVersion(getHarnessApiVersion())
@@ -86,7 +89,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
                                   .deploymentType(deploymentType)
                                   .configMapYaml(service.getConfigMapYaml())
                                   .configVariables(nameValuePairList)
-                                  .applicationStack(applicationStack);
+                                  .applicationStack(applicationStack)
+                                  .helmVersion(helmVersion);
 
     Yaml yaml = yamlBuilder.build();
     updateYamlWithAdditionalInfo(service, appId, yaml);
@@ -155,6 +159,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       notNullCheck("No application stack found with the given name: " + applicationStack, appContainer, USER);
       currentService.setAppContainer(appContainer);
     }
+    setHelmVersion(yaml, currentService);
     Service previousService = get(accountId, yamlFilePath);
 
     boolean syncFromGit = changeContext.getChange().isSyncFromGit();
@@ -188,6 +193,17 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
 
     changeContext.setEntity(currentService);
     return currentService;
+  }
+
+  void setHelmVersion(Yaml yaml, Service currentService) {
+    if (yaml.getHelmVersion() != null) {
+      try {
+        HelmVersion helmVersion = HelmVersion.valueOf(yaml.getHelmVersion());
+        currentService.setHelmVersion(helmVersion);
+      } catch (IllegalArgumentException enumNotFound) {
+        throw new InvalidRequestException("helmVersion must be one of: " + Arrays.toString(HelmVersion.values()));
+      }
+    }
   }
 
   @Override

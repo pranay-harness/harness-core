@@ -2,6 +2,7 @@ package io.harness.delegate.configuration;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.AVMOHAN;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -48,6 +49,7 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetOcPath() throws Exception {
+    setStaticFieldValue(InstallUtils.class, "ocPath", "oc");
     assertThat(InstallUtils.getOcPath()).isEqualTo("oc");
 
     setStaticFieldValue(InstallUtils.class, "ocPath", "path_to_oc");
@@ -86,5 +88,33 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
     if (file.exists()) {
       org.apache.commons.io.FileUtils.deleteDirectory(file);
     }
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testisHelmV2() {
+    assertThat(InstallUtils.isHelmV2("V2")).isTrue();
+    assertThat(InstallUtils.isHelmV2("v2")).isTrue();
+    assertThat(InstallUtils.isHelmV2("V3")).isFalse();
+    assertThat(InstallUtils.isHelmV2("v3")).isFalse();
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testisHelmV3() {
+    assertThat(InstallUtils.isHelmV3("V3")).isTrue();
+    assertThat(InstallUtils.isHelmV3("v3")).isTrue();
+    assertThat(InstallUtils.isHelmV3("V2")).isFalse();
+    assertThat(InstallUtils.isHelmV3("v2")).isFalse();
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetHelmPath() {
+    assertThat(InstallUtils.getHelm2Path()).isNotNull();
+    assertThat(InstallUtils.getHelm3Path()).isNotNull();
   }
 }
