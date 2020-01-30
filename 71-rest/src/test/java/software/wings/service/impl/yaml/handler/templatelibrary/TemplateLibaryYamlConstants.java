@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.templatelibrary;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
+import static software.wings.common.TemplateConstants.ARTIFACT_SOURCE;
 import static software.wings.common.TemplateConstants.HTTP;
 import static software.wings.common.TemplateConstants.SHELL_SCRIPT;
 import static software.wings.common.TemplateConstants.SSH;
@@ -15,6 +16,9 @@ import software.wings.beans.command.ProcessCheckRunningCommandUnit;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
+import software.wings.beans.template.artifactsource.CustomArtifactSourceTemplate;
+import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
@@ -256,4 +260,75 @@ public class TemplateLibaryYamlConstants {
 
   public static final String commandRefUuid = "refuuid";
   public static final String commandTemplateRefUri = "Harness/abc";
+
+  // artifact source template constants.
+  public static final String artifactTemplateName = "test-artifact-template";
+
+  public static final String VALID_ARTIFACT_TEMPLATE_WITH_VARIABLE = "harnessApiVersion: '1.0'\n"
+      + "type: ARTIFACT_SOURCE\n"
+      + "customRepositoryMapping:\n"
+      + "  artifactAttributes:\n"
+      + "  - mappedAttribute: abc\n"
+      + "    relativePath: xyz\n"
+      + "  artifactRoot: abc1\n"
+      + "  buildNoPath: xyz1\n"
+      + "script: echo 1\n"
+      + "sourceType: CUSTOM\n"
+      + "timeout: '60'\n"
+      + "variables:\n"
+      + "- description: asd\n"
+      + "  name: abc\n"
+      + "  value: xyz\n";
+
+  public static final String INVALID_ARTIFACT_TEMPLATE_WITH_VARIABLE = "harnessApiVersion: '1.0'\n"
+      + "type: ARTIFACT_SOURCE\n"
+      + "customRepositoryMapping:\n"
+      + "  artifactAttributes:\n"
+      + "  - mappedAttribute: abc\n"
+      + "    relativePath: xyz\n"
+      + "  artifactRoot: abc1\n"
+      + "  buildNoPath: xyz1\n"
+      + "script: echo 1\n"
+      + "sourceType: CUSTOM\n"
+      + "timeout: 60\n" + // Error in this line.
+      "variables:\n"
+      + "- description: asd\n"
+      + "  name: abc\n"
+      + "  value: xyz\n";
+
+  public static final BaseTemplate baseArtifactTemplateObject =
+      ArtifactSourceTemplate.builder()
+          .artifactSource(CustomArtifactSourceTemplate.builder()
+                              .script("echo 1")
+                              .timeoutSeconds("60")
+                              .customRepositoryMapping(CustomRepositoryMapping.builder()
+                                                           .artifactAttributes(Arrays.asList(
+                                                               CustomRepositoryMapping.AttributeMapping.builder()
+                                                                   .relativePath("xyz")
+                                                                   .mappedAttribute("abc")
+                                                                   .build()))
+                                                           .artifactRoot("abc1")
+                                                           .buildNoPath("xyz1")
+                                                           .build())
+                              .build())
+          .build();
+  public static final String ARTIFACT_TEMPLATE_VALID_YAML_FILE_PATH =
+      "Setup/Template Library/Harness/" + artifactTemplateName + ".yaml";
+  public static final String ARTIFACT_TEMPLATE_INVALID_YAML_FILE_PATH =
+      "Setup/Template Library/" + artifactTemplateName + ".yaml";
+  public static final Template artifactTemplateForSetup = Template.builder()
+                                                              .type(ARTIFACT_SOURCE)
+                                                              .name(artifactTemplateName)
+                                                              .accountId(GLOBAL_ACCOUNT_ID)
+                                                              .appId(GLOBAL_APP_ID)
+                                                              .build();
+
+  public static final Template expectedArtifactTemplate = Template.builder()
+                                                              .name(artifactTemplateName)
+                                                              .accountId(GLOBAL_ACCOUNT_ID)
+                                                              .type(ARTIFACT_SOURCE)
+                                                              .variables(Arrays.asList(variable))
+                                                              .appId(GLOBAL_APP_ID)
+                                                              .templateObject(baseArtifactTemplateObject)
+                                                              .build();
 }
