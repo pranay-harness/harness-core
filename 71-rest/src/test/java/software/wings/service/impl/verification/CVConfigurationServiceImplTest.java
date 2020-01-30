@@ -7,12 +7,14 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.sm.StateType.APM_VERIFICATION;
 
@@ -25,6 +27,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.fabric8.utils.Lists;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.VerificationOperationException;
+import io.harness.limits.impl.model.StaticLimit;
 import io.harness.rule.Owner;
 import io.harness.serializer.YamlUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -35,15 +38,22 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
+import software.wings.beans.APMVerificationConfig;
+import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.UsageLimitExceededAlert;
+import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.analysis.TimeSeriesKeyTransactions;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
@@ -84,19 +94,22 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private AlertService alertService;
+  @Inject private ContinuousVerificationService continuousVerificationService;
 
   private String accountId;
   private String appId;
 
   @Before
   public void setupTest() throws Exception {
-    accountId = generateUuid();
-    appId = generateUuid();
+    accountId = wingsPersistence.save(anAccount().withAccountName(generateUuid()).build());
+    appId =
+        wingsPersistence.save(Application.Builder.anApplication().name(generateUuid()).accountId(accountId).build());
     MockitoAnnotations.initMocks(this);
     when(featureFlagService.isEnabled(FeatureName.CUSTOM_LOGS_SERVICEGUARD, accountId)).thenReturn(true);
     FieldUtils.writeField(cvConfigurationService, "featureFlagService", featureFlagService, true);
@@ -976,9 +989,102 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     assertThat(transactions).isNull();
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testWhenDeleteConfiguration_DeletesAlerts() {
+    final APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
+    apmVerificationConfig.setAccountId(accountId);
+    final String connectorId = wingsPersistence.save(SettingAttribute.Builder.aSettingAttribute()
+                                                         .withAccountId(accountId)
+                                                         .withAppId(appId)
+                                                         .withName(generateUuid())
+                                                         .withValue(apmVerificationConfig)
+                                                         .build());
+    APMCVServiceConfiguration config1 = createAPMCVConfig(true);
+    config1.setConnectorId(connectorId);
+    APMCVServiceConfiguration config2 = createAPMCVConfig(true);
+    config2.setConnectorId(connectorId);
+
+    final String configId1 = cvConfigurationService.saveConfiguration(
+        config1.getAccountId(), config1.getAppId(), StateType.APM_VERIFICATION, config1);
+    final String configId2 = cvConfigurationService.saveConfiguration(
+        config2.getAccountId(), config2.getAppId(), StateType.APM_VERIFICATION, config2);
+
+    int numOfAlertsForCvConfig1 = 7;
+    int numOfAlertsForCvConfig2 = 5;
+    int numOfNonCvAlert = 9;
+
+    for (int i = 0; i < numOfAlertsForCvConfig1; i++) {
+      continuousVerificationService.openAlert(configId1,
+          ContinuousVerificationAlertData.builder()
+              .alertStatus(AlertStatus.Open)
+              .mlAnalysisType(MLAnalysisType.TIME_SERIES)
+              .cvConfiguration(config1)
+              .accountId(accountId)
+              .analysisEndTime(TimeUnit.DAYS.toMillis(i))
+              .build());
+    }
+
+    for (int i = 0; i < numOfAlertsForCvConfig2; i++) {
+      continuousVerificationService.openAlert(configId2,
+          ContinuousVerificationAlertData.builder()
+              .alertStatus(AlertStatus.Open)
+              .mlAnalysisType(MLAnalysisType.TIME_SERIES)
+              .cvConfiguration(config2)
+              .accountId(accountId)
+              .analysisEndTime(TimeUnit.DAYS.toMillis(i))
+              .build());
+    }
+
+    for (int i = 0; i < numOfNonCvAlert; i++) {
+      alertService.openAlert(accountId, generateUuid(), AlertType.USAGE_LIMIT_EXCEEDED,
+          new UsageLimitExceededAlert(accountId, new StaticLimit(10), generateUuid()));
+    }
+
+    long numOfOpenAlerts = waitTillAlertsSteady(numOfAlertsForCvConfig1 + numOfAlertsForCvConfig2 + numOfNonCvAlert);
+    assertThat(numOfOpenAlerts).isEqualTo(numOfAlertsForCvConfig1 + numOfAlertsForCvConfig2 + numOfNonCvAlert);
+    assertThat(wingsPersistence.createQuery(Alert.class, excludeAuthority)
+                   .filter(AlertKeys.status, AlertStatus.Closed)
+                   .count())
+        .isEqualTo(0);
+
+    cvConfigurationService.deleteConfiguration(accountId, appId, configId1);
+
+    numOfOpenAlerts = waitTillAlertsSteady(numOfAlertsForCvConfig2 + numOfNonCvAlert);
+    assertThat(numOfOpenAlerts).isEqualTo(numOfAlertsForCvConfig2 + numOfNonCvAlert);
+    assertThat(wingsPersistence.createQuery(Alert.class, excludeAuthority)
+                   .filter(AlertKeys.status, AlertStatus.Closed)
+                   .count())
+        .isEqualTo(numOfAlertsForCvConfig1);
+
+    cvConfigurationService.deleteConfiguration(accountId, appId, configId2);
+    numOfOpenAlerts = waitTillAlertsSteady(numOfNonCvAlert);
+    assertThat(numOfOpenAlerts).isEqualTo(numOfNonCvAlert);
+    assertThat(wingsPersistence.createQuery(Alert.class, excludeAuthority)
+                   .filter(AlertKeys.status, AlertStatus.Closed)
+                   .count())
+        .isEqualTo(numOfAlertsForCvConfig1 + numOfAlertsForCvConfig2);
+  }
+
+  private long waitTillAlertsSteady(long numOfExpectedAlerts) {
+    long numOfOpenAlerts;
+    int numOfTrials = 0;
+    do {
+      numOfOpenAlerts = wingsPersistence.createQuery(Alert.class, excludeAuthority)
+                            .filter(AlertKeys.status, AlertStatus.Open)
+                            .count();
+      numOfTrials++;
+      log().info("trial: {} numOfAlerts: {}", numOfTrials, numOfOpenAlerts);
+      sleep(ofMillis(100));
+    } while (numOfTrials < 50 && numOfOpenAlerts != numOfExpectedAlerts);
+    return numOfOpenAlerts;
+  }
+
   private APMCVServiceConfiguration createAPMCVConfig(boolean enabled24x7) {
     APMCVServiceConfiguration apmcvServiceConfiguration = new APMCVServiceConfiguration();
-    apmcvServiceConfiguration.setName("APM config");
+    apmcvServiceConfiguration.setName("APM config " + generateUuid());
+    apmcvServiceConfiguration.setAccountId(accountId);
     apmcvServiceConfiguration.setAppId(appId);
     apmcvServiceConfiguration.setEnvId(generateUuid());
     apmcvServiceConfiguration.setServiceId(generateUuid());

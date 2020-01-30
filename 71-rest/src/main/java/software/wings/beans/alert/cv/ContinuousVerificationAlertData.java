@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "ContinuousVerificationAlertDataKeys")
 public class ContinuousVerificationAlertData implements AlertData {
   private static final Logger log = LoggerFactory.getLogger(ContinuousVerificationAlertData.class);
   public static final String DEFAULT_TIME_FORMAT = "MMM dd' 'hh:mm a z";
