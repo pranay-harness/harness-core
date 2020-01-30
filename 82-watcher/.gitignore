@@ -1,4 +1,4 @@
 /target
 82-watcher.iml
-watcher.log
+watcher*.log
 msg/
