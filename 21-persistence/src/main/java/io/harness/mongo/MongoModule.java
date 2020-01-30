@@ -81,6 +81,7 @@ public class MongoModule extends DependencyProviderModule {
                                                        .serverSelectionTimeout(mongoConfig.getServerSelectionTimeout())
                                                        .maxConnectionIdleTime(mongoConfig.getMaxConnectionIdleTime())
                                                        .connectionsPerHost(mongoConfig.getConnectionsPerHost())
+                                                       .readPreference(mongoConfig.getReadPreference())
                                                        .build();
     MongoClientURI uri =
         new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(primaryMongoClientOptions));
