@@ -79,6 +79,9 @@ public class GraphNode {
                                .instanceStatusSummary(getInstanceStatusSummary())
                                .templateExpressions(getTemplateExpressions())
                                .variableOverrides(getVariableOverrides())
+                               .templateVariables(templateVariables)
+                               .templateUuid(templateUuid)
+                               .templateVersion(templateVersion)
                                .build();
     clonedNode.setProperties(getProperties());
     return clonedNode;

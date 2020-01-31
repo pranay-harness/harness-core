@@ -3387,6 +3387,26 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
+  public void shouldCloneWorkflowPhaseWithLinkedTemplate() {
+    Workflow savedWorkflow = createLinkedTemplateWorkflow();
+    assertThat(savedWorkflow).isNotNull();
+    assertThat(savedWorkflow.getLinkedTemplateUuids()).isNotEmpty().contains(TEMPLATE_ID);
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    WorkflowPhase clonedWorkflowPhase = workflowService.cloneWorkflowPhase(
+        savedWorkflow.getAppId(), savedWorkflow.getUuid(), canaryOrchestrationWorkflow.getWorkflowPhases().get(0));
+    assertThat(clonedWorkflowPhase).isNotNull();
+    assertThat(clonedWorkflowPhase.getPhaseSteps()).isNotEmpty();
+
+    PhaseStep phaseStep1 = clonedWorkflowPhase.getPhaseSteps().stream().findFirst().orElse(null);
+    assertThat(phaseStep1).isNotNull();
+    GraphNode phaseNode = phaseStep1.getSteps().stream().findFirst().orElse(null);
+    assertWorkflowPhaseTemplateStep(phaseNode);
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
   public void shouldUpdateLinkedWorkflowVariables() {
     Workflow savedWorkflow = createLinkedTemplateWorkflow();
 
