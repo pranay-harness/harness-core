@@ -80,13 +80,13 @@ public abstract class ExpressionBuilder {
   protected static final String ARTIFACT_BUCKET_KEY = "artifact.key";
   protected static final String ARTIFACT_URL = "artifact.url";
   protected static final String ARTIFACT_BUILD_FULL_DISPLAYNAME = "artifact.buildFullDisplayName";
-  protected static final String ARTIFACT_METADATA_IMAGE = "artifact." + ArtifactKeys.metadata_image;
-  protected static final String ARTIFACT_METADATA_TAG = "artifact." + ArtifactKeys.metadata_tag;
+  protected static final String ARTIFACT_METADATA_IMAGE = ARTIFACT_PREFIX + ArtifactKeys.metadata_image;
+  protected static final String ARTIFACT_METADATA_TAG = ARTIFACT_PREFIX + ArtifactKeys.metadata_tag;
   protected static final String ARTIFACT_PATH = "artifact.artifactPath";
-  protected static final String ARTIFACT_SOURCE_USER_NAME = "artifact.source." + ARTIFACT_SOURCE_USER_NAME_KEY;
-  protected static final String ARTIFACT_SOURCE_REGISTRY_URL = "artifact.source." + ARTIFACT_SOURCE_REGISTRY_URL_KEY;
-  protected static final String ARTIFACT_SOURCE_REPOSITORY_NAME =
-      "artifact.source." + ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
+  protected static final String ARTIFACT_SOURCE = "artifact.source.";
+  protected static final String ARTIFACT_SOURCE_USER_NAME = ARTIFACT_SOURCE + ARTIFACT_SOURCE_USER_NAME_KEY;
+  protected static final String ARTIFACT_SOURCE_REGISTRY_URL = ARTIFACT_SOURCE + ARTIFACT_SOURCE_REGISTRY_URL_KEY;
+  protected static final String ARTIFACT_SOURCE_REPOSITORY_NAME = ARTIFACT_SOURCE + ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
 
   protected static final String ARTIFACT_DISPLAY_NAME_SUFFIX = ".displayName";
   protected static final String ARTIFACT_DESCRIPTION_SUFFIX = ".description";

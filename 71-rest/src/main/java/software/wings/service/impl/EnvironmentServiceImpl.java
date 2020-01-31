@@ -24,7 +24,10 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.Service.ServiceKeys;
+import static software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
@@ -216,7 +219,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public Environment getEnvironmentByName(String appId, String environmentName, boolean withServiceTemplates) {
     Environment environment = wingsPersistence.createQuery(Environment.class)
-                                  .filter("appId", appId)
+                                  .filter(EnvironmentKeys.appId, appId)
                                   .filter(EnvironmentKeys.name, environmentName)
                                   .get();
     if (environment != null) {
@@ -229,14 +232,17 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public boolean exist(@NotEmpty String appId, @NotEmpty String envId) {
-    return wingsPersistence.createQuery(Environment.class).filter("appId", appId).filter(ID_KEY, envId).getKey()
+    return wingsPersistence.createQuery(Environment.class)
+               .filter(EnvironmentKeys.appId, appId)
+               .filter(ID_KEY, envId)
+               .getKey()
         != null;
   }
 
   private void addServiceTemplates(Environment environment) {
     PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("appId", EQ, environment.getAppId());
-    pageRequest.addFilter("envId", EQ, environment.getUuid());
+    pageRequest.addFilter(ServiceTemplateKeys.appId, EQ, environment.getAppId());
+    pageRequest.addFilter(ServiceTemplateKeys.envId, EQ, environment.getUuid());
     environment.setServiceTemplates(serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE).getResponse());
   }
 
@@ -246,7 +252,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public Map<String, String> getData(String appId, Map<String, String> params) {
     PageRequest<Environment> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("appId", EQ, appId);
+    pageRequest.addFilter(EnvironmentKeys.appId, EQ, appId);
     return list(pageRequest, false, false, null).stream().collect(toMap(Environment::getUuid, Environment::getName));
   }
 
@@ -445,9 +451,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     if (!serviceIds.isEmpty()) {
       PageRequest<Service> pageRequest = aPageRequest()
                                              .withLimit(UNLIMITED)
-                                             .addFilter("appId", EQ, environment.getAppId())
-                                             .addFilter("uuid", IN, serviceIds.toArray())
-                                             .addFieldsExcluded("appContainer")
+                                             .addFilter(ServiceKeys.appId, EQ, environment.getAppId())
+                                             .addFilter(ServiceKeys.uuid, IN, serviceIds.toArray())
+                                             .addFieldsExcluded(ServiceKeys.appContainer)
                                              .build();
       services = serviceResourceService.list(pageRequest, false, false, false, null);
     }
@@ -519,7 +525,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public void pruneByApplication(String appId) {
-    List<Environment> environments = wingsPersistence.createQuery(Environment.class).filter("appId", appId).asList();
+    List<Environment> environments =
+        wingsPersistence.createQuery(Environment.class).filter(EnvironmentKeys.appId, appId).asList();
     environments.forEach(environment -> {
       wingsPersistence.delete(environment);
       auditServiceHelper.reportDeleteForAuditing(appId, environment);
@@ -537,7 +544,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public List<Environment> getEnvByApp(String appId) {
-    PageRequest<Environment> pageRequest = aPageRequest().addFilter("appId", EQ, appId).build();
+    PageRequest<Environment> pageRequest = aPageRequest().addFilter(EnvironmentKeys.appId, EQ, appId).build();
     return wingsPersistence.query(Environment.class, pageRequest).getResponse();
   }
 
@@ -551,7 +558,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public List<String> getEnvIdsByApp(String appId) {
     List<Key<Environment>> environmentKeyList =
-        wingsPersistence.createQuery(Environment.class).filter("appId", appId).asKeyList();
+        wingsPersistence.createQuery(Environment.class).filter(EnvironmentKeys.appId, appId).asKeyList();
     return environmentKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toList());
   }
 
@@ -561,7 +568,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       return new HashMap<>();
     }
     PageRequest<Environment> pageRequest = aPageRequest()
-                                               .addFilter("appId", Operator.IN, appIds.toArray())
+                                               .addFilter(EnvironmentKeys.appId, Operator.IN, appIds.toArray())
                                                .addFieldsIncluded("_id", "appId", "environmentType")
                                                .build();
 
@@ -600,9 +607,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           PageRequest<ServiceTemplate> serviceTemplatePageRequest =
               aPageRequest()
                   .withLimit(UNLIMITED)
-                  .addFilter("appId", EQ, appId)
-                  .addFilter("envId", EQ, savedClonedEnv.getUuid())
-                  .addFilter("serviceId", EQ, serviceTemplate.getServiceId())
+                  .addFilter(ServiceTemplateKeys.appId, EQ, appId)
+                  .addFilter(ServiceTemplateKeys.envId, EQ, savedClonedEnv.getUuid())
+                  .addFilter(ServiceTemplateKeys.serviceId, EQ, serviceTemplate.getServiceId())
                   .build();
 
           List<ServiceTemplate> serviceTemplateList =
@@ -647,8 +654,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         }
       }
       // Clone ALL service variable overrides
-      PageRequest<ServiceVariable> serviceVariablePageRequest =
-          aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFilter("entityId", EQ, envId).build();
+      PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
+                                                                    .withLimit(UNLIMITED)
+                                                                    .addFilter(ServiceVariableKeys.appId, EQ, appId)
+                                                                    .addFilter(ServiceVariableKeys.entityId, EQ, envId)
+                                                                    .build();
       List<ServiceVariable> serviceVariables = serviceVariableService.list(serviceVariablePageRequest, OBTAIN_VALUE);
       cloneServiceVariables(savedClonedEnv, serviceVariables, null, null, null);
       cloneAppManifests(savedClonedEnv.getAppId(), savedClonedEnv.getUuid(), envId);

@@ -105,6 +105,7 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class DataGenService {
+  private static final String APACHE_TOMCAT_7_0_78_TAR_GZ = "apache-tomcat-7.0.78.tar.gz";
   private static final String NEW_RELIC_CONNECTOR_NAME = "NewRelic";
   private static final int NUM_APPS = 1; /* Max 1000 */
   private static final int NUM_SERVICES_PER_APP = 1; /* Max 1000 */
@@ -412,11 +413,11 @@ public class DataGenService {
     logger.info("Creating System App Stack Catalogs");
     // Create Tomcat 7 Standard
     SystemCatalog systemCatalog;
-    if (!fileToSystemCatalog.containsKey("apache-tomcat-7.0.78.tar.gz")) {
+    if (!fileToSystemCatalog.containsKey(APACHE_TOMCAT_7_0_78_TAR_GZ)) {
       systemCatalog = aSystemCatalog()
                           .withCatalogType(APPSTACK)
                           .withName("Standard Tomcat 7")
-                          .withFileName("apache-tomcat-7.0.78.tar.gz")
+                          .withFileName(APACHE_TOMCAT_7_0_78_TAR_GZ)
                           .withAppId(GLOBAL_APP_ID)
                           .withFamily(TOMCAT)
                           .withNotes("System created.")
@@ -426,7 +427,7 @@ public class DataGenService {
       systemCatalogService.save(systemCatalog, AWS_S3_CATALOG_TOMCAT7, PLATFORMS, fileSize);
     } else {
       // call update --> Support the update
-      systemCatalog = fileToSystemCatalog.get("apache-tomcat-7.0.78.tar.gz");
+      systemCatalog = fileToSystemCatalog.get(APACHE_TOMCAT_7_0_78_TAR_GZ);
       systemCatalog.setVersion("7.0.78");
       systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT7, PLATFORMS, fileSize);
     }
