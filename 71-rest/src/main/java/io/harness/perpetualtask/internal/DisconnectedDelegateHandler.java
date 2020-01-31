@@ -15,9 +15,13 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.service.intfc.DelegateService;
 
+import java.time.Instant;
+import java.util.concurrent.TimeUnit;
+
 @Slf4j
 public class DisconnectedDelegateHandler implements Handler<Delegate> {
   private static final long ITERATOR_INTERVAL_MINUTE = 5;
+  private static long DELEGATE_TIMEOUT = TimeUnit.HOURS.toMillis(2);
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;
@@ -37,6 +41,8 @@ public class DisconnectedDelegateHandler implements Handler<Delegate> {
             .targetInterval(ofMinutes(ITERATOR_INTERVAL_MINUTE))
             .acceptableNoAlertDelay(ofSeconds(45))
             .handler(this)
+            .filterExpander(q
+                -> q.criteria(DelegateKeys.lastHeartBeat).greaterThan(Instant.now().toEpochMilli() - DELEGATE_TIMEOUT))
             .schedulingType(REGULAR)
             .redistribute(true));
   }
