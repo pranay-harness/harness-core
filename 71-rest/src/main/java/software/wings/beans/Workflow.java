@@ -47,7 +47,6 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Workflow extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
   public static final String NAME_KEY = "name";
-  public static final String LINKED_TEMPLATE_UUIDS_KEY = "linkedTemplateUuids";
   public static final String ORCHESTRATION_KEY = "orchestration";
 
   @NotNull @EntityName private String name;

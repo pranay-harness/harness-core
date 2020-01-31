@@ -44,6 +44,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateType;
@@ -186,8 +187,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
 
     when(wingsPersistence.createQuery(Workflow.class, excludeAuthority)).thenReturn(query);
 
-    when(query.field(Workflow.LINKED_TEMPLATE_UUIDS_KEY)).thenReturn(end);
-    when(end.contains(savedTemplate.getUuid())).thenReturn(query);
+    when(query.filter(WorkflowKeys.linkedTemplateUuids, savedTemplate.getUuid())).thenReturn(query);
     when(query.fetch()).thenReturn(workflowIterator);
     when(workflowIterator.getCursor()).thenReturn(dbCursor);
     when(workflowIterator.hasNext()).thenReturn(true).thenReturn(false);

@@ -2648,16 +2648,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public List<Service> listByArtifactStreamId(String appId, String artifactStreamId) {
     return wingsPersistence.createQuery(Service.class)
         .filter(Service.APP_ID_KEY, appId)
-        .field(ServiceKeys.artifactStreamIds)
-        .contains(artifactStreamId)
+        .filter(ServiceKeys.artifactStreamIds, artifactStreamId)
         .asList();
   }
 
   @Override
   public List<Service> listByArtifactStreamId(String artifactStreamId) {
     return wingsPersistence.createQuery(Service.class, excludeAuthority)
-        .field(ServiceKeys.artifactStreamIds)
-        .contains(artifactStreamId)
+        .filter(ServiceKeys.artifactStreamIds, artifactStreamId)
         .asList();
   }
 

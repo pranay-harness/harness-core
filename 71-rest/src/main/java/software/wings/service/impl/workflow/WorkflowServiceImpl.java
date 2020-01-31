@@ -608,8 +608,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public List<Workflow> listWorkflows(String artifactStreamId, String accountId) {
     List<Workflow> workflows = wingsPersistence.createQuery(Workflow.class)
-                                   .field(WorkflowKeys.linkedArtifactStreamIds)
-                                   .contains(artifactStreamId)
+                                   .filter(WorkflowKeys.linkedArtifactStreamIds, artifactStreamId)
                                    .filter(WorkflowKeys.accountId, accountId)
                                    .project(WorkflowKeys.name, true)
                                    .project(WorkflowKeys.uuid, true)
