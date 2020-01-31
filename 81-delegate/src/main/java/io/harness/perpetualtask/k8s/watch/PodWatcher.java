@@ -23,6 +23,7 @@ import io.harness.grpc.utils.HTimestamps;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -73,7 +74,8 @@ public class PodWatcher implements Watcher<Pod> {
                             .setTotalResource(K8sResourceUtils.getTotalResourceRequest(pod.getSpec().getContainers()))
                             .setCreationTimestamp(creationTimestamp)
                             .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
-                            .putAllLabels(pod.getMetadata().getLabels())
+                            .putAllLabels(pod.getMetadata().getLabels() != null ? pod.getMetadata().getLabels()
+                                                                                : Collections.emptyMap())
                             .setTopLevelOwner(K8sWorkloadUtils.getTopLevelOwner(client, pod))
                             .build();
 

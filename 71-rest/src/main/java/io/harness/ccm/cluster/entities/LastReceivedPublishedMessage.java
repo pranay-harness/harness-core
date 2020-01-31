@@ -1,7 +1,7 @@
 package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
-import io.harness.ccm.cluster.entities.K8sWorkload.K8sWorkloadKeys;
+import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage.LastReceivedPublishedMessageKeys;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -20,31 +20,23 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 
-import java.util.Map;
-
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
-@Entity(value = "k8sWorkload", noClassnameStored = true)
+@Entity(value = "lastReceivedPublishedMessage", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "no_dup_cluster", unique = true), fields = {
-    @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.uid)
+  @Index(options = @IndexOptions(name = "no_dup", unique = true), fields = {
+    @Field(LastReceivedPublishedMessageKeys.accountId), @Field(LastReceivedPublishedMessageKeys.identifier)
   })
 })
-@FieldNameConstants(innerTypeName = "K8sWorkloadKeys")
-public class K8sWorkload implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+@FieldNameConstants(innerTypeName = "LastReceivedPublishedMessageKeys")
+public class LastReceivedPublishedMessage
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
+  @NotEmpty String accountId;
+  @NotEmpty String identifier;
+  long lastReceivedAt;
   long createdAt;
   long lastUpdatedAt;
-
-  @NotEmpty String accountId;
-  @NotEmpty String clusterId;
-  @NotEmpty String settingId;
-
-  @NotEmpty String name;
-  @NotEmpty String namespace;
-  @NotEmpty String uid;
-  @NotEmpty String kind;
-  Map<String, String> labels;
 }

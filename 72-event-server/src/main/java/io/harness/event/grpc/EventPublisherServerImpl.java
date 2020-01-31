@@ -11,6 +11,7 @@ import io.grpc.stub.StreamObserver;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.PublishRequest;
 import io.harness.event.PublishResponse;
+import io.harness.event.service.intfc.LastReceivedPublishedMessageRepository;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
@@ -24,10 +25,13 @@ import java.util.stream.Collectors;
 @Singleton
 public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherImplBase {
   private final HPersistence hPersistence;
+  private final LastReceivedPublishedMessageRepository lastReceivedPublishedMessageRepository;
 
   @Inject
-  public EventPublisherServerImpl(HPersistence hPersistence) {
+  public EventPublisherServerImpl(
+      HPersistence hPersistence, LastReceivedPublishedMessageRepository lastReceivedPublishedMessageRepository) {
     this.hPersistence = hPersistence;
+    this.lastReceivedPublishedMessageRepository = lastReceivedPublishedMessageRepository;
   }
 
   @Override
@@ -52,6 +56,11 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
       logger.warn("Encountered error while persisting messages", e);
       responseObserver.onError(Status.INTERNAL.withCause(e).asException());
       return;
+    }
+    try {
+      lastReceivedPublishedMessageRepository.updateLastReceivedPublishedMessages(publishedMessages);
+    } catch (Exception e) {
+      logger.warn("Error while persisting last received data", e);
     }
     logger.info("Published messages persisted");
     responseObserver.onNext(PublishResponse.newBuilder().build());
