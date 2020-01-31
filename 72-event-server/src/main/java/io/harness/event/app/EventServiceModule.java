@@ -12,6 +12,8 @@ import com.google.inject.multibindings.Multibinder;
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
 import io.harness.event.grpc.EventPublisherServerImpl;
+import io.harness.event.service.impl.LastReceivedPublishedMessageRepositoryImpl;
+import io.harness.event.service.intfc.LastReceivedPublishedMessageRepository;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.server.GrpcServerModule;
 import io.harness.persistence.HPersistence;
@@ -38,6 +40,7 @@ public class EventServiceModule extends AbstractModule {
     bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
     bind(KeySource.class).to(AccountKeySource.class).in(Singleton.class);
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
+    bind(LastReceivedPublishedMessageRepository.class).to(LastReceivedPublishedMessageRepositoryImpl.class);
 
     Multibinder<BindableService> bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class);
     bindableServiceMultibinder.addBinding().to(EventPublisherServerImpl.class);
