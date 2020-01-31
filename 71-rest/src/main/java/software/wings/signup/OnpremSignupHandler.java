@@ -4,6 +4,7 @@ import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
@@ -21,6 +22,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.signup.SignupException;
 
 @Slf4j
+@Singleton
 public class OnpremSignupHandler implements SignupHandler {
   @Inject private SignupService signupService;
   @Inject private UserService userService;
@@ -37,8 +39,10 @@ public class OnpremSignupHandler implements SignupHandler {
   }
 
   private void validate(UserInvite userInvite) {
-    validateDeployMode();
-    validateCountOfAccount();
+    if (!mainConfiguration.isTrialRegistrationAllowedForHackathon()) {
+      validateDeployMode();
+      validateCountOfAccount();
+    }
     signupService.validateEmail(userInvite.getEmail());
     signupService.validatePassword(userInvite.getPassword());
   }

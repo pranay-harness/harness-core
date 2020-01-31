@@ -101,6 +101,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("kubectlVersion") private String kubectlVersion;
   @JsonProperty("ocVersion") private String ocVersion;
   @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
+  @JsonProperty("trialRegistrationAllowedForHackathon") private boolean trialRegistrationAllowedForHackathon;
   @JsonProperty("blacklistedEmailDomainsAllowed") private boolean blacklistedEmailDomainsAllowed;
   @JsonProperty("pwnedPasswordsAllowed") private boolean pwnedPasswordsAllowed;
   @JsonProperty("executionLogStorageMode") private DataStorageMode executionLogsStorageMode;

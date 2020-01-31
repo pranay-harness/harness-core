@@ -43,6 +43,7 @@ serviceScheduler:
 
 enableIterators: true
 trialRegistrationAllowed: true
+trialRegistrationAllowedForHackathon: true
 blacklistedEmailDomainsAllowed: true
 pwnedPasswordsAllowed: true
 executionLogStorageMode: MONGO
