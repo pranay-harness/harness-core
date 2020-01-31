@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.environment.batch;
 
 import com.google.inject.Inject;
 
+import io.harness.persistence.HIterator;
 import io.harness.persistence.HQuery;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -47,11 +48,14 @@ public class EnvironmentBatchDataLoader implements MappedBatchLoader<String, QLE
                                    .field(EnvironmentKeys.uuid)
                                    .in(environmentIds);
     Map<String, QLEnvironment> environmentMap = new HashMap<>();
-    query.iterator().forEachRemaining(environment -> {
-      final QLEnvironmentBuilder builder = QLEnvironment.builder();
-      EnvironmentController.populateEnvironment(environment, builder);
-      environmentMap.put(environment.getUuid(), builder.build());
-    });
+
+    try (HIterator<Environment> environments = new HIterator<>(query.fetch())) {
+      environments.forEach(environment -> {
+        final QLEnvironmentBuilder builder = QLEnvironment.builder();
+        EnvironmentController.populateEnvironment(environment, builder);
+        environmentMap.put(environment.getUuid(), builder.build());
+      });
+    }
     return environmentMap;
   }
 }
