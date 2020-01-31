@@ -171,8 +171,8 @@ public class CVTaskServiceTest extends VerificationBaseTest {
   public void testIfCVTaskValidUntilIsBeingSetToOneMonth() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId();
     assertThat(cvTask.getValidUntil().getTime() > Instant.now().toEpochMilli()).isTrue();
-    assertThat(cvTask.getValidUntil().getTime() > Instant.now().plus(29, ChronoUnit.DAYS).toEpochMilli()
-        && cvTask.getValidUntil().getTime() < Instant.now().plus(31, ChronoUnit.DAYS).toEpochMilli())
+    assertThat(cvTask.getValidUntil().getTime() >= Instant.now().plus(28, ChronoUnit.DAYS).toEpochMilli()
+        && cvTask.getValidUntil().getTime() <= Instant.now().plus(31, ChronoUnit.DAYS).toEpochMilli())
         .isTrue();
   }
 
