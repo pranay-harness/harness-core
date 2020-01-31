@@ -12,6 +12,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.search.framework.ChangeHandler;
+import software.wings.search.framework.ElasticsearchRequestHandler;
 import software.wings.search.framework.SearchEntity;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 public class PipelineSearchEntity implements SearchEntity<Pipeline> {
   @Inject private PipelineChangeHandler pipelineChangeHandler;
   @Inject private PipelineViewBuilder pipelineViewBuilder;
+  @Inject private PipelineElasticsearchRequestHandler pipelineSearchRequestHandler;
 
   public static final String TYPE = "pipelines";
   public static final String VERSION = "0.1";
@@ -63,6 +65,11 @@ public class PipelineSearchEntity implements SearchEntity<Pipeline> {
   @Override
   public ChangeHandler getChangeHandler() {
     return pipelineChangeHandler;
+  }
+
+  @Override
+  public ElasticsearchRequestHandler getElasticsearchRequestHandler() {
+    return pipelineSearchRequestHandler;
   }
 
   @Override

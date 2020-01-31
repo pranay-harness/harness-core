@@ -12,6 +12,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.search.framework.ChangeHandler;
+import software.wings.search.framework.ElasticsearchRequestHandler;
 import software.wings.search.framework.SearchEntity;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 public class ServiceSearchEntity implements SearchEntity<Service> {
   @Inject private ServiceViewBuilder serviceViewBuilder;
   @Inject private ServiceChangeHandler serviceChangeHandler;
+  @Inject private ServiceElasticsearchRequestHandler serviceSearchRequestHandler;
 
   public static final String TYPE = "services";
   public static final String VERSION = "0.1";
@@ -63,6 +65,11 @@ public class ServiceSearchEntity implements SearchEntity<Service> {
   @Override
   public ChangeHandler getChangeHandler() {
     return serviceChangeHandler;
+  }
+
+  @Override
+  public ElasticsearchRequestHandler getElasticsearchRequestHandler() {
+    return serviceSearchRequestHandler;
   }
 
   @Override
