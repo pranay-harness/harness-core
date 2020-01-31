@@ -25,7 +25,8 @@ public class TemplateFolderGenerator {
   public enum TemplateFolders {
     TEMPLATE_FOLDER_SHELL_SCRIPTS,
     TEMPLATE_FOLDER_SERVICE_COMMANDS,
-    APP_FOLDER_SHELL_SCRIPTS
+    APP_FOLDER_SHELL_SCRIPTS,
+    TEMPLATE_FOLDER_PCF_COMMANDS
   }
 
   public TemplateFolder ensurePredefined(
@@ -43,6 +44,9 @@ public class TemplateFolderGenerator {
                 .name("App-Functional Test Folder - " + System.currentTimeMillis())
                 .appId(appId)
                 .build());
+      case TEMPLATE_FOLDER_PCF_COMMANDS:
+        return ensureTemplateFolder(
+            seed, owners, TemplateFolder.builder().name("Functional Test - PCF Commands").appId(appId).build());
       default:
         unhandled(predefined);
     }
