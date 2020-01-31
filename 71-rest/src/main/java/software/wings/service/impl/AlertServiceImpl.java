@@ -347,16 +347,18 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.createQuery(Alert.class)
-        .filter(AlertKeys.accountId, accountId)
-        .forEach(alert -> wingsPersistence.delete(alert));
+    try (HIterator<Alert> alerts = new HIterator<>(
+             wingsPersistence.createQuery(Alert.class).filter(AlertKeys.accountId, accountId).fetch())) {
+      alerts.forEach(alert -> wingsPersistence.delete(alert));
+    }
   }
 
   @Override
   public void pruneByApplication(String appId) {
-    wingsPersistence.createQuery(Alert.class)
-        .filter(AlertKeys.appId, appId)
-        .forEach(alert -> wingsPersistence.delete(alert));
+    try (HIterator<Alert> alerts =
+             new HIterator<>(wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).fetch())) {
+      alerts.forEach(alert -> wingsPersistence.delete(alert));
+    }
   }
 
   @Override

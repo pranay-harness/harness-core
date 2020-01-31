@@ -382,12 +382,16 @@ public class SettingsServiceImpl implements SettingsService {
 
       Map<String, SettingAttribute> cloudProvidersMap = new HashMap<>();
 
-      wingsPersistence.createQuery(SettingAttribute.class)
-          .filter(SettingAttributeKeys.accountId, accountId)
-          .filter(SettingAttributeKeys.appId, GLOBAL_APP_ID)
-          .field(ID_KEY)
-          .in(cloudProviderIds)
-          .forEach(settingAttribute -> { cloudProvidersMap.put(settingAttribute.getUuid(), settingAttribute); });
+      try (HIterator<SettingAttribute> settingAttributes =
+               new HIterator<>(wingsPersistence.createQuery(SettingAttribute.class)
+                                   .filter(SettingAttributeKeys.accountId, accountId)
+                                   .filter(SettingAttributeKeys.appId, GLOBAL_APP_ID)
+                                   .field(ID_KEY)
+                                   .in(cloudProviderIds)
+                                   .fetch())) {
+        settingAttributes.forEach(
+            settingAttribute -> { cloudProvidersMap.put(settingAttribute.getUuid(), settingAttribute); });
+      }
 
       helmRepoSettingAttributes.forEach(settingAttribute -> {
         String cloudProviderId = ((HelmRepoConfig) settingAttribute.getValue()).getConnectorId();
