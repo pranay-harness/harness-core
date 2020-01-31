@@ -841,8 +841,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   private void setUserStatusInAccount(String accountId, boolean enable) {
-    Query<User> query =
-        wingsPersistence.createQuery(User.class, excludeAuthority).field(UserKeys.accounts).contains(accountId);
+    Query<User> query = wingsPersistence.createQuery(User.class, excludeAuthority).filter(UserKeys.accounts, accountId);
     int count = 0;
     try (HIterator<User> records = new HIterator<>(query.fetch())) {
       for (User user : records) {
