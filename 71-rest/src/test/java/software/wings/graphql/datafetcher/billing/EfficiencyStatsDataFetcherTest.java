@@ -88,13 +88,13 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTest {
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNotNull();
     assertThat(data.getContext().getTotalCost()).isEqualTo(200.0);
-    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(46);
+    assertThat(data.getContext().getEfficiencyScore()).isEqualTo(92);
     assertThat(data.getContext().getContextName()).isEqualTo(ACCOUNT1_ID);
     assertThat(data.getEfficiencyBreakdown().getTotal()).isEqualTo(200.0);
-    assertThat(data.getEfficiencyBreakdown().getIdle()).isEqualTo(80.0);
+    assertThat(data.getEfficiencyBreakdown().getIdle()).isEqualTo(20.0);
     assertThat(data.getEfficiencyBreakdown().getUnallocated()).isEqualTo(60.0);
-    assertThat(data.getEfficiencyBreakdown().getUtilized()).isEqualTo(60.0);
-    assertThat(data.getResourceBreakdown().get(0).getInfo().getUtilized()).isEqualTo(0.3);
+    assertThat(data.getEfficiencyBreakdown().getUtilized()).isEqualTo(120.0);
+    assertThat(data.getResourceBreakdown().get(0).getInfo().getUtilized()).isEqualTo(0.6);
   }
 
   @Test

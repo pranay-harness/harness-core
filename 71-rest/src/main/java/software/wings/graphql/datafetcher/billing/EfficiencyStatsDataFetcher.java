@@ -45,8 +45,8 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
   private static final String CPU_CONSTANT = "CPU";
   private static final String MEMORY_CONSTANT = "MEMORY";
   private static final String TOTAL_COST_DESCRIPTION = "Total Cost between %s - %s";
-  private static int IDLE_COST_BASELINE = 30;
-  private static int UNALLOCATED_COST_BASELINE = 5;
+  private static int idleCostBaseline = 30;
+  private static int unallocatedCostBaseline = 5;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -66,11 +66,13 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
 
   protected QLEfficiencyStatsData getData(
       @NotNull String accountId, List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
+    boolean isClusterView = checkIfClusterFilterIsPresent(filters);
     QLIdleCostData costData = idleCostTrendStatsDataFetcher.getIdleCostData(accountId, aggregateFunction, filters);
     QLUnallocatedCost unallocatedCost =
         idleCostTrendStatsDataFetcher.getUnallocatedCostData(accountId, aggregateFunction, filters);
-    QLStatsBreakdownInfo costStats = getCostBreakdown(costData, unallocatedCost);
-    List<QLResourceStatsInfo> resourceStatsInfo = getResourceStats(costData, unallocatedCost);
+    QLStatsBreakdownInfo costStats =
+        getCostBreakdown(costData, unallocatedCost, checkIfClusterFilterIsPresent(filters));
+    List<QLResourceStatsInfo> resourceStatsInfo = getResourceStats(costData, unallocatedCost, isClusterView);
     QLContextInfo contextInfo = getContextInfo(costStats, filters, accountId);
 
     return QLEfficiencyStatsData.builder()
@@ -80,10 +82,29 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
         .build();
   }
 
-  private QLStatsBreakdownInfo getCostBreakdown(QLIdleCostData costData, QLUnallocatedCost unallocatedCostData) {
+  private boolean checkIfClusterFilterIsPresent(List<QLBillingDataFilter> filters) {
+    boolean isClusterFilter = false;
+    boolean isNamespaceOrWorkloadNameOrTaskIdOrCloudServiceNameFilter = false;
+    for (QLBillingDataFilter filter : filters) {
+      if (filter.getCluster() != null) {
+        isClusterFilter = true;
+      }
+      if (filter.getWorkloadName() != null || filter.getNamespace() != null || filter.getTaskId() != null
+          || filter.getCloudServiceName() != null) {
+        isNamespaceOrWorkloadNameOrTaskIdOrCloudServiceNameFilter = true;
+      }
+    }
+    return isClusterFilter && !isNamespaceOrWorkloadNameOrTaskIdOrCloudServiceNameFilter;
+  }
+
+  private QLStatsBreakdownInfo getCostBreakdown(
+      QLIdleCostData costData, QLUnallocatedCost unallocatedCostData, boolean isClusterView) {
     double totalCost = billingDataHelper.getRoundedDoubleValue(checkForNullValues(costData.getTotalCost()));
     double idleCost = billingDataHelper.getRoundedDoubleValue(checkForNullValues(costData.getIdleCost()));
     double unallocatedCost = validateUnallocatedCost(unallocatedCostData);
+    if (isClusterView) {
+      idleCost -= unallocatedCost;
+    }
     double utilizedCost = billingDataHelper.getRoundedDoubleValue(totalCost - idleCost - unallocatedCost);
     return QLStatsBreakdownInfo.builder()
         .total(totalCost)
@@ -93,15 +114,22 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
         .build();
   }
 
-  private List<QLResourceStatsInfo> getResourceStats(QLIdleCostData costData, QLUnallocatedCost unallocatedCostData) {
+  private List<QLResourceStatsInfo> getResourceStats(
+      QLIdleCostData costData, QLUnallocatedCost unallocatedCostData, boolean isClusterView) {
     double cpuTotal = billingDataHelper.getRoundedDoubleValue(checkForNullValues(costData.getTotalCpuCost()));
     double cpuIdleCost = billingDataHelper.getRoundedDoubleValue(checkForNullValues(costData.getCpuIdleCost()));
     double cpuUnallocated = validateCpuUnallocatedCost(unallocatedCostData);
+    if (isClusterView) {
+      cpuIdleCost -= cpuUnallocated;
+    }
     double cpuUtilizedCost = cpuTotal - cpuIdleCost - cpuUnallocated;
 
     double memoryTotal = billingDataHelper.getRoundedDoubleValue(checkForNullValues(costData.getTotalMemoryCost()));
     double memoryIdleCost = billingDataHelper.getRoundedDoubleValue(checkForNullValues(costData.getMemoryIdleCost()));
     double memoryUnallocated = validateMemoryUnallocatedCost(unallocatedCostData);
+    if (isClusterView) {
+      memoryIdleCost -= memoryUnallocated;
+    }
     double memoryUtilizedCost = memoryTotal - memoryIdleCost - memoryUnallocated;
 
     QLStatsBreakdownInfo cpuInfo = QLStatsBreakdownInfo.builder()
@@ -167,7 +195,7 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
   }
 
   private int calculateEfficiencyScore(QLStatsBreakdownInfo costStats) {
-    int utilizedBaseline = 100 - IDLE_COST_BASELINE - UNALLOCATED_COST_BASELINE;
+    int utilizedBaseline = 100 - idleCostBaseline - unallocatedCostBaseline;
     double utilized = costStats.getUtilized().doubleValue();
     double total = costStats.getTotal().doubleValue();
     double utilizedPercentage = utilized / total * 100;
