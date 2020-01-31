@@ -11,6 +11,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.impl.aws.model.AwsRequest;
 import software.wings.service.intfc.DelegateService;
 import software.wings.settings.SettingValue;
 
@@ -78,6 +79,9 @@ public class DelegateInvocationHandler implements InvocationHandler {
           if (settingValue instanceof AwsConfig) {
             return ((AwsConfig) settingValue).getTag();
           }
+        } else if (arg instanceof AwsRequest) {
+          AwsConfig awsConfig = ((AwsRequest) arg).getAwsConfig();
+          return awsConfig.getTag();
         }
       }
     }
