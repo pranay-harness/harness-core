@@ -202,6 +202,7 @@ public class KubernetesResourceTest extends CategoryTest {
     addLabelsInPodSpecUtil("daemonset.yaml", true);
     addLabelsInPodSpecUtil("statefulset.yaml", true);
     addLabelsInPodSpecUtil("secret.yaml", false);
+    addLabelsInPodSpecUtil("deployment-config_custom.yaml", true);
   }
 
   private void addLabelsInPodSpecUtil(String resourceFile, boolean verifyLabels) throws Exception {
@@ -357,5 +358,85 @@ public class KubernetesResourceTest extends CategoryTest {
     assertThat(resource.getField("spec.template.spec.volumes[1].projected.sources[1].secret.name"))
         .isEqualTo("secret-projection-2");
     assertThat(resource.getField("spec.template.spec.imagePullSecrets[0].name")).isEqualTo("image_pull_secret-2");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testDeploymentConfigCustomStrategy() throws Exception {
+    URL url = this.getClass().getResource("/deployment-config_custom.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+
+    UnaryOperator<Object> configMapRevision = t -> t + "-1";
+    UnaryOperator<Object> secretRevision = t -> t + "-2";
+    resource = resource.transformConfigMapAndSecretRef(configMapRevision, secretRevision);
+    assertThat(resource).isNotNull();
+    assertThat(resource.getField("spec.template.spec.containers[0].env[1].valueFrom.secretKeyRef.name"))
+        .isEqualTo("mysecret-2");
+    assertThat(resource.getField("spec.template.spec.containers[0].env[0].valueFrom.configMapKeyRef.name"))
+        .isEqualTo("myconfig-1");
+    assertThat(resource.getField("spec.strategy.customParams.environment[0].valueFrom.configMapKeyRef.name"))
+        .isEqualTo("customParamsName-1");
+    assertThat(resource.getField("spec.strategy.customParams.environment[1].valueFrom.secretKeyRef.name"))
+        .isEqualTo("customParamsSecretName-2");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testDeploymentConfigRollingStrategy() throws Exception {
+    URL url = this.getClass().getResource("/deployment-config-rolling.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+
+    UnaryOperator<Object> configMapRevision = t -> t + "-1";
+    UnaryOperator<Object> secretRevision = t -> t + "-2";
+    resource = resource.transformConfigMapAndSecretRef(configMapRevision, secretRevision);
+    assertThat(resource).isNotNull();
+    assertThat(resource.getField("spec.strategy.rollingParams.pre.execNewPod.env[0].valueFrom.configMapKeyRef.name"))
+        .isEqualTo("pre-varName-1");
+    assertThat(resource.getField("spec.strategy.rollingParams.pre.execNewPod.env[1].valueFrom.secretKeyRef.name"))
+        .isEqualTo("pre-secretName-2");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testDeploymentConfigRecreateStrategy() throws Exception {
+    URL url = this.getClass().getResource("/deployment-config-recreate.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+
+    UnaryOperator<Object> configMapRevision = t -> t + "-1";
+    UnaryOperator<Object> secretRevision = t -> t + "-2";
+    resource = resource.transformConfigMapAndSecretRef(configMapRevision, secretRevision);
+    assertThat(resource).isNotNull();
+    assertThat(resource.getField("spec.strategy.recreateParams.mid.execNewPod.env[0].valueFrom.configMapKeyRef.name"))
+        .isEqualTo("mid-varName-1");
+    assertThat(resource.getField("spec.strategy.recreateParams.mid.execNewPod.env[1].valueFrom.secretKeyRef.name"))
+        .isEqualTo("mid-secretName-2");
+    assertThat(resource.getField("spec.template.spec.containers[0].env[1].valueFrom.secretKeyRef.name"))
+        .isEqualTo("mysecret-2");
+    assertThat(resource.getField("spec.template.spec.containers[0].env[0].valueFrom.configMapKeyRef.name"))
+        .isEqualTo("myconfig-1");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testDeploymentConfig() throws Exception {
+    URL url = this.getClass().getResource("/deployment-config.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+
+    UnaryOperator<Object> configMapRevision = t -> t + "-1";
+    UnaryOperator<Object> secretRevision = t -> t + "-2";
+    resource = resource.transformConfigMapAndSecretRef(configMapRevision, secretRevision);
+    assertThat(resource).isNotNull();
+    assertThat(resource.getField("spec.template.spec.containers[0].env[1].valueFrom.secretKeyRef.name"))
+        .isEqualTo("mysecret-2");
+    assertThat(resource.getField("spec.template.spec.containers[0].env[0].valueFrom.configMapKeyRef.name"))
+        .isEqualTo("myconfig-1");
   }
 }

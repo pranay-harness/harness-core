@@ -156,7 +156,8 @@ public class ManifestHelper {
     return stringBuilder.toString();
   }
 
-  private static final Set<String> managedWorkloadKinds = ImmutableSet.of("Deployment", "StatefulSet", "DaemonSet");
+  private static final Set<String> managedWorkloadKinds =
+      ImmutableSet.of("Deployment", "StatefulSet", "DaemonSet", "DeploymentConfig");
 
   public static List<KubernetesResource> getWorkloads(List<KubernetesResource> resources) {
     return resources.stream()
@@ -167,7 +168,9 @@ public class ManifestHelper {
 
   public static List<KubernetesResource> getWorkloadsForCanary(List<KubernetesResource> resources) {
     return resources.stream()
-        .filter(resource -> ImmutableSet.of(Kind.Deployment.name()).contains(resource.getResourceId().getKind()))
+        .filter(resource
+            -> ImmutableSet.of(Kind.Deployment.name(), Kind.DeploymentConfig.name())
+                   .contains(resource.getResourceId().getKind()))
         .filter(resource -> !resource.isDirectApply())
         .collect(Collectors.toList());
   }
@@ -175,7 +178,9 @@ public class ManifestHelper {
   public static List<KubernetesResource> getWorkloadsForApplyState(List<KubernetesResource> resources) {
     return resources.stream()
         .filter(resource
-            -> ImmutableSet.of(Kind.Deployment.name(), Kind.StatefulSet.name(), Kind.DaemonSet.name(), Kind.Job.name())
+            -> ImmutableSet
+                   .of(Kind.Deployment.name(), Kind.StatefulSet.name(), Kind.DaemonSet.name(), Kind.Job.name(),
+                       Kind.DeploymentConfig.name())
                    .contains(resource.getResourceId().getKind()))
         .filter(resource -> !resource.isDirectApply())
         .collect(Collectors.toList());

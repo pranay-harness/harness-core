@@ -22,6 +22,7 @@ public enum Kind {
   ReplicationController,
   ReplicaSet,
   Deployment,
+  DeploymentConfig,
   StatefulSet,
   Job,
   CronJob,

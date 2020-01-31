@@ -10,6 +10,14 @@ import static io.harness.validation.Validator.notNullCheck;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.manifest.ObjectYamlUtils;
 import io.harness.k8s.manifest.ResourceUtils;
+import io.harness.k8s.model.harnesscrds.CustomDeploymentStrategyParams;
+import io.harness.k8s.model.harnesscrds.DeploymentConfig;
+import io.harness.k8s.model.harnesscrds.DeploymentConfigSpec;
+import io.harness.k8s.model.harnesscrds.DeploymentStrategy;
+import io.harness.k8s.model.harnesscrds.ExecNewPodHook;
+import io.harness.k8s.model.harnesscrds.LifecycleHook;
+import io.harness.k8s.model.harnesscrds.RecreateDeploymentStrategyParams;
+import io.harness.k8s.model.harnesscrds.RollingDeploymentStrategyParams;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1ConfigMapEnvSource;
 import io.kubernetes.client.openapi.models.V1ConfigMapKeySelector;
@@ -51,16 +59,8 @@ import java.util.function.UnaryOperator;
 @Data
 @Builder
 public class KubernetesResource {
-  private static final String DEPLOYMENT = "Deployment";
-  private static final String CONFIGMAP = "ConfigMap";
-  private static final String SECRET = "Secret";
-  private static final String SERVICE = "Service";
-  private static final String DAEMONSET = "DaemonSet";
-  private static final String STATEFULSET = "StatefulSet";
-  private static final String JOB = "Job";
-  private static final String POD = "Pod";
-
   private static final String MISSING_DEPLOYMENT_SPEC_MSG = "Deployment does not have spec";
+  private static final String MISSING_DEPLOYMENT_CONFIG_SPEC_MSG = "DeploymentConfig does not have spec";
 
   private KubernetesResourceId resourceId;
   private Object value;
@@ -205,8 +205,9 @@ public class KubernetesResource {
   private void updateName(Object k8sResource, UnaryOperator<Object> transformer) {
     String newName;
 
-    switch (this.resourceId.getKind()) {
-      case DEPLOYMENT:
+    Kind kind = Kind.valueOf(this.resourceId.getKind());
+    switch (kind) {
+      case Deployment:
         V1Deployment v1Deployment = (V1Deployment) k8sResource;
         notNullCheck("Deployment does not have metadata", v1Deployment.getMetadata());
         newName = (String) transformer.apply(v1Deployment.getMetadata().getName());
@@ -214,7 +215,7 @@ public class KubernetesResource {
         this.resourceId.setName(newName);
         break;
 
-      case CONFIGMAP:
+      case ConfigMap:
         V1ConfigMap v1ConfigMap = (V1ConfigMap) k8sResource;
         notNullCheck("ConfigMap does not have metadata", v1ConfigMap.getMetadata());
         newName = (String) transformer.apply(v1ConfigMap.getMetadata().getName());
@@ -222,7 +223,7 @@ public class KubernetesResource {
         this.resourceId.setName(newName);
         break;
 
-      case SECRET:
+      case Secret:
         V1Secret v1Secret = (V1Secret) k8sResource;
         notNullCheck("Secret does not have metadata", v1Secret.getMetadata());
         newName = (String) transformer.apply(v1Secret.getMetadata().getName());
@@ -230,7 +231,7 @@ public class KubernetesResource {
         this.resourceId.setName(newName);
         break;
 
-      case SERVICE:
+      case Service:
         V1Service v1Service = (V1Service) k8sResource;
         notNullCheck("Service does not have metadata", v1Service.getMetadata());
         newName = (String) transformer.apply(v1Service.getMetadata().getName());
@@ -283,13 +284,9 @@ public class KubernetesResource {
   public KubernetesResource transformConfigMapAndSecretRef(
       UnaryOperator<Object> configMapRefTransformer, UnaryOperator<Object> secretRefTransformer) {
     Object k8sResource = getK8sResource();
-    V1PodSpec v1PodSpec = getV1PodSpec(k8sResource);
-    if (v1PodSpec == null) {
-      return this;
-    }
 
-    updateConfigMapRef(v1PodSpec, configMapRefTransformer);
-    updateSecretRef(v1PodSpec, secretRefTransformer);
+    updateConfigMapRef(k8sResource, configMapRefTransformer);
+    updateSecretRef(k8sResource, secretRefTransformer);
 
     try {
       this.spec = Yaml.dump(k8sResource);
@@ -329,19 +326,24 @@ public class KubernetesResource {
   }
 
   private V1PodTemplateSpec getV1PodTemplateSpec(Object resource) {
-    switch (this.resourceId.getKind()) {
-      case DEPLOYMENT:
+    Kind kind = Kind.valueOf(this.resourceId.getKind());
+
+    switch (kind) {
+      case Deployment:
         notNullCheck(MISSING_DEPLOYMENT_SPEC_MSG, ((V1Deployment) resource).getSpec());
         return ((V1Deployment) resource).getSpec().getTemplate();
-      case DAEMONSET:
+      case DaemonSet:
         notNullCheck("DaemonSet does not have spec", ((V1DaemonSet) resource).getSpec());
         return ((V1DaemonSet) resource).getSpec().getTemplate();
-      case STATEFULSET:
+      case StatefulSet:
         notNullCheck("StatefulSet does not have spec", ((V1StatefulSet) resource).getSpec());
         return ((V1StatefulSet) resource).getSpec().getTemplate();
-      case JOB:
+      case Job:
         notNullCheck("Job does not have spec", ((V1Job) resource).getSpec());
         return ((V1Job) resource).getSpec().getTemplate();
+      case DeploymentConfig:
+        notNullCheck(MISSING_DEPLOYMENT_CONFIG_SPEC_MSG, ((DeploymentConfig) resource).getSpec());
+        return ((DeploymentConfig) resource).getSpec().getTemplate();
       default:
         unhandled(this.resourceId.getKind());
     }
@@ -350,22 +352,27 @@ public class KubernetesResource {
   }
 
   private V1PodSpec getV1PodSpec(Object resource) {
-    switch (this.resourceId.getKind()) {
-      case DEPLOYMENT:
+    Kind kind = Kind.valueOf(this.resourceId.getKind());
+
+    switch (kind) {
+      case Deployment:
         notNullCheck(MISSING_DEPLOYMENT_SPEC_MSG, ((V1Deployment) resource).getSpec());
         return ((V1Deployment) resource).getSpec().getTemplate().getSpec();
-      case DAEMONSET:
+      case DaemonSet:
         notNullCheck("DaemonSet does not have spec", ((V1DaemonSet) resource).getSpec());
         return ((V1DaemonSet) resource).getSpec().getTemplate().getSpec();
-      case STATEFULSET:
+      case StatefulSet:
         notNullCheck("StatefulSet does not have spec", ((V1StatefulSet) resource).getSpec());
         return ((V1StatefulSet) resource).getSpec().getTemplate().getSpec();
-      case JOB:
+      case Job:
         notNullCheck("Job does not have spec", ((V1Job) resource).getSpec());
         return ((V1Job) resource).getSpec().getTemplate().getSpec();
-      case POD:
+      case Pod:
         notNullCheck("Pod does not have spec", ((V1Pod) resource).getSpec());
         return ((V1Pod) resource).getSpec();
+      case DeploymentConfig:
+        notNullCheck(MISSING_DEPLOYMENT_CONFIG_SPEC_MSG, ((DeploymentConfig) resource).getSpec());
+        return ((DeploymentConfig) resource).getSpec().getTemplate().getSpec();
       default:
         unhandled(this.resourceId.getKind());
     }
@@ -374,33 +381,106 @@ public class KubernetesResource {
   }
 
   private Object getK8sResource() {
-    switch (this.resourceId.getKind()) {
-      case DEPLOYMENT:
+    Kind kind = Kind.valueOf(this.resourceId.getKind());
+
+    switch (kind) {
+      case Deployment:
         return Yaml.loadAs(this.spec, V1Deployment.class);
-      case DAEMONSET:
+      case DaemonSet:
         return Yaml.loadAs(this.spec, V1DaemonSet.class);
-      case STATEFULSET:
+      case StatefulSet:
         return Yaml.loadAs(this.spec, V1StatefulSet.class);
-      case JOB:
+      case Job:
         return Yaml.loadAs(this.spec, V1Job.class);
-      case SERVICE:
+      case Service:
         return Yaml.loadAs(this.spec, V1Service.class);
-      case SECRET:
+      case Secret:
         return Yaml.loadAs(this.spec, V1Secret.class);
-      case CONFIGMAP:
+      case ConfigMap:
         return Yaml.loadAs(this.spec, V1ConfigMap.class);
-      case POD:
+      case Pod:
         return Yaml.loadAs(this.spec, V1Pod.class);
+      case DeploymentConfig:
+        return Yaml.loadAs(this.spec, DeploymentConfig.class);
       default:
         unhandled(this.resourceId.getKind());
         throw new KubernetesYamlException("Unhandled Kubernetes resource " + this.resourceId.getKind());
     }
   }
 
-  private void updateConfigMapRef(V1PodSpec v1PodSpec, UnaryOperator<Object> transformer) {
-    updateConfigMapRefInContainers(v1PodSpec.getContainers(), transformer);
-    updateConfigMapRefInContainers(v1PodSpec.getInitContainers(), transformer);
-    updateConfigMapRefInVolumes(v1PodSpec, transformer);
+  private void updateConfigMapRef(Object k8sResource, UnaryOperator<Object> transformer) {
+    V1PodSpec v1PodSpec = getV1PodSpec(k8sResource);
+    if (v1PodSpec != null) {
+      updateConfigMapRefInContainers(v1PodSpec.getContainers(), transformer);
+      updateConfigMapRefInContainers(v1PodSpec.getInitContainers(), transformer);
+      updateConfigMapRefInVolumes(v1PodSpec, transformer);
+    }
+
+    // Handling for DeploymentConfig
+    updateRefInDeploymentConfigStrategy(k8sResource, transformer, true);
+  }
+
+  private void updateRefInDeploymentConfigStrategy(
+      Object k8sResource, UnaryOperator<Object> transformer, boolean isConfigMap) {
+    if (!(k8sResource instanceof DeploymentConfig)) {
+      return;
+    }
+
+    DeploymentConfigSpec deploymentConfigSpec = ((DeploymentConfig) k8sResource).getSpec();
+    if (deploymentConfigSpec == null) {
+      return;
+    }
+
+    DeploymentStrategy strategy = deploymentConfigSpec.getStrategy();
+    if (strategy == null) {
+      return;
+    }
+
+    CustomDeploymentStrategyParams customParams = strategy.getCustomParams();
+    if (customParams != null) {
+      List<V1EnvVar> environment = customParams.getEnvironment();
+      if (isNotEmpty(environment)) {
+        for (V1EnvVar v1EnvVar : environment) {
+          if (isConfigMap) {
+            updateConfigMapInEnvVars(v1EnvVar, transformer);
+          } else {
+            updateSecretRefInEnvVar(v1EnvVar, transformer);
+          }
+        }
+      }
+    }
+
+    RecreateDeploymentStrategyParams recreateParams = strategy.getRecreateParams();
+    if (recreateParams != null) {
+      updateRefInLifecycleHook(recreateParams.getPre(), transformer, isConfigMap);
+      updateRefInLifecycleHook(recreateParams.getMid(), transformer, isConfigMap);
+      updateRefInLifecycleHook(recreateParams.getPost(), transformer, isConfigMap);
+    }
+
+    RollingDeploymentStrategyParams rollingParams = strategy.getRollingParams();
+    if (rollingParams != null) {
+      updateRefInLifecycleHook(rollingParams.getPre(), transformer, isConfigMap);
+      updateRefInLifecycleHook(rollingParams.getPost(), transformer, isConfigMap);
+    }
+  }
+
+  private void updateRefInLifecycleHook(
+      LifecycleHook lifecycleHook, UnaryOperator<Object> transformer, boolean isConfigMap) {
+    if (lifecycleHook != null) {
+      ExecNewPodHook execNewPod = lifecycleHook.getExecNewPod();
+      if (execNewPod != null) {
+        List<V1EnvVar> env = execNewPod.getEnv();
+        if (env != null) {
+          for (V1EnvVar v1EnvVar : env) {
+            if (isConfigMap) {
+              updateConfigMapInEnvVars(v1EnvVar, transformer);
+            } else {
+              updateSecretRefInEnvVar(v1EnvVar, transformer);
+            }
+          }
+        }
+      }
+    }
   }
 
   private void updateConfigMapRefInContainers(List<V1Container> containers, UnaryOperator<Object> transformer) {
@@ -408,14 +488,7 @@ public class KubernetesResource {
       for (V1Container v1Container : containers) {
         if (isNotEmpty(v1Container.getEnv())) {
           for (V1EnvVar v1EnvVar : v1Container.getEnv()) {
-            V1EnvVarSource v1EnvVarSource = v1EnvVar.getValueFrom();
-            if (v1EnvVarSource != null) {
-              V1ConfigMapKeySelector v1ConfigMapKeyRef = v1EnvVarSource.getConfigMapKeyRef();
-              if (v1ConfigMapKeyRef != null) {
-                String name = v1ConfigMapKeyRef.getName();
-                v1ConfigMapKeyRef.setName((String) transformer.apply(name));
-              }
-            }
+            updateConfigMapInEnvVars(v1EnvVar, transformer);
           }
         }
 
@@ -428,6 +501,17 @@ public class KubernetesResource {
             }
           }
         }
+      }
+    }
+  }
+
+  private void updateConfigMapInEnvVars(V1EnvVar v1EnvVar, UnaryOperator<Object> transformer) {
+    V1EnvVarSource v1EnvVarSource = v1EnvVar.getValueFrom();
+    if (v1EnvVarSource != null) {
+      V1ConfigMapKeySelector v1ConfigMapKeyRef = v1EnvVarSource.getConfigMapKeyRef();
+      if (v1ConfigMapKeyRef != null) {
+        String name = v1ConfigMapKeyRef.getName();
+        v1ConfigMapKeyRef.setName((String) transformer.apply(name));
       }
     }
   }
@@ -454,11 +538,17 @@ public class KubernetesResource {
     }
   }
 
-  private void updateSecretRef(V1PodSpec v1PodSpec, UnaryOperator<Object> transformer) {
-    updateSecretRefInContainers(v1PodSpec.getContainers(), transformer);
-    updateSecretRefInContainers(v1PodSpec.getInitContainers(), transformer);
-    updateSecretRefInImagePullSecrets(v1PodSpec, transformer);
-    updateSecretRefInVolumes(v1PodSpec, transformer);
+  private void updateSecretRef(Object k8sResource, UnaryOperator<Object> transformer) {
+    V1PodSpec v1PodSpec = getV1PodSpec(k8sResource);
+    if (v1PodSpec != null) {
+      updateSecretRefInContainers(v1PodSpec.getContainers(), transformer);
+      updateSecretRefInContainers(v1PodSpec.getInitContainers(), transformer);
+      updateSecretRefInImagePullSecrets(v1PodSpec, transformer);
+      updateSecretRefInVolumes(v1PodSpec, transformer);
+    }
+
+    // Handling for DeploymentConfig
+    updateRefInDeploymentConfigStrategy(k8sResource, transformer, false);
   }
 
   private void updateSecretRefInImagePullSecrets(V1PodSpec v1PodSpec, UnaryOperator<Object> transformer) {
@@ -497,14 +587,7 @@ public class KubernetesResource {
       for (V1Container v1Container : containers) {
         if (isNotEmpty(v1Container.getEnv())) {
           for (V1EnvVar v1EnvVar : v1Container.getEnv()) {
-            V1EnvVarSource v1EnvVarSource = v1EnvVar.getValueFrom();
-            if (v1EnvVarSource != null) {
-              V1SecretKeySelector v1SecretKeyRef = v1EnvVarSource.getSecretKeyRef();
-              if (v1SecretKeyRef != null) {
-                String name = v1SecretKeyRef.getName();
-                v1SecretKeyRef.setName((String) transformer.apply(name));
-              }
-            }
+            updateSecretRefInEnvVar(v1EnvVar, transformer);
           }
         }
 
@@ -517,6 +600,17 @@ public class KubernetesResource {
             }
           }
         }
+      }
+    }
+  }
+
+  private void updateSecretRefInEnvVar(V1EnvVar v1EnvVar, UnaryOperator<Object> transformer) {
+    V1EnvVarSource v1EnvVarSource = v1EnvVar.getValueFrom();
+    if (v1EnvVarSource != null) {
+      V1SecretKeySelector v1SecretKeyRef = v1EnvVarSource.getSecretKeyRef();
+      if (v1SecretKeyRef != null) {
+        String name = v1SecretKeyRef.getName();
+        v1SecretKeyRef.setName((String) transformer.apply(name));
       }
     }
   }
@@ -554,7 +648,7 @@ public class KubernetesResource {
   /* Issue https://github.com/kubernetes/kubernetes/pull/66165 was fixed in 1.11.2.
   The issue didn't allow update to stateful set which has empty/null fields in its spec. */
   public String getSpec() {
-    if (!STATEFULSET.equals(resourceId.getKind())) {
+    if (!Kind.StatefulSet.name().equals(resourceId.getKind())) {
       return spec;
     }
 
