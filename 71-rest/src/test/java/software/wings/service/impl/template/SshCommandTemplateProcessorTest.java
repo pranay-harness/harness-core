@@ -43,6 +43,7 @@ import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
@@ -254,8 +255,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
     when(serviceCommandIterator.hasNext()).thenReturn(true).thenReturn(false);
     when(serviceCommandIterator.next()).thenReturn(serviceCommand);
 
-    when(workflowQuery.field(Workflow.LINKED_TEMPLATE_UUIDS_KEY)).thenReturn(end);
-    when(end.contains(savedTemplate.getUuid())).thenReturn(workflowQuery);
+    when(workflowQuery.filter(WorkflowKeys.linkedTemplateUuids, savedTemplate.getUuid())).thenReturn(workflowQuery);
     when(workflowQuery.fetch()).thenReturn(workflowIterator);
     when(workflowIterator.getCursor()).thenReturn(dbCursor);
     when(workflowIterator.hasNext()).thenReturn(false);

@@ -19,6 +19,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
@@ -127,8 +128,7 @@ public abstract class AbstractTemplateProcessor {
   public void updateLinkedEntitiesInWorkflow(Template template) {
     try (HIterator<Workflow> workflowIterator =
              new HIterator<>(wingsPersistence.createQuery(Workflow.class, excludeAuthority)
-                                 .field(Workflow.LINKED_TEMPLATE_UUIDS_KEY)
-                                 .contains(template.getUuid())
+                                 .filter(WorkflowKeys.linkedTemplateUuids, template.getUuid())
                                  .fetch())) {
       for (Workflow workflow : workflowIterator) {
         try {
