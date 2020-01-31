@@ -36,7 +36,6 @@ interface CloudProvider {
   type: String
   # The field is work in progress.
   isContinuousEfficiencyEnabled: Boolean
-  isCloudCostEnabled: Boolean
   ceHealthStatus: CEHealthStatus
 }
 
@@ -64,7 +63,6 @@ type AwsCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
-  isCloudCostEnabled: Boolean
   ceHealthStatus: CEHealthStatus
 }
 
@@ -76,7 +74,6 @@ type PhysicalDataCenterCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
-  isCloudCostEnabled: Boolean
   ceHealthStatus: CEHealthStatus
 }
 
@@ -88,7 +85,6 @@ type AzureCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
-  isCloudCostEnabled: Boolean
   ceHealthStatus: CEHealthStatus
 }
 
@@ -100,7 +96,6 @@ type GcpCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
-  isCloudCostEnabled: Boolean
   ceHealthStatus: CEHealthStatus
 }
 
@@ -112,7 +107,6 @@ type KubernetesCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
-  isCloudCostEnabled: Boolean
   ceHealthStatus: CEHealthStatus
 }
 
@@ -124,6 +118,5 @@ type PcfCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
-  isCloudCostEnabled: Boolean
   ceHealthStatus: CEHealthStatus
 }

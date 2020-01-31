@@ -10,7 +10,6 @@ public interface QLCloudProviderBuilder {
   QLCloudProviderBuilder createdBy(QLUser createdBy);
   QLCloudProviderBuilder type(String type);
   QLCloudProviderBuilder isContinuousEfficiencyEnabled(boolean isContinuousEfficiencyEnabled);
-  QLCloudProviderBuilder isCloudCostEnabled(boolean isCloudCostEnabled);
   QLCloudProviderBuilder ceHealthStatus(CEHealthStatus ceHealthStatus);
   QLCloudProvider build();
 }
