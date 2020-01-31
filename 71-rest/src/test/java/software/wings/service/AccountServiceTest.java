@@ -857,6 +857,7 @@ public class AccountServiceTest extends WingsBaseTest {
         false);
     SubdomainUrl validUrl = new SubdomainUrl("https://domain.io");
     SubdomainUrl invalidUrl = new SubdomainUrl("domain.com");
+    SubdomainUrl duplicateUrl = new SubdomainUrl("https://initialDomain.com");
     User user1 = User.Builder.anUser().uuid("userId1").name("name1").email("user1@harness.io").build();
     User user2 = User.Builder.anUser().uuid("userId2").name("name2").email("user2@harness.io").build();
     when(harnessUserGroupService.isHarnessSupportUser("userId1")).thenReturn(Boolean.FALSE);
@@ -868,6 +869,8 @@ public class AccountServiceTest extends WingsBaseTest {
         .isThrownBy(() -> accountService.addSubdomainUrl(user1.getUuid(), account2.getUuid(), validUrl));
     assertThatExceptionOfType(InvalidArgumentsException.class)
         .isThrownBy(() -> accountService.addSubdomainUrl(user2.getUuid(), account2.getUuid(), invalidUrl));
+    assertThatExceptionOfType(InvalidArgumentsException.class)
+        .isThrownBy(() -> accountService.addSubdomainUrl(user2.getUuid(), account2.getUuid(), duplicateUrl));
 
     Boolean result1 = accountService.addSubdomainUrl(user2.getUuid(), account2.getUuid(), validUrl);
     assertThat(wingsPersistence.get(Account.class, account2.getUuid()).getSubdomainUrl()).isEqualTo(validUrl.getUrl());

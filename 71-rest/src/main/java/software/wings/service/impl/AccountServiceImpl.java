@@ -1382,6 +1382,16 @@ public class AccountServiceImpl implements AccountService {
   }
 
   /**
+   * Checks whether the subdomain URL is taken by any other account or not
+   * @param subdomainUrl Object of type SubdomainUrl
+   * @return true if subdomain URL is duplicate otherwise false
+   */
+  public boolean checkDuplicateSubdomainUrl(SubdomainUrl subdomainUrl) {
+    return wingsPersistence.createQuery(Account.class).filter(AccountKeys.subdomainUrl, subdomainUrl.getUrl()).get()
+        != null;
+  }
+
+  /**
    * Takes a User ID and does the following checks before adding subdomainUrl to the account
    * Sanity check on Url provided
    * @param subdomainUrl subdomain URL object
@@ -1424,6 +1434,11 @@ public class AccountServiceImpl implements AccountService {
     // Check if the user is a part of Harness User Group
     if (!harnessUserGroupService.isHarnessSupportUser(userId)) {
       throw new UnauthorizedException("User is not authorized to add subdomain URL", USER);
+    }
+
+    // Check if URL is not duplicate
+    if (checkDuplicateSubdomainUrl(subDomainUrl)) {
+      throw new InvalidArgumentsException("Subdomain URL is already taken", USER);
     }
 
     // Check if URL is valid

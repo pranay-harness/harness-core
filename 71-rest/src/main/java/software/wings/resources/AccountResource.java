@@ -394,9 +394,8 @@ public class AccountResource {
 
   @PATCH
   @Path("{accountId}/addSubdomainUrl")
-  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Boolean> addSubdomainUrl(
-      @PathParam("accountId") @NotEmpty String accountId, SubdomainUrl subdomainUrl) {
+      @PathParam("accountId") @NotEmpty String accountId, @NotNull SubdomainUrl subdomainUrl) {
     String userId = UserThreadLocal.get().getUuid();
     return new RestResponse<>(accountService.addSubdomainUrl(userId, accountId, subdomainUrl));
   }

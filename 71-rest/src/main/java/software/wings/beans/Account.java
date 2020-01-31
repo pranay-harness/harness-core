@@ -609,5 +609,6 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String uuid = "uuid";
     public static final String name = "name";
     public static final String licenseExpiryCheckIteration = "licenseExpiryCheckIteration";
+    public static final String subdomainUrl = "subdomainUrl";
   }
 }
