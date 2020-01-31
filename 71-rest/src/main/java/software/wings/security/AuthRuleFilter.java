@@ -81,7 +81,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private static final String[] EXEMPTED_URI_PREFIXES = new String[] {"limits/configure", "account/license",
       "account/export", "account/import", "account/delete/", "account/disable", "account/enable", "users/reset-cache",
       "executions/workflow-variables", "executions/deployment-metadata"};
-  private static final String[] EXEMPTED_URI_SUFFIXES = new String[] {"sales-contacts"};
+  private static final String[] EXEMPTED_URI_SUFFIXES = new String[] {"sales-contacts", "addSubdomainUrl"};
 
   @Context private ResourceInfo resourceInfo;
   @Context private HttpServletRequest servletRequest;

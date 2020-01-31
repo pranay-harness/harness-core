@@ -156,4 +156,9 @@ public interface AccountService {
    * Add subDomainUrl to the account
    */
   Boolean addSubdomainUrl(String userId, String accountId, SubdomainUrl subdomainUrl);
+
+  /**
+   * Checks whether subdomain URL is taken by another account
+   */
+  boolean checkDuplicateSubdomainUrl(SubdomainUrl subdomainUrl);
 }
