@@ -8,6 +8,7 @@ import static io.harness.k8s.model.Kind.CronJob;
 import static io.harness.k8s.model.Kind.CustomResourceDefinition;
 import static io.harness.k8s.model.Kind.DaemonSet;
 import static io.harness.k8s.model.Kind.Deployment;
+import static io.harness.k8s.model.Kind.DeploymentConfig;
 import static io.harness.k8s.model.Kind.Ingress;
 import static io.harness.k8s.model.Kind.Job;
 import static io.harness.k8s.model.Kind.LimitRange;
@@ -57,6 +58,7 @@ public class KubernetesResourceComparer implements Comparator<KubernetesResource
       ReplicationController.name(),
       ReplicaSet.name(),
       Deployment.name(),
+      DeploymentConfig.name(),
       StatefulSet.name(),
       Job.name(),
       CronJob.name(),
