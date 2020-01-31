@@ -13,6 +13,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.search.framework.ChangeHandler;
+import software.wings.search.framework.ElasticsearchRequestHandler;
 import software.wings.search.framework.SearchEntity;
 
 import java.util.List;
@@ -21,6 +22,7 @@ import java.util.List;
 public class WorkflowSearchEntity implements SearchEntity<Workflow> {
   @Inject private WorkflowViewBuilder workflowViewBuilder;
   @Inject private WorkflowChangeHandler workflowChangeHandler;
+  @Inject private WorkflowElasticsearchRequestHandler workflowSearchRequestHandler;
 
   public static final String TYPE = "workflows";
   public static final String VERSION = "0.1";
@@ -65,6 +67,11 @@ public class WorkflowSearchEntity implements SearchEntity<Workflow> {
   @Override
   public ChangeHandler getChangeHandler() {
     return workflowChangeHandler;
+  }
+
+  @Override
+  public ElasticsearchRequestHandler getElasticsearchRequestHandler() {
+    return workflowSearchRequestHandler;
   }
 
   @Override

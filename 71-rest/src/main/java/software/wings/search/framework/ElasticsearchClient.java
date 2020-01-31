@@ -3,7 +3,6 @@ package software.wings.search.framework;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -37,41 +36,39 @@ import java.io.IOException;
 public class ElasticsearchClient {
   @Inject private RestHighLevelClient client;
 
-  IndexResponse index(IndexRequest indexRequest) throws IOException, ElasticsearchException {
+  IndexResponse index(IndexRequest indexRequest) throws IOException {
     return client.index(indexRequest, RequestOptions.DEFAULT);
   }
 
-  UpdateResponse update(UpdateRequest updateRequest) throws IOException, ElasticsearchException {
+  UpdateResponse update(UpdateRequest updateRequest) throws IOException {
     return client.update(updateRequest, RequestOptions.DEFAULT);
   }
 
-  DeleteResponse delete(DeleteRequest deleteRequest) throws IOException, ElasticsearchException {
+  DeleteResponse delete(DeleteRequest deleteRequest) throws IOException {
     return client.delete(deleteRequest, RequestOptions.DEFAULT);
   }
 
-  BulkByScrollResponse updateByQuery(UpdateByQueryRequest updateByQueryRequest)
-      throws IOException, ElasticsearchException {
+  BulkByScrollResponse updateByQuery(UpdateByQueryRequest updateByQueryRequest) throws IOException {
     return client.updateByQuery(updateByQueryRequest, RequestOptions.DEFAULT);
   }
 
-  public SearchResponse search(SearchRequest searchRequest) throws IOException, ElasticsearchException {
+  public SearchResponse search(SearchRequest searchRequest) throws IOException {
     return client.search(searchRequest, RequestOptions.DEFAULT);
   }
 
-  CreateIndexResponse createIndex(CreateIndexRequest createIndexRequest) throws IOException, ElasticsearchException {
+  CreateIndexResponse createIndex(CreateIndexRequest createIndexRequest) throws IOException {
     return client.indices().create(createIndexRequest, RequestOptions.DEFAULT);
   }
 
-  boolean indexExists(GetIndexRequest getIndexRequest) throws IOException, ElasticsearchException {
+  boolean indexExists(GetIndexRequest getIndexRequest) throws IOException {
     return client.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
   }
 
-  AcknowledgedResponse deleteIndex(DeleteIndexRequest deleteIndexRequest) throws IOException, ElasticsearchException {
+  AcknowledgedResponse deleteIndex(DeleteIndexRequest deleteIndexRequest) throws IOException {
     return client.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
   }
 
-  AcknowledgedResponse updateAliases(IndicesAliasesRequest indicesAliasesRequest)
-      throws IOException, ElasticsearchException {
+  AcknowledgedResponse updateAliases(IndicesAliasesRequest indicesAliasesRequest) throws IOException {
     return client.indices().updateAliases(indicesAliasesRequest, RequestOptions.DEFAULT);
   }
 

@@ -3,10 +3,9 @@ package software.wings.search;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.beans.WorkflowType;
 import io.harness.data.structure.UUIDGenerator;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.TotalHits;
 import org.apache.lucene.search.TotalHits.Relation;
-import org.elasticsearch.action.search.MultiSearchResponse;
-import org.elasticsearch.action.search.MultiSearchResponse.Item;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchResponse.Clusters;
 import org.elasticsearch.action.search.ShardSearchFailure;
@@ -17,22 +16,28 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.internal.InternalSearchResponse;
 import software.wings.beans.EntityType;
 import software.wings.beans.WorkflowExecution;
+import software.wings.search.entities.application.ApplicationSearchEntity;
 import software.wings.search.entities.application.ApplicationView;
+import software.wings.search.entities.deployment.DeploymentSearchEntity;
 import software.wings.search.entities.deployment.DeploymentView;
+import software.wings.search.entities.environment.EnvironmentSearchEntity;
 import software.wings.search.entities.environment.EnvironmentView;
+import software.wings.search.entities.pipeline.PipelineSearchEntity;
 import software.wings.search.entities.pipeline.PipelineView;
 import software.wings.search.entities.related.audit.RelatedAuditView;
 import software.wings.search.entities.related.deployment.RelatedDeploymentView;
+import software.wings.search.entities.service.ServiceSearchEntity;
 import software.wings.search.entities.service.ServiceView;
+import software.wings.search.entities.workflow.WorkflowSearchEntity;
 import software.wings.search.entities.workflow.WorkflowView;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
-public class ElasticsearchServiceTestUtils {
+@Slf4j
+public class SearchRequestHandlerTestUtils {
   private static float score = 0.2345f;
   private static ObjectMapper mapper = new ObjectMapper();
 
@@ -143,6 +148,7 @@ public class ElasticsearchServiceTestUtils {
 
       return new SearchHit[] {searchHit, searchHit1};
     } catch (IOException e) {
+      logger.error("Error", e);
       return new SearchHit[] {};
     }
   }
@@ -157,6 +163,7 @@ public class ElasticsearchServiceTestUtils {
 
       return new SearchHit[] {searchHit};
     } catch (IOException e) {
+      logger.error("Error", e);
       return new SearchHit[] {};
     }
   }
@@ -217,26 +224,36 @@ public class ElasticsearchServiceTestUtils {
     }
   }
 
-  private static SearchHit[] getSearchHits() {
-    return Stream
-        .of(getApplicationSearchHits(), getDeploymentSearchHits(), getEnvironmentSearchHits(), getPipelineSearchHits(),
-            getWorkflowSearchHits(), getServiceSearchHits())
-        .flatMap(Stream::of)
-        .toArray(SearchHit[] ::new);
-  }
-
-  public static SearchResponse getSearchResponse() {
+  public static SearchResponse getSearchResponse(String type) {
     ShardSearchFailure[] shardFailures = new ShardSearchFailure[0];
-    SearchHits searchHits = new SearchHits(getSearchHits(), new TotalHits(2, Relation.GREATER_THAN_OR_EQUAL_TO), score);
+    SearchHit[] rawSearchHits = null;
+    switch (type) {
+      case ApplicationSearchEntity.TYPE:
+        rawSearchHits = getApplicationSearchHits();
+        break;
+      case ServiceSearchEntity.TYPE:
+        rawSearchHits = getServiceSearchHits();
+        break;
+      case WorkflowSearchEntity.TYPE:
+        rawSearchHits = getWorkflowSearchHits();
+        break;
+      case PipelineSearchEntity.TYPE:
+        rawSearchHits = getPipelineSearchHits();
+        break;
+      case DeploymentSearchEntity.TYPE:
+        rawSearchHits = getDeploymentSearchHits();
+        break;
+      case EnvironmentSearchEntity.TYPE:
+        rawSearchHits = getEnvironmentSearchHits();
+        break;
+      default:
+        rawSearchHits = SearchHits.EMPTY;
+    }
+    SearchHits searchHits =
+        new SearchHits(rawSearchHits, new TotalHits(rawSearchHits.length, Relation.EQUAL_TO), score);
     InternalSearchResponse internalSearchResponse =
         new InternalSearchResponse(searchHits, null, null, null, false, false, 1);
 
     return new SearchResponse(internalSearchResponse, "scrollId", 1, 1, 0, 10000, shardFailures, new Clusters(1, 1, 0));
-  }
-
-  public static MultiSearchResponse getMultiSearchResponse() {
-    Item item = new Item(getSearchResponse(), new Exception());
-    Item[] items = {item};
-    return new MultiSearchResponse(items, 1);
   }
 }

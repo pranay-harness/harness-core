@@ -11,6 +11,8 @@ import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import software.wings.search.ElasticsearchServiceImpl;
+import software.wings.search.SearchService;
 import software.wings.search.entities.application.ApplicationSearchEntity;
 import software.wings.search.entities.deployment.DeploymentSearchEntity;
 import software.wings.search.entities.environment.EnvironmentSearchEntity;
@@ -20,8 +22,6 @@ import software.wings.search.entities.workflow.WorkflowSearchEntity;
 import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.SearchEntity;
 import software.wings.search.framework.SynchronousElasticsearchDao;
-import software.wings.service.impl.ElasticsearchServiceImpl;
-import software.wings.service.intfc.SearchService;
 
 import java.net.URI;
 import java.net.URISyntaxException;

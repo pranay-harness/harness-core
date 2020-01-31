@@ -17,5 +17,6 @@ public interface SearchEntity<T extends PersistentEntity> {
   Class<T> getSourceEntityClass();
   List<Class<? extends PersistentEntity>> getSubscriptionEntities();
   ChangeHandler getChangeHandler();
+  ElasticsearchRequestHandler getElasticsearchRequestHandler();
   EntityBaseView getView(T object);
 }

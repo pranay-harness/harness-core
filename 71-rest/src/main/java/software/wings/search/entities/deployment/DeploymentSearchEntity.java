@@ -11,6 +11,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.search.framework.ChangeHandler;
+import software.wings.search.framework.ElasticsearchRequestHandler;
 import software.wings.search.framework.SearchEntity;
 
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.List;
 public class DeploymentSearchEntity implements SearchEntity<WorkflowExecution> {
   @Inject private DeploymentViewBuilder deploymentViewBuilder;
   @Inject private DeploymentChangeHandler deploymentChangeHandler;
+  @Inject private DeploymentElasticsearchRequestHandler deploymentElasticsearchRequestHandler;
 
   public static final String TYPE = "deployments";
   public static final String VERSION = "0.1";
@@ -61,6 +63,11 @@ public class DeploymentSearchEntity implements SearchEntity<WorkflowExecution> {
   @Override
   public ChangeHandler getChangeHandler() {
     return deploymentChangeHandler;
+  }
+
+  @Override
+  public ElasticsearchRequestHandler getElasticsearchRequestHandler() {
+    return deploymentElasticsearchRequestHandler;
   }
 
   @Override
