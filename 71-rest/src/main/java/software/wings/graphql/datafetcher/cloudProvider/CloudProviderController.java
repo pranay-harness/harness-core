@@ -22,8 +22,7 @@ public class CloudProviderController {
         .createdAt(settingAttribute.getCreatedAt())
         .createdBy(UserController.populateUser(settingAttribute.getCreatedBy()))
         .type(settingAttribute.getValue().getType())
-        .isContinuousEfficiencyEnabled(getCloudCostEnabledBoolean(settingAttribute))
-        .isCloudCostEnabled(getCloudCostEnabledBoolean(settingAttribute));
+        .isContinuousEfficiencyEnabled(getCloudCostEnabledBoolean(settingAttribute));
   }
 
   private static QLCloudProviderBuilder getCloudProviderBuilder(SettingAttribute settingAttribute) {

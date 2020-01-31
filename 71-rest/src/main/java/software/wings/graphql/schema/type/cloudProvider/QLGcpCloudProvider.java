@@ -20,7 +20,6 @@ public class QLGcpCloudProvider implements QLCloudProvider {
   private QLUser createdBy;
   private String type;
   private boolean isContinuousEfficiencyEnabled;
-  private boolean isCloudCostEnabled;
   private CEHealthStatus ceHealthStatus;
 
   public static class QLGcpCloudProviderBuilder implements QLCloudProviderBuilder {}
