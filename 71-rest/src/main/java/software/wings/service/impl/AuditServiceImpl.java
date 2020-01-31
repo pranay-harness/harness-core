@@ -115,6 +115,26 @@ public class AuditServiceImpl implements AuditService {
       EntityType.PIPELINE_GOVERNANCE_STANDARD.name(), ResourceType.SSO_SETTINGS.name(), ResourceType.USER.name(),
       ResourceType.USER_INVITE.name());
 
+  boolean checkIfYamlEntityIsBehindFeatureFlag(
+      FeatureName featureName, String entityName, EntityAuditRecord record, String accountId) {
+    if (featureFlagService.isEnabled(featureName, accountId)) {
+      return record.getEntityType().equals(entityName) || record.getAffectedResourceType().equals(entityName);
+    }
+    return false;
+  }
+
+  /**
+   * check for nonYamlEntites.
+   */
+  public boolean isNonYamlEntity(EntityAuditRecord record, String accountId) {
+    if (checkIfYamlEntityIsBehindFeatureFlag(
+            FeatureName.TEMPLATE_YAML_SUPPORT, EntityType.TEMPLATE.name(), record, accountId)) {
+      return false;
+    }
+    return nonYamlEntities.contains(record.getEntityType())
+        || nonYamlEntities.contains(record.getAffectedResourceType());
+  }
+
   /**
    * Instantiates a new audit service impl.
    *
@@ -547,8 +567,7 @@ public class AuditServiceImpl implements AuditService {
 
   @VisibleForTesting
   void loadLatestYamlDetailsForEntity(EntityAuditRecord record, String accountId) {
-    if (nonYamlEntities.contains(record.getEntityType())
-        || nonYamlEntities.contains(record.getAffectedResourceType())) {
+    if (isNonYamlEntity(record, accountId)) {
       return;
     }
     String entityId;
@@ -590,8 +609,7 @@ public class AuditServiceImpl implements AuditService {
 
   @VisibleForTesting
   void saveEntityYamlForAudit(Object entity, EntityAuditRecord record, String accountId) {
-    if (nonYamlEntities.contains(record.getEntityType()) || nonYamlEntities.contains(record.getAffectedResourceType())
-        || entity == null) {
+    if (isNonYamlEntity(record, accountId) || entity == null) {
       return;
     }
     String yamlContent;

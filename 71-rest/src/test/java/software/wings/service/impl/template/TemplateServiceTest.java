@@ -960,4 +960,12 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
                    savedTemplate.getName() + "invalid text", savedTemplate.getAppId()))
         .isNull();
   }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testFolderPathGeneration() {
+    Template savedTemplate = saveTemplate();
+    assertThat(templateService.getTemplateFolderPathString(savedTemplate)).isEqualTo("Harness/Tomcat Commands");
+  }
 }

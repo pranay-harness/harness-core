@@ -2309,8 +2309,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
-  public String getRootPathByGlobalTemplate(Template template) {
-    return getRootPath() + PATH_DELIMITER + GLOBAL_TEMPLATE_LIBRARY_FOLDER;
+  public String getRootPathByTemplate(Template template) {
+    if (template.getAppId().equals(GLOBAL_APP_ID)) {
+      return getRootPath() + PATH_DELIMITER + GLOBAL_TEMPLATE_LIBRARY_FOLDER + PATH_DELIMITER
+          + templateService.getTemplateFolderPathString(template);
+    }
+    Application app = appService.get(template.getAppId());
+    return getRootPathByApp(app) + PATH_DELIMITER + APPLICATION_TEMPLATE_LIBRARY_FOLDER + PATH_DELIMITER
+        + templateService.getTemplateFolderPathString(template);
   }
 
   @Override
@@ -2376,6 +2382,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return getRootPathByDeploymentTrigger((DeploymentTrigger) entity);
     } else if (entity instanceof HarnessTag) {
       return getRootPathForTags();
+    } else if (entity instanceof Template) {
+      return getRootPathByTemplate((Template) entity);
     }
 
     throw new InvalidRequestException(

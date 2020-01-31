@@ -514,7 +514,7 @@ public class YamlHelper {
     final TemplateFolder templateFolder = templateService.getTemplateTree(accountId, appId, null, null);
     final YamlType yamlType = TemplateYamlConfig.getInstance(appId).getYamlType();
     return ensurePathforTemplates(templateFolder, getRootTemplateLibraryPath(yamlFilePath, appId),
-        yamlType.getPrefixExpression(), PATH_DELIMITER);
+        yamlType.getPrefixExpression(), PATH_DELIMITER, appId);
   }
 
   public InfrastructureMapping getInfraMapping(String accountId, String yamlFilePath) {
@@ -534,7 +534,7 @@ public class YamlHelper {
   }
 
   private TemplateFolder ensurePathforTemplates(
-      TemplateFolder templateFolder, String yamlFilePath, String regex, String delimiter) {
+      TemplateFolder templateFolder, String yamlFilePath, String regex, String delimiter, String appId) {
     if (templateFolder == null) {
       throw new InvalidRequestException("Template folder found to be null.");
     }
@@ -548,11 +548,11 @@ public class YamlHelper {
     String yamlFolderName = extractTopmostEntityName(newYamlFilePath, delimiter);
     TemplateFolder childFolder = getChildFolderFromName(templateFolder, yamlFolderName, delimiter);
     if (childFolder != null) {
-      return ensurePathforTemplates(childFolder, newYamlFilePath, regex, delimiter);
+      return ensurePathforTemplates(childFolder, newYamlFilePath, regex, delimiter, appId);
     } else {
       TemplateFolder childTemplateFolder = TemplateFolder.builder()
                                                .name(yamlFolderName)
-                                               .appId(templateFolder.getAppId())
+                                               .appId(appId)
                                                .accountId(templateFolder.getAccountId())
                                                .parentId(templateFolder.getUuid())
                                                .galleryId(templateFolder.getGalleryId())
@@ -560,7 +560,7 @@ public class YamlHelper {
                                                .build();
       childTemplateFolder.setPathId(templateFolder.getPathId() + PATH_DELIMITER + templateFolder.getUuid());
       templateFolderService.save(childTemplateFolder);
-      return ensurePathforTemplates(childTemplateFolder, newYamlFilePath, regex, delimiter);
+      return ensurePathforTemplates(childTemplateFolder, newYamlFilePath, regex, delimiter, appId);
     }
   }
 

@@ -603,7 +603,7 @@ public class YamlHandlerFactory {
         "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
         "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration",
         "AzureInfrastructureMapping", "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner",
-        "DeploymentTrigger");
+        "DeploymentTrigger", "Template");
   }
 
   private static List<String> obtainLeafEntitiesWithFeatureFlag() {
