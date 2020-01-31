@@ -99,6 +99,16 @@ public class PcfFunctionalTest extends AbstractFunctionalTest {
     workflowUtils.checkForWorkflowSuccess(workflowExecution);
   }
 
+  // todo @rk : enable it after jenkins image has cf cli installed
+  @Test
+  @Owner(developers = OwnerRule.AADITI)
+  @Category(FunctionalTests.class)
+  @Ignore("enable it after the jenkins image with CF cli has been released")
+  public void shouldCreateAndRunPcfBasicWorkflowWithLinkedPcfCommand() {
+    WorkflowExecution workflowExecution = createAndExecuteWorkflowWithLinkedPcfCommand();
+    workflowUtils.checkForWorkflowSuccess(workflowExecution);
+  }
+
   private WorkflowExecution createAndExecuteWorkflowPCFCommand() {
     Service commandService = serviceGenerator.ensurePredefined(seed, owners, Services.PCF_V2_REMOTE_TEST);
     Artifact artifact = getArtifact(commandService, commandService.getAppId());
@@ -120,6 +130,19 @@ public class PcfFunctionalTest extends AbstractFunctionalTest {
         seed, owners, InfrastructureType.PCF_INFRASTRUCTURE, bearerToken);
     resetCache(service.getAccountId());
     Workflow workflow = workflowUtils.createPcfWorkflow("pcf-wf", service, infrastructureDefinition);
+    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
+    Artifact artifact = getArtifact(service, service.getAppId());
+    return executeWorkflow(workflow, service, Arrays.asList(artifact), ImmutableMap.<String, String>builder().build());
+  }
+
+  private WorkflowExecution createAndExecuteWorkflowWithLinkedPcfCommand() {
+    service = serviceGenerator.ensurePredefined(seed, owners, Services.PCF_V2_REMOTE_TEST);
+    resetCache(service.getAccountId());
+    InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(
+        seed, owners, InfrastructureType.PCF_INFRASTRUCTURE, bearerToken);
+    resetCache(service.getAccountId());
+    Workflow workflow = workflowUtils.createLinkedPcfCommandWorkflow(
+        seed, owners, "pcf-wf-with-linked-command-" + System.currentTimeMillis(), service, infrastructureDefinition);
     workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
     Artifact artifact = getArtifact(service, service.getAppId());
     return executeWorkflow(workflow, service, Arrays.asList(artifact), ImmutableMap.<String, String>builder().build());

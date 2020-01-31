@@ -39,6 +39,9 @@ import com.google.inject.Singleton;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.generator.OwnerManager;
+import io.harness.generator.Randomizer;
+import io.harness.generator.TemplateGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -55,6 +58,8 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
+import software.wings.beans.template.Template;
+import software.wings.beans.template.command.PcfCommandTemplate;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -83,6 +88,7 @@ public class WorkflowUtils {
   static final String SELECT_NODES_CONSTANT = "Select Node";
 
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private TemplateGenerator templateGenerator;
 
   public void checkForWorkflowSuccess(WorkflowExecution workflowExecution) {
     WorkflowExecution finalWorkflowExecution = awaitAndFetchFinalWorkflowExecution(workflowExecution);
@@ -374,6 +380,13 @@ public class WorkflowUtils {
     return createPcfWorkflow(name, service, infrastructureDefinition, workflowPhase, rollbackPhase);
   }
 
+  public Workflow createLinkedPcfCommandWorkflow(Randomizer.Seed seed, OwnerManager.Owners owners, String name,
+      Service service, InfrastructureDefinition infrastructureDefinition) {
+    WorkflowPhase workflowPhase = obtainWorkflowPhasePcfCommandLinked(seed, owners, service, infrastructureDefinition);
+    WorkflowPhase rollbackPhase = obtainRollbackPhasePcfCommand(workflowPhase);
+    return createPcfWorkflow(name, service, infrastructureDefinition, workflowPhase, rollbackPhase);
+  }
+
   private WorkflowPhase obtainRollbackPhasePcfCommand(WorkflowPhase workflowPhase) {
     return aWorkflowPhase()
         .name(ROLLBACK_PREFIX + workflowPhase.getName())
@@ -406,6 +419,39 @@ public class WorkflowUtils {
                                     .type(StateType.PCF_PLUGIN.name())
                                     .name(WorkflowServiceHelper.PCF_PLUGIN)
                                     .properties(pcfCommandProperties)
+                                    .build())
+                       .build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE).build());
+
+    return aWorkflowPhase()
+        .uuid(generateUuid())
+        .serviceId(service.getUuid())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .phaseSteps(phaseSteps)
+        .build();
+  }
+
+  private WorkflowPhase obtainWorkflowPhasePcfCommandLinked(Randomizer.Seed seed, OwnerManager.Owners owners,
+      Service service, InfrastructureDefinition infrastructureDefinition) {
+    List<PhaseStep> phaseSteps = new ArrayList<>();
+
+    Template pcfCommandTemplate =
+        templateGenerator.ensurePredefined(seed, owners, TemplateGenerator.Templates.PCF_COMMAND_TEMPLATE_1);
+    PcfCommandTemplate templateObject = (PcfCommandTemplate) pcfCommandTemplate.getTemplateObject();
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("scriptString", templateObject.getScriptString());
+    properties.put("timeoutIntervalInMinutes", templateObject.getTimeoutIntervalInMinutes());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.PCF_SETUP, SETUP)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.PCF_PLUGIN.name())
+                                    .name(WorkflowServiceHelper.PCF_PLUGIN)
+                                    .properties(properties)
+                                    .templateVariables(pcfCommandTemplate.getVariables())
+                                    .templateUuid(pcfCommandTemplate.getUuid())
+                                    .templateVersion("latest")
                                     .build())
                        .build());
 

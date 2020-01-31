@@ -1,6 +1,7 @@
 package io.harness.generator;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_PCF_COMMANDS;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_SERVICE_COMMANDS;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_SHELL_SCRIPTS;
 import static io.harness.generator.TemplateGalleryGenerator.TemplateGalleries.HARNESS_GALLERY;
@@ -29,6 +30,7 @@ import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateReference;
 import software.wings.beans.template.TemplateType;
+import software.wings.beans.template.command.PcfCommandTemplate;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
@@ -44,7 +46,13 @@ public class TemplateGenerator {
   @Inject WingsPersistence wingsPersistence;
   @Inject TemplateService templateService;
 
-  public enum Templates { SHELL_SCRIPT, SERVICE_COMMAND_1, SERVICE_COMMAND_2, MULTI_ARTIFACT_COMMAND_TEMPLATE }
+  public enum Templates {
+    SHELL_SCRIPT,
+    SERVICE_COMMAND_1,
+    SERVICE_COMMAND_2,
+    MULTI_ARTIFACT_COMMAND_TEMPLATE,
+    PCF_COMMAND_TEMPLATE_1
+  }
 
   public Template ensurePredefined(Randomizer.Seed seed, OwnerManager.Owners owners, Templates predefined) {
     switch (predefined) {
@@ -55,6 +63,8 @@ public class TemplateGenerator {
         return ensureServiceCommandTemplate(seed, owners, predefined);
       case MULTI_ARTIFACT_COMMAND_TEMPLATE:
         return ensureMultiArtifactCommandTemplate(seed, owners);
+      case PCF_COMMAND_TEMPLATE_1:
+        return ensurePcfCommandTemplate(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -210,6 +220,32 @@ public class TemplateGenerator {
                 aVariable().type(ARTIFACT).name("m_artifact1").build(),
                 aVariable().type(TEXT).name("var2").value("Hello John Doe").build(),
                 aVariable().type(ARTIFACT).name("m_artifact2").build()))
+            .build());
+  }
+
+  private Template ensurePcfCommandTemplate(Randomizer.Seed seed, OwnerManager.Owners owners) {
+    Account account = owners.obtainAccount();
+    if (account == null) {
+      account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
+    }
+    TemplateFolder parentFolder =
+        templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_PCF_COMMANDS, GLOBAL_APP_ID);
+    PcfCommandTemplate pcfCommandTemplate =
+        PcfCommandTemplate.builder()
+            .scriptString(
+                "cf ${commandName} \n cat ${service.manifest}/manifest.yml \n cat ${service.manifest.repoRoot}/pcf-app1/vars.yml")
+            .timeoutIntervalInMinutes(4)
+            .build();
+
+    return ensureTemplate(seed, owners,
+        Template.builder()
+            .type(TemplateType.PCF_PLUGIN.name())
+            .accountId(account.getUuid())
+            .name("Pcf Command Test - " + System.currentTimeMillis())
+            .templateObject(pcfCommandTemplate)
+            .folderId(parentFolder.getUuid())
+            .appId(GLOBAL_APP_ID)
+            .variables(Arrays.asList(aVariable().type(TEXT).name("commandName").mandatory(true).value("apps").build()))
             .build());
   }
 
