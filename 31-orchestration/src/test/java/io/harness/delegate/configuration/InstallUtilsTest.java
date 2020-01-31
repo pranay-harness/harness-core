@@ -10,6 +10,7 @@ import io.harness.MockableTestMixin;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.SystemUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -59,6 +60,7 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
+  @Ignore("Disable this test until the oc binary is on QA proxy also")
   public void testInstallOc() throws Exception {
     setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
     setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", true);
