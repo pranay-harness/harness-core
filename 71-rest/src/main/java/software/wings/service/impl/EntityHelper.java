@@ -831,6 +831,9 @@ public class EntityHelper {
         finalYaml = format("%s/%s%s", yamlPrefix, cvConfiguration.getName(), YAML_EXTENSION);
       } else if (entity instanceof HarnessTag) {
         finalYaml = format("Setup/%s", TAGS_YAML);
+      } else if (entity instanceof Template) {
+        Template template = (Template) entity;
+        finalYaml = format("%s/%s%s", yamlPrefix, template.getName(), YAML_EXTENSION);
       } else {
         finalYaml = yamlPrefix;
       }

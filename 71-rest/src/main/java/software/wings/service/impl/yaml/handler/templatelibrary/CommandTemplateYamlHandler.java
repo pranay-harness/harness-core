@@ -50,16 +50,18 @@ public class CommandTemplateYamlHandler extends TemplateLibraryYamlHandler<Comma
     SshCommandTemplate command = (SshCommandTemplate) bean.getTemplateObject();
     String commandUnitType = Utils.getStringFromEnum(command.getCommandType());
     // commmand units
-    List<AbstractCommandUnit.Yaml> commandUnitYamlList =
-        command.getCommandUnits()
-            .stream()
-            .map(commandUnit -> {
-              CommandUnitYamlHandler commandUnitsYamlHandler =
-                  yamlHandlerFactory.getYamlHandler(YamlType.COMMAND_UNIT, getCommandUnitSubTypeFromBean(commandUnit));
-              return (AbstractCommandUnit.Yaml) commandUnitsYamlHandler.toYaml(commandUnit, appId);
-            })
-            .collect(toList());
+    List<AbstractCommandUnit.Yaml> commandUnitYamlList = null;
 
+    if (command.getCommandUnits() != null) {
+      commandUnitYamlList = command.getCommandUnits()
+                                .stream()
+                                .map(commandUnit -> {
+                                  CommandUnitYamlHandler commandUnitsYamlHandler = yamlHandlerFactory.getYamlHandler(
+                                      YamlType.COMMAND_UNIT, getCommandUnitSubTypeFromBean(commandUnit));
+                                  return (AbstractCommandUnit.Yaml) commandUnitsYamlHandler.toYaml(commandUnit, appId);
+                                })
+                                .collect(toList());
+    }
     CommandTemplateYaml commandTemplateYaml =
         CommandTemplateYaml.builder().commandUnits(commandUnitYamlList).commandUnitType(commandUnitType).build();
     super.toYaml(commandTemplateYaml, bean);

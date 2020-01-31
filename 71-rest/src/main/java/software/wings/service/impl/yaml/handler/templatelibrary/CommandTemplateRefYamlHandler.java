@@ -91,31 +91,27 @@ public class CommandTemplateRefYamlHandler extends CommandUnitYamlHandler<Comman
     String filePath = changeContext.getChange().getFilePath();
 
     String appId = getAppId(changeContext);
-
+    String templateUri = yaml.getTemplateUri();
     String commandName = yaml.getName();
+    notNullCheck("templateUri field missing.", templateUri);
+    if (templateUri.startsWith(APP_PREFIX)) {
+      templateUri = templateUri.substring(APP_PREFIX.length());
+    }
     Template template =
-        templateService.fetchTemplateFromUri(yaml.getTemplateUri(), changeContext.getChange().getAccountId(), appId);
+        templateService.fetchTemplateFromUri(templateUri, changeContext.getChange().getAccountId(), appId);
     // This can happen when the template command is in the same changeset but not yet processed. So we extract it from
     // the changeSet and process it first.
     if (template == null) {
       processDependentTemplate(changeSetContext, filePath, yaml);
-      template = templateService.fetchTemplateFromUri(
-          changeContext.getYaml().getTemplateUri(), changeContext.getChange().getAccountId(), appId);
+      template = templateService.fetchTemplateFromUri(templateUri, changeContext.getChange().getAccountId(), appId);
       notNullCheck("No command found with the given name:" + commandName, template, USER);
     }
 
     commandRef.setCommandType(CommandType.OTHER);
-    String templateUri = yaml.getTemplateUri();
     TemplateReferenceBuilder templateReferenceBuilder = TemplateReference.builder();
     if (isNotEmpty(templateUri)) {
-      if (templateUri.startsWith(APP_PREFIX)) {
-        templateUri = templateUri.substring(APP_PREFIX.length());
-        templateReferenceBuilder.templateUuid(
-            templateService.fetchTemplateIdFromUri(changeContext.getChange().getAccountId(), appId, templateUri));
-      } else {
-        templateReferenceBuilder.templateUuid(
-            templateService.fetchTemplateIdFromUri(changeContext.getChange().getAccountId(), templateUri));
-      }
+      templateReferenceBuilder.templateUuid(
+          templateService.fetchTemplateIdFromUri(changeContext.getChange().getAccountId(), appId, templateUri));
       String templateVersion = TemplateHelper.obtainTemplateVersion(templateUri);
       try {
         templateReferenceBuilder.templateVersion(Long.valueOf(templateVersion));

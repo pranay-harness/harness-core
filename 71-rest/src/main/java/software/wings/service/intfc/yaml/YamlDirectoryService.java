@@ -121,7 +121,7 @@ public interface YamlDirectoryService {
 
   String getRootPathByInfraProvisioner(InfrastructureProvisioner provisioner);
 
-  String getRootPathByGlobalTemplate(Template template);
+  String getRootPathByTemplate(Template template);
 
   void getGitFileChange(DirectoryNode dn, String path, String accountId, boolean includeFiles,
       List<GitFileChange> gitFileChanges, boolean failFast, Optional<List<String>> listOfYamlErrors,

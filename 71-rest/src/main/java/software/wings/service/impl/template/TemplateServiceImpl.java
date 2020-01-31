@@ -31,6 +31,7 @@ import static software.wings.beans.template.TemplateVersion.TEMPLATE_UUID_KEY;
 import static software.wings.beans.template.VersionedTemplate.TEMPLATE_ID_KEY;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
+import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -52,6 +53,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Variable;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
@@ -71,10 +73,12 @@ import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
+import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.io.IOException;
 import java.net.URL;
@@ -103,6 +107,8 @@ public class TemplateServiceImpl implements TemplateService {
   @Inject private TemplateHelper templateHelper;
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private YamlPushService yamlPushService;
+  @Inject private FeatureFlagService featureFlagService;
   ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
   @Override
@@ -133,8 +139,17 @@ public class TemplateServiceImpl implements TemplateService {
     wingsPersistence.save(buildTemplateDetails(template, templateUuid));
 
     Template savedTemplate = get(templateUuid);
-    // TODO: AUDIT: Once this entity is yamlized, this can be removed
-    auditServiceHelper.reportForAuditingUsingAccountId(savedTemplate.getAccountId(), null, savedTemplate, Type.CREATE);
+
+    // TODO: AUDIT: Once the feature flag is on for all, this can be removed. All audit will be sent through
+    // yamlPushService once feature flag is enabled for all.
+    if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, savedTemplate.getAccountId())) {
+      yamlPushService.pushYamlChangeSet(
+          template.getAccountId(), null, template, Type.CREATE, template.isSyncFromGit(), false);
+    } else {
+      auditServiceHelper.reportForAuditingUsingAccountId(
+          savedTemplate.getAccountId(), null, savedTemplate, Type.CREATE);
+    }
+
     return savedTemplate;
   }
 
@@ -222,8 +237,17 @@ public class TemplateServiceImpl implements TemplateService {
     if (templateDetailsChanged) {
       executorService.submit(() -> updateLinkedEntities(savedTemplate));
     }
-    auditServiceHelper.reportForAuditingUsingAccountId(
-        savedTemplate.getAccountId(), oldTemplate, savedTemplate, Type.UPDATE);
+
+    // TODO: AUDIT: Once the feature flag is on for all, this can be removed. All audit will be sent through
+    // yamlPushService once feature flag is enabled for all.
+    if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, savedTemplate.getAccountId())) {
+      boolean isRename = !template.getName().equals(oldTemplate.getName());
+      yamlPushService.pushYamlChangeSet(
+          template.getAccountId(), oldTemplate, template, Type.UPDATE, template.isSyncFromGit(), isRename);
+    } else {
+      auditServiceHelper.reportForAuditingUsingAccountId(
+          savedTemplate.getAccountId(), oldTemplate, savedTemplate, Type.UPDATE);
+    }
     return savedTemplate;
   }
 
@@ -338,9 +362,15 @@ public class TemplateServiceImpl implements TemplateService {
                                   .filter(TEMPLATE_UUID_KEY, templateUuid));
     }
 
-    // TODO: AUDIT: Once this entity is yamlized, this can be removed
     if (templateDeleted) {
-      auditServiceHelper.reportDeleteForAuditingUsingAccountId(template.getAccountId(), template);
+      // TODO: AUDIT: Once the feature flag is on for all, this can be removed. All audit will be sent through
+      // yamlPushService once feature flag is enabled for all.
+      if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, template.getAccountId())) {
+        yamlPushService.pushYamlChangeSet(
+            template.getAccountId(), template, null, Type.DELETE, template.isSyncFromGit(), false);
+      } else {
+        auditServiceHelper.reportDeleteForAuditingUsingAccountId(template.getAccountId(), template);
+      }
     }
     return templateDeleted;
   }
@@ -528,6 +558,26 @@ public class TemplateServiceImpl implements TemplateService {
       return null;
     }
     return template;
+  }
+
+  @Override
+  public String getTemplateFolderPathString(Template template) {
+    TemplateFolder templateFolder = templateFolderService.get(template.getFolderId());
+    TemplateFolder rootFolder = getTemplateTree(template.getAccountId(), template.getAppId(), null, null);
+    return generateFolderPath(rootFolder, templateFolder);
+  }
+
+  private String generateFolderPath(TemplateFolder folder, TemplateFolder leafFolder) {
+    if (folder.getUuid().equals(leafFolder.getUuid())) {
+      return folder.getName();
+    }
+    for (TemplateFolder children : folder.getChildren()) {
+      String folderName = generateFolderPath(children, leafFolder);
+      if (folderName != null) {
+        return folder.getName() + PATH_DELIMITER + folderName;
+      }
+    }
+    return null;
   }
 
   @Override

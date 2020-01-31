@@ -168,6 +168,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
   @Override
   public <R, T> List<GitFileChange> obtainEntityGitSyncFileChangeSet(
       String accountId, R helperEntity, T entity, ChangeType changeType) {
+    // TODO @abhinav: refactor the code here to be generic.
     List<GitFileChange> gitFileChanges = new ArrayList<>();
     String yaml = null;
 

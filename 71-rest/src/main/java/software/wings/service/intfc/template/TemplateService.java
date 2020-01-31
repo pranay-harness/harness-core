@@ -80,4 +80,6 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
   Template findByFolder(TemplateFolder templateFolder, String templateName, String appId);
 
   Template fetchTemplateFromUri(String templateUri, String accountId, String appId);
+
+  String getTemplateFolderPathString(Template template);
 }

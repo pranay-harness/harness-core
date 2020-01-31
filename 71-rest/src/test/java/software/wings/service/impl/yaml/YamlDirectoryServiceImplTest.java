@@ -6,9 +6,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.APPLICATION_TEMPLATE_LIBRARY_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GLOBAL_TEMPLATE_LIBRARY_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.common.TemplateConstants.SHELL_SCRIPT;
 
 import io.harness.CategoryTest;
@@ -27,6 +29,7 @@ import software.wings.beans.Application;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.common.TemplateConstants;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.YamlVersion;
@@ -43,6 +46,7 @@ import java.util.List;
 public class YamlDirectoryServiceImplTest extends CategoryTest {
   @Mock private YamlGitService yamlGitSyncService;
   @Mock private TemplateService templateService;
+  @Mock private AppService appService;
 
   @InjectMocks private YamlDirectoryServiceImpl yamlDirectoryService = new YamlDirectoryServiceImpl();
   @Before
@@ -130,5 +134,23 @@ public class YamlDirectoryServiceImplTest extends CategoryTest {
     final AccountLevelYamlNode template2Node = (AccountLevelYamlNode) childFolderNode.getChildren().get(0);
     assertThat(template2Node.getAccountId()).isEqualTo(accountid);
     assertThat(template2Node.getName()).isEqualTo("child_folder_template.yaml");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ABHINAV)
+  @Category(UnitTests.class)
+  public void testGetRootByTemplate() {
+    Template template = Template.builder().appId(GLOBAL_APP_ID).build();
+    String folderName = "Harness/name";
+    when(templateService.getTemplateFolderPathString(template)).thenReturn(folderName);
+    assertThat(yamlDirectoryService.getRootPathByTemplate(template))
+        .isEqualTo(yamlDirectoryService.getRootPath() + PATH_DELIMITER + GLOBAL_TEMPLATE_LIBRARY_FOLDER + PATH_DELIMITER
+            + folderName);
+    template.setAppId("random");
+    Application mockApp = Application.Builder.anApplication().name("random").build();
+    when(appService.get("random")).thenReturn(mockApp);
+    assertThat(yamlDirectoryService.getRootPathByTemplate(template))
+        .isEqualTo(yamlDirectoryService.getRootPathByApp(mockApp) + PATH_DELIMITER + APPLICATION_TEMPLATE_LIBRARY_FOLDER
+            + PATH_DELIMITER + folderName);
   }
 }
