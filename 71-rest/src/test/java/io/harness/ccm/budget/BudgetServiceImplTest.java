@@ -118,14 +118,21 @@ public class BudgetServiceImplTest extends CategoryTest {
   }
 
   private Budget mockBudget(String scope) {
-    BudgetBuilder budgetBuilder = Budget.builder()
-                                      .uuid(budgetId)
-                                      .accountId(accountId)
-                                      .name(budgetName)
-                                      .createdAt(createdAt)
-                                      .lastUpdatedAt(lastUpdatedAt)
-                                      .type(budgetType)
-                                      .budgetAmount(budgetAmount);
+    BudgetBuilder budgetBuilder =
+        Budget.builder()
+            .uuid(budgetId)
+            .accountId(accountId)
+            .name(budgetName)
+            .createdAt(createdAt)
+            .lastUpdatedAt(lastUpdatedAt)
+            .alertThresholds(new AlertThreshold[] {AlertThreshold.builder()
+                                                       .percentage(0.5)
+                                                       .alertsSent(1)
+                                                       .crossedAt(currentTime)
+                                                       .basedOn(AlertThresholdBase.ACTUAL_COST)
+                                                       .build()})
+            .type(budgetType)
+            .budgetAmount(budgetAmount);
     if (scope.equals("CLUSTER")) {
       budgetBuilder.scope(ClusterBudgetScope.builder().clusterIds(clusterIds).build());
     } else {
@@ -221,13 +228,12 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetBudgetDetails() {
     when(statsHelper.getEntityName(any(), any())).thenReturn(entityName);
-
-    QLBudgetTableData budgetDetails = budgetService.getBudgetDetails(budget);
-    assertThat(budgetDetails.getName()).isEqualTo("test_budget");
+    QLBudgetTableData budgetDetails = budgetService.getBudgetDetails(mockBudget("APPLICATION"));
+    assertThat(budgetDetails.getName()).isEqualTo(budgetName);
     assertThat(budgetDetails.getId()).isEqualTo(budgetId);
     assertThat(budgetDetails.getType()).isEqualTo(SPECIFIED_AMOUNT.toString());
     assertThat(budgetDetails.getActualAmount()).isEqualTo(0.0);
-    assertThat(budgetDetails.getBudgetedAmount()).isEqualTo(100.0);
+    assertThat(budgetDetails.getBudgetedAmount()).isEqualTo(budgetAmount);
     assertThat(budgetDetails.getScopeType()).isEqualTo("APPLICATION");
     assertThat(budgetDetails.getAppliesTo()[0]).isEqualTo(entityName);
     assertThat(budgetDetails.getAppliesTo()[1]).isEqualTo(entityName);

@@ -33,7 +33,7 @@ public class BudgetTrendStatsDataFetcher
   protected QLBudgetTrendStats fetch(QLBudgetQueryParameters parameters, String accountId) {
     Budget budget = null;
     if (parameters.getBudgetId() != null) {
-      logger.info("Fetching budget data");
+      logger.info("Fetching budgetTrendStats data");
       budget = budgetService.get(parameters.getBudgetId());
     }
     if (budget == null) {
