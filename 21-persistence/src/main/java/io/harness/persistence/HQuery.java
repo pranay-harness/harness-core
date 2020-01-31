@@ -65,6 +65,11 @@ public class HQuery<T> extends QueryImpl<T> {
     super(clazz, coll, ds);
   }
 
+  public MorphiaIterator<T, T> iterator() {
+    logger.error("Do not use the query as iterator directly.", new Exception(""));
+    return this.fetch();
+  }
+
   private void checkKeyListSize(List<Key<T>> list) {
     if (!queryChecks.contains(COUNT)) {
       return;

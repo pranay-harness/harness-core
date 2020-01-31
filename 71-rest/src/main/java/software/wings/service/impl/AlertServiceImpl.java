@@ -224,33 +224,37 @@ public class AlertServiceImpl implements AlertService {
     findExistingAlert(
         accountId, GLOBAL_APP_ID, NoActiveDelegates, NoActiveDelegatesAlert.builder().accountId(accountId).build())
         .ifPresent(this ::close);
-    Query<Alert> alertQuery = wingsPersistence.createQuery(Alert.class)
-                                  .filter(AlertKeys.accountId, accountId)
-                                  .filter(AlertKeys.type, NoEligibleDelegates)
-                                  .field(AlertKeys.status)
-                                  .in(STATUS_ACTIVE);
-    for (Alert alert : alertQuery) {
-      NoEligibleDelegatesAlert data = (NoEligibleDelegatesAlert) alert.getAlertData();
-      if (assignDelegateService.canAssign(delegateId, accountId, data.getAppId(), data.getEnvId(),
-              data.getInfraMappingId(), data.getTaskGroup(), data.getTags())) {
-        close(alert);
+    Query<Alert> query = wingsPersistence.createQuery(Alert.class)
+                             .filter(AlertKeys.accountId, accountId)
+                             .filter(AlertKeys.type, NoEligibleDelegates)
+                             .field(AlertKeys.status)
+                             .in(STATUS_ACTIVE);
+    try (HIterator<Alert> alerts = new HIterator<>(query.fetch())) {
+      for (Alert alert : alerts) {
+        NoEligibleDelegatesAlert data = (NoEligibleDelegatesAlert) alert.getAlertData();
+        if (assignDelegateService.canAssign(delegateId, accountId, data.getAppId(), data.getEnvId(),
+                data.getInfraMappingId(), data.getTaskGroup(), data.getTags())) {
+          close(alert);
+        }
       }
     }
   }
 
   private void deploymentCompletedInternal(String appId, String executionId) {
-    Query<Alert> alertQuery = wingsPersistence.createQuery(Alert.class)
-                                  .filter(AlertKeys.appId, appId)
-                                  .field(AlertKeys.type)
-                                  .in(asList(ApprovalNeeded, ManualInterventionNeeded))
-                                  .field(AlertKeys.status)
-                                  .in(STATUS_ACTIVE);
-    for (Alert alert : alertQuery) {
-      String alertExecutionId = alert.getType() == ApprovalNeeded
-          ? ((ApprovalNeededAlert) alert.getAlertData()).getExecutionId()
-          : ((ManualInterventionNeededAlert) alert.getAlertData()).getExecutionId();
-      if (executionId.equals(alertExecutionId)) {
-        close(alert);
+    Query<Alert> query = wingsPersistence.createQuery(Alert.class)
+                             .filter(AlertKeys.appId, appId)
+                             .field(AlertKeys.type)
+                             .in(asList(ApprovalNeeded, ManualInterventionNeeded))
+                             .field(AlertKeys.status)
+                             .in(STATUS_ACTIVE);
+    try (HIterator<Alert> alerts = new HIterator<>(query.fetch())) {
+      for (Alert alert : alerts) {
+        String alertExecutionId = alert.getType() == ApprovalNeeded
+            ? ((ApprovalNeededAlert) alert.getAlertData()).getExecutionId()
+            : ((ManualInterventionNeededAlert) alert.getAlertData()).getExecutionId();
+        if (executionId.equals(alertExecutionId)) {
+          close(alert);
+        }
       }
     }
   }
