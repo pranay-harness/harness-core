@@ -289,6 +289,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       Comparator.comparingInt((Stencil o) -> o.getStencilCategory().getDisplayOrder())
           .thenComparingInt(Stencil::getDisplayOrder)
           .thenComparing(Stencil::getType);
+  private static final String WORKFLOW_WAS_DELETED = "Workflow was deleted";
+  public static final String ORCHESTRATION_WORKFLOW = "OrchestrationWorkflow";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StencilPostProcessor stencilPostProcessor;
@@ -1316,10 +1318,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public PhaseStep updatePreDeployment(String appId, String workflowId, PhaseStep phaseStep) {
     Workflow workflow = readWorkflow(appId, workflowId);
-    notNullCheck("workflow", workflow, USER);
+    notNullCheck("Workflow", workflow, USER);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
+    notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow, USER);
 
     // Update linked PhaseStep template
     workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(
@@ -1339,7 +1341,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     notNullCheck("workflow", workflow, USER);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
+    notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow, USER);
     // Update linked PhaseStep template
     workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(
         phaseStep, orchestrationWorkflow.getPostDeploymentSteps());
@@ -1369,7 +1371,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
 
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
+    notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow, USER);
 
     workflowPhase.setDaemonSet(isDaemonSet(appId, workflowPhase.getServiceId()));
     workflowPhase.setStatefulSet(isStatefulSet(appId, workflowPhase.getServiceId()));
@@ -1406,7 +1408,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     notNullCheck("workflow", workflow, USER);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
+    notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow, USER);
 
     workflowPhase = orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
     notNullCheck("workflowPhase", workflowPhase, USER);
@@ -1531,7 +1533,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
+    notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow, USER);
 
     if (orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid()) == null) {
       throw new InvalidArgumentsException(Pair.of("workflow", workflowId), Pair.of("workflowPhase", appId),
@@ -1735,7 +1737,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void validateWorkflowPhase(String phaseId, CanaryOrchestrationWorkflow orchestrationWorkflow) {
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
+    notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow, USER);
     notNullCheck("WorkflowPhase", orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId), USER);
   }
 
@@ -1745,7 +1747,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     notNullCheck("workflow", workflow, USER);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
+    notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow, USER);
 
     Graph graph = orchestrationWorkflow.getGraph().getSubworkflows().get(subworkflowId);
 
@@ -1863,7 +1865,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow);
 
     orchestrationWorkflow.setNotificationRules(notificationRules);
     orchestrationWorkflow =
@@ -1877,7 +1879,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("workflow", workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow);
 
     if (concurrencyStrategy.getUnitType() == UnitType.INFRA) {
       concurrencyStrategy.setResourceUnit(INFRA_ID_EXPRESSION);
@@ -1897,10 +1899,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public List<FailureStrategy> updateFailureStrategies(
       String appId, String workflowId, List<FailureStrategy> failureStrategies) {
     Workflow workflow = readWorkflow(appId, workflowId);
-    notNullCheck("Workflow was deleted", workflow, USER);
+    notNullCheck(WORKFLOW_WAS_DELETED, workflow, USER);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
+    notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow, USER);
 
     orchestrationWorkflow.setFailureStrategies(failureStrategies);
     orchestrationWorkflow =
@@ -1917,7 +1919,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     notNullCheck("Workflow was deleted", workflow, USER);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
+    notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow, USER);
 
     orchestrationWorkflow.setUserVariables(userVariables);
     orchestrationWorkflow =

@@ -623,5 +623,7 @@ public class ServiceTemplate extends Base {
   public static final class ServiceTemplateKeys {
     // Temporary
     public static final String appId = "appId";
+    public static final String envId = "envId";
+    public static final String serviceId = "serviceId";
   }
 }

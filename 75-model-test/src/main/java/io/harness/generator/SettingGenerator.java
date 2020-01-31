@@ -68,6 +68,7 @@ import java.util.EnumSet;
 
 @Singleton
 public class SettingGenerator {
+  private static final String ADMIN = "admin";
   private static final String HARNESS_NEXUS = "Harness Nexus";
   private static final String HARNESS_NEXUS_2 = "Harness Nexus 2";
   private static final String HARNESS_JENKINS = "Harness Jenkins";
@@ -272,7 +273,7 @@ public class SettingGenerator {
             .withValue(ServiceNowConfig.builder()
                            .accountId(account.getUuid())
                            .baseUrl("https://ven03171.service-now.com")
-                           .username("admin")
+                           .username(ADMIN)
                            .password(scmSecret.decryptToCharArray(new SecretName("snow_connector")))
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
@@ -548,7 +549,7 @@ public class SettingGenerator {
             .withValue(NexusConfig.builder()
                            .accountId(account.getUuid())
                            .nexusUrl("https://nexus2.harness.io")
-                           .username("admin")
+                           .username(ADMIN)
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_nexus")))
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
@@ -566,7 +567,7 @@ public class SettingGenerator {
             .withValue(NexusConfig.builder()
                            .accountId(account.getUuid())
                            .nexusUrl("https://nexus2-cdteam.harness.io")
-                           .username("admin")
+                           .username(ADMIN)
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_nexus")))
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
@@ -584,7 +585,7 @@ public class SettingGenerator {
             .withValue(NexusConfig.builder()
                            .accountId(account.getUuid())
                            .nexusUrl("https://nexus3.harness.io")
-                           .username("admin")
+                           .username(ADMIN)
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_nexus")))
                            .version("3.x")
                            .build())
@@ -603,7 +604,7 @@ public class SettingGenerator {
             .withValue(ArtifactoryConfig.builder()
                            .accountId(account.getUuid())
                            .artifactoryUrl("https://harness.jfrog.io/harness")
-                           .username("admin")
+                           .username(ADMIN)
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_artifactory")))
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
