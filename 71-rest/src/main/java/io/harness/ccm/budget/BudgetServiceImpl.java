@@ -4,6 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.ccm.budget.entities.AlertThreshold;
+import io.harness.ccm.budget.entities.AlertThresholdBase;
+import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.budget.entities.BudgetScope;
 import io.harness.ccm.budget.entities.BudgetScopeType;
@@ -32,10 +34,12 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -46,6 +50,8 @@ public class BudgetServiceImpl implements BudgetService {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject QLBillingStatsHelper statsHelper;
+  private String NOTIFICATION_TEMPLATE = "%s | %s exceed %s ($%s)";
+  private String DATE_TEMPLATE = "MM-DD-YYYY hh:mm a";
 
   @Override
   public String create(Budget budget) {
@@ -112,6 +118,7 @@ public class BudgetServiceImpl implements BudgetService {
   public double getForecastCost(Budget budget) {
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(budget.getScope().getBudgetScopeFilter());
+    filters.add(getEndTimeFilterForCurrentBillingCycle());
     QLCCMAggregationFunction aggregationFunction = BudgetUtils.makeBillingAmtAggregation();
     QLBillingAmountData billingAmountData =
         billingTrendStatsDataFetcher.getBillingAmountData(budget.getAccountId(), aggregationFunction, filters);
@@ -153,18 +160,36 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public QLBudgetTableData getBudgetDetails(Budget budget) {
     List<Double> alertAt = new ArrayList<>();
+    List<String> notificationMessages = new ArrayList<>();
     if (budget.getAlertThresholds() != null) {
       for (AlertThreshold alertThreshold : budget.getAlertThresholds()) {
         alertAt.add(alertThreshold.getPercentage());
+        if (alertThreshold.getAlertsSent() != 0) {
+          String costType =
+              alertThreshold.getBasedOn() == AlertThresholdBase.ACTUAL_COST ? "Actual costs" : "Forecasted costs";
+          SimpleDateFormat formatter = new SimpleDateFormat(DATE_TEMPLATE);
+          Date date = new Date(alertThreshold.getCrossedAt());
+          notificationMessages.add(String.format(NOTIFICATION_TEMPLATE, formatter.format(date), costType,
+              alertThreshold.getPercentage() + "%", budget.getBudgetAmount()));
+        }
       }
+    }
+    BudgetScope scope = budget.getScope();
+    String scopeType = getScopeType(scope);
+    String environment = "-";
+    if (scopeType.equals(BudgetScopeType.APPLICATION) && scope != null) {
+      ApplicationBudgetScope applicationBudgetScope = (ApplicationBudgetScope) scope;
+      environment = applicationBudgetScope.getEnvironmentType().toString();
     }
     return QLBudgetTableData.builder()
         .name(budget.getName())
         .id(budget.getUuid())
         .type(budget.getType().toString())
-        .scopeType(getScopeType(budget.getScope()))
-        .appliesTo(getAppliesTo(budget.getScope()))
+        .scopeType(scopeType)
+        .appliesTo(getAppliesTo(scope))
+        .environment(environment)
         .alertAt(alertAt.toArray(new Double[0]))
+        .notifications(notificationMessages.toArray(new String[0]))
         .budgetedAmount(budget.getBudgetAmount())
         .actualAmount(getActualCost(budget))
         .build();
@@ -227,6 +252,19 @@ public class BudgetServiceImpl implements BudgetService {
     long startTime = c.getTimeInMillis();
     return QLBillingDataFilter.builder()
         .startTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(startTime).build())
+        .build();
+  }
+
+  private QLBillingDataFilter getEndTimeFilterForCurrentBillingCycle() {
+    Calendar c = Calendar.getInstance();
+    c.set(Calendar.DAY_OF_MONTH, c.getActualMaximum(Calendar.DAY_OF_MONTH));
+    c.set(Calendar.HOUR, c.getActualMaximum(Calendar.HOUR));
+    c.set(Calendar.MINUTE, c.getActualMaximum(Calendar.MINUTE));
+    c.set(Calendar.SECOND, c.getActualMaximum(Calendar.SECOND));
+    c.set(Calendar.MILLISECOND, c.getActualMaximum(Calendar.MILLISECOND));
+    long endTime = c.getTimeInMillis();
+    return QLBillingDataFilter.builder()
+        .endTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(endTime).build())
         .build();
   }
 

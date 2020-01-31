@@ -4,6 +4,8 @@ extend type Query {
 
   # Get list of budgets for an account.
   budgetList: [BudgetTableData] @dataFetcher(name: budgetList)
+
+  budgetTrendStats(budgetId: String!): BudgetTrendStats @dataFetcher(name: budgetTrendStats)
 }
 
 type BudgetDataList {
@@ -24,7 +26,15 @@ type BudgetTableData {
   type: String
   scopeType: String
   appliesTo: [String]
+  environment: String
   alertAt: [Number]
+  notifications: [String]
   budgetedAmount: Number
   actualAmount: Number
+}
+
+type BudgetTrendStats {
+  totalCost: BillingStatsInfo
+  forecastCost: BillingStatsInfo
+  budgetDetails: BudgetTableData
 }
