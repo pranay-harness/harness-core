@@ -268,6 +268,7 @@ public class AuthenticationManager {
         .accounts(user.getAccounts())
         .supportAccounts(user.getSupportAccounts())
         .defaultAccountId(user.getDefaultAccountId())
+        .emailVerified(user.isEmailVerified())
         .build();
   }
 
