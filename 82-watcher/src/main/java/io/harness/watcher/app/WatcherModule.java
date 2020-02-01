@@ -29,6 +29,10 @@ public class WatcherModule extends DependencyModule {
         .toInstance(new ScheduledThreadPoolExecutor(1,
             new ThreadFactoryBuilder().setNameFormat("InputCheck-Thread").setPriority(Thread.NORM_PRIORITY).build()));
     bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("heartbeatExecutor"))
+        .toInstance(new ScheduledThreadPoolExecutor(
+            1, new ThreadFactoryBuilder().setNameFormat("Heartbeat-Thread").setPriority(Thread.MAX_PRIORITY).build()));
+    bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("watchExecutor"))
         .toInstance(new ScheduledThreadPoolExecutor(
             1, new ThreadFactoryBuilder().setNameFormat("Watch-Thread").setPriority(Thread.MAX_PRIORITY).build()));

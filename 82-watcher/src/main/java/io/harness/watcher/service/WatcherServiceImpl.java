@@ -144,6 +144,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
+  @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject @Named("commandCheckExecutor") private ScheduledExecutorService commandCheckExecutor;
@@ -273,18 +274,24 @@ public class WatcherServiceImpl implements WatcherService {
     runningDelegates.addAll(
         Optional.ofNullable(messageService.getData(WATCHER_DATA, RUNNING_DELEGATES, List.class)).orElse(emptyList()));
 
-    watchExecutor.scheduleWithFixedDelay(() -> {
-      Map<String, Object> heartbeatData = new HashMap<>();
-      heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
-      heartbeatData.put(WATCHER_PROCESS, getProcessId());
-      heartbeatData.put(WATCHER_VERSION, getVersion());
-      messageService.putAllData(WATCHER_DATA, heartbeatData);
-      synchronized (this) {
-        if (!working.get()) {
-          watchDelegate();
-        }
+    heartbeatExecutor.scheduleWithFixedDelay(this ::heartbeat, 0, 10, TimeUnit.SECONDS);
+    watchExecutor.scheduleWithFixedDelay(this ::syncWatchDelegate, 0, 10, TimeUnit.SECONDS);
+  }
+
+  private void heartbeat() {
+    Map<String, Object> heartbeatData = new HashMap<>();
+    heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
+    heartbeatData.put(WATCHER_PROCESS, getProcessId());
+    heartbeatData.put(WATCHER_VERSION, getVersion());
+    messageService.putAllData(WATCHER_DATA, heartbeatData);
+  }
+
+  private void syncWatchDelegate() {
+    synchronized (this) {
+      if (!working.get()) {
+        watchDelegate();
       }
-    }, 0, 10, TimeUnit.SECONDS);
+    }
   }
 
   private void watchDelegate() {

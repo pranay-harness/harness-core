@@ -147,6 +147,7 @@ public class WatcherApplication {
 
     // This should run in case of upgrade flow otherwise never called
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("inputExecutor"))).shutdownNow();
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("heartbeatExecutor"))).shutdownNow();
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("watchExecutor"))).shutdownNow();
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("upgradeExecutor"))).shutdownNow();
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("commandCheckExecutor"))).shutdownNow();
