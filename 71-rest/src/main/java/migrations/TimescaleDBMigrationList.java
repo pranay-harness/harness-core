@@ -20,6 +20,7 @@ import migrations.timescaledb.DeploymentAdditionalColumns;
 import migrations.timescaledb.InitSchemaMigration;
 import migrations.timescaledb.InitVerificationSchemaMigration;
 import migrations.timescaledb.RenameInstanceMigration;
+import migrations.timescaledb.UniqueIndexCEUtilizationDataTables;
 import migrations.timescaledb.UpdateServiceGuardSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -47,6 +48,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(16, CreateKubernetesUtilizationData.class))
         .add(Pair.of(17, CreateUtilizationData.class))
         .add(Pair.of(18, AlterCEUtilizationDataTables.class))
+        .add(Pair.of(19, UniqueIndexCEUtilizationDataTables.class))
         .build();
   }
 }
