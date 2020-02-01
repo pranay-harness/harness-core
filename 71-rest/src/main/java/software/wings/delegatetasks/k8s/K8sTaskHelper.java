@@ -71,6 +71,7 @@ import io.harness.k8s.kubectl.GetPodCommand;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutHistoryCommand;
 import io.harness.k8s.kubectl.RolloutStatusCommand;
+import io.harness.k8s.kubectl.Utils;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.HarnessLabelValues;
@@ -164,6 +165,13 @@ public class K8sTaskHelper {
   private static String eventWithNamespaceOutputFormat =
       "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,NAMESPACE:.involvedObject.namespace,MESSAGE:.message,REASON:.reason";
 
+  private static final String ocRolloutStatusCommand =
+      "{OC_COMMAND_PREFIX} rollout status {RESOURCE_ID} {NAMESPACE}--watch=true";
+  private static final String ocRolloutHistoryCommand = "{OC_COMMAND_PREFIX} rollout history {RESOURCE_ID} {NAMESPACE}";
+
+  public static final String ocRolloutUndoCommand =
+      "{OC_COMMAND_PREFIX} rollout undo {RESOURCE_ID} {NAMESPACE}{REVISION}";
+
   public boolean dryRunManifests(Kubectl client, List<KubernetesResource> resources,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) {
     try {
@@ -250,14 +258,28 @@ public class K8sTaskHelper {
       eventWatchProcess = getEventsCommand.executeInBackground(
           k8sDelegateTaskParams.getWorkingDirectory(), watchInfoStream, watchErrorStream);
 
-      RolloutStatusCommand rolloutStatusCommand =
-          client.rollout().status().resource(resourceId.kindNameRef()).namespace(resourceId.getNamespace()).watch(true);
+      ProcessResult result;
+      if (Kind.DeploymentConfig.name().equals(resourceId.getKind())) {
+        String rolloutStatusCommand = getRolloutStatusCommandForDeploymentConfig(k8sDelegateTaskParams, resourceId);
 
-      executionLogCallback.saveExecutionLog(
-          RolloutStatusCommand.getPrintableCommand(rolloutStatusCommand.command()) + "\n");
+        executionLogCallback.saveExecutionLog(
+            rolloutStatusCommand.substring(rolloutStatusCommand.indexOf("oc --kubeconfig")) + "\n");
 
-      ProcessResult result = rolloutStatusCommand.execute(
-          k8sDelegateTaskParams.getWorkingDirectory(), statusInfoStream, statusErrorStream, false);
+        result = Utils.executeScript(
+            k8sDelegateTaskParams.getWorkingDirectory(), rolloutStatusCommand, statusInfoStream, statusErrorStream);
+      } else {
+        RolloutStatusCommand rolloutStatusCommand = client.rollout()
+                                                        .status()
+                                                        .resource(resourceId.kindNameRef())
+                                                        .namespace(resourceId.getNamespace())
+                                                        .watch(true);
+
+        executionLogCallback.saveExecutionLog(
+            RolloutStatusCommand.getPrintableCommand(rolloutStatusCommand.command()) + "\n");
+
+        result = rolloutStatusCommand.execute(
+            k8sDelegateTaskParams.getWorkingDirectory(), statusInfoStream, statusErrorStream, false);
+      }
 
       success = result.getExitValue() == 0;
 
@@ -280,6 +302,36 @@ public class K8sTaskHelper {
         executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
       }
     }
+  }
+
+  public static String getOcCommandPrefix(K8sDelegateTaskParams k8sDelegateTaskParams) {
+    StringBuilder command = new StringBuilder(128);
+
+    String ocPath = k8sDelegateTaskParams.getOcPath();
+    if (StringUtils.isNotBlank(ocPath)) {
+      command.append(encloseWithQuotesIfNeeded(ocPath));
+    } else {
+      command.append("oc");
+    }
+
+    String kubeconfigPath = k8sDelegateTaskParams.getKubeconfigPath();
+    if (StringUtils.isNotBlank(kubeconfigPath)) {
+      command.append(" --kubeconfig=").append(encloseWithQuotesIfNeeded(kubeconfigPath));
+    }
+
+    return command.toString();
+  }
+
+  private String getRolloutStatusCommandForDeploymentConfig(
+      K8sDelegateTaskParams k8sDelegateTaskParams, KubernetesResourceId resourceId) {
+    String namespace = "";
+    if (StringUtils.isNotBlank(resourceId.getNamespace())) {
+      namespace = "--namespace=" + resourceId.getNamespace() + " ";
+    }
+
+    return ocRolloutStatusCommand.replace("{OC_COMMAND_PREFIX}", getOcCommandPrefix(k8sDelegateTaskParams))
+        .replace("{RESOURCE_ID}", resourceId.kindNameRef())
+        .replace("{NAMESPACE}", namespace);
   }
 
   private boolean doStatusCheckForJob(Kubectl client, KubernetesResourceId resourceId,
@@ -353,14 +405,29 @@ public class K8sTaskHelper {
                      format(statusFormat, "Status", resourceId.getName(), line), INFO);
                }
              }) {
-      RolloutStatusCommand rolloutStatusCommand =
-          client.rollout().status().resource(resourceId.kindNameRef()).namespace(resourceId.getNamespace()).watch(true);
+      ProcessResult result;
 
-      executionLogCallback.saveExecutionLog(
-          RolloutStatusCommand.getPrintableCommand(rolloutStatusCommand.command()) + "\n");
+      if (Kind.DeploymentConfig.name().equals(resourceId.getKind())) {
+        String rolloutStatusCommand = getRolloutStatusCommandForDeploymentConfig(k8sDelegateTaskParams, resourceId);
 
-      ProcessResult result = rolloutStatusCommand.execute(
-          k8sDelegateTaskParams.getWorkingDirectory(), statusInfoStream, statusErrorStream, false);
+        executionLogCallback.saveExecutionLog(
+            rolloutStatusCommand.substring(rolloutStatusCommand.indexOf("oc --kubeconfig")) + "\n");
+
+        result = Utils.executeScript(
+            k8sDelegateTaskParams.getWorkingDirectory(), rolloutStatusCommand, statusInfoStream, statusErrorStream);
+      } else {
+        RolloutStatusCommand rolloutStatusCommand = client.rollout()
+                                                        .status()
+                                                        .resource(resourceId.kindNameRef())
+                                                        .namespace(resourceId.getNamespace())
+                                                        .watch(true);
+
+        executionLogCallback.saveExecutionLog(
+            RolloutStatusCommand.getPrintableCommand(rolloutStatusCommand.command()) + "\n");
+
+        result = rolloutStatusCommand.execute(
+            k8sDelegateTaskParams.getWorkingDirectory(), statusInfoStream, statusErrorStream, false);
+      }
 
       boolean success = 0 == result.getExitValue();
       if (!success) {
@@ -570,14 +637,43 @@ public class K8sTaskHelper {
         executionLogCallback);
   }
 
+  private String getRolloutHistoryCommandForDeploymentConfig(
+      K8sDelegateTaskParams k8sDelegateTaskParams, KubernetesResourceId resourceId) {
+    String namespace = "";
+    if (StringUtils.isNotBlank(resourceId.getNamespace())) {
+      namespace = "--namespace=" + resourceId.getNamespace() + " ";
+    }
+
+    return ocRolloutHistoryCommand.replace("{OC_COMMAND_PREFIX}", getOcCommandPrefix(k8sDelegateTaskParams))
+        .replace("{RESOURCE_ID}", resourceId.kindNameRef())
+        .replace("{NAMESPACE}", namespace)
+        .trim();
+  }
+
   public String getLatestRevision(
       Kubectl client, KubernetesResourceId resourceId, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
-    RolloutHistoryCommand rolloutHistoryCommand =
-        client.rollout().history().resource(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
-    ProcessResult result = executeCommandSilent(rolloutHistoryCommand, k8sDelegateTaskParams.getWorkingDirectory());
-    if (result.getExitValue() == 0) {
-      return parseLatestRevisionNumberFromRolloutHistory(result.outputString());
+    if (Kind.DeploymentConfig.name().equals(resourceId.getKind())) {
+      String rolloutHistoryCommand = getRolloutHistoryCommandForDeploymentConfig(k8sDelegateTaskParams, resourceId);
+
+      try (LogOutputStream emptyLogOutputStream = getEmptyLogOutputStream();) {
+        ProcessResult result = Utils.executeScript(k8sDelegateTaskParams.getWorkingDirectory(), rolloutHistoryCommand,
+            emptyLogOutputStream, emptyLogOutputStream);
+
+        if (result.getExitValue() == 0) {
+          String[] lines = result.outputString().split("\\r?\\n");
+          return lines[lines.length - 1].split("\t")[0];
+        }
+      }
+
+    } else {
+      RolloutHistoryCommand rolloutHistoryCommand =
+          client.rollout().history().resource(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
+      ProcessResult result = executeCommandSilent(rolloutHistoryCommand, k8sDelegateTaskParams.getWorkingDirectory());
+      if (result.getExitValue() == 0) {
+        return parseLatestRevisionNumberFromRolloutHistory(result.outputString());
+      }
     }
+
     return "";
   }
 

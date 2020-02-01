@@ -1,18 +1,26 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.model.Kind;
+import io.harness.k8s.model.KubernetesResourceId;
+import io.harness.k8s.model.Release;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -23,6 +31,7 @@ import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
@@ -89,5 +98,28 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1)).deleteSkippedManifestFiles(any(), any());
     verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testUpdateDeploymentConfigRevision() throws Exception {
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+
+    Release.KubernetesResourceIdRevision resourceIdMock = Mockito.mock(Release.KubernetesResourceIdRevision.class);
+    Release release = Release.builder().managedWorkloads(Arrays.asList(resourceIdMock)).build();
+
+    on(k8sRollingDeployTaskHandler).set("release", release);
+    when(k8sTaskHelper.getLatestRevision(any(), any(), any())).thenReturn("2");
+    when(resourceIdMock.getWorkload())
+        .thenReturn(KubernetesResourceId.builder().kind(Kind.DeploymentConfig.name()).build());
+
+    k8sRollingDeployTaskHandler.updateDeploymentConfigRevision(delegateTaskParams);
+    ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+    verify(resourceIdMock).setRevision(captor.capture());
+    assertThat(captor.getValue()).isEqualTo("2");
+
+    when(resourceIdMock.getWorkload()).thenReturn(KubernetesResourceId.builder().kind(Kind.Deployment.name()).build());
+    verify(resourceIdMock, times(1)).setRevision(anyString());
   }
 }

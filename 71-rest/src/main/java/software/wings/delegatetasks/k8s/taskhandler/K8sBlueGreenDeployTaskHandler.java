@@ -156,6 +156,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     List<K8sPod> podList = k8sTaskHelper.getPodDetailsWithColor(
         kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, stageColor);
 
+    currentRelease.setManagedWorkloadRevision(
+        k8sTaskHelper.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
     releaseHistory.setReleaseStatus(Status.Succeeded);
     kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
         k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
