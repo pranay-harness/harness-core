@@ -25,6 +25,7 @@ import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -138,6 +139,12 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       success = k8sTaskHelper.doStatusCheckForAllResources(client, managedWorkloadKubernetesResourceIds,
           k8sDelegateTaskParams, kubernetesConfig.getNamespace(),
           k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WaitForSteadyState));
+
+      // We have to update the DeploymentConfig revision again as the rollout history command sometimes gives the older
+      // revision. There seems to be delay in handling of the DeploymentConfig where it still gives older revision even
+      // after the apply command has successfully run
+      updateDeploymentConfigRevision(k8sDelegateTaskParams);
+
       if (!success) {
         releaseHistory.setReleaseStatus(Status.Failed);
         kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
@@ -329,7 +336,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     }
 
     for (KubernetesResource kubernetesResource : managedWorkloads) {
-      if (Kind.Deployment.name().equals(kubernetesResource.getResourceId().getKind())) {
+      if (ImmutableSet.of(Kind.Deployment.name(), Kind.DeploymentConfig.name())
+              .contains(kubernetesResource.getResourceId().getKind())) {
         kubernetesResource.addLabelsInDeploymentSelector(
             ImmutableMap.of(HarnessLabels.track, HarnessLabelValues.trackStable));
       }
@@ -350,5 +358,18 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     }
 
     release.setManagedWorkloads(kubernetesResourceIdRevisions);
+  }
+
+  @VisibleForTesting
+  void updateDeploymentConfigRevision(K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
+    List<KubernetesResourceIdRevision> workloads = release.getManagedWorkloads();
+
+    for (KubernetesResourceIdRevision kubernetesResourceIdRevision : workloads) {
+      if (Kind.DeploymentConfig.name().equals(kubernetesResourceIdRevision.getWorkload().getKind())) {
+        String latestRevision =
+            k8sTaskHelper.getLatestRevision(client, kubernetesResourceIdRevision.getWorkload(), k8sDelegateTaskParams);
+        kubernetesResourceIdRevision.setRevision(latestRevision);
+      }
+    }
   }
 }

@@ -6,7 +6,9 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ObjectYamlUtils.encodeDot;
 import static io.harness.k8s.manifest.ObjectYamlUtils.readYaml;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.lang.String.format;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.manifest.ObjectYamlUtils;
 import io.harness.k8s.manifest.ResourceUtils;
@@ -81,19 +83,34 @@ public class KubernetesResource {
 
   public KubernetesResource addLabelsInDeploymentSelector(Map<String, String> labels) {
     Object k8sResource = getK8sResource();
-    V1Deployment v1Deployment = (V1Deployment) k8sResource;
-    notNullCheck(MISSING_DEPLOYMENT_SPEC_MSG, v1Deployment.getSpec());
-    if (v1Deployment.getSpec().getSelector() == null) {
-      throw new KubernetesYamlException("Deployment spec does not have selector");
-    }
 
-    Map<String, String> matchLabels = v1Deployment.getSpec().getSelector().getMatchLabels();
-    if (matchLabels == null) {
-      matchLabels = new HashMap<>();
-    }
+    if (k8sResource instanceof DeploymentConfig) {
+      DeploymentConfig deploymentConfig = (DeploymentConfig) k8sResource;
 
-    matchLabels.putAll(labels);
-    v1Deployment.getSpec().getSelector().setMatchLabels(matchLabels);
+      notNullCheck(MISSING_DEPLOYMENT_CONFIG_SPEC_MSG, deploymentConfig.getSpec());
+      Map<String, String> selector = deploymentConfig.getSpec().getSelector();
+      if (selector != null) {
+        selector.putAll(labels);
+      }
+    } else if (k8sResource instanceof V1Deployment) {
+      V1Deployment v1Deployment = (V1Deployment) k8sResource;
+
+      notNullCheck(MISSING_DEPLOYMENT_SPEC_MSG, v1Deployment.getSpec());
+      if (v1Deployment.getSpec().getSelector() == null) {
+        throw new KubernetesYamlException("Deployment spec does not have selector");
+      }
+
+      Map<String, String> matchLabels = v1Deployment.getSpec().getSelector().getMatchLabels();
+      if (matchLabels == null) {
+        matchLabels = new HashMap<>();
+      }
+
+      matchLabels.putAll(labels);
+      v1Deployment.getSpec().getSelector().setMatchLabels(matchLabels);
+    } else {
+      throw new InvalidRequestException(
+          format("Unhandled Kubernetes resource %s while adding labels to selector", this.resourceId.getKind()));
+    }
 
     try {
       this.spec = Yaml.dump(k8sResource);
@@ -108,9 +125,19 @@ public class KubernetesResource {
 
   public KubernetesResource setReplicaCount(Integer replicas) {
     Object k8sResource = getK8sResource();
-    V1Deployment v1Deployment = (V1Deployment) k8sResource;
-    notNullCheck(MISSING_DEPLOYMENT_SPEC_MSG, v1Deployment.getSpec());
-    v1Deployment.getSpec().setReplicas(replicas);
+
+    if (k8sResource instanceof DeploymentConfig) {
+      DeploymentConfig deploymentConfig = (DeploymentConfig) k8sResource;
+      notNullCheck(MISSING_DEPLOYMENT_CONFIG_SPEC_MSG, deploymentConfig.getSpec());
+      deploymentConfig.getSpec().setReplicas(replicas);
+    } else if (k8sResource instanceof V1Deployment) {
+      V1Deployment v1Deployment = (V1Deployment) k8sResource;
+      notNullCheck(MISSING_DEPLOYMENT_SPEC_MSG, v1Deployment.getSpec());
+      v1Deployment.getSpec().setReplicas(replicas);
+    } else {
+      throw new InvalidRequestException(
+          format("Unhandled Kubernetes resource %s while setting replicaCount", this.resourceId.getKind()));
+    }
 
     try {
       this.spec = Yaml.dump(k8sResource);
@@ -125,9 +152,19 @@ public class KubernetesResource {
 
   public Integer getReplicaCount() {
     Object k8sResource = getK8sResource();
-    V1Deployment v1Deployment = (V1Deployment) k8sResource;
-    notNullCheck(MISSING_DEPLOYMENT_SPEC_MSG, v1Deployment.getSpec());
-    return v1Deployment.getSpec().getReplicas();
+
+    if (k8sResource instanceof DeploymentConfig) {
+      DeploymentConfig deploymentConfig = (DeploymentConfig) k8sResource;
+      notNullCheck(MISSING_DEPLOYMENT_CONFIG_SPEC_MSG, deploymentConfig.getSpec());
+      return deploymentConfig.getSpec().getReplicas();
+    } else if (k8sResource instanceof V1Deployment) {
+      V1Deployment v1Deployment = (V1Deployment) k8sResource;
+      notNullCheck(MISSING_DEPLOYMENT_SPEC_MSG, v1Deployment.getSpec());
+      return v1Deployment.getSpec().getReplicas();
+    } else {
+      throw new InvalidRequestException(
+          format("Unhandled Kubernetes resource %s while getting replicaCount", this.resourceId.getKind()));
+    }
   }
 
   public boolean isService() {
@@ -236,6 +273,14 @@ public class KubernetesResource {
         notNullCheck("Service does not have metadata", v1Service.getMetadata());
         newName = (String) transformer.apply(v1Service.getMetadata().getName());
         v1Service.getMetadata().setName(newName);
+        this.resourceId.setName(newName);
+        break;
+
+      case DeploymentConfig:
+        DeploymentConfig deploymentConfig = (DeploymentConfig) k8sResource;
+        notNullCheck("Deployment Config does not have metadata", deploymentConfig.getMetadata());
+        newName = (String) transformer.apply(deploymentConfig.getMetadata().getName());
+        deploymentConfig.getMetadata().setName(newName);
         this.resourceId.setName(newName);
         break;
 

@@ -5,12 +5,16 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static java.lang.String.format;
 import static software.wings.beans.Log.LogColor.Cyan;
+import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Rollback;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
+import static software.wings.delegatetasks.k8s.K8sTaskHelper.getExecutionLogOutputStream;
+import static software.wings.delegatetasks.k8s.K8sTaskHelper.getOcCommandPrefix;
+import static software.wings.delegatetasks.k8s.K8sTaskHelper.ocRolloutUndoCommand;
 
 import com.google.inject.Inject;
 
@@ -18,6 +22,8 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutUndoCommand;
+import io.harness.k8s.kubectl.Utils;
+import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
@@ -29,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
@@ -40,6 +47,7 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -209,14 +217,34 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
           kubernetesResourceIdRevision.getWorkload().kindNameRef(),
           kubernetesResourceIdRevision.getWorkload().getNamespace(), kubernetesResourceIdRevision.getRevision()));
 
-      RolloutUndoCommand rolloutUndoCommand = client.rollout()
-                                                  .undo()
-                                                  .resource(kubernetesResourceIdRevision.getWorkload().kindNameRef())
-                                                  .namespace(kubernetesResourceIdRevision.getWorkload().getNamespace())
-                                                  .toRevision(kubernetesResourceIdRevision.getRevision());
+      ProcessResult result;
 
-      ProcessResult result = K8sTaskHelper.executeCommand(
-          rolloutUndoCommand, k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
+      KubernetesResourceId resourceId = kubernetesResourceIdRevision.getWorkload();
+      if (Kind.DeploymentConfig.name().equals(resourceId.getKind())) {
+        String rolloutUndoCommand = getRolloutUndoCommandForDeploymentConfig(k8sDelegateTaskParams,
+            kubernetesResourceIdRevision.getWorkload(), kubernetesResourceIdRevision.getRevision());
+
+        String printableCommand = rolloutUndoCommand.substring(rolloutUndoCommand.indexOf("oc --kubeconfig"));
+        executionLogCallback.saveExecutionLog(printableCommand + "\n");
+
+        try (LogOutputStream logOutputStream = getExecutionLogOutputStream(executionLogCallback, INFO);
+             LogOutputStream logErrorStream = getExecutionLogOutputStream(executionLogCallback, ERROR);) {
+          printableCommand = new StringBuilder().append("\n").append(printableCommand).append("\n\n").toString();
+          logOutputStream.write(printableCommand.getBytes(StandardCharsets.UTF_8));
+          result = Utils.executeScript(
+              k8sDelegateTaskParams.getWorkingDirectory(), rolloutUndoCommand, logOutputStream, logErrorStream);
+        }
+      } else {
+        RolloutUndoCommand rolloutUndoCommand =
+            client.rollout()
+                .undo()
+                .resource(kubernetesResourceIdRevision.getWorkload().kindNameRef())
+                .namespace(kubernetesResourceIdRevision.getWorkload().getNamespace())
+                .toRevision(kubernetesResourceIdRevision.getRevision());
+
+        result = K8sTaskHelper.executeCommand(
+            rolloutUndoCommand, k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
+      }
 
       if (result.getExitValue() != 0) {
         executionLogCallback.saveExecutionLog(
@@ -230,6 +258,25 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
     }
 
     return true;
+  }
+
+  private String getRolloutUndoCommandForDeploymentConfig(
+      K8sDelegateTaskParams k8sDelegateTaskParams, KubernetesResourceId resourceId, String revision) {
+    String namespace = "";
+    if (StringUtils.isNotBlank(resourceId.getNamespace())) {
+      namespace = "--namespace=" + resourceId.getNamespace() + " ";
+    }
+
+    String evaluatedRevision = "";
+    if (StringUtils.isNotBlank(revision)) {
+      evaluatedRevision = "--to-revision=" + revision;
+    }
+
+    return ocRolloutUndoCommand.replace("{OC_COMMAND_PREFIX}", getOcCommandPrefix(k8sDelegateTaskParams))
+        .replace("{RESOURCE_ID}", resourceId.kindNameRef())
+        .replace("{NAMESPACE}", namespace)
+        .replace("{REVISION}", evaluatedRevision)
+        .trim();
   }
 
   private void printManagedWorkloads(ExecutionLogCallback executionLogCallback) {

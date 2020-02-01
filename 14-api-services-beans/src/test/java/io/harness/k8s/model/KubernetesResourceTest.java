@@ -1,12 +1,15 @@
 package io.harness.k8s.model;
 
+import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
+import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.fail;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
@@ -14,8 +17,13 @@ import com.google.common.io.Resources;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.eraro.ResponseMessage;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.KubernetesYamlException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.rule.Owner;
 import org.apache.commons.io.IOUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -25,6 +33,11 @@ import java.util.Map;
 import java.util.function.UnaryOperator;
 
 public class KubernetesResourceTest extends CategoryTest {
+  @Before
+  public void setup() {
+    initializeLogging();
+  }
+
   @Test
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
@@ -125,6 +138,7 @@ public class KubernetesResourceTest extends CategoryTest {
     nameUpdateTestsUtil("configmap.yaml", true);
     nameUpdateTestsUtil("secret.yaml", true);
     nameUpdateTestsUtil("daemonset.yaml", false);
+    nameUpdateTestsUtil("deployment-config.yaml", true);
   }
 
   private void nameUpdateTestsUtil(String resourceFile, boolean shouldNameChange) throws Exception {
@@ -286,6 +300,28 @@ public class KubernetesResourceTest extends CategoryTest {
     String fileContents = Resources.toString(url, Charsets.UTF_8);
     KubernetesResource resource = processYaml(fileContents).get(0);
     assertThat(resource.getReplicaCount()).isEqualTo(3);
+    url = this.getClass().getResource("/deployment-config.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    resource = processYaml(fileContents).get(0);
+    assertThat(resource.getReplicaCount()).isEqualTo(5);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetReplicaCountForUnhandledResourceKind() throws Exception {
+    URL url = this.getClass().getResource("/job.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+
+    try {
+      resource.getReplicaCount();
+      fail("Should not reach here");
+    } catch (InvalidRequestException e) {
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
+          .extracting(ResponseMessage::getMessage)
+          .containsExactly("Invalid request: Unhandled Kubernetes resource Job while getting replicaCount");
+    }
   }
 
   @Test
@@ -297,6 +333,30 @@ public class KubernetesResourceTest extends CategoryTest {
     KubernetesResource resource = processYaml(fileContents).get(0);
     resource = resource.setReplicaCount(5);
     assertThat(resource.getReplicaCount()).isEqualTo(5);
+
+    url = this.getClass().getResource("/deployment-config.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    resource = processYaml(fileContents).get(0);
+    resource = resource.setReplicaCount(50);
+    assertThat(resource.getReplicaCount()).isEqualTo(50);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testSetReplicaCountForUnhandledResourceKind() throws Exception {
+    URL url = this.getClass().getResource("/job.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+
+    try {
+      resource.setReplicaCount(5);
+      fail("Should not reach here");
+    } catch (InvalidRequestException e) {
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
+          .extracting(ResponseMessage::getMessage)
+          .containsExactly("Invalid request: Unhandled Kubernetes resource Job while setting replicaCount");
+    }
   }
 
   @Test
@@ -385,6 +445,17 @@ public class KubernetesResourceTest extends CategoryTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
+  public void testAddLabelsInDeploymentWithNullMatchLabels() throws Exception {
+    URL url = this.getClass().getResource("/deployment-null-match-labels.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    resource = resource.addLabelsInDeploymentSelector(ImmutableMap.of("key", "val"));
+    assertThat(resource.getField("spec.selector.matchLabels.key")).isEqualTo("val");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
   public void testDeploymentConfigRollingStrategy() throws Exception {
     URL url = this.getClass().getResource("/deployment-config-rolling.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -398,6 +469,22 @@ public class KubernetesResourceTest extends CategoryTest {
         .isEqualTo("pre-varName-1");
     assertThat(resource.getField("spec.strategy.rollingParams.pre.execNewPod.env[1].valueFrom.secretKeyRef.name"))
         .isEqualTo("pre-secretName-2");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testAddLabelsInDeploymentWithNullSelector() throws Exception {
+    URL url = this.getClass().getResource("/deployment-null-selector.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    try {
+      resource.addLabelsInDeploymentSelector(ImmutableMap.of("key", "val"));
+    } catch (KubernetesYamlException e) {
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
+          .extracting(ResponseMessage::getMessage)
+          .containsExactly("Invalid Kubernetes YAML Spec. Deployment spec does not have selector.");
+    }
   }
 
   @Test
@@ -425,6 +512,22 @@ public class KubernetesResourceTest extends CategoryTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
+  public void testAddLabelsInDeploymentConfigWithNullSelector() throws Exception {
+    URL url = this.getClass().getResource("/deployment-config-null-selector.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    try {
+      resource.addLabelsInDeploymentSelector(ImmutableMap.of("key", "val"));
+    } catch (KubernetesYamlException e) {
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
+          .extracting(ResponseMessage::getMessage)
+          .containsExactly("Invalid Kubernetes YAML Spec. DeploymentConfig spec does not have selector.");
+    }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
   public void testDeploymentConfig() throws Exception {
     URL url = this.getClass().getResource("/deployment-config.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -438,5 +541,34 @@ public class KubernetesResourceTest extends CategoryTest {
         .isEqualTo("mysecret-2");
     assertThat(resource.getField("spec.template.spec.containers[0].env[0].valueFrom.configMapKeyRef.name"))
         .isEqualTo("myconfig-1");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testAddLabelsInDeploymentConfigSelector() throws Exception {
+    URL url = this.getClass().getResource("/deployment-config.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    resource = resource.addLabelsInDeploymentSelector(ImmutableMap.of("key", "val"));
+    assertThat(resource.getField("spec.selector.key")).isEqualTo("val");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testAddLabelsInJobSelector() throws Exception {
+    URL url = this.getClass().getResource("/job.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+
+    try {
+      resource.addLabelsInDeploymentSelector(ImmutableMap.of("key", "val"));
+      fail("Should not reach here");
+    } catch (InvalidRequestException e) {
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
+          .extracting(ResponseMessage::getMessage)
+          .containsExactly("Invalid request: Unhandled Kubernetes resource Job while adding labels to selector");
+    }
   }
 }

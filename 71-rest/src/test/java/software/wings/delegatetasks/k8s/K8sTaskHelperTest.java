@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s;
 
+import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.k8s.model.Kind.ConfigMap;
 import static io.harness.k8s.model.Kind.Deployment;
 import static io.harness.k8s.model.Kind.Namespace;
@@ -10,6 +11,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -17,17 +19,21 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DAEMON_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.STATEFUL_SET_YAML;
 import static software.wings.utils.KubernetesConvention.ReleaseHistoryKeyName;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.harness.category.element.UnitTests;
-import io.harness.k8s.manifest.ManifestHelper;
+import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.kubectl.Utils;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
@@ -36,9 +42,17 @@ import io.harness.rule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.zeroturnaround.exec.ProcessOutput;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.StartedProcess;
 import software.wings.WingsBaseTest;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -51,6 +65,7 @@ import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -59,6 +74,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(Utils.class)
+@PowerMockIgnore("javax.net.*")
 public class K8sTaskHelperTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
   @Mock private KubernetesContainerService mockKubernetesContainerService;
@@ -67,8 +85,11 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
   @Mock private HelmTaskHelper mockHelmTaskHelper;
   @Mock private KubernetesHelperService mockKubernetesHelperService;
+  @Mock private ExecutionLogCallback executionLogCallback;
+  @Mock private StartedProcess startedProcess;
+  @Mock private Process process;
 
-  @Spy @Inject @InjectMocks private K8sTaskHelper helper;
+  @Inject @InjectMocks private K8sTaskHelper helper;
 
   @Test
   @Owner(developers = SATYAM)
@@ -90,9 +111,9 @@ public class K8sTaskHelperTest extends WingsBaseTest {
         + "\u001B[0;37m\u001B[40mStatefulSet         statefulSet                             false     #==#\n"
         + "\u001B[0;37m\u001B[40mDaemonSet           daemonSet                               false     #==#\n";
     List<KubernetesResource> kubernetesResources = new ArrayList<>();
-    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
-    kubernetesResources.addAll(ManifestHelper.processYaml(STATEFUL_SET_YAML));
-    kubernetesResources.addAll(ManifestHelper.processYaml(DAEMON_SET_YAML));
+    kubernetesResources.addAll(processYaml(DEPLOYMENT_YAML));
+    kubernetesResources.addAll(processYaml(STATEFUL_SET_YAML));
+    kubernetesResources.addAll(processYaml(DAEMON_SET_YAML));
 
     String resourcesInTableFormat = helper.getResourcesInTableFormat(kubernetesResources);
 
@@ -265,5 +286,111 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     String command = helper.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
         " -f values-0.yaml", "template/service.yaml", HelmVersion.V3);
     Assertions.assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+  }
+
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetLatestRevision() throws Exception {
+    URL url = this.getClass().getResource("/k8s/deployment-config.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder().build();
+    Kubectl client = Kubectl.client("kubectl", "config-path");
+
+    String output = "deploymentconfigs \"test-dc\"\n"
+        + "REVISION\tSTATUS\t\tCAUSE\n"
+        + "35\t\tComplete\tconfig change\n"
+        + "36\t\tComplete\tconfig change";
+
+    PowerMockito.mockStatic(Utils.class);
+    ProcessResult processResult = new ProcessResult(0, new ProcessOutput(output.getBytes()));
+    PowerMockito.when(Utils.executeScript(anyString(), anyString(), any(), any())).thenReturn(processResult);
+
+    String latestRevision = helper.getLatestRevision(client, resource.getResourceId(), k8sDelegateTaskParams);
+    assertThat(latestRevision).isEqualTo("36");
+
+    PowerMockito.mockStatic(Utils.class);
+    processResult = new ProcessResult(1, new ProcessOutput("".getBytes()));
+    PowerMockito.when(Utils.executeScript(anyString(), anyString(), any(), any())).thenReturn(processResult);
+
+    latestRevision = helper.getLatestRevision(client, resource.getResourceId(), k8sDelegateTaskParams);
+    assertThat(latestRevision).isEqualTo("");
+  }
+
+  private void setupForDoStatusCheckForAllResources() throws Exception {
+    PowerMockito.mockStatic(Utils.class);
+    ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
+    PowerMockito.when(Utils.executeScript(anyString(), anyString(), any(), any())).thenReturn(processResult);
+
+    PowerMockito.when(Utils.encloseWithQuotesIfNeeded("kubectl")).thenReturn("kubectl");
+    PowerMockito.when(Utils.encloseWithQuotesIfNeeded("oc")).thenReturn("oc");
+    PowerMockito.when(Utils.encloseWithQuotesIfNeeded("config-path")).thenReturn("config-path");
+
+    when(process.destroyForcibly()).thenReturn(process);
+    PowerMockito.when(Utils.startScript(any(), any(), any(), any())).thenReturn(startedProcess);
+    PowerMockito.when(startedProcess.getProcess()).thenReturn(process);
+  }
+
+  private void doStatusCheck(String manifestFilePath, String expectedOutput, boolean allResources) throws Exception {
+    URL url = this.getClass().getResource(manifestFilePath);
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+
+    K8sDelegateTaskParams k8sDelegateTaskParams =
+        K8sDelegateTaskParams.builder().kubectlPath("kubectl").ocPath("oc").kubeconfigPath("config-path").build();
+    Kubectl client = Kubectl.client("kubectl", "config-path");
+
+    if (allResources) {
+      helper.doStatusCheckForAllResources(
+          client, asList(resource.getResourceId()), k8sDelegateTaskParams, "default", executionLogCallback);
+    } else {
+      helper.doStatusCheck(client, resource.getResourceId(), k8sDelegateTaskParams, executionLogCallback);
+    }
+
+    ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+    PowerMockito.verifyStatic();
+    Utils.executeScript(any(), captor.capture(), any(), any());
+    assertThat(captor.getValue()).isEqualTo(expectedOutput);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForAllResourcesForDC() throws Exception {
+    setupForDoStatusCheckForAllResources();
+
+    doStatusCheck("/k8s/deployment-config.yaml",
+        "oc --kubeconfig=config-path rollout status DeploymentConfig/test-dc --namespace=default --watch=true", true);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForAllResourcesForDeployment() throws Exception {
+    setupForDoStatusCheckForAllResources();
+
+    doStatusCheck("/k8s/deployment.yaml",
+        "kubectl --kubeconfig=config-path rollout status Deployment/nginx-deployment --watch=true", true);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForDC() throws Exception {
+    setupForDoStatusCheckForAllResources();
+
+    doStatusCheck("/k8s/deployment-config.yaml",
+        "oc --kubeconfig=config-path rollout status DeploymentConfig/test-dc --namespace=default --watch=true", false);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForDeployment() throws Exception {
+    setupForDoStatusCheckForAllResources();
+
+    doStatusCheck("/k8s/deployment.yaml",
+        "kubectl --kubeconfig=config-path rollout status Deployment/nginx-deployment --watch=true", true);
   }
 }
