@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ecs.model.LaunchType;
@@ -101,13 +100,10 @@ public class InfraMappingToDefinitionMigration implements Migration {
   // "0LRUeE0IR8ax08KOXrMv3A","XtqjhVchTfOwuNqXiSzxdQ", "i3p84Q6oTXaN7JvCNLQJRA","UtTa95tnQqWxGByLkXlp6Q",
   // "wXdRHOtoSuK1Qdi6QWnGgA"
 
-  private final Set<String> accountIdsToExclude =
-      new HashSet<>(Arrays.asList("2aB3xZkET1aWYCidfxPurw", "9BSvDjK_RGu1KM41GAQCzA", "BaPwUKG5SPa4EVyvuWZs7Q",
-          "OMQfesGZQtykl8qaKU-2_A", "RDIpim-aQpiTdqZ5R2R18g", "TLg9p_CnRWSg7WKzk13ykA", "UsxMUcMBRqKfzMDmSfDT1w",
-          "bwBVO7N0RmKltRhTjk101A", "ddMx7_A_RNmmFInDMp2yXg", "en9EZJ2gTCS6WeY9x-XRfg", "o7HilTQFRxGf96jzUO8lSQ",
-          "qmBAOdC3TpeQ62h7ONmP7g", "55563ed1-bea1-456a-943d-f28bc8fb141d", "E6Hr7uoC2fh5o8N9WWHptD",
-          "SERx8_qVRT6zbzN05J1gwg", "e05393d5-f171-44f5-9083-387c7455d51c", "gz4oUAlfSgONuOrWmphHif",
-          "kmpySmUISimoRrJL6NL73w", "lU1_N50mRcur3e6OO2_9sg", "x2Ynq8DDwjotzB9sw6X9nl"));
+  private final Set<String> accountIdsToExclude = new HashSet<>(Arrays.asList("2aB3xZkET1aWYCidfxPurw",
+      "9BSvDjK_RGu1KM41GAQCzA", "bwBVO7N0RmKltRhTjk101A", "en9EZJ2gTCS6WeY9x-XRfg", "qmBAOdC3TpeQ62h7ONmP7g",
+      "55563ed1-bea1-456a-943d-f28bc8fb141d", "E6Hr7uoC2fh5o8N9WWHptD", "e05393d5-f171-44f5-9083-387c7455d51c",
+      "gz4oUAlfSgONuOrWmphHif", "lU1_N50mRcur3e6OO2_9sg", "x2Ynq8DDwjotzB9sw6X9nl"));
 
   @Override
   public void migrate() {
@@ -241,7 +237,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
                 prov.getUuid())));
       }
 
-      Map<String, String> fieldNameChanges = Maps.newHashMap();
+      Map<String, String> fieldNameChanges = new HashMap<>();
       InfraMappingInfrastructureProvider infrastructure;
       if (src instanceof AwsInfrastructureMapping) {
         AwsInfrastructureMapping awsSrc = (AwsInfrastructureMapping) src;

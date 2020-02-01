@@ -23,6 +23,7 @@ import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
 import migrations.all.FetchAndSaveAccounts2;
+import migrations.all.InfraMappingToDefinitionMigration;
 import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
 import migrations.all.InitServiceCounters;
@@ -146,6 +147,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(84, BaseMigration.class))
         .add(Pair.of(85, WFEAddDeploymentMetaData.class))
         .add(Pair.of(86, SetAccountIdProvisioners.class))
+        .add(Pair.of(87, InfraMappingToDefinitionMigration.class))
         .build();
   }
 }
