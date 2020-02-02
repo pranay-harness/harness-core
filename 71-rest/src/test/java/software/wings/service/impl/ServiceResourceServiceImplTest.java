@@ -80,10 +80,10 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void shouldUpdateHelmVersionIfNotPresent() {
+  public void shouldNotUpdateHelmVersionIfNotPresent() {
     Service helmService = Service.builder().appId(APP_ID).uuid("some-random-helm-id").deploymentType(HELM).build();
     helmService = updateAndGetService(helmService, helmService);
-    assertThat(helmService.getHelmVersion()).isEqualTo(V2);
+    assertThat(helmService.getHelmVersion()).isNull();
   }
 
   @Test
@@ -172,7 +172,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUpdateOperationsForHelmVersion() {
     opsMapShouldBeUpdatedWhenVersionPresent();
-    opsMapShouldBeUpdatedWhenVersionNotPresentInOldAndNewService();
+    opsMapShouldNotBeUpdatedWhenVersionNotPresentInOldAndNewService();
     opsMapShouldNotBeUpdatedWhenVersionNotPresentInNewService();
     opsMapShouldNotBeUpdatedWhenNonHelmK8sService();
   }
@@ -203,17 +203,17 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     assertThat(opsMap.isEmpty()).isTrue();
   }
 
-  private void opsMapShouldBeUpdatedWhenVersionNotPresentInOldAndNewService() {
+  private void opsMapShouldNotBeUpdatedWhenVersionNotPresentInOldAndNewService() {
     Service newService = Service.builder().appId(APP_ID).deploymentType(HELM).build();
     Service oldService = Service.builder().appId(APP_ID).deploymentType(HELM).build();
     UpdateOperations<Service> updateOperations = wingsPersistence.createUpdateOperations(Service.class);
 
     serviceResourceService.updateOperationsForHelmVersion(oldService, newService, updateOperations);
 
-    Map<String, Object> ops =
+    Map<String, Object> fieldValues =
         ReflectionUtils.getFieldValues(updateOperations, new HashSet<>(Collections.singletonList("ops")));
-    Object value = ((Map) ((Map) ops.get("ops")).get("$set")).get(ServiceKeys.helmVersion);
-    assertThat(value).isEqualTo(V2.name());
+    Map opsMap = (Map) fieldValues.get("ops");
+    assertThat(opsMap.isEmpty()).isTrue();
   }
 
   private void opsMapShouldBeUpdatedWhenVersionPresent() {
@@ -244,7 +244,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
 
     HelmVersion helmVersion = spyServiceResourceService.getHelmVersionWithDefault(APP_ID, SERVICE_ID);
 
-    assertThat(helmVersion).isEqualTo(V3);
+    assertThat(helmVersion).isEqualTo(V2);
   }
 
   private void shouldReturnDefaultForHelmService() {

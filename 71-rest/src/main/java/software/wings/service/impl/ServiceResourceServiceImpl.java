@@ -42,7 +42,6 @@ import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_HELM_VALUE_YAML;
 import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V2;
-import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V3;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
@@ -740,12 +739,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (newService.getHelmVersion() != null) {
       validateHelmVersion(savedService);
       updateOperations.set(ServiceKeys.helmVersion, newService.getHelmVersion());
-    } else if (savedService.getHelmVersion() == null) {
-      // Lazy Migration
-      HelmVersion defaultHelmVersion = getDefaultHelmVersion(savedService.getDeploymentType());
-      if (defaultHelmVersion != null) {
-        updateOperations.set(ServiceKeys.helmVersion, defaultHelmVersion);
-      }
     }
   }
 
@@ -2430,7 +2423,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       case HELM:
         return V2;
       case KUBERNETES:
-        return V3;
+        return V2;
       default:
         return null;
     }
