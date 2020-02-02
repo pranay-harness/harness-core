@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
 import io.harness.limits.impl.model.StaticLimit;
@@ -30,7 +30,7 @@ public class StaticLimitVicinityCheckerMongoImplIntegrationTest extends BaseInte
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testCrossed() {
     String key = "some-key-" + NAMESPACE + ":" + ActionType.DEPLOY;
     Counter counter = new Counter(key, 10);

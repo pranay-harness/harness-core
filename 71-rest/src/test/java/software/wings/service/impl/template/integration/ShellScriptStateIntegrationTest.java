@@ -10,7 +10,7 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Ignore;
@@ -36,7 +36,7 @@ public class ShellScriptStateIntegrationTest extends WingsBaseTest {
 
   @Test(expected = WingsException.class)
   @Owner(developers = AADITI)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateUpdateDeleteShellScriptTemplate() {
     // Create template

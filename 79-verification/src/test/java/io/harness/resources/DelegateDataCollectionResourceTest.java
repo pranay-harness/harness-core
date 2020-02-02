@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseIntegrationTest;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +34,7 @@ public class DelegateDataCollectionResourceTest extends VerificationBaseIntegrat
 
   @Test
   @Owner(developers = KAMAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testPostCVActivityLog() {
     WebTarget target =
         client.target(VERIFICATION_API_BASE + "/delegate-data-collection/save-cv-activity-logs?accountId=" + accountId);

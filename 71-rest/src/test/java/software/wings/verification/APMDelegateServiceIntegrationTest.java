@@ -3,7 +3,7 @@ package software.wings.verification;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import io.harness.scm.SecretName;
 import org.junit.Before;
@@ -39,7 +39,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRAVEEN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testValidateConnectorHappyCase() {
     options.put("from", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
     options.put("to", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
@@ -57,7 +57,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRAVEEN, intermittent = true)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testValidateConnectorHappyCaseNoCollectionMethod() {
     options.put("from", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
     options.put("to", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
@@ -74,7 +74,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRAVEEN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testValidateConnectorHappyCaseDatadogConfig() {
     DatadogConfig ddConfig =
         DatadogConfig.builder()
@@ -93,7 +93,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRAVEEN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testValidateConnectorHappyCasePost() {
     APMValidateCollectorConfig config =
         APMValidateCollectorConfig.builder()

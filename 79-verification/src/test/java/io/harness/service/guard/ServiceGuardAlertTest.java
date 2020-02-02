@@ -12,7 +12,7 @@ import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
 import static software.wings.sm.StateType.SUMO;
 
 import io.harness.VerificationBaseIntegrationTest;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +52,7 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public <T extends CVConfiguration> void testLogsConfigurationResetBaseline() {
     final String appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
     final String connectorId = wingsPersistence.save(Builder.aSettingAttribute()

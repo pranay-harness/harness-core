@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 import com.google.protobuf.util.Durations;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
@@ -46,7 +46,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = HITESH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldCreatePerpetualTask() {
     String taskId = perpetualTaskService.createTask(
         DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false);
@@ -58,7 +58,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = HITESH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldCreateDuplicatePerpetualTask() {
     String taskId = perpetualTaskService.createTask(
         DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, true);
@@ -70,7 +70,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = HITESH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldDeletePerpetualTask() {
     String taskId = perpetualTaskService.createTask(
         DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false);
@@ -80,7 +80,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = HITESH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldUpdateHeartbeat() {
     String taskId = perpetualTaskService.createTask(
         DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false);

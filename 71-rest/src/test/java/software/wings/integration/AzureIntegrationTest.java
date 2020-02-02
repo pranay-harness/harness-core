@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.microsoft.azure.management.containerservice.OSType;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.ccm.CCMConfig;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
@@ -55,7 +55,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = PUNEET)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void azureAuthenticationTest() {
     AzureConfig config = getAzureConfig();
     azureHelperService.validateAzureAccountCredential(config, Collections.emptyList());
@@ -63,7 +63,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = PUNEET)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void getSubscriptionsTest() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -73,7 +73,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = PUNEET)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void getContainerRegistriesTest() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -90,7 +90,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = PUNEET)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void getVirtualMachineScaleSetsTest() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -106,7 +106,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = PUNEET)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void getAvailabilitySets() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -122,7 +122,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = PUNEET, intermittent = true)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void getAvailableTags() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -140,7 +140,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = PUNEET, intermittent = true)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Ignoring for now as its flaky")
   public void getHostsByResourceGroupAndTag() {
     AzureConfig config = getAzureConfig();
@@ -179,7 +179,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = PUNEET)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void getRepositoryTags() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -204,7 +204,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = PUNEET, intermittent = true)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void getKubernetesClusters() {
     AzureConfig config = getAzureConfig();
     List<AzureKubernetesCluster> clusters =

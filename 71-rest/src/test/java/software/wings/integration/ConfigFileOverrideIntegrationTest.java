@@ -18,7 +18,7 @@ import static software.wings.service.intfc.ServiceVariableService.EncryptedField
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
 import org.junit.Before;
@@ -182,7 +182,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
    */
   @Test
   @Owner(developers = BRETT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldApplyServiceConfigFilesIT() throws IOException {
     attacheConfigFileToEntity(template.getServiceId(), EntityType.SERVICE);

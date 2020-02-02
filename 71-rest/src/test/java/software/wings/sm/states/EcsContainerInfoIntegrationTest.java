@@ -18,7 +18,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
@@ -94,7 +94,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetLastExecutionNodesECS() throws IllegalAccessException {
     AwsConfig awsConfig = AwsConfig.builder()

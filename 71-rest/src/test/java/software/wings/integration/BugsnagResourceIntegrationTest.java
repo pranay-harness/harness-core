@@ -12,7 +12,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
@@ -78,7 +78,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRANJAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetBugsnagApplications() {
     WebTarget target = client.target(API_BASE + "/bugsnag"
         + "/applications"
@@ -97,7 +97,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRANJAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetBugsnagOrganizations() {
     WebTarget target = client.target(API_BASE + "/bugsnag"
         + "/orgs"
@@ -115,7 +115,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRANJAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetLogRecords() {
     BugsnagSetupTestData testNodedata = getBugsnagSampledata();
     WebTarget target =

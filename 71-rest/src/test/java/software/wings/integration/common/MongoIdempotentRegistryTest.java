@@ -13,7 +13,7 @@ import static software.wings.beans.Idempotent.TENTATIVE;
 import com.google.inject.Inject;
 
 import com.mongodb.MongoCommandException;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
@@ -93,7 +93,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testMongoRegisterTentativeAssumptions() {
     Idempotent tentativeIdempotent = Idempotent.builder().uuid(id.getValue()).state(TENTATIVE).build();
     wingsPersistence.save(tentativeIdempotent);
@@ -125,7 +125,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testMongoUnregisterMissingAssumptions() {
     wingsPersistence.delete(Idempotent.class, id.getValue());
     wingsPersistence.findAndModify(idempotentRegistry.query(id), idempotentRegistry.unregisterUpdateOperation(),
@@ -135,7 +135,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testMongoUnregisterTentativeAssumptions() {
     Idempotent tentativeIdempotent = Idempotent.builder().uuid(id.getValue()).state(TENTATIVE).build();
     wingsPersistence.save(tentativeIdempotent);
@@ -147,7 +147,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testMongoUnregisterSucceededAssumptions() {
     Idempotent doneIdempotent = Idempotent.builder().uuid(id.getValue()).state(SUCCEEDED).build();
     wingsPersistence.save(doneIdempotent);

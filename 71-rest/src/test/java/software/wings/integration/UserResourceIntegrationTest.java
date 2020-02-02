@@ -3,7 +3,7 @@ package software.wings.integration;
 import static io.harness.rule.OwnerRule.AMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -23,7 +23,7 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = AMAN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testLoginTypeResponseForNewAdminUserShouldReturnUserPassWord() {
     String argument = "userName=admin@harness.io";
     String url = getLoginTypeResponseUri(getLoginTypeURI, argument);
@@ -35,7 +35,7 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = AMAN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
 
   public void testLoginTypeResponseForNonExistentUserShouldReturnUserPassWord() {
     String nonExistingUserArgument = "userName=random@xyz";

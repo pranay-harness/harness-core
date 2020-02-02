@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import lombok.val;
 import org.junit.After;
@@ -48,7 +48,7 @@ public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = HITESH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testCreateGCPUsageReport() {
     val gcpUsageReport = getSampleGCPUsageReport();
     val id = persistence.save(gcpUsageReport);
@@ -65,7 +65,7 @@ public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = HITESH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testLastGCPUsageReportTime() {
     val gcpUsageReport = getSampleGCPUsageReport();
     val id = persistence.save(gcpUsageReport);

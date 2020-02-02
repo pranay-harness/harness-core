@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,7 +22,7 @@ public class FeatureFlagServiceImplIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = VAIBHAV_SI)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testEnableAccount() {
     shouldEnableWhenFeatureFlagNotAlreadyPresent();
     shouldEnableWhenSomeAccountsPresent();

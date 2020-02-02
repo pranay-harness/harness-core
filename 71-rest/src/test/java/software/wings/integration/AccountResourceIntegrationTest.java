@@ -7,7 +7,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.PageResponse;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
@@ -44,7 +44,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testAccountMigration() {
     disableAccount(accountId, true);
 
@@ -82,7 +82,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAMA)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shallCreateAndDeleteAccount() {
     Account account = new Account();
     account.setLicenseInfo(getLicenseInfo());
@@ -116,7 +116,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAMA)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldEnableAndDisableCloudCost() {
     Account account = new Account();
     account.setLicenseInfo(getLicenseInfo());

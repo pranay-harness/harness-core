@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Sets;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
@@ -24,7 +24,7 @@ import javax.ws.rs.core.GenericType;
 public class TimeSeriesResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRAVEEN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetKeyTransactions() {
     loginAdminUser();
     String cvConfigId = generateUuid();
@@ -46,7 +46,7 @@ public class TimeSeriesResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRAVEEN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testAddKeyTransactions() {
     loginAdminUser();
     String cvConfigId = generateUuid();
@@ -70,7 +70,7 @@ public class TimeSeriesResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRAVEEN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testRemoveKeyTransactions() {
     loginAdminUser();
     String cvConfigId = generateUuid();

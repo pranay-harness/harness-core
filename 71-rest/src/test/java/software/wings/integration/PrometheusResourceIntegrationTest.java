@@ -11,7 +11,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import org.apache.http.HttpStatus;
@@ -69,7 +69,7 @@ public class PrometheusResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetMetricsWithDataForNode() {
     PrometheusSetupTestNodeData setupTestNodeData = getPrometheusSetupTestNodedata();
@@ -90,7 +90,7 @@ public class PrometheusResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetMetricsWithDataForNodeServiceLevel() {
     PrometheusSetupTestNodeData setupTestNodeData = getPrometheusSetupTestNodedata();

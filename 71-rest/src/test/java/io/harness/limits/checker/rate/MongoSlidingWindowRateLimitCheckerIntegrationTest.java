@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.offset;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.checker.rate.UsageBucket.UsageBucketKeys;
@@ -81,7 +81,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testCheckAndConsume() throws Exception {
     int maxReq = 10;
     int durationInMillis = 5000;
@@ -101,7 +101,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testVicinity() throws Exception {
     int maxReq = 10;
     int durationInMillis = 5000;
@@ -120,7 +120,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testCheckAndConsumeConcurrent() throws Exception {
     int maxAllowedReq = 40;
     int durationInMillis = 5000;

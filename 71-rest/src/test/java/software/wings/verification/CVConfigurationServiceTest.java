@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -40,7 +40,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
 
   @Test(expected = WingsException.class)
   @Owner(developers = PRAVEEN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSaveDuplicateName() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =
         AppDynamicsCVServiceConfiguration.builder().tierId(tierId).appDynamicsApplicationId("1234").build();
@@ -57,7 +57,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRAVEEN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testUpdateGoodCase() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =
         AppDynamicsCVServiceConfiguration.builder().tierId(tierId).appDynamicsApplicationId("1234").build();
@@ -82,7 +82,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
 
   @Test(expected = WingsException.class)
   @Owner(developers = PRAVEEN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testUpdateDuplicateName() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =
         AppDynamicsCVServiceConfiguration.builder().tierId(tierId).appDynamicsApplicationId("1234").build();

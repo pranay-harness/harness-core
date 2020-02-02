@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationServiceMongo;
 import io.harness.limits.impl.model.RateLimit;
@@ -39,7 +39,7 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testConfigure() throws Exception {
     StaticLimit limit = new StaticLimit(10);
     String url = IntegrationTestUtils.buildAbsoluteUrl("/api/limits/configure/static-limit",
@@ -57,7 +57,7 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testConfigureRateLimit() throws Exception {
     RateLimit limit = new RateLimit(10, 24, TimeUnit.HOURS);
     String url = IntegrationTestUtils.buildAbsoluteUrl("/api/limits/configure/rate-limit",

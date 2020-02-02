@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.PRANJAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.VerificationBaseIntegrationTest;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.resources.intfc.ExperimentalLogAnalysisResource;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -31,7 +31,7 @@ public class ExperimentalLogAnalysisResourceIntegrationTest extends Verification
 
   @Test
   @Owner(developers = PRANJAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetLogExpAnalysisInfo() throws UnknownHostException {
     WebTarget getTarget = client.target(VERIFICATION_API_BASE + "/"
         + "learning-exp" + ExperimentalLogAnalysisResource.ANALYSIS_STATE_GET_EXP_ANALYSIS_INFO_URL

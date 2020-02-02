@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
@@ -36,7 +36,7 @@ public class InitWorkflowCountersIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UJJAWAL, intermittent = true)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testMigrate() {
     long totalWorkflows = wingsPersistence.createQuery(Workflow.class).count();
     if (totalWorkflows == 0) {

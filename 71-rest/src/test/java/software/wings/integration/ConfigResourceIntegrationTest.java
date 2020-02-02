@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -64,7 +64,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testServiceLevelConfigFileCrud() {
     // 1. Create a new service level config file
@@ -101,7 +101,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testMultipleConfigFileUpdate_shouldNot_OverwriteEachOther() {
     // 1. Create 2 new service level config files
@@ -145,7 +145,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testEnvironmentLevelConfigFileOverrideCrud() {
     // 1. Create a new service level config file

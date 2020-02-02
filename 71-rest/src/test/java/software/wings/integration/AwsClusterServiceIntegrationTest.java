@@ -7,7 +7,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -73,7 +73,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateCluster() {
     Map<String, Object> params = new HashMap<>();
@@ -93,7 +93,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldResizeCluster() {
     awsClusterService.resizeCluster(Regions.US_EAST_1.getName(), awsConnectorSetting, Collections.emptyList(),
@@ -102,13 +102,13 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDeleteCluster() {}
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldProvisionNode() {
     Map<String, Object> params1 = new HashMap<>();
@@ -133,7 +133,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateClusterFromCFTemplate() throws InterruptedException {
     ((EcsContainerServiceImpl) ecsContainerService).createCluster();

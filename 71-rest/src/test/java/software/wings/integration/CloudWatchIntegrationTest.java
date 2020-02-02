@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
@@ -138,7 +138,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAGHU)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetEc2Metrics() throws Exception {
     WebTarget target = client.target(
         API_BASE + "/cloudwatch/get-metric-names?accountId=" + accountId + "&awsNameSpace=" + AwsNameSpace.EC2);
@@ -150,7 +150,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAGHU, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetLoadBalancersTest() throws Exception {
     WebTarget target = client.target(API_BASE + "/cloudwatch/get-load-balancers?accountId=" + accountId
         + "&settingId=" + awsConfigId + "&region=" + Regions.US_EAST_1.getName());
@@ -162,7 +162,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetMetricsWithDataForNode() throws Exception {
     CloudWatchSetupTestNodeData setupTestNodedata = getCloudWatchSetupTestNodedata();
     WebTarget target = client.target(API_BASE + "/cloudwatch/node-data?accountId=" + accountId);
@@ -179,7 +179,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRANJAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetLambdaFunctionNamesPermissionsNotAvailable() throws Exception {
     WebTarget target = client.target(API_BASE + "/cloudwatch/get-lambda-functions?accountId=" + accountId
         + "&settingId=" + awsConfigNoLambdaId + "&region=" + Regions.US_EAST_1.getName());
@@ -190,7 +190,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetECSClusternNames() throws Exception {
     WebTarget target = client.target(API_BASE + "/cloudwatch/get-ecs-cluster-names?accountId=" + accountId
         + "&settingId=" + awsConfigId + "&region=" + Regions.US_EAST_1.getName());
@@ -205,7 +205,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetEC2InstancesNames() throws Exception {
     WebTarget target = client.target(API_BASE + "/cloudwatch/get-ec2-instances?accountId=" + accountId
         + "&settingId=" + awsConfigId + "&region=" + Regions.US_EAST_1.getName());

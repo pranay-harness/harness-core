@@ -6,7 +6,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,7 +22,7 @@ public class WorkflowExecutionServiceImplIntegrationTest extends BaseIntegration
 
   @Test
   @Owner(developers = VAIBHAV_SI)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldGetStateExecutionInstancesForPhases() {
     StateExecutionInstance stateExecutionInstance1 = null, stateExecutionInstance2 = null,
                            stateExecutionInstance3 = null;
@@ -48,7 +48,7 @@ public class WorkflowExecutionServiceImplIntegrationTest extends BaseIntegration
 
   @Test
   @Owner(developers = VAIBHAV_SI)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldReturnEmptyWhenStateExecutionInstancesForPhasesNotExists() {
     List<StateExecutionInstance> stateExecutionInstancesForPhases =
         workflowExecutionService.getStateExecutionInstancesForPhases("non-existent-execution-id");

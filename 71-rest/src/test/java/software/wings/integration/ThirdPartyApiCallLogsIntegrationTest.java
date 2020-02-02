@@ -10,7 +10,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import com.google.common.collect.Lists;
 
 import io.harness.beans.PageResponse;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -48,7 +48,7 @@ public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSaveApiCallLogs() throws Exception {
     int numOfApiCallLogs = 12;
     List<ThirdPartyApiCallLog> apiCallLogs = new ArrayList<>();

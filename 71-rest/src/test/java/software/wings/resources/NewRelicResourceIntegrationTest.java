@@ -3,7 +3,7 @@ package software.wings.resources;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +63,7 @@ public class NewRelicResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UNKNOWN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   /**
    * Integration test for getAllMetricNames
    * This API should return the names of all the metrics listed in the YAML

@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import lombok.val;
 import org.junit.After;
@@ -60,7 +60,7 @@ public class GCPMarketPlaceServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = HITESH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGCPUsageReport() {
     val currentTime = Instant.now();
     val startTime = currentTime.truncatedTo(ChronoUnit.MINUTES);

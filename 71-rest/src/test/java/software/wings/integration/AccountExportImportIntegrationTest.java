@@ -6,7 +6,7 @@ import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -54,7 +54,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testAccountExportImport() throws Exception {
     byte[] exportedAccountData = exportAccountData(accountId);
     assertThat(exportedAccountData).isNotNull();
@@ -79,7 +79,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testImportQEAccountDataFromZipFile() {
     String qaHarnessAccountId = "eWZFoTkESDSkPfnGwAp0lQ";
     String qaHarnessAccountName = "QEAccount";
@@ -113,7 +113,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSpecificExport() throws Exception {
     byte[] exportedAccountData =
         exportSpecificAccountData(accountId, Application.class.getAnnotation(Entity.class).value());
@@ -137,7 +137,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSpecificExport_noEntityTypes_shouldFail() {
     assertThatExceptionOfType(Exception.class).isThrownBy(() -> {
       WebTarget target =

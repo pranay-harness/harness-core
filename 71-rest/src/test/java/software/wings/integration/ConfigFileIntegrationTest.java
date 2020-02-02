@@ -22,7 +22,7 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
@@ -115,7 +115,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldSaveServiceConfigFile() throws IOException {
     ConfigFile appConfigFile = getConfigFile();
     appConfigFile.setTemplateId(DEFAULT_TEMPLATE_ID);
@@ -132,7 +132,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldUpdateServiceConfigFile() throws IOException {
     ConfigFile appConfigFile = getConfigFile();
     appConfigFile.setTemplateId(DEFAULT_TEMPLATE_ID);
@@ -162,7 +162,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UNKNOWN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldOverrideSimpleConfigFile() throws IOException {
     ConfigFile configFile = getConfigFile();
     configFile.setAppId(service.getAppId());
@@ -198,7 +198,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UNKNOWN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldEnvironmentOverrideServiceConfigFile() throws IOException {
     // Entity is SERVICE
     configFile.setAppId(service.getAppId());
@@ -248,7 +248,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldOverrideEncryptedConfigFile() throws IOException {
     ConfigFile configFile = getConfigFile();
     configFile.setEncrypted(true);
@@ -292,7 +292,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldSaveEncryptedServiceConfigFile() throws IOException {
     String secretName = UUID.randomUUID().toString();
     InputStream inputStream = IOUtils.toInputStream(INPUT_TEXT, "ISO-8859-1");

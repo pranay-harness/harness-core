@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.CategoryTest;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import okhttp3.Authenticator;
@@ -70,7 +70,7 @@ public class ProxyTest extends CategoryTest {
    */
   @Test
   @Owner(developers = ADWAIT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testWithNoProxyConfigured_OkHttpClient() throws IOException {
     OkHttpClient.Builder builder = new Builder();
     Request request1 = new Request.Builder().url(targetUrl).build();
@@ -135,7 +135,7 @@ public class ProxyTest extends CategoryTest {
    */
   @Test
   @Owner(developers = ADWAIT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testWithProxyAuthFailWithInvalidCreds_OkHttpClient() throws IOException {
     Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
     OkHttpClient.Builder builder = new OkHttpClient.Builder().proxy(proxy);
@@ -242,7 +242,7 @@ public class ProxyTest extends CategoryTest {
 
   @Test
   @Owner(developers = ADWAIT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetResponseFromUrlNoProxy() throws IOException {
     Executor executor = Executor.newInstance();
     org.apache.http.client.fluent.Request request =
