@@ -17,7 +17,7 @@ import com.segment.analytics.messages.GroupMessage;
 import com.segment.analytics.messages.IdentifyMessage;
 import io.harness.event.handler.EventHandler;
 import io.harness.event.handler.impl.Utils;
-import io.harness.event.handler.impl.segment.SalesforceAccountCheck;
+import io.harness.event.handler.impl.segment.SalesforceApiCheck;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.event.listener.EventListener;
@@ -62,7 +62,7 @@ public class AccountChangeHandler implements EventHandler {
   @Inject private UserService userService;
   @Inject private HPersistence hPersistence;
   @Inject private AccountService accountService;
-  @Inject private SalesforceAccountCheck salesforceAccountCheck;
+  @Inject private SalesforceApiCheck salesforceApiCheck;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private Utils utils;
 
@@ -152,6 +152,7 @@ public class AccountChangeHandler implements EventHandler {
     LicenseInfo licenseInfo = account.getLicenseInfo();
     String accountType = licenseInfo != null ? licenseInfo.getAccountType() : null;
     SecretManagerConfig defaultSecretManager = secretManagerConfigService.getDefaultSecretManager(accountId);
+    String name = account.getAccountName();
 
     boolean isGlobal = false;
     if (defaultSecretManager != null) {
@@ -171,9 +172,16 @@ public class AccountChangeHandler implements EventHandler {
                   .count();
     }
 
+    boolean isPresentInSalesforce = featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, accountId)
+        && salesforceApiCheck.isPresentInSalesforce(account);
+
+    if (isPresentInSalesforce) {
+      name = salesforceApiCheck.getSalesforceAccountName();
+    }
+
     Map<String, Object> groupTraits =
         ImmutableMap.<String, Object>builder()
-            .put("name", account.getAccountName())
+            .put("name", name)
             .put("company_name", account.getCompanyName())
             .put("account_type", isEmpty(accountType) ? "" : accountType)
             .put("cluster", isEmpty(env) ? "" : env)
@@ -192,8 +200,6 @@ public class AccountChangeHandler implements EventHandler {
                                                    .traits(groupTraits)
                                                    .enableIntegration(SegmentHandler.Keys.NATERO, true);
 
-    boolean isPresentInSalesforce = featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, accountId)
-        && salesforceAccountCheck.isAccountPresentInSalesforce(account);
     segmentHelper.enqueue(groupMessageBuilder.enableIntegration(SegmentHandler.Keys.SALESFORCE, isPresentInSalesforce));
     logger.info("Group call sent to Salesforce is={} for accountId={}", isPresentInSalesforce, account.getUuid());
   }
