@@ -1,23 +1,28 @@
 package io.harness.functional.secrets;
 
-import static io.harness.rule.OwnerRule.UTKARSH;
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.testframework.restutils.SecretsRestUtils.addSecret;
+import static io.harness.testframework.restutils.SecretsRestUtils.deleteSecret;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertTrue;
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Setup;
-import io.harness.testframework.restutils.SecretsRestUtils;
 import io.restassured.mapper.ObjectMapperType;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Ignore;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.AzureVaultConfig;
@@ -34,79 +39,117 @@ import javax.ws.rs.core.GenericType;
  */
 @Slf4j
 public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
-  private static final String SM_NAME = "Azure Key Vault";
-  private static final String CLIENT_ID = "19875049-d2a5-47c3-b1fe-f8babd7caf30";
+  private static final String CLIENT_ID = "1ca0a31f-52e6-4766-b016-c6049c209040";
   private static final String TENANT_ID = "b229b2bb-5f33-4d22-bce0-730f6474e906";
-  private static final String SUBSRIPTION = "20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0";
+  private static final String SUBSCRIPTION = "20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0";
   private static final String VAULT_NAME = "Aman-test";
 
-  // private static final String SECRET_KEY = "[9qoJskuCWp1/?:l0XZH36V:OXepB-=q";
+  // private static final String SECRET_KEY = "9h.8Hfn64yHbe?i..lT_Gpg6Qq3?B86s";
   private static final String SECRET_KEY = new ScmSecret().decryptToString(new SecretName("qa_azure_vault_secret_key"));
 
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
   @Inject private WingsPersistence wingsPersistence;
 
+  private AzureVaultConfig azureVaultConfig;
+  private String secretName;
+
+  @Before
+  public void setUp() {
+    azureVaultConfig = getAzureVaultConfig();
+    String secretsManagerId = saveSecretsManager(azureVaultConfig);
+    assertNotNull(secretsManagerId);
+
+    azureVaultConfig = wingsPersistence.get(AzureVaultConfig.class, secretsManagerId);
+    // azureVaultConfig.setDefault(true);
+    wingsPersistence.save(azureVaultConfig);
+
+    List<AzureVaultConfig> secretManagerConfigs = listConfigs(getAccount().getUuid());
+    assertTrue(secretManagerConfigs.size() > 0);
+
+    azureVaultConfig.setSecretKey(SECRET_KEY);
+
+    secretName = randomAlphanumeric(7);
+  }
+
   @Test
-  @Owner(developers = UTKARSH)
+  @Owner(developers = ANKIT)
   @Category(FunctionalTests.class)
-  @Ignore("Marked as ignore as this test is flaky and failing intermittently")
-  public void testCRUDSecretsWithAzureVaultSecretManager() throws Exception {
+  public void testCRUDSecrets() {
+    String value = randomAlphanumeric(7);
+    SecretText secretText =
+        SecretText.builder().name(secretName).value(value).kmsId(azureVaultConfig.getUuid()).build();
+    String secretId = addSecret(getAccount().getUuid(), bearerToken, secretText);
+
+    EncryptedData data = wingsPersistence.get(EncryptedData.class, secretId);
+    assertNotNull(data);
+
+    char[] decrypted = secretManagementDelegateService.decrypt(data, azureVaultConfig);
+    assertTrue(isNotEmpty(decrypted));
+
+    String decryptedSecret = String.valueOf(decrypted);
+    assertEquals(value, decryptedSecret);
+
+    boolean deleted = deleteSecret(getAccount().getUuid(), bearerToken, secretId);
+    assertTrue(deleted);
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(FunctionalTests.class)
+  public void testCRUDSecretsReferenceWithoutVersion() {
+    String secretPath = "DoNotChange-FunctionalTestSecret";
+    SecretText secretText =
+        SecretText.builder().name(secretName).kmsId(azureVaultConfig.getUuid()).path(secretPath).build();
+    String secretId = addSecret(getAccount().getUuid(), bearerToken, secretText);
+
+    EncryptedData data = wingsPersistence.get(EncryptedData.class, secretId);
+    assertNotNull(data);
+
+    char[] decrypted = secretManagementDelegateService.decrypt(data, azureVaultConfig);
+    assertTrue(isNotEmpty(decrypted));
+
+    String decryptedSecret = String.valueOf(decrypted);
+    assertEquals("Val2", decryptedSecret);
+
+    boolean deleted = deleteSecret(getAccount().getUuid(), bearerToken, secretId);
+    assertTrue(deleted);
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(FunctionalTests.class)
+  public void testCRUDSecretsReferenceWithVersion() {
+    String secretPath = "DoNotChange-FunctionalTestSecret/128cf6016e0449c3ad02007c4881dd9a";
+    SecretText secretText =
+        SecretText.builder().name(secretName).path(secretPath).kmsId(azureVaultConfig.getUuid()).build();
+    String secretId = addSecret(getAccount().getUuid(), bearerToken, secretText);
+
+    EncryptedData data = wingsPersistence.get(EncryptedData.class, secretId);
+    assertNotNull(data);
+
+    char[] decrypted = secretManagementDelegateService.decrypt(data, azureVaultConfig);
+    assertTrue(isNotEmpty(decrypted));
+
+    String decryptedSecret = String.valueOf(decrypted);
+    assertEquals("Val1", decryptedSecret);
+
+    boolean deleted = deleteSecret(getAccount().getUuid(), bearerToken, secretId);
+    assertTrue(deleted);
+  }
+
+  @NotNull
+  private AzureVaultConfig getAzureVaultConfig() {
     AzureVaultConfig azureVaultConfig = AzureVaultConfig.builder()
-                                            .name(SM_NAME)
+                                            .name(UUIDGenerator.generateUuid())
                                             .clientId(CLIENT_ID)
                                             .tenantId(TENANT_ID)
-                                            .subscription(SUBSRIPTION)
+                                            .subscription(SUBSCRIPTION)
                                             .secretKey(SECRET_KEY)
                                             .vaultName(VAULT_NAME)
                                             .build();
     azureVaultConfig.setDefault(true);
     azureVaultConfig.setAccountId(getAccount().getUuid());
-
-    String secretsManagerId = null;
-    String secretId = null;
-    try {
-      secretsManagerId = saveSecretsManager(azureVaultConfig);
-      assertThat(secretsManagerId).isNotNull();
-      logger.info("Azure Key Vault Secret Manager config created.");
-
-      azureVaultConfig = wingsPersistence.get(AzureVaultConfig.class, secretsManagerId);
-      azureVaultConfig.setDefault(true);
-      wingsPersistence.save(azureVaultConfig);
-
-      List<AzureVaultConfig> secretManagerConfigs = listConfigs(getAccount().getUuid());
-      assertThat(secretManagerConfigs.size() > 0).isTrue();
-
-      String secretName = "MyCyberArkSecret";
-      String value = "MySecretValue";
-      SecretText secretText = SecretText.builder().name(secretName).value(value).build();
-
-      secretId = SecretsRestUtils.addSecret(getAccount().getUuid(), bearerToken, secretText);
-      assertThat(StringUtils.isNotBlank(secretId)).isTrue();
-
-      List<EncryptedData> encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
-      assertThat(encryptedDataList.size() > 0).isTrue();
-
-      EncryptedData data = wingsPersistence.get(EncryptedData.class, secretId);
-      assertThat(data).isNotNull();
-
-      // Verifying the secret decryption
-      azureVaultConfig.setSecretKey(SECRET_KEY);
-      char[] decrypted = secretManagementDelegateService.decrypt(data, azureVaultConfig);
-      assertThat(EmptyPredicate.isNotEmpty(decrypted)).isTrue();
-      String decryptedSecret = String.valueOf(decrypted);
-      logger.info("Decrypted value: {}", decryptedSecret);
-      assertThat(decryptedSecret).isEqualTo(value);
-    } finally {
-      if (secretId != null) {
-        boolean deleted = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretId);
-        assertThat(deleted).isTrue();
-        logger.info("Secret with id {} has been deleted: {}", secretId, deleted);
-      }
-      if (secretsManagerId != null) {
-        deleteSecretsManager(getAccount().getUuid(), secretsManagerId);
-        logger.info("CyberArk Secrets Manager deleted.");
-      }
-    }
+    return azureVaultConfig;
   }
 
   private String saveSecretsManager(AzureVaultConfig azureVaultConfig) {
@@ -117,17 +160,6 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
                                             .body(azureVaultConfig, ObjectMapperType.GSON)
                                             .post("/azure-secrets-manager")
                                             .as(new GenericType<RestResponse<String>>() {}.getType());
-    return restResponse.getResource();
-  }
-
-  private Boolean deleteSecretsManager(String accountId, String secretsManagerConfigId) {
-    RestResponse<Boolean> restResponse = Setup.portal()
-                                             .auth()
-                                             .oauth2(bearerToken)
-                                             .queryParam("accountId", accountId)
-                                             .queryParam("configId", secretsManagerConfigId)
-                                             .delete("/azure-secrets-manager")
-                                             .as(new GenericType<RestResponse<Boolean>>() {}.getType());
     return restResponse.getResource();
   }
 
