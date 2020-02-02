@@ -30,7 +30,10 @@ public class UserGroupDeleteEventHandler {
 
   private void updateNotificationStrategyOnUserGroupDelete(String accountId, String deletedUserGroupId) {
     PageRequest<Workflow> request =
-        (PageRequest<Workflow>) aPageRequest().addFilter(WorkflowKeys.accountId, Operator.EQ, accountId).build();
+        (PageRequest<Workflow>) aPageRequest()
+            .addFilter(WorkflowKeys.accountId, Operator.EQ, accountId)
+            .addFilter("orchestration.notificationRules.userGroupIds", Operator.CONTAINS, deletedUserGroupId)
+            .build();
 
     List<Workflow> workflows = workflowService.listWorkflows(request);
     for (Workflow workflow : workflows) {
