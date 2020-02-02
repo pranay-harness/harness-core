@@ -19,6 +19,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.Utils;
 import io.harness.event.handler.impl.account.AccountChangeHandler;
 import io.harness.event.handler.impl.segment.SalesforceAccountCheck;
+import io.harness.event.handler.impl.segment.SalesforceApiCheck;
 import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.event.listener.EventListener;
@@ -71,6 +72,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
   @Mock private SalesforceAccountCheck salesforceAccountCheck;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private Utils utils;
+  @Mock private SalesforceApiCheck salesforceApiCheck;
   @Inject private HPersistence hPersistence;
   @Inject private TestUtils eventTestHelper;
 
@@ -94,7 +96,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
     FieldUtils.writeField(accountChangeHandler, "secretManagerConfigService", secretManagerConfigService, true);
     FieldUtils.writeField(accountChangeHandler, "hPersistence", hPersistence, true);
     FieldUtils.writeField(accountChangeHandler, "accountService", accountService, true);
-    FieldUtils.writeField(accountChangeHandler, "salesforceAccountCheck", salesforceAccountCheck, true);
+    FieldUtils.writeField(accountChangeHandler, "salesforceApiCheck", salesforceApiCheck, true);
     FieldUtils.writeField(accountChangeHandler, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(accountChangeHandler, "utils", utils, true);
 
@@ -137,6 +139,8 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
       when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(true);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(true);
+      when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(true);
+      when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
       when(userService.update(any(User.class))).thenReturn(newUser);
       when(accountService.get(anyString())).thenReturn(account);
       when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
@@ -174,6 +178,8 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
       when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(false);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(true);
+      when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(true);
+      when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
       when(userService.update(any(User.class))).thenReturn(newUser);
       when(accountService.get(anyString())).thenReturn(account);
       when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
@@ -211,6 +217,8 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
       when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(true);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(false);
+      when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(false);
+      when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
       when(userService.update(any(User.class))).thenReturn(newUser);
       when(accountService.get(anyString())).thenReturn(account);
       when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
@@ -248,6 +256,8 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
       when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(false);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(false);
+      when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(false);
+      when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
       when(userService.update(any(User.class))).thenReturn(newUser);
       when(accountService.get(anyString())).thenReturn(account);
       when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
@@ -285,6 +295,8 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(userService.getUserByEmail(anyString())).thenReturn(user);
       when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(false);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(false);
+      when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(false);
+      when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
       when(userService.update(any(User.class))).thenReturn(user);
       when(accountService.get(anyString())).thenReturn(account);
       when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);

@@ -19,6 +19,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import software.wings.beans.Account;
@@ -41,12 +42,17 @@ public class SalesforceApiCheck {
   HttpClient httpClient;
   SalesforceConfig salesforceConfig;
   String loginUrl;
+  String salesforceAccountName;
 
   @Inject
   public SalesforceApiCheck(SalesforceConfig salesforceConfig) {
     this.salesforceConfig = salesforceConfig;
     this.loginUrl = getLoginUrl();
     this.httpClient = HttpClientBuilder.create().build();
+  }
+
+  public String getSalesforceAccountName() {
+    return salesforceAccountName;
   }
 
   private String getLoginUrl() {
@@ -186,13 +192,20 @@ public class SalesforceApiCheck {
       if (jsonObject.has("totalSize")) {
         if ((Integer) jsonObject.get("totalSize") > 0) {
           logger.info("The account was found in Salesforce, with response={}", jsonObject);
+          try {
+            this.salesforceAccountName =
+                ((JSONObject) ((JSONArray) jsonObject.get("records")).get(0)).get("Name").toString();
+          } catch (JSONException je) {
+            logger.error("JSON Exception while getting Salesforce Account Name from API", je);
+            return false;
+          }
           return true;
         } else {
           logger.info("The account was not found in Salesforce when sending group calls to Segment");
           return false;
         }
       } else {
-        logger.warn("Salesforce Json object doesn't have field 'totalSize', response={}", jsonObject);
+        logger.error("Salesforce Json object doesn't have field 'totalSize', response={}", jsonObject);
       }
     } catch (JSONException je) {
       logger.error("Error while jsonifying Salesforce responseString={}", responseString, je);
