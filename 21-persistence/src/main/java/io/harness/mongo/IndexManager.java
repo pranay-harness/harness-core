@@ -21,6 +21,7 @@ import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.MorphiaMove.MorphiaMoveKeys;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -160,17 +161,30 @@ public class IndexManager {
 
   public static void updateMovedClasses(
       AdvancedDatastore primaryDatastore, Map<String, Class> morphiaInterfaceImplementers) {
+    Map<String, String> movements = movements(morphiaInterfaceImplementers);
+
+    movements.forEach((source, target) -> {
+      Query<MorphiaMove> query = primaryDatastore.createQuery(MorphiaMove.class).filter(MorphiaMoveKeys.target, target);
+      final UpdateOperations<MorphiaMove> updateOperations =
+          primaryDatastore.createUpdateOperations(MorphiaMove.class).addToSet(MorphiaMoveKeys.sources, source);
+      primaryDatastore.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
+    });
+  }
+
+  public static Map<String, String> movements(Map<String, Class> morphiaInterfaceImplementers) {
+    Map<String, String> movements = new HashMap<>();
     for (Entry<String, Class> entry : morphiaInterfaceImplementers.entrySet()) {
-      final String target = entry.getValue().getName();
-      if (!entry.getKey().equals(target)) {
-        Query<MorphiaMove> query =
-            primaryDatastore.createQuery(MorphiaMove.class).filter(MorphiaMoveKeys.target, target);
-        final UpdateOperations<MorphiaMove> updateOperations =
-            primaryDatastore.createUpdateOperations(MorphiaMove.class)
-                .addToSet(MorphiaMoveKeys.sources, entry.getKey());
-        primaryDatastore.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
+      if (entry.getValue() == MorphiaRegistrar.NotFoundClass.class) {
+        continue;
       }
+      final String target = entry.getValue().getName();
+      if (entry.getKey().equals(target)) {
+        continue;
+      }
+
+      movements.put(entry.getKey(), target);
     }
+    return movements;
   }
 
   public static void ensureIndex(AdvancedDatastore datastore, Morphia morphia) {
