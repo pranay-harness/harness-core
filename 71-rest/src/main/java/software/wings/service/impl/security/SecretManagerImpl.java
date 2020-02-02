@@ -1579,12 +1579,12 @@ public class SecretManagerImpl implements SecretManager {
           }
           break;
         case AWS_SECRETS_MANAGER:
-          break;
         case CYBERARK:
+        case AZURE_VAULT:
           break;
         default:
           throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
-              "Secret path can be specified only if the secret manager is of VAULT/AWS_SECRETS_MANAGER/CYBERARK type!",
+              "Secret path can be specified only if the secret manager is of VAULT/AWS_SECRETS_MANAGER/CYBERARK/AZURE_VAULT type!",
               USER);
       }
     }
@@ -1669,10 +1669,12 @@ public class SecretManagerImpl implements SecretManager {
         }
         break;
       case AZURE_VAULT:
-        String keyName = encryptedData.getEncryptionKey();
-        AzureVaultConfig encryptionConfig =
-            azureSecretsManagerService.getEncryptionConfig(accountId, encryptedData.getKmsId());
-        azureVaultService.delete(accountId, keyName, encryptionConfig);
+        if (isEmpty(encryptedData.getPath())) {
+          String keyName = encryptedData.getEncryptionKey();
+          AzureVaultConfig encryptionConfig =
+              azureSecretsManagerService.getEncryptionConfig(accountId, encryptedData.getKmsId());
+          azureVaultService.delete(accountId, keyName, encryptionConfig);
+        }
         break;
       default:
         break;

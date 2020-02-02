@@ -720,8 +720,14 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   private EncryptedRecord encryptInternal(String fullSecretName, String value, String accountId,
       SettingVariableTypes type, AzureVaultConfig secretsManagerConfig, EncryptedRecord savedEncryptedData) {
     logger.info("Saving secret '{}' into Azure Secrets Manager: {}", fullSecretName, secretsManagerConfig.getName());
-
     long startTime = System.currentTimeMillis();
+
+    boolean pathReference = false;
+    String path = null;
+    if (savedEncryptedData != null && isNotEmpty(savedEncryptedData.getPath())) {
+      pathReference = true;
+      path = savedEncryptedData.getPath();
+    }
 
     EncryptedData encryptedData = savedEncryptedData != null ? (EncryptedData) savedEncryptedData
                                                              : EncryptedData.builder()
@@ -733,15 +739,32 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
                                                                    .kmsId(secretsManagerConfig.getUuid())
                                                                    .build();
 
+    if (!pathReference && isEmpty(value)) {
+      return encryptedData;
+    }
+
     KeyVaultClient azureVaultClient = getAzureVaultClient(secretsManagerConfig);
 
-    try {
-      azureVaultClient.getSecret(secretsManagerConfig.getEncryptionServiceUrl(), fullSecretName);
-      logger.info("Updating the key: {} in account Id: {}", fullSecretName, accountId);
-    } catch (Exception ex) {
-      // reaching here means the value doesn't exists.
-      logger.info("Couldn't find any existing keys with name: {} in account Id: {}. Trying to create a new one.",
-          fullSecretName, accountId, ex);
+    if (pathReference) {
+      SecretBundle secret = null;
+      try {
+        AzureParsedSecretReference parsedSecretReference = new AzureParsedSecretReference(path);
+
+        secret = azureVaultClient.getSecret(secretsManagerConfig.getEncryptionServiceUrl(),
+            parsedSecretReference.getSecretName(), parsedSecretReference.getSecretVersion());
+      } catch (Exception ex) {
+        logger.error("Couldn't retrieve referenced secret", ex);
+      }
+
+      if (secret == null) {
+        String message = "Secret name reference '" + savedEncryptedData.getPath() + "' is invalid";
+        throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, USER);
+      } else {
+        encryptedData.setEncryptionKey(savedEncryptedData.getPath());
+        encryptedData.setEncryptedValue(secret.id().toCharArray());
+
+        return encryptedData;
+      }
     }
 
     // Create and updates are done in Azure using the same API. A set call will update the secret
@@ -750,7 +773,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             .withTags(getMetadata(type))
             .build();
 
-    SecretBundle secretBundle = null;
+    SecretBundle secretBundle;
     try {
       secretBundle = azureVaultClient.setSecret(setSecretRequest);
     } catch (Exception ex) {
@@ -769,15 +792,21 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   private char[] decryptInternal(EncryptedRecord data, AzureVaultConfig azureConfig) {
     long startTime = System.currentTimeMillis();
 
+    AzureParsedSecretReference parsedSecretReference = isNotEmpty(data.getPath())
+        ? new AzureParsedSecretReference(data.getPath())
+        : new AzureParsedSecretReference(data.getEncryptionKey());
+
     KeyVaultClient azureVaultClient = getAzureVaultClient(azureConfig);
-    String secretName = data.getEncryptionKey();
     try {
-      SecretBundle secret = azureVaultClient.getSecret(azureConfig.getEncryptionServiceUrl(), secretName);
-      logger.info("Done decrypting Azure secret {} in {} ms", secretName, System.currentTimeMillis() - startTime);
+      SecretBundle secret = azureVaultClient.getSecret(azureConfig.getEncryptionServiceUrl(),
+          parsedSecretReference.getSecretName(), parsedSecretReference.getSecretVersion());
+
+      logger.info("Done decrypting Azure secret {} in {} ms", parsedSecretReference.getSecretName(),
+          System.currentTimeMillis() - startTime);
       return secret.value().toCharArray();
     } catch (Exception ex) {
-      String message = format("Failed to decrypt Azure secret %s in vault %s in account %s", secretName,
-          azureConfig.getName(), azureConfig.getAccountId());
+      String message = format("Failed to decrypt Azure secret %s in vault %s in account %s",
+          parsedSecretReference.getSecretName(), azureConfig.getName(), azureConfig.getAccountId());
       throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, ex, USER);
     }
   }
