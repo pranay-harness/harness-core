@@ -260,22 +260,20 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
   private List<ServiceVariable> getServiceVariablesByArtifactStreamId(
       String appId, String accountId, String artifactStreamId) {
-    return serviceVariableService.list(
-        aPageRequest()
-            .addFilter(ServiceVariableKeys.accountId, Operator.EQ, accountId)
-            .addFilter(ServiceVariableKeys.appId, Operator.EQ, appId)
-            .addFilter(ServiceVariableKeys.entityType, Operator.EQ, EntityType.SERVICE)
-            .addFilter(ServiceVariableKeys.allowedList, Operator.CONTAINS, artifactStreamId)
-            .build());
+    return serviceVariableService.list(aPageRequest()
+                                           .addFilter(ServiceVariableKeys.accountId, Operator.EQ, accountId)
+                                           .addFilter(ServiceVariableKeys.appId, Operator.EQ, appId)
+                                           .addFilter(ServiceVariableKeys.entityType, Operator.EQ, EntityType.SERVICE)
+                                           .addFilter(ServiceVariableKeys.allowedList, Operator.EQ, artifactStreamId)
+                                           .build());
   }
 
   private List<ServiceVariable> getServiceVariablesByArtifactStreamId(String accountId, String artifactStreamId) {
-    return serviceVariableService.list(
-        aPageRequest()
-            .addFilter(ServiceVariableKeys.accountId, Operator.EQ, accountId)
-            .addFilter(ServiceVariableKeys.entityType, Operator.EQ, EntityType.SERVICE)
-            .addFilter(ServiceVariableKeys.allowedList, Operator.CONTAINS, artifactStreamId)
-            .build());
+    return serviceVariableService.list(aPageRequest()
+                                           .addFilter(ServiceVariableKeys.accountId, Operator.EQ, accountId)
+                                           .addFilter(ServiceVariableKeys.entityType, Operator.EQ, EntityType.SERVICE)
+                                           .addFilter(ServiceVariableKeys.allowedList, Operator.EQ, artifactStreamId)
+                                           .build());
   }
 
   @Override

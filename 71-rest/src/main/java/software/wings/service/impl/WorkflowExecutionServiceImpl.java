@@ -3640,7 +3640,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
             .build();
     if (!isEmpty(serviceId)) {
-      pageRequest.addFilter(WorkflowExecutionKeys.serviceIds, Operator.CONTAINS, serviceId);
+      pageRequest.addFilter(WorkflowExecutionKeys.serviceIds, EQ, serviceId);
     }
     final PageResponse<WorkflowExecution> workflowExecutions = listExecutions(pageRequest, false, true, false, false);
     if (workflowExecutions != null) {
