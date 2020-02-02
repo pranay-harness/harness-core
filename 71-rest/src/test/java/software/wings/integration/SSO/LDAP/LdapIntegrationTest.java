@@ -20,7 +20,7 @@ import static software.wings.integration.SSO.LDAP.LdapUrlHelper.createUploadLdap
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
@@ -82,7 +82,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
 
   @Test
   @Owner(developers = AMAN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: Aman to investigate and fix")
   public void testLdapConnectionSettings() {
     loginAdminUser();
@@ -97,7 +97,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
 
   @Test
   @Owner(developers = AMAN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: Aman to investigate and fix")
   public void testLdapLogin() {
     loginAdminUser();
@@ -114,7 +114,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
 
   @Test
   @Owner(developers = AMAN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: Aman to investigate and fix")
   public void testLdapUserGroupLinking() {
     loginAdminUser();

@@ -13,7 +13,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
@@ -88,7 +88,7 @@ public class GovernanceConfigServiceTest extends BaseIntegrationTest {
    */
   @Test
   @Owner(developers = RAMA)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testUpdateAndRead() {
     GovernanceConfig defaultConfig = GovernanceConfig.builder().accountId(accountId).deploymentFreeze(false).build();
     GovernanceConfig governanceConfig = governanceConfigService.get(accountId);

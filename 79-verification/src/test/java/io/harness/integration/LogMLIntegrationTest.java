@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.jobs.LogMLClusterGenerator;
 import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob.LogAnalysisTask;
 import io.harness.managerclient.VerificationManagerClient;
@@ -189,7 +189,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void saveAnalysisSummaryControlClusters() throws Exception {
     loginAdminUser();
@@ -273,7 +273,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFeatureflagDemoSuccess() {
     loginAdminUser();
@@ -337,7 +337,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFeatureflagDemoFail() {
     loginAdminUser();
@@ -414,7 +414,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFirstLevelClustering() throws Exception {
     for (String host : hosts) {
@@ -532,7 +532,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void controlButNoTestData() throws IOException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -743,7 +743,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testButNoControlDataFirstExecution() throws IOException, InterruptedException {
     final String query = UUID.randomUUID().toString();
@@ -815,7 +815,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testNoControlNotFirstExecution() throws Exception {
     final String query = UUID.randomUUID().toString();
@@ -881,7 +881,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void noControlandTestData() throws IOException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -992,7 +992,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void withControlAndTest() throws IOException, InterruptedException {
     int numOfNodes = 5;
@@ -1136,7 +1136,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFetchCorrectLastWorkflowLogsMissingData() {
     final String query = UUID.randomUUID().toString();
@@ -1149,7 +1149,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFetchCorrectLastWorkflowLogs() {
     final String query = UUID.randomUUID().toString();
@@ -1162,7 +1162,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFetchCorrectLastWorkflowLogsFirstWorkflow() {
     final String query = UUID.randomUUID().toString();
@@ -1173,7 +1173,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFetchCorrectLastWorkflowLogsNoData() {
     final String query = UUID.randomUUID().toString();
@@ -1240,7 +1240,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testGetCurrentExecutionLogs() throws Exception {
     final Random r = new Random();
@@ -1318,7 +1318,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testGetLastExecutionLogs() throws Exception {
     final Random r = new Random();
@@ -1445,7 +1445,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void onlyFeedback() throws IOException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();

@@ -14,7 +14,7 @@ import static software.wings.utils.WingsTestConstants.HARNESS_NEXUS;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.eraro.ResponseMessage;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -63,7 +63,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = ANUBHAW)
   @Repeat(times = 5)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSaveJenkinsConfig() {
     RestResponse<SettingAttribute> restResponse =
@@ -92,7 +92,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldThrowExceptionForUnreachableJenkinsUrl() {
     Response response =
@@ -120,7 +120,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSaveNexusConfig() {
     RestResponse<SettingAttribute> restResponse =
@@ -147,7 +147,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSaveBambooConfig() {
     RestResponse<SettingAttribute> restResponse =
@@ -175,7 +175,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = ANUBHAW)
   @Repeat(times = 5, successes = 1)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldSaveDockerConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))

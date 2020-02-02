@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.service.intfc.FileService.FileBucket.AUDITS;
 
 import io.harness.beans.PageRequest;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -23,7 +23,7 @@ import java.io.ByteArrayInputStream;
 public class AuditServiceIntegrationTest extends AuditServiceTest {
   @Test
   @Owner(developers = ADWAIT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateRequestPayload() throws Exception {
     AuditHeader header = createAuditHeader();
@@ -47,7 +47,7 @@ public class AuditServiceIntegrationTest extends AuditServiceTest {
    */
   @Test
   @Owner(developers = ADWAIT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldFinalize() throws Exception {
     AuditHeader header = createAuditHeader();
@@ -65,7 +65,7 @@ public class AuditServiceIntegrationTest extends AuditServiceTest {
 
   @Test
   @Owner(developers = ADWAIT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDeleteAuditRecordsRequestFiles() throws Exception {
     AuditHeader header = createAuditHeader();

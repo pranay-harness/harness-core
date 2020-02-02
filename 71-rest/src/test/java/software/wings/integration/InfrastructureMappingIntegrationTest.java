@@ -18,7 +18,7 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 import com.google.inject.Inject;
 
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
@@ -91,7 +91,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldSelectServiceInstances() {
     SettingAttribute hostConnectionAttr = wingsPersistence.saveAndGet(
         SettingAttribute.class, aSettingAttribute().withAccountId(app.getAccountId()).withName("hca").build());
@@ -181,7 +181,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSelectAwsInfrastructureInstances() {
     List<Key<ServiceTemplate>> templateRefKeysByService =
@@ -220,7 +220,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldProvisionAwsNodes() {
     List<Key<ServiceTemplate>> templateRefKeysByService =

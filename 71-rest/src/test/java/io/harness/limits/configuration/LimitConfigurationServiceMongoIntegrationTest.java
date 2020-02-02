@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.ConfiguredLimit.ConfiguredLimitKeys;
 import io.harness.limits.impl.model.RateLimit;
@@ -49,7 +49,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSaveAndGet() {
     ConfiguredLimit<StaticLimit> cl = new ConfiguredLimit<>(SOME_ACCOUNT_ID, new StaticLimit(10), CREATE_APPLICATION);
     boolean configured = configuredLimitService.configure(cl.getAccountId(), CREATE_APPLICATION, cl.getLimit());
@@ -64,7 +64,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testUpsert() {
     String accountId = SOME_ACCOUNT_ID;
     boolean configured = configuredLimitService.configure(accountId, CREATE_APPLICATION, new StaticLimit(10));
@@ -85,7 +85,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testUpsertForRateLimits() {
     String accountId = SOME_ACCOUNT_ID;
 

@@ -13,7 +13,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -82,7 +82,7 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
    */
   @Test
   @Owner(developers = PRANJAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetLogRecordsWithQuery() {
     SplunkSetupTestNodeData setupTestNodeData = getSplunkSetupTestNodedata("*exception*");
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL

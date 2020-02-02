@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ConfiguredLimit.ConfiguredLimitKeys;
 import io.harness.limits.Counter.CounterKeys;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -63,7 +63,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testLimitEnforcement() {
     // configure limits
     StaticLimit limit = new StaticLimit(0);
@@ -81,7 +81,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testRateBasedLimitEnforcement() throws Exception {
     // configure limits
     RateLimit limit = new RateLimit(1, 4, TimeUnit.SECONDS);

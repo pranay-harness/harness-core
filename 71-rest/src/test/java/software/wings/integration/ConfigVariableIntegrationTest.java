@@ -16,7 +16,7 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 import org.junit.After;
@@ -78,7 +78,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UNKNOWN)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldOverrideServiceConfigVariable() {
     // Config variable - Entity type as Service
     serviceVariable1 = getServiceVariable(Type.TEXT);
@@ -110,7 +110,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldOverrideEncryptedServiceConfigVariable() {
     String encryptedId = wingsPersistence.save(EncryptedData.builder()
                                                    .name(generateUuid())

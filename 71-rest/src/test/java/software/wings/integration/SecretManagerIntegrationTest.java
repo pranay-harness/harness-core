@@ -5,7 +5,7 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -35,7 +35,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void test_crudSecret_shouldSucceed() {
     // 1. Create a new secret text
     WebTarget target = client.target(API_BASE + "/secrets/add-secret?accountId=" + accountId);
@@ -65,7 +65,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void test_crudEncryptedFile_shouldSucceed() throws Exception {
     // 1. Create a new encrypted file.
     WebTarget target = client.target(API_BASE + "/secrets/add-file?accountId=" + accountId);

@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import lombok.Builder;
@@ -36,7 +36,7 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
   @Test
 
   @Owner(developers = KAMAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetActivityLogsByStateExecutionId() {
     long now = System.currentTimeMillis();
     String stateExecutionId = generateUUID();
@@ -61,7 +61,7 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = KAMAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetCVActivityLog() {
     long now = System.currentTimeMillis();
 
@@ -88,7 +88,7 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = KAMAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testPlaceholderActivityLogsByStateExecutionId() {
     long now = System.currentTimeMillis();
     String stateExecutionId = generateUUID();

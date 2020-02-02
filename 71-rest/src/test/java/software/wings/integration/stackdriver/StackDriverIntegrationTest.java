@@ -12,7 +12,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
@@ -76,7 +76,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetMetricsWithDataForNode() throws Exception {
     StackDriverSetupTestNodeData setupTestNodedata = getStackDriverSetupTestNodedata();
     WebTarget target = client.target(API_BASE + "/stackdriver/node-data?accountId=" + accountId);
@@ -94,7 +94,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetRegionsForStackdriver() throws Exception {
     WebTarget target =
         client.target(API_BASE + "/stackdriver/get-regions?accountId=" + accountId + "&settingId=" + gcpConfigId);
@@ -107,7 +107,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetLoadBalancersForStackdriver() throws Exception {
     String region = "us-central1";
     WebTarget target = client.target(API_BASE + "/stackdriver/get-load-balancers?accountId=" + accountId
@@ -121,7 +121,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetSampleRecord() throws Exception {
     String guid = generateUuid();
     StackDriverSetupTestNodeData setupTestNodedata = StackDriverSetupTestNodeData.builder()

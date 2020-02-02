@@ -18,7 +18,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
@@ -86,7 +86,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testDisableEnableUser() {
     User user = userService.getUserByEmail(defaultEmail);
     String userId = user.getUuid();
@@ -126,7 +126,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testBlankEmail() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
@@ -138,7 +138,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testInvalidEmail() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=xyz.com");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
@@ -150,7 +150,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testDomainNotAllowed() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=xyz@some-domain.io");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
@@ -159,7 +159,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testUserExists() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=admin@harness.io");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
@@ -171,7 +171,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testValidEmail() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=" + validEmail);
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
@@ -181,7 +181,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testValidEmailWithSpace() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=%20" + validEmail + "%20");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
@@ -191,7 +191,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSwitchAccount() {
     WebTarget target = client.target(API_BASE + "/users/switch-account?accountId=" + accountId);
     RestResponse<User> restResponse =
@@ -213,7 +213,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetLoginTypeWithAccountId() {
     WebTarget target =
         client.target(API_BASE + "/users/logintype?userName=" + adminUserEmail + "&accountId=" + accountId);
@@ -227,7 +227,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testDefaultLoginWithAccountId() {
     WebTarget target = client.target(API_BASE + "/users/login?accountId=" + defaultAccountId);
     String basicAuthValue =
@@ -242,7 +242,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSetDefaultAccount() {
     WebTarget target = client.target(API_BASE + "/users/set-default-account/" + accountId);
     RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).put(
@@ -255,7 +255,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testLoginUserUsingIdentityServiceAuth() throws IllegalAccessException {
     WebTarget target = client.target(API_BASE + "/users/user/login?email=" + adminUserEmail);
 
@@ -276,7 +276,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetUserUsingIdentityServiceAuth() throws IllegalAccessException {
     WebTarget target = client.target(API_BASE + "/users/user");
 
@@ -306,7 +306,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testTrialSignupSuccess() {
     final String name = "Mark Lu";
     final String pwd = "somepwd123456";
@@ -377,7 +377,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSignupSuccess() {
     final String name = "Raghu Singh";
     final String email = "abc" + System.currentTimeMillis() + "@harness.io";
@@ -415,7 +415,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH, intermittent = true)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testUserInviteSignupAndSignInSuccess() {
     final String name = "Mark Lu";
     final String email = "abc" + System.currentTimeMillis() + "@harness.io";
@@ -440,7 +440,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testInvalidUserInviteShouldFail() {
     String invalidInviteId = UUIDGenerator.generateUuid();
     UserInvite userInvite = new UserInvite();
@@ -458,7 +458,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSignupSuccessWithSpaces() throws IOException {
     final String name = "  Brad  Pitt    ";
     final String email = "xyz" + System.currentTimeMillis() + "@harness.io";
@@ -495,7 +495,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSignupEmailWithSpace() throws IOException {
     final String name = "Brad  Pitt    ";
     final String email = "  xyz@wings  ";
@@ -528,7 +528,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSignupBadEmail() throws IOException {
     final String name = "Brad  Pitt    ";
     final String email = "xyz@wings";
@@ -561,7 +561,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSignupEmailExists() throws IOException {
     final String name = "Brad  Pitt    ";
     final String email = "admin@harness.io";
@@ -594,7 +594,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAMA)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testAccountCreationWithKms() {
     loginAdminUser();
     User user = wingsPersistence.createQuery(User.class).filter(UserKeys.email, "admin@harness.io").get();
@@ -631,7 +631,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testResendInvitationAndCompleteInvitation() {
     Account adminAccount =
         wingsPersistence.createQuery(Account.class).filter(AccountKeys.accountName, defaultAccountName).get();

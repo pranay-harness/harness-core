@@ -6,7 +6,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +45,7 @@ public class DelegateIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = BRETT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDownloadDelegateZipWithWatcher()
       throws IOException, JSONException, TimeoutException, InterruptedException {
@@ -92,7 +92,7 @@ public class DelegateIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = BRETT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldRunDelegate() throws IOException, JSONException, TimeoutException, InterruptedException {
     String url = "https://localhost:9090/api/delegates/downloadUrl?accountId=" + accountId;

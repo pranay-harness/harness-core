@@ -34,7 +34,7 @@ import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.CategoryTest;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -57,7 +57,7 @@ public class EcsIntegrationTest extends CategoryTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDescribeCluster() {
     List<String> clusterArns = ecsClient.listClusters().getClusterArns();
@@ -71,7 +71,7 @@ public class EcsIntegrationTest extends CategoryTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDescribeContainerInstances() {
     List<String> clusterArns = ecsClient.listClusters().getClusterArns();
@@ -85,7 +85,7 @@ public class EcsIntegrationTest extends CategoryTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateCluster() {
     CreateClusterRequest demo2 = new CreateClusterRequest().withClusterName("Demo2");
@@ -95,7 +95,7 @@ public class EcsIntegrationTest extends CategoryTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldFetchContainerInstanceForService() {
     ListTasksResult listTasksResult =
@@ -107,7 +107,7 @@ public class EcsIntegrationTest extends CategoryTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateTaskDefinition() throws IOException {
     /*
@@ -141,7 +141,7 @@ public class EcsIntegrationTest extends CategoryTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateService() throws IOException {
     /*
@@ -162,7 +162,7 @@ public class EcsIntegrationTest extends CategoryTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldUpdateService() throws IOException {
     String serviceJson =
@@ -174,7 +174,7 @@ public class EcsIntegrationTest extends CategoryTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldScaleUpTheService() throws IOException {
     String serviceJson =
@@ -186,7 +186,7 @@ public class EcsIntegrationTest extends CategoryTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldScaleDownTheService() throws IOException {
     String serviceJson =
@@ -198,7 +198,7 @@ public class EcsIntegrationTest extends CategoryTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldAddContainerInstance() {
     AmazonEC2Client amazonEC2Client = new AmazonEC2Client(
@@ -222,7 +222,7 @@ public class EcsIntegrationTest extends CategoryTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldScaleContainerInstanceCluster() {
     AmazonAutoScalingClient amazonAutoScalingClient = new AmazonAutoScalingClient(
@@ -241,7 +241,7 @@ public class EcsIntegrationTest extends CategoryTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldWaitTillAllInstanceaAreReady() {
     //    AmazonAutoScalingClient amazonAutoScalingClient =
@@ -254,7 +254,7 @@ public class EcsIntegrationTest extends CategoryTest {
 
   @Test
   @Owner(developers = ANUBHAW)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldReturnServices() {
     AmazonECSClient amazonECSClient = new AmazonECSClient(

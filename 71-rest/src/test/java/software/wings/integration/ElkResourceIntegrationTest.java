@@ -13,7 +13,7 @@ import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkRes
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.apache.http.HttpStatus;
@@ -75,7 +75,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void queryHostData() {
     WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
@@ -92,7 +92,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRANJAL, intermittent = true)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetLogRecordsWithNormalQuery() {
     ElkSetupTestNodeData elkSetupTestNodeData = getElkSetupTestNodedata("error");
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
@@ -109,7 +109,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRANJAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetLogRecordsWithValidJSONQuery() {
     String query = "{\"bool\":{\"must\":[{\"query_string\":{\"query\":\"log:error\",\"analyze_wildcard\":true,"
         + "\"default_field\":\"*\"}},{\"range\":{\"@timestamp\":{\"gte\":1535049542943,\"lte\":1535050442943,"
@@ -129,7 +129,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRANJAL, intermittent = true)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetLogRecordsWithInvalidJSONQuery() {
     // doesnt start with '{' its an invalid query String
     String query = "must\":[{\"query_string\":{\"query\":\"log:error\",\"analyze_wildcard\":true,"

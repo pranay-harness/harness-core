@@ -24,7 +24,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
@@ -301,7 +301,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getJobs() {
     switch (type) {
@@ -319,7 +319,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getPlans() {
     switch (type) {
@@ -336,7 +336,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getPlansWithService() {
     switch (type) {
@@ -355,7 +355,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getArtifactPaths() {
     switch (type) {
@@ -373,7 +373,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getBuilds() {
     switch (type) {
@@ -390,7 +390,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getLastSuccessfulBuild() {
     switch (type) {
@@ -426,7 +426,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getGroupIds() {
     Set<String> groupIds = null;
@@ -462,7 +462,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void validateArtifactSource() {
     switch (type) {
@@ -490,7 +490,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = GARVIT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void getLabels() {
     switch (type) {
       case JENKINS:

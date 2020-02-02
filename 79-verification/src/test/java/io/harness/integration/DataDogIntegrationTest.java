@@ -16,7 +16,7 @@ import com.google.inject.Inject;
 
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rest.RestResponse;
@@ -83,7 +83,7 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void fetch() {
     APMVerificationConfig config = new APMVerificationConfig();
     config.setAccountId(accountId);
@@ -133,7 +133,7 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SOWMYA)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void txnDatadog() throws InterruptedException {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();

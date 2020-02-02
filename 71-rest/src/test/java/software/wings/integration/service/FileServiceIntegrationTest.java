@@ -10,7 +10,7 @@ import static software.wings.utils.WingsTestConstants.FILE_ID;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -56,7 +56,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    */
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldSaveFileWithMetadata() throws Exception {
     FileMetadata fileMetadata = FileMetadata.builder()
                                     .fileName("dummy.txt")
@@ -74,7 +74,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    */
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldThrowExceptionWhenFileNameIsNullWithFileMetadata() throws Exception {
     FileMetadata fileMetadata = FileMetadata.builder().mimeType("text/plain").build();
     assertThatExceptionOfType(IllegalArgumentException.class)
@@ -88,7 +88,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    */
   @Test
   @Owner(developers = GEORGE)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldSaveBaseFile() throws Exception {
     final BaseFile baseFile = new BaseFile();
     baseFile.setName("dummy.txt");
@@ -104,7 +104,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    */
   @Test
   @Owner(developers = GEORGE)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldUpdateEntityId() throws Exception {
     final BaseFile baseFile = new BaseFile();
     baseFile.setName("dummy.txt");
@@ -123,7 +123,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    */
   @Test
   @Owner(developers = GEORGE)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldThrowExceptionWhenFileNameIsNullWithBaseFile() throws Exception {
     final BaseFile baseFile = new BaseFile();
     assertThatExceptionOfType(IllegalArgumentException.class)

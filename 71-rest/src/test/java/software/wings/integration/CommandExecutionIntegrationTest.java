@@ -26,7 +26,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -144,7 +144,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
    */
   @Test
   @Owner(developers = SRINIVAS)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldExecuteCommand() {
     CommandExecutionStatus commandExecutionStatus = serviceCommandExecutorService.execute(command, context);
@@ -158,7 +158,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
    */
   @Test
   @Owner(developers = SRINIVAS)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCaptureFailedExecutionCommandUnit() {
     ((ExecCommandUnit) command.getCommandUnits().get(6)).setCommandString("INVALID_COMMAND");

@@ -31,7 +31,7 @@ import com.google.inject.Inject;
 
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob.MetricAnalysisGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -143,7 +143,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testFeatureEnabled() {
     WebTarget target = client.target(API_BASE + "/account/feature-flag-enabled?accountId=" + accountId
         + "&featureName=" + FeatureName.values()[0].name());
@@ -159,7 +159,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU, intermittent = true)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void getNewRelicApplications() throws Exception {
     WebTarget target =
         client.target(API_BASE + "/newrelic/applications?settingId=" + newRelicConfigId + "&accountId=" + accountId);
@@ -177,7 +177,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU, intermittent = true)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void getAllTxnNames() throws Exception {
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, newRelicConfigId);
     NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
@@ -193,7 +193,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void getNewRelicApplicationInstances() throws Exception {
     WebTarget target = client.target(API_BASE + "/newrelic/nodes?settingId=" + newRelicConfigId
         + "&accountId=" + accountId + "&applicationId=" + 107019083);
@@ -207,7 +207,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   @Test
   @Owner(developers = RAGHU)
   @Repeat(times = 5, successes = 1)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void getNewRelicTxnsWithData() throws Exception {
     WebTarget target = client.target(API_BASE + "/newrelic/txns-with-data?settingId=" + newRelicConfigId
         + "&accountId=" + accountId + "&applicationId=" + 107019083);
@@ -221,7 +221,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = 5, successes = 1)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void getNewRelicDataForNode() {
     String appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().appId(appId).name(generateUuid()).build());
@@ -282,7 +282,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testMetricSave() throws Exception {
     final int numOfMinutes = 4;
     final int numOfBatches = 5;
@@ -561,7 +561,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void generateMetricsTest() throws Exception {
     // because of the CV_DEMO flag tests, all generate metrics tests should go here.
     // the CV_DEMO tests should run last
@@ -576,7 +576,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void noControlNoTest() throws IOException {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();
@@ -693,7 +693,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void controlNoTest() {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();
@@ -828,7 +828,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testNoControl() {
     final String workflowId = generateUuid();
     final String workflowExecutionId = generateUuid();
@@ -965,7 +965,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM, intermittent = true)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void txnInTestButNotControl() throws InterruptedException {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();
@@ -1151,7 +1151,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SRIRAM)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void getMetricTemplate() throws IOException, InterruptedException {
     final String serviceId = UUID.randomUUID().toString();
     final String stateExecutionId = UUID.randomUUID().toString();

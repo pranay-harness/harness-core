@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +38,7 @@ public class SegmentGroupEventJobServiceTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSchedule() {
     String accountId = "some-account-" + SegmentGroupEventJobServiceTest.class.getSimpleName();
     long next = Instant.now().toEpochMilli();
@@ -62,7 +62,7 @@ public class SegmentGroupEventJobServiceTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testScheduleNewDocumentIsCreated() {
     String accountId = "some-account-" + SegmentGroupEventJobServiceTest.class.getSimpleName();
     long next = Instant.now().toEpochMilli();

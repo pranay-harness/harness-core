@@ -6,7 +6,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rule.Owner;
 import org.assertj.core.api.Assertions;
@@ -68,7 +68,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
 
   @Test
   @Owner(developers = VAIBHAV_SI)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testListNamesByProvisionerId() {
     InfrastructureDefinition id1 = InfrastructureDefinition.builder()
                                        .appId(app1.getUuid())
@@ -93,7 +93,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
 
   @Test
   @Owner(developers = VAIBHAV_SI)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testListNamesByConnectionAttr() {
     final String connectionAttr1 = "private-key-1";
     final String connectionAttr2 = "private-key-2";
@@ -127,7 +127,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
 
   @Test
   @Owner(developers = VAIBHAV_SI)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testListNamesByComputeProviderId() {
     InfrastructureDefinitionBuilder infrastructureDefinitionBuilder =
         InfrastructureDefinition.builder().appId(app1.getUuid()).envId(app1_env1.getUuid());

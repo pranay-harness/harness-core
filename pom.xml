@@ -42,7 +42,7 @@
         <aws.sdk.version>1.11.711</aws.sdk.version>
         <buildTimeStamp>${maven.build.timestamp}</buildTimeStamp>
         <categories>io.harness.category.element.UnitTests.class</categories>
-        <categories.integration>io.harness.category.element.IntegrationTests.class</categories.integration>
+        <categories.integration>io.harness.category.element.DeprecatedIntegrationTests.class</categories.integration>
         <checkStyleFile>harness_checks.xml</checkStyleFile>
         <dbcp.version>1.4</dbcp.version>
         <deployHost>{env.HOSTNAME}</deployHost>

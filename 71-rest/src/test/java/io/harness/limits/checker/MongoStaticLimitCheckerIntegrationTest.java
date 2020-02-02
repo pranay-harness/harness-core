@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
 import io.harness.limits.impl.model.StaticLimit;
@@ -44,7 +44,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testCheckAndConsume() {
     String key = NAMESPACE + "-" + RandomStringUtils.randomAlphanumeric(5) + ":" + ActionType.DEPLOY;
     String id = persistence.save(new Counter(key, 0));
@@ -75,7 +75,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testCheckAndConsumeConcurrent() throws ExecutionException, InterruptedException {
     String key = NAMESPACE + "-" + RandomStringUtils.randomAlphanumeric(5) + ":" + ActionType.DEPLOY;
     String id = persistence.save(new Counter(key, 0));

@@ -13,7 +13,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -81,7 +81,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRANJAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Disabled due to rate limit issue on Datadog")
   public void testGetTimeseriesRecordsForWorkflowWithoutServerConfigId() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(true, StateType.DATA_DOG);
@@ -100,7 +100,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRANJAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Disabled due to rate limit issue on Datadog")
   public void testGetTimeseriesRecordsForWorkflow() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(true, StateType.DATA_DOG);
@@ -119,7 +119,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRANJAL, intermittent = true)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetTimeseriesRecordsForServiceGuard() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(false, StateType.DATA_DOG);
 
@@ -137,7 +137,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRANJAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("Disabled due to rate limit issue on Datadog")
   public void testGetTimeseriesRecordsForServiceGuardWithoutServerConfigId() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(false, StateType.DATA_DOG);
@@ -156,7 +156,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRANJAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testDatadogLogsForWorkflow() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(true, StateType.DATA_DOG_LOG);
 
@@ -175,7 +175,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = PRANJAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testDatadogLogsForServiceGuard() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(false, StateType.DATA_DOG_LOG);
 

@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskClientParams;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskServiceClient;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
@@ -31,7 +31,7 @@ public class EcsPerpetualTaskServiceClientIntegrationTest extends BaseIntegratio
 
   @Test
   @Owner(developers = HITESH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void shouldCreatePerpetualTask() {
     EcsPerpetualTaskClientParams ecsPerpetualTaskClientParams =
         new EcsPerpetualTaskClientParams(DEFAULT_REGION, DEFAULT_SETTING_ID, DEFAULT_CLUSTER_NAME, DEFAULT_CLUSTER_ID);

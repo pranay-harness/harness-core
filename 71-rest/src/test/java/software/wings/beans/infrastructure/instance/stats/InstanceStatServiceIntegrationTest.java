@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.offset;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import lombok.val;
 import org.junit.After;
@@ -56,7 +56,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSave() {
     val stats = sampleSnapshot();
     val ds = persistence.getDatastore(InstanceStatsSnapshot.class);
@@ -76,7 +76,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testAggregateOverPeriod() {
     val from = Instant.now();
 
@@ -114,7 +114,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testPercentile() {
     val from = Instant.now();
 
@@ -156,7 +156,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetLastSnapshotTime() {
     val before = Instant.now();
     val stat = sampleSnapshot();
@@ -177,7 +177,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testGetCurrentCount() {
     val stat = sampleSnapshot();
 

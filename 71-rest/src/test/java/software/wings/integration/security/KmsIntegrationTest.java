@@ -3,7 +3,7 @@ package software.wings.integration.security;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +50,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testUpdateKmsSecretText_withBackupGlobalKMS_shouldSucceed() {
     String backupGlobalKmsConfigId = createGlobalKmsConfig(globalKmsBackup);
 
@@ -74,7 +74,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testUpdateKmsSecretText_shouldSucceed() {
     String kmsConfigId = createKmsConfig(kmsConfig);
     KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
@@ -91,7 +91,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testUpdateKmsEncryptedSecretFile_withNoContent_shouldNot_UpdateFileContent() throws IOException {
     String kmsConfigId = createKmsConfig(kmsConfig);
     KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
@@ -108,7 +108,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
 
   @Test
   @Owner(developers = UTKARSH)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testUpdateKmsSecretTextName_shouldNotAlterSecretValue() {
     String kmsConfigId = createKmsConfig(kmsConfig);
     KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);

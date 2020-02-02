@@ -13,7 +13,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
@@ -81,7 +81,7 @@ public class DynaTraceResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetLogRecords() {
     DynaTraceSetupTestNodeData testNodedata = getSampledata();

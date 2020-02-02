@@ -9,7 +9,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.StaticLimit;
@@ -71,7 +71,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Repeat(times = 10, successes = 10)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testLimitsEnforcement() throws Exception {
     long appCount = appCount(WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID);
@@ -117,7 +117,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Repeat(times = 10, successes = 10)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testLimitsEnforcementConcurrent() throws Exception {
     long appCount = appCount(WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID);

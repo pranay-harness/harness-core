@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import lombok.val;
 import org.junit.After;
@@ -46,7 +46,7 @@ public class InstanceStatsSnapshotIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = UJJAWAL)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   public void testSerialization() {
     val snapshot = getSampleSnapshot();
 

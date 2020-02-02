@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.BRETT;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import migrations.BaseMigration;
 import org.junit.Ignore;
@@ -25,7 +25,7 @@ public class RunMigrationsUtils extends WingsBaseTest {
 
   @Test
   @Owner(developers = BRETT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void runMigrations() {
     migrationService.runMigrations();
@@ -33,7 +33,7 @@ public class RunMigrationsUtils extends WingsBaseTest {
 
   @Test
   @Owner(developers = BRETT)
-  @Category(IntegrationTests.class)
+  @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void runSpecificMigration() {
     // Temporarily change this to any Migration class to execute it directly
