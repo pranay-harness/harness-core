@@ -1,13 +1,16 @@
 package io.harness.serializer.morphia;
 
 import static io.harness.mongo.HObjectFactory.checkRegisteredClasses;
+import static io.harness.mongo.IndexManager.movements;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.mongo.HObjectFactory;
 import io.harness.morphia.MorphiaModule;
 import io.harness.rule.Owner;
@@ -17,9 +20,11 @@ import org.apache.commons.collections.map.HashedMap;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentInfo;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.common.PartitionProcessorTest.SampleElement;
 import software.wings.infra.InfraMappingInfrastructureProvider;
 import software.wings.integration.common.MongoDBTest.MongoEntity;
@@ -35,6 +40,7 @@ import software.wings.sm.StateMachineExecutionCallbackMock;
 import software.wings.sm.StateMachineTest.StateAsync;
 import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.StepExecutionSummary;
+import software.wings.verification.CVConfiguration;
 
 import java.util.Map;
 import java.util.Set;
@@ -90,9 +96,29 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
                                                            .add(InfraMappingInfrastructureProvider.class)
                                                            .add(LogDataCollectionInfoV2.class)
                                                            .add(NotifyCallback.class)
+                                                           .add(CVConfiguration.class)
+                                                           .add(InstanceInfo.class)
+                                                           .add(Cluster.class)
+                                                           .add(DeploymentInfo.class)
                                                            .build(),
         classes);
 
     assertThat(unwanted).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void testManagerKnownMovements() {
+    ImmutableMap<Object, Object> known =
+        ImmutableMap.builder()
+            .put("io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters",
+                "io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters")
+            .put("io.harness.waiter.ErrorNotifyResponseData", "io.harness.delegate.beans.ErrorNotifyResponseData")
+            .put("software.wings.api.JiraExecutionData", "software.wings.api.jira.JiraExecutionData")
+            .put("software.wings.security.encryption.SimpleEncryption", "io.harness.security.SimpleEncryption")
+            .build();
+
+    assertThat(movements(objectFactory.getMorphiaInterfaceImplementers())).isEqualTo(known);
   }
 }
