@@ -2,8 +2,6 @@ package io.harness.jobs.workflow.timeseries;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static software.wings.beans.FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
@@ -17,20 +15,17 @@ import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.resources.intfc.ExperimentalMetricAnalysisResource;
-import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.SchedulerException;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
-import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -74,51 +69,11 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    try {
-      String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
-      String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
-
-      AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      if (!managerClientHelper
-               .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
-                   WORKFLOW_VERIFICATION_REMOVE_CRON, context.getAccountId()))
-               .getResource()) {
-        logger.info("Executing Workflow timeseries Analysis job for context : {}", context);
-        try (VerificationLogContext ignored = new VerificationLogContext(
-                 context.getAccountId(), null, context.getStateExecutionId(), context.getStateType(), OVERRIDE_ERROR)) {
-          new WorkflowTimeSeriesAnalysisJob
-              .MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClientHelper, context,
-                  Optional.of(jobExecutionContext))
-              .run();
-          logger.info("Triggering scheduled job with params {} and delegateTaskId {}", params, delegateTaskId);
-        }
-      } else {
-        logger.info("{} flag is enabled, it will be handled by iterators", WORKFLOW_VERIFICATION_REMOVE_CRON);
-        if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-          logger.info(
-              "The state {} is no longer valid, so we will delete the backup cron now.", context.getStateExecutionId());
-          jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
-        }
-      }
-    } catch (Exception ex) {
-      logger.warn("Metric analysis cron failed with error", ex);
-      try {
-        jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
-      } catch (SchedulerException e) {
-        logger.error("Unable to clean up cron", e);
-      }
-    }
+    // to be deleted once iterator is operationalized
   }
 
   @Override
   public void handle(AnalysisContext analysisContext) {
-    if (!managerClientHelper
-             .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
-                 WORKFLOW_VERIFICATION_REMOVE_CRON, analysisContext.getAccountId()))
-             .getResource()) {
-      logger.info("{} flag is disabled, it will be handled by cron", WORKFLOW_VERIFICATION_REMOVE_CRON);
-      return;
-    }
     if (ExecutionStatus.QUEUED == analysisContext.getExecutionStatus()) {
       learningEngineService.markJobStatus(analysisContext, ExecutionStatus.RUNNING);
     }

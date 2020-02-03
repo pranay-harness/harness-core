@@ -69,11 +69,11 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   public boolean validateConfig(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       if (isNotBlank(elkConfig.getUsername()) && isEmpty(elkConfig.getPassword())) {
-        throw new WingsException("User name is given but password is empty");
+        throw new IllegalArgumentException("User name is given but password is empty");
       }
 
       if (isBlank(elkConfig.getUsername()) && isNotEmpty(elkConfig.getPassword())) {
-        throw new WingsException("User name is empty but password is given");
+        throw new IllegalArgumentException("User name is empty but password is given");
       }
       getLogSample(elkConfig, "*", false, encryptedDataDetails);
       return true;
@@ -210,7 +210,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
     if (response.isSuccessful()) {
       return response.body();
     }
-    throw new WingsException(response.errorBody().string());
+    throw new IllegalArgumentException(response.errorBody().string());
   }
 
   @Override

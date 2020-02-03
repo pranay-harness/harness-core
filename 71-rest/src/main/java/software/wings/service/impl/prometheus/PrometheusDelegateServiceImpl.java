@@ -43,7 +43,7 @@ public class PrometheusDelegateServiceImpl implements PrometheusDelegateService 
         return true;
       } else {
         logger.error("Request not successful. Reason: {}", response);
-        throw new WingsException(response.errorBody().string());
+        throw new IllegalArgumentException(response.errorBody().string());
       }
     } catch (Exception e) {
       throw new WingsException("Could not validate prometheus server. " + ExceptionUtils.getMessage(e), e);

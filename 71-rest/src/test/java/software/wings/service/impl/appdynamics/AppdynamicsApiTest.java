@@ -170,7 +170,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
       assertThat(e.getCode()).isEqualTo(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR);
       logger.info("got exception", e);
       assertThat(e.getParams().get("reason"))
-          .isEqualTo("Could not login to AppDynamics server with the given credentials");
+          .isEqualTo("IllegalArgumentException: Could not login to AppDynamics server with the given credentials");
     }
   }
 

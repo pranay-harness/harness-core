@@ -21,8 +21,6 @@ import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFL
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.scheduler.AdministrativeJob.ADMINISTRATIVE_CRON_GROUP;
 import static software.wings.scheduler.AdministrativeJob.ADMINISTRATIVE_CRON_NAME;
-import static software.wings.scheduler.ExecutionLogsPruneJob.EXECUTION_LOGS_PRUNE_CRON_GROUP;
-import static software.wings.scheduler.ExecutionLogsPruneJob.EXECUTION_LOGS_PRUNE_CRON_NAME;
 import static software.wings.service.impl.analysis.MLAnalysisType.LOG_CLUSTER;
 import static software.wings.service.impl.analysis.MLAnalysisType.LOG_ML;
 import static software.wings.service.impl.analysis.MLAnalysisType.TIME_SERIES;
@@ -71,11 +69,13 @@ public class ServiceGuardAccountPoller {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HarnessMetricRegistry metricRegistry;
 
-  public void scheduleUsageMetricsCollection() {
+  public void scheduleAdministrativeTasks() {
     long initialDelay = new SecureRandom().nextInt(60);
     executorService.scheduleAtFixedRate(
         () -> recordQueuedTaskMetric(), initialDelay, POLL_INTIAL_DELAY_SEOONDS, TimeUnit.SECONDS);
     executorService.scheduleAtFixedRate(() -> dataStoreService.purgeOlderRecords(), initialDelay, 60, TimeUnit.MINUTES);
+    executorService.scheduleAtFixedRate(
+        () -> cvConfigurationService.deleteStaleConfigs(), initialDelay, 10, TimeUnit.MINUTES);
   }
 
   @VisibleForTesting
@@ -273,14 +273,5 @@ public class ServiceGuardAccountPoller {
     if (jobScheduler.checkExists(ADMINISTRATIVE_CRON_NAME, ADMINISTRATIVE_CRON_GROUP)) {
       jobScheduler.deleteJob(ADMINISTRATIVE_CRON_NAME, ADMINISTRATIVE_CRON_GROUP);
     }
-
-    logger.info("Delete date prune job");
-    if (jobScheduler.checkExists(EXECUTION_LOGS_PRUNE_CRON_NAME, EXECUTION_LOGS_PRUNE_CRON_GROUP)) {
-      jobScheduler.deleteJob(EXECUTION_LOGS_PRUNE_CRON_NAME, EXECUTION_LOGS_PRUNE_CRON_GROUP);
-    }
-  }
-
-  private void cleanUpAfterDeletionOfEntity() {
-    cvConfigurationService.deleteStaleConfigs();
   }
 }

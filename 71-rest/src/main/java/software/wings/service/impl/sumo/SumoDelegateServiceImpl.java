@@ -66,17 +66,10 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     String query = "*exception*";
     String startTime = String.valueOf(Timestamp.currentMinuteBoundary() - 1);
     String endTime = String.valueOf(Timestamp.currentMinuteBoundary());
-    try {
-      getSumoClient(config, encryptedDataDetails, encryptionService)
-          .createSearchJob(query, startTime, endTime, TimeZone.getDefault().getID());
-      logger.info("Valid config provided");
-      return true;
-    } catch (VerificationOperationException ex) {
-      throw ex;
-    } catch (Exception exception) {
-      throw new VerificationOperationException(
-          ErrorCode.SUMO_DATA_COLLECTION_ERROR, "Error from Sumo xxxxxxxx " + exception.getMessage(), exception);
-    }
+    getSumoClient(config, encryptedDataDetails, encryptionService)
+        .createSearchJob(query, startTime, endTime, TimeZone.getDefault().getID());
+    logger.info("Valid config provided");
+    return true;
   }
 
   @Override

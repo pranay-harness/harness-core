@@ -572,7 +572,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
     final int errorCode = response.code();
     if (errorCode == HttpStatus.SC_UNAUTHORIZED) {
-      throw new WingsException("Could not login to AppDynamics server with the given credentials");
+      throw new IllegalArgumentException("Could not login to AppDynamics server with the given credentials");
     }
 
     throw new WingsException(response.message());

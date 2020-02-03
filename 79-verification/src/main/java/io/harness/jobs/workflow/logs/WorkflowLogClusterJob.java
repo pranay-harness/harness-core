@@ -1,6 +1,5 @@
 package io.harness.jobs.workflow.logs;
 
-import static software.wings.beans.FeatureName.REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 
@@ -12,7 +11,6 @@ import io.harness.jobs.LogMLClusterGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
-import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.AllArgsConstructor;
@@ -47,49 +45,11 @@ public class WorkflowLogClusterJob implements Job, MongoPersistenceIterator.Hand
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    try {
-      String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
-      AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      if (managerClientHelper
-              .callManagerWithRetry(
-                  managerClient.isFeatureEnabled(REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON, context.getAccountId()))
-              .getResource()) {
-        logger.info(
-            "The feature REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON is enabled for {}, it will be handled by the iterators",
-            context.getAccountId());
-      } else {
-        logger.info("Executing workflow Log Cluster cron job with context : {} and params : {}", context, params);
-        new WorkflowLogClusterJob
-            .LogClusterTask(analysisService, managerClientHelper, Optional.of(jobExecutionContext), context,
-                learningEngineService, managerClient, dataStoreService)
-            .run();
-      }
-      if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-        logger.info("The state {} is no longer valid, so we are deleting the cron now.", context.getStateExecutionId());
-        jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
-      }
-
-    } catch (Exception ex) {
-      logger.warn("Log cluster cron failed with error", ex);
-      try {
-        jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
-      } catch (SchedulerException e) {
-        logger.error("Unable to cleanup cron", e);
-      }
-    }
+    // to be deleted once iterator is operationalized
   }
 
   @Override
   public void handle(AnalysisContext analysisContext) {
-    if (!managerClientHelper
-             .callManagerWithRetry(managerClient.isFeatureEnabled(
-                 REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON, analysisContext.getAccountId()))
-             .getResource()) {
-      logger.info(
-          "The feature REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON is not enabled for {}, it will be handled by the cron",
-          analysisContext.getAccountId());
-      return;
-    }
     if (ExecutionStatus.QUEUED == analysisContext.getExecutionStatus()) {
       learningEngineService.markJobStatus(analysisContext, ExecutionStatus.RUNNING);
     }
