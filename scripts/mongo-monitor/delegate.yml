@@ -3,30 +3,39 @@ metrics:
       check_interval:   10      # seconds
       query:            "db.delegateConnectionResults.find({validated:true, lastUpdatedAt: {$gt: Date.now() - 6*60*60*1000}}).count()"
 
+  - delegates_total_count:
+      check_interval:   10      # seconds
+      query:            "db.delegates.find().count()"
+
+  - delegates_connected_count:
+      check_interval:   10      # seconds
+      query:            "db.delegates.find({connected:true}).count()"
+
   - delegate_tasks_count:
       check_interval:   10      # seconds
       query:            "db.delegateTasks.find({}).count()"
 
   - delegate_tasks_avg_broadcast_count:
       check_interval:   60      # seconds
-      query:            "db.delegateTasks.aggregate( [ { $group: {_id:null, avgBroadcastCount: {$avg:'$broadcastCount'}},},{ $project: {avgBroadcastCount: 1, _id:0 }}])"
+      query:            "db.delegateTasks.aggregate( [ { $group: {_id:null, avgBroadcastCount: {$avg:'$broadcastCount'} } },
+                         { $project: { avgBroadcastCount: 1, _id:0 } } ] ).toArray()[0]['avgBroadcastCount']"
 
   - delegate_tasks_started_count:
       check_interval:   10      # seconds
-      query:            "db.getCollection('delegateTasks').find({status:'STARTED'}).count()"
+      query:            "db.delegateTasks.find({status:'STARTED'}).count()"
 
   - delegate_tasks_queued_count:
       check_interval:   10      # seconds
-      query:            "db.getCollection('delegateTasks').find({status:'QUEUED'}).count()"
+      query:            "db.delegateTasks.find({status:'QUEUED'}).count()"
 
   - delegate_tasks_finished_count:
       check_interval:   10      # seconds
-      query:            "db.getCollection('delegateTasks').find({ $or :[ {status:'FINISHED'}, {status:'ABORTED'}, {status:'ERROR'} ] }).count()"
+      query:            "db.delegateTasks.find({ $or :[ {status:'FINISHED'}, {status:'ABORTED'}, {status:'ERROR'} ] }).count()"
 
   - delegate_tasks_sync_count:
       check_interval:   10      # seconds
-      query:            "db.getCollection('delegateTasks').find({async:false}).count()"
+      query:            "db.delegateTasks.find({async:false}).count()"
 
   - delegate_tasks_async_count:
       check_interval:   10      # seconds
-      query:            "db.getCollection('delegateTasks').find({async:true}).count()"
+      query:            "db.delegateTasks.find({async:true}).count()"
