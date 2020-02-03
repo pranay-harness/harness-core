@@ -50,7 +50,7 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
   @Blueprint private List<String> stageTargetGroupArns;
 
   // Right now ONLY regular Asg OR SpotInst
-  private AmiDeploymentType amiDeploymentType;
+  private AmiDeploymentType amiDeploymentType = AWS_ASG;
 
   // Variables used for SpotInst Deployment type
   private String spotinstElastiGroupJson;

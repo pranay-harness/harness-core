@@ -53,7 +53,7 @@ public class AwsAmiInfrastructure
 
   // Right now ONLY regular Asg OR SpotInst
   // This field can't be modified once Infra is created
-  @IncludeFieldMap private AmiDeploymentType amiDeploymentType;
+  @IncludeFieldMap @Builder.Default private AmiDeploymentType amiDeploymentType = AWS_ASG;
 
   // Variables used for SpotInst Deployment type
   private String spotinstElastiGroupJson;
@@ -79,7 +79,7 @@ public class AwsAmiInfrastructure
         .withStageClassicLoadBalancers(stageClassicLoadBalancers)
         .withStageTargetGroupArns(stageTargetGroupArns)
         .withInfraMappingType(InfrastructureMappingType.AWS_AMI.name())
-        .withAmiDeploymentType(amiDeploymentType)
+        .withAmiDeploymentType(getAmiDeploymentType())
         .withSpotinstCloudProvider(spotinstCloudProvider)
         .withSpotinstElastiGroupJson(spotinstElastiGroupJson)
         .build();
