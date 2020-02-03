@@ -114,11 +114,6 @@ public class WorkflowAnalysisHostWithDotsJobTest extends VerificationBaseTest {
 
     final Call<RestResponse<Boolean>> featureFlagFalseMock = mock(Call.class);
     when(featureFlagFalseMock.execute()).thenReturn(Response.success(new RestResponse<>(false)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON, accountId))
-        .thenReturn(featureFlagTrueMock);
-    when(
-        verificationManagerClient.isFeatureEnabled(FeatureName.REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON, accountId))
-        .thenReturn(featureFlagTrueMock);
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
         .thenReturn(featureFlagFalseMock);
     when(verificationManagerClient.isFeatureEnabled(FeatureName.LOGML_NEURAL_NET, accountId))

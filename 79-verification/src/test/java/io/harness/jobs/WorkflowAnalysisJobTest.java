@@ -10,7 +10,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
@@ -55,6 +54,7 @@ import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -142,11 +142,6 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
 
     final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
     when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(false)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON, accountId))
-        .thenReturn(featureFlagRestMock);
-    when(
-        verificationManagerClient.isFeatureEnabled(FeatureName.REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON, accountId))
-        .thenReturn(featureFlagRestMock);
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
         .thenReturn(featureFlagRestMock);
     when(verificationManagerClient.isFeatureEnabled(FeatureName.LOGML_NEURAL_NET, accountId))
@@ -261,42 +256,16 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testTimeSeriesCronDisabled() throws IOException {
-    final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
-    when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON, accountId))
-        .thenReturn(featureFlagRestMock);
-    workflowTimeSeriesAnalysisJob.execute(timeSeriesContext);
-    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).asList()).isEmpty();
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
   public void testTimeSeriesCronEnabled() {
     workflowTimeSeriesAnalysisJob.handle(timeSeriesAnalysisContext);
-    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).asList()).isEmpty();
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testTimeSeriesAnalysisJobQueuePreviousWithPredictive() {
-    workflowTimeSeriesAnalysisJob.execute(timeSeriesContext);
-    verifyTimeSeriesQueuedTasks();
-    verify(timeSeriesAnalysisService, times(3))
-        .getMaxControlMinuteWithData(
-            any(StateType.class), anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).asList().size())
+        .isEqualTo(metricGroups.size());
   }
 
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testTimeSeriesAnalysisJobQueuePreviousWithPredictiveIterator() throws IOException {
-    final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
-    when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON, accountId))
-        .thenReturn(featureFlagRestMock);
     workflowTimeSeriesAnalysisJob.handle(timeSeriesAnalysisContext);
     final AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
                                                 .filter(AnalysisContextKeys.stateType, StateType.APP_DYNAMICS)
@@ -313,8 +282,6 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
 
     final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
     when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON, accountId))
-        .thenReturn(featureFlagRestMock);
     // save an analysis record with the fail fast as true
     TimeSeriesMLAnalysisRecord mlAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
     mlAnalysisRecord.setShouldFailFast(true);
@@ -339,11 +306,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testTimeSeriesAnalysisJobHandleWhenControlNodesIsNull() throws IOException {
-    final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
-    when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON, accountId))
-        .thenReturn(featureFlagRestMock);
+  public void testTimeSeriesAnalysisJobHandleWhenControlNodesIsNull() {
     timeSeriesAnalysisContext.setControlNodes(null);
     workflowTimeSeriesAnalysisJob.handle(timeSeriesAnalysisContext);
     final AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
@@ -359,11 +322,6 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testTimeSeriesAnalysisJobSuccess() throws IOException {
-    final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
-    when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON, accountId))
-        .thenReturn(featureFlagRestMock);
-
     final Call<RestResponse<Boolean>> stateValidRestMock = mock(Call.class);
     when(stateValidRestMock.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(stateValidRestMock);
@@ -378,39 +336,23 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testLogsCronDisabled() throws IOException {
-    final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
-    when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON, accountId))
-        .thenReturn(featureFlagRestMock);
-    workflowLogAnalysisJob.execute(logAnalysisExecutionContext);
-    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).asList()).isEmpty();
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
   public void testLogAnalysisCronEnabled() {
     workflowLogAnalysisJob.handle(logAnalysisContext);
-    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).asList()).isEmpty();
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).count()).isEqualTo(2);
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                   .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.LOG_CLUSTER)
+                   .count())
+        .isEqualTo(1);
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                   .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.LOG_ML)
+                   .count())
+        .isEqualTo(1);
   }
 
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testLogAnalysisJobQueuePrevious() {
-    workflowLogAnalysisJob.execute(logAnalysisExecutionContext);
-    verifyLogAnalysisQueuedTasks();
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testLogAnalysisJobIterator() throws IOException {
-    final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
-    when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON, accountId))
-        .thenReturn(featureFlagRestMock);
+  public void testLogAnalysisJobIterator() {
     workflowLogAnalysisJob.handle(logAnalysisContext);
     final AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
                                                 .filter(AnalysisContextKeys.stateType, StateType.SUMO)
@@ -423,11 +365,6 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testLogAnalysisJobSuccess() throws IOException {
-    final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
-    when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON, accountId))
-        .thenReturn(featureFlagRestMock);
-
     final Call<RestResponse<Boolean>> stateValidRestMock = mock(Call.class);
     when(stateValidRestMock.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(stateValidRestMock);
@@ -437,19 +374,6 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
                                                 .filter(AnalysisContextKeys.stateType, StateType.SUMO)
                                                 .get();
     assertThat(analysisContext.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testLogClusteringCronDisabled() throws IOException {
-    final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
-    when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(
-        verificationManagerClient.isFeatureEnabled(FeatureName.REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON, accountId))
-        .thenReturn(featureFlagRestMock);
-    workflowLogClusterJob.execute(logAnalysisExecutionContext);
-    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).asList()).isEmpty();
   }
 
   @Test

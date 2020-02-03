@@ -17,9 +17,6 @@ import com.google.inject.name.Named;
 
 import io.harness.jobs.workflow.collection.WorkflowDataCollectionJob;
 import io.harness.jobs.workflow.logs.WorkflowFeedbackAnalysisJob;
-import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob;
-import io.harness.jobs.workflow.logs.WorkflowLogClusterJob;
-import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.serializer.JsonUtils;
@@ -82,11 +79,8 @@ public class WorkflowVerificationTaskPoller {
             scheduleDataCollection(verificationAnalysisTask);
             switch (verificationAnalysisTask.getAnalysisType()) {
               case TIME_SERIES:
-                scheduleTimeSeriesAnalysisCronJob(verificationAnalysisTask);
                 break;
               case LOG_ML:
-                scheduleLogAnalysisCronJob(verificationAnalysisTask);
-                scheduleClusterCronJob(verificationAnalysisTask);
                 if (verificationManagerClientHelper
                         .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
                             FeatureName.CV_FEEDBACKS, verificationAnalysisTask.getAccountId()))
@@ -191,78 +185,6 @@ public class WorkflowVerificationTaskPoller {
         Date.from(OffsetDateTime.now().plusDays(CV_CONFIGURATION_VALID_LIMIT_IN_DAYS).toInstant()));
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(logsCVConfiguration));
     return logsCVConfiguration;
-  }
-
-  private void scheduleTimeSeriesAnalysisCronJob(AnalysisContext context) {
-    Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES + 1));
-    JobDetail job = JobBuilder.newJob(WorkflowTimeSeriesAnalysisJob.class)
-                        .withIdentity(context.getStateExecutionId(),
-                            context.getStateType().name().toUpperCase() + "WORKFLOW_TIME_SERIES_VERIFY_CRON_GROUP")
-                        .usingJobData("jobParams", JsonUtils.asJson(context))
-                        .usingJobData("timestamp", System.currentTimeMillis())
-                        .usingJobData("delegateTaskId", context.getDelegateTaskId())
-                        .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
-                        .build();
-
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(context.getStateExecutionId(),
-                              context.getStateType().name().toUpperCase() + "WORKFLOW_TIME_SERIES_VERIFY_CRON_GROUP")
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(60)
-                                            .withMisfireHandlingInstructionNowWithExistingCount()
-                                            .repeatForever())
-                          .startAt(startDate)
-                          .build();
-
-    jobScheduler.scheduleJob(job, trigger);
-    logger.info("Scheduled TimeSeries Analysis Cron Job with details : {}", job);
-  }
-
-  private void scheduleLogAnalysisCronJob(AnalysisContext context) {
-    Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES + 1));
-    JobDetail job = JobBuilder.newJob(WorkflowLogAnalysisJob.class)
-                        .withIdentity(context.getStateExecutionId(), "WORKFLOW_LOG_ANALYSIS_CRON_GROUP")
-                        .usingJobData("jobParams", JsonUtils.asJson(context))
-                        .usingJobData("timestamp", System.currentTimeMillis())
-                        .usingJobData("delegateTaskId", context.getDelegateTaskId())
-                        .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
-                        .build();
-
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(context.getStateExecutionId(), "WORKFLOW_LOG_ANALYSIS_CRON_GROUP")
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(60)
-                                            .repeatForever()
-                                            .withMisfireHandlingInstructionNowWithExistingCount())
-                          .startAt(startDate)
-                          .build();
-
-    jobScheduler.scheduleJob(job, trigger);
-    logger.info("Scheduled Log Analysis Cron Job with details : {}", job);
-  }
-
-  private void scheduleClusterCronJob(AnalysisContext context) {
-    Date startDate = new Date(new Date().getTime() + 3 * 60000);
-
-    JobDetail job = JobBuilder.newJob(WorkflowLogClusterJob.class)
-                        .withIdentity(context.getStateExecutionId(), "LOG_CLUSTER_CRON_GROUP")
-                        .usingJobData("jobParams", JsonUtils.asJson(context))
-                        .usingJobData("timestamp", System.currentTimeMillis())
-                        .usingJobData("delegateTaskId", context.getDelegateTaskId())
-                        .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
-                        .build();
-
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(context.getStateExecutionId(), "LOG_CLUSTER_CRON_GROUP")
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(10)
-                                            .repeatForever()
-                                            .withMisfireHandlingInstructionNowWithExistingCount())
-                          .startAt(startDate)
-                          .build();
-
-    jobScheduler.scheduleJob(job, trigger);
-    logger.info("Scheduled Log Analysis cluster Job with details : {}", job);
   }
 
   private void scheduleFeedbackAnalysisCronJob(AnalysisContext context) {

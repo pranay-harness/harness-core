@@ -55,7 +55,7 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
       return true;
     } else {
       logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException(response.errorBody().string());
+      throw new IllegalArgumentException(response.errorBody().string());
     }
   }
 

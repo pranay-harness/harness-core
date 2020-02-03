@@ -1,7 +1,5 @@
 package io.harness.jobs.workflow.logs;
 
-import static software.wings.beans.FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON;
-
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -21,7 +19,6 @@ import org.mongodb.morphia.annotations.Transient;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.SchedulerException;
 import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -49,46 +46,11 @@ public class WorkflowLogAnalysisJob implements Job, Handler<AnalysisContext> {
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    try {
-      String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
-      AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      if (!managerClientHelper
-               .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
-                   WORKFLOW_VERIFICATION_REMOVE_CRON, context.getAccountId()))
-               .getResource()) {
-        logger.info("Starting log analysis cron " + JsonUtils.asJson(context));
-        new WorkflowLogAnalysisJob
-            .LogAnalysisTask(analysisService, context, Optional.of(jobExecutionContext), learningEngineService,
-                managerClient, managerClientHelper, dataStoreService)
-            .call();
-        logger.info("Finish log analysis cron " + context.getStateExecutionId());
-      } else {
-        logger.info("{} flag is enabled, it will be handled by iterators", WORKFLOW_VERIFICATION_REMOVE_CRON);
-        if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-          logger.info(
-              "The state {} is no longer valid, so we will delete the backup cron now.", context.getStateExecutionId());
-          jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
-        }
-      }
-    } catch (Exception ex) {
-      logger.warn("Log analysis cron failed with error", ex);
-      try {
-        jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
-      } catch (SchedulerException e) {
-        logger.error("Unable to clean up cron", e);
-      }
-    }
+    // to be deleted once iterator is operationalized
   }
 
   @Override
   public void handle(AnalysisContext analysisContext) {
-    if (!managerClientHelper
-             .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
-                 WORKFLOW_VERIFICATION_REMOVE_CRON, analysisContext.getAccountId()))
-             .getResource()) {
-      logger.info("{} flag is disabled, it will be handled by cron", WORKFLOW_VERIFICATION_REMOVE_CRON);
-      return;
-    }
     if (ExecutionStatus.QUEUED == analysisContext.getExecutionStatus()) {
       learningEngineService.markJobStatus(analysisContext, ExecutionStatus.RUNNING);
     }

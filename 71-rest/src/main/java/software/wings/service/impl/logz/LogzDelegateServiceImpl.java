@@ -52,7 +52,7 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
       if (response.isSuccessful()) {
         return true;
       }
-      throw new WingsException(response.errorBody().string());
+      throw new IllegalArgumentException(response.errorBody().string());
     } catch (Exception exception) {
       throw new WingsException("Error validating LOGZ config " + ExceptionUtils.getMessage(exception), exception);
     }

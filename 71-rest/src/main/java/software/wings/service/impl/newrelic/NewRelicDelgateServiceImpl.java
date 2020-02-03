@@ -165,22 +165,16 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   private List<NewRelicApplication> validateApplications(
-      NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails, int pageCount) {
+      NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails, int pageCount) throws IOException {
     final Call<NewRelicApplicationsResponse> request =
         getNewRelicRestClient(newRelicConfig)
             .listAllApplications(getApiKey(newRelicConfig, encryptedDataDetails), pageCount);
     Response<NewRelicApplicationsResponse> response;
-    try {
-      response = request.execute();
-      if (response.isSuccessful()) {
-        return response.body().getApplications();
-      } else {
-        throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
-            + response.errorBody() + " Request: " + request.request().url().toString());
-      }
-    } catch (Exception ex) {
-      throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
-          + ex.getMessage() + " Request: " + request.request().url().toString());
+    response = request.execute();
+    if (response.isSuccessful()) {
+      return response.body().getApplications();
+    } else {
+      throw new IllegalArgumentException(response.errorBody().string());
     }
   }
 

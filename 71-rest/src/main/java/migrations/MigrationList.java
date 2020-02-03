@@ -36,6 +36,7 @@ import migrations.all.DanglingUserInviteCleanupMigration;
 import migrations.all.DatadogCVServiceConfigurationMigration;
 import migrations.all.DatadogCustomMetricMigration;
 import migrations.all.DeleteCVAlertsMigration;
+import migrations.all.DeleteCVCronMigration;
 import migrations.all.DeleteLETaskDelCronMigration;
 import migrations.all.DeleteNewRelicMetricNameCronMigration;
 import migrations.all.DeleteOldThirdPartyApiCallsMigration;
@@ -305,6 +306,7 @@ public class MigrationList {
         .add(Pair.of(290, PcfFeatureFlagMigration.class))
         .add(Pair.of(291, CleanupOrphanInstances.class))
         .add(Pair.of(292, CleanupSyncStatusForDeletedEntities.class))
+        .add(Pair.of(293, DeleteCVCronMigration.class))
         .build();
   }
 }
