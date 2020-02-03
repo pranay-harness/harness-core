@@ -5,6 +5,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.common.TemplateConstants.ARTIFACT_SOURCE;
 import static software.wings.common.TemplateConstants.HTTP;
+import static software.wings.common.TemplateConstants.PCF_PLUGIN;
 import static software.wings.common.TemplateConstants.SHELL_SCRIPT;
 import static software.wings.common.TemplateConstants.SSH;
 
@@ -20,6 +21,7 @@ import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
 import software.wings.beans.template.artifactsource.CustomArtifactSourceTemplate;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
 import software.wings.beans.template.command.HttpTemplate;
+import software.wings.beans.template.command.PcfCommandTemplate;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 
@@ -331,4 +333,56 @@ public class TemplateLibaryYamlConstants {
                                                               .appId(GLOBAL_APP_ID)
                                                               .templateObject(baseArtifactTemplateObject)
                                                               .build();
+
+  //  PcfCommandTemplate constants.
+  public static final String PCF_COMMAND_TEMPLATE_VALID_YAML_FILE_PATH =
+      "Setup/Template Library/Harness/test-pcf-command.yaml";
+
+  public static final Template PCfCommandTemplateForSetup = Template.builder()
+                                                                .type(PCF_PLUGIN)
+                                                                .name("test-pcf-command")
+                                                                .accountId(GLOBAL_ACCOUNT_ID)
+                                                                .appId(GLOBAL_APP_ID)
+                                                                .build();
+
+  public static final BaseTemplate basePcfCommandTemplateObject =
+      PcfCommandTemplate.builder().scriptString("echo asd").timeoutIntervalInMinutes(5).build();
+
+  public static final Template expectedPcfCommandTemplate = Template.builder()
+                                                                .name("test-pcf-command")
+                                                                .accountId(GLOBAL_ACCOUNT_ID)
+                                                                .type(PCF_PLUGIN)
+                                                                .variables(Arrays.asList(variable))
+                                                                .appId(GLOBAL_APP_ID)
+                                                                .templateObject(basePcfCommandTemplateObject)
+                                                                .build();
+
+  public static final String VALID_PCF_COMMAND_TEMPLATE_WITH_VARIABLE = "harnessApiVersion: '1.0'\n"
+      + "type: PCF_PLUGIN\n"
+      + "scriptString: echo asd\n"
+      + "timeoutIntervalInMinutes: 5\n"
+      + "variables:\n"
+      + "- description: asd\n"
+      + "  name: abc\n"
+      + "  value: xyz\n";
+
+  public static final Template expectedPcfCommandTemplateWithoutVariable =
+      Template.builder()
+          .name("test-pcf-command")
+          .accountId(GLOBAL_ACCOUNT_ID)
+          .appId(GLOBAL_APP_ID)
+          .templateObject(basePcfCommandTemplateObject)
+          .build();
+
+  public static final String INVALID_PCF_COMMAND_TEMPLATE_WITH_VARIABLE = "harnessApiVersion: '1.0'\n"
+      + "type: PCF_PLUGIN\n"
+      + "scriptString: echo asd\n"
+      + "timeoutIntervalInMinutes: -1\n"
+      + "variables:\n"
+      + "- description: asd\n"
+      + "  name: abc\n"
+      + "  value: xyz\n";
+
+  public static final String INVALID_PCF_COMMAND_TEMPLATE_VALID_YAML_FILE_PATH =
+      "Setup/Template Library/test-pcf-command.yaml";
 }

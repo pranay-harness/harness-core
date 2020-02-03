@@ -198,6 +198,7 @@ import software.wings.service.impl.yaml.handler.templatelibrary.ArtifactSourceTe
 import software.wings.service.impl.yaml.handler.templatelibrary.CommandTemplateRefYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.CommandTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.HttpTemplateYamlHandler;
+import software.wings.service.impl.yaml.handler.templatelibrary.PcfCommandTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.ShellScriptTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibraryYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.ActionYamlHandler;
@@ -552,5 +553,7 @@ public class YamlModule extends AbstractModule {
     templateLibraryYamlHandlerMapBinder.addBinding(TemplateConstants.SSH).to(CommandTemplateYamlHandler.class);
     templateLibraryYamlHandlerMapBinder.addBinding(TemplateConstants.ARTIFACT_SOURCE)
         .to(ArtifactSourceTemplateYamlHandler.class);
+    templateLibraryYamlHandlerMapBinder.addBinding(TemplateConstants.PCF_PLUGIN)
+        .to(PcfCommandTemplateYamlHandler.class);
   }
 }
