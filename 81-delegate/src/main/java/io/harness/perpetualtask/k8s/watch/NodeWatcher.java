@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_START;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_STOP;
 
@@ -23,7 +24,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 @Slf4j
 public class NodeWatcher implements Watcher<Node> {
-  static final String IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME = "identifier_clusterId";
   private final Watch watch;
   private final String cloudProviderId;
   private final String clusterId;
@@ -64,8 +64,7 @@ public class NodeWatcher implements Watcher<Node> {
                                      .setTimestamp(timestamp)
                                      .build();
     logger.debug("Publishing event: {}", nodeStartedEvent);
-    eventPublisher.publishMessage(
-        nodeStartedEvent, timestamp, ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, clusterId));
+    eventPublisher.publishMessage(nodeStartedEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
   }
 
   private void publishNodeStoppedEvent(Node node) {
@@ -79,8 +78,7 @@ public class NodeWatcher implements Watcher<Node> {
                                      .setTimestamp(timestamp)
                                      .build();
     logger.debug("Publishing event: {}", nodeStoppedEvent);
-    eventPublisher.publishMessage(
-        nodeStoppedEvent, timestamp, ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, clusterId));
+    eventPublisher.publishMessage(nodeStoppedEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
     publishedNodes.remove(node.getMetadata().getUid());
   }
 
@@ -99,8 +97,7 @@ public class NodeWatcher implements Watcher<Node> {
               .putAllLabels(node.getMetadata().getLabels())
               .putAllAllocatableResource(K8sResourceUtils.getResourceMap(node.getStatus().getAllocatable()))
               .build();
-      eventPublisher.publishMessage(
-          nodeInfo, timestamp, ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, clusterId));
+      eventPublisher.publishMessage(nodeInfo, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
       publishedNodes.add(node.getMetadata().getUid());
     }
   }

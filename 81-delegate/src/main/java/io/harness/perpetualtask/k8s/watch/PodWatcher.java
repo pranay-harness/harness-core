@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_DELETED;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
 
@@ -30,7 +31,6 @@ import java.util.Set;
 
 @Slf4j
 public class PodWatcher implements Watcher<Pod> {
-  static final String IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME = "identifier_clusterId";
   private static final TypeRegistry TYPE_REGISTRY =
       TypeRegistry.newBuilder().add(PodInfo.getDescriptor()).add(PodEvent.getDescriptor()).build();
 
@@ -81,8 +81,7 @@ public class PodWatcher implements Watcher<Pod> {
 
       logMessage(podInfo);
 
-      eventPublisher.publishMessage(
-          podInfo, creationTimestamp, ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, clusterId));
+      eventPublisher.publishMessage(podInfo, creationTimestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
       final Timestamp timestamp = HTimestamps.parse(podScheduledCondition.getLastTransitionTime());
       PodEvent podEvent = PodEvent.newBuilder()
                               .setCloudProviderId(cloudProviderId)
@@ -92,8 +91,7 @@ public class PodWatcher implements Watcher<Pod> {
                               .setTimestamp(timestamp)
                               .build();
       logMessage(podEvent);
-      eventPublisher.publishMessage(
-          podEvent, timestamp, ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, clusterId));
+      eventPublisher.publishMessage(podEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
       publishedPods.add(uid);
     }
 
@@ -108,8 +106,7 @@ public class PodWatcher implements Watcher<Pod> {
                               .setTimestamp(timestamp)
                               .build();
       logMessage(podEvent);
-      eventPublisher.publishMessage(
-          podEvent, timestamp, ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, clusterId));
+      eventPublisher.publishMessage(podEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
       publishedPods.remove(uid);
     }
   }

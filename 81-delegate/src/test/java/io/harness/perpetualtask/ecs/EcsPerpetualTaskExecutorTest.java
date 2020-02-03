@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.ecs;
 
-import static io.harness.perpetualtask.ecs.EcsPerpetualTaskExecutor.IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME;
+import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.HITESH;
 import static java.time.temporal.ChronoUnit.HOURS;
@@ -118,7 +118,7 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
         .publishMessage(messageCaptor.capture(), eq(HTimestamps.fromInstant(lastMetricCollectionTime)),
             mapArgumentCaptor.capture());
     assertThat(messageCaptor.getAllValues()).hasSize(2).containsAll(utilizationMessages);
-    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 
   @Test
@@ -136,7 +136,7 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
         .should(times(1))
         .publishMessage(messageCaptor.capture(), eq(HTimestamps.fromInstant(pollTime)), mapArgumentCaptor.capture());
     assertThat(messageCaptor.getAllValues()).hasSize(1);
-    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 
   @Test
