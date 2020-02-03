@@ -3,6 +3,7 @@ package io.harness.event.grpc;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 import static io.harness.rule.OwnerRule.AVMOHAN;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
@@ -42,7 +43,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EventPublisherServerImplTest extends CategoryTest {
@@ -80,7 +80,7 @@ public class EventPublisherServerImplTest extends CategoryTest {
                                              .setPayload(Any.pack(message))
                                              .setOccurredAt(HTimestamps.fromInstant(occurredAt))
                                              .build())
-                                  .collect(Collectors.toList()))
+                                  .collect(toList()))
               .build();
       publisherServer.publish(publishRequest, observer);
       verify(hPersistence).save(captor.capture());
@@ -96,7 +96,7 @@ public class EventPublisherServerImplTest extends CategoryTest {
                          .attributes(ImmutableMap.of("key1", "val1", "key2", message.toString()))
                          .occurredAt(occurredAt.toEpochMilli())
                          .build())
-              .collect(Collectors.toList()));
+              .collect(toList()));
     });
   }
 
@@ -108,7 +108,14 @@ public class EventPublisherServerImplTest extends CategoryTest {
     when(hPersistence.save(anyListOf(PublishedMessage.class))).thenThrow(exception);
     ArgumentCaptor<StatusException> captor = ArgumentCaptor.forClass(StatusException.class);
     Context.current().withValue(DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY, TEST_ACC_ID).run(() -> {
-      publisherServer.publish(PublishRequest.newBuilder().build(), observer);
+      publisherServer.publish(
+          PublishRequest.newBuilder()
+              .addAllMessages(testMessages()
+                                  .stream()
+                                  .map(x -> PublishMessage.newBuilder().setPayload(Any.pack(x)).build())
+                                  .collect(toList()))
+              .build(),
+          observer);
       verify(observer).onError(captor.capture());
       assertThat(captor.getValue().getStatus().getCode()).isEqualTo(Code.INTERNAL);
       assertThat(captor.getValue().getStatus().getCause()).isSameAs(exception);

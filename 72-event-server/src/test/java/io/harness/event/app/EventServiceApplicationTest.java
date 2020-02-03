@@ -2,7 +2,9 @@ package io.harness.event.app;
 
 import static io.harness.event.app.EventServiceTestRule.DEFAULT_ACCOUNT_ID;
 import static io.harness.event.app.EventServiceTestRule.DEFAULT_ACCOUNT_SECRET;
+import static io.harness.event.app.EventServiceTestRule.DEFAULT_DELEGATE_ID;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
+import static io.harness.grpc.IdentifierKeys.DELEGATE_ID;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -57,7 +59,8 @@ public class EventServiceApplicationTest extends CategoryTest {
       PublishedMessage publishedMessage = hPersistence.createQuery(PublishedMessage.class).get();
       assertThat(publishedMessage).isNotNull();
       assertThat(publishedMessage.getAccountId()).isEqualTo(DEFAULT_ACCOUNT_ID);
-      assertThat(publishedMessage.getAttributes()).isEqualTo(attributes);
+      assertThat(publishedMessage.getAttributes())
+          .isEqualTo(ImmutableMap.builder().putAll(attributes).put(DELEGATE_ID, DEFAULT_DELEGATE_ID).build());
       assertThat(publishedMessage.getMessage()).isEqualTo(message);
     });
   }

@@ -281,8 +281,8 @@ public class DelegateServiceImpl implements DelegateService {
     return HOST_NAME;
   }
 
-  public static String getDelegateId() {
-    return delegateId;
+  public static Optional<String> getDelegateId() {
+    return Optional.ofNullable(delegateId);
   }
 
   @Override

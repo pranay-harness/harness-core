@@ -3,6 +3,9 @@ package io.harness.perpetualtask.k8s.watch;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.fabric8.kubernetes.api.model.Event;
+import io.fabric8.kubernetes.api.model.Node;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.harness.serializer.KryoUtils;
@@ -29,9 +32,9 @@ public class K8sWatchServiceDelegate {
 
   @Builder
   static class WatcherGroup {
-    private Watcher nodeWatcher;
-    private Watcher podWatcher;
-    private Watcher clusterEventWatcher;
+    private Watcher<Node> nodeWatcher;
+    private Watcher<Pod> podWatcher;
+    private Watcher<Event> clusterEventWatcher;
   }
 
   public Iterable<String> watchIds() {
@@ -45,9 +48,9 @@ public class K8sWatchServiceDelegate {
       K8sClusterConfig k8sClusterConfig =
           (K8sClusterConfig) KryoUtils.asObject(params.getK8SClusterConfig().toByteArray());
       KubernetesClient client = kubernetesClientFactory.newKubernetesClient(k8sClusterConfig);
-      Watcher podWatcher = watcherFactory.createPodWatcher(client, params);
-      Watcher nodeWatcher = watcherFactory.createNodeWatcher(client, params);
-      Watcher eventWatcher = watcherFactory.createClusterEventWatcher(client, params);
+      Watcher<Pod> podWatcher = watcherFactory.createPodWatcher(client, params);
+      Watcher<Node> nodeWatcher = watcherFactory.createNodeWatcher(client, params);
+      Watcher<Event> eventWatcher = watcherFactory.createClusterEventWatcher(client, params);
       return WatcherGroup.builder()
           .nodeWatcher(nodeWatcher)
           .podWatcher(podWatcher)

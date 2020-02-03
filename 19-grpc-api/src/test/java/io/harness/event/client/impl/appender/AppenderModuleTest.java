@@ -22,7 +22,7 @@ public class AppenderModuleTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldBindNoopPublisherIfNoQueueFileConfigured() throws Exception {
-    Injector injector = Guice.createInjector(new AppenderModule(new Config(null)));
+    Injector injector = Guice.createInjector(new AppenderModule(new Config(null), () -> ""));
     Assertions.assertThat(injector.getInstance(EventPublisher.class))
         .isInstanceOfSatisfying(NoopEventPublisher.class,
             noopEventPublisher

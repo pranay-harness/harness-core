@@ -211,7 +211,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
             return;
           }
           String stateExecutionId = logsList.get(0).getStateExecutionId();
-          String delegateId = getDelegateId();
+          String delegateId = getDelegateId().orElse(null);
           logsList.forEach(log -> log.setDelegateId(delegateId));
           try {
             logger.info("Dispatching {} api call logs for [{}] [{}]", logsList.size(), stateExecutionId, accountId);
