@@ -8,7 +8,6 @@ import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +25,6 @@ import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -48,8 +46,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = getEnvId(context);
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
       throw new WingsException("No logz setting with id: " + analysisServerConfigId + " found");
@@ -219,5 +216,10 @@ public class LogzAnalysisState extends ElkAnalysisState {
   @SchemaIgnore
   public Logger getLogger() {
     return logger;
+  }
+
+  @Override
+  protected boolean isCVTaskEnqueuingEnabled(String accountId) {
+    return false;
   }
 }
