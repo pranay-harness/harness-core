@@ -1,5 +1,8 @@
 package io.harness.event.client.impl.appender;
 
+import static java.util.Arrays.stream;
+import static net.openhft.chronicle.queue.impl.single.SingleChronicleQueue.SUFFIX;
+
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -13,7 +16,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Monitors queue stats.
+ * Monitors queue health so that we don't fill up all disk space on the delegate with too many files
  */
 @Slf4j
 @Singleton
@@ -32,18 +35,21 @@ public class ChronicleQueueMonitor extends AbstractScheduledService {
 
   @Override
   protected void runOneIteration() throws Exception {
-    long entryCount = queue.entryCount();
-    int fileCount = Optional.ofNullable(queue.file())
-                        .map(File::listFiles)
-                        .map(fileList -> fileList.length - 1) // -1 to exclude the metadata file
-                        .orElse(0);
-    logger.info("entryCount: {}, fileCount: {}", entryCount, fileCount);
-    if (fileCount >= THRESHOLD) {
-      logger.warn("EventQueue file count on delegate is too high. Marking unhealthy");
-      healthy = false;
-    } else if (!healthy) {
-      logger.info("Event queue recovered. Marking healthy.");
-      healthy = true;
+    try {
+      long fileCount = Optional.ofNullable(queue.file())
+                           .map(File::listFiles)
+                           .map(fileList -> stream(fileList).filter(file -> file.getName().endsWith(SUFFIX)).count())
+                           .orElse(0L);
+      logger.info("eventQueue fileCount: {}", fileCount);
+      if (fileCount >= THRESHOLD) {
+        logger.warn("EventQueue file count on delegate is too high. Marking unhealthy");
+        healthy = false;
+      } else if (!healthy) {
+        logger.info("Event queue recovered. Marking healthy.");
+        healthy = true;
+      }
+    } catch (Exception e) {
+      logger.error("Ignoring encountered exception", e);
     }
   }
 
