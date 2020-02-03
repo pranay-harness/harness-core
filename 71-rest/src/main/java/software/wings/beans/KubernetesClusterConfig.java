@@ -196,12 +196,13 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     private String serviceAccountToken;
     private String clientKeyAlgo;
     private boolean skipValidation;
+    private CCMConfig.Yaml continuousEfficiencyConfig;
 
     @lombok.Builder
     public Yaml(boolean useKubernetesDelegate, String delegateName, String type, String harnessApiVersion,
         String masterUrl, String username, String password, String caCert, String clientCert, String clientKey,
         String clientKeyPassphrase, String serviceAccountToken, String clientKeyAlgo, boolean skipValidation,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions, CCMConfig.Yaml ccmConfig) {
       super(type, harnessApiVersion, usageRestrictions);
       this.useKubernetesDelegate = useKubernetesDelegate;
       this.delegateName = delegateName;
@@ -215,6 +216,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
       this.serviceAccountToken = serviceAccountToken;
       this.clientKeyAlgo = clientKeyAlgo;
       this.skipValidation = skipValidation;
+      this.continuousEfficiencyConfig = ccmConfig;
     }
   }
 }
