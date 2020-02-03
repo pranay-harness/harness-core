@@ -344,7 +344,8 @@ public class TriggerServiceHelper {
         trigger.getWorkflowVariables() == null ? new HashMap<>() : trigger.getWorkflowVariables();
     for (Entry<String, String> entry : webhookVariableValues.entrySet()) {
       if (isNotEmpty(entry.getValue())) {
-        if (infraDefEnabled && entry.getKey().startsWith("ServiceInfra")) {
+        if (infraDefEnabled && entry.getKey().startsWith("ServiceInfra")
+            && ORCHESTRATION == trigger.getWorkflowType()) {
           String infraMappingVarName = entry.getKey();
           String infraDefVarName = infraMappingVarName.replace("ServiceInfra", "InfraDefinition");
           triggerWorkflowVariableValues.put(infraDefVarName, entry.getValue());
