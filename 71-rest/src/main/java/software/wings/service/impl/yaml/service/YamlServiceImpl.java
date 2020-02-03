@@ -61,6 +61,7 @@ import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -85,6 +86,8 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
+import io.harness.logging.AutoLogContext;
+import io.harness.mongo.ProcessTimeLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -197,6 +200,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Override
   public List<ChangeContext> processChangeSet(List<Change> changeList, boolean isGitSyncPath)
       throws YamlProcessingException {
+    final Stopwatch startedStopWatch = Stopwatch.createStarted();
     // e.g. remove files outside of setup folder. (checking filePath)
     changeList = filterInvalidFilePaths(changeList);
 
@@ -207,6 +211,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     // process in the given order
     process(changeContextList, isGitSyncPath);
 
+    try (ProcessTimeLogContext ignore = new ProcessTimeLogContext(
+             startedStopWatch.elapsed(TimeUnit.MILLISECONDS), AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
+      logger.info("Processed yaml changes with isGitSyncPath=[{}]", isGitSyncPath);
+    }
     return changeContextList;
   }
 

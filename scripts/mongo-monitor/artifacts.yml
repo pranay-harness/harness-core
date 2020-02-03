@@ -1,8 +1,4 @@
 metrics:
-  - gitcommits_count:
-      check_interval:   10      # seconds
-      query:            "db.gitCommits.find({}).count()"
-
   - artifacts_collection_count:
       check_interval:   10      # seconds
       query:            "db.artifacts.find({}).count()"
