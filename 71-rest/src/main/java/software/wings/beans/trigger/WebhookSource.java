@@ -59,50 +59,59 @@ public enum WebhookSource {
   }
 
   public enum BitBucketEventType implements WebhookEvent {
-    PING("Ping", "ping", WebhookEventType.PING, 1),
-    DIAGNOSTICS_PING("Diagnostics Ping", "diagnostics:ping", WebhookEventType.PING, 1),
-    ALL("All", "all", WebhookEventType.ANY, 1),
+    PING("Ping", "ping", null, WebhookEventType.PING, 1),
+    DIAGNOSTICS_PING("Diagnostics Ping", "diagnostics:ping", null, WebhookEventType.PING, 1),
+    ALL("All", "all", null, WebhookEventType.ANY, 1),
 
-    PUSH_ANY("Any", "repo:any", WebhookEventType.PUSH, 1),
-    ANY("Any", "any", WebhookEventType.ANY, 1),
+    PUSH_ANY("Any", "repo:any", null, WebhookEventType.PUSH, 1),
+    ANY("Any", "any", null, WebhookEventType.ANY, 1),
     // OTHER("Other", "other", WebhookEventType.OTHER),
-    FORK("Fork", "repo:fork", WebhookEventType.PUSH, 3),
-    UPDATED("Updated", "repo:updated", WebhookEventType.PUSH, 8),
-    COMMIT_COMMENT_CREATED("Commit Comment Created", "repo:commit_comment_created", WebhookEventType.PUSH, 3),
-    BUILD_STATUS_CREATED("Build Status Created", "repo:commit_status_created", WebhookEventType.PUSH, 4),
-    BUILD_STATUS_UPDATED("Build Status Updated", "repo:commit_status_updated", WebhookEventType.PUSH, 5),
-    PUSH("Push", "repo:push", WebhookEventType.PUSH, 6),
-    REFS_CHANGED("Refs Changed", "repo:refs_changed", WebhookEventType.PUSH, 7),
+    FORK("Fork", "repo:fork", null, WebhookEventType.PUSH, 3),
+    UPDATED("Updated", "repo:updated", "repo:comment:edited", WebhookEventType.PUSH, 8),
+    COMMIT_COMMENT_CREATED(
+        "Commit Comment Created", "repo:commit_comment_created", " repo:comment:added", WebhookEventType.PUSH, 3),
 
-    ISSUE_ANY("Any", "issue:any", WebhookEventType.ISSUE, 1),
-    ISSUE_CREATED("Issue Created", "issue:created", WebhookEventType.ISSUE, 2),
-    ISSUE_UPDATED("Issue Updated", "issue:updated", WebhookEventType.ISSUE, 3),
-    ISSUE_COMMENT_CREATED("Issue Comment Created", "issue:comment_created", WebhookEventType.ISSUE, 4),
+    BUILD_STATUS_CREATED("Build Status Created", "repo:commit_status_created", null, WebhookEventType.PUSH, 4),
+    BUILD_STATUS_UPDATED("Build Status Updated", "repo:commit_status_updated", null, WebhookEventType.PUSH, 5),
+    PUSH("Push", "repo:push", "repo:refs_changed", WebhookEventType.PUSH, 6),
+    REFS_CHANGED("Refs Changed", "repo:refs_changed", null, WebhookEventType.PUSH, 7),
 
-    PULL_REQUEST_ANY("Any", "pullrequest:any", WebhookEventType.PULL_REQUEST, 1),
-    PULL_REQUEST_CREATED("Pull Request Created", "pullrequest:created", WebhookEventType.PULL_REQUEST, 2),
-    PULL_REQUEST_UPDATED("Pull Request Updated", "pullrequest:updated", WebhookEventType.PULL_REQUEST, 3),
-    PULL_REQUEST_APPROVED("Pull Request Approved", "pullrequest:approved", WebhookEventType.PULL_REQUEST, 4),
-    PULL_REQUEST_APPROVAL_REMOVED(
-        "Pull Request Approval Removed", "pullrequest:unapproved", WebhookEventType.PULL_REQUEST, 5),
-    PULL_REQUEST_MERGED("Pull Request Merged", "pullrequest:fulfilled", WebhookEventType.PULL_REQUEST, 6),
-    PULL_REQUEST_DECLINED("Pull Request Declined", "pullrequest:rejected", WebhookEventType.PULL_REQUEST, 7),
-    PULL_REQUEST_COMMENT_CREATED(
-        "Pull Request Comment Created", "pullrequest:comment_created", WebhookEventType.PULL_REQUEST, 8),
-    PULL_REQUEST_COMMENT_UPDATED(
-        "Pull Request Comment Updated", "pullrequest:comment_updated", WebhookEventType.PULL_REQUEST, 9),
-    PULL_REQUEST_COMMENT_DELETED(
-        "Pull Request Comment Deleted", "pullrequest:comment_deleted", WebhookEventType.PULL_REQUEST, 10);
+    ISSUE_ANY("Any", "issue:any", null, WebhookEventType.ISSUE, 1),
+    ISSUE_CREATED("Issue Created", "issue:created", null, WebhookEventType.ISSUE, 2),
+    ISSUE_UPDATED("Issue Updated", "issue:updated", null, WebhookEventType.ISSUE, 3),
+    ISSUE_COMMENT_CREATED("Issue Comment Created", "issue:comment_created", null, WebhookEventType.ISSUE, 4),
+
+    PULL_REQUEST_ANY("Any", "pullrequest:any", null, WebhookEventType.PULL_REQUEST, 1),
+    PULL_REQUEST_CREATED("Pull Request Created", "pullrequest:created", "pr:opened", WebhookEventType.PULL_REQUEST, 2),
+    PULL_REQUEST_UPDATED(
+        "Pull Request Updated", "pullrequest:updated", "pr:modified", WebhookEventType.PULL_REQUEST, 3),
+    PULL_REQUEST_APPROVED(
+        "Pull Request Approved", "pullrequest:approved", "pr:reviewer:approved", WebhookEventType.PULL_REQUEST, 4),
+    PULL_REQUEST_APPROVAL_REMOVED("Pull Request Approval Removed", "pullrequest:unapproved", "pr:reviewer:updated",
+        WebhookEventType.PULL_REQUEST, 5),
+    PULL_REQUEST_MERGED("Pull Request Merged", "pullrequest:fulfilled", "pr:merged", WebhookEventType.PULL_REQUEST, 6),
+    PULL_REQUEST_DECLINED(
+        "Pull Request Declined", "pullrequest:rejected", "pr:declined", WebhookEventType.PULL_REQUEST, 7),
+    PULL_REQUEST_COMMENT_CREATED("Pull Request Comment Created", "pullrequest:comment_created", "pr:comment:added",
+        WebhookEventType.PULL_REQUEST, 8),
+    PULL_REQUEST_COMMENT_UPDATED("Pull Request Comment Updated", "pullrequest:comment_updated", "pr:comment:edited",
+        WebhookEventType.PULL_REQUEST, 9),
+    PULL_REQUEST_COMMENT_DELETED("Pull Request Comment Deleted", "pullrequest:comment_deleted", "pr:comment:deleted",
+        WebhookEventType.PULL_REQUEST, 10);
 
     @Getter private String displayName;
     @Getter private String value;
     @Getter private WebhookEventType eventType;
 
-    BitBucketEventType(String displayName, String value, WebhookEventType eventType, int counter) {
+    BitBucketEventType(
+        String displayName, String value, String onPremEventKey, WebhookEventType eventType, int counter) {
       this.displayName = displayName;
       this.value = value;
       this.eventType = eventType;
       BitBucketEventHolder.map.put(value, this);
+      if (onPremEventKey != null) {
+        BitBucketEventHolder.map.put(onPremEventKey, this);
+      }
     }
 
     public static class BitBucketEventHolder { @Getter static Map<String, BitBucketEventType> map = new HashMap<>(); }
