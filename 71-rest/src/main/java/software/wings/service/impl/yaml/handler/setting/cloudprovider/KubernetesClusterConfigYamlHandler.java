@@ -1,7 +1,10 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.ccm.CCMConfig;
+import io.harness.ccm.CCMConfigYamlHandler;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +18,8 @@ import java.util.List;
 @Singleton
 @Slf4j
 public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler<Yaml, KubernetesClusterConfig> {
+  @Inject CCMConfigYamlHandler ccmConfigYamlHandler;
+
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) settingAttribute.getValue();
@@ -68,7 +73,7 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
       }
 
       yaml.setClientKeyAlgo(kubernetesClusterConfig.getClientKeyAlgo());
-
+      yaml.setContinuousEfficiencyConfig(ccmConfigYamlHandler.toYaml(kubernetesClusterConfig.getCcmConfig(), ""));
       toYaml(yaml, settingAttribute, appId);
 
     } catch (IllegalAccessException e) {
@@ -99,6 +104,13 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     kubernetesClusterConfig.setEncryptedClientKey(yaml.getClientKey());
     kubernetesClusterConfig.setEncryptedClientKeyPassphrase(yaml.getClientKeyPassphrase());
     kubernetesClusterConfig.setSkipValidation(yaml.isSkipValidation());
+
+    ChangeContext.Builder clonedContextBuilder =
+        cloneFileChangeContext(changeContext, changeContext.getYaml().getContinuousEfficiencyConfig());
+    ChangeContext clonedContext = clonedContextBuilder.build();
+
+    CCMConfig ccmConfig = ccmConfigYamlHandler.upsertFromYaml(clonedContext, changeSetContext);
+    kubernetesClusterConfig.setCcmConfig(ccmConfig);
 
     String encryptedRef = yaml.getPassword();
     if (encryptedRef != null) {

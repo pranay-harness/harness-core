@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.CCMConfig;
 import io.harness.ccm.CCMSettingService;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -38,11 +39,11 @@ public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConf
   public void testCRUDAndGet() throws Exception {
     String kubernetesClusterConfigName = "KubernetesCluster-" + System.currentTimeMillis();
 
-    SettingAttribute K8sClusterConfigWithoutValidation =
+    SettingAttribute k8sClusterConfigWithoutValidation =
         createKubernetesClusterConfigProvider(kubernetesClusterConfigName, true);
-    assertThat(K8sClusterConfigWithoutValidation.getName()).isEqualTo(kubernetesClusterConfigName);
+    assertThat(k8sClusterConfigWithoutValidation.getName()).isEqualTo(kubernetesClusterConfigName);
 
-    testCRUD(generateSettingValueYamlConfig(kubernetesClusterConfigName, K8sClusterConfigWithoutValidation));
+    testCRUD(generateSettingValueYamlConfig(kubernetesClusterConfigName, k8sClusterConfigWithoutValidation));
 
     SettingAttribute K8sClusterConfigWithValidation =
         createKubernetesClusterConfigProvider(kubernetesClusterConfigName, false);
@@ -64,6 +65,7 @@ public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConf
                                                    .username(username)
                                                    .password(password.toCharArray())
                                                    .accountId(ACCOUNT_ID)
+                                                   .ccmConfig(CCMConfig.builder().cloudCostEnabled(false).build())
                                                    .skipValidation(skipValidation)
                                                    .build())
                                     .build());
