@@ -56,7 +56,7 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
         expressions.addAll(getExpressions(appId, entityId, serviceId));
       } else {
         expressions.addAll(getExpressions(appId, entityId));
-        if (serviceId.equalsIgnoreCase("All")) {
+        if ("All".equalsIgnoreCase(serviceId)) {
           expressions.addAll(serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, "All", SERVICE));
           if (workflow.getEnvId() != null) {
             expressions.addAll(

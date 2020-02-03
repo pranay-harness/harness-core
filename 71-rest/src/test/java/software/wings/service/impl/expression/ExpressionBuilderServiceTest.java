@@ -556,7 +556,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
 
-    Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID, COMMAND);
+    Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, null, COMMAND);
     assertThat(expressions).isNotNull();
     assertThat(expressions).doesNotContain("env.name");
     assertThat(expressions).doesNotContain(SERVICE_VARIABLE_NAME);
