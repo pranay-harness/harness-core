@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.health.CEClusterHealth;
 import io.harness.ccm.health.CEError;
 import io.harness.ccm.health.CEHealthStatus;
 import io.harness.ccm.health.HealthStatusService;
@@ -21,25 +22,22 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.CEHealthStatusDTO;
-import software.wings.graphql.schema.type.aggregation.cloudprovider.ClusterErrorsDTO;
 import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class CEHealthStatusDataFetcherTest extends CategoryTest {
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
   private String clusterId = "CLUSTER_ID";
   private String errorMessage = String.format(CEError.PERPETUAL_TASK_MISSING_HEARTBEAT.getMessage(), clusterId);
-  private Map<String, List<String>> clusterErrorMap = new HashMap<>();
-  private CEHealthStatus ceHealthStatus =
-      CEHealthStatus.builder().isHealthy(false).clusterErrors(clusterErrorMap).build();
+  private CEHealthStatus ceHealthStatus = CEHealthStatus.builder().isHealthy(false).build();
+  private CEClusterHealth clusterHealthStatus = CEClusterHealth.builder().errors(Arrays.asList(errorMessage)).build();
+  private List<CEClusterHealth> clusterHealthStatusList = Arrays.asList(clusterHealthStatus);
+
   @Mock private DataFetchingEnvironment environment;
   private QLKubernetesClusterCloudProvider cloudProvider =
       QLKubernetesClusterCloudProvider.builder().id(cloudProviderId).build();
-  private ClusterErrorsDTO clusterErrorsDTO;
   private CEHealthStatusDTO ceHealthStatusDTO;
 
   @Mock private HealthStatusService healthStatusService;
@@ -48,10 +46,8 @@ public class CEHealthStatusDataFetcherTest extends CategoryTest {
 
   @Before
   public void setUp() {
-    clusterErrorMap.put(clusterId, Arrays.asList(errorMessage));
-    clusterErrorsDTO = ClusterErrorsDTO.builder().clusterErrors(Arrays.asList(errorMessage)).build();
     ceHealthStatusDTO =
-        CEHealthStatusDTO.builder().isHealthy(false).clusterErrors(Arrays.asList(clusterErrorsDTO)).build();
+        CEHealthStatusDTO.builder().isHealthy(false).clusterHealthStatusList(clusterHealthStatusList).build();
     when(environment.getSource()).thenReturn(cloudProvider);
     when(healthStatusService.getHealthStatus(eq(cloudProviderId))).thenReturn(ceHealthStatus);
   }

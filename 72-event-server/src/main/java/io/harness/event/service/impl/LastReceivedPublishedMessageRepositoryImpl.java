@@ -5,30 +5,27 @@ import com.google.inject.Singleton;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
-import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage.LastReceivedPublishedMessageKeys;
+import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.service.intfc.LastReceivedPublishedMessageRepository;
 import io.harness.grpc.IdentifierKeys;
-import io.harness.persistence.HPersistence;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
 @Slf4j
 public class LastReceivedPublishedMessageRepositoryImpl implements LastReceivedPublishedMessageRepository {
-  private final HPersistence hPersistence;
+  private final LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
 
   private Cache<CacheKey, Boolean> lastReceivedPublishedMessageCache =
       Caffeine.newBuilder().expireAfterWrite(15, TimeUnit.MINUTES).build();
 
   @Inject
-  public LastReceivedPublishedMessageRepositoryImpl(HPersistence hPersistence) {
-    this.hPersistence = hPersistence;
+  public LastReceivedPublishedMessageRepositoryImpl(LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao) {
+    this.lastReceivedPublishedMessageDao = lastReceivedPublishedMessageDao;
   }
 
   private static boolean containsIdentifierKey(PublishedMessage publishedMessage) {
@@ -56,19 +53,7 @@ public class LastReceivedPublishedMessageRepositoryImpl implements LastReceivedP
 
   private void updateLastReceivedPublishedMessage(String accountId, String identifier) {
     CacheKey cacheKey = new CacheKey(accountId, identifier);
-    lastReceivedPublishedMessageCache.get(cacheKey, key -> upsert(key.getAccountId(), key.getIdentifier()) != null);
-  }
-
-  private LastReceivedPublishedMessage upsert(String accountId, String identifier) {
-    return hPersistence.upsert(hPersistence.createQuery(LastReceivedPublishedMessage.class)
-                                   .field(LastReceivedPublishedMessageKeys.accountId)
-                                   .equal(accountId)
-                                   .field(LastReceivedPublishedMessageKeys.identifier)
-                                   .equal(identifier),
-        hPersistence.createUpdateOperations(LastReceivedPublishedMessage.class)
-            .set(LastReceivedPublishedMessageKeys.accountId, accountId)
-            .set(LastReceivedPublishedMessageKeys.identifier, identifier)
-            .set(LastReceivedPublishedMessageKeys.lastReceivedAt, Instant.now().toEpochMilli()),
-        HPersistence.upsertReturnNewOptions);
+    lastReceivedPublishedMessageCache.get(
+        cacheKey, key -> lastReceivedPublishedMessageDao.upsert(key.getAccountId(), key.getIdentifier()) != null);
   }
 }
