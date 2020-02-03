@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 import io.harness.ccm.CCMSettingService;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.ClusterRecord;
-import io.harness.ccm.health.CEHealthStatus.CEHealthStatusBuilder;
+import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import lombok.extern.slf4j.Slf4j;
@@ -27,14 +27,15 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class HealthStatusServiceImpl implements HealthStatusService {
-  public static final Long PERPETUAL_TASK_RECENCY_THRESHOLD =
-      TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS); // a few hours?
+  public static final Long PERPETUAL_TASK_RECENCY_THRESHOLD = TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS);
+  static final String IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME = "identifier_clusterId";
 
   @Inject SettingsService settingsService;
   @Inject CCMSettingService ccmSettingService;
   @Inject ClusterRecordService clusterRecordService;
   @Inject PerpetualTaskService perpetualTaskService;
   @Inject DelegateService delegateService;
+  @Inject LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
 
   @Override
   public CEHealthStatus getHealthStatus(String cloudProviderId) {
@@ -43,17 +44,10 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     Preconditions.checkArgument(ccmSettingService.isCloudCostEnabled(cloudProvider),
         format("The cloud provider with id=%s has CE disabled.", cloudProvider.getUuid()));
 
-    CEHealthStatusBuilder builder = CEHealthStatus.builder();
-
     List<ClusterRecord> clusterRecords = clusterRecordService.list(cloudProvider.getAccountId(), cloudProviderId);
 
     if (clusterRecords.isEmpty()) {
-      return builder.isHealthy(true).build();
-    }
-
-    List<String> clusterIds = new ArrayList<>();
-    for (ClusterRecord clusterRecord : clusterRecords) {
-      clusterIds.add(clusterRecord.getUuid());
+      return CEHealthStatus.builder().isHealthy(true).build();
     }
 
     Map<String, List<String>> clusterErrorMap = new HashMap<>();
@@ -65,11 +59,30 @@ public class HealthStatusServiceImpl implements HealthStatusService {
 
     boolean isHealthy = clusterErrorMap.values().stream().allMatch(List::isEmpty);
 
-    return builder.isHealthy(isHealthy)
-        .clusterIds(clusterIds)
-        .clusterRecords(clusterRecords)
-        .clusterErrors(clusterErrorMap)
+    List<CEClusterHealth> ceClusterHealthList = new ArrayList<>();
+    for (ClusterRecord clusterRecord : clusterRecords) {
+      ceClusterHealthList.add(getClusterHealth(clusterRecord));
+    }
+
+    return CEHealthStatus.builder().isHealthy(isHealthy).ceClusterHealthList(ceClusterHealthList).build();
+  }
+
+  private CEClusterHealth getClusterHealth(ClusterRecord clusterRecord) {
+    return CEClusterHealth.builder()
+        .clusterId(clusterRecord.getUuid())
+        .clusterRecord(clusterRecord)
+        .errors(getErrors(clusterRecord))
+        .lastEventTimestamp(getLastEventTimestamp(clusterRecord.getAccountId(), IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME))
         .build();
+  }
+
+  private long getLastEventTimestamp(String accountId, String identifier) {
+    LastReceivedPublishedMessage lastReceivedPublishedMessage =
+        lastReceivedPublishedMessageDao.get(accountId, identifier);
+    if (lastReceivedPublishedMessage == null) {
+      return 0;
+    }
+    return lastReceivedPublishedMessage.getLastReceivedAt();
   }
 
   private List<String> getErrors(ClusterRecord clusterRecord) {

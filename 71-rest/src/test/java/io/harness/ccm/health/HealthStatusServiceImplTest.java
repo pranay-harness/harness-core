@@ -1,5 +1,6 @@
 package io.harness.ccm.health;
 
+import static io.harness.ccm.health.HealthStatusServiceImpl.IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,6 +18,7 @@ import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
+import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
@@ -59,6 +61,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Mock ClusterRecordService clusterRecordService;
   @Mock PerpetualTaskService perpetualTaskService;
   @Mock DelegateService delegateService;
+  @Mock LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
 
   @InjectMocks HealthStatusServiceImpl healthStatusService;
 
@@ -92,6 +95,8 @@ public class HealthStatusServiceImplTest extends CategoryTest {
     when(clusterRecordService.list(eq(accountId), eq(cloudProviderId))).thenReturn(Arrays.asList(clusterRecord));
     when(perpetualTaskService.getTaskRecord(anyString())).thenReturn(taskRecord);
     when(delegateService.isDelegateConnected(eq(delegateId))).thenReturn(true);
+    when(lastReceivedPublishedMessageDao.get(eq(accountId), eq(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME)))
+        .thenReturn(LastReceivedPublishedMessage.builder().build());
   }
 
   @Test
@@ -106,7 +111,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldReturnUnhealthyForWhenDelegateDisconnected() {
+  public void shouldReturnUnhealthyWhenDelegateDisconnected() {
     when(delegateService.isDelegateConnected(eq(delegateId))).thenReturn(false);
     CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
     assertThat(status.isHealthy()).isFalse();

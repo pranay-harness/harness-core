@@ -46,8 +46,13 @@ type CloudProviderConnection {
 
 type CEHealthStatus {
   isHealthy: Boolean
-  clusterIds: [String]
-  clusterErrors: [ClusterError]
+  clusterHealthStatusList: [CEClusterHealth]
+}
+
+type CEClusterHealth {
+  clusterId: String
+  errors: [String]
+  lastEventTimestamp: Number
 }
 
 type ClusterError {

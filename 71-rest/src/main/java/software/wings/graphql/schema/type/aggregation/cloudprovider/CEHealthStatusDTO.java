@@ -1,5 +1,6 @@
 package software.wings.graphql.schema.type.aggregation.cloudprovider;
 
+import io.harness.ccm.health.CEClusterHealth;
 import lombok.Builder;
 
 import java.util.List;
@@ -7,6 +8,5 @@ import java.util.List;
 @Builder
 public class CEHealthStatusDTO {
   boolean isHealthy;
-  List<String> clusterIds;
-  List<ClusterErrorsDTO> clusterErrors;
+  List<CEClusterHealth> clusterHealthStatusList;
 }
