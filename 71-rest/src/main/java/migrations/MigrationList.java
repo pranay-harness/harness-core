@@ -18,6 +18,7 @@ import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
 import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.AddWhitelistedDomainsToAccountMigration;
+import migrations.all.AmiDeploymentTypeMigration;
 import migrations.all.AppDTemplateMigration;
 import migrations.all.AppKeywordsMigration;
 import migrations.all.AuditRecordMigration;
@@ -307,6 +308,7 @@ public class MigrationList {
         .add(Pair.of(291, CleanupOrphanInstances.class))
         .add(Pair.of(292, CleanupSyncStatusForDeletedEntities.class))
         .add(Pair.of(293, DeleteCVCronMigration.class))
+        .add(Pair.of(294, AmiDeploymentTypeMigration.class))
         .build();
   }
 }
