@@ -381,9 +381,8 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     try {
       final Set<String> constraintIds =
           resourceConstraintService.updateActiveConstraints(context.getAppId(), workflowExecutionId);
-
-      resourceConstraintService.updateBlockedConstraints(constraintIds);
-
+      logger.info(
+          "Constraints {} were updated on finishing the workflow execution {}", constraintIds, workflowExecutionId);
     } catch (RuntimeException exception) {
       // Do not block the execution for possible exception in the barrier update
       logger.error("Something wrong with resource constraints update", exception);

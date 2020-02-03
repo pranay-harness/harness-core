@@ -8,7 +8,6 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 
 import io.harness.distribution.constraint.Consumer.State;
-import io.harness.distribution.constraint.RunnableConsumers.RunnableConsumersBuilder;
 import io.harness.threading.Morpheus;
 import lombok.Builder;
 import lombok.Value;
@@ -18,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /*
  * Distributed constrain is designed to limit the access to arbitrary resource. It allows for configurable number of
@@ -158,12 +158,25 @@ public class Constraint {
 
   public RunnableConsumers runnableConsumers(ConstraintUnit unit, ConstraintRegistry registry) {
     final List<Consumer> consumers = registry.loadConsumers(id, unit);
-    int usedPermits = getUsedPermits(consumers);
+    return RunnableConsumers.builder()
+        .usedPermits(getUsedPermits(consumers))
+        .consumerIds(filterConsumersForPermitsAndStrategy(consumers))
+        .build();
+  }
 
-    final RunnableConsumersBuilder builder = RunnableConsumers.builder().usedPermits(usedPermits);
+  public List<ConsumerId> getUnblockableConsumer(
+      ConstraintUnit unit, ConstraintRegistry registry, List<ConsumerId> filteredConsumers) {
+    final List<Consumer> consumers = registry.loadConsumers(id, unit)
+                                         .stream()
+                                         .filter(consumer -> !filteredConsumers.contains(consumer.getId()))
+                                         .collect(Collectors.toList());
 
+    return filterConsumersForPermitsAndStrategy(consumers);
+  }
+
+  private List<ConsumerId> filterConsumersForPermitsAndStrategy(List<Consumer> consumers) {
     List<ConsumerId> consumerIds = new ArrayList<>();
-
+    int usedPermits = getUsedPermits(consumers);
     for (Consumer consumer : consumers) {
       if (consumer.getState() != BLOCKED) {
         continue;
@@ -183,7 +196,6 @@ public class Constraint {
       consumerIds.add(consumer.getId());
       usedPermits += consumer.getPermits();
     }
-
-    return builder.consumerIds(consumerIds).build();
+    return consumerIds;
   }
 }
