@@ -12,6 +12,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.GitCommit.GitCommitKeys;
@@ -47,7 +48,7 @@ public class GitCommit extends Base {
   private String commitId;
   private YamlChangeSet yamlChangeSet;
   private GitCommandResult gitCommandResult;
-  private Status status;
+  @Indexed private Status status;
   private FailureReason failureReason;
   private List<String> yamlChangeSetsProcessed;
   private List<String> yamlGitConfigIds;

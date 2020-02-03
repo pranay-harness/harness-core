@@ -15,6 +15,7 @@ import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
@@ -32,10 +33,14 @@ import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
+import static software.wings.service.impl.yaml.YamlProcessingLogContext.BRANCH_NAME;
+import static software.wings.service.impl.yaml.YamlProcessingLogContext.GIT_CONNECTOR_ID;
+import static software.wings.service.impl.yaml.YamlProcessingLogContext.WEBHOOK_TOKEN;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -46,6 +51,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -53,6 +59,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.mongo.ProcessTimeLogContext;
 import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.rest.RestResponse;
@@ -91,6 +98,8 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
+import software.wings.service.impl.AppLogContext;
+import software.wings.service.impl.EntityTypeLogContext;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AccountService;
@@ -257,6 +266,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public void fullSync(String accountId, String entityId, EntityType entityType, boolean forcePush) {
+    final Stopwatch stopwatch = Stopwatch.createStarted();
     logger.info(
         format(GIT_YAML_LOG_PREFIX + "Performing git full-sync for account %s and entity %s", accountId, entityId));
 
@@ -293,8 +303,11 @@ public class YamlGitServiceImpl implements YamlGitService {
         discardGitSyncErrorForFullSync(accountId, appId);
 
         yamlChangeSetService.save(yamlChangeSet);
-        logger.info(GIT_YAML_LOG_PREFIX + "Performed git full-sync for account {} and entity {} successfully",
-            accountId, entityId);
+        final long processingTimeMs = stopwatch.elapsed(MILLISECONDS);
+        try (ProcessTimeLogContext ignore = new ProcessTimeLogContext(processingTimeMs, OVERRIDE_ERROR);
+             EntityTypeLogContext ignore1 = new EntityTypeLogContext(entityType, entityId, accountId, OVERRIDE_ERROR)) {
+          logger.info(GIT_YAML_LOG_PREFIX + "Performed git full-sync successfully");
+        }
       } catch (Exception ex) {
         logger.error(GIT_YAML_LOG_PREFIX + "Failed to perform git full-sync for account {} and entity {}",
             yamlGitConfig.getAccountId(), entityId, ex);
@@ -479,6 +492,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public boolean handleChangeSet(List<YamlChangeSet> yamlChangeSets, String accountId) {
+    final Stopwatch stopwatch = Stopwatch.createStarted();
     // With GIT_BATCH_SYNC flag disabled, the assumption is that yamlChangeSets list should have only one changeset
     String appId = yamlChangeSets.get(0).getAppId();
     YamlGitConfig yamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId, appId);
@@ -555,6 +569,11 @@ public class YamlGitServiceImpl implements YamlGitService {
     waitNotifyEngine.waitForAllOn(
         GENERAL, new GitCommandCallback(accountId, mostRecentYamlChangesetId, GitCommandType.COMMIT_AND_PUSH), waitId);
     delegateService.queueTask(delegateTask);
+    try (ProcessTimeLogContext ignore = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR);
+         AppLogContext ignore1 = new AppLogContext(appId, OVERRIDE_ERROR);
+         AccountLogContext ignore3 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info(GIT_YAML_LOG_PREFIX + "Processed changesets successfully");
+    }
     return true;
   }
 
@@ -630,6 +649,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public String processWebhookPost(
       String accountId, String webhookToken, String yamlWebHookPayload, HttpHeaders headers) {
+    final Stopwatch startedStopWatch = Stopwatch.createStarted();
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       List<SettingAttribute> settingAttributes =
           wingsPersistence.createQuery(SettingAttribute.class)
@@ -708,13 +728,22 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       waitNotifyEngine.waitForAllOn(GENERAL, new GitCommandCallback(accountId, null, GitCommandType.DIFF), waitId);
       delegateService.queueTask(delegateTask);
-
-      logger.info(
-          "Successfully queued webhook request for processing for branch [{}], gitConnectorId[{}], webhookToken [{}] ",
-          branchName, gitConnectorId, webhookToken);
-
+      try (ProcessTimeLogContext ignore2 =
+               new ProcessTimeLogContext(startedStopWatch.elapsed(MILLISECONDS), OVERRIDE_ERROR);
+           YamlProcessingLogContext ignore3 = getYamlProcessingLogContext(gitConnectorId, branchName, webhookToken)) {
+        logger.info("Successfully queued webhook request for processing");
+      }
       return "Successfully queued webhook request for processing";
     }
+  }
+  private YamlProcessingLogContext getYamlProcessingLogContext(
+      String gitConnectorId, String branch, String webhookToken) {
+    return new YamlProcessingLogContext(NullSafeImmutableMap.<String, String>builder()
+                                            .putIfNotNull(GIT_CONNECTOR_ID, gitConnectorId)
+                                            .putIfNotNull(BRANCH_NAME, branch)
+                                            .putIfNotNull(WEBHOOK_TOKEN, webhookToken)
+                                            .build(),
+        OVERRIDE_ERROR);
   }
 
   @Override
