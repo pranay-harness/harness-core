@@ -655,6 +655,102 @@ public class WebHookServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldTestJsonBitBucketForkWithPullRequestOnPremMerge() throws IOException {
+    webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
+    webHookTriggerCondition.setBitBucketEvents(Arrays.asList(BitBucketEventType.PULL_REQUEST_MERGED));
+
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file = new File(
+        classLoader
+            .getResource("software/wings/service/impl/webhook/bitbucket_deployment_trigger_pull_request_onprem.json")
+            .getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("pr:merged").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
+
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldTestJsonBitBucketForkWithPullRequestOnPremPRApproved() throws IOException {
+    webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
+    webHookTriggerCondition.setBitBucketEvents(Arrays.asList(BitBucketEventType.PULL_REQUEST_APPROVED));
+
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file = new File(
+        classLoader
+            .getResource("software/wings/service/impl/webhook/bitbucket_deployment_trigger_pull_request_onprem.json")
+            .getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("pr:reviewer:approved").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
+
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldTestJsonBitBucketForkWithPullRequestOnPremCommentCreated() throws IOException {
+    webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
+    webHookTriggerCondition.setBitBucketEvents(Arrays.asList(BitBucketEventType.PULL_REQUEST_COMMENT_CREATED));
+    trigger.setCondition(webHookTriggerCondition);
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file = new File(
+        classLoader
+            .getResource("software/wings/service/impl/webhook/bitbucket_deployment_trigger_pull_request_onprem.json")
+            .getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("pr:comment:added").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
+
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldTestJsonBitBucketForkWithPullRequestOnPremCommentDeleted() throws IOException {
+    webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
+    webHookTriggerCondition.setBitBucketEvents(Arrays.asList(BitBucketEventType.PULL_REQUEST_COMMENT_DELETED));
+
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file = new File(
+        classLoader
+            .getResource("software/wings/service/impl/webhook/bitbucket_deployment_trigger_pull_request_onprem.json")
+            .getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("pullrequest:comment_deleted").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
+
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testPopulateUrlFieldsWhenTriggering() {
