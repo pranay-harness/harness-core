@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 
@@ -38,7 +39,6 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
-  static final String IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME = "identifier_clusterId";
   private Map<String, String> taskWatchIdMap = new ConcurrentHashMap<>();
 
   private final EventPublisher eventPublisher;
@@ -101,8 +101,8 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                                                   .addAllActivePodUids(podUidList)
                                                   .setLastProcessedTimestamp(timestamp)
                                                   .build();
-    eventPublisher.publishMessage(k8SClusterSyncEvent, timestamp,
-        ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, watchTaskParams.getClusterName()));
+    eventPublisher.publishMessage(
+        k8SClusterSyncEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, watchTaskParams.getClusterName()));
   }
 
   @VisibleForTesting
@@ -126,7 +126,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                    .build())
         .forEach(nodeMetric
             -> eventPublisher.publishMessage(nodeMetric, HTimestamps.fromInstant(heartbeatTime),
-                ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, watchTaskParams.getClusterId())));
+                ImmutableMap.of(CLUSTER_ID_IDENTIFIER, watchTaskParams.getClusterId())));
   }
 
   @VisibleForTesting
@@ -162,7 +162,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                    .build())
         .forEach(podMetric
             -> eventPublisher.publishMessage(podMetric, HTimestamps.fromInstant(heartbeatTime),
-                ImmutableMap.of(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME, watchTaskParams.getClusterId())));
+                ImmutableMap.of(CLUSTER_ID_IDENTIFIER, watchTaskParams.getClusterId())));
   }
 
   @Override

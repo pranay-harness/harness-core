@@ -1,9 +1,9 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.grpc.utils.HTimestamps.toInstant;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_START;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_STOP;
-import static io.harness.perpetualtask.k8s.watch.NodeWatcher.IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static java.time.Instant.now;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -93,7 +93,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getNodeName()).isEqualTo(NAME);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
       assertThat(toInstant(nodeEvent.getTimestamp())).isEqualTo(creationTime);
-      assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
+      assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
     });
   }
 
@@ -113,7 +113,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_STOP);
       // approximate check as the time is measured within the NodeWatcher code.
       assertThat(toInstant(nodeEvent.getTimestamp())).isCloseTo(now(), within(5, ChronoUnit.SECONDS));
-      assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
+      assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
     });
   }
 
@@ -133,14 +133,14 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeInfo.getNodeName()).isEqualTo(NAME);
       assertThat(toInstant(nodeInfo.getCreationTime())).isEqualTo(creationTime);
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(labels);
-      assertThat(mapArgumentCaptor.getValue().keySet().contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME));
+      assertThat(mapArgumentCaptor.getValue().keySet().contains(CLUSTER_ID_IDENTIFIER));
     });
     Mockito.reset(eventPublisher);
     captor = ArgumentCaptor.forClass(Message.class);
     nodeWatcher.eventReceived(Action.DELETED, node);
     verify(eventPublisher).publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
     assertThat(captor.getAllValues()).hasSize(1).isNotInstanceOfAny(NodeInfo.class);
-    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 
   @Test

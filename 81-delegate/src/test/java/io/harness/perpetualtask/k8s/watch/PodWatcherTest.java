@@ -1,8 +1,8 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_DELETED;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
-import static io.harness.perpetualtask.k8s.watch.PodWatcher.IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -88,7 +88,7 @@ public class PodWatcherTest extends CategoryTest {
     assertThat(captor.getAllValues()).hasSize(2);
     assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(PodInfo.class, this ::infoMessageAssertions);
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(PodEvent.class, this ::scheduledMessageAssertions);
-    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 
   @Test
@@ -100,7 +100,7 @@ public class PodWatcherTest extends CategoryTest {
     verify(eventPublisher, atLeastOnce())
         .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
     assertThat(captor.getAllValues().get(2)).isInstanceOfSatisfying(PodEvent.class, this ::deletedMessageAssertions);
-    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 
   @Test
@@ -119,7 +119,7 @@ public class PodWatcherTest extends CategoryTest {
     assertThat(publishedMessages.get(0)).isInstanceOfSatisfying(PodInfo.class, this ::infoMessageAssertions);
     assertThat(publishedMessages.get(1)).isInstanceOfSatisfying(PodEvent.class, this ::scheduledMessageAssertions);
     assertThat(publishedMessages.get(2)).isInstanceOfSatisfying(PodEvent.class, this ::deletedMessageAssertions);
-    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 
   @Test

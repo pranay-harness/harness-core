@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import static io.harness.perpetualtask.k8s.watch.K8SWatchTaskExecutor.IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME;
+import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -191,7 +191,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                               .setMemoryByte(18281752L * 1024)
                               .build())
                 .build());
-    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 
   private K8sWatchTaskParams getK8sWatchTaskParams() {
@@ -227,7 +227,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                       .addAllActiveNodeUids(ImmutableList.of(NODE_ONE_UID, NODE_TWO_UID))
                       .setLastProcessedTimestamp(HTimestamps.fromInstant(pollTime))
                       .build());
-    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 
   private NodeList getNodeList() {
@@ -309,6 +309,6 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                                                  .build())
                                    .build())
                 .build());
-    assertThat(mapArgumentCaptor.getValue().keySet()).contains(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 }
