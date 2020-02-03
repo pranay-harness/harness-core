@@ -8,6 +8,7 @@ import static io.harness.delegate.message.MessageConstants.WATCHER_HEARTBEAT;
 import static io.harness.delegate.message.MessageConstants.WATCHER_PROCESS;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
+import static io.harness.delegate.service.DelegateServiceImpl.getDelegateId;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.app.DeployMode.DEPLOY_MODE;
@@ -145,7 +146,8 @@ public class DelegateApplication {
       modules.add(new PerpetualTaskWorkerModule());
     }
     modules.add(new KubernetesClientFactoryModule());
-    modules.add(new AppenderModule(Config.builder().queueFilePath(configuration.getQueueFilePath()).build()));
+    modules.add(new AppenderModule(Config.builder().queueFilePath(configuration.getQueueFilePath()).build(),
+        () -> getDelegateId().orElse("UNREGISTERED")));
     modules.addAll(new DelegateModule().cumulativeDependencies());
 
     Injector injector = Guice.createInjector(modules);

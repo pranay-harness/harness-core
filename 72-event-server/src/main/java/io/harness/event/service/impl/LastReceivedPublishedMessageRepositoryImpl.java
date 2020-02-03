@@ -9,6 +9,7 @@ import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage.LastReceivedPublishedMessageKeys;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.service.intfc.LastReceivedPublishedMessageRepository;
+import io.harness.grpc.IdentifierKeys;
 import io.harness.persistence.HPersistence;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -25,15 +26,13 @@ public class LastReceivedPublishedMessageRepositoryImpl implements LastReceivedP
   private Cache<CacheKey, Boolean> lastReceivedPublishedMessageCache =
       Caffeine.newBuilder().expireAfterWrite(15, TimeUnit.MINUTES).build();
 
-  private static final String IDENTIFIER_KEY = "identifier";
-
   @Inject
   public LastReceivedPublishedMessageRepositoryImpl(HPersistence hPersistence) {
     this.hPersistence = hPersistence;
   }
 
   private static boolean containsIdentifierKey(PublishedMessage publishedMessage) {
-    return publishedMessage.getAttributes().keySet().stream().anyMatch(s -> s.startsWith(IDENTIFIER_KEY));
+    return publishedMessage.getAttributes().keySet().stream().anyMatch(s -> s.startsWith(IdentifierKeys.PREFIX));
   }
 
   @Value
@@ -50,7 +49,7 @@ public class LastReceivedPublishedMessageRepositoryImpl implements LastReceivedP
             -> publishedMessage.getAttributes()
                    .entrySet()
                    .stream()
-                   .filter(mapEntry -> mapEntry.getKey().startsWith(IDENTIFIER_KEY))
+                   .filter(mapEntry -> mapEntry.getKey().startsWith(IdentifierKeys.PREFIX))
                    .forEach(identifier
                        -> updateLastReceivedPublishedMessage(publishedMessage.getAccountId(), identifier.getValue())));
   }

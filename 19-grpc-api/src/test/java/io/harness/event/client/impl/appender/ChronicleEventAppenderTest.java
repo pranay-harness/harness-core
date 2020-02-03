@@ -56,7 +56,8 @@ public class ChronicleEventAppenderTest extends CategoryTest {
 
   private Injector injector = Guice.createInjector(
       Modules
-          .override(new AppenderModule(AppenderModule.Config.builder().queueFilePath(QUEUE_FILE_PATH).build()),
+          .override(
+              new AppenderModule(AppenderModule.Config.builder().queueFilePath(QUEUE_FILE_PATH).build(), () -> ""),
               new TailerModule(TailerModule.Config.builder().queueFilePath(QUEUE_FILE_PATH).build()))
           .with(new ProviderModule() {
             @Provides

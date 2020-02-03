@@ -28,7 +28,7 @@ public class PingPongClient extends AbstractScheduledService {
     try {
       Instant timestamp = Instant.now();
       Ping ping = Ping.newBuilder()
-                      .setDelegateId(DelegateServiceImpl.getDelegateId())
+                      .setDelegateId(DelegateServiceImpl.getDelegateId().orElse("UNREGISTERED"))
                       .setPingTimestamp(HTimestamps.fromInstant(timestamp))
                       .setProcessId(PROCESS_ID)
                       .setVersion(version)

@@ -35,6 +35,7 @@ import java.util.UUID;
 public class EventServiceTestRule implements MethodRule, MongoRuleMixin, InjectorRuleMixin {
   static final String DEFAULT_ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
   static final String DEFAULT_ACCOUNT_SECRET = "2f6b0988b6fb3370073c3d0505baee59";
+  static final String DEFAULT_DELEGATE_ID = "G0yG0f9gQhKsr1xBErpUFg";
 
   private static final String QUEUE_FILE_PATH =
       Paths.get(FileUtils.getTempDirectoryPath(), UUID.randomUUID().toString()).toString();
@@ -49,7 +50,8 @@ public class EventServiceTestRule implements MethodRule, MongoRuleMixin, Injecto
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName());
     datastore.setQueryFactory(new QueryFactory());
-    return ImmutableList.of(new AppenderModule(AppenderModule.Config.builder().queueFilePath(QUEUE_FILE_PATH).build()),
+    return ImmutableList.of(new AppenderModule(AppenderModule.Config.builder().queueFilePath(QUEUE_FILE_PATH).build(),
+                                () -> DEFAULT_DELEGATE_ID),
         new TailerModule(TailerModule.Config.builder()
                              .accountId(DEFAULT_ACCOUNT_ID)
                              .accountSecret(DEFAULT_ACCOUNT_SECRET)

@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 /**
  * {@link EventPublisher} that appends the events to a chronicle-queue.
@@ -23,7 +24,9 @@ class ChronicleEventAppender extends EventPublisher {
   private final ChronicleQueueMonitor queueMonitor;
 
   @Inject
-  ChronicleEventAppender(@Named("appender") RollingChronicleQueue queue, ChronicleQueueMonitor queueMonitor) {
+  ChronicleEventAppender(@Named("appender") RollingChronicleQueue queue, ChronicleQueueMonitor queueMonitor,
+      Supplier<String> delegateIdSupplier) {
+    super(delegateIdSupplier);
     this.queue = Preconditions.checkNotNull(queue);
     this.queueMonitor = queueMonitor;
     this.shutDown = new AtomicBoolean(false);

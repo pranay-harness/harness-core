@@ -58,7 +58,7 @@ public class PerpetualTaskWorker extends AbstractScheduledService {
   }
 
   void updateAssignedTaskIds() {
-    String delegateId = getDelegateId();
+    String delegateId = getDelegateId().orElse("UNREGISTERED");
     assignedTasks = new HashSet<>(perpetualTaskServiceGrpcClient.listTaskIds(delegateId));
     logger.debug("Refreshed list of assigned perpetual tasks {}", assignedTasks);
   }
