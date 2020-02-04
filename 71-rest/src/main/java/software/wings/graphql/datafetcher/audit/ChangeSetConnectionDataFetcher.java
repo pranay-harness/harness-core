@@ -9,6 +9,7 @@ import org.mongodb.morphia.query.Sort;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
+import software.wings.graphql.datafetcher.Principal;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.audit.QLChangeSetFilter;
@@ -39,7 +40,9 @@ public class ChangeSetConnectionDataFetcher
       final QLChangeSet changeSet = changeSetController.populateChangeSet(audit);
       connectionBuilder.node(changeSet);
     }));
-    changeContentHelper.reportAuditTrailExportToSegment();
+    final String accountId = getAccountId();
+    final Principal triggeredBy = getTriggeredBy();
+    changeContentHelper.reportAuditTrailExportToSegment(accountId, triggeredBy);
     return connectionBuilder.build();
   }
 

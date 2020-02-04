@@ -10,6 +10,7 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
+import software.wings.graphql.datafetcher.Principal;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.audit.QLChangeContentFilter;
@@ -41,7 +42,9 @@ public class ChangeContentConnectionDataFetcher
         } else { // get yaml diff for a specific changeSetId and all resourceIds under it
           changeContentController.populateChangeContent(changeSetId, connectionBuilder, pageQueryParameters);
         }
-        changeContentHelper.reportAuditTrailExportToSegment();
+        final String accountId = getAccountId();
+        final Principal triggeredBy = getTriggeredBy();
+        changeContentHelper.reportAuditTrailExportToSegment(accountId, triggeredBy);
         return connectionBuilder.build();
       } else {
         throw new GraphQLException("Query supports only one filter at a time", WingsException.SRE);

@@ -183,9 +183,9 @@ public class GraphQLResource {
         graphQL = publicGraphQL;
       }
       if (hasUserContext) {
-        final Builder contextBuilder =
-            populateContextBuilder(GraphQLContext.newContext(), userRequestContext.getUserPermissionInfo(),
-                userRequestContext.getUserRestrictionInfo(), accountId, httpServletRequest, graphQLQuery.getQuery());
+        final Builder contextBuilder = populateContextBuilder(GraphQLContext.newContext(),
+            userRequestContext.getUserPermissionInfo(), userRequestContext.getUserRestrictionInfo(), accountId,
+            user.getUuid(), TriggeredByType.USER, httpServletRequest, graphQLQuery.getQuery());
         executionResult = graphQL.execute(getExecutionInput(contextBuilder, graphQLQuery, dataLoaderRegistryHelper));
       } else {
         ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
@@ -195,8 +195,9 @@ public class GraphQLResource {
           UserPermissionInfo apiKeyPermissions = apiKeyService.getApiKeyPermissions(apiKeyEntry, accountId);
           UserRestrictionInfo apiKeyRestrictions =
               apiKeyService.getApiKeyRestrictions(apiKeyEntry, apiKeyPermissions, accountId);
-          final Builder contextBuilder = populateContextBuilder(GraphQLContext.newContext(), apiKeyPermissions,
-              apiKeyRestrictions, accountId, httpServletRequest, graphQLQuery.getQuery());
+          final Builder contextBuilder =
+              populateContextBuilder(GraphQLContext.newContext(), apiKeyPermissions, apiKeyRestrictions, accountId,
+                  apiKeyEntry.getUuid(), TriggeredByType.API_KEY, httpServletRequest, graphQLQuery.getQuery());
           executionResult = graphQL.execute(getExecutionInput(contextBuilder, graphQLQuery, dataLoaderRegistryHelper));
         }
       }
@@ -233,9 +234,9 @@ public class GraphQLResource {
     try {
       GraphQL graphQL = privateGraphQL;
       if (hasUserContext && userRequestContext != null) {
-        final Builder contextBuilder =
-            populateContextBuilder(GraphQLContext.newContext(), userRequestContext.getUserPermissionInfo(),
-                userRequestContext.getUserRestrictionInfo(), accountId, httpServletRequest, graphQLQuery.getQuery());
+        final Builder contextBuilder = populateContextBuilder(GraphQLContext.newContext(),
+            userRequestContext.getUserPermissionInfo(), userRequestContext.getUserRestrictionInfo(), accountId,
+            user.getUuid(), TriggeredByType.USER, httpServletRequest, graphQLQuery.getQuery());
         executionResult = graphQL.execute(getExecutionInput(contextBuilder, graphQLQuery, dataLoaderRegistryHelper));
       } else {
         throw graphQLUtils.getInvalidTokenException();
@@ -259,9 +260,11 @@ public class GraphQLResource {
   }
 
   private GraphQLContext.Builder populateContextBuilder(GraphQLContext.Builder builder,
-      UserPermissionInfo permissionInfo, UserRestrictionInfo restrictionInfo, String accountId,
-      HttpServletRequest httpServletRequest, String graphqlQueryString) {
-    return builder.of("accountId", accountId, "permissions", permissionInfo, "restrictions", restrictionInfo,
+      UserPermissionInfo permissionInfo, UserRestrictionInfo restrictionInfo, String accountId, String triggeredById,
+      TriggeredByType triggeredByType, HttpServletRequest httpServletRequest, String graphqlQueryString) {
+    builder.of("accountId", accountId, "permissions", permissionInfo, "restrictions", restrictionInfo,
         HTTP_SERVLET_REQUEST, httpServletRequest, GRAPHQL_QUERY_STRING, graphqlQueryString);
+    builder.of("triggeredById", triggeredById, "triggeredByType", triggeredByType);
+    return builder;
   }
 }

@@ -74,6 +74,8 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
 
       final String accountId = getAccountId(environment);
       AccountThreadLocal.set(accountId);
+      final Principal triggeredById = getTriggeredBy(environment);
+      PrincipalThreadLocal.set(triggeredById);
       return fetch(filters, pageQueryParameters, sort);
     } catch (WingsException ex) {
       throw new WingsException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
@@ -95,6 +97,10 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
 
   public String getAccountId(DataFetchingEnvironment environment) {
     return utils.getAccountId(environment);
+  }
+
+  public Principal getTriggeredBy(DataFetchingEnvironment environment) {
+    return utils.getTriggeredBy(environment);
   }
 
   private QLPageQueryParameters extractPageQueryParameters(DataFetchingEnvironment dataFetchingEnvironment) {
@@ -172,5 +178,9 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
 
   public String getAccountId() {
     return AccountThreadLocal.get();
+  }
+
+  public Principal getTriggeredBy() {
+    return PrincipalThreadLocal.get();
   }
 }
