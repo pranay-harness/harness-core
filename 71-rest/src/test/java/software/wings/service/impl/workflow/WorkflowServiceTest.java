@@ -85,6 +85,7 @@ import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_M
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.DEPLOY_CONTAINERS;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.UPGRADE_CONTAINERS;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertClonedWorkflowAcrossApps;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertLinkedPhaseStep;
@@ -4565,5 +4566,41 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow).isNotNull();
     assertThat(orchestrationWorkflow.getConcurrencyStrategy()).isNotNull();
     assertThat(orchestrationWorkflow.getConcurrencyStrategy().getUnitType()).isEqualTo(UnitType.NONE);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testK8sV2BGWorkflowHasRouteUpdateStepInRollbackPhase() {
+    Workflow workflow = constructBlueGreenWorkflow();
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructGKInfraMapping());
+
+    // when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(Service.builder()
+                        .name(SERVICE_NAME)
+                        .uuid(SERVICE_ID)
+                        .deploymentType(DeploymentType.KUBERNETES)
+                        .isK8sV2(true)
+                        .build());
+
+    Workflow savedWorkflow = workflowService.createWorkflow(workflow);
+
+    BlueGreenOrchestrationWorkflow orchestrationWorkflow =
+        (BlueGreenOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    Set<Entry<String, WorkflowPhase>> entries = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().entrySet();
+
+    Entry<String, WorkflowPhase> entry = (Entry<String, WorkflowPhase>) entries.toArray()[0];
+    PhaseStep phaseStep = entry.getValue().getPhaseSteps().get(0);
+    assertThat(phaseStep.getPhaseStepNameForRollback()).isEqualTo(WorkflowServiceHelper.ROUTE_UPDATE);
+    assertThat(phaseStep.isRollback()).isTrue();
+    phaseStep.getSteps().get(0).getName();
+    assertThat(phaseStep.getSteps().get(0).getName()).isEqualTo(KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE);
+    assertThat(phaseStep.getSteps().get(0).isRollback()).isTrue();
+
+    List<PhaseStep> phaseSteps = orchestrationWorkflow.getWorkflowPhases().get(0).getPhaseSteps();
+
+    assertThat(phaseSteps.get(0).getSteps().get(0).getType()).isEqualTo(K8S_BLUE_GREEN_DEPLOY.name());
+    assertThat(phaseSteps.get(0).getSteps().get(0).isRollback()).isFalse();
   }
 }
