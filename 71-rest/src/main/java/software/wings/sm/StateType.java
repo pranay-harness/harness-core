@@ -407,8 +407,8 @@ public enum StateType implements StateTypeDescriptor {
   ARTIFACT_CHECK(ArtifactCheckState.class, OTHERS, 4, "Artifact Check", asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
   AZURE_NODE_SELECT(AzureNodeSelectState.class, CLOUD, "Azure Select Nodes",
-      Lists.newArrayList(InfrastructureMappingType.AZURE_INFRA), asList(INFRASTRUCTURE_NODE, SELECT_NODE),
-      ORCHESTRATION_STENCILS),
+      Lists.newArrayList(InfrastructureMappingType.AZURE_INFRA, InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM),
+      asList(INFRASTRUCTURE_NODE, SELECT_NODE), ORCHESTRATION_STENCILS),
 
   /**
    * AWS Node Select state.

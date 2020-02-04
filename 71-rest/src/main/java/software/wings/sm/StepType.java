@@ -12,6 +12,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.InfrastructureMappingType.AZURE_INFRA;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
+import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
 import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES;
@@ -639,5 +640,6 @@ public enum StepType {
     infrastructureMappingTypeToStepTypeMap.put(PHYSICAL_DATA_CENTER_SSH, DC_NODE_SELECT);
     infrastructureMappingTypeToStepTypeMap.put(InfrastructureMappingType.AWS_SSH, AWS_NODE_SELECT);
     infrastructureMappingTypeToStepTypeMap.put(AZURE_INFRA, AZURE_NODE_SELECT);
+    infrastructureMappingTypeToStepTypeMap.put(PHYSICAL_DATA_CENTER_WINRM, AZURE_NODE_SELECT);
   }
 }
