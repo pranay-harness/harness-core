@@ -5,6 +5,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.ValidationResult;
 
 public interface CCMSettingService {
+  boolean isCloudCostEnabled(String accountId);
   boolean isCloudCostEnabled(SettingAttribute settingAttribute);
   SettingAttribute maskCCMConfig(SettingAttribute settingAttribute);
   boolean isCloudCostEnabled(ClusterRecord clusterRecord);

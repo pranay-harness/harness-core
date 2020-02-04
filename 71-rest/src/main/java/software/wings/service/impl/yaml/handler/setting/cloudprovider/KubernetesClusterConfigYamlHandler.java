@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 
 import io.harness.ccm.CCMConfig;
 import io.harness.ccm.CCMConfigYamlHandler;
-import io.harness.exception.HarnessException;
+import io.harness.ccm.CCMSettingService;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KubernetesClusterConfig;
@@ -14,11 +14,13 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
+import java.util.Optional;
 
 @Singleton
 @Slf4j
 public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler<Yaml, KubernetesClusterConfig> {
   @Inject CCMConfigYamlHandler ccmConfigYamlHandler;
+  @Inject CCMSettingService ccmSettingService;
 
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
@@ -73,7 +75,11 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
       }
 
       yaml.setClientKeyAlgo(kubernetesClusterConfig.getClientKeyAlgo());
-      yaml.setContinuousEfficiencyConfig(ccmConfigYamlHandler.toYaml(kubernetesClusterConfig.getCcmConfig(), ""));
+
+      if (ccmSettingService.isCloudCostEnabled(settingAttribute.getAccountId())) {
+        CCMConfig.Yaml ccmConfigYaml = ccmConfigYamlHandler.toYaml(kubernetesClusterConfig.getCcmConfig(), "");
+        yaml.setContinuousEfficiencyConfig(ccmConfigYaml);
+      }
       toYaml(yaml, settingAttribute, appId);
 
     } catch (IllegalAccessException e) {
@@ -84,9 +90,14 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
   }
 
   @Override
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
-    String uuid = previous != null ? previous.getUuid() : null;
+  protected SettingAttribute toBean(
+      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+    Optional<SettingAttribute> optionalPrevious = Optional.ofNullable(previous);
+    String uuid = null;
+    if (optionalPrevious.isPresent()) {
+      uuid = previous.getUuid();
+    }
+
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
@@ -109,8 +120,10 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
         cloneFileChangeContext(changeContext, changeContext.getYaml().getContinuousEfficiencyConfig());
     ChangeContext clonedContext = clonedContextBuilder.build();
 
-    CCMConfig ccmConfig = ccmConfigYamlHandler.upsertFromYaml(clonedContext, changeSetContext);
-    kubernetesClusterConfig.setCcmConfig(ccmConfig);
+    if (ccmSettingService.isCloudCostEnabled(previous.getAccountId())) {
+      CCMConfig ccmConfig = ccmConfigYamlHandler.upsertFromYaml(clonedContext, changeSetContext);
+      kubernetesClusterConfig.setCcmConfig(ccmConfig);
+    }
 
     String encryptedRef = yaml.getPassword();
     if (encryptedRef != null) {

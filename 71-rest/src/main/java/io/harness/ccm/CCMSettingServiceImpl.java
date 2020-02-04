@@ -49,6 +49,12 @@ public class CCMSettingServiceImpl implements CCMSettingService {
   }
 
   @Override
+  public boolean isCloudCostEnabled(String accountId) {
+    Account account = accountService.get(accountId);
+    return account.isCloudCostEnabled();
+  }
+
+  @Override
   public boolean isCloudCostEnabled(SettingAttribute settingAttribute) {
     Account account = accountService.get(settingAttribute.getAccountId());
     if (account.isCloudCostEnabled()) {
