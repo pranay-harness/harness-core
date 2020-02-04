@@ -203,6 +203,8 @@ public interface YamlGitService {
 
   void asyncFullSyncForEntireAccount(String accountId);
 
+  void syncForTemplates(String accountId, String appId);
+
   List<GitFileChange> obtainApplicationYamlGitFileChanges(String accountId, Application app);
 
   boolean retainYamlGitConfigsOfSelectedGitConnectorsAndDeleteRest(

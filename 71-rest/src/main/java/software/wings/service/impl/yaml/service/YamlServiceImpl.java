@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.pcf.model.PcfConstants.PCF_CONFIG_FILE_EXTENSION;
 import static io.harness.threading.Morpheus.quietSleep;
@@ -9,6 +10,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER_PATH;
@@ -61,7 +63,6 @@ import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -86,8 +87,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
-import io.harness.logging.AutoLogContext;
-import io.harness.mongo.ProcessTimeLogContext;
+import io.harness.logging.ExceptionLogger;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -102,6 +102,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -112,6 +113,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.yaml.BaseYaml;
@@ -172,7 +174,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private AppService appService;
   @Inject private FailedCommitStore failedCommitStore;
   @Inject private FeatureFlagService featureFlagService;
-
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private YamlPushService yamlPushService;
   @Inject private HarnessTagYamlHelper harnessTagYamlHelper;
 
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
@@ -200,7 +203,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Override
   public List<ChangeContext> processChangeSet(List<Change> changeList, boolean isGitSyncPath)
       throws YamlProcessingException {
-    final Stopwatch startedStopWatch = Stopwatch.createStarted();
     // e.g. remove files outside of setup folder. (checking filePath)
     changeList = filterInvalidFilePaths(changeList);
 
@@ -211,10 +213,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     // process in the given order
     process(changeContextList, isGitSyncPath);
 
-    try (ProcessTimeLogContext ignore = new ProcessTimeLogContext(
-             startedStopWatch.elapsed(TimeUnit.MILLISECONDS), AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
-      logger.info("Processed yaml changes with isGitSyncPath=[{}]", isGitSyncPath);
-    }
     return changeContextList;
   }
 
@@ -299,6 +297,34 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           .withResponseMessages(asList(ResponseMessage.builder().code(ErrorCode.DEFAULT_ERROR_CODE).build()))
           .build();
     }
+  }
+
+  @Override
+  public void syncYamlTemplate(String accountId) {
+    featureFlagService.enableAccount(FeatureName.TEMPLATE_YAML_SUPPORT, accountId);
+    executorService.submit(() -> {
+      try {
+        syncYamlForTemplates(accountId);
+      } catch (WingsException ex) {
+        ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
+      } catch (Exception e) {
+        logger.error("Exception while performing template sync for account {}", accountId, e);
+      }
+    });
+  }
+
+  private void syncYamlForTemplates(String accountId) {
+    List<String> appIdsList = appService.getAppIdsByAccountId(accountId);
+    appIdsList.add(GLOBAL_APP_ID);
+    appIdsList.forEach(appId -> {
+      try {
+        logger.info(GIT_YAML_LOG_PREFIX + "Pushing templates for app {}", appId);
+        yamlGitService.syncForTemplates(accountId, appId);
+        logger.info(GIT_YAML_LOG_PREFIX + "Pushed templates for app {}", appId);
+      } catch (Exception ex) {
+        logger.error(GIT_YAML_LOG_PREFIX + "Failed to push templates for app {}", appId, ex);
+      }
+    });
   }
 
   protected List<GitFileChange> getChangesForZipFile(String accountId, InputStream fileInputStream, String yamlPath)

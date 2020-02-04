@@ -28,6 +28,7 @@ import software.wings.security.AppPermissionSummary;
 import software.wings.security.UserPermissionInfo;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.verification.CVConfiguration;
+import software.wings.yaml.YamlVersion;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryPath;
 import software.wings.yaml.directory.FolderNode;
@@ -68,6 +69,9 @@ public interface YamlDirectoryService {
 
   List<GitFileChange> traverseDirectory(List<GitFileChange> gitFileChanges, String accountId, FolderNode fn,
       String path, boolean includeFiles, boolean failFast, Optional<List<String>> listOfYamlErrors);
+
+  FolderNode doTemplateLibrary(String accountId, DirectoryPath directoryPath, String appId,
+      String templateLibraryFolderName, YamlVersion.Type type);
 
   String getRootPath();
 
@@ -141,6 +145,8 @@ public interface YamlDirectoryService {
 
   DirectoryNode getApplicationManifestYamlFolderNode(
       @NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String serviceId);
+
+  FolderNode doTemplateLibraryForApp(Application app, DirectoryPath directoryPath);
 
   FolderNode generateManifestFileFolderNode(
       String accountId, Service service, List<ManifestFile> manifestFiles, DirectoryPath manifestFilePath);
