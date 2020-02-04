@@ -2,7 +2,6 @@
 
 set -e
 
-ACCOUNT_PROPERTY_FILE=accountdetails.properties
 INFRA_PROPERTY_FILE=inframapping.properties
 CONFIG_PROPERTY_FILE=config.properties
 
@@ -64,7 +63,14 @@ function replaceconfigs(){
     jwtSsoRedirectSecret=$(getProperty "$runtime_dir/savedState" "jwtSsoRedirectSecret")
     jwtAuthSecret=$(getProperty "$runtime_dir/savedState" "jwtAuthSecret")
     managerPort=$(getProperty "$runtime_dir/savedState" "managerPort")
-    verificationPort=$(getProperty ""$runtime_dir/savedState"" "verificationPort")
+    verificationPort=$(getProperty "$runtime_dir/savedState" "verificationPort")
+    timescaleDbUrl=$(getProperty "$runtime_dir/savedState" "timescaleDbUrl")
+    timescaleDbUserName=$(getProperty "$runtime_dir/savedState" "timescaleDbUserName")
+    timescaleDbPassword=$(getProperty "$runtime_dir/savedState" "timescaleDbPassword")
+    learningengine_secret=$(getProperty "$runtime_dir/savedState" "learningengine_secret")
+    host1=$(getProperty "$runtime_dir/savedState" "host1")
+    NGINX_PORT=$(getProperty $runtime_dir/savedState "NGINX_PORT")
+
 
     if [[ ! -z "$LOGGING_LEVEL" ]]; then
         sed -i "s|level: INFO|level: ${LOGGING_LEVEL}|" $MANAGER_DIR/config.yml
@@ -77,6 +83,11 @@ function replaceconfigs(){
     sed -i "s|trustStorePath: \${JAVA_HOME}/jre/lib/security/cacerts||" $MANAGER_DIR/config.yml
     sed -i 's|certAlias: localhost||' $MANAGER_DIR/config.yml
     sed -i 's|validateCerts: false||' $MANAGER_DIR/config.yml
+
+    sed -i 's|keyFilePath: key.pem||' $MANAGER_DIR/config.yml
+    sed -i 's|certFilePath: cert.pem||' $MANAGER_DIR/config.yml
+    sed -i 's|secure: true||' $MANAGER_DIR/config.yml
+
 
     if [[ ! -z "$UI_SERVER_URL" ]]; then
         sed -i "s|url: https://localhost:8000|url: ${UI_SERVER_URL}|" $MANAGER_DIR/config.yml
@@ -101,7 +112,7 @@ function replaceconfigs(){
     fi
 
     if [[ ! -z "$API_URL" ]]; then
-        sed -i "s|apiUrl:|apiUrl: ${API_URL}|" $MANAGER_DIR/config.yml
+        sed -i "s|http://localhost:8080|${API_URL}|" $MANAGER_DIR/config.yml
     fi
 
     if [[ ! -z "$DEPLOY_MODE" ]]; then
@@ -136,6 +147,17 @@ function replaceconfigs(){
         sed -i "s|featuresEnabled:|featuresEnabled: ${FEATURES}|" $MANAGER_DIR/config.yml
     fi
 
+    if [[ ! -z "$timescaleDbUrl" ]]; then
+        sed -i "s|timescaledbUrl: \"\"|timescaledbUrl: $timescaleDbUrl|" $MANAGER_DIR/config.yml
+    fi
+
+    if [[ ! -z "$timescaleDbUserName" ]]; then
+        sed -i "s|timescaledbUsername: \"\"|timescaledbUsername: $timescaleDbUserName|" $MANAGER_DIR/config.yml
+    fi
+
+    if [[ ! -z "$timescaleDbPassword" ]]; then
+        sed -i "s|timescaledbPassword: \"\"|timescaledbPassword: $timescaleDbPassword|" $MANAGER_DIR/config.yml
+    fi
 
     if [[ ! -z "$LOGGING_LEVEL" ]]; then
     sed -i "s|level: INFO|level: ${LOGGING_LEVEL}|" $VERIFICATION_DIR/verification-config.yml
@@ -223,21 +245,11 @@ function generateNginxScript(){
 
 function generateSeedData(){
    echo "########################Seeding mongo with seed data for first time install#################################"
-   companyName=$1
-   accountName=$2
-   adminEmail=$3
-   accountKey=$4
-   account_secret=$5
-   learningengine_secret=$6
+   learningengine_secret=$1
    echo "Creating seed data script"
    mkdir -p output
    cp scripts/add_seed_data.js output/
 
-   replace COMPANYNAME $companyName add_seed_data.js output
-   replace ACCOUNTNAME $accountName add_seed_data.js output
-   replace EMAIL $adminEmail add_seed_data.js output
-   replace kmpySmUISimoRrJL6NL73w $accountKey add_seed_data.js output
-   replace ACCOUNT_SECRET_KEY $account_secret add_seed_data.js output
    replace LEARNING_ENGINE_SECRET $learningengine_secret add_seed_data.js output
    mongo $MONGO_URI<output/add_seed_data.js
 
@@ -269,6 +281,18 @@ function copyToRuntimeDirectory(){
    echo "Copying to runtime directories completed"
 }
 
+
+function publishVersion(){
+    DELEGATE_VERSION=$(getProperty "version.properties" "DELEGATE_VERSION")
+    MONGO_URI=$(getProperty "inframapping.properties" "MONGO_URI")
+    echo "Publishing version $DELEGATE_VERSION to database"
+    cp scripts/publish_version.js output/
+    replace VERSION 1.0.$DELEGATE_VERSION publish_version.js output
+    #cat output/publish_version.js
+    mongo "$MONGO_URI" < output/publish_version.js
+
+}
+
 function startLE(){
   le_port=$(getProperty "config/learning_engine/learning_engine.properties" "https_port")
   verificationPort=$(getProperty "config/verification/verification_service.properties" "verification_port")
@@ -286,25 +310,22 @@ if [[ $(checkIfFileExists "$runtime_dir/savedState") -eq 1 ]]; then
     echo "No state found, creating a new savedState"
     newinstallation=true
     learningengine_secret=$(generateRandomStringOfLength 32)
-    account_secret=$(generateRandomString)
     jwtPasswordSecret=$(generateRandomStringOfLength 80)
     jwtExternalServiceSecret=$(generateRandomStringOfLength 80)
     jwtZendeskSecret=$(generateRandomStringOfLength 80)
     jwtMultiAuthSecret=$(generateRandomStringOfLength 80)
     jwtSsoRedirectSecret=$(generateRandomStringOfLength 80)
     jwtAuthSecret=$(generateRandomStringOfLength 80)
-    accountKey=$(generateRandomStringOfLength 22)
-    accountName=$(getProperty $ACCOUNT_PROPERTY_FILE "AccountName")
-    companyName=$(getProperty $ACCOUNT_PROPERTY_FILE "CompanyName")
-    adminEmail=$(getProperty $ACCOUNT_PROPERTY_FILE "AdminEmail")
     MONGO_URI=$(getProperty $INFRA_PROPERTY_FILE "MONGO_URI")
     NGINX_PORT=$(getProperty $INFRA_PROPERTY_FILE "NGINX_PORT")
     LOAD_BALANCER_URL=http://$(getProperty $INFRA_PROPERTY_FILE "HOST1_IP_ADDRESS"):$NGINX_PORT
     managerPort=$(getProperty "config/manager/manager.properties" "manager_port")
     verificationPort=$(getProperty "config/verification/verification_service.properties" "verification_port")
+    timescaleDbUrl=$(getProperty $INFRA_PROPERTY_FILE "TIMESCALEDB_URL")
+    timescaleDbUserName=$(getProperty $INFRA_PROPERTY_FILE "TIMESCALEDB_USERNAME")
+    timescaleDbPassword=$(getProperty $INFRA_PROPERTY_FILE "TIMESCALEDB_PASSWORD")
 
     echo "learningengine_secret"=$learningengine_secret > "$runtime_dir/savedState"
-    echo "account_secret"=$account_secret >> "$runtime_dir/savedState"
     echo "jwtPasswordSecret"=$jwtPasswordSecret >> "$runtime_dir/savedState"
     echo "jwtExternalServiceSecret="$jwtExternalServiceSecret >> "$runtime_dir/savedState"
     echo "jwtZendeskSecret="$jwtZendeskSecret >> "$runtime_dir/savedState"
@@ -313,27 +334,21 @@ if [[ $(checkIfFileExists "$runtime_dir/savedState") -eq 1 ]]; then
     echo "jwtAuthSecret="$jwtAuthSecret >> "$runtime_dir/savedState"
     echo "accountKey="$accountKey >> "$runtime_dir/savedState"
     echo "host1="$host1 >> "$runtime_dir/savedState"
-    echo "accountName="$accountName >> "$runtime_dir/savedState"
-    echo "companyName="$companyName >> "$runtime_dir/savedState"
-    echo "adminEmail="$adminEmail >> "$runtime_dir/savedState"
     echo "mongoUrl="$MONGO_URI >> "$runtime_dir/savedState"
     echo "loadBalancerUrl="$LOAD_BALANCER_URL >> "$runtime_dir/savedState"
     echo "managerPort="$managerPort >> "$runtime_dir/savedState"
     echo "verificationPort="$verificationPort >> "$runtime_dir/savedState"
+    echo "NGINX_PORT="$NGINX_PORT >> "$runtime_dir/savedState"
+    echo "timescaleDbUrl="$timescaleDbUrl >> "$runtime_dir/savedState"
+    echo "timescaleDbUserName="$timescaleDbUserName >> "$runtime_dir/savedState"
+    echo "timescaleDbPassword="$timescaleDbPassword >> "$runtime_dir/savedState"
+
 
 else
     echo "Reading configuration from the savedState in ${runtime_dir}"
 fi
 
 
-learningengine_secret=$(getProperty "$runtime_dir/savedState" "learningengine_secret")
-account_secret=$(getProperty "$runtime_dir/savedState" "account_secret")
-accountKey=$(getProperty "$runtime_dir/savedState" "accountKey")
-host1=$(getProperty "$runtime_dir/savedState" "host1")
-accountKey=$(getProperty "$runtime_dir/savedState" "accountKey")
-accountName=$(getProperty "$runtime_dir/savedState" "accountName")
-companyName=$(getProperty "$runtime_dir/savedState" "companyName")
-adminEmail=$(getProperty "$runtime_dir/savedState" "adminEmail")
 
 checkIfMongoIsRunning
 stopAllServices
@@ -344,9 +359,10 @@ startManager
 startVerification
 startLE
 generateNginxScript
+publishVersion
 
 if [[ ${newinstallation} == "true" ]];then
-       generateSeedData $companyName $accountName $adminEmail $accountKey $account_secret $learningengine_secret
+       generateSeedData $learningengine_secret
 else
    echo "Not seeding Mongo,existing installation found "
 fi

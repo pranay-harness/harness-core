@@ -26,6 +26,7 @@ cp -R config $INSTALLER_DIR/
 cp *.properties $INSTALLER_DIR
 cp install_harness.sh $INSTALLER_DIR
 cp utils.sh $INSTALLER_DIR
+cp stop.sh $INSTALLER_DIR
 chmod +x $INSTALLER_DIR/*.sh
 CONFIG_PROPERTIES_FILE=$INSTALLER_DIR/config.properties
 cp -R splunk_pyml $LE_DIR/
