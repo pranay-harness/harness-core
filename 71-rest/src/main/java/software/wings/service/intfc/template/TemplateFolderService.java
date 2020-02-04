@@ -14,6 +14,8 @@ public interface TemplateFolderService {
 
   TemplateFolder save(@Valid TemplateFolder templateFolder);
 
+  TemplateFolder saveSafelyAndGet(@Valid TemplateFolder templateFolder);
+
   TemplateFolder update(@Valid TemplateFolder templateFolder);
 
   boolean delete(String templateFolderUuid);

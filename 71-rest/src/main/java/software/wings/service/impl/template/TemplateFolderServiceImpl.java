@@ -24,8 +24,11 @@ import static software.wings.common.TemplateConstants.TOMCAT_COMMANDS;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.validation.Create;
@@ -56,6 +59,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -79,6 +83,15 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   @Override
   @ValidationGroups(Create.class)
   public TemplateFolder save(TemplateFolder templateFolder) {
+    return saveInternal(templateFolder,
+        toBeSavedTemplateFolder
+        -> PersistenceValidator.duplicateCheck(
+            ()
+                -> wingsPersistence.saveAndGet(TemplateFolder.class, toBeSavedTemplateFolder),
+            TemplateFolder.NAME_KEY, toBeSavedTemplateFolder.getName()));
+  }
+
+  private TemplateFolder saveInternal(TemplateFolder templateFolder, UnaryOperator<TemplateFolder> saveStrategy) {
     TemplateGallery templateGallery;
     String galleryId = templateFolder.getGalleryId();
     if (isEmpty(galleryId)) {
@@ -98,15 +111,35 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
       templateFolder.setPathId(pathId);
     }
     templateFolder.setKeywords(getKeywords(templateFolder));
-    TemplateFolder savedTemplateFolder =
-        PersistenceValidator.duplicateCheck(()
-                                                -> wingsPersistence.saveAndGet(TemplateFolder.class, templateFolder),
-            TemplateFolder.NAME_KEY, templateFolder.getName());
-
+    TemplateFolder savedTemplateFolder = saveStrategy.apply(templateFolder);
     // TODO: AUDIT: Once this entity is yamlized, this can be removed
     auditServiceHelper.reportForAuditingUsingAccountId(
         savedTemplateFolder.getAccountId(), null, savedTemplateFolder, Type.CREATE);
     return savedTemplateFolder;
+  }
+
+  @Override
+  public TemplateFolder saveSafelyAndGet(TemplateFolder templateFolder) {
+    try {
+      return saveInternal(templateFolder,
+          toBeSavedTemplateFolder -> wingsPersistence.saveAndGet(TemplateFolder.class, toBeSavedTemplateFolder));
+    } catch (DuplicateKeyException e) {
+      return getExistingTemplateFolder(templateFolder);
+    } catch (Exception e) {
+      if (e.getCause() instanceof DuplicateKeyException) {
+        return getExistingTemplateFolder(templateFolder);
+      }
+      throw new GeneralException(ExceptionUtils.getMessage(e), e, USER);
+    }
+  }
+
+  private TemplateFolder getExistingTemplateFolder(TemplateFolder templateFolder) {
+    return wingsPersistence.createQuery(TemplateFolder.class)
+        .filter(TemplateFolderKeys.accountId, templateFolder.getAccountId())
+        .filter(TemplateFolderKeys.appId, templateFolder.getAppId())
+        .filter(TemplateFolderKeys.pathId, templateFolder.getPathId())
+        .filter(TemplateFolderKeys.name, templateFolder.getName())
+        .get();
   }
 
   private Set<String> getKeywords(TemplateFolder templateFolder) {
