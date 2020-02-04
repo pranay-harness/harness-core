@@ -5,6 +5,7 @@ import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.ge
 import com.google.inject.Inject;
 
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -16,7 +17,9 @@ import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.instana.InstanaDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.util.Arrays;
 import java.util.List;
+
 @Slf4j
 public class InstanaDelegateServiceImpl implements InstanaDelegateService {
   @Inject private EncryptionService encryptionService;
@@ -33,6 +36,24 @@ public class InstanaDelegateServiceImpl implements InstanaDelegateService {
   }
 
   @Override
+  public boolean validateConfig(InstanaConfig instanaConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    InstanaTimeFrame instanaTimeFrame =
+        InstanaTimeFrame.builder().windowSize(60000).to(Timestamp.currentMinuteBoundary()).build();
+    InstanaInfraMetricRequest instanaInfraMetricRequest = InstanaInfraMetricRequest.builder()
+                                                              .timeframe(instanaTimeFrame)
+                                                              .plugin("docker")
+                                                              .metrics(Arrays.asList("cpu.totalusage"))
+                                                              .query("dummyQuery")
+                                                              .rollup(60)
+                                                              .build();
+
+    final Call<InstanaInfraMetrics> request =
+        getRestClient(instanaConfig)
+            .getInfrastructureMetrics(
+                getAuthorizationHeader(instanaConfig, encryptedDataDetails), instanaInfraMetricRequest);
+    requestExecutor.executeRequest(request);
+    return true;
+  }
   public InstanaAnalyzeMetrics getInstanaTraceMetrics(InstanaConfig instanaConfig,
       List<EncryptedDataDetail> encryptedDataDetails, InstanaAnalyzeMetricRequest instanaAnalyzeMetricRequest,
       ThirdPartyApiCallLog apiCallLog) {

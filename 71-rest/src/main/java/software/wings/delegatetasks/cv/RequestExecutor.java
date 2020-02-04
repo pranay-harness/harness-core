@@ -30,6 +30,19 @@ import java.util.concurrent.ThreadLocalRandom;
 public class RequestExecutor {
   @Inject private DelegateLogService delegateLogService;
   private static final int MAX_RETRIES = 3;
+  public <U> U executeRequest(Call<U> request) {
+    try {
+      Response<U> response = request.clone().execute();
+      if (response.isSuccessful()) {
+        return response.body();
+      } else {
+        throw new DataCollectionException(
+            "Response code: " + response.code() + " Error: " + response.errorBody().string());
+      }
+    } catch (IOException e) {
+      throw new DataCollectionException(e);
+    }
+  }
 
   public <U> U executeRequest(ThirdPartyApiCallLog thirdPartyApiCallLog, Call<U> request) {
     int retryCount = 0;

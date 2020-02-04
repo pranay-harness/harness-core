@@ -27,6 +27,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.instana.InstanaDelegateService;
 import software.wings.service.intfc.instana.InstanaService;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,7 +37,7 @@ import java.util.UUID;
 
 public class InstanaServiceImplTest extends WingsBaseTest {
   private String accountId = UUID.randomUUID().toString();
-  @Inject private SettingsService settingsService;
+  @Mock private SettingsService settingsService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock InstanaDelegateService instanaDelegateService;
   @Inject InstanaService instanaService;
@@ -44,9 +45,10 @@ public class InstanaServiceImplTest extends WingsBaseTest {
   private SettingAttribute settingAttribute;
 
   @Before
-  public void setup() throws IllegalAccessException {
+  public void setup() throws IllegalAccessException, IOException {
     initMocks(this);
     FieldUtils.writeField(instanaService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(instanaService, "settingsService", settingsService, true);
     instanaConfig = InstanaConfig.builder()
                         .instanaUrl("https://instana-example.com/")
                         .accountId(accountId)
@@ -59,7 +61,7 @@ public class InstanaServiceImplTest extends WingsBaseTest {
                            .withValue(instanaConfig)
                            .build();
 
-    settingsService.save(settingAttribute);
+    when(settingsService.get(any())).thenReturn(settingAttribute);
     when(delegateProxyFactory.get(any(), any())).thenReturn(instanaDelegateService);
   }
   @Test

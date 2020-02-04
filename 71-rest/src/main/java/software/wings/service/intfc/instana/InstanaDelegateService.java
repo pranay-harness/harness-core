@@ -18,6 +18,9 @@ public interface InstanaDelegateService {
   InstanaInfraMetrics getInfraMetrics(InstanaConfig instanaConfig, List<EncryptedDataDetail> encryptionDetails,
       InstanaInfraMetricRequest infraMetricRequest, ThirdPartyApiCallLog apiCallLog) throws DataCollectionException;
 
+  @DelegateTaskType(TaskType.INSTANA_VALIDATE_CONFIGURATION_TASK)
+  boolean validateConfig(InstanaConfig instanaConfig, List<EncryptedDataDetail> encryptedDataDetails);
+
   InstanaAnalyzeMetrics getInstanaTraceMetrics(InstanaConfig instanaConfig,
       List<EncryptedDataDetail> encryptedDataDetails, InstanaAnalyzeMetricRequest instanaAnalyzeMetricRequest,
       ThirdPartyApiCallLog thirdPartyApiCallLog);
