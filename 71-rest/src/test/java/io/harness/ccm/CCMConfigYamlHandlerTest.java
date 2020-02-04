@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +22,7 @@ public class CCMConfigYamlHandlerTest extends CategoryTest {
   @Before
   public void setUp() {
     ccmConfig = CCMConfig.builder().cloudCostEnabled(isCloudCostEnabled).build();
-    ccmConfigYaml = CCMConfig.Yaml.builder().cloudCostEnabled(isCloudCostEnabled).build();
+    ccmConfigYaml = CCMConfig.Yaml.builder().continuousEfficiencyEnabled(isCloudCostEnabled).build();
   }
 
   @Test
@@ -37,7 +36,7 @@ public class CCMConfigYamlHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void testUpsertFromYaml() throws HarnessException {
+  public void testUpsertFromYaml() {
     ChangeContext<CCMConfig.Yaml> changeContext =
         ChangeContext.Builder.aChangeContext().withYaml(ccmConfigYaml).build();
     CCMConfig upsertedCcmConfig = ccmConfigYamlHandler.upsertFromYaml(changeContext, EMPTY_LIST);

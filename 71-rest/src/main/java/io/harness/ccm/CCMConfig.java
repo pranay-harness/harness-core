@@ -16,11 +16,11 @@ public class CCMConfig {
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends BaseYaml {
-    private boolean isContinuousEfficiencyEnabled;
+    private boolean continuousEfficiencyEnabled;
 
     @Builder
-    public Yaml(boolean cloudCostEnabled) {
-      this.isContinuousEfficiencyEnabled = cloudCostEnabled;
+    public Yaml(boolean continuousEfficiencyEnabled) {
+      this.continuousEfficiencyEnabled = continuousEfficiencyEnabled;
     }
   }
 }

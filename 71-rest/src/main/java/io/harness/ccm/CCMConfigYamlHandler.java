@@ -14,7 +14,7 @@ public class CCMConfigYamlHandler extends BaseYamlHandler<CCMConfig.Yaml, CCMCon
     if (ccmConfig != null) {
       isCloudCostEnabled = ccmConfig.isCloudCostEnabled();
     }
-    return CCMConfig.Yaml.builder().cloudCostEnabled(isCloudCostEnabled).build();
+    return CCMConfig.Yaml.builder().continuousEfficiencyEnabled(isCloudCostEnabled).build();
   }
 
   @Override
