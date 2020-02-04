@@ -831,18 +831,17 @@ public class YamlGitServiceImpl implements YamlGitService {
   public <T extends Change> void upsertGitSyncErrors(T failedChange, String errorMessage, boolean fullSyncPath) {
     Query<GitSyncError> failedQuery = wingsPersistence.createQuery(GitSyncError.class)
                                           .filter(GitSyncError.ACCOUNT_ID_KEY, failedChange.getAccountId())
-                                          .filter(GitSyncErrorKeys.yamlFilePath, failedChange.getFilePath())
-                                          .project(GitSyncError.ID_KEY, true);
+                                          .filter(GitSyncErrorKeys.yamlFilePath, failedChange.getFilePath());
     GitFileChange failedGitFileChange = (GitFileChange) failedChange;
     String failedCommitId = failedGitFileChange.getCommitId() != null ? failedGitFileChange.getCommitId() : "";
     String appId = obtainAppIdFromGitFileChange(failedChange.getAccountId(), failedChange.getFilePath());
+    logger.info(String.format("Fixing git sync issue for file: %s", failedChange.getFilePath()));
 
     UpdateOperations<GitSyncError> failedUpdateOperations =
         wingsPersistence.createUpdateOperations(GitSyncError.class)
             .setOnInsert(GitSyncError.ID_KEY, generateUuid())
             .set(GitSyncError.ACCOUNT_ID_KEY, failedChange.getAccountId())
             .set("yamlFilePath", failedChange.getFilePath())
-            .set("yamlContent", failedChange.getFileContent())
             .set("gitCommitId", failedCommitId)
             .set("changeType", failedChange.getChangeType().name())
             .set("failureReason",
@@ -850,6 +849,26 @@ public class YamlGitServiceImpl implements YamlGitService {
             .set("fullSyncPath", fullSyncPath)
             .set(APP_ID_KEY, appId);
 
+    final GitSyncError gitSyncError = failedQuery.get();
+
+    // git sync error already exists
+    if (gitSyncError != null) {
+      // if fix got triggered from Git, it will come in through a new and valid commit id
+      if (StringUtils.isNotBlank(failedCommitId)) {
+        failedUpdateOperations.set("yamlContent", failedChange.getFileContent());
+        failedUpdateOperations.unset("lastAttemptedYaml");
+      }
+      // if fix got triggered from UI, commit id will remain the same
+      else {
+        failedUpdateOperations.set("lastAttemptedYaml", failedChange.getFileContent());
+      }
+    }
+    // if it's a new git sync error
+    else {
+      failedUpdateOperations.set("yamlContent", failedChange.getFileContent());
+    }
+
+    failedQuery.project(GitSyncError.ID_KEY, true);
     wingsPersistence.upsert(failedQuery, failedUpdateOperations, upsertReturnNewOptions);
   }
 
