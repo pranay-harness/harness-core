@@ -84,6 +84,16 @@ public class K8BlueGreenWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
   private PhaseStep getRollbackRouteUpdatePhaseStep() {
     return aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.ROUTE_UPDATE)
         .withPhaseStepNameForRollback(WorkflowServiceHelper.ROUTE_UPDATE)
+        .addStep(GraphNode.builder()
+                     .id(generateUuid())
+                     .type(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
+                     .name(WorkflowServiceHelper.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
+                     .properties(ImmutableMap.<String, Object>builder()
+                                     .put("service1", primaryServiceNameExpression)
+                                     .put("service2", stageServiceNameExpression)
+                                     .build())
+                     .rollback(true)
+                     .build())
         .withStatusForRollback(ExecutionStatus.SUCCESS)
         .withRollback(true)
         .build();
