@@ -31,6 +31,7 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
+import software.wings.resources.graphql.TriggeredByType;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -45,6 +46,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.UserService;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -64,6 +66,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
   private AuthHandler authHandler;
   private AuthService authService;
   private HPersistence persistence;
+  @Inject private UserService userService;
 
   @Inject
   public AuthRuleGraphQL(
@@ -156,7 +159,15 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     List<PermissionAttribute> permissionAttributes = asList(permissionAttribute);
     String appId = (String) dataFetcher.getArgumentValue(environment, APP_ID_ARG);
 
+    TriggeredByType triggeredByType = context.get("triggeredByType");
+    String triggeredById = context.get("triggeredById");
+
     User user = new User();
+
+    if (triggeredByType == TriggeredByType.USER) {
+      user = userService.get(triggeredById);
+    }
+
     //    String actionStr = actionArgument.getValue() != null ? String.valueOf(actionArgument.getValue()) : null;
     boolean isAccountLevelPermissions = authRuleFilter.isAccountLevelPermissions(permissionAttributes);
     boolean emptyAppIdsInReq = isEmpty(appId);

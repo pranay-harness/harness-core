@@ -33,6 +33,7 @@ import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
+import software.wings.resources.graphql.TriggeredByType;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -347,5 +348,24 @@ public class DataFetcherUtils {
     if (field == null) {
       throw new InvalidRequestException(format("Field: [%s] is required", fieldName));
     }
+  }
+
+  public Principal getTriggeredBy(DataFetchingEnvironment environment) {
+    GraphQLContext context = null;
+
+    if (environment.getContext() instanceof GraphQLContext) {
+      context = environment.getContext();
+    } else if (environment.getContext() instanceof GraphQLContext.Builder) {
+      GraphQLContext.Builder builder = environment.getContext();
+      context = builder.build();
+    } else {
+      throw new WingsException("Unknown context");
+    }
+
+    String triggeredById = context.get("triggeredById");
+
+    TriggeredByType triggeredByType = context.get("triggeredByType");
+
+    return Principal.builder().triggeredByType(triggeredByType).triggeredById(triggeredById).build();
   }
 }
