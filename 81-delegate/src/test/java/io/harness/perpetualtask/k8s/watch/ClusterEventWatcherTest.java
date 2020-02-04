@@ -2,14 +2,20 @@ package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
 
 import io.fabric8.kubernetes.api.model.EventBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.dsl.FilterWatchListMultiDeletable;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -30,6 +36,7 @@ public class ClusterEventWatcherTest extends CategoryTest {
   @Rule public final KubernetesServer server = new KubernetesServer();
 
   private ClusterEventWatcher watcher;
+  private KubernetesClient client;
   @Mock private EventPublisher eventPublisher;
 
   private K8sClusterEvent expectedEventPrototype = K8sClusterEvent.newBuilder()
@@ -40,7 +47,12 @@ public class ClusterEventWatcherTest extends CategoryTest {
 
   @Before
   public void setUp() throws Exception {
-    watcher = new ClusterEventWatcher(server.getClient(),
+    client = spy(server.getClient());
+    MixedOperation op = mock(MixedOperation.class);
+    FilterWatchListMultiDeletable op1 = mock(FilterWatchListMultiDeletable.class);
+    when(client.events()).thenReturn(op);
+    when(op.inAnyNamespace()).thenReturn(op1);
+    watcher = new ClusterEventWatcher(client,
         K8sWatchTaskParams.newBuilder()
             .setCloudProviderId("cloud-provider-id")
             .setClusterName("cluster-name")

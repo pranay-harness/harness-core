@@ -34,6 +34,8 @@ public class NodeWatcher implements Watcher<Node> {
   @Inject
   public NodeWatcher(
       @Assisted KubernetesClient client, @Assisted K8sWatchTaskParams params, EventPublisher eventPublisher) {
+    logger.info(
+        "Creating new NodeWatcher for cluster with id: {} name: {} ", params.getClusterId(), params.getClusterName());
     this.watch = client.nodes().watch(this);
     this.cloudProviderId = params.getCloudProviderId();
     this.clusterId = params.getClusterId();

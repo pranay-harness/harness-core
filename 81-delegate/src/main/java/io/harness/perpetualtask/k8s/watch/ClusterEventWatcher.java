@@ -74,7 +74,10 @@ public class ClusterEventWatcher implements Watcher<Event> {
   @Inject
   public ClusterEventWatcher(
       @Assisted KubernetesClient client, @Assisted K8sWatchTaskParams params, EventPublisher eventPublisher) {
+    logger.info("Creating new ClusterEventWatcher for cluster with id: {} name: {} ", params.getClusterId(),
+        params.getClusterName());
     this.client = client;
+    this.client.events().watch(this);
     this.eventPublisher = eventPublisher;
     clusterEventPrototype = K8sClusterEvent.newBuilder()
                                 .setClusterId(params.getClusterId())
