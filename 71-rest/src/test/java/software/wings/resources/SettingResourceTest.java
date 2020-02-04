@@ -3,7 +3,6 @@ package software.wings.resources;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.HARNESS_BAMBOO;
@@ -19,12 +18,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SettingAttribute.SettingCategory;
-import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -34,8 +30,6 @@ public class SettingResourceTest extends WingsBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private SettingsService settingsService;
   @Mock private UsageRestrictionsService usageRestrictionsService;
-  @Mock private AccountService accountService;
-  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks private SettingResource settingResource;
 
@@ -58,7 +52,6 @@ public class SettingResourceTest extends WingsBaseTest {
                            .withCategory(SettingCategory.CLOUD_PROVIDER)
                            .withValue(bambooConfig)
                            .build();
-    when(featureFlagService.isGlobalEnabled(FeatureName.PERPETUAL_TASK_SERVICE)).thenReturn(false);
 
     FieldUtils.writeField(settingResource, "secretManager", secretManager, true);
     FieldUtils.writeField(settingResource, "settingsService", settingsService, true);

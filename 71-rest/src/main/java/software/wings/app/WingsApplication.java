@@ -11,7 +11,6 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static software.wings.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
-import static software.wings.beans.FeatureName.PERPETUAL_TASK_SERVICE;
 import static software.wings.common.VerificationConstants.CV_24X7_METRIC_LABELS;
 import static software.wings.common.VerificationConstants.CV_META_DATA;
 import static software.wings.common.VerificationConstants.VERIFICATION_DEPLOYMENTS;
@@ -677,13 +676,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(ResourceConstraintBackupHandler.class).registerIterators();
     injector.getInstance(WorkflowExecutionMonitorHandler.class).registerIterators();
     injector.getInstance(SettingAttributeValidateConnectivityHandler.class).registerIterators();
-
-    if (injector.getInstance(FeatureFlagService.class).isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
-      logger.info("Initializing Perpetual Task Assignor..");
-      injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
-      injector.getInstance(DisconnectedDelegateHandler.class).registerIterators();
-    }
-
+    injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
+    injector.getInstance(DisconnectedDelegateHandler.class).registerIterators();
     injector.getInstance(BudgetHandler.class).registerIterators();
   }
 
