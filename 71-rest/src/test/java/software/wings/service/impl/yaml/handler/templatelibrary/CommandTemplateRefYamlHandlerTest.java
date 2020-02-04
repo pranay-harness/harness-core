@@ -14,6 +14,7 @@ import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateL
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.commandRefUuid;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.commandTemplateRefUri;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedCommandTemplate;
+import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedReturnCommandTemplate;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.variable;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -29,6 +30,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ExecCommandUnit;
+import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateReference;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
@@ -50,7 +52,7 @@ public class CommandTemplateRefYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock private TemplateService templateService;
   @InjectMocks @Inject private CommandTemplateRefYamlHandler commandTemplateRefYamlHandler;
   @Mock private ExecCommandUnitYamlHandler execCommandUnitYamlHandler;
-  @Mock private CommandTemplateYamlHandler yamlHandler;
+  @Mock private TemplateLibraryYamlHandler yamlHandler;
 
   @Before
   public void setup() {
@@ -63,7 +65,8 @@ public class CommandTemplateRefYamlHandlerTest extends BaseYamlHandlerTest {
   public void testToBean() throws IOException {
     when(yamlHandlerFactory.getYamlHandler(YamlType.GLOBAL_TEMPLATE_LIBRARY, SSH)).thenReturn(yamlHandler);
     when(yamlHandler.upsertFromYaml(any(), any())).thenReturn(null);
-    when(templateService.fetchTemplateFromUri(any(), any(), any())).thenReturn(null, expectedCommandTemplate);
+    when(templateService.fetchTemplateFromUri(any(), any(), any())).thenReturn(null, expectedReturnCommandTemplate);
+    when(templateService.get(any())).thenReturn(Template.builder().version(1).build());
     ChangeContext<CommandRefYaml> changeContext =
         getChangeContext(REF_COMMAND_UNIT, REF_COMMAND_TEMPLATE_VALID_YAML_FILE_PATH, commandTemplateRefYamlHandler);
     CommandRefYaml yamlObject = (CommandRefYaml) getYaml(REF_COMMAND_UNIT, CommandRefYaml.class);

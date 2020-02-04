@@ -968,4 +968,22 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     Template savedTemplate = saveTemplate();
     assertThat(templateService.getTemplateFolderPathString(savedTemplate)).isEqualTo("Harness/Tomcat Commands");
   }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldFetchTemplateFromUri() {
+    Template template = getSshCommandTemplate();
+    Template savedTemplate = templateService.save(template);
+    assertThat(savedTemplate).isNotNull();
+
+    String templateUri = templateService.fetchTemplateUri(template.getUuid());
+    assertTemplateUri(templateUri);
+
+    Template returnedTemplate = templateService.fetchTemplateFromUri(templateUri, GLOBAL_ACCOUNT_ID, GLOBAL_APP_ID);
+    assertThat(returnedTemplate.getVersion()).isNotNull();
+    assertThat(returnedTemplate.getAccountId()).isNotNull();
+    assertThat(returnedTemplate.getAppId()).isNotNull();
+    assertThat(returnedTemplate.getFolderId()).isNotNull();
+  }
 }

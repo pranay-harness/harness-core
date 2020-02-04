@@ -14,6 +14,7 @@ import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateL
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.commandTemplateForSetup;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.commandTemplateName;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedCommandTemplate;
+import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedReturnCommandTemplate;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.rootTemplateFolder;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -54,7 +55,7 @@ public class CommandTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTe
         .thenReturn(rootTemplateFolder);
     when(templateService.findByFolder(rootTemplateFolder, commandTemplateName, GLOBAL_APP_ID))
         .thenReturn(commandTemplateForSetup);
-    when(templateService.update(expectedCommandTemplate)).thenReturn(expectedCommandTemplate);
+    when(templateService.update(expectedCommandTemplate)).thenReturn(expectedReturnCommandTemplate);
     ChangeContext<CommandTemplateYaml> changeContext =
         getChangeContext(VALID_COMMAND_TEMPLATE_WITHOUT_VARIABLE, COMMAND_TEMPLATE_VALID_YAML_FILE_PATH, yamlHandler);
     CommandTemplateYaml yamlObject =

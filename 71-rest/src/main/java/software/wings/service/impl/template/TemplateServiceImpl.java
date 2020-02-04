@@ -574,8 +574,6 @@ public class TemplateServiceImpl implements TemplateService {
 
     String templateName = obtainTemplateName(templateUri);
     Template template = wingsPersistence.createQuery(Template.class)
-                            .project(NAME_KEY, true)
-                            .project(Template.ACCOUNT_ID_KEY, true)
                             .filter(Template.ACCOUNT_ID_KEY, accountId)
                             .filter(NAME_KEY, templateName)
                             .filter(Template.FOLDER_ID_KEY, templateFolder.getUuid())
