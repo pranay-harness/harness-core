@@ -456,41 +456,20 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       FileUtils.deleteQuietly(tfVariablesFile);
       return;
     }
-    if (parameters.isUseVarForInlineVariables()) {
-      String variableFormatString = " -var='%s=%s' ";
-      if (isNotEmpty(parameters.getVariables())) {
-        for (Entry<String, String> entry : parameters.getVariables().entrySet()) {
-          executeParams.append(format(variableFormatString, entry.getKey(), entry.getValue()));
-          uiLogParams.append(format(variableFormatString, entry.getKey(), entry.getValue()));
-        }
+    String variableFormatString = " -var='%s=%s' ";
+    if (isNotEmpty(parameters.getVariables())) {
+      for (Entry<String, String> entry : parameters.getVariables().entrySet()) {
+        executeParams.append(format(variableFormatString, entry.getKey(), entry.getValue()));
+        uiLogParams.append(format(variableFormatString, entry.getKey(), entry.getValue()));
       }
+    }
 
-      if (isNotEmpty(parameters.getEncryptedVariables())) {
-        for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedVariables().entrySet()) {
-          executeParams.append(format(variableFormatString, entry.getKey(),
-              String.valueOf(encryptionService.getDecryptedValue(entry.getValue()))));
-          uiLogParams.append(
-              format(variableFormatString, entry.getKey(), format("HarnessSecret:[%s]", entry.getKey())));
-        }
+    if (isNotEmpty(parameters.getEncryptedVariables())) {
+      for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedVariables().entrySet()) {
+        executeParams.append(format(variableFormatString, entry.getKey(),
+            String.valueOf(encryptionService.getDecryptedValue(entry.getValue()))));
+        uiLogParams.append(format(variableFormatString, entry.getKey(), format("HarnessSecret:[%s]", entry.getKey())));
       }
-    } else {
-      try (BufferedWriter writer = new BufferedWriter(
-               new OutputStreamWriter(new FileOutputStream(tfVariablesFile), StandardCharsets.UTF_8))) {
-        if (isNotEmpty(parameters.getVariables())) {
-          for (Entry<String, String> entry : parameters.getVariables().entrySet()) {
-            saveVariable(writer, entry.getKey(), entry.getValue());
-          }
-        }
-
-        if (isNotEmpty(parameters.getEncryptedVariables())) {
-          for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedVariables().entrySet()) {
-            String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue()));
-            saveVariable(writer, entry.getKey(), value);
-          }
-        }
-      }
-      executeParams.append(format(VAR_FILE_FORMAT, tfVariablesFile.toString()));
-      uiLogParams.append(format(VAR_FILE_FORMAT, tfVariablesFile.toString()));
     }
   }
 

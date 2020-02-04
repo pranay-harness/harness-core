@@ -3,7 +3,6 @@ package software.wings.delegatetasks.terraform;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
-import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -26,13 +25,10 @@ import software.wings.delegatetasks.TerraformProvisionTask;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.WingsTestConstants;
 
-import java.io.File;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
@@ -74,7 +70,6 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     doReturn(new char[] {'v', '2'}).when(mockEncryptionService).getDecryptedValue(any());
     TerraformProvisionParameters parameters =
         TerraformProvisionParameters.builder()
-            .useVarForInlineVariables(true)
             .variables(ImmutableMap.of("k1", "v1"))
             .encryptedVariables(ImmutableMap.of("k2", EncryptedDataDetail.builder().build()))
             .build();
@@ -85,27 +80,5 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     String uiLogs = inlineUILogBuffer.toString();
     assertThat(varParams).isEqualTo(" -var='k1=v1'  -var='k2=v2' ");
     assertThat(uiLogs).isEqualTo(" -var='k1=v1'  -var='k2=HarnessSecret:[k2]' ");
-  }
-
-  @Test
-  @Owner(developers = SATYAM)
-  @Category(UnitTests.class)
-  public void testGenerateInlineCommandVarsFile() throws Exception {
-    doReturn(new char[] {'v', '2'}).when(mockEncryptionService).getDecryptedValue(any());
-    TerraformProvisionParameters parameters =
-        TerraformProvisionParameters.builder()
-            .useVarForInlineVariables(false)
-            .variables(ImmutableMap.of("k1", "v1"))
-            .encryptedVariables(ImmutableMap.of("k2", EncryptedDataDetail.builder().build()))
-            .build();
-    StringBuilder inlineCommandBuffer = new StringBuilder();
-    StringBuilder inlineUILogBuffer = new StringBuilder();
-    File tempFile = File.createTempFile(format("Temp-[%s]", UUID.randomUUID().toString()), ".tmp");
-    terraformProvisionTask.getCommandLineVariableParams(parameters, tempFile, inlineCommandBuffer, inlineUILogBuffer);
-    String fileContents = new String(Files.readAllBytes(tempFile.toPath()));
-    assertThat(fileContents)
-        .isEqualTo("k1 = \"v1\"\n"
-            + "k2 = \"v2\"\n");
-    tempFile.deleteOnExit();
   }
 }

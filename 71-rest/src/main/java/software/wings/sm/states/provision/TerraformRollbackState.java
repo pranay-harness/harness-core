@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.FeatureName.TF_USE_VAR_CL;
 import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEOUT_IN_MINUTES;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
 
@@ -183,8 +182,6 @@ public class TerraformRollbackState extends TerraformProvisionState {
               .tfVarFiles(configParameter.getTfVarFiles())
               .workspace(workspace)
               .delegateTag(configParameter.getDelegateTag())
-              .useVarForInlineVariables(
-                  featureFlagService.isEnabled(TF_USE_VAR_CL, executionContext.getApp().getAccountId()))
               .build();
 
       return createAndRunTask(activityId, executionContext, parameters, configParameter.getDelegateTag());
