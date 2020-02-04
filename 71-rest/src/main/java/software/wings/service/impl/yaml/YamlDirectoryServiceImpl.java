@@ -795,8 +795,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return applicationsFolder;
   }
 
-  @VisibleForTesting
-  FolderNode doTemplateLibraryForApp(Application app, DirectoryPath directoryPath) {
+  @Override
+  public FolderNode doTemplateLibraryForApp(Application app, DirectoryPath directoryPath) {
     return doTemplateLibrary(app.getAccountId(), directoryPath, app.getAppId(), APPLICATION_TEMPLATE_LIBRARY_FOLDER,
         Type.APPLICATION_TEMPLATE_LIBRARY);
   }
@@ -1933,8 +1933,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
-  @VisibleForTesting
-  FolderNode doTemplateLibrary(
+  @Override
+  public FolderNode doTemplateLibrary(
       String accountId, DirectoryPath directoryPath, String appId, String templateLibraryFolderName, Type type) {
     final FolderNode templateLibraryFolder = new FolderNode(accountId, templateLibraryFolderName,
         SettingAttribute.class, directoryPath.add(templateLibraryFolderName), yamlGitSyncService);

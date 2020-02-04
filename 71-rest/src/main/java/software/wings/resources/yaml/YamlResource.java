@@ -1158,4 +1158,16 @@ public class YamlResource {
     yamlGitService.asyncFullSyncForEntireAccount(accountId);
     return new RestResponse<>("Triggered async full git sync");
   }
+
+  @POST
+  @Path("/internal/template-yaml-sync")
+  @Timed
+  @ExceptionMetered
+  public RestResponse templateYamlSync(@QueryParam("accountId") String accountId) {
+    if (!harnessUserGroupService.isHarnessSupportUser(UserThreadLocal.get().getUuid())) {
+      throw new UnauthorizedException("You don't have the permissions to perform this action.", WingsException.USER);
+    }
+    yamlService.syncYamlTemplate(accountId);
+    return new RestResponse<>("Triggered async template git sync");
+  }
 }

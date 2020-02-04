@@ -118,6 +118,7 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.CryptoUtils;
 import software.wings.utils.Utils;
+import software.wings.yaml.YamlVersion;
 import software.wings.yaml.directory.DirectoryPath;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.errorhandling.GitSyncError;
@@ -315,6 +316,31 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
   }
 
+  @Override
+  public void syncForTemplates(String accountId, String appId) {
+    YamlGitConfig yamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId, appId);
+    if (yamlGitConfig != null) {
+      try {
+        List<GitFileChange> gitFileChanges = new ArrayList<>();
+        if (GLOBAL_APP_ID.equals(appId)) {
+          gitFileChanges = obtainGlobalTemplates(accountId, true);
+        } else {
+          Application app = appService.get(appId);
+          if (app != null) {
+            gitFileChanges = obtainAppTemplateChanges(accountId, app);
+          }
+        }
+        YamlChangeSet yamlChangeSet = obtainYamlChangeSetForNonFullSync(accountId, appId, gitFileChanges, true);
+        yamlChangeSetService.save(yamlChangeSet);
+      } catch (Exception ex) {
+        logger.error(
+            GIT_YAML_LOG_PREFIX + "Failed to perform template sync for account {} and app {}", accountId, appId, ex);
+      }
+    } else {
+      logger.info("YamlGitConfig null for app {}", appId);
+    }
+  }
+
   @Deprecated
   private void syncFiles(String accountId, String entityId, YamlChangeSet yamlChangeSet) {
     try {
@@ -380,6 +406,19 @@ public class YamlGitServiceImpl implements YamlGitService {
         .build();
   }
 
+  private YamlChangeSet obtainYamlChangeSetForNonFullSync(
+      String accountId, String appId, List<GitFileChange> gitFileChangeList, boolean forcePush) {
+    return YamlChangeSet.builder()
+        .accountId(accountId)
+        .status(Status.QUEUED)
+        .queuedOn(System.currentTimeMillis())
+        .forcePush(forcePush)
+        .gitFileChanges(gitFileChangeList)
+        .appId(appId)
+        .fullSync(false)
+        .build();
+  }
+
   @Override
   public List<GitFileChange> obtainApplicationYamlGitFileChanges(String accountId, Application app) {
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
@@ -394,6 +433,29 @@ public class YamlGitServiceImpl implements YamlGitService {
         gitFileChanges, accountId, applicationsFolder, SETUP_FOLDER, true, false, Optional.empty());
 
     return gitFileChanges;
+  }
+
+  private List<GitFileChange> obtainGlobalTemplates(String accountId, boolean includeFiles) {
+    List<GitFileChange> gitFileChanges = new ArrayList<>();
+    DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
+    FolderNode templateFolder = yamlDirectoryService.doTemplateLibrary(accountId, directoryPath.clone(), GLOBAL_APP_ID,
+        GLOBAL_TEMPLATE_LIBRARY_FOLDER, YamlVersion.Type.GLOBAL_TEMPLATE_LIBRARY);
+    gitFileChanges = yamlDirectoryService.traverseDirectory(
+        gitFileChanges, accountId, templateFolder, SETUP_FOLDER, includeFiles, true, Optional.empty());
+
+    return gitFileChanges;
+  }
+
+  private List<GitFileChange> obtainAppTemplateChanges(String accountId, Application app) {
+    DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
+    directoryPath.add(APPLICATIONS_FOLDER);
+    DirectoryPath appPath = directoryPath.clone();
+    appPath.add(app.getName());
+    FolderNode appTemplates = yamlDirectoryService.doTemplateLibraryForApp(app, appPath.clone());
+
+    List<GitFileChange> gitFileChanges = new ArrayList<>();
+    return yamlDirectoryService.traverseDirectory(
+        gitFileChanges, accountId, appTemplates, appPath.getPath(), true, false, Optional.empty());
   }
 
   private List<YamlChangeSet> obtainAllApplicationYamlChangeSet(String accountId, boolean forcePush) {

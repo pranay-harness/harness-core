@@ -24,12 +24,14 @@ public interface YamlService<Y extends BaseYaml, B extends Base> {
   List<ChangeContext> processChangeSet(List<Change> changeList) throws YamlProcessingException;
 
   List<ChangeContext> processChangeSet(List<Change> changeList, boolean isGitSyncPath) throws YamlProcessingException;
+
   /**
-   *
    * @param yamlPayload
    * @param accountId
    */
   RestResponse<B> update(YamlPayload yamlPayload, String accountId);
 
   RestResponse processYamlFilesAsZip(String accountId, InputStream fileInputStream, String yamlPath) throws IOException;
+
+  void syncYamlTemplate(String accountId);
 }
