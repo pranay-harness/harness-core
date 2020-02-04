@@ -15,7 +15,7 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.esotericsoftware.kryo.Kryo;
-import io.harness.ccm.AwsS3SyncConfig;
+import io.harness.ccm.BillingReportConfig;
 import io.harness.ccm.CCMConfig;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
@@ -1469,7 +1469,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InstanaMetricItem.class, 7299);
     kryo.register(InstanaMetricValues.class, 7300);
     kryo.register(InstanaDataCollectionInfo.class, 7301);
-    kryo.register(AwsS3SyncConfig.class, 7302);
+    kryo.register(BillingReportConfig.class, 7302);
     kryo.register(HelmVersion.class, 7303);
     kryo.register(InstanaTagFilter.class, 7304);
   }

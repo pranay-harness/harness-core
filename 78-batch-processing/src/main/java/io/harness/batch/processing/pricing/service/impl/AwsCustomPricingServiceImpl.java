@@ -13,10 +13,15 @@ import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
 import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo.EcsFargatePricingInfoBuilder;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomPricingService;
+import io.harness.batch.processing.service.impl.SettingValueServiceImpl;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.ccm.BillingReportConfig;
+import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import software.wings.beans.AwsConfig;
+import software.wings.settings.SettingValue;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -29,6 +34,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AwsCustomPricingServiceImpl implements AwsCustomPricingService {
   @Autowired private AwsAthenaQueryHelperService awsAthenaQueryHelperService;
+  @Autowired private SettingValueServiceImpl settingValueService;
+  @Autowired private HPersistence persistence;
 
   private Cache<String, VMComputePricingInfo> awsVmPricingInfoCache =
       Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).build();
@@ -42,31 +49,41 @@ public class AwsCustomPricingServiceImpl implements AwsCustomPricingService {
     String instanceFamily = instanceMetaData.get(InstanceMetaDataConstants.INSTANCE_FAMILY);
     String operatingSystem = instanceMetaData.get(InstanceMetaDataConstants.OPERATING_SYSTEM);
     String region = instanceMetaData.get(InstanceMetaDataConstants.REGION);
-    String billingAccountId = "132359207506"; // TODO(Hitesh) get billing account id
-
-    VMComputePricingInfo vmComputePricingInfo =
-        getVMPricingInfoFromCache(billingAccountId, instanceFamily, region, operatingSystem);
-    if (null != vmComputePricingInfo) {
-      return vmComputePricingInfo;
-    } else {
-      refreshCache(instanceData, billingAccountId, startTime);
-      return getVMPricingInfoFromCache(billingAccountId, instanceFamily, region, operatingSystem);
+    String settingId = instanceData.getSettingId();
+    SettingValue settingValue = settingValueService.getSettingValueService(settingId);
+    BillingReportConfig billingReportConfig = ((AwsConfig) settingValue).getCcmConfig().getBillingReportConfig();
+    if (billingReportConfig.isBillingReportEnabled()) {
+      String billingAccountId = billingReportConfig.getBillingAccountId();
+      VMComputePricingInfo vmComputePricingInfo =
+          getVMPricingInfoFromCache(billingAccountId, instanceFamily, region, operatingSystem);
+      if (null != vmComputePricingInfo) {
+        return vmComputePricingInfo;
+      } else {
+        refreshCache(instanceData, billingAccountId, startTime);
+        return getVMPricingInfoFromCache(billingAccountId, instanceFamily, region, operatingSystem);
+      }
     }
+    return null;
   }
 
   @Override
   public EcsFargatePricingInfo getFargateVMPricingInfo(InstanceData instanceData, Instant startTime) {
     Map<String, String> instanceMetaData = instanceData.getMetaData();
     String region = instanceMetaData.get(InstanceMetaDataConstants.REGION);
-    String billingAccountId = "448640225317"; // TODO(Hitesh) get billing account id
-
-    EcsFargatePricingInfo fargatePricingInfoFromCache = getFargatePricingInfoFromCache(billingAccountId, region);
-    if (null != fargatePricingInfoFromCache) {
-      return fargatePricingInfoFromCache;
-    } else {
-      refreshFargateCache(instanceData, billingAccountId, startTime);
-      return getFargatePricingInfoFromCache(billingAccountId, region);
+    String settingId = instanceData.getSettingId();
+    SettingValue settingValue = settingValueService.getSettingValueService(settingId);
+    BillingReportConfig billingReportConfig = ((AwsConfig) settingValue).getCcmConfig().getBillingReportConfig();
+    String billingAccountId = billingReportConfig.getBillingAccountId();
+    if (billingReportConfig.isBillingReportEnabled()) {
+      EcsFargatePricingInfo fargatePricingInfoFromCache = getFargatePricingInfoFromCache(billingAccountId, region);
+      if (null != fargatePricingInfoFromCache) {
+        return fargatePricingInfoFromCache;
+      } else {
+        refreshFargateCache(instanceData, billingAccountId, startTime);
+        return getFargatePricingInfoFromCache(billingAccountId, region);
+      }
     }
+    return null;
   }
 
   private VMComputePricingInfo getVMPricingInfoFromCache(
@@ -83,7 +100,7 @@ public class AwsCustomPricingServiceImpl implements AwsCustomPricingService {
   private void refreshCache(InstanceData instanceData, String billingAccountId, Instant startTime) {
     try {
       List<AccountComputePricingData> accountComputePricingDataList =
-          awsAthenaQueryHelperService.fetchComputePriceRate(billingAccountId, startTime);
+          awsAthenaQueryHelperService.fetchComputePriceRate(instanceData.getSettingId(), billingAccountId, startTime);
       accountComputePricingDataList.forEach(accountComputePricingData
           -> awsVmPricingInfoCache.put(
               getVMCacheKey(billingAccountId, accountComputePricingData.getInstanceType(),
@@ -97,7 +114,8 @@ public class AwsCustomPricingServiceImpl implements AwsCustomPricingService {
   private void refreshFargateCache(InstanceData instanceData, String billingAccountId, Instant startTime) {
     try {
       List<AccountFargatePricingData> accountFargatePricingDataList =
-          awsAthenaQueryHelperService.fetchEcsFargatePriceRate(billingAccountId, startTime);
+          awsAthenaQueryHelperService.fetchEcsFargatePriceRate(
+              instanceData.getSettingId(), billingAccountId, startTime);
       List<EcsFargatePricingInfo> ecsFargatePricingInfoList = fetchEcsFargatePricingInfo(accountFargatePricingDataList);
       ecsFargatePricingInfoList.forEach(accountFargatePricingData
           -> ecsFargatePricingInfoCache.put(
