@@ -50,7 +50,6 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AwsHelperResourceService;
@@ -108,7 +107,6 @@ public class SettingResource {
   @Inject private AzureResourceService azureResourceService;
   @Inject private AwsHelperResourceService awsHelperResourceService;
   @Inject private YamlGitService yamlGitService;
-  @Inject private AccountService accountService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private K8sClusterConfigFactory k8sClusterConfigFactory;
   @Inject private CCMSettingService ccmSettingService;
