@@ -25,6 +25,7 @@ import software.wings.sm.StateType;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,18 +39,30 @@ public class InstanaDataCollectionInfo extends MetricsDataCollectionInfo {
   private InstanaConfig instanaConfig;
   private String query;
   private List<String> metrics;
+  private List<InstanaTagFilter> tagFilters;
+  private String hostTagFilter;
 
   @Builder
   public InstanaDataCollectionInfo(String accountId, String applicationId, String envId, Instant startTime,
       Instant endTime, Set<String> hosts, String cvConfigId, String stateExecutionId, String workflowId,
       String workflowExecutionId, String serviceId, String cvTaskId, String connectorId,
       List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> hostsToGroupNameMap,
-      InstanaConfig instanaConfig, String query, List<String> metrics) {
+      InstanaConfig instanaConfig, String query, List<String> metrics, String hostTagFilter,
+      List<InstanaTagFilter> tagFilters) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, hostsToGroupNameMap);
     this.query = query;
     this.metrics = metrics;
     this.instanaConfig = instanaConfig;
+    this.hostTagFilter = hostTagFilter;
+    this.tagFilters = tagFilters;
+  }
+
+  public List<InstanaTagFilter> getTagFilters() {
+    if (tagFilters == null) {
+      return Collections.emptyList();
+    }
+    return Collections.unmodifiableList(tagFilters);
   }
   @Override
   public TaskType getTaskType() {
@@ -87,6 +100,8 @@ public class InstanaDataCollectionInfo extends MetricsDataCollectionInfo {
                                                               .metrics(new ArrayList<>(this.metrics))
                                                               .query(this.query)
                                                               .instanaConfig(instanaConfig)
+                                                              .hostTagFilter(hostTagFilter)
+                                                              .tagFilters(new ArrayList<>(getTagFilters()))
                                                               .build();
     super.copy(instanaDataCollectionInfo);
     return instanaDataCollectionInfo;
@@ -102,6 +117,7 @@ public class InstanaDataCollectionInfo extends MetricsDataCollectionInfo {
     Preconditions.checkNotNull(instanaConfig, InstanaDataCollectionInfoKeys.instanaConfig);
     Preconditions.checkNotNull(query, InstanaDataCollectionInfoKeys.query);
     Preconditions.checkNotNull(metrics, InstanaDataCollectionInfoKeys.metrics);
+    Preconditions.checkNotNull(hostTagFilter, InstanaDataCollectionInfoKeys.hostTagFilter);
     Preconditions.checkArgument(
         !metrics.isEmpty(), InstanaDataCollectionInfoKeys.metrics + " metrics list can not be empty");
   }

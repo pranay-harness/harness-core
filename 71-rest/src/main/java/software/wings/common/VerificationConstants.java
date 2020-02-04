@@ -244,7 +244,7 @@ public class VerificationConstants {
 
   public static List<StateType> getMetricAnalysisStates() {
     return Arrays.asList(StateType.APM_VERIFICATION, StateType.APP_DYNAMICS, StateType.DATA_DOG, StateType.DYNA_TRACE,
-        StateType.PROMETHEUS, StateType.NEW_RELIC, StateType.STACK_DRIVER, StateType.CLOUD_WATCH);
+        StateType.PROMETHEUS, StateType.NEW_RELIC, StateType.STACK_DRIVER, StateType.CLOUD_WATCH, StateType.INSTANA);
   }
 
   public static List<StateType> getLogAnalysisStates() {

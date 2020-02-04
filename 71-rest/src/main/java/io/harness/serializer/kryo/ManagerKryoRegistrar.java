@@ -626,6 +626,7 @@ import software.wings.service.impl.instana.InstanaInfraMetricRequest;
 import software.wings.service.impl.instana.InstanaInfraMetrics;
 import software.wings.service.impl.instana.InstanaMetricItem;
 import software.wings.service.impl.instana.InstanaMetricValues;
+import software.wings.service.impl.instana.InstanaTagFilter;
 import software.wings.service.impl.instana.InstanaTimeFrame;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -1470,5 +1471,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InstanaDataCollectionInfo.class, 7301);
     kryo.register(AwsS3SyncConfig.class, 7302);
     kryo.register(HelmVersion.class, 7303);
+    kryo.register(InstanaTagFilter.class, 7304);
   }
 }

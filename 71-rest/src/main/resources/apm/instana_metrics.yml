@@ -1,0 +1,27 @@
+infraMetrics:
+  -
+    metricName: cpu.total_usage
+    metricType: INFRA
+    displayName: Docker container total CPU usage
+  -
+    metricName: memory.usage
+    metricType: INFRA
+    displayName: Docker containers memory usage
+applicationMetrics:
+  -
+    metricName: latency
+    metricType: RESP_TIME
+    displayName: Call latency
+    aggregation: mean
+  -
+    metricName: errors
+    metricType: ERROR
+    displayName: Error rate
+    aggregation: mean
+  -
+    metricName: traces
+    metricType: THROUGHPUT
+    displayName: Trace count
+    aggregation: sum
+
+
