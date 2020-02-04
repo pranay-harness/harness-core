@@ -418,12 +418,16 @@ public class TemplateServiceImpl implements TemplateService {
                                            .asKeyList();
     List<String> templateUuids =
         templateKeys.stream().map(templateKey -> templateKey.getId().toString()).collect(Collectors.toList());
+
     if (isEmpty(templateUuids)) {
       logger.info("No templates under the folder {}", templateFolder.getName());
       return true;
     }
+    final List<Template> templates = batchGet(templateUuids, templateFolder.getAccountId());
+
     logger.info("To be deleted linked template uuids {}", templateUuids);
-    // Verify if Service Commands contains the given ids
+    // Since the template folder will be deleted only if all the folder inside it are deleted. Hence validating linkage
+    // beforehand. Verify if Service Commands contains the given ids
     if (templateHelper.templatesLinked(SSH, templateUuids)) {
       throwException(templateFolder, SSH, SERVICE);
     }
@@ -440,10 +444,33 @@ public class TemplateServiceImpl implements TemplateService {
       throwException(templateFolder, PCF_PLUGIN, WORKFLOW);
     }
     // Delete templates
-    return wingsPersistence.delete(wingsPersistence.createQuery(Template.class)
-                                       .filter(Template.ACCOUNT_ID_KEY, templateFolder.getAccountId())
-                                       .field(Template.ID_KEY)
-                                       .in(templateUuids));
+    boolean templateDeleted =
+        wingsPersistence.delete(wingsPersistence.createQuery(Template.class)
+                                    .filter(Template.ACCOUNT_ID_KEY, templateFolder.getAccountId())
+                                    .field(Template.ID_KEY)
+                                    .in(templateUuids));
+
+    // TODO: AUDIT: Once the feature flag is on for all, this can be removed. All audit will be sent through
+    // yamlPushService.
+    if (templateDeleted) {
+      for (Template template : templates) {
+        if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, template.getAccountId())) {
+          yamlPushService.pushYamlChangeSet(
+              template.getAccountId(), template, null, Type.DELETE, template.isSyncFromGit(), false);
+        } else {
+          auditServiceHelper.reportDeleteForAuditingUsingAccountId(template.getAccountId(), template);
+        }
+      }
+    }
+    return templateDeleted;
+  }
+
+  private List<Template> batchGet(List<String> templateUuids, String accountId) {
+    return wingsPersistence.createQuery(Template.class)
+        .filter(Template.ACCOUNT_ID_KEY, accountId)
+        .field(Template.ID_KEY)
+        .in(templateUuids)
+        .asList();
   }
 
   @Override
@@ -787,7 +814,14 @@ public class TemplateServiceImpl implements TemplateService {
     List<Template> templates = wingsPersistence.createQuery(Template.class).filter(TemplateKeys.appId, appId).asList();
     for (Template template : templates) {
       deleteTemplate(template);
-      auditServiceHelper.reportDeleteForAuditing(appId, template);
+      // TODO: AUDIT: Once the feature flag is on for all, this can be removed. All audit will be sent through
+      // yamlPushService once feature flag is enabled for all.
+      if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, template.getAccountId())) {
+        yamlPushService.pushYamlChangeSet(
+            template.getAccountId(), template, null, Type.DELETE, template.isSyncFromGit(), false);
+      } else {
+        auditServiceHelper.reportDeleteForAuditing(appId, template);
+      }
     }
     // delete all template folders with appId
     List<TemplateFolder> templateFolders =
