@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.lang.String.format;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.SSH;
 
@@ -24,6 +24,7 @@ import software.wings.beans.template.TemplateReference;
 import software.wings.beans.template.TemplateReference.TemplateReferenceBuilder;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
+import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.command.CommandUnitYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -92,7 +93,6 @@ public class CommandTemplateRefYamlHandler extends CommandUnitYamlHandler<Comman
 
     String appId = getAppId(changeContext);
     String templateUri = yaml.getTemplateUri();
-    String commandName = yaml.getName();
     notNullCheck("templateUri field missing.", templateUri);
     if (templateUri.startsWith(APP_PREFIX)) {
       templateUri = templateUri.substring(APP_PREFIX.length());
@@ -104,27 +104,31 @@ public class CommandTemplateRefYamlHandler extends CommandUnitYamlHandler<Comman
     if (template == null) {
       processDependentTemplate(changeSetContext, filePath, yaml);
       template = templateService.fetchTemplateFromUri(templateUri, changeContext.getChange().getAccountId(), appId);
-      notNullCheck("No command found with the given name:" + commandName, template, USER);
+      notNullCheck(format("No template can be found with URI:[%s] , appId:[%s]", templateUri, appId), template, USER);
     }
 
     commandRef.setCommandType(CommandType.OTHER);
     TemplateReferenceBuilder templateReferenceBuilder = TemplateReference.builder();
-    if (isNotEmpty(templateUri)) {
-      templateReferenceBuilder.templateUuid(
-          templateService.fetchTemplateIdFromUri(changeContext.getChange().getAccountId(), appId, templateUri));
-      String templateVersion = TemplateHelper.obtainTemplateVersion(templateUri);
-      try {
-        templateReferenceBuilder.templateVersion(Long.valueOf(templateVersion));
-      } catch (Exception e) {
-        throw new InvalidRequestException(
-            "Please provide an exact version. Version provided is" + templateVersion + ".", e);
-      }
+    String templateUuid = template.getUuid();
+    templateReferenceBuilder.templateUuid(templateUuid);
+    String templateVersion = TemplateHelper.obtainTemplateVersion(templateUri);
+    try {
+      templateReferenceBuilder.templateVersion(Long.valueOf(templateVersion));
+    } catch (Exception e) {
+      throw new InvalidRequestException(
+          "Please provide an exact version. Version provided is" + templateVersion + ".", e);
+    }
+    if (Long.parseLong(templateVersion) > template.getVersion()) {
+      throw new InvalidRequestException(
+          format("The referenced template %s with version %s does not exist. The latest version is: %s.",
+              template.getName(), templateVersion, template.getVersion()),
+          USER);
     }
     commandRef.setTemplateReference(templateReferenceBuilder.build());
     commandRef.setReferenceUuid(template.getUuid());
     commandRef.setTemplateVariables(TemplateLibraryYamlHandler.templateVariableYamlToVariable(yaml.getVariables()));
     commandRef.setCommandType(CommandType.OTHER);
-
+    commandRef.setVersion(Long.valueOf(templateVersion));
     return commandRef;
   }
 
@@ -167,7 +171,7 @@ public class CommandTemplateRefYamlHandler extends CommandUnitYamlHandler<Comman
   }
 
   private void getHandlerAndUpsert(ChangeContext commandContext, List<ChangeContext> changeSetContext) {
-    CommandTemplateYamlHandler commandYamlHandler;
+    BaseYamlHandler commandYamlHandler;
     if (getAppId(commandContext).equals(GLOBAL_APP_ID)) {
       commandYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.GLOBAL_TEMPLATE_LIBRARY, SSH);
     } else {

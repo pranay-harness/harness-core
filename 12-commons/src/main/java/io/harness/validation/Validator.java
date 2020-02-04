@@ -23,15 +23,15 @@ public class Validator {
     }
   }
 
-  public static void notNullCheck(String name, Object value, EnumSet<ReportTarget> reportTargets) {
+  public static void notNullCheck(String message, Object value, EnumSet<ReportTarget> reportTargets) {
     if (value == null) {
-      throw new GeneralException(name, reportTargets);
+      throw new GeneralException(message, reportTargets);
     }
   }
 
-  public static void nullCheck(String name, Object value) {
+  public static void nullCheck(String message, Object value) {
     if (value != null) {
-      throw new GeneralException(name);
+      throw new GeneralException(message);
     }
   }
 

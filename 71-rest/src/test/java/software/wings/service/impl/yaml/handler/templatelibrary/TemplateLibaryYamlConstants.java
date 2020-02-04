@@ -243,6 +243,15 @@ public class TemplateLibaryYamlConstants {
                                                              .templateObject(baseCommandTemplateObject)
                                                              .build();
 
+  public static final Template expectedReturnCommandTemplate = Template.builder()
+                                                                   .name(commandTemplateName)
+                                                                   .type(SSH)
+                                                                   .accountId(GLOBAL_ACCOUNT_ID)
+                                                                   .appId(GLOBAL_APP_ID)
+                                                                   .templateObject(baseCommandTemplateObject)
+                                                                   .version(1)
+                                                                   .build();
+
   //  Ref command.
   public static String refCommandTemplateName = "test-command-template-ref";
 
