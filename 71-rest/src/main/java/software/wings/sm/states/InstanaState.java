@@ -2,11 +2,12 @@ package software.wings.sm.states;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.google.common.base.Preconditions;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
@@ -15,6 +16,9 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.instana.InstanaDataCollectionInfo;
+import software.wings.service.impl.instana.InstanaMetricTemplate;
+import software.wings.service.impl.instana.InstanaTagFilter;
+import software.wings.service.impl.instana.InstanaUtils;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
@@ -28,9 +32,14 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 @Slf4j
 public class InstanaState extends AbstractMetricAnalysisState {
+  public static final String LATENCY = "latency";
+  public static final String ERRORS = "errors";
+  public static final String TRACES = "traces";
   private String analysisServerConfigId;
   private List<String> metrics;
   private String query;
+  private String hostTagFilter;
+  private List<InstanaTagFilter> tagFilters;
 
   public InstanaState(String name) {
     super(name, StateType.INSTANA);
@@ -86,16 +95,30 @@ public class InstanaState extends AbstractMetricAnalysisState {
         .serviceId(getPhaseServiceId(context))
         .metrics(metrics)
         .query(query)
+        .tagFilters(tagFilters)
+        .hostTagFilter(hostTagFilter)
         .build();
   }
 
   public Map<String, TimeSeriesMetricDefinition> createMetricTemplates() {
     Map<String, TimeSeriesMetricDefinition> rv = new HashMap<>();
+    Map<String, InstanaMetricTemplate> infraMetricTemplateMap = InstanaUtils.getInfraMetricTemplateMap();
     metrics.forEach(metric -> {
-      // TODO: Mongo can not save dots in the key. we need to  Find a better way to handle this.
-      metric = metric.replace(".", "_");
-      rv.put(metric, TimeSeriesMetricDefinition.builder().metricName(metric).metricType(MetricType.INFRA).build());
+      InstanaMetricTemplate instanaMetricTemplate = infraMetricTemplateMap.get(metric);
+      Preconditions.checkNotNull(instanaMetricTemplate, "instanaMetricTemplate can not be null");
+      rv.put(instanaMetricTemplate.getDisplayName(),
+          TimeSeriesMetricDefinition.builder()
+              .metricName(instanaMetricTemplate.getDisplayName())
+              .metricType(instanaMetricTemplate.getMetricType())
+              .build());
     });
+    InstanaUtils.getApplicationMetricTemplateMap().forEach(
+        (metricName, instanaMetricTemplate)
+            -> rv.put(instanaMetricTemplate.getDisplayName(),
+                TimeSeriesMetricDefinition.builder()
+                    .metricName(instanaMetricTemplate.getDisplayName())
+                    .metricType(instanaMetricTemplate.getMetricType())
+                    .build()));
     return rv;
   }
   @Override

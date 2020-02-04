@@ -28,6 +28,7 @@ import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.MetricElement;
+import software.wings.service.impl.instana.InstanaAnalyzeMetrics;
 import software.wings.service.impl.instana.InstanaDataCollectionInfo;
 import software.wings.service.impl.instana.InstanaInfraMetrics;
 import software.wings.service.intfc.instana.InstanaDelegateService;
@@ -70,6 +71,10 @@ public class InstanaDataCollectorTest extends WingsBaseTest {
       Response<?> response = call.execute();
       return response.body();
     });
+    InstanaInfraMetrics instanaInfraMetrics = getInstanaInfraMetricsEmptyItems();
+    InstanaAnalyzeMetrics instanaAnalyzeMetrics = getInstanaTraceMetricsEmptyItems();
+    when(instanaDelegateService.getInfraMetrics(any(), any(), any(), any())).thenReturn(instanaInfraMetrics);
+    when(instanaDelegateService.getInstanaTraceMetrics(any(), any(), any(), any())).thenReturn(instanaAnalyzeMetrics);
   }
 
   @Test
@@ -96,7 +101,9 @@ public class InstanaDataCollectorTest extends WingsBaseTest {
   public void testFetchMetric_withHostWithEmptyItems() {
     instanaDataCollector.init(dataCollectionExecutionContext, createDataCollectionInfo());
     InstanaInfraMetrics instanaInfraMetrics = getInstanaInfraMetricsEmptyItems();
+    InstanaAnalyzeMetrics instanaAnalyzeMetrics = getInstanaTraceMetricsEmptyItems();
     when(instanaDelegateService.getInfraMetrics(any(), any(), any(), any())).thenReturn(instanaInfraMetrics);
+    when(instanaDelegateService.getInstanaTraceMetrics(any(), any(), any(), any())).thenReturn(instanaAnalyzeMetrics);
     List<MetricElement> metricElements = instanaDataCollector.fetchMetrics(Lists.newArrayList(host));
     assertThat(metricElements).isEmpty();
   }
@@ -115,9 +122,9 @@ public class InstanaDataCollectorTest extends WingsBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testFetchMetric_withHost() {
+  public void testFetchMetric_withHostForInfraMetrics() {
     instanaDataCollector.init(dataCollectionExecutionContext, createDataCollectionInfo());
-    InstanaInfraMetrics instanaInfraMetrics = getInstanaMetrics();
+    InstanaInfraMetrics instanaInfraMetrics = getInstanaInfraMetrics();
     when(instanaDelegateService.getInfraMetrics(any(), any(), any(), any())).thenReturn(instanaInfraMetrics);
     List<MetricElement> metricElements = instanaDataCollector.fetchMetrics(Lists.newArrayList(host));
     assertThat(metricElements).hasSize(1);
@@ -128,8 +135,45 @@ public class InstanaDataCollectorTest extends WingsBaseTest {
         + "    \"groupName\": \"default\",\n"
         + "    \"timestamp\": 1579508880000,\n"
         + "    \"values\": {\n"
-        + "      \"memory_usage\": 246259780.2666,\n"
-        + "      \"cpu_total_usage\": 0.1265\n"
+        + "      \"Docker containers memory usage\": 246259780.2666,\n"
+        + "      \"Docker container total CPU usage\": 0.1265\n"
+        + "    }\n"
+        + "  }\n"
+        + "]";
+    assertThat(metricElements).isEqualTo(JsonUtils.asObject(expected, List.class, MetricElement.class));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testFetchMetric_withHostForTraceMetrics() {
+    instanaDataCollector.init(dataCollectionExecutionContext, createDataCollectionInfo());
+    InstanaAnalyzeMetrics instanaAnalyzeMetrics = getInstanaAnalysisMetrics();
+    String host = "harness-example-deployment-canary-656c858465-42xdw";
+    when(instanaDelegateService.getInstanaTraceMetrics(any(), any(), any(), any())).thenReturn(instanaAnalyzeMetrics);
+    List<MetricElement> metricElements = instanaDataCollector.fetchMetrics(Lists.newArrayList(host));
+    assertThat(metricElements).hasSize(2);
+    String expected = "[\n"
+        + "  {\n"
+        + "    \"name\": \"GET /todolist/exception\",\n"
+        + "    \"host\": \"harness-example-deployment-canary-656c858465-42xdw\",\n"
+        + "    \"groupName\": \"default\",\n"
+        + "    \"timestamp\": 1580724180000,\n"
+        + "    \"values\": {\n"
+        + "      \"Call latency\": 12.232558139534884,\n"
+        + "      \"Error rate\": 0,\n"
+        + "      \"Trace count\": 43\n"
+        + "    }\n"
+        + "  },\n"
+        + "  {\n"
+        + "    \"name\": \"GET /todolist/inside/addTask\",\n"
+        + "    \"host\": \"harness-example-deployment-canary-656c858465-42xdw\",\n"
+        + "    \"groupName\": \"default\",\n"
+        + "    \"timestamp\": 1580724180000,\n"
+        + "    \"values\": {\n"
+        + "      \"Call latency\": 1.2307692307692308,\n"
+        + "      \"Error rate\": 0,\n"
+        + "      \"Trace count\": 13\n"
         + "    }\n"
         + "  }\n"
         + "]";
@@ -157,7 +201,7 @@ public class InstanaDataCollectorTest extends WingsBaseTest {
     return JsonUtils.asObject(json, InstanaInfraMetrics.class);
   }
 
-  private InstanaInfraMetrics getInstanaMetrics() {
+  private InstanaInfraMetrics getInstanaInfraMetrics() {
     String jsonResponse = "{\n"
         + "  \"items\": [\n"
         + "    {\n"
@@ -183,12 +227,77 @@ public class InstanaDataCollectorTest extends WingsBaseTest {
         + "}";
     return JsonUtils.asObject(jsonResponse, InstanaInfraMetrics.class);
   }
+
+  private InstanaAnalyzeMetrics getInstanaAnalysisMetrics() {
+    String jsonResponse = "{\n"
+        + "  \"items\": [\n"
+        + "    {\n"
+        + "      \"metrics\": {\n"
+        + "        \"latency.mean.60\": [\n"
+        + "          [\n"
+        + "            1580724180000,\n"
+        + "            12.232558139534884\n"
+        + "          ]\n"
+        + "        ],\n"
+        + "        \"errors.mean.60\": [\n"
+        + "          [\n"
+        + "            1580724180000,\n"
+        + "            0\n"
+        + "          ]\n"
+        + "        ],\n"
+        + "        \"traces.sum.60\": [\n"
+        + "          [\n"
+        + "            1580724180000,\n"
+        + "            43\n"
+        + "          ]\n"
+        + "        ]\n"
+        + "      },\n"
+        + "      \"name\": \"GET /todolist/exception\",\n"
+        + "      \"timestamp\": 1580724193662\n"
+        + "    },\n"
+        + "    {\n"
+        + "      \"metrics\": {\n"
+        + "        \"latency.mean.60\": [\n"
+        + "          [\n"
+        + "            1580724180000,\n"
+        + "            1.2307692307692308\n"
+        + "          ]\n"
+        + "        ],\n"
+        + "        \"errors.mean.60\": [\n"
+        + "          [\n"
+        + "            1580724180000,\n"
+        + "            0\n"
+        + "          ]\n"
+        + "        ],\n"
+        + "        \"traces.sum.60\": [\n"
+        + "          [\n"
+        + "            1580724180000,\n"
+        + "            13\n"
+        + "          ]\n"
+        + "        ]\n"
+        + "      },\n"
+        + "      \"name\": \"GET /todolist/inside/addTask\",\n"
+        + "      \"timestamp\": 1580724193754\n"
+        + "    }\n"
+        + "  ]\n"
+        + "}";
+    return JsonUtils.asObject(jsonResponse, InstanaAnalyzeMetrics.class);
+  }
+
   private InstanaInfraMetrics getInstanaInfraMetricsEmptyItems() {
     String json = "{\n"
         + "    \"items\": [\n"
         + "    ]\n"
         + "}";
     return JsonUtils.asObject(json, InstanaInfraMetrics.class);
+  }
+
+  private InstanaAnalyzeMetrics getInstanaTraceMetricsEmptyItems() {
+    String json = "{\n"
+        + "    \"items\": [\n"
+        + "    ]\n"
+        + "}";
+    return JsonUtils.asObject(json, InstanaAnalyzeMetrics.class);
   }
 
   private InstanaDataCollectionInfo createDataCollectionInfo() {

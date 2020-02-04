@@ -72,4 +72,28 @@ public class InstanaDelegateServiceImplTest extends WingsBaseTest {
     assertThat(result).isEqualTo(instanaInfraMetrics);
     assertThat(apiCallLog.getTitle()).isEqualTo("Fetching Infrastructure metrics from https://instana-example.com/");
   }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetInstanaTraceMetrics() {
+    InstanaAnalyzeMetricRequest instanaAnalyzeMetricRequest = InstanaAnalyzeMetricRequest.builder().build();
+    String stateExecutionId = UUID.randomUUID().toString();
+    ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(accountId, stateExecutionId);
+    InstanaAnalyzeMetrics instanaAnalyzeMetrics = mock(InstanaAnalyzeMetrics.class);
+    when(requestExecutor.executeRequest(any(), any())).thenReturn(instanaAnalyzeMetrics);
+
+    InstanaAnalyzeMetrics result = instanaDelegateService.getInstanaTraceMetrics(
+        instanaConfig, mock(List.class), instanaAnalyzeMetricRequest, apiCallLog);
+    ArgumentCaptor<Call> argumentCaptor = ArgumentCaptor.forClass(Call.class);
+    verify(requestExecutor).executeRequest(eq(apiCallLog), argumentCaptor.capture());
+    assertThat(argumentCaptor.getValue()).isInstanceOf(Call.class);
+    Call<InstanaInfraMetrics> call = argumentCaptor.getValue();
+    assertThat(call.request().url().toString())
+        .isEqualTo("https://instana-example.com/api/application-monitoring/analyze/trace-groups");
+    assertThat(call.request().method()).isEqualTo("POST");
+    assertThat(call.request().header("Authorization")).isEqualTo("apiToken " + new String(instanaConfig.getApiToken()));
+    assertThat(result).isEqualTo(instanaAnalyzeMetrics);
+    assertThat(apiCallLog.getTitle()).isEqualTo("Fetching application call metrics from https://instana-example.com/");
+  }
 }

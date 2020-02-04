@@ -902,6 +902,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       case DATA_DOG:
       case STACK_DRIVER:
       case APM_VERIFICATION:
+      case INSTANA:
         metricDefinitions.addAll(getMetricTemplates(appId, stateType, stateExecutionId, cvConfigId).values());
         break;
       default:

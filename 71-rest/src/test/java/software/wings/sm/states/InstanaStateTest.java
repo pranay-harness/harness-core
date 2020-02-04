@@ -23,6 +23,7 @@ import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.instana.InstanaDataCollectionInfo;
+import software.wings.service.impl.instana.InstanaTagFilter;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -30,12 +31,15 @@ import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public class InstanaStateTest extends APMStateVerificationTestBase {
   private InstanaState instanaState;
+  private List<InstanaTagFilter> instanaTagFilters;
   @Mock private CVActivityLogService.Logger activityLogger;
   @Mock private MetricDataAnalysisService metricAnalysisService;
 
@@ -57,6 +61,14 @@ public class InstanaStateTest extends APMStateVerificationTestBase {
     instanaState.setQuery("entity.kubernetes.pod.name:${host.hostName}");
     instanaState.setTimeDuration("15");
     instanaState.setMetrics(Lists.newArrayList("cpu.total_usage", "memory.usage"));
+    instanaState.setHostTagFilter("kubernetes.pod.name");
+    instanaTagFilters = new ArrayList<>();
+    instanaTagFilters.add(InstanaTagFilter.builder()
+                              .name("kubernetes.cluster.name")
+                              .operator(InstanaTagFilter.Operator.EQUALS)
+                              .value("harness-test")
+                              .build());
+    instanaState.setTagFilters(instanaTagFilters);
     setupCommonFields(instanaState);
     FieldUtils.writeField(instanaState, "accountService", accountService, true);
     FieldUtils.writeField(instanaState, "metricAnalysisService", metricAnalysisService, true);
@@ -80,6 +92,8 @@ public class InstanaStateTest extends APMStateVerificationTestBase {
     assertThat(instanaDataCollectionInfo.getConnectorId()).isEqualTo(instanaState.getAnalysisServerConfigId());
     assertThat(instanaDataCollectionInfo.getHosts()).isEqualTo(Sets.newHashSet("host1"));
     assertThat(instanaDataCollectionInfo.getHostsToGroupNameMap()).isEqualTo(hosts);
+    assertThat(instanaDataCollectionInfo.getTagFilters()).isEqualTo(instanaTagFilters);
+    assertThat(instanaDataCollectionInfo.getHostTagFilter()).isEqualTo("kubernetes.pod.name");
   }
 
   @Test

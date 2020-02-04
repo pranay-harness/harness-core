@@ -32,6 +32,18 @@ public class InstanaDelegateServiceImpl implements InstanaDelegateService {
     return requestExecutor.executeRequest(apiCallLog, request);
   }
 
+  @Override
+  public InstanaAnalyzeMetrics getInstanaTraceMetrics(InstanaConfig instanaConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, InstanaAnalyzeMetricRequest instanaAnalyzeMetricRequest,
+      ThirdPartyApiCallLog apiCallLog) {
+    apiCallLog.setTitle("Fetching application call metrics from " + instanaConfig.getInstanaUrl());
+    final Call<InstanaAnalyzeMetrics> request =
+        getRestClient(instanaConfig)
+            .getGroupedTraceMetrics(
+                getAuthorizationHeader(instanaConfig, encryptedDataDetails), instanaAnalyzeMetricRequest);
+    return requestExecutor.executeRequest(apiCallLog, request);
+  }
+
   InstanaRestClient getRestClient(final InstanaConfig instanaConfig) {
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(instanaConfig.getInstanaUrl())
