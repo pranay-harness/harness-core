@@ -52,7 +52,6 @@ public class TerraformProvisionParameters implements ExecutionCapabilityDemander
   private final boolean runPlanOnly;
   private final String workspace;
   private final String delegateTag;
-  private final boolean useVarForInlineVariables;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

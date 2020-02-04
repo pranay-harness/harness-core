@@ -19,7 +19,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.FeatureName.TF_USE_VAR_CL;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEOUT_IN_MINUTES;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
@@ -495,8 +494,6 @@ public abstract class TerraformProvisionState extends State {
             .runPlanOnly(false)
             .workspace(workspace)
             .delegateTag(element.getDelegateTag())
-            .useVarForInlineVariables(
-                featureFlagService.isEnabled(TF_USE_VAR_CL, executionContext.getApp().getAccountId()))
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters, element.getDelegateTag());
@@ -678,8 +675,6 @@ public abstract class TerraformProvisionState extends State {
             .tfVarFiles(getRenderedTfVarFiles(tfVarFiles, context))
             .workspace(workspace)
             .delegateTag(delegateTag)
-            .useVarForInlineVariables(
-                featureFlagService.isEnabled(TF_USE_VAR_CL, executionContext.getApp().getAccountId()))
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters, delegateTag);
