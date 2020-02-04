@@ -115,8 +115,8 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
     when(timeScaleDBService.isValid()).thenReturn(true);
     when(statement.execute()).thenReturn(true);
     mockResultSet();
-    Map<String, UtilizationData> utilizationDataMap =
-        utilizationDataService.getUtilizationDataForInstances(instanceDataList(), START_TIME, END_TIME);
+    Map<String, UtilizationData> utilizationDataMap = utilizationDataService.getUtilizationDataForInstances(
+        instanceDataList(), START_TIME, END_TIME, ACCOUNT_ID, SETTING_ID, CLUSTER_ID);
     assertThat(utilizationDataMap).isNotNull();
     assertThat(utilizationDataMap.get(INSTANCE_ID)).isNotNull();
     UtilizationData utilizationData = utilizationDataMap.get(INSTANCE_ID);
@@ -131,8 +131,9 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetUtilizationDataForInstancesWhenDbIsInvalid() {
     when(timeScaleDBService.isValid()).thenReturn(false);
-    assertThatThrownBy(
-        () -> utilizationDataService.getUtilizationDataForInstances(instanceDataList(), START_TIME, END_TIME))
+    assertThatThrownBy(()
+                           -> utilizationDataService.getUtilizationDataForInstances(
+                               instanceDataList(), START_TIME, END_TIME, ACCOUNT_ID, SETTING_ID, CLUSTER_ID))
         .isInstanceOf(InvalidRequestException.class);
   }
 

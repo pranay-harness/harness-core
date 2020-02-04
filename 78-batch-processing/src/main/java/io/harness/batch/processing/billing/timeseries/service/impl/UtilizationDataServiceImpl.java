@@ -42,7 +42,7 @@ public class UtilizationDataServiceImpl {
   static final String INSERT_STATEMENT =
       "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, ACCOUNTID, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTANCEID, INSTANCETYPE, CLUSTERID, SETTINGID, MAXCPUVALUE, MAXMEMORYVALUE, AVGCPUVALUE, AVGMEMORYVALUE ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
   private static final String UTILIZATION_DATA_QUERY =
-      "SELECT MAX(MAXCPU) as MAXCPUUTILIZATION, MAX(MAXMEMORY) as MAXMEMORYUTILIZATION, AVG(AVGCPU) as AVGCPUUTILIZATION, AVG(AVGMEMORY) as AVGMEMORYUTILIZATION, MAX(MAXCPUVALUE) as MAXCPUVALUE, MAX(MAXMEMORYVALUE) as MAXMEMORYVALUE, AVG(AVGCPUVALUE) as AVGCPUVALUE, AVG(AVGMEMORYVALUE) as AVGMEMORYVALUE, INSTANCEID FROM UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY INSTANCEID;";
+      "SELECT MAX(MAXCPU) as MAXCPUUTILIZATION, MAX(MAXMEMORY) as MAXMEMORYUTILIZATION, AVG(AVGCPU) as AVGCPUUTILIZATION, AVG(AVGMEMORY) as AVGMEMORYUTILIZATION, MAX(MAXCPUVALUE) as MAXCPUVALUE, MAX(MAXMEMORYVALUE) as MAXMEMORYVALUE, AVG(AVGCPUVALUE) as AVGCPUVALUE, AVG(AVGMEMORYVALUE) as AVGMEMORYVALUE, INSTANCEID FROM UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND SETTINGID = '%s' AND CLUSTERID = '%s' AND INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY INSTANCEID;";
 
   public boolean create(List<InstanceUtilizationData> instanceUtilizationDataList) {
     boolean successfulInsert = false;
@@ -94,13 +94,13 @@ public class UtilizationDataServiceImpl {
     statement.setDouble(15, instanceUtilizationData.getMemoryUtilizationAvgValue());
   }
 
-  public Map<String, UtilizationData> getUtilizationDataForInstances(
-      List<? extends InstanceData> instanceDataList, String startTime, String endTime) {
+  public Map<String, UtilizationData> getUtilizationDataForInstances(List<? extends InstanceData> instanceDataList,
+      String startTime, String endTime, String accountId, String settingId, String clusterId) {
     try {
       if (timeScaleDBService.isValid()) {
         Map<String, List<String>> serviceArnToInstanceIds = getServiceArnToInstanceIdMapping(instanceDataList);
-        String query = String.format(
-            UTILIZATION_DATA_QUERY, String.join("','", serviceArnToInstanceIds.keySet()), startTime, endTime);
+        String query = String.format(UTILIZATION_DATA_QUERY, accountId, settingId, clusterId,
+            String.join("','", serviceArnToInstanceIds.keySet()), startTime, endTime);
         return getUtilizationDataFromTimescaleDB(query, serviceArnToInstanceIds);
       } else {
         throw new InvalidRequestException("Cannot process request in InstanceBillingDataWriter");

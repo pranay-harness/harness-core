@@ -144,7 +144,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
                                     .build();
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
-    when(utilizationDataService.getUtilizationDataForInstances(any(), any(), any()))
+    when(utilizationDataService.getUtilizationDataForInstances(any(), any(), any(), any(), any(), any()))
         .thenReturn(utilizationDataForInstances);
     when(billingCalculationService.getInstanceBillingAmount(any(), any(), any(), any()))
         .thenReturn(new BillingData(BillingAmountBreakup.builder().billingAmount(BigDecimal.ONE).build(),

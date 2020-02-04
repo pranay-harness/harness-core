@@ -23,6 +23,7 @@ import software.wings.beans.instance.HarnessServiceInfo;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Singleton
@@ -39,64 +40,73 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
   }
 
   @Override
-  public void write(List<? extends InstanceData> instanceDataList) throws Exception {
+  public void write(List<? extends InstanceData> instanceDataLists) throws Exception {
     Instant startTime = getFieldValueFromJobParams(CCMJobConstants.JOB_START_DATE);
     Instant endTime = getFieldValueFromJobParams(CCMJobConstants.JOB_END_DATE);
-    logger.info("Instance data list {} {} {} {}", instanceDataList.size(), startTime, endTime, parameters.toString());
-    Map<String, UtilizationData> utilizationDataForInstances = utilizationDataService.getUtilizationDataForInstances(
-        instanceDataList, startTime.toString(), endTime.toString());
-    instanceDataList.forEach(instanceData -> {
-      UtilizationData utilizationData = utilizationDataForInstances.get(instanceData.getInstanceId());
-      BillingData billingData =
-          billingCalculationService.getInstanceBillingAmount(instanceData, utilizationData, startTime, endTime);
-      logger.info("Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmountBreakup());
-      HarnessServiceInfo harnessServiceInfo = getHarnessServiceInfo(instanceData);
-      String settingId =
-          (instanceData.getInstanceType() == InstanceType.EC2_INSTANCE) ? null : instanceData.getSettingId();
-      String clusterId =
-          (instanceData.getInstanceType() == InstanceType.EC2_INSTANCE) ? null : instanceData.getClusterId();
-      InstanceBillingData instanceBillingData =
-          InstanceBillingData.builder()
-              .accountId(instanceData.getAccountId())
-              .settingId(settingId)
-              .clusterId(clusterId)
-              .instanceType(instanceData.getInstanceType().toString())
-              .billingAccountId("BILLING_ACCOUNT_ID")
-              .startTimestamp(startTime.toEpochMilli())
-              .endTimestamp(endTime.toEpochMilli())
-              .billingAmount(billingData.getBillingAmountBreakup().getBillingAmount())
-              .cpuBillingAmount(billingData.getBillingAmountBreakup().getCpuBillingAmount())
-              .memoryBillingAmount(billingData.getBillingAmountBreakup().getMemoryBillingAmount())
-              .idleCost(billingData.getIdleCostData().getIdleCost())
-              .cpuIdleCost(billingData.getIdleCostData().getCpuIdleCost())
-              .memoryIdleCost(billingData.getIdleCostData().getMemoryIdleCost())
-              .usageDurationSeconds(billingData.getUsageDurationSeconds())
-              .instanceId(instanceData.getInstanceId())
-              .clusterName(instanceData.getClusterName())
-              .appId(harnessServiceInfo.getAppId())
-              .serviceId(harnessServiceInfo.getServiceId())
-              .cloudProviderId(harnessServiceInfo.getCloudProviderId())
-              .envId(harnessServiceInfo.getEnvId())
-              .cpuUnitSeconds(billingData.getCpuUnitSeconds())
-              .memoryMbSeconds(billingData.getMemoryMbSeconds())
-              .parentInstanceId(
-                  getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.PARENT_RESOURCE_ID, instanceData))
-              .launchType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.LAUNCH_TYPE, instanceData))
-              .taskId(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.TASK_ID, instanceData))
-              .namespace(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.NAMESPACE, instanceData))
-              .region(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, instanceData))
-              .clusterType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLUSTER_TYPE, instanceData))
-              .cloudProvider(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER, instanceData))
-              .workloadName(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_NAME, instanceData))
-              .workloadType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_TYPE, instanceData))
-              .cloudServiceName(
-                  getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ECS_SERVICE_NAME, instanceData))
-              .maxCpuUtilization(utilizationData.getMaxCpuUtilization())
-              .maxMemoryUtilization(utilizationData.getMaxMemoryUtilization())
-              .avgCpuUtilization(utilizationData.getAvgCpuUtilization())
-              .avgMemoryUtilization(utilizationData.getAvgMemoryUtilization())
-              .build();
-      billingDataService.create(instanceBillingData);
+    logger.info("Instance data list {} {} {} {}", instanceDataLists.size(), startTime, endTime, parameters.toString());
+
+    Map<String, ? extends List<? extends InstanceData>> instanceDataGroupedCluster =
+        instanceDataLists.stream().collect(Collectors.groupingBy(InstanceData::getClusterId));
+
+    instanceDataGroupedCluster.forEach((clusterRecordId, instanceDataList) -> {
+      InstanceData firstInstanceData = instanceDataList.get(0);
+      Map<String, UtilizationData> utilizationDataForInstances = utilizationDataService.getUtilizationDataForInstances(
+          instanceDataList, startTime.toString(), endTime.toString(), firstInstanceData.getAccountId(),
+          firstInstanceData.getSettingId(), firstInstanceData.getClusterId());
+      instanceDataList.forEach(instanceData -> {
+        UtilizationData utilizationData = utilizationDataForInstances.get(instanceData.getInstanceId());
+        BillingData billingData =
+            billingCalculationService.getInstanceBillingAmount(instanceData, utilizationData, startTime, endTime);
+        logger.info("Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmountBreakup());
+        HarnessServiceInfo harnessServiceInfo = getHarnessServiceInfo(instanceData);
+        String settingId =
+            (instanceData.getInstanceType() == InstanceType.EC2_INSTANCE) ? null : instanceData.getSettingId();
+        String clusterId =
+            (instanceData.getInstanceType() == InstanceType.EC2_INSTANCE) ? null : instanceData.getClusterId();
+        InstanceBillingData instanceBillingData =
+            InstanceBillingData.builder()
+                .accountId(instanceData.getAccountId())
+                .settingId(settingId)
+                .clusterId(clusterId)
+                .instanceType(instanceData.getInstanceType().toString())
+                .billingAccountId("BILLING_ACCOUNT_ID")
+                .startTimestamp(startTime.toEpochMilli())
+                .endTimestamp(endTime.toEpochMilli())
+                .billingAmount(billingData.getBillingAmountBreakup().getBillingAmount())
+                .cpuBillingAmount(billingData.getBillingAmountBreakup().getCpuBillingAmount())
+                .memoryBillingAmount(billingData.getBillingAmountBreakup().getMemoryBillingAmount())
+                .idleCost(billingData.getIdleCostData().getIdleCost())
+                .cpuIdleCost(billingData.getIdleCostData().getCpuIdleCost())
+                .memoryIdleCost(billingData.getIdleCostData().getMemoryIdleCost())
+                .usageDurationSeconds(billingData.getUsageDurationSeconds())
+                .instanceId(instanceData.getInstanceId())
+                .clusterName(instanceData.getClusterName())
+                .appId(harnessServiceInfo.getAppId())
+                .serviceId(harnessServiceInfo.getServiceId())
+                .cloudProviderId(harnessServiceInfo.getCloudProviderId())
+                .envId(harnessServiceInfo.getEnvId())
+                .cpuUnitSeconds(billingData.getCpuUnitSeconds())
+                .memoryMbSeconds(billingData.getMemoryMbSeconds())
+                .parentInstanceId(
+                    getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.PARENT_RESOURCE_ID, instanceData))
+                .launchType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.LAUNCH_TYPE, instanceData))
+                .taskId(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.TASK_ID, instanceData))
+                .namespace(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.NAMESPACE, instanceData))
+                .region(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, instanceData))
+                .clusterType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLUSTER_TYPE, instanceData))
+                .cloudProvider(
+                    getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER, instanceData))
+                .workloadName(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_NAME, instanceData))
+                .workloadType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_TYPE, instanceData))
+                .cloudServiceName(
+                    getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ECS_SERVICE_NAME, instanceData))
+                .maxCpuUtilization(utilizationData.getMaxCpuUtilization())
+                .maxMemoryUtilization(utilizationData.getMaxMemoryUtilization())
+                .avgCpuUtilization(utilizationData.getAvgCpuUtilization())
+                .avgMemoryUtilization(utilizationData.getAvgMemoryUtilization())
+                .build();
+        billingDataService.create(instanceBillingData);
+      });
     });
   }
 
