@@ -21,12 +21,15 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.service.impl.security.SecretManagerImpl.HARNESS_DEFAULT_SECRET_MANAGER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
+import static software.wings.utils.ArtifactType.JAR;
 
 import com.google.inject.Inject;
 
@@ -44,6 +47,7 @@ import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
+import net.openhft.chronicle.core.util.Time;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -59,6 +63,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
+import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
@@ -113,6 +118,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.servlet.http.HttpServletRequest;
 
@@ -508,9 +514,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(generateUuid())
-                                                .envId(generateUuid())
                                                 .entityType(EntityType.SERVICE)
-                                                .entityId(generateUuid())
                                                 .parentServiceVariableId(generateUuid())
                                                 .overrideType(OverrideType.ALL)
                                                 .instances(Collections.singletonList(generateUuid()))
@@ -520,10 +524,27 @@ public class SecretTextTest extends WingsBaseTest {
                                                 .value(secretId1.toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
+    Application application = anApplication().accountId(accountId).name(generateUuid()).build();
+    String appId = wingsPersistence.save(application);
+    Service service = Service.builder()
+                          .appId(appId)
+                          .name("SERVICE_NAME")
+                          .description("SERVICE_DESC")
+                          .artifactType(JAR)
+                          .appContainer(anAppContainer().withUuid("APP_CONTAINER_ID").build())
+                          .accountId(accountId)
+                          .build();
+    String serviceId = wingsPersistence.save(service);
+    Environment environment = anEnvironment().accountId(accountId).appId(appId).name(generateUuid()).build();
+    String environmentId = wingsPersistence.save(environment);
 
-    serviceVariable.setAppId(wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build()));
-    String savedAttributeId = wingsPersistence.save(serviceVariable);
+    serviceVariable.setAppId(appId);
+    serviceVariable.setEnvId(environmentId);
+    serviceVariable.setServiceId(serviceId);
+    serviceVariable.setEntityId(serviceId);
+    String savedAttributeId = serviceVariableService.save(serviceVariable).getUuid();
 
+    Time.sleep(2, TimeUnit.SECONDS);
     ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     encryptionService.decrypt(
         savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
@@ -549,7 +570,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     savedVariable.setValue(secretId2.toCharArray());
     serviceVariableService.update(savedVariable);
-
+    Time.sleep(2, TimeUnit.SECONDS);
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     encryptionService.decrypt(
         savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
@@ -583,7 +604,6 @@ public class SecretTextTest extends WingsBaseTest {
     keyValuePairs.put("value", secretId3.toCharArray());
 
     wingsPersistence.updateFields(ServiceVariable.class, savedAttributeId, keyValuePairs);
-
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     encryptionService.decrypt(
         savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
@@ -610,6 +630,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     savedVariable.setValue(secretId1.toCharArray());
     serviceVariableService.update(savedVariable);
+    Time.sleep(2, TimeUnit.SECONDS);
 
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     encryptionService.decrypt(

@@ -2022,7 +2022,7 @@ public class SecretManagerImpl implements SecretManager {
                           .build());
         }
       }
-      List<UuidAware> configFiles = fetchParents(accountId, parents);
+      List<UuidAware> configFiles = fetchParents(accountId, recordId, parents);
       configFiles.forEach(configFile -> {
         ((ConfigFile) configFile).setSize(uploadFileSize);
         wingsPersistence.save((ConfigFile) configFile);
@@ -2252,6 +2252,8 @@ public class SecretManagerImpl implements SecretManager {
     for (EncryptedData encryptedData : encryptedDataList) {
       encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
       encryptedData.setEncryptionKey(SECRET_MASK);
+      encryptedData.setBackupEncryptedValue(SECRET_MASK.toCharArray());
+      encryptedData.setBackupEncryptionKey(SECRET_MASK);
     }
 
     if (details) {
@@ -2288,7 +2290,7 @@ public class SecretManagerImpl implements SecretManager {
                       .build());
     }
 
-    return fetchParents(accountId, parents);
+    return fetchParents(accountId, secretTextId, parents);
   }
 
   private List<String> getSecretIds(String accountId, Collection<String> entityIds, SettingVariableTypes variableType)
@@ -2338,7 +2340,7 @@ public class SecretManagerImpl implements SecretManager {
     return secretIds;
   }
 
-  private List<UuidAware> fetchParents(String accountId, Set<Parent> parents) {
+  private List<UuidAware> fetchParents(String accountId, String entityId, Set<Parent> parents) {
     TreeBasedTable<SettingVariableTypes, EncryptionDetail, List<Parent>> parentByTypes = TreeBasedTable.create();
     parents.forEach(parent -> {
       List<Parent> parentList = parentByTypes.get(parent.getVariableType(), parent.getEncryptionDetail());
@@ -2366,6 +2368,11 @@ public class SecretManagerImpl implements SecretManager {
                                                                  .addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId)
                                                                  .build())
                                                        .getResponse();
+          serviceVariables = serviceVariables.stream()
+                                 .filter(serviceVariable
+                                     -> serviceVariable.getEncryptedValue() != null
+                                         && serviceVariable.getEncryptedValue().equals(entityId))
+                                 .collect(Collectors.toList());
           serviceVariables.forEach(serviceVariable -> {
             serviceVariable.setValue(SECRET_MASK.toCharArray());
             if (serviceVariable.getEntityType() == EntityType.SERVICE_TEMPLATE) {
@@ -2387,7 +2394,11 @@ public class SecretManagerImpl implements SecretManager {
                                                        .addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId)
                                                        .build())
                                              .getResponse();
-
+          configFiles =
+              configFiles.stream()
+                  .filter(configFile
+                      -> configFile.getEncryptedFileId() != null && configFile.getEncryptedFileId().equals(entityId))
+                  .collect(Collectors.toList());
           configFiles.forEach(configFile -> {
             if (configFile.getEntityType() == EntityType.SERVICE_TEMPLATE) {
               ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, configFile.getEntityId());

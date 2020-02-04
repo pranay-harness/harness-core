@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,11 +11,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.data.structure.UUIDGenerator;
+import io.harness.persistence.UuidAware;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
@@ -25,7 +30,11 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
+import software.wings.beans.EntityType;
 import software.wings.beans.GcpKmsConfig;
+import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
@@ -67,7 +76,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
     User user = User.Builder.anUser()
                     .uuid("uuid")
                     .name("Hello")
-                    .uuid(UUIDGenerator.generateUuid())
+                    .uuid(generateUuid())
                     .email("hello@harness.io")
                     .accounts(accounts)
                     .build();
@@ -271,5 +280,92 @@ public class SecretManagerImplTest extends WingsBaseTest {
     String accountId = wingsPersistence.save(newAccount);
     String secretId = secretManager.saveSecretUsingLocalMode(accountId, secretName, secretValue, null, null);
     assertThat(secretId).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void test_getSecretUsageForEncryptedText() {
+    Account newAccount = getAccount(AccountType.PAID);
+    String accountId = wingsPersistence.save(newAccount);
+    newAccount.setUuid(accountId);
+    EncryptedData encryptedData = EncryptedData.builder()
+                                      .accountId(accountId)
+                                      .enabled(true)
+                                      .kmsId(accountId)
+                                      .encryptionType(EncryptionType.LOCAL)
+                                      .encryptionKey("Dummy Key")
+                                      .encryptedValue("Dummy Value".toCharArray())
+                                      .base64Encoded(false)
+                                      .name("Dummy record")
+                                      .type(SettingVariableTypes.SECRET_TEXT)
+                                      .build();
+    String secretId = wingsPersistence.save(encryptedData);
+    encryptedData.setUuid(secretId);
+
+    EncryptedData encryptedData1 = EncryptedData.builder()
+                                       .accountId(accountId)
+                                       .enabled(true)
+                                       .kmsId(accountId)
+                                       .encryptionType(EncryptionType.LOCAL)
+                                       .encryptionKey("Dummy Key")
+                                       .encryptedValue("Dummy Value".toCharArray())
+                                       .base64Encoded(false)
+                                       .name("Dummy record 1")
+                                       .type(SettingVariableTypes.SECRET_TEXT)
+                                       .build();
+    String secretId1 = wingsPersistence.save(encryptedData1);
+    encryptedData1.setUuid(secretId1);
+
+    ServiceTemplate serviceTemplate = aServiceTemplate().build();
+    String entityId = wingsPersistence.save(serviceTemplate);
+
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .accountId(accountId)
+                                          .envId(ENV_ID)
+                                          .entityType(EntityType.SERVICE_TEMPLATE)
+                                          .entityId(entityId)
+                                          .templateId(entityId)
+                                          .name(SERVICE_VARIABLE_NAME + "2")
+                                          .type(ENCRYPTED_TEXT)
+                                          .encryptedValue(secretId)
+                                          .build();
+
+    ServiceVariable serviceVariable1 = ServiceVariable.builder()
+                                           .accountId(accountId)
+                                           .envId(ENV_ID)
+                                           .entityType(EntityType.SERVICE_TEMPLATE)
+                                           .entityId(entityId)
+                                           .entityId(entityId)
+                                           .name(SERVICE_VARIABLE_NAME + "3")
+                                           .type(ENCRYPTED_TEXT)
+                                           .encryptedValue(secretId)
+                                           .build();
+
+    String serviceVariableId = wingsPersistence.save(serviceVariable);
+    serviceVariable.setUuid(serviceVariableId);
+    String serviceVariableId1 = wingsPersistence.save(serviceVariable1);
+    serviceVariable1.setUuid(serviceVariableId1);
+
+    encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+    assertThat(encryptedData.getParentIds()).isNotNull();
+    assertThat(encryptedData.getParentIds().size()).isEqualTo(2);
+    encryptedData.getParentIds().add(generateUuid());
+    wingsPersistence.save(encryptedData);
+
+    encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+    assertThat(encryptedData.getParentIds()).isNotNull();
+    assertThat(encryptedData.getParentIds().size()).isEqualTo(3);
+
+    wingsPersistence.updateField(ServiceVariable.class, serviceVariable1.getUuid(), ServiceVariableKeys.encryptedValue,
+        encryptedData1.getUuid());
+
+    encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+    assertThat(encryptedData.getParentIds()).isNotNull();
+    assertThat(encryptedData.getParentIds().size()).isEqualTo(3);
+
+    List<UuidAware> usages = secretManager.getSecretUsage(accountId, encryptedData.getUuid());
+    assertThat(usages).isNotNull();
+    assertThat(usages.size()).isEqualTo(1);
   }
 }
