@@ -47,6 +47,7 @@ import software.wings.api.jira.JiraExecutionData;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
+import software.wings.beans.InstanaConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
@@ -88,6 +89,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.elk.ElkDelegateService;
+import software.wings.service.intfc.instana.InstanaDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
@@ -1013,6 +1015,16 @@ public class AnalysisServiceImpl implements AnalysisService {
           delegateProxyFactory.get(SumoDelegateService.class, sumoTaskContext)
               .validateConfig((SumoConfig) settingAttribute.getValue(), encryptedDataDetails);
           break;
+        case INSTANA:
+          errorCode = ErrorCode.INSTANA_CONFIGURATION_ERROR;
+          SyncTaskContext instanaTaskContext = SyncTaskContext.builder()
+                                                   .accountId(settingAttribute.getAccountId())
+                                                   .appId(GLOBAL_APP_ID)
+                                                   .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                                   .build();
+          delegateProxyFactory.get(InstanaDelegateService.class, instanaTaskContext)
+              .validateConfig((InstanaConfig) settingAttribute.getValue(), encryptedDataDetails);
+          break;
         default:
           errorCode = ErrorCode.DEFAULT_ERROR_CODE;
           throw new IllegalStateException("Invalid state type: " + stateType);
@@ -1201,12 +1213,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     int count;
     for (MessageFrequency frequency : analysisCluster.getMessage_frequencies()) {
       count = frequency.getCount();
-      if (!frequencyMap.containsKey(count)) {
-        frequencyMap.put(count, 0);
-      }
-      if (frequencyMap.get(count) != null) {
-        frequencyMap.put(count, frequencyMap.get(count) + 1);
-      }
+      frequencyMap.put(count, frequencyMap.getOrDefault(count, 0) + 1);
     }
     return frequencyMap;
   }

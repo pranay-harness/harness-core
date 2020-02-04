@@ -48,6 +48,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.InstanaConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.KubernetesClusterConfig;
@@ -250,6 +251,8 @@ public class SettingValidationService {
       ((APMVerificationConfig) settingAttribute.getValue()).encryptFields(secretManager);
     } else if (settingValue instanceof SplunkConfig) {
       analysisService.validateConfig(settingAttribute, StateType.SPLUNKV2, encryptedDataDetails);
+    } else if (settingValue instanceof InstanaConfig) {
+      analysisService.validateConfig(settingAttribute, StateType.INSTANA, encryptedDataDetails);
     } else if (settingValue instanceof ElkConfig) {
       if (((ElkConfig) settingValue).getElkConnector() == ElkConnector.KIBANA_SERVER) {
         try {

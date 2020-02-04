@@ -39,7 +39,7 @@ import java.util.UUID;
 
 public class RequestExecutorTest extends CategoryTest {
   @Mock private DelegateLogService delegateLogService;
-  RequestExecutor requestExecutor;
+  private RequestExecutor requestExecutor;
   private String stateExecutionId = UUID.randomUUID().toString();
   private String accountId = UUID.randomUUID().toString();
   private String title = "api call title";
@@ -174,6 +174,50 @@ public class RequestExecutorTest extends CategoryTest {
     when(call.execute()).thenReturn(rateLimitResponse);
     assertThatThrownBy(() -> requestExecutor.executeRequest(create(), call))
         .isInstanceOf(DataCollectionException.class);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecuteRequest_ifSuccessful() throws IOException {
+    Request request = new Request.Builder().url("http://example.com/test").build();
+    Call<String> call = mock(Call.class);
+    when(call.clone()).thenReturn(call);
+    when(call.request()).thenReturn(request);
+    String responseStr = "This is test response";
+    Response<String> response = Response.success(responseStr);
+    when(call.execute()).thenReturn(response);
+    assertThat(requestExecutor.executeRequest(call)).isEqualTo(responseStr);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecuteRequest_Non200Response() throws IOException {
+    Request request = new Request.Builder().url("http://example.com/test").build();
+    Call<String> call = mock(Call.class);
+    when(call.clone()).thenReturn(call);
+    when(call.request()).thenReturn(request);
+    Response<String> response = tooManyRequestsResponse("to many requests");
+    when(call.execute()).thenReturn(response);
+    assertThatThrownBy(() -> requestExecutor.executeRequest(call))
+        .isInstanceOf(DataCollectionException.class)
+        .hasMessage("Response code: 429 Error: to many requests");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecuteRequest_InCaseOfException() throws IOException {
+    Request request = new Request.Builder().url("http://example.com/test").build();
+    Call<String> call = mock(Call.class);
+    when(call.clone()).thenReturn(call);
+    when(call.request()).thenReturn(request);
+    when(call.execute()).thenThrow(new IOException("execute call failed"));
+    assertThatThrownBy(() -> requestExecutor.executeRequest(call))
+        .isInstanceOf(DataCollectionException.class)
+        .hasMessage("java.io.IOException: execute call failed")
+        .hasCauseInstanceOf(IOException.class);
   }
 
   private Response tooManyRequestsResponse(String responseStr) {

@@ -2,6 +2,7 @@ package software.wings.service.impl.instana;
 
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import retrofit2.Call;
 import software.wings.WingsBaseTest;
 import software.wings.beans.InstanaConfig;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.instana.InstanaDelegateService;
@@ -71,6 +73,36 @@ public class InstanaDelegateServiceImplTest extends WingsBaseTest {
     assertThat(call.request().header("Authorization")).isEqualTo("apiToken " + new String(instanaConfig.getApiToken()));
     assertThat(result).isEqualTo(instanaInfraMetrics);
     assertThat(apiCallLog.getTitle()).isEqualTo("Fetching Infrastructure metrics from https://instana-example.com/");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testValidateConfig_whenSuccessful() {
+    InstanaInfraMetrics instanaInfraMetrics = mock(InstanaInfraMetrics.class);
+    when(requestExecutor.executeRequest(any())).thenReturn(instanaInfraMetrics);
+
+    boolean result = instanaDelegateService.validateConfig(instanaConfig, mock(List.class));
+    ArgumentCaptor<Call> argumentCaptor = ArgumentCaptor.forClass(Call.class);
+    verify(requestExecutor).executeRequest(argumentCaptor.capture());
+    assertThat(argumentCaptor.getValue()).isInstanceOf(Call.class);
+    Call<InstanaInfraMetrics> call = argumentCaptor.getValue();
+    assertThat(call.request().url().toString())
+        .isEqualTo("https://instana-example.com/api/infrastructure-monitoring/metrics/");
+    assertThat(call.request().method()).isEqualTo("POST");
+    assertThat(call.request().header("Authorization")).isEqualTo("apiToken " + new String(instanaConfig.getApiToken()));
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testValidateConfig_whenExecuteFails() {
+    DataCollectionException dataCollectionException = new DataCollectionException("exception from executeRequest");
+    when(requestExecutor.executeRequest(any())).thenThrow(dataCollectionException);
+
+    assertThatThrownBy(() -> instanaDelegateService.validateConfig(instanaConfig, mock(List.class)))
+        .isInstanceOf(DataCollectionException.class);
   }
 
   @Test
