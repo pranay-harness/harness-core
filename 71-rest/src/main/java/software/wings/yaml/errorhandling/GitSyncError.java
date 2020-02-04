@@ -31,10 +31,11 @@ public class GitSyncError extends Base {
   private String changeType;
   private String failureReason;
   private boolean fullSyncPath;
+  private String lastAttemptedYaml;
 
   @Builder
   public GitSyncError(String accountId, String yamlFilePath, String yamlContent, String gitCommitId, String changeType,
-      String failureReason, boolean fullSyncPath) {
+      String failureReason, boolean fullSyncPath, String lastAttemptedYaml) {
     this.accountId = accountId;
     this.yamlFilePath = yamlFilePath;
     this.yamlContent = yamlContent;
@@ -42,5 +43,6 @@ public class GitSyncError extends Base {
     this.changeType = changeType;
     this.failureReason = failureReason;
     this.fullSyncPath = fullSyncPath;
+    this.lastAttemptedYaml = lastAttemptedYaml;
   }
 }
