@@ -78,8 +78,10 @@ public class K8sWorkloadUtils {
           return client.extensions().jobs().inNamespace(key.namespace).withName(key.name).get();
         case "CronJob":
           return client.adapt(K8sCronJobClient.class).cronJobs().inNamespace(key.namespace).withName(key.name).get();
+        case "Pod":
+          return client.pods().inNamespace(key.namespace).withName(key.name).get();
         default:
-          logger.warn("Not a controller workload kind: {} (namespace: {}, name: {})", kind, namespace, name);
+          logger.warn("Not a valid workload kind: {} (namespace: {}, name: {})", kind, namespace, name);
           return null;
       }
     });

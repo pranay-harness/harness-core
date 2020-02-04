@@ -45,6 +45,8 @@ public class PodWatcher implements Watcher<Pod> {
   @Inject
   public PodWatcher(
       @Assisted KubernetesClient client, @Assisted K8sWatchTaskParams params, EventPublisher eventPublisher) {
+    logger.info(
+        "Creating new PodWatcher for cluster with id: {} name: {} ", params.getClusterId(), params.getClusterName());
     this.client = client;
     this.watch = client.pods().inAnyNamespace().watch(this);
     this.cloudProviderId = params.getCloudProviderId();
