@@ -10,8 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QLSunburstGridDataPoint {
+  String id;
   String name;
-  String trend;
-  String value;
-  String info;
+  String type;
+  Number trend;
+  Number value;
+  int efficiencyScore;
 }

@@ -7,13 +7,19 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
+import software.wings.beans.Account;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
 import software.wings.graphql.schema.type.aggregation.QLData;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
+import software.wings.graphql.schema.type.aggregation.billing.QLStatsBreakdownInfo;
+import software.wings.graphql.schema.type.aggregation.billing.QLStatsBreakdownInfo.QLStatsBreakdownInfoBuilder;
 import software.wings.graphql.schema.type.aggregation.billing.QLSunburstChartData;
 import software.wings.graphql.schema.type.aggregation.billing.QLSunburstChartDataPoint;
 import software.wings.graphql.schema.type.aggregation.billing.QLSunburstChartDataPoint.QLSunburstChartDataPointBuilder;
@@ -22,14 +28,17 @@ import software.wings.graphql.schema.type.aggregation.billing.QLSunburstGridData
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -40,9 +49,10 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
   @Inject QLBillingStatsHelper billingStatsHelper;
   @Inject BillingDataHelper billingDataHelper;
 
-  private static final String TOTAL_COST_VALUE = "$%s";
-  private static final String INFO = "Idle Cost %s";
   private static final String ROOT_PARENT_ID = "ROOT_PARENT_ID";
+  private static int idleCostBaseline = 30;
+  private static int unallocatedCostBaseline = 5;
+  private static String unsupportedType = "UnsupportedType ";
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -50,28 +60,27 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
     try {
       if (timeScaleDBService.isValid()) {
-        if (groupBy.size() > 2) {
+        if (groupBy.size() > 4) {
           List<QLCCMGroupBy> k8sGroupBy = new ArrayList<>(groupBy);
           List<QLCCMGroupBy> ecsGroupBy = new ArrayList<>(groupBy);
           processAndRetainK8sGroupBy(k8sGroupBy);
           processAndRetainEcsGroupBy(ecsGroupBy);
-          List<QLSunburstChartDataPoint> k8sChartData =
-              getSunburstChartData(accountId, aggregateFunction, filters, k8sGroupBy, sort, true);
-          List<QLSunburstChartDataPoint> ecsChartData =
-              getSunburstChartData(accountId, aggregateFunction, filters, ecsGroupBy, sort, false);
+          List<QLSunburstGridDataPoint> gridData =
+              getGridDataPointsForAllViews(accountId, aggregateFunction, filters, groupBy, sort);
+          List<QLSunburstChartDataPoint> k8sChartData = getSunburstChartData(
+              accountId, aggregateFunction, filters, k8sGroupBy, sort, true, convertGridPointsToMap(gridData));
+          List<QLSunburstChartDataPoint> ecsChartData = getSunburstChartData(
+              accountId, aggregateFunction, filters, ecsGroupBy, sort, false, convertGridPointsToMap(gridData));
           List<QLSunburstChartDataPoint> chartData = k8sChartData;
           chartData.addAll(ecsChartData);
-          List<QLSunburstGridDataPoint> gridData =
-              getSunburstGridData(accountId, aggregateFunction, filters, groupBy, sort);
 
           return QLSunburstChartData.builder().data(chartData).gridData(gridData).build();
         }
 
-        List<QLSunburstChartDataPoint> sunburstChartDataPointList =
-            getSunburstChartData(accountId, aggregateFunction, filters, groupBy, sort, true);
-
         List<QLSunburstGridDataPoint> sunburstGridDataPointList =
-            getSunburstGridData(accountId, aggregateFunction, filters, groupBy, sort);
+            getGridDataPointsForAllViews(accountId, aggregateFunction, filters, groupBy, sort);
+        List<QLSunburstChartDataPoint> sunburstChartDataPointList = getSunburstChartData(accountId, aggregateFunction,
+            filters, groupBy, sort, true, convertGridPointsToMap(sunburstGridDataPointList));
 
         return QLSunburstChartData.builder()
             .data(sunburstChartDataPointList)
@@ -85,9 +94,42 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
     }
   }
 
+  private List<QLSunburstGridDataPoint> getGridDataPointsForAllViews(String accountId,
+      List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy,
+      List<QLBillingSortCriteria> sort) {
+    List<QLSunburstGridDataPoint> sunburstGridDataPointList = new ArrayList<>();
+    for (QLCCMGroupBy groupByPoint : groupBy) {
+      boolean isClusterGroupBy = false;
+      if (groupByPoint.getEntityGroupBy() == QLCCMEntityGroupBy.Cluster) {
+        isClusterGroupBy = true;
+      }
+      if (groupByPoint.getEntityGroupBy() != QLCCMEntityGroupBy.ClusterType) {
+        sunburstGridDataPointList.addAll(getSunburstGridData(accountId, aggregateFunction, new ArrayList<>(filters),
+            Collections.singletonList(groupByPoint), sort, isClusterGroupBy));
+      }
+    }
+    return sunburstGridDataPointList;
+  }
+
+  private Map<String, QLSunburstGridDataPoint> convertGridPointsToMap(
+      List<QLSunburstGridDataPoint> sunburstGridDataPointList) {
+    Map<String, QLSunburstGridDataPoint> gridDataPointHashMap = new HashMap<>();
+    for (QLSunburstGridDataPoint sunburstGridDataPoint : sunburstGridDataPointList) {
+      gridDataPointHashMap.put(sunburstGridDataPoint.getName(), sunburstGridDataPoint);
+    }
+    return gridDataPointHashMap;
+  }
+
   @VisibleForTesting
   List<QLSunburstGridDataPoint> getSunburstGridData(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
-      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
+      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort,
+      boolean isClusterGroupBy) {
+    Map<String, Double> unallocatedCostMap = new HashMap<>();
+
+    if (isClusterGroupBy) {
+      unallocatedCostMap = getUnallocatedCostData(accountId, filters, groupBy, sort);
+    }
+
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupBy);
@@ -96,160 +138,286 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
     queryData = billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction,
         groupByEntityList.isEmpty() ? Collections.emptyList() : Collections.singletonList(groupByEntityList.get(0)),
         groupByTime, sort, true);
-    logger.info("SunburstGridStatsDataFetcher query: {}", queryData.getQuery());
+    logger.info("getSunburstGridData query: {}", queryData.getQuery());
 
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(queryData.getQuery());
-      return generateSunburstGridData(queryData, resultSet);
+      return generateSunburstGridData(queryData, resultSet, unallocatedCostMap, isClusterGroupBy);
     } catch (SQLException e) {
-      logger.error("BillingStatsTimeSeriesDataFetcher Error exception {}", e);
+      logger.error("SunburstChartStatsDataFetcher (getSunburstGridData) Error exception {}", e);
     } finally {
       DBUtils.close(resultSet);
     }
     return Collections.emptyList();
   }
 
-  private List<QLSunburstGridDataPoint> generateSunburstGridData(
-      BillingDataQueryMetadata queryData, ResultSet resultSet) throws SQLException {
+  private List<QLSunburstGridDataPoint> generateSunburstGridData(BillingDataQueryMetadata queryData,
+      ResultSet resultSet, Map<String, Double> unallocatedCostMap, boolean isClusterGroupBy) throws SQLException {
     List<QLSunburstGridDataPoint> sunburstGridDataPointList = new ArrayList<>();
     while (null != resultSet && resultSet.next()) {
       QLSunburstGridDataPointBuilder gridDataPointBuilder = QLSunburstGridDataPoint.builder();
+      QLStatsBreakdownInfoBuilder qlStatsBreakdownInfoBuilder = QLStatsBreakdownInfo.builder();
       for (BillingDataQueryMetadata.BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field.getDataType()) {
           case DOUBLE:
             switch (field) {
               case SUM:
-                gridDataPointBuilder.value(
-                    String.format(TOTAL_COST_VALUE, billingDataHelper.roundingDoubleFieldValue(field, resultSet)));
+                qlStatsBreakdownInfoBuilder.total(billingDataHelper.roundingDoubleFieldValue(field, resultSet));
                 break;
               case IDLECOST:
-                gridDataPointBuilder.info(
-                    String.format(INFO, billingDataHelper.roundingDoubleFieldValue(field, resultSet)) + "%");
+                qlStatsBreakdownInfoBuilder.idle(billingDataHelper.roundingDoubleFieldValue(field, resultSet));
                 break;
               default:
-                throw new InvalidRequestException("UnsupportedType " + field.getDataType());
+                throw new InvalidRequestException(unsupportedType + field.getDataType());
             }
             break;
           case STRING:
-            gridDataPointBuilder.name(
-                billingStatsHelper.getEntityName(field, resultSet.getString(field.getFieldName())));
+            String fieldName = field.getFieldName();
+            String entityId = resultSet.getString(fieldName);
+            qlStatsBreakdownInfoBuilder.unallocated(
+                unallocatedCostMap.get(entityId) != null ? unallocatedCostMap.get(entityId) : 0);
+            gridDataPointBuilder.id(entityId);
+            gridDataPointBuilder.type(fieldName);
+            gridDataPointBuilder.name(billingStatsHelper.getEntityName(field, entityId));
             break;
           default:
-            throw new InvalidRequestException("UnsupportedType " + field.getDataType());
+            throw new InvalidRequestException(unsupportedType + field.getDataType());
         }
       }
+      QLStatsBreakdownInfo breakdownInfo = qlStatsBreakdownInfoBuilder.build();
+      validateBreakdownInfo(breakdownInfo, isClusterGroupBy);
+      gridDataPointBuilder.efficiencyScore(calculateEfficiencyScore(breakdownInfo, isClusterGroupBy));
+      gridDataPointBuilder.value(breakdownInfo.getTotal());
+      gridDataPointBuilder.trend(8.5);
       sunburstGridDataPointList.add(gridDataPointBuilder.build());
     }
     return sunburstGridDataPointList;
   }
 
+  private void validateBreakdownInfo(QLStatsBreakdownInfo breakdownInfo, boolean isClusterGroupBy) {
+    if (breakdownInfo.getIdle() == null) {
+      breakdownInfo.setIdle(0.0);
+    }
+
+    if (breakdownInfo.getTotal() == null) {
+      breakdownInfo.setTotal(0.0);
+    }
+
+    if (breakdownInfo.getUnallocated() == null) {
+      breakdownInfo.setUnallocated(0.0);
+    }
+    if (isClusterGroupBy && !breakdownInfo.getIdle().equals(0.0)) {
+      breakdownInfo.setIdle(breakdownInfo.getIdle().doubleValue() - breakdownInfo.getUnallocated().doubleValue());
+    }
+  }
+
+  private int calculateEfficiencyScore(QLStatsBreakdownInfo costStats, boolean isClusterGroupBy) {
+    int utilizedBaseline = 100 - idleCostBaseline;
+    if (isClusterGroupBy) {
+      utilizedBaseline -= unallocatedCostBaseline;
+    }
+    double utilized = costStats.getTotal().doubleValue() - costStats.getIdle().doubleValue()
+        - costStats.getUnallocated().doubleValue();
+    double total = costStats.getTotal().doubleValue();
+    double utilizedPercentage = utilized / total * 100;
+    int efficiencyScore = (int) ((1 - ((utilizedBaseline - utilizedPercentage) / utilizedBaseline)) * 100);
+    return efficiencyScore > 100 ? 100 : efficiencyScore;
+  }
+
   @VisibleForTesting
   List<QLSunburstChartDataPoint> getSunburstChartData(String accountId,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy,
-      List<QLBillingSortCriteria> sort, boolean addRootParent) {
+      List<QLBillingSortCriteria> sort, boolean addRootParent,
+      Map<String, QLSunburstGridDataPoint> sunburstGridDataPointMap) {
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupBy);
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupBy);
     queryData = billingDataQueryBuilder.formQuery(
         accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sort, false);
-    logger.info("SunburstChartStatsDataFetcher query: {}", queryData.getQuery());
+    logger.info("getSunburstChartData query: {}", queryData.getQuery());
 
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(queryData.getQuery());
 
-      return generateSunburstChartData(queryData, resultSet, addRootParent);
+      return generateSunburstChartData(
+          queryData, resultSet, addRootParent, getContextName(accountId), sunburstGridDataPointMap);
     } catch (SQLException e) {
-      logger.error("BillingStatsTimeSeriesDataFetcher Error exception {}", e);
+      logger.error("SunburstChartStatsDataFetcher (getSunburstChartData) Error exception {}", e);
     } finally {
       DBUtils.close(resultSet);
     }
     return Collections.emptyList();
   }
 
-  private List<QLSunburstChartDataPoint> generateSunburstChartData(
-      BillingDataQueryMetadata queryData, ResultSet resultSet, boolean addRootParent) throws SQLException {
-    List<BillingDataQueryMetadata.BillingDataMetaDataFields> groupByFields = queryData.getGroupByFields();
-    BillingDataQueryMetadata.BillingDataMetaDataFields parentField = null;
-    BillingDataQueryMetadata.BillingDataMetaDataFields childField = groupByFields.get(0);
-    if (groupByFields.size() > 1) {
-      parentField = groupByFields.get(0);
-      childField = groupByFields.get(1);
-    }
+  private String getContextName(String accountId) {
+    return wingsPersistence.get(Account.class, accountId) != null
+        ? wingsPersistence.get(Account.class, accountId).getAccountName()
+        : accountId;
+  }
 
-    Set<String> parentIdSet = new HashSet<>();
+  private List<QLSunburstChartDataPoint> generateSunburstChartData(BillingDataQueryMetadata queryData,
+      ResultSet resultSet, boolean addRootParent, String contextName,
+      Map<String, QLSunburstGridDataPoint> sunburstGridDataPointMap) throws SQLException {
+    List<BillingDataQueryMetadata.BillingDataMetaDataFields> groupByFields = queryData.getGroupByFields();
+    BillingDataQueryMetadata.BillingDataMetaDataFields parentField = groupByFields.get(0);
+    BillingDataQueryMetadata.BillingDataMetaDataFields childField = groupByFields.get(1);
+    BillingDataQueryMetadata.BillingDataMetaDataFields leafField = groupByFields.get(2);
+
     List<QLSunburstChartDataPoint> sunburstChartDataPoints = new ArrayList<>();
-    addRootParentIdIfSpecified(addRootParent, sunburstChartDataPoints);
+    addRootParentIdIfSpecified(addRootParent, sunburstChartDataPoints, contextName);
+    // First in the pair is the first level Id's and so on ..
+    Set<Pair<String, String>> pairOfNonLeafEntities = new HashSet<>();
+    Set<Pair<String, String>> parentIdAndClusterTypeSet = new HashSet<>();
+    Map<String, Double> childIdCostMap = new HashMap<>();
 
     while (resultSet != null && resultSet.next()) {
       QLSunburstChartDataPointBuilder dataPointBuilder = QLSunburstChartDataPoint.builder();
+      // Add Inner two fields data into a Set for adding Data Points
+      pairOfNonLeafEntities.add(
+          Pair.of(resultSet.getString(parentField.getFieldName()), resultSet.getString(childField.getFieldName())));
+      String clusterType = checkAndSetClusterType(resultSet, parentField);
+      parentIdAndClusterTypeSet.add(Pair.of(resultSet.getString(parentField.getFieldName()), clusterType));
 
-      // ParentId
-      if (parentField == null) {
-        dataPointBuilder.parent(ROOT_PARENT_ID);
-      } else {
-        setParentIdAndAddParentDataPoint(
-            resultSet, parentField, parentIdSet, dataPointBuilder, sunburstChartDataPoints);
-      }
-
-      // Id and Name
-      String id = resultSet.getString(childField.getFieldName());
+      String id = resultSet.getString(leafField.getFieldName());
       dataPointBuilder.id(id);
-      dataPointBuilder.name(billingStatsHelper.getEntityName(childField, id));
-      // Value
-      dataPointBuilder.value(
-          resultSet.getBigDecimal(BillingDataQueryMetadata.BillingDataMetaDataFields.SUM.getFieldName()));
+      dataPointBuilder.name(billingStatsHelper.getEntityName(leafField, id));
+
+      String parentId = resultSet.getString(childField.getFieldName());
+      dataPointBuilder.parent(parentId);
+      dataPointBuilder.metadata(sunburstGridDataPointMap.get(parentId));
+      BigDecimal value = resultSet.getBigDecimal(BillingDataQueryMetadata.BillingDataMetaDataFields.SUM.getFieldName());
+      dataPointBuilder.value(value);
+      childIdCostMap.put(parentId, childIdCostMap.getOrDefault(parentId, 0.0) + value.doubleValue());
       sunburstChartDataPoints.add(dataPointBuilder.build());
     }
+
+    // Add Children Data Points
+    for (Pair<String, String> pairOfIds : pairOfNonLeafEntities) {
+      String parentId = pairOfIds.getKey();
+      String childId = pairOfIds.getValue();
+      QLSunburstChartDataPointBuilder dataPointBuilder = QLSunburstChartDataPoint.builder();
+      dataPointBuilder.id(childId);
+      dataPointBuilder.name(billingStatsHelper.getEntityName(childField, childId));
+      dataPointBuilder.metadata(sunburstGridDataPointMap.get(parentId));
+      dataPointBuilder.value(childIdCostMap.get(childId));
+      dataPointBuilder.parent(parentId);
+      sunburstChartDataPoints.add(dataPointBuilder.build());
+    }
+
+    // Add First Level Data Points (Parent)
+    for (Pair<String, String> parentIds : parentIdAndClusterTypeSet) {
+      String id = parentIds.getKey();
+      String clusterType = parentIds.getValue();
+      QLSunburstChartDataPointBuilder dataPointBuilder = QLSunburstChartDataPoint.builder();
+      dataPointBuilder.id(id);
+      dataPointBuilder.name(billingStatsHelper.getEntityName(parentField, id));
+      dataPointBuilder.parent(ROOT_PARENT_ID);
+      dataPointBuilder.clusterType(clusterType);
+      sunburstChartDataPoints.add(dataPointBuilder.build());
+    }
+
     return sunburstChartDataPoints;
   }
 
-  private void setParentIdAndAddParentDataPoint(ResultSet resultSet,
-      BillingDataQueryMetadata.BillingDataMetaDataFields parentField, Set<String> parentIdSet,
-      QLSunburstChartDataPointBuilder dataPointBuilder, List<QLSunburstChartDataPoint> sunburstChartDataPoints)
-      throws SQLException {
-    String parentId = resultSet.getString(parentField.getFieldName());
-    dataPointBuilder.parent(parentId);
-    if (!parentIdSet.contains(parentId)) {
-      String id = resultSet.getString(parentField.getFieldName());
-      boolean setClusterType = false;
-      String clusterType = null;
-      if (parentField.getFieldName().equals(
-              BillingDataQueryMetadata.BillingDataMetaDataFields.CLUSTERID.getFieldName())) {
-        clusterType =
-            resultSet.getString(BillingDataQueryMetadata.BillingDataMetaDataFields.CLUSTERTYPE.getFieldName());
-        setClusterType = true;
-      }
-      sunburstChartDataPoints.add(QLSunburstChartDataPoint.builder()
-                                      .parent(ROOT_PARENT_ID)
-                                      .id(id)
-                                      .name(billingStatsHelper.getEntityName(parentField, id))
-                                      .clusterType(setClusterType ? clusterType : null)
-                                      .build());
-      parentIdSet.add(parentId);
+  private String checkAndSetClusterType(
+      ResultSet resultSet, BillingDataQueryMetadata.BillingDataMetaDataFields parentField) throws SQLException {
+    if (parentField == BillingDataQueryMetadata.BillingDataMetaDataFields.CLUSTERID) {
+      return resultSet.getString(BillingDataQueryMetadata.BillingDataMetaDataFields.CLUSTERTYPE.getFieldName());
     }
+    return null;
   }
 
   private void addRootParentIdIfSpecified(
-      boolean addRootParent, List<QLSunburstChartDataPoint> sunburstChartDataPoints) {
+      boolean addRootParent, List<QLSunburstChartDataPoint> sunburstChartDataPoints, String contextName) {
     final String ROOT_PARENT_CONSTANT = "";
     if (addRootParent) {
-      sunburstChartDataPoints.add(QLSunburstChartDataPoint.builder()
-                                      .id(ROOT_PARENT_ID)
-                                      .name(ROOT_PARENT_CONSTANT)
-                                      .parent(ROOT_PARENT_CONSTANT)
-                                      .build());
+      sunburstChartDataPoints.add(
+          QLSunburstChartDataPoint.builder().id(ROOT_PARENT_ID).name(contextName).parent(ROOT_PARENT_CONSTANT).build());
     }
   }
 
   private void processAndRetainK8sGroupBy(List<QLCCMGroupBy> groupBy) {
-    groupBy.removeIf(groupByItem -> groupByItem.getEntityGroupBy() == QLCCMEntityGroupBy.CloudServiceName);
+    groupBy.removeIf(groupByItem
+        -> groupByItem.getEntityGroupBy() == QLCCMEntityGroupBy.CloudServiceName
+            || groupByItem.getEntityGroupBy() == QLCCMEntityGroupBy.TaskId);
   }
 
   private void processAndRetainEcsGroupBy(List<QLCCMGroupBy> groupBy) {
-    groupBy.removeIf(groupByItem -> groupByItem.getEntityGroupBy() == QLCCMEntityGroupBy.Namespace);
+    groupBy.removeIf(groupByItem
+        -> groupByItem.getEntityGroupBy() == QLCCMEntityGroupBy.Namespace
+            || groupByItem.getEntityGroupBy() == QLCCMEntityGroupBy.WorkloadName);
+  }
+
+  @VisibleForTesting
+  Map<String, Double> getUnallocatedCostData(String accountId, List<QLBillingDataFilter> filters,
+      List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
+    BillingDataQueryMetadata queryData;
+    ResultSet resultSet = null;
+    List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupBy);
+    QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupBy);
+
+    List<QLBillingDataFilter> filtersWithUnallocatedFilter = new ArrayList<>(filters);
+    addUnallocatedInstanceFilter(filtersWithUnallocatedFilter);
+
+    List<QLCCMAggregationFunction> aggregateFunction = getBillingAggregation();
+
+    queryData = billingDataQueryBuilder.formQuery(accountId, filtersWithUnallocatedFilter, aggregateFunction,
+        groupByEntityList.isEmpty() ? Collections.emptyList() : Collections.singletonList(groupByEntityList.get(0)),
+        groupByTime, sort, false);
+    logger.info("getUnallocatedCostData query: {}", queryData.getQuery());
+
+    try (Connection connection = timeScaleDBService.getDBConnection();
+         Statement statement = connection.createStatement()) {
+      resultSet = statement.executeQuery(queryData.getQuery());
+      return generateUnallocatedData(queryData, resultSet);
+    } catch (SQLException e) {
+      logger.error("SunburstChartStatsDataFetcher (getUnallocatedCostData) Error exception {}", e);
+    } finally {
+      DBUtils.close(resultSet);
+    }
+    return new HashMap<>();
+  }
+
+  Map<String, Double> generateUnallocatedData(BillingDataQueryMetadata queryData, ResultSet resultSet)
+      throws SQLException {
+    Map<String, Double> unallocatedCostMap = new HashMap<>();
+    while (null != resultSet && resultSet.next()) {
+      String entityId = "defaultEntityId";
+      double unallocatedCost = 0;
+      for (BillingDataQueryMetadata.BillingDataMetaDataFields field : queryData.getFieldNames()) {
+        switch (field.getDataType()) {
+          case DOUBLE:
+            unallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case STRING:
+            entityId = resultSet.getString(field.getFieldName());
+            break;
+          default:
+            throw new InvalidRequestException(unsupportedType + field.getDataType());
+        }
+      }
+      unallocatedCostMap.put(entityId, unallocatedCost);
+    }
+
+    return unallocatedCostMap;
+  }
+
+  private List<QLCCMAggregationFunction> getBillingAggregation() {
+    return Collections.singletonList(QLCCMAggregationFunction.builder()
+                                         .operationType(QLCCMAggregateOperation.SUM)
+                                         .columnName("billingamount")
+                                         .build());
+  }
+
+  private void addUnallocatedInstanceFilter(List<QLBillingDataFilter> filtersWithUnallocatedFilter) {
+    filtersWithUnallocatedFilter.add(
+        QLBillingDataFilter.builder()
+            .instanceType(
+                QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"CLUSTER_UNALLOCATED"}).build())
+            .build());
   }
 
   @Override

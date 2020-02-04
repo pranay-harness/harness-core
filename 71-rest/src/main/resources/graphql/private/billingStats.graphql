@@ -149,13 +149,16 @@ type SunburstChartDataPoint {
   name: String
   value: Number
   clusterType: String
+  metadata: SunburstGridDataPoint
 }
 
 type SunburstGridDataPoint {
+  id: String
   name: String
-  trend: String
-  value: String
-  info: String
+  type: String
+  trend: Number
+  value: Number
+  efficiencyScore: Number
 }
 
 type BillingEntityData {
