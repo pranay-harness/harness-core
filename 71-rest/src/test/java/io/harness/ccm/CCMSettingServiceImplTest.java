@@ -161,11 +161,12 @@ public class CCMSettingServiceImplTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testValidateS3SyncConfig() {
-    AwsS3SyncConfig syncConfig = AwsS3SyncConfig.builder()
-                                     .billingAccountId(BILLING_ACCOUNT_ID)
-                                     .billingBucketPath(BILLING_BUCKET_PATH)
-                                     .billingBucketRegion(BILLING_BUCKET_REGION)
-                                     .build();
+    BillingReportConfig syncConfig = BillingReportConfig.builder()
+                                         .billingAccountId(BILLING_ACCOUNT_ID)
+                                         .billingBucketPath(BILLING_BUCKET_PATH)
+                                         .billingBucketRegion(BILLING_BUCKET_REGION)
+                                         .isBillingReportEnabled(true)
+                                         .build();
     ValidationResult result = ccmSettingService.validateS3SyncConfig(syncConfig, accountIdWithCCM, cloudProviderId);
     assertThat(result.isValid()).isFalse();
   }

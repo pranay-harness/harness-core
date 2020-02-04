@@ -5,8 +5,9 @@ import lombok.Value;
 
 @Value
 @Builder
-public class AwsS3SyncConfig {
+public class BillingReportConfig {
   String billingAccountId;
   String billingBucketRegion;
   String billingBucketPath;
+  boolean isBillingReportEnabled;
 }

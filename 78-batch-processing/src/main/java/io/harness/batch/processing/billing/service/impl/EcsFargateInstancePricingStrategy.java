@@ -29,7 +29,6 @@ public class EcsFargateInstancePricingStrategy implements InstancePricingStrateg
 
   @Override
   public PricingData getPricePerHour(InstanceData instanceData, Instant startTime) {
-    // TODO(Hitesh) check if cloud provider has s3 billing enabled
     EcsFargatePricingInfo fargatePricingInfo = awsCustomPricingService.getFargateVMPricingInfo(instanceData, startTime);
     if (null == fargatePricingInfo) {
       Map<String, String> instanceMetaData = instanceData.getMetaData();

@@ -69,7 +69,7 @@ public class AwsAthenaQueryHelperServiceImplTest extends CategoryTest {
         .thenReturn(getQueryExecutionResponse(QueryExecutionState.SUCCEEDED.toString()));
     when(getQueryResultsIterable.iterator()).thenReturn(getQueryResultsResponseList.iterator());
     List<AccountFargatePricingData> accountFargatePricingData =
-        awsAthenaQueryHelperService.fetchEcsFargatePriceRate("billingAccountId", Instant.now());
+        awsAthenaQueryHelperService.fetchEcsFargatePriceRate("settingId", "billingAccountId", Instant.now());
     assertThat(accountFargatePricingData)
         .hasSize(4)
         .containsExactlyInAnyOrderElementsOf(getAccountFargatePricingDataList());
@@ -91,7 +91,7 @@ public class AwsAthenaQueryHelperServiceImplTest extends CategoryTest {
         .thenReturn(getQueryExecutionResponse(QueryExecutionState.SUCCEEDED.toString()));
     when(getQueryResultsIterable.iterator()).thenReturn(getQueryResultsResponseList.iterator());
     List<AccountComputePricingData> accountComputePricingData =
-        awsAthenaQueryHelperService.fetchComputePriceRate("billingAccountId", Instant.now());
+        awsAthenaQueryHelperService.fetchComputePriceRate("settingId", "billingAccountId", Instant.now());
     assertThat(accountComputePricingData)
         .hasSize(2)
         .containsExactlyInAnyOrderElementsOf(getAccountComputePricingData());

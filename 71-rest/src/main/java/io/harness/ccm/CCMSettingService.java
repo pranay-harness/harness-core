@@ -8,5 +8,5 @@ public interface CCMSettingService {
   boolean isCloudCostEnabled(SettingAttribute settingAttribute);
   SettingAttribute maskCCMConfig(SettingAttribute settingAttribute);
   boolean isCloudCostEnabled(ClusterRecord clusterRecord);
-  ValidationResult validateS3SyncConfig(AwsS3SyncConfig awsS3SyncConfig, String accountId, String settingId);
+  ValidationResult validateS3SyncConfig(BillingReportConfig billingReportConfig, String accountId, String settingId);
 }

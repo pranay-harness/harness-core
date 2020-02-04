@@ -43,9 +43,8 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
     if (instanceFamily.startsWith(GCP_CUSTOM_INSTANCE_PREFIX) && cloudProvider == CloudProvider.GCP) {
       return getGCPCustomInstancePricingData(instanceFamily, instanceCategory);
     }
-
-    // TODO(Hitesh) check if cloud provider has s3 billing enabled
     VMComputePricingInfo vmComputePricingInfo = getCustomVMPricing(instanceData, startTime, cloudProvider);
+
     if (null == vmComputePricingInfo) {
       String region = instanceMetaData.get(InstanceMetaDataConstants.REGION);
       vmComputePricingInfo = vmPricingService.getComputeVMPricingInfo(instanceFamily, region, cloudProvider);
@@ -88,7 +87,7 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
   private VMComputePricingInfo getCustomVMPricing(
       InstanceData instanceData, Instant startTime, CloudProvider cloudProvider) {
     VMComputePricingInfo vmComputePricingInfo = null;
-    if (cloudProvider == CloudProvider.UNKNOWN) { // TODO(Hitesh) change name to AWS
+    if (cloudProvider == CloudProvider.AWS) {
       vmComputePricingInfo = awsCustomPricingService.getComputeVMPricingInfo(instanceData, startTime);
     }
     return vmComputePricingInfo;

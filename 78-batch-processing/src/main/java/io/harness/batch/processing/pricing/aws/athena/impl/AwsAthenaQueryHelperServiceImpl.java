@@ -45,25 +45,27 @@ public class AwsAthenaQueryHelperServiceImpl implements AwsAthenaQueryHelperServ
       AthenaClient.builder().region(Region.US_EAST_2).credentialsProvider(ProfileCredentialsProvider.create());
 
   @Override
-  public List<AccountComputePricingData> fetchComputePriceRate(String billingAccountId, Instant startInstant)
-      throws InterruptedException {
+  public List<AccountComputePricingData> fetchComputePriceRate(
+      String settingId, String billingAccountId, Instant startInstant) throws InterruptedException {
     AthenaClient athenaClient = createAthenaClient();
     String computeInstanceQuery =
         String.format(ATHENA_COMPUTE_INSTANCE_PRICE_QUERY, billingAccountId, getFormattedDate(startInstant));
+    String bucketPath = String.format(ATHENA_OUTPUT_BUCKET, billingAccountId, settingId);
     String queryExecutionId =
-        submitAthenaQuery(ATHENA_DEFAULT_DATABASE, ATHENA_OUTPUT_BUCKET, computeInstanceQuery, athenaClient);
+        submitAthenaQuery(ATHENA_DEFAULT_DATABASE, bucketPath, computeInstanceQuery, athenaClient);
     waitForQueryToComplete(athenaClient, queryExecutionId);
     return processComputeResultRows(athenaClient, queryExecutionId);
   }
 
   @Override
-  public List<AccountFargatePricingData> fetchEcsFargatePriceRate(String billingAccountId, Instant startInstant)
-      throws InterruptedException {
+  public List<AccountFargatePricingData> fetchEcsFargatePriceRate(
+      String settingId, String billingAccountId, Instant startInstant) throws InterruptedException {
     AthenaClient athenaClient = createAthenaClient();
     String computeInstanceQuery =
         String.format(ATHENA_ECS_FARGATE_PRICE_QUERY, billingAccountId, getFormattedDate(startInstant));
+    String bucketPath = String.format(ATHENA_OUTPUT_BUCKET, billingAccountId, settingId);
     String queryExecutionId =
-        submitAthenaQuery(ATHENA_DEFAULT_DATABASE, ATHENA_OUTPUT_BUCKET, computeInstanceQuery, athenaClient);
+        submitAthenaQuery(ATHENA_DEFAULT_DATABASE, bucketPath, computeInstanceQuery, athenaClient);
     waitForQueryToComplete(athenaClient, queryExecutionId);
     return processFargateResultRows(athenaClient, queryExecutionId);
   }
