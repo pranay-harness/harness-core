@@ -547,9 +547,7 @@ public class YamlHelper {
     String newYamlFilePath = removeTopmostEntityFromPath(yamlFilePath, delimiter);
     String yamlFolderName = extractTopmostEntityName(newYamlFilePath, delimiter);
     TemplateFolder childFolder = getChildFolderFromName(templateFolder, yamlFolderName, delimiter);
-    if (childFolder != null) {
-      return ensurePathforTemplates(childFolder, newYamlFilePath, regex, delimiter, appId);
-    } else {
+    if (childFolder == null) {
       TemplateFolder childTemplateFolder = TemplateFolder.builder()
                                                .name(yamlFolderName)
                                                .appId(appId)
@@ -558,10 +556,10 @@ public class YamlHelper {
                                                .galleryId(templateFolder.getGalleryId())
                                                .createdBy(templateFolder.getCreatedBy())
                                                .build();
-      childTemplateFolder.setPathId(templateFolder.getPathId() + PATH_DELIMITER + templateFolder.getUuid());
-      templateFolderService.save(childTemplateFolder);
-      return ensurePathforTemplates(childTemplateFolder, newYamlFilePath, regex, delimiter, appId);
+
+      childFolder = templateFolderService.saveSafelyAndGet(childTemplateFolder);
     }
+    return ensurePathforTemplates(childFolder, newYamlFilePath, regex, delimiter, appId);
   }
 
   private TemplateFolder getChildFolderFromName(TemplateFolder templateFolder, String folderName, String delimiter) {

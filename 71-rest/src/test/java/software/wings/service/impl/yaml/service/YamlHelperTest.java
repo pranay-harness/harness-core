@@ -93,8 +93,8 @@ public class YamlHelperTest extends WingsBaseTest {
 
     // Case 2: When folder is to be created.
     String newFolderName = "newFolder";
-    TemplateFolder expectedTemplateFolder = TemplateFolder.builder().name(newFolderName).build();
-    when(templateFolderService.save(expectedTemplateFolder)).thenReturn(expectedTemplateFolder);
+    TemplateFolder expectedTemplateFolder = TemplateFolder.builder().name(newFolderName).appId(GLOBAL_APP_ID).build();
+    when(templateFolderService.saveSafelyAndGet(expectedTemplateFolder)).thenReturn(expectedTemplateFolder);
     TemplateFolder returnTemplateFolderCase2 = yamlHelper.ensureTemplateFolder(GLOBAL_ACCOUNT_ID,
         "Setup/Template Library/" + templateFolder.getName() + "/" + templateFolder.getChildren().get(0).getName() + "/"
             + newFolderName + "/test.yaml",

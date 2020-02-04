@@ -5,8 +5,10 @@ import static io.harness.generator.AccountGenerator.readOnlyEmail;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.APP_FOLDER_SHELL_SCRIPTS;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_SHELL_SCRIPTS;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
@@ -40,6 +42,7 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.ShellScriptTemplate;
+import software.wings.service.intfc.template.TemplateFolderService;
 
 import java.util.Collections;
 import java.util.Set;
@@ -51,7 +54,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private TemplateFolderGenerator templateFolderGenerator;
-
+  @Inject private TemplateFolderService templateFolderService;
   Workflow buildWorkflow;
 
   final Randomizer.Seed seed = new Randomizer.Seed(0);
@@ -505,5 +508,31 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
         .delete("/templates/{templateId}")
         .then()
         .statusCode(200);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(FunctionalTests.class)
+  public void testDuplicateFolderSave() {
+    TemplateFolder templateFolder =
+        templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS, GLOBAL_APP_ID);
+
+    checkSave(templateFolder);
+    checkSaveSafelyAndGet(templateFolder);
+  }
+
+  private void checkSave(TemplateFolder templateFolder) {
+    TemplateFolder newTemplateFolder = templateFolder.cloneInternal();
+    newTemplateFolder.setAccountId(templateFolder.getAccountId());
+    newTemplateFolder.setParentId(templateFolder.getParentId());
+    newTemplateFolder.setGalleryId(templateFolder.getGalleryId());
+
+    assertThatThrownBy(() -> templateFolderService.save(newTemplateFolder)).hasMessageContaining("Duplicate");
+  }
+
+  private void checkSaveSafelyAndGet(TemplateFolder templateFolder) {
+    TemplateFolder savedTemplateFolder = templateFolderService.saveSafelyAndGet(templateFolder);
+
+    assertThat(savedTemplateFolder).isEqualTo(templateFolder);
   }
 }
