@@ -2,6 +2,9 @@ package software.wings.sm.states.collaboration;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -20,6 +23,7 @@ import io.harness.expression.ExpressionEvaluator;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.beans.Activity;
@@ -35,6 +39,7 @@ import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
@@ -44,23 +49,33 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
+@Slf4j
 @FieldNameConstants(innerTypeName = "JiraCreateUpdateKeys")
 public class JiraCreateUpdate extends State implements SweepingOutputStateMixin {
+  public static final String DATE_ISO_FORMAT = "yyyy-MM-dd";
   private static final long JIRA_TASK_TIMEOUT_MILLIS = 60 * 1000;
   private static final String JIRA_ISSUE_ID = "issueId";
   private static final String JIRA_ISSUE_KEY = "issueKey";
   private static final String JIRA_ISSUE = "issue";
+  public static final String DATETIME_ISO_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXX";
 
   @Inject private transient ActivityService activityService;
+  @Inject @Transient private LogService logService;
+
   @Inject @Transient private transient WingsPersistence wingsPersistence;
   @Inject @Transient private DelegateServiceImpl delegateService;
   @Inject @Transient private transient SecretManager secretManager;
@@ -78,6 +93,12 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   @Getter @Setter private String comment;
   @Getter @Setter private String issueId;
   private Map<String, JiraCustomFieldValue> customFields;
+  private static final Pattern currentPattern =
+      Pattern.compile("(current\\(\\))(\\s*([+-])\\s*(\\d{0,13}))*", Pattern.CASE_INSENSITIVE);
+  private static final Pattern varPattern =
+      Pattern.compile("^(\\$\\{[a-z\\d._]*})(\\s*([+-])\\s*(\\d{0,13}))?", Pattern.CASE_INSENSITIVE);
+  private static final Pattern fixedDatePattern = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
+  private static final Pattern fixedDatetimePattern = Pattern.compile("(\\d{13})");
 
   public Map<String, JiraCustomFieldValue> fetchCustomFields() {
     return customFields;
@@ -104,6 +125,19 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
 
     JiraConfig jiraConfig = getJiraConfig(jiraConnectorId);
+    if (isNotEmpty(customFields)) {
+      for (Entry<String, JiraCustomFieldValue> customField : customFields.entrySet()) {
+        JiraCustomFieldValue value = customField.getValue();
+        if (value.getFieldType().equals("date")) {
+          String parsedDateValue = parseDateValue(value.getFieldValue(), context);
+          value.setFieldValue(parsedDateValue);
+        }
+        if (value.getFieldType().equals("datetime")) {
+          String parsedDateTimeValue = parseDateTimeValue(value.getFieldValue(), context);
+          value.setFieldValue(parsedDateTimeValue);
+        }
+      }
+    }
     renderExpressions(context);
 
     if (ExpressionEvaluator.containsVariablePattern(issueId)) {
@@ -165,6 +199,98 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         .delegateTaskId(delegateTaskId)
         .stateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
         .build();
+  }
+
+  String parseDateTimeValue(String fieldValue, ExecutionContext context) {
+    Matcher matcher = fixedDatetimePattern.matcher(fieldValue);
+    if (matcher.matches()) {
+      return fieldValue;
+    }
+    long val1;
+    matcher = currentPattern.matcher(fieldValue);
+    if (matcher.matches()) {
+      val1 = System.currentTimeMillis();
+      return getDateTime(matcher, val1);
+    }
+    matcher = varPattern.matcher(fieldValue);
+    if (matcher.matches()) {
+      String renderedVal = context.renderExpression(matcher.group(1));
+      renderedVal = renderedVal.replaceAll("\\s+", "");
+      try {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATETIME_ISO_FORMAT);
+        val1 = dateFormat.parse(renderedVal).getTime();
+      } catch (ParseException e) {
+        try {
+          val1 = Long.parseLong(renderedVal);
+        } catch (NumberFormatException ne) {
+          throw new InvalidRequestException("Cannot parse date time value from " + renderedVal, ne, USER);
+        }
+      }
+      return getDateTime(matcher, val1);
+    } else {
+      throw new InvalidRequestException("Cannot parse date time value from " + fieldValue, USER);
+    }
+  }
+
+  private String getDateTime(Matcher matcher, Long val1) {
+    long val2;
+    String group4 = matcher.group(4);
+    if (isNotEmpty(group4)) {
+      val2 = Long.parseLong(group4);
+      if (matcher.group(3).equals("+")) {
+        return String.valueOf(val1 + val2);
+      } else {
+        return String.valueOf(val1 - val2);
+      }
+    } else {
+      return String.valueOf(val1);
+    }
+  }
+
+  String parseDateValue(String fieldValue, ExecutionContext context) {
+    Matcher matcher = fixedDatePattern.matcher(fieldValue);
+    if (matcher.matches()) {
+      return fieldValue;
+    }
+    long val1;
+    matcher = currentPattern.matcher(fieldValue);
+    if (matcher.matches()) {
+      val1 = System.currentTimeMillis();
+      return getDateValue(matcher, val1);
+    }
+    matcher = varPattern.matcher(fieldValue);
+    if (matcher.matches()) {
+      String renderedVal = context.renderExpression(matcher.group(1));
+      renderedVal = renderedVal.replaceAll("\\s+", "");
+      try {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_ISO_FORMAT);
+        val1 = dateFormat.parse(renderedVal).getTime();
+        return getDateValue(matcher, val1);
+      } catch (ParseException e) {
+        try {
+          val1 = Long.parseLong(renderedVal);
+          return getDateValue(matcher, val1);
+        } catch (NumberFormatException ne) {
+          throw new InvalidRequestException("Cannot parse date value from " + renderedVal, ne, USER);
+        }
+      }
+    }
+    throw new InvalidRequestException("Cannot parse date value from " + fieldValue, USER);
+  }
+
+  private String getDateValue(Matcher matcher, Long val1) {
+    long val2;
+    String group4 = matcher.group(4);
+    if (isNotEmpty(group4)) {
+      val2 = Long.parseLong(group4);
+      if (matcher.group(3).equals("+")) {
+        return new SimpleDateFormat(DATE_ISO_FORMAT).format(new Date(val1 + val2));
+      } else {
+        return new SimpleDateFormat(DATE_ISO_FORMAT).format(new Date(val1 - val2));
+      }
+    } else {
+      return new SimpleDateFormat(DATE_ISO_FORMAT).format(new Date(val1));
+    }
   }
 
   private List<String> parseExpression(String issueId) {
@@ -261,4 +387,59 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> results = new HashMap<>();
+    if (isEmpty(jiraConnectorId) || isEmpty(project) || isEmpty(issueType)) {
+      logger.info("Connector Id not present in Jira State");
+      results.put("Required Fields missing", "Connector, Project and IssueType must be provided.");
+      return results;
+    }
+    if (isNotEmpty(customFields)) {
+      for (Entry<String, JiraCustomFieldValue> customField : customFields.entrySet()) {
+        if (customField.getValue() == null) {
+          logger.info("Field value null for a custom field selected: " + customField.getKey());
+          results.put("Field value missing", "Value must be provided for " + customField.getKey());
+          continue;
+        }
+        JiraCustomFieldValue value = customField.getValue();
+        if (value.getFieldType() == null) {
+          logger.info("Field Type null for a custom field selected: " + customField.getKey());
+          results.put("Field Type missing", "Type must be provided for " + customField.getKey());
+          continue;
+        }
+        if (value.getFieldType().equals("datetime") || value.getFieldType().equals("date")) {
+          String fieldValue = value.getFieldValue();
+          if (!validateDateFieldValue(fieldValue, value.getFieldType())) {
+            logger.info("Field value not valid for a custom field selected: {} {} ", customField.getKey(),
+                customField.getValue().getFieldValue());
+            results.put("Invalid field value", "Value provided for " + customField.getKey() + " is not valid");
+          }
+        }
+      }
+    }
+
+    logger.info("Jira State Validated");
+    return results;
+  }
+
+  private boolean validateDateFieldValue(String fieldValue, String fieldType) {
+    Matcher matcher = null;
+    if (fieldType.equals("date")) {
+      matcher = fixedDatePattern.matcher(fieldValue);
+    } else {
+      matcher = fixedDatetimePattern.matcher(fieldValue);
+    }
+
+    if (matcher.matches()) {
+      return true;
+    }
+    matcher = currentPattern.matcher(fieldValue);
+    if (matcher.matches()) {
+      return true;
+    }
+    matcher = varPattern.matcher(fieldValue);
+    return matcher.matches();
+  }
 }
