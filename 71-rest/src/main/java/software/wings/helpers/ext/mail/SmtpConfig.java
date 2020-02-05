@@ -39,6 +39,7 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Port", required = true) private int port;
   @DefaultValue("wings") @Attributes(title = "From Address") private String fromAddress;
   @DefaultValue("true") @Attributes(title = "SSL") private boolean useSSL;
+  @DefaultValue("false") @Attributes(title = "Start TLS") private boolean startTLS;
   @Attributes(title = "Username") private String username;
   @Attributes(title = "Password") @Encrypted private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
@@ -52,13 +53,14 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
     super(SettingVariableTypes.SMTP.name());
   }
 
-  public SmtpConfig(String host, int port, String fromAddress, boolean useSSL, String username, char[] password,
-      String accountId, String encryptedPassword) {
+  public SmtpConfig(String host, int port, String fromAddress, boolean useSSL, boolean startTLS, String username,
+      char[] password, String accountId, String encryptedPassword) {
     this();
     this.host = host;
     this.port = port;
     this.fromAddress = fromAddress;
     this.useSSL = useSSL;
+    this.startTLS = startTLS;
     this.username = username;
     this.password = password == null ? null : password.clone();
     this.accountId = accountId;
