@@ -489,10 +489,6 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     }
   }
 
-  protected boolean isHistoricalAnalysis() {
-    return false;
-  }
-
   @Override
   protected String getPcfHostName(PcfInstanceElement pcfInstanceElement, boolean includePrevious) {
     if ((includePrevious && !pcfInstanceElement.isUpsize()) || (!includePrevious && pcfInstanceElement.isUpsize())) {
