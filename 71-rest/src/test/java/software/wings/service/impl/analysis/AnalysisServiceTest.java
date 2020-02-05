@@ -2,11 +2,17 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
@@ -20,7 +26,14 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
+import software.wings.api.HostElement;
+import software.wings.api.InstanceElement;
+import software.wings.api.InstanceElementListParam;
+import software.wings.api.PcfInstanceElement;
 import software.wings.api.jira.JiraExecutionData;
+import software.wings.beans.Service;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.dl.WingsPersistence;
@@ -30,6 +43,11 @@ import software.wings.service.impl.analysis.CVFeedbackRecord.CVFeedbackRecordKey
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class AnalysisServiceTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
@@ -189,5 +207,50 @@ public class AnalysisServiceTest extends WingsBaseTest {
                                           .build();
 
     analysisService.addToBaseline(accountId, cvConfiguration.getUuid(), null, feedbackRecord);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void test_getPcfNodes_forLastExecution() {
+    final String workflowId =
+        wingsPersistence.save(aWorkflow().appId(appId).accountId(accountId).name(generateUuid()).build());
+    final String serviceId = wingsPersistence.save(
+        Service.builder().appId(appId).deploymentType(DeploymentType.PCF).name(generateUuid()).build());
+    final String workflowExecutionId =
+        wingsPersistence.save(WorkflowExecution.builder()
+                                  .appId(appId)
+                                  .workflowId(workflowId)
+                                  .status(ExecutionStatus.SUCCESS)
+                                  .serviceExecutionSummaries(Lists.newArrayList(anElementExecutionSummary().build()))
+                                  .serviceIds(Lists.newArrayList(serviceId))
+                                  .build());
+    List<PcfInstanceElement> pcfInstanceElements = Lists.newArrayList(PcfInstanceElement.builder()
+                                                                          .applicationId(generateUuid())
+                                                                          .displayName(generateUuid())
+                                                                          .instanceIndex(generateUuid())
+                                                                          .build(),
+        PcfInstanceElement.builder()
+            .applicationId(generateUuid())
+            .displayName(generateUuid())
+            .instanceIndex(generateUuid())
+            .build());
+    final InstanceElementListParam instanceElementListParam =
+        InstanceElementListParam.builder().pcfInstanceElements(pcfInstanceElements).build();
+    wingsPersistence.save(aStateExecutionInstance()
+                              .executionUuid(workflowExecutionId)
+                              .contextElements(new LinkedList<>(Lists.newArrayList(instanceElementListParam)))
+                              .build());
+
+    final Map<String, InstanceElement> lastExecutionNodes = analysisService.getLastExecutionNodes(appId, workflowId);
+    Map<String, InstanceElement> expected = new HashMap<>();
+    pcfInstanceElements.forEach(pcfInstanceElement
+        -> expected.put(pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex(),
+            anInstanceElement()
+                .hostName(pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex())
+                .host(HostElement.builder().pcfElement(pcfInstanceElement).build())
+                .build()));
+
+    assertThat(lastExecutionNodes).isEqualTo(expected);
   }
 }
