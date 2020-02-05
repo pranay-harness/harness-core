@@ -55,7 +55,8 @@ public class CreateUserDataFetcher extends BaseMutatorDataFetcher<QLCreateUserIn
     String accountId = mutationContext.getAccountId();
     inviteUser(qlCreateUserInput, accountId);
     List<String> userGroupIds = new LinkedList<>();
-    if (qlCreateUserInput.getUserGroupIds() != null) {
+    final RequestField<List<String>> userGroupIdsFromInput = qlCreateUserInput.getUserGroupIds();
+    if (userGroupIdsFromInput != null && userGroupIdsFromInput.hasBeenSet()) {
       userGroupIds = getValue(qlCreateUserInput.getUserGroupIds()).orElse(Collections.emptyList());
     }
     final User savedUser = userService.getUserByEmail(qlCreateUserInput.getEmail(), accountId);
