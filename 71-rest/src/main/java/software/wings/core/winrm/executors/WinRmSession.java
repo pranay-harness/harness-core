@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class WinRmSession implements AutoCloseable {
-  private static final int operationTimeout = 30 * 60 * 1000;
   private static final int retryCount = 1;
 
   private final ShellCommand shell;
@@ -33,7 +32,7 @@ public class WinRmSession implements AutoCloseable {
                              .workingDirectory(config.getWorkingDirectory())
                              .environment(processedEnvironmentMap)
                              .retriesForConnectionFailures(retryCount)
-                             .operationTimeout(operationTimeout)
+                             .operationTimeout(config.getTimeout())
                              .build();
 
     shell = client.createShell();

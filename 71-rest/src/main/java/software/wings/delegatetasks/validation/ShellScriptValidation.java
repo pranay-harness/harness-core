@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.govern.Switch.unhandled;
+import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
@@ -64,10 +65,14 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
       return resultBuilder.validated(validated).build();
     }
 
+    int timeout = (int) ofSeconds(15L).toMillis();
     switch (parameters.getConnectionType()) {
       case SSH:
         try {
           SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
+          expectedSshConfig.setSocketConnectTimeout(timeout);
+          expectedSshConfig.setSshConnectionTimeout(timeout);
+          expectedSshConfig.setSshSessionTimeout(timeout);
           getSSHSession(expectedSshConfig).disconnect();
 
           resultBuilder.validated(true);
@@ -80,6 +85,7 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
       case WINRM:
         try {
           WinRmSessionConfig winrmConfig = parameters.winrmSessionConfig(encryptionService);
+          winrmConfig.setTimeout(timeout);
           logger.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", winrmConfig.getHostname(),
               winrmConfig.getPort(), winrmConfig.isUseSSL());
 
