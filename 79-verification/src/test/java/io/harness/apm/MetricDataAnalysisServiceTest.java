@@ -20,6 +20,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -128,6 +129,13 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     FieldUtils.writeField(managerAnalysisService, "settingsService", settingsService, true);
     FieldUtils.writeField(
         metricDataAnalysisService, "continuousVerificationService", continuousVerificationService, true);
+
+    wingsPersistence.save(StateExecutionInstance.Builder.aStateExecutionInstance()
+                              .uuid(stateExecutionId)
+                              .displayName("name")
+                              .stateExecutionMap(new HashMap<String, StateExecutionData>(
+                                  ImmutableMap.of("name", new VerificationStateAnalysisExecutionData())))
+                              .build());
   }
 
   @Test
@@ -249,7 +257,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     wingsPersistence.save(AnalysisContext.builder().stateExecutionId(stateExecutionId).timeDuration(5).build());
 
     DeploymentTimeSeriesAnalysis metricsAnalysis =
-        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.empty());
+        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.empty(), false);
     assertThat(metricsAnalysis).isNotNull();
     assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
     assertThat(metricsAnalysis.getBaseLineExecutionId()).isNull();
@@ -259,7 +267,8 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     List<NewRelicMetricAnalysis> metricAnalyses = metricsAnalysis.getMetricAnalyses();
 
     // ask with page size
-    metricsAnalysis = managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.of(10));
+    metricsAnalysis =
+        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.of(10), false);
     assertThat(metricsAnalysis).isNotNull();
     assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
     assertThat(metricsAnalysis.getBaseLineExecutionId()).isNull();
@@ -274,7 +283,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     int offset = 0;
     while (offset < total) {
       metricsAnalysis = managerAnalysisService.getMetricsAnalysis(
-          stateExecutionId, Optional.of(offset), Optional.of(DEFAULT_PAGE_SIZE));
+          stateExecutionId, Optional.of(offset), Optional.of(DEFAULT_PAGE_SIZE), false);
 
       for (int i = 0; i < metricsAnalysis.getMetricAnalyses().size(); i++) {
         assertThat(metricsAnalysis.getMetricAnalyses().get(i).getMetricName()).isEqualTo("txn-" + (offset + i));
@@ -283,8 +292,8 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     }
 
     // test with offset beyond the size
-    metricsAnalysis =
-        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.of(total), Optional.of(DEFAULT_PAGE_SIZE));
+    metricsAnalysis = managerAnalysisService.getMetricsAnalysis(
+        stateExecutionId, Optional.of(total), Optional.of(DEFAULT_PAGE_SIZE), false);
     assertThat(metricsAnalysis.getMetricAnalyses().size()).isEqualTo(0);
   }
 
@@ -306,7 +315,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     wingsPersistence.save(AnalysisContext.builder().stateExecutionId(stateExecutionId).timeDuration(10).build());
 
     DeploymentTimeSeriesAnalysis metricsAnalysis =
-        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.empty());
+        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.empty(), false);
     assertThat(metricsAnalysis).isNotNull();
     assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
     assertThat(metricsAnalysis.getBaseLineExecutionId()).isNull();
@@ -402,7 +411,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     wingsPersistence.save(AnalysisContext.builder().stateExecutionId(stateExecutionId).timeDuration(5).build());
 
     DeploymentTimeSeriesAnalysis metricsAnalysis =
-        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.empty());
+        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.empty(), false);
     assertThat(metricsAnalysis).isNotNull();
     assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
     assertThat(metricsAnalysis.getBaseLineExecutionId()).isNull();

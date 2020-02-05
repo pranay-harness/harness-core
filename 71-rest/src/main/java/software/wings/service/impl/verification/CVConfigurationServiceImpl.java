@@ -636,6 +636,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     if (cvConfiguration.getAnalysisTolerance() != null) {
       updateOperations.set(CVConfigurationKeys.analysisTolerance, cvConfiguration.getAnalysisTolerance());
     }
+    if (isNotEmpty(cvConfiguration.getCustomThresholdRefId())) {
+      updateOperations.set(CVConfigurationKeys.customThresholdRefId, cvConfiguration.getCustomThresholdRefId());
+    }
     switch (stateType) {
       case NEW_RELIC:
         updateOperations.set("applicationId", ((NewRelicCVServiceConfiguration) cvConfiguration).getApplicationId());

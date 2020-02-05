@@ -300,7 +300,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
     ArgumentCaptor<VerificationDataAnalysisResponse> taskCaptor =
         ArgumentCaptor.forClass(VerificationDataAnalysisResponse.class);
     verify(verificationManagerClient).sendNotifyForVerificationState(anyMap(), anyString(), taskCaptor.capture());
-    assertThat(taskCaptor.getValue().getExecutionStatus().name()).isEqualTo(ExecutionStatus.SUCCESS.name());
+    assertThat(taskCaptor.getValue().getExecutionStatus().name()).isEqualTo(ExecutionStatus.ERROR.name());
   }
 
   @Test

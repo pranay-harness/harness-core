@@ -50,6 +50,8 @@ import software.wings.metrics.ThresholdCategory;
 import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.metrics.TimeSeriesDataRecord.TimeSeriesMetricRecordKeys;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.ExperimentStatus;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord;
@@ -65,6 +67,7 @@ import software.wings.service.impl.analysis.TimeSeriesMLMetricSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.analysis.TimeSeriesMLScores.TimeSeriesMLScoresKeys;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
+import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys;
 import software.wings.service.impl.analysis.TimeSeriesMLTxnScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
@@ -630,9 +633,22 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         throw new WingsException("Invalid Verification StateType.");
     }
 
-    result.putAll(getCustomMetricTemplates(appId, stateType, serviceId, cvConfigId, groupName));
+    result.putAll(getCustomMetricTemplates(
+        appId, stateType, serviceId, cvConfigId, groupName, getCustomThresholdRefIdForWorkflow(stateExecutionId)));
 
     return result;
+  }
+
+  private String getCustomThresholdRefIdForWorkflow(String stateExecutionId) {
+    if (isNotEmpty(stateExecutionId)) {
+      AnalysisContext context = wingsPersistence.createQuery(AnalysisContext.class)
+                                    .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
+                                    .get();
+      if (context != null) {
+        return context.getCustomThresholdRefId();
+      }
+    }
+    return null;
   }
 
   @Override
@@ -812,16 +828,22 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     return newRelicMetricTemplates == null ? null : newRelicMetricTemplates.getMetricTemplates();
   }
 
-  private Map<String, Map<String, TimeSeriesMetricDefinition>> getCustomMetricTemplates(
-      String appId, StateType stateType, String serviceId, String cvConfigId, String groupName) {
-    List<TimeSeriesMLTransactionThresholds> thresholds =
-        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
-            .filter("appId", appId)
-            .filter("serviceId", serviceId)
-            .filter("stateType", stateType)
-            .filter("groupName", groupName)
-            .filter("cvConfigId", cvConfigId)
-            .asList();
+  private Map<String, Map<String, TimeSeriesMetricDefinition>> getCustomMetricTemplates(String appId,
+      StateType stateType, String serviceId, String cvConfigId, String groupName, String customThresholdRefId) {
+    Query<TimeSeriesMLTransactionThresholds> thresholdsQuery;
+    if (isEmpty(customThresholdRefId)) {
+      thresholdsQuery = wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+                            .filter(TimeSeriesMLTransactionThresholds.BaseKeys.appId, appId)
+                            .filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
+                            .filter(TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
+                            .filter(TimeSeriesMLTransactionThresholdKeys.groupName, groupName)
+                            .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId);
+    } else {
+      thresholdsQuery = wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+                            .filter(TimeSeriesMLTransactionThresholdKeys.customThresholdRefId, customThresholdRefId);
+    }
+    List<TimeSeriesMLTransactionThresholds> thresholds = thresholdsQuery.asList();
+
     Map<String, Map<String, TimeSeriesMetricDefinition>> customThresholds = new HashMap<>();
     if (thresholds != null) {
       for (TimeSeriesMLTransactionThresholds threshold : thresholds) {

@@ -12,11 +12,14 @@ import static software.wings.common.VerificationConstants.DEMO_FAILURE_TS_STATE_
 import static software.wings.common.VerificationConstants.DEMO_SUCCESS_TS_STATE_EXECUTION_ID;
 import static software.wings.common.VerificationConstants.DEMO_WORKFLOW_EXECUTION_ID;
 import static software.wings.delegatetasks.AppdynamicsDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
+import static software.wings.metrics.ThresholdType.ALERT_WHEN_HIGHER;
+import static software.wings.metrics.ThresholdType.ALERT_WHEN_LOWER;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.utils.Misc.replaceDotWithUnicode;
 import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -39,6 +42,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.Threshold;
 import software.wings.metrics.ThresholdComparisonType;
+import software.wings.metrics.TimeSeriesCustomThresholdType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
@@ -67,7 +71,6 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
-import software.wings.verification.CVConfiguration;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.io.UnsupportedEncodingException;
@@ -256,8 +259,19 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public TimeSeriesMLTransactionThresholds getCustomThreshold(String appId, StateType stateType, String serviceId,
-      String cvConfigId, String groupName, String transactionName, String metricName)
+      String cvConfigId, String groupName, String transactionName, String metricName, String customThresholdRefId)
       throws UnsupportedEncodingException {
+    if (isNotEmpty(customThresholdRefId)) {
+      List<TimeSeriesMLTransactionThresholds> thresholdList = getCustomThreshold(customThresholdRefId);
+      if (isNotEmpty(thresholdList)) {
+        for (TimeSeriesMLTransactionThresholds threshold : thresholdList) {
+          if (threshold.getTransactionName().equals(transactionName) && threshold.getMetricName().equals(metricName)) {
+            return threshold;
+          }
+        }
+      }
+    }
+
     return wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class, excludeAuthority)
         .filter(TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
         .filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
@@ -287,22 +301,33 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
+  public List<TimeSeriesMLTransactionThresholds> getCustomThreshold(String customThresholdRefId) {
+    Query<TimeSeriesMLTransactionThresholds> query =
+        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class, excludeAuthority)
+            .filter(TimeSeriesMLTransactionThresholdKeys.customThresholdRefId, customThresholdRefId);
+
+    List<TimeSeriesMLTransactionThresholds> transactionThresholds = new ArrayList<>();
+    try (HIterator<TimeSeriesMLTransactionThresholds> iterator = new HIterator(query.fetch())) {
+      while (iterator.hasNext()) {
+        transactionThresholds.add(iterator.next());
+      }
+    }
+    return transactionThresholds;
+  }
+
+  @Override
   public boolean saveCustomThreshold(
       String serviceId, String cvConfigId, List<TimeSeriesMLTransactionThresholds> thresholds) {
     if (isNotEmpty(thresholds)) {
-      if (isEmpty(serviceId)) {
-        CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
-        if (cvConfiguration == null) {
-          logger.error("cvConfigId {} provided in saveCustomThresholds is invalid", cvConfigId);
-          return false;
-        }
-      }
+      validateCustomThresholdsBeforeSaving(thresholds);
       Map<String, TimeSeriesMLTransactionThresholds> uniqueKeyMap = new HashMap<>();
       thresholds.forEach(threshold -> {
         ThresholdComparisonType thresholdComparisonType = getComparisonTypeFromThreshold(threshold);
+        TimeSeriesCustomThresholdType customThresholdType = getCustomThresholdType(threshold);
 
-        uniqueKeyMap.put(
-            threshold.getMetricName() + "," + threshold.getTransactionName() + thresholdComparisonType, threshold);
+        uniqueKeyMap.put(threshold.getMetricName() + "," + threshold.getTransactionName() + ","
+                + thresholdComparisonType + "," + customThresholdType,
+            threshold);
       });
       List<TimeSeriesMLTransactionThresholds> thresholdsInDB =
           wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class, excludeAuthority)
@@ -313,8 +338,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       if (thresholdsInDB != null) {
         thresholdsInDB.forEach(thresholdInDB -> {
           ThresholdComparisonType thresholdComparisonType = getComparisonTypeFromThreshold(thresholdInDB);
-          String uniqueKey =
-              thresholdInDB.getMetricName() + "," + thresholdInDB.getTransactionName() + thresholdComparisonType;
+          TimeSeriesCustomThresholdType customThresholdType = getCustomThresholdType(thresholdInDB);
+          String uniqueKey = thresholdInDB.getMetricName() + "," + thresholdInDB.getTransactionName() + ","
+              + thresholdComparisonType + "," + customThresholdType;
           if (uniqueKeyMap.containsKey(uniqueKey)) {
             uniqueKeyMap.get(uniqueKey).setUuid(thresholdInDB.getUuid());
           }
@@ -325,6 +351,20 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       wingsPersistence.save(new ArrayList<>(uniqueKeyMap.values()));
     }
     return true;
+  }
+
+  private TimeSeriesCustomThresholdType getCustomThresholdType(TimeSeriesMLTransactionThresholds threshold) {
+    TimeSeriesCustomThresholdType thresholdComparisonType = null;
+    if (threshold.getThresholds() != null && isNotEmpty(threshold.getThresholds().getCustomThresholds())) {
+      thresholdComparisonType =
+          threshold.getThresholds().getCustomThresholds().iterator().next().getCustomThresholdType();
+    }
+    if (thresholdComparisonType == null) {
+      final String errMsg = "Comparison type is null in saveCustomThreshold";
+      logger.info(errMsg);
+      return TimeSeriesCustomThresholdType.ACCEPTABLE;
+    }
+    return thresholdComparisonType;
   }
 
   private ThresholdComparisonType getComparisonTypeFromThreshold(TimeSeriesMLTransactionThresholds threshold) {
@@ -340,19 +380,107 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     return thresholdComparisonType;
   }
 
+  private Collection<TimeSeriesMLTransactionThresholds> validateCustomThresholdsBeforeSaving(
+      List<TimeSeriesMLTransactionThresholds> thresholds) {
+    // for acceptable, check if there are more than one threshold with same txn, metric, criteria -> then fail.
+    // For absolute value, check if greater than value is < lesser than value.
+    // For percentage deviation, check if it is between 0-100.
+    // for anomalous, check if there are more than one with same txn, metric, criteria, values -> then fail.
+
+    if (isEmpty(thresholds)) {
+      return null;
+    }
+    Map<String, TimeSeriesMLTransactionThresholds> txnMetricThresholdMap = new HashMap<>();
+    thresholds.forEach(threshold -> {
+      String uniqueString = threshold.getTransactionName() + ",_," + threshold.getMetricName();
+      if (!txnMetricThresholdMap.containsKey(uniqueString)) {
+        txnMetricThresholdMap.put(uniqueString, threshold.cloneWithoutCustomThresholds());
+      }
+      txnMetricThresholdMap.get(uniqueString)
+          .getThresholds()
+          .getCustomThresholds()
+          .addAll(threshold.getThresholds().getCustomThresholds());
+    });
+
+    txnMetricThresholdMap.forEach((uniqueKey, threshold) -> {
+      List<Threshold> customThresholds = threshold.getThresholds().getCustomThresholds();
+      AtomicDouble acceptableAbsoluteLowerValue = new AtomicDouble(-1),
+                   acceptableAbsoluteHigherValue = new AtomicDouble(-1);
+      AtomicInteger numAcceptableRatio = new AtomicInteger(0), numAcceptableDeviation = new AtomicInteger(0),
+                    numAcceptableAbsolute = new AtomicInteger(0), numAnomalousRation = new AtomicInteger(0),
+                    numAnomalousDeviation = new AtomicInteger(0), numAnomalousAbsolute = new AtomicInteger(0);
+
+      customThresholds.forEach(customThreshold -> {
+        if (ThresholdComparisonType.RATIO.equals(customThreshold.getComparisonType())) {
+          if (TimeSeriesCustomThresholdType.ACCEPTABLE.equals(customThreshold.getCustomThresholdType())) {
+            numAcceptableRatio.incrementAndGet();
+          } else {
+            numAnomalousRation.incrementAndGet();
+          }
+
+          if (customThreshold.getMl() <= 0 || customThreshold.getMl() >= 100) {
+            throw new VerificationOperationException(
+                ErrorCode.APM_CONFIGURATION_ERROR, "Percentage deviation should be between 0 and 100.");
+          }
+        }
+
+        if (ThresholdComparisonType.ABSOLUTE.equals(customThreshold.getComparisonType())
+            && customThreshold.getCustomThresholdType().equals(TimeSeriesCustomThresholdType.ACCEPTABLE)) {
+          numAcceptableAbsolute.incrementAndGet();
+          if (ALERT_WHEN_LOWER.equals(customThreshold.getThresholdType())) {
+            acceptableAbsoluteLowerValue.set(customThreshold.getMl());
+          } else if (ALERT_WHEN_HIGHER.equals(customThreshold.getThresholdType())) {
+            acceptableAbsoluteHigherValue.set(customThreshold.getMl());
+          }
+        } else if (ThresholdComparisonType.ABSOLUTE.equals(customThreshold.getComparisonType())
+            && customThreshold.getCustomThresholdType().equals(TimeSeriesCustomThresholdType.ANOMALOUS)) {
+          numAnomalousAbsolute.incrementAndGet();
+        } else if (ThresholdComparisonType.DELTA.equals(customThreshold.getComparisonType())
+            && customThreshold.getCustomThresholdType().equals(TimeSeriesCustomThresholdType.ACCEPTABLE)) {
+          numAcceptableDeviation.incrementAndGet();
+        } else if (ThresholdComparisonType.DELTA.equals(customThreshold.getComparisonType())
+            && customThreshold.getCustomThresholdType().equals(TimeSeriesCustomThresholdType.ANOMALOUS)) {
+          numAnomalousDeviation.incrementAndGet();
+        }
+      });
+      if (numAcceptableAbsolute.get() > 2 || numAnomalousAbsolute.get() > 2) {
+        throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
+            "Please add only one absolute threshold per transaction metric combination");
+      }
+      if (numAcceptableDeviation.get() > 1 || numAnomalousDeviation.get() > 1) {
+        throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
+            "Please add only one Deviation threshold per transaction metric combination");
+      }
+      if (numAcceptableRatio.get() > 1 || numAnomalousRation.get() > 1) {
+        throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
+            "Please add only one Percentage Deviation threshold per transaction metric combination");
+      }
+      if (acceptableAbsoluteHigherValue.doubleValue() < acceptableAbsoluteLowerValue.doubleValue()) {
+        // TODO: Come up with better error msg.
+        throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
+            "The lesser Absolute values should actually be lesser than the other one.");
+      }
+    });
+    return txnMetricThresholdMap.values();
+  }
   @Override
   public boolean saveCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
-      String transactionName, String groupName, TimeSeriesMetricDefinition metricDefinition) {
-    final Query<TimeSeriesMLTransactionThresholds> query =
+      String transactionName, String groupName, TimeSeriesMetricDefinition metricDefinition,
+      String customThresholdRefId) {
+    Query<TimeSeriesMLTransactionThresholds> query =
         wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
             .filter("appId", appId)
-            .filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
             .filter(TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
             .filter(TimeSeriesMLTransactionThresholdKeys.groupName, groupName)
             .filter(TimeSeriesMLTransactionThresholdKeys.transactionName, transactionName)
-            .filter(TimeSeriesMLTransactionThresholdKeys.metricName, metricDefinition.getMetricName())
-            .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId);
+            .filter(TimeSeriesMLTransactionThresholdKeys.metricName, metricDefinition.getMetricName());
 
+    if (isNotEmpty(customThresholdRefId)) {
+      query = query.filter(TimeSeriesMLTransactionThresholdKeys.customThresholdRefId, customThresholdRefId);
+    } else {
+      query = query.filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
+                  .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId);
+    }
     UpdateOperations<TimeSeriesMLTransactionThresholds> updateOperations =
         wingsPersistence.createUpdateOperations(TimeSeriesMLTransactionThresholds.class)
             .set(TimeSeriesMLTransactionThresholdKeys.thresholds, metricDefinition)
@@ -369,6 +497,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
               .serviceId(serviceId)
               .cvConfigId(cvConfigId)
               .transactionName(transactionName)
+              .customThresholdRefId(customThresholdRefId)
               .metricName(metricDefinition.getMetricName())
               .thresholds(metricDefinition)
               .build();
@@ -379,18 +508,32 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public boolean deleteCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
-      String groupName, String transactionName, String metricName, ThresholdComparisonType thresholdComparisonType)
-      throws UnsupportedEncodingException {
+  public boolean bulkDeleteCustomThreshold(String customThresholdRefId) {
     Query<TimeSeriesMLTransactionThresholds> thresholdsQuery =
         wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class, excludeAuthority)
-            .filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
+            .filter(TimeSeriesMLTransactionThresholdKeys.customThresholdRefId, customThresholdRefId);
+    return wingsPersistence.delete(thresholdsQuery);
+  }
+
+  @Override
+  public boolean deleteCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
+      String groupName, String transactionName, String metricName, ThresholdComparisonType thresholdComparisonType,
+      String customThresholdRefId) throws UnsupportedEncodingException {
+    Query<TimeSeriesMLTransactionThresholds> thresholdsQuery =
+        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class, excludeAuthority)
             .filter(TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
             .filter(TimeSeriesMLTransactionThresholdKeys.groupName, groupName)
             .filter(TimeSeriesMLTransactionThresholdKeys.transactionName, transactionName)
             .filter(TimeSeriesMLTransactionThresholdKeys.metricName,
-                URLDecoder.decode(metricName, StandardCharsets.UTF_8.name()))
-            .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId);
+                URLDecoder.decode(metricName, StandardCharsets.UTF_8.name()));
+
+    if (isNotEmpty(customThresholdRefId)) {
+      thresholdsQuery =
+          thresholdsQuery.filter(TimeSeriesMLTransactionThresholdKeys.customThresholdRefId, customThresholdRefId);
+    } else {
+      thresholdsQuery = thresholdsQuery.filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
+                            .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId);
+    }
 
     if (thresholdComparisonType == null) {
       return wingsPersistence.delete(thresholdsQuery);
@@ -431,13 +574,13 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         || settingAttribute.getName().toLowerCase().endsWith("prod")) {
       if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
         return getMetricsAnalysis(
-            DEMO_SUCCESS_TS_STATE_EXECUTION_ID + stateExecutionInstance.getStateType(), offset, pageSize);
+            DEMO_SUCCESS_TS_STATE_EXECUTION_ID + stateExecutionInstance.getStateType(), offset, pageSize, true);
       } else {
         return getMetricsAnalysis(
-            DEMO_FAILURE_TS_STATE_EXECUTION_ID + stateExecutionInstance.getStateType(), offset, pageSize);
+            DEMO_FAILURE_TS_STATE_EXECUTION_ID + stateExecutionInstance.getStateType(), offset, pageSize, true);
       }
     }
-    return getMetricsAnalysis(stateExecutionId, offset, pageSize);
+    return getMetricsAnalysis(stateExecutionId, offset, pageSize, false);
   }
 
   @Override
@@ -476,9 +619,21 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         .get();
   }
 
+  private String getCustomThresholdRefIdForStateExecutionId(String stateExecutionId) {
+    if (isNotEmpty(stateExecutionId)) {
+      AnalysisContext context = wingsPersistence.createQuery(AnalysisContext.class)
+                                    .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
+                                    .get();
+      if (context != null) {
+        return context.getCustomThresholdRefId();
+      }
+    }
+    return null;
+  }
+
   @Override
   public DeploymentTimeSeriesAnalysis getMetricsAnalysis(
-      String stateExecutionId, Optional<Integer> offset, Optional<Integer> pageSize) {
+      String stateExecutionId, Optional<Integer> offset, Optional<Integer> pageSize, boolean isDemoPath) {
     final TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
             .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
@@ -516,7 +671,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
           List<NewRelicMetricAnalysisValue> metricsList = new ArrayList<>();
           RiskLevel globalRisk = RiskLevel.NA;
           for (TimeSeriesMLMetricSummary mlMetricSummary : txnSummary.getMetrics().values()) {
-            RiskLevel riskLevel = getRiskLevel(mlMetricSummary.getMax_risk());
+            RiskLevel riskLevel =
+                mlMetricSummary.isShould_fail_fast() ? RiskLevel.HIGH : getRiskLevel(mlMetricSummary.getMax_risk());
 
             if (riskLevel.compareTo(globalRisk) < 0) {
               globalRisk = riskLevel;
@@ -572,6 +728,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     Collections.sort(metricAnalyses);
     for (int i = txnOffset; i < metricAnalyses.size() && i < txnOffset + txnPageSize; i++) {
       deploymentTimeSeriesAnalysis.getMetricAnalyses().add(metricAnalyses.get(i));
+    }
+
+    if (!isDemoPath) {
+      deploymentTimeSeriesAnalysis.setCustomThresholdRefId(
+          getCustomThresholdRefIdForStateExecutionId(stateExecutionId));
     }
 
     return deploymentTimeSeriesAnalysis;

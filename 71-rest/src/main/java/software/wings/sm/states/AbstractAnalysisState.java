@@ -1029,6 +1029,7 @@ public abstract class AbstractAnalysisState extends State {
                 isEmpty(context.getControlNodes()) ? Collections.emptySet() : context.getControlNodes().keySet())
             .correlationId(context.getCorrelationId())
             .query(context.getQuery())
+            .customThresholdRefId(context.getCustomThresholdRefId())
             .comparisonStrategy(getComparisonStrategy())
             .build();
     executionData.setStatus(status);

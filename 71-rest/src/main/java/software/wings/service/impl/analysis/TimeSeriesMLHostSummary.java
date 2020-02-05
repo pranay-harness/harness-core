@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -31,4 +32,7 @@ public class TimeSeriesMLHostSummary {
   private TimeSeriesMlAnalysisType timeSeriesMlAnalysisType;
   private List<Integer> anomalies;
   private List<Long> anomalousTimeStamps;
+  @JsonProperty("upper_threshold") private List<Double> upperThreshold;
+  @JsonProperty("lower_threshold") private List<Double> lowerThreshold;
+  @JsonProperty("host_name") private String hostName;
 }

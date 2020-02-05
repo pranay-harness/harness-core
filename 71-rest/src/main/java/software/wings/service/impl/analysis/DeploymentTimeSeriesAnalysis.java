@@ -13,6 +13,7 @@ import java.util.List;
 @FieldNameConstants(innerTypeName = "DeploymentTimeSeriesAnalysisKeys")
 public class DeploymentTimeSeriesAnalysis {
   private String stateExecutionId;
+  private String customThresholdRefId;
   private String baseLineExecutionId;
   private String message;
   private RiskLevel riskLevel;

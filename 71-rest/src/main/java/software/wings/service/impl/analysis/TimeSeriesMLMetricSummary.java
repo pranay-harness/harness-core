@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 import java.util.Map;
@@ -8,6 +9,7 @@ import java.util.Map;
  * Created by sriram_parthasarathy on 9/22/17.
  */
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TimeSeriesMLMetricSummary {
   private String metric_name;
   private String metric_type;

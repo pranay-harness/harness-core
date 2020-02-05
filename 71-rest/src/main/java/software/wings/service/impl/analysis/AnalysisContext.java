@@ -93,6 +93,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
   private DataCollectionInfo dataCollectionInfo;
   private DataCollectionInfoV2 dataCollectionInfov2;
   private boolean cvTasksCreated;
+  private String customThresholdRefId;
 
   private int retry;
   // This needs to be String to boolean map because FeatureFlags can be removed which can cause deserialization issue.
@@ -120,7 +121,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
       Map<String, List<TimeSeries>> timeSeriesToCollect, boolean runTillConvergence, String delegateTaskId,
       MLAnalysisType analysisType, ExecutionStatus executionStatus, String managerVersion, String envId,
       String hostNameField, int collectionInterval, long startDataCollectionMinute,
-      DataCollectionInfo dataCollectionInfo) {
+      DataCollectionInfo dataCollectionInfo, String customThresholdRefId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, syncFromGit);
     this.accountId = accountId;
     this.workflowId = workflowId;
@@ -159,6 +160,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
     this.collectionInterval = collectionInterval;
     this.startDataCollectionMinute = startDataCollectionMinute;
     this.dataCollectionInfo = dataCollectionInfo;
+    this.customThresholdRefId = customThresholdRefId;
   }
 
   public LogClusterContext getClusterContext() {
