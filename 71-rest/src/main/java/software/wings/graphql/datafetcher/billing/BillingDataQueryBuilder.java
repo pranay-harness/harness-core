@@ -64,6 +64,14 @@ public class BillingDataQueryBuilder {
   protected BillingDataQueryMetadata formQuery(String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
       QLCCMTimeSeriesAggregation groupByTime, List<QLBillingSortCriteria> sortCriteria, boolean addInstanceTypeFilter) {
+    return formQuery(
+        accountId, filters, aggregateFunction, groupBy, groupByTime, sortCriteria, addInstanceTypeFilter, false);
+  }
+
+  protected BillingDataQueryMetadata formQuery(String accountId, List<QLBillingDataFilter> filters,
+      List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
+      QLCCMTimeSeriesAggregation groupByTime, List<QLBillingSortCriteria> sortCriteria, boolean addInstanceTypeFilter,
+      boolean isCostTrendQuery) {
     BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
     SelectQuery selectQuery = new SelectQuery();
 
@@ -80,6 +88,9 @@ public class BillingDataQueryBuilder {
     }
 
     decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
+    if (isCostTrendQuery) {
+      decorateQueryWithMinMaxStartTime(selectQuery, fieldNames);
+    }
 
     selectQuery.addCustomFromTable(schema.getBillingDataTable());
 

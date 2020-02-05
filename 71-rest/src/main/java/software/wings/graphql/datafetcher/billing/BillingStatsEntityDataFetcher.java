@@ -76,10 +76,13 @@ public class BillingStatsEntityDataFetcher
     }
 
     queryData = billingDataQueryBuilder.formQuery(
-        accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria, true);
+        accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria, true, true);
 
     logger.info("BillingStatsEntityDataFetcher query!! {}", queryData.getQuery());
-    logger.info(queryData.getQuery());
+
+    Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData =
+        billingDataHelper.getBillingAmountDataForEntityCostTrend(
+            accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sortCriteria);
 
     // Calculate Unallocated Cost for Clusters
     Map<String, Double> unallocatedCostForClusters = new HashMap<>();
@@ -91,7 +94,8 @@ public class BillingStatsEntityDataFetcher
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(queryData.getQuery());
-      return generateEntityData(queryData, resultSet, unallocatedCostForClusters);
+      return generateEntityData(
+          queryData, resultSet, entityIdToPrevBillingAmountData, filters, unallocatedCostForClusters);
     } catch (SQLException e) {
       logger.error("BillingStatsTimeSeriesDataFetcher Error exception {}", e);
     } finally {
@@ -101,6 +105,7 @@ public class BillingStatsEntityDataFetcher
   }
 
   private QLEntityTableListData generateEntityData(BillingDataQueryMetadata queryData, ResultSet resultSet,
+      Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData, List<QLBillingDataFilter> filters,
       Map<String, Double> unallocatedCostForCluster) throws SQLException {
     List<QLEntityTableData> entityTableListData = new ArrayList<>();
     while (resultSet != null && resultSet.next()) {
@@ -155,6 +160,7 @@ public class BillingStatsEntityDataFetcher
             break;
           case WORKLOADNAME:
             workloadName = resultSet.getString(field.getFieldName());
+            entityId = resultSet.getString(field.getFieldName());
             break;
           case WORKLOADTYPE:
             workloadType = resultSet.getString(field.getFieldName());
@@ -162,6 +168,7 @@ public class BillingStatsEntityDataFetcher
           case NAMESPACE:
             namespace
             = resultSet.getString(field.getFieldName());
+            entityId = resultSet.getString(field.getFieldName());
             break;
           case IDLECOST:
             idleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
@@ -202,6 +209,11 @@ public class BillingStatsEntityDataFetcher
           default:
             break;
         }
+      }
+
+      if (entityIdToPrevBillingAmountData != null && entityIdToPrevBillingAmountData.containsKey(entityId)) {
+        costTrend =
+            billingDataHelper.getCostTrendForEntity(resultSet, entityIdToPrevBillingAmountData.get(entityId), filters);
       }
 
       if (unallocatedCostForCluster.containsKey(clusterId)) {

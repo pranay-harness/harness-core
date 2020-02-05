@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.billing;
 
 import com.google.inject.Inject;
 
-import com.hazelcast.util.Preconditions;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -10,8 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.schema.type.aggregation.QLData;
-import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
-import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo;
@@ -29,7 +26,6 @@ import java.sql.Statement;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
@@ -50,7 +46,6 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
   private static final String FORECAST_COST_VALUE = "$%s";
   private static final String EMPTY_VALUE = "-";
   private static final String NA_VALUE = "NA";
-  private static final long ONE_DAY_MILLIS = 86400000;
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -72,41 +67,17 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
     QLBillingAmountData billingAmountData = getBillingAmountData(accountId, aggregateFunction, filters);
     if (billingAmountData != null) {
       BigDecimal totalBillingAmount = billingAmountData.getCost();
-      BigDecimal forecastCost = getForecastCost(billingAmountData, getEndInstant(filters));
+      BigDecimal forecastCost =
+          billingDataHelper.getForecastCost(billingAmountData, billingDataHelper.getEndInstant(filters));
       return QLBillingTrendStats.builder()
           .totalCost(getTotalBillingStats(billingAmountData, filters))
           .costTrend(getBillingTrend(accountId, totalBillingAmount, forecastCost, aggregateFunction, filters))
-          .forecastCost(getForecastBillingStats(forecastCost, getStartInstant(filters), getEndInstant(filters)))
+          .forecastCost(getForecastBillingStats(
+              forecastCost, billingDataHelper.getStartInstant(filters), billingDataHelper.getEndInstant(filters)))
           .build();
     } else {
       return QLBillingTrendStats.builder().build();
     }
-  }
-
-  public BigDecimal getForecastCost(QLBillingAmountData billingAmountData, Instant endInstant) {
-    Preconditions.checkNotNull(billingAmountData);
-    Instant currentTime = Instant.ofEpochMilli(billingAmountData.getMaxStartTime() - ONE_DAY_MILLIS);
-    if (currentTime.isAfter(endInstant)) {
-      return null;
-    }
-
-    long billingTimeDiffMillis = ONE_DAY_MILLIS;
-    if (billingAmountData.getMaxStartTime() != billingAmountData.getMinStartTime()) {
-      billingTimeDiffMillis = billingAmountData.getMaxStartTime() - billingAmountData.getMinStartTime();
-    }
-
-    BigDecimal totalBillingAmount = billingAmountData.getCost();
-    long actualTimeDiffMillis = endInstant.toEpochMilli() - billingAmountData.getMinStartTime();
-    return totalBillingAmount.multiply(
-        new BigDecimal(actualTimeDiffMillis).divide(new BigDecimal(billingTimeDiffMillis), 2, RoundingMode.HALF_UP));
-  }
-
-  public Instant getEndInstant(List<QLBillingDataFilter> filters) {
-    return Instant.ofEpochMilli(billingDataHelper.getEndTimeFilter(filters).getValue().longValue());
-  }
-
-  public Instant getStartInstant(List<QLBillingDataFilter> filters) {
-    return Instant.ofEpochMilli(billingDataHelper.getStartTimeFilter(filters).getValue().longValue());
   }
 
   private QLBillingStatsInfo getForecastBillingStats(
@@ -126,29 +97,6 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
         .build();
   }
 
-  private List<QLBillingDataFilter> getTrendFilter(
-      List<QLBillingDataFilter> filters, Instant startInstant, Instant endInstant) {
-    long diffMillis = endInstant.toEpochMilli() - startInstant.toEpochMilli();
-    long trendStartTime = startInstant.toEpochMilli() - diffMillis - ONE_DAY_MILLIS;
-    long trendEndTime = startInstant.toEpochMilli() - ONE_DAY_MILLIS;
-    return updateTimeFilter(filters, trendStartTime, trendEndTime);
-  }
-
-  private List<QLBillingDataFilter> updateTimeFilter(List<QLBillingDataFilter> filters, long startTime, long endTime) {
-    List<QLBillingDataFilter> entityFilters =
-        filters.stream()
-            .filter(qlBillingDataFilter
-                -> null == qlBillingDataFilter.getStartTime() && null == qlBillingDataFilter.getEndTime())
-            .collect(Collectors.toList());
-    entityFilters.add(QLBillingDataFilter.builder()
-                          .startTime(QLTimeFilter.builder().value(startTime).operator(QLTimeOperator.AFTER).build())
-                          .build());
-    entityFilters.add(QLBillingDataFilter.builder()
-                          .endTime(QLTimeFilter.builder().value(endTime).operator(QLTimeOperator.BEFORE).build())
-                          .build());
-    return entityFilters;
-  }
-
   private QLBillingStatsInfo getTotalBillingStats(
       QLBillingAmountData billingAmountData, List<QLBillingDataFilter> filters) {
     Instant startInstant = Instant.ofEpochMilli(billingDataHelper.getStartTimeFilter(filters).getValue().longValue());
@@ -166,7 +114,8 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
 
   private QLBillingStatsInfo getBillingTrend(String accountId, BigDecimal totalBillingAmount, BigDecimal forecastCost,
       QLCCMAggregationFunction aggregateFunction, List<QLBillingDataFilter> filters) {
-    List<QLBillingDataFilter> trendFilters = getTrendFilter(filters, getStartInstant(filters), getEndInstant(filters));
+    List<QLBillingDataFilter> trendFilters = billingDataHelper.getTrendFilter(
+        filters, billingDataHelper.getStartInstant(filters), billingDataHelper.getEndInstant(filters));
     QLBillingAmountData prevBillingAmountData = getBillingAmountData(accountId, aggregateFunction, trendFilters);
     Instant filterStartTime =
         Instant.ofEpochMilli(billingDataHelper.getStartTimeFilter(trendFilters).getValue().longValue());

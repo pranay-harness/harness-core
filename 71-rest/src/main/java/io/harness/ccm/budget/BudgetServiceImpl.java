@@ -13,6 +13,7 @@ import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
+import software.wings.graphql.datafetcher.billing.BillingDataHelper;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
@@ -49,6 +50,7 @@ public class BudgetServiceImpl implements BudgetService {
   @Inject private BudgetDao budgetDao;
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private BillingDataQueryBuilder billingDataQueryBuilder;
+  @Inject private BillingDataHelper billingDataHelper;
   @Inject QLBillingStatsHelper statsHelper;
   private String NOTIFICATION_TEMPLATE = "%s | %s exceed %s ($%s)";
   private String DATE_TEMPLATE = "MM-DD-YYYY hh:mm a";
@@ -122,8 +124,8 @@ public class BudgetServiceImpl implements BudgetService {
     QLCCMAggregationFunction aggregationFunction = BudgetUtils.makeBillingAmtAggregation();
     QLBillingAmountData billingAmountData =
         billingTrendStatsDataFetcher.getBillingAmountData(budget.getAccountId(), aggregationFunction, filters);
-    Instant endInstant = billingTrendStatsDataFetcher.getEndInstant(filters);
-    BigDecimal forecastCost = billingTrendStatsDataFetcher.getForecastCost(billingAmountData, endInstant);
+    Instant endInstant = billingDataHelper.getEndInstant(filters);
+    BigDecimal forecastCost = billingDataHelper.getForecastCost(billingAmountData, endInstant);
     if (forecastCost == null) {
       return 0L;
     }
