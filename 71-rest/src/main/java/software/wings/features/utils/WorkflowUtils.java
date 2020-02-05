@@ -107,7 +107,7 @@ public class WorkflowUtils {
   }
 
   public static List<Workflow> getMatchingWorkflows(Collection<Workflow> workflows, Predicate<GraphNode> predicate) {
-    return workflows.parallelStream().filter(workflow -> matches(workflow, predicate)).collect(toList());
+    return workflows.stream().filter(workflow -> matches(workflow, predicate)).collect(toList());
   }
 
   public static boolean matches(Workflow workflow, Predicate<GraphNode> predicate) {

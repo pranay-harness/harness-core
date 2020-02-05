@@ -318,7 +318,7 @@ public class JenkinsImpl implements Jenkins {
     }
     List<BuildDetails> buildDetails = Lists.newArrayList(
         jobWithDetails.getBuilds()
-            .parallelStream()
+            .stream()
             .limit(lastN)
             .map(build -> {
               try {

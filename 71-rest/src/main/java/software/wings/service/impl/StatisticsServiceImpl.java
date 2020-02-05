@@ -60,7 +60,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
 
     Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType =
-        workflowExecutions.parallelStream().collect(groupingBy(wex -> PROD == wex.getEnvType() ? PROD : NON_PROD));
+        workflowExecutions.stream().collect(groupingBy(wex -> PROD == wex.getEnvType() ? PROD : NON_PROD));
 
     deploymentStats.getStatsMap().put(
         PROD, getDeploymentStatisticsByEnvType(numOfDays, wflExecutionByEnvType.get(EnvironmentType.PROD)));
@@ -96,7 +96,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     allTopConsumers = allTopConsumers.stream().sorted(byCount).collect(toList());
 
     Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType =
-        workflowExecutions.parallelStream().collect(groupingBy(wex -> PROD == wex.getEnvType() ? PROD : NON_PROD));
+        workflowExecutions.stream().collect(groupingBy(wex -> PROD == wex.getEnvType() ? PROD : NON_PROD));
 
     List<TopConsumer> prodTopConsumers = new ArrayList<>();
     getTopServicesDeployed(prodTopConsumers, wflExecutionByEnvType.get(PROD));
@@ -146,7 +146,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     Map<Long, List<WorkflowExecution>> wflExecutionByDate = new HashMap<>();
     if (workflowExecutions != null) {
-      wflExecutionByDate = workflowExecutions.parallelStream().collect(
+      wflExecutionByDate = workflowExecutions.stream().collect(
           groupingBy(wfl -> EpochUtils.obtainStartOfTheDayEpoch(wfl.getCreatedAt(), PST_ZONE_ID)));
     }
 
