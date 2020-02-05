@@ -85,7 +85,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
 
   public BigDecimal getForecastCost(QLBillingAmountData billingAmountData, Instant endInstant) {
     Preconditions.checkNotNull(billingAmountData);
-    Instant currentTime = Instant.now();
+    Instant currentTime = Instant.ofEpochMilli(billingAmountData.getMaxStartTime() - ONE_DAY_MILLIS);
     if (currentTime.isAfter(endInstant)) {
       return null;
     }

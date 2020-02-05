@@ -85,8 +85,6 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getTotalCost().getStatsDescription()).isEqualTo("of 09 October, 2019 - 19 October, 2019");
     assertThat(data.getCostTrend().getStatsValue()).isEqualTo("113.2");
     assertThat(data.getCostTrend().getStatsDescription()).isEqualTo("$5.66 over 11 September, 2019 - 08 October, 2019");
-    assertThat(data.getForecastCost().getStatsValue()).isEqualTo("-");
-    assertThat(data.getForecastCost().getStatsDescription()).isEqualTo("-");
   }
 
   @Test
