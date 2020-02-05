@@ -360,6 +360,54 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testHandlePipelineStageDeletion() throws Exception {
+    PipelineStageElement pipelineStageElement = PipelineStageElement.builder().name("test").parallelIndex(0).build();
+    PipelineStageElement pipelineStageElement1 = PipelineStageElement.builder().name("test_1").parallelIndex(0).build();
+    PipelineStageElement pipelineStageElement2 = PipelineStageElement.builder().name("test_2").parallelIndex(1).build();
+    PipelineStageElement pipelineStageElement3 = PipelineStageElement.builder().name("test_3").parallelIndex(1).build();
+    PipelineStageElement pipelineStageElement4 = PipelineStageElement.builder().name("test_4").parallelIndex(1).build();
+
+    PipelineStage pipelineStage =
+        PipelineStage.builder().pipelineStageElements(Arrays.asList(pipelineStageElement)).parallel(false).build();
+    PipelineStage pipelineStage1 =
+        PipelineStage.builder().pipelineStageElements(Arrays.asList(pipelineStageElement1)).parallel(true).build();
+    PipelineStage pipelineStage2 =
+        PipelineStage.builder().pipelineStageElements(Arrays.asList(pipelineStageElement2)).parallel(false).build();
+    PipelineStage pipelineStage3 =
+        PipelineStage.builder().pipelineStageElements(Arrays.asList(pipelineStageElement3)).parallel(true).build();
+    PipelineStage pipelineStage4 =
+        PipelineStage.builder().pipelineStageElements(Arrays.asList(pipelineStageElement4)).parallel(true).build();
+
+    Pipeline pipeline =
+        Pipeline.builder()
+            .pipelineStages(Arrays.asList(pipelineStage, pipelineStage1, pipelineStage3, pipelineStage4))
+            .build();
+    Pipeline savedPipeline = Pipeline.builder()
+                                 .pipelineStages(Arrays.asList(
+                                     pipelineStage, pipelineStage1, pipelineStage2, pipelineStage3, pipelineStage4))
+                                 .build();
+
+    pipelineServiceImpl.handlePipelineStageDeletion(pipeline, savedPipeline, false);
+
+    assertThat(pipeline.getPipelineStages().get(2).isParallel()).isEqualTo(false);
+    assertThat(pipeline.getPipelineStages().get(2).getPipelineStageElements().get(0).getName()).isEqualTo("test_3");
+
+    pipeline = Pipeline.builder()
+                   .pipelineStages(Arrays.asList(pipelineStage, pipelineStage1, pipelineStage2, pipelineStage4))
+                   .build();
+    savedPipeline = Pipeline.builder()
+                        .pipelineStages(Arrays.asList(
+                            pipelineStage, pipelineStage1, pipelineStage2, pipelineStage3, pipelineStage4))
+                        .build();
+
+    pipelineServiceImpl.handlePipelineStageDeletion(pipeline, savedPipeline, false);
+
+    assertThat(pipeline.getPipelineStages().get(3).isParallel()).isEqualTo(true);
+  }
+
+  @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldNotAllowSamePublishedVariable() throws Exception {

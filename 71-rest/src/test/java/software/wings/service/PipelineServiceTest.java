@@ -298,7 +298,7 @@ public class PipelineServiceTest extends WingsBaseTest {
         FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
     Pipeline pipeline = getPipelineSimple(failureStrategy, prepareStageSimple());
 
-    Pipeline updatedPipeline = pipelineService.update(pipeline, false);
+    Pipeline updatedPipeline = pipelineService.update(pipeline, false, false);
 
     assertThat(updatedPipeline)
         .isNotNull()
@@ -321,7 +321,7 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     Pipeline pipeline = getPipelineSimple(failureStrategy, prepareStageDisableAssertion(ENV_ID, WORKFLOW_ID));
 
-    Pipeline updatedPipeline = pipelineService.update(pipeline, false);
+    Pipeline updatedPipeline = pipelineService.update(pipeline, false, false);
 
     assertThat(updatedPipeline)
         .isNotNull()
@@ -345,7 +345,7 @@ public class PipelineServiceTest extends WingsBaseTest {
         failureStrategy, prepareStageApprovalDisableAssertion(), prepareStageDisableAssertion(ENV_ID, WORKFLOW_ID));
 
     assertThatExceptionOfType(InvalidArgumentsException.class)
-        .isThrownBy(() -> pipelineService.update(pipeline, false));
+        .isThrownBy(() -> pipelineService.update(pipeline, false, false));
   }
 
   @NotNull
