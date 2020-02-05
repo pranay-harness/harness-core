@@ -28,7 +28,7 @@ public interface MetricDataAnalysisService {
   NewRelicMetricAnalysisRecord getLatestLocalAnalysisRecord(String stateExecutionId);
 
   DeploymentTimeSeriesAnalysis getMetricsAnalysis(
-      String stateExecutionId, Optional<Integer> offset, Optional<Integer> pageSize);
+      String stateExecutionId, Optional<Integer> offset, Optional<Integer> pageSize, boolean isDemoPath);
 
   DeploymentTimeSeriesAnalysis getMetricsAnalysisForDemo(
       String stateExecutionId, Optional<Integer> offset, Optional<Integer> pageSize);
@@ -58,19 +58,22 @@ public interface MetricDataAnalysisService {
       String appId, String stateExecutionId, String workflowExecutionId);
 
   TimeSeriesMLTransactionThresholds getCustomThreshold(String appId, StateType stateType, String serviceId,
-      String cvConfigId, String groupName, String transactionName, String metricName)
+      String cvConfigId, String groupName, String transactionName, String metricName, String customThresholdRefId)
       throws UnsupportedEncodingException;
 
   List<TimeSeriesMLTransactionThresholds> getCustomThreshold(String fieldName, String fieldValue);
+  List<TimeSeriesMLTransactionThresholds> getCustomThreshold(String customThresholdRefId);
 
   boolean saveCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
-      String transactionName, String groupName, TimeSeriesMetricDefinition metricDefinition);
+      String transactionName, String groupName, TimeSeriesMetricDefinition metricDefinition,
+      String customThresholdRefId);
   boolean saveCustomThreshold(String serviceId, String cvConfigId, List<TimeSeriesMLTransactionThresholds> thresholds);
 
   boolean deleteCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
-      String groupName, String transactionName, String metricName, ThresholdComparisonType thresholdComparisonType)
-      throws UnsupportedEncodingException;
+      String groupName, String transactionName, String metricName, ThresholdComparisonType thresholdComparisonType,
+      String customThresholdRefId) throws UnsupportedEncodingException;
 
+  boolean bulkDeleteCustomThreshold(String customThresholdRefId);
   void saveRawDataToGoogleDataStore(
       String accountId, String stateExecutionId, ExecutionStatus executionStatus, String serviceId);
 }

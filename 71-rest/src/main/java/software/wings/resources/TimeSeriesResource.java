@@ -60,7 +60,7 @@ public class TimeSeriesResource {
           stateExecutionId, Optional.ofNullable(offset), Optional.ofNullable(pageSize)));
     }
     return new RestResponse<>(metricDataAnalysisService.getMetricsAnalysis(
-        stateExecutionId, Optional.ofNullable(offset), Optional.ofNullable(pageSize)));
+        stateExecutionId, Optional.ofNullable(offset), Optional.ofNullable(pageSize), false));
   }
 
   @GET
@@ -113,9 +113,10 @@ public class TimeSeriesResource {
       @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
       @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
       @QueryParam("transactionName") String transactionName, @QueryParam("cvConfigId") String cvConfigId,
+      @QueryParam("customThresholdRefId") String customThresholdRefId,
       TimeSeriesMetricDefinition timeSeriesMetricDefinition) {
-    return new RestResponse<>(metricDataAnalysisService.saveCustomThreshold(
-        appId, stateType, serviceId, cvConfigId, transactionName, groupName, timeSeriesMetricDefinition));
+    return new RestResponse<>(metricDataAnalysisService.saveCustomThreshold(appId, stateType, serviceId, cvConfigId,
+        transactionName, groupName, timeSeriesMetricDefinition, customThresholdRefId));
   }
 
   @POST
@@ -137,9 +138,10 @@ public class TimeSeriesResource {
       @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
       @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
       @QueryParam("transactionName") String transactionName, @QueryParam("metricName") String metricName,
-      @QueryParam("cvConfigId") String cvConfigId) throws UnsupportedEncodingException {
+      @QueryParam("customThresholdRefId") String customThresholdRefId, @QueryParam("cvConfigId") String cvConfigId)
+      throws UnsupportedEncodingException {
     return new RestResponse<>(metricDataAnalysisService.getCustomThreshold(
-        appId, stateType, serviceId, cvConfigId, groupName, transactionName, metricName));
+        appId, stateType, serviceId, cvConfigId, groupName, transactionName, metricName, customThresholdRefId));
   }
 
   @GET
@@ -162,6 +164,15 @@ public class TimeSeriesResource {
         metricDataAnalysisService.getCustomThreshold(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId));
   }
 
+  @GET
+  @Path("/thresholds")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<TimeSeriesMLTransactionThresholds>> getCustomThresholdWithRefId(
+      @QueryParam("accountId") String accountId, @QueryParam("customThresholdRefId") String customThresholdRefId) {
+    return new RestResponse<>(metricDataAnalysisService.getCustomThreshold(customThresholdRefId));
+  }
+
   @DELETE
   @Path("/threshold")
   @Timed
@@ -171,10 +182,19 @@ public class TimeSeriesResource {
       @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("transactionName") String transactionName,
       @QueryParam("metricName") String metricName,
-      @QueryParam("comparisonType") ThresholdComparisonType thresholdComparisonType)
-      throws UnsupportedEncodingException {
-    return new RestResponse<>(metricDataAnalysisService.deleteCustomThreshold(
-        appId, stateType, serviceId, cvConfigId, groupName, transactionName, metricName, thresholdComparisonType));
+      @QueryParam("comparisonType") ThresholdComparisonType thresholdComparisonType,
+      @QueryParam("customThresholdRefId") String customThresholdRefId) throws UnsupportedEncodingException {
+    return new RestResponse<>(metricDataAnalysisService.deleteCustomThreshold(appId, stateType, serviceId, cvConfigId,
+        groupName, transactionName, metricName, thresholdComparisonType, customThresholdRefId));
+  }
+
+  @DELETE
+  @Path("/bulk-threshold")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> bulkDeleteCustomThresholds(
+      @QueryParam("accountId") String accountId, @QueryParam("customThresholdRefId") String customThresholdRefId) {
+    return new RestResponse<>(metricDataAnalysisService.bulkDeleteCustomThreshold(customThresholdRefId));
   }
 
   @GET

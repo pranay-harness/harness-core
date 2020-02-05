@@ -56,6 +56,7 @@ public class CVConfiguration extends Base implements NameAccess {
   @NotNull @Indexed private String serviceId;
   @NotNull private StateType stateType;
   @NotNull private AnalysisTolerance analysisTolerance;
+  private String customThresholdRefId;
   private boolean enabled24x7;
   private AnalysisComparisonStrategy comparisonStrategy;
   private String contextId;

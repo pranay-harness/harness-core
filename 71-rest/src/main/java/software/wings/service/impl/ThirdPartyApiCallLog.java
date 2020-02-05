@@ -254,11 +254,12 @@ public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAwar
      on this instance.
      This is also for preventing NPE while getting 0th index of response
      */
-    if (this.response.isEmpty()) {
+    if (this.response != null && this.response.isEmpty()) {
       return ExecutionStatus.FAILED;
     }
-    if (this.response.stream().anyMatch(
-            obj -> obj.getName().equals(STATUS_CODE) && !obj.getValue().equals(String.valueOf(HttpStatus.SC_OK)))) {
+    if (this.response != null
+        && this.response.stream().anyMatch(
+               obj -> obj.getName().equals(STATUS_CODE) && !obj.getValue().equals(String.valueOf(HttpStatus.SC_OK)))) {
       return ExecutionStatus.FAILED;
     }
 

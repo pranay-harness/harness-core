@@ -1,5 +1,7 @@
 package software.wings.service.impl.analysis;
 
+import com.google.common.collect.Sets;
+
 import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +17,9 @@ import software.wings.beans.Base;
 import software.wings.metrics.TimeSeriesCustomThresholdType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.sm.StateType;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 @Indexes({
   @Index(fields = {
@@ -48,5 +53,28 @@ public class TimeSeriesMLTransactionThresholds extends Base {
 
   TimeSeriesCustomThresholdType thresholdType = TimeSeriesCustomThresholdType.ACCEPTABLE;
 
+  private String customThresholdRefId;
+
   private int version;
+
+  public TimeSeriesMLTransactionThresholds cloneWithoutCustomThresholds() {
+    return TimeSeriesMLTransactionThresholds.builder()
+        .serviceId(serviceId)
+        .workflowId(workflowId)
+        .stateType(stateType)
+        .groupName(groupName)
+        .transactionName(transactionName)
+        .metricName(metricName)
+        .cvConfigId(cvConfigId)
+        .thresholds(TimeSeriesMetricDefinition.builder()
+                        .metricName(thresholds.getMetricName())
+                        .metricType(thresholds.getMetricType())
+                        .tags(thresholds.getTags() != null ? Sets.newHashSet(thresholds.getTags()) : null)
+                        .categorizedThresholds(thresholds.getCategorizedThresholds() != null
+                                ? new HashMap<>(thresholds.getCategorizedThresholds())
+                                : null)
+                        .customThresholds(new ArrayList<>())
+                        .build())
+        .build();
+  }
 }

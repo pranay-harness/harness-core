@@ -320,9 +320,10 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
             analysisService.getFailFastAnalysisRecord(context.getAppId(), context.getStateExecutionId());
         if (failFastRecord != null && failFastRecord.isShouldFailFast()) {
           logger.info("The analysis for state {} is going to fail fast due to {}", context.getStateExecutionId(),
-              failFastRecord.getFailFastErrorMsg());
+              "Analysis failed due to fail fast thresholds: " + failFastRecord.getFailFastErrorMsg());
           completeCron = true;
-          error = false;
+          error = true;
+          errMsg = "Analysis failed due to fail fast thresholds: " + failFastRecord.getFailFastErrorMsg();
           return;
         }
 

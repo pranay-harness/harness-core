@@ -149,7 +149,8 @@ public class MetricDataAnalysisServiceImplTest extends WingsBaseTest {
                                                          .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
                                                          .ml(i * numOfMetricsPerTxns + j)
                                                          .build()))
-                .build());
+                .build(),
+            null);
       }
     }
   }

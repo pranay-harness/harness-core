@@ -11,6 +11,7 @@ import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -40,6 +41,8 @@ import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -73,6 +76,12 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
     appId = wingsPersistence.save(anApplication().name("Harness Verification").accountId(accountId).build());
     stateExecutionId = generateUuid();
     when(executionContext.getStateExecutionInstanceId()).thenReturn(stateExecutionId);
+    wingsPersistence.save(StateExecutionInstance.Builder.aStateExecutionInstance()
+                              .uuid(stateExecutionId)
+                              .displayName("name")
+                              .stateExecutionMap(new HashMap<String, StateExecutionData>(
+                                  ImmutableMap.of("name", new VerificationStateAnalysisExecutionData())))
+                              .build());
   }
 
   @Test

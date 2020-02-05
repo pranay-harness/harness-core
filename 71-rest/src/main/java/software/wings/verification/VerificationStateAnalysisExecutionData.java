@@ -42,6 +42,7 @@ public class VerificationStateAnalysisExecutionData extends StateExecutionData {
   private int progressPercentage;
   private AnalysisComparisonStrategy comparisonStrategy;
   private long remainingMinutes;
+  private String customThresholdRefId;
 
   @Override
   @JsonIgnore

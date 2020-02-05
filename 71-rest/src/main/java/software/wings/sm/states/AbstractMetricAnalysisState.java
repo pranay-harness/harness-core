@@ -74,6 +74,16 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   public static final int CANARY_DAYS_TO_COLLECT = 7;
   private static String DEMO_REQUEST_BODY;
   private static String DEMO_RESPONSE_BODY;
+  private String customThresholdRefId;
+
+  public void setCustomThresholdRefId(String crIds) {
+    this.customThresholdRefId = crIds;
+  }
+
+  public String getCustomThresholdRefId() {
+    return this.customThresholdRefId;
+  }
+
   static {
     initDemoParams();
   }
@@ -325,8 +335,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       return createExecutionResponse(context, cvMetaData.getExecutionStatus(), manualActionRecord.getMessage(), false);
     }
 
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis =
-        metricAnalysisService.getMetricsAnalysis(context.getStateExecutionId(), Optional.empty(), Optional.empty());
+    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = metricAnalysisService.getMetricsAnalysis(
+        context.getStateExecutionId(), Optional.empty(), Optional.empty(), false);
     if (deploymentTimeSeriesAnalysis == null || isEmpty(deploymentTimeSeriesAnalysis.getMetricAnalyses())) {
       getLogger().info("for {} No analysis summary.", context.getStateExecutionId());
       executionStatus = isQAVerificationPath(context.getAccountId(), context.getAppId()) ? ExecutionStatus.FAILED
@@ -425,6 +435,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .tolerance(getAnalysisTolerance().tolerance())
             .minimumRequestsPerMinute(MIN_REQUESTS_PER_MINUTE)
             .comparisonWindow(COMPARISON_WINDOW)
+            .customThresholdRefId(customThresholdRefId)
             .startDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
             .parallelProcesses(PARALLEL_PROCESSES)
             .managerVersion(versionInfoManager.getVersionInfo().getVersion())
