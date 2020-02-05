@@ -87,6 +87,9 @@ public class EmailHandler implements CollaborationHandler {
             props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
             props.put("mail.smtp.starttls.enable", "true");
           }
+          if (config.isStartTLS()) {
+            props.put("mail.smtp.starttls.enable", "true");
+          }
           Session session = Session.getInstance(props, null);
           Transport transport = session.getTransport("smtp");
           transport.connect(config.getHost(), config.getPort(), config.getUsername(),

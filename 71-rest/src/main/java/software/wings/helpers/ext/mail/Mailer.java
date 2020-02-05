@@ -65,6 +65,7 @@ public class Mailer {
             new DefaultAuthenticator(smtpConfig.getUsername(), new String(smtpConfig.getPassword())));
       }
       email.setSSLOnConnect(smtpConfig.isUseSSL());
+      email.setStartTLSEnabled(smtpConfig.isStartTLS());
       if (smtpConfig.isUseSSL()) {
         email.setSslSmtpPort(Integer.toString(smtpConfig.getPort()));
       }

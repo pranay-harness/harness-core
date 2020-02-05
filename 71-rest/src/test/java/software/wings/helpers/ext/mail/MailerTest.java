@@ -2,6 +2,7 @@ package software.wings.helpers.ext.mail;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.common.Constants.HARNESS_NAME;
 
@@ -20,6 +21,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 
 import java.io.IOException;
@@ -161,5 +163,29 @@ public class MailerTest extends WingsBaseTest {
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
         .extracting(Address::toString)
         .containsExactly("recieve@email.com", "recieve2@email.com");
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void shouldStartTLS() throws MessagingException {
+    SmtpConfig smtpConfig = Mockito.spy(SmtpConfig.builder()
+                                            .fromAddress(EMAIL)
+                                            .host("localhost")
+                                            .port(greenMail.getSmtp().getPort())
+                                            .username(EMAIL)
+                                            .password(PASSWORD)
+                                            .startTLS(true)
+                                            .build());
+
+    mailer.send(smtpConfig, Collections.emptyList(),
+        EmailData.builder()
+            .hasHtml(false)
+            .templateName("testmail")
+            .templateModel(ImmutableMap.of("name", "test"))
+            .to(Lists.newArrayList("recieve@email.com"))
+            .cc(Lists.newArrayList("recieve2@email.com"))
+            .build());
+    Mockito.verify(smtpConfig).isStartTLS();
   }
 }
