@@ -5,6 +5,9 @@ import static io.harness.rule.OwnerRule.ROHIT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyDouble;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -66,6 +69,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;
   @Mock TagHelper tagHelper;
+  @Mock BillingDataHelper billingDataHelper;
   @InjectMocks BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject @InjectMocks BillingStatsEntityDataFetcher billingStatsEntityDataFetcher;
   @Inject private K8sWorkloadDao k8sWorkloadDao;
@@ -98,6 +102,39 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     when(mockStatement.executeQuery(anyString())).thenReturn(resultSet);
     resetValues();
     mockResultSet();
+    when(billingDataHelper.getBillingAmountDataForEntityCostTrend(
+             anyString(), anyList(), anyList(), anyList(), any(), anyList()))
+        .thenReturn(null);
+    when(billingDataHelper.roundingDoubleFieldPercentageValue(BillingDataMetaDataFields.AVGCPUUTILIZATION, resultSet))
+        .thenAnswer(i
+            -> Math.round(resultSet.getDouble(BillingDataMetaDataFields.AVGCPUUTILIZATION.getFieldName()) * 10000D)
+                / 100D);
+    when(
+        billingDataHelper.roundingDoubleFieldPercentageValue(BillingDataMetaDataFields.AVGMEMORYUTILIZATION, resultSet))
+        .thenAnswer(i
+            -> Math.round(resultSet.getDouble(BillingDataMetaDataFields.AVGMEMORYUTILIZATION.getFieldName()) * 10000D)
+                / 100D);
+    when(billingDataHelper.roundingDoubleFieldPercentageValue(BillingDataMetaDataFields.MAXCPUUTILIZATION, resultSet))
+        .thenAnswer(i
+            -> Math.round(resultSet.getDouble(BillingDataMetaDataFields.MAXCPUUTILIZATION.getFieldName()) * 10000D)
+                / 100D);
+    when(
+        billingDataHelper.roundingDoubleFieldPercentageValue(BillingDataMetaDataFields.MAXMEMORYUTILIZATION, resultSet))
+        .thenAnswer(i
+            -> Math.round(resultSet.getDouble(BillingDataMetaDataFields.MAXMEMORYUTILIZATION.getFieldName()) * 10000D)
+                / 100D);
+    when(billingDataHelper.roundingDoubleFieldValue(BillingDataMetaDataFields.SUM, resultSet))
+        .thenAnswer(i -> Math.round(resultSet.getDouble(BillingDataMetaDataFields.SUM.getFieldName()) * 100D) / 100D);
+    when(billingDataHelper.roundingDoubleFieldValue(BillingDataMetaDataFields.IDLECOST, resultSet))
+        .thenAnswer(
+            i -> Math.round(resultSet.getDouble(BillingDataMetaDataFields.IDLECOST.getFieldName()) * 100D) / 100D);
+    when(billingDataHelper.roundingDoubleFieldValue(BillingDataMetaDataFields.CPUIDLECOST, resultSet))
+        .thenAnswer(
+            i -> Math.round(resultSet.getDouble(BillingDataMetaDataFields.CPUIDLECOST.getFieldName()) * 100D) / 100D);
+    when(billingDataHelper.roundingDoubleFieldValue(BillingDataMetaDataFields.MEMORYIDLECOST, resultSet))
+        .thenAnswer(i
+            -> Math.round(resultSet.getDouble(BillingDataMetaDataFields.MEMORYIDLECOST.getFieldName()) * 100D) / 100D);
+    when(billingDataHelper.getRoundedDoubleValue(anyDouble())).thenAnswer(i -> i.getArguments()[0]);
   }
 
   @Test
@@ -225,9 +262,9 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
     assertThat(data).isNotNull();
-    assertThat(data.getData().get(0).getWorkloadName()).isEqualTo("WORKLOAD_NAME_ACCOUNT1");
-    assertThat(data.getData().get(0).getWorkloadType()).isEqualTo("WORKLOAD_TYPE_ACCOUNT1");
-    assertThat(data.getData().get(0).getId()).isEqualTo(BillingStatsDefaultKeys.ENTITYID);
+    assertThat(data.getData().get(0).getWorkloadName()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
+    assertThat(data.getData().get(0).getWorkloadType()).isEqualTo(WORKLOAD_TYPE_ACCOUNT1);
+    assertThat(data.getData().get(0).getId()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
     assertThat(data.getData().get(0).getName()).isEqualTo(BillingStatsDefaultKeys.NAME);
     assertThat(data.getData().get(0).getType()).isEqualTo(BillingStatsDefaultKeys.TYPE);
     assertThat(data.getData().get(0).getCostTrend()).isEqualTo(BillingStatsDefaultKeys.COSTTREND);

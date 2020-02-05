@@ -36,12 +36,14 @@ public class K8sLabelConnectionDataFetcher
     Map<String, Set<String>> labels = new HashMap<>();
     QLK8sLabelConnectionBuilder connectionBuilder = QLK8sLabelConnection.builder();
     connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, k8sWorkload -> {
-      k8sWorkload.getLabels().keySet().forEach(key -> {
-        if (!labels.containsKey(key)) {
-          labels.put(key, new HashSet<>());
-        }
-        labels.get(key).add(k8sWorkload.getLabels().get(key));
-      });
+      if (k8sWorkload.getLabels() != null) {
+        k8sWorkload.getLabels().keySet().forEach(key -> {
+          if (!labels.containsKey(key)) {
+            labels.put(key, new HashSet<>());
+          }
+          labels.get(key).add(k8sWorkload.getLabels().get(key));
+        });
+      }
     }));
 
     labels.keySet().forEach(key -> {

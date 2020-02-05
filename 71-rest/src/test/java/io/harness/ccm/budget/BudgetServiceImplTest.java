@@ -36,6 +36,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.stubbing.Answer;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
+import software.wings.graphql.datafetcher.billing.BillingDataHelper;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
@@ -62,6 +63,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Mock private DataFetcherUtils utils;
   @Mock private BillingTrendStatsDataFetcher billingTrendStatsDataFetcher;
   @Mock private QLBillingStatsHelper statsHelper;
+  @Mock private BillingDataHelper billingDataHelper;
   @InjectMocks BudgetServiceImpl budgetService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -217,7 +219,7 @@ public class BudgetServiceImplTest extends CategoryTest {
     when(billingTrendStatsDataFetcher.getBillingAmountData(
              eq(accountId), isA(QLCCMAggregationFunction.class), anyListOf(QLBillingDataFilter.class)))
         .thenReturn(QLBillingAmountData.builder().build());
-    when(billingTrendStatsDataFetcher.getEndInstant(anyListOf(QLBillingDataFilter.class))).thenReturn(Instant.now());
+    when(billingDataHelper.getEndInstant(anyListOf(QLBillingDataFilter.class))).thenReturn(Instant.now());
     budgetService.getForecastCost(budget);
     verify(billingTrendStatsDataFetcher)
         .getBillingAmountData(eq(accountId), isA(QLCCMAggregationFunction.class), anyListOf(QLBillingDataFilter.class));
