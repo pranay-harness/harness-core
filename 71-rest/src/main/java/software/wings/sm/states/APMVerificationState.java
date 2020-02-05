@@ -28,6 +28,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.beans.APMVerificationConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
@@ -39,10 +40,12 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
+import software.wings.service.impl.apm.CustomAPMDataCollectionInfo;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
@@ -85,6 +88,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
 
   @Attributes(required = false, title = "APM DataCollection Rate (mins)") private int dataCollectionRate;
 
+  @Override
   public int getDataCollectionRate() {
     return dataCollectionRate < 1 ? 1 : dataCollectionRate;
   }
@@ -171,6 +175,60 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   @Override
   public void setAnalysisServerConfigId(String analysisServerConfigId) {
     this.analysisServerConfigId = analysisServerConfigId;
+  }
+
+  @Override
+  protected Optional<FeatureName> getCVTaskFeatureName() {
+    return Optional.of(FeatureName.CUSTOM_APM_CV_TASK);
+  }
+
+  @Override
+  protected DataCollectionInfoV2 createDataCollectionInfo(
+      ExecutionContext context, Map<String, String> hostsToCollect) {
+    String envId = getEnvId(context);
+
+    List<APMMetricInfo> canaryMetricInfos = getCanaryMetricInfos(context);
+    Map<String, List<APMMetricInfo>> apmMetricInfos = isNotEmpty(canaryMetricInfos)
+        ? new HashMap<>()
+        : buildMetricInfoMap(metricCollectionInfos, Optional.of(context));
+
+    metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.APM_VERIFICATION,
+        context.getStateExecutionInstanceId(), null,
+        metricDefinitions(
+            isNotEmpty(canaryMetricInfos) ? Collections.singletonList(canaryMetricInfos) : apmMetricInfos.values()));
+    APMVerificationConfig apmConfig = getApmVerificationConfig(context);
+    return CustomAPMDataCollectionInfo.builder()
+        .connectorId(analysisServerConfigId)
+        .workflowExecutionId(context.getWorkflowExecutionId())
+        .stateExecutionId(context.getStateExecutionInstanceId())
+        .workflowId(context.getWorkflowId())
+        .accountId(appService.get(context.getAppId()).getAccountId())
+        .envId(envId)
+        .applicationId(context.getAppId())
+        .hosts(hostsToCollect.keySet())
+        .apmConfig(apmConfig)
+        .headers(apmConfig.collectionHeaders())
+        .options(apmConfig.collectionParams())
+        .metricEndpoints(buildMetricInfoList(metricCollectionInfos, Optional.of(context)))
+        .canaryMetricInfos(canaryMetricInfos)
+        .hostsToGroupNameMap(hostsToCollect)
+        .serviceId(getPhaseServiceId(context))
+        .build();
+  }
+
+  @Override
+  protected boolean isHistoricalAnalysis() {
+    boolean isHistorical = true;
+    if (isNotEmpty(metricCollectionInfos)) {
+      for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfos) {
+        if (metricCollectionInfo.getCollectionUrl().contains(VERIFICATION_HOST_PLACEHOLDER)
+            || metricCollectionInfo.getCollectionBody().contains(VERIFICATION_HOST_PLACEHOLDER)) {
+          isHistorical = false;
+        }
+      }
+      return isHistorical;
+    }
+    return false;
   }
 
   @Override
@@ -291,6 +349,26 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     return groupInfoMap;
   }
 
+  private APMVerificationConfig getApmVerificationConfig(ExecutionContext context) {
+    SettingAttribute settingAttribute = null;
+    String serverConfigId = analysisServerConfigId;
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression configIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
+      if (configIdExpression != null) {
+        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
+        serverConfigId = settingAttribute.getUuid();
+      }
+    }
+    if (settingAttribute == null) {
+      settingAttribute = settingsService.get(serverConfigId);
+      if (settingAttribute == null) {
+        throw new WingsException("No Datadog setting with id: " + analysisServerConfigId + " found");
+      }
+    }
+
+    return (APMVerificationConfig) settingAttribute.getValue();
+  }
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
@@ -418,6 +496,36 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
       metricInfoMap.get(evaluatedUrl).add(metricInfo);
     }
     return metricInfoMap;
+  }
+
+  public static List<APMMetricInfo> buildMetricInfoList(
+      List<MetricCollectionInfo> metricCollectionInfos, Optional<ExecutionContext> context) {
+    List<APMMetricInfo> metricInfoList = new ArrayList<>();
+    for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfos) {
+      String evaluatedUrl = context != null && context.isPresent()
+          ? context.get().renderExpression(metricCollectionInfo.getCollectionUrl())
+          : metricCollectionInfo.getCollectionUrl();
+
+      if (metricCollectionInfo.getMethod() != null && metricCollectionInfo.getMethod() == Method.POST) {
+        evaluatedUrl += URL_BODY_APPENDER + metricCollectionInfo.getCollectionBody();
+      }
+
+      String evaluatedBody = context != null && context.isPresent()
+          ? context.get().renderExpression(metricCollectionInfo.getCollectionBody())
+          : metricCollectionInfo.getCollectionBody();
+      APMMetricInfo metricInfo = APMMetricInfo.builder()
+                                     .metricName(metricCollectionInfo.getMetricName())
+                                     .metricType(metricCollectionInfo.getMetricType())
+                                     .method(metricCollectionInfo.getMethod())
+                                     .body(evaluatedBody)
+                                     .url(evaluatedUrl)
+                                     .tag(metricCollectionInfo.getTag())
+                                     .responseMappers(getResponseMappers(metricCollectionInfo))
+                                     .build();
+      logger.info("In APMMetricInfos, evaluatedUrl is: {}", evaluatedUrl);
+      metricInfoList.add(metricInfo);
+    }
+    return metricInfoList;
   }
 
   private List<APMMetricInfo> getCanaryMetricInfos(final ExecutionContext context) {

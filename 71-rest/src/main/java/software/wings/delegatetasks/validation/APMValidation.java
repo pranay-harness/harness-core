@@ -19,6 +19,7 @@ import software.wings.beans.DatadogConfig;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
+import software.wings.service.impl.apm.CustomAPMDataCollectionInfo;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,6 +57,14 @@ public class APMValidation extends AbstractSecretManagerValidation {
                                } else if (obj instanceof CustomLogDataCollectionInfo) {
                                  CustomLogDataCollectionInfo dInfo = (CustomLogDataCollectionInfo) obj;
                                  return dInfo.getBaseUrl() + dInfo.getValidationUrl();
+                               } else if (obj instanceof CustomAPMDataCollectionInfo) {
+                                 CustomAPMDataCollectionInfo dInfo = (CustomAPMDataCollectionInfo) obj;
+                                 APMVerificationConfig config = dInfo.getApmConfig();
+                                 if (config != null) {
+                                   return config.getUrl() + config.getValidationUrl();
+                                 } else {
+                                   return null;
+                                 }
                                } else {
                                  APMValidateCollectorConfig config = (APMValidateCollectorConfig) obj;
                                  return config.getBaseUrl() + config.getUrl();
@@ -114,6 +123,11 @@ public class APMValidation extends AbstractSecretManagerValidation {
       } else if (config instanceof CustomLogDataCollectionInfo) {
         CustomLogDataCollectionInfo dInfo = (CustomLogDataCollectionInfo) config;
         validateCollectorConfig = APMValidateCollectorConfig.builder().baseUrl(dInfo.getBaseUrl()).build();
+        break;
+      } else if (config instanceof CustomAPMDataCollectionInfo) {
+        CustomAPMDataCollectionInfo customAPMDataCollectionInfo = (CustomAPMDataCollectionInfo) config;
+        APMVerificationConfig apmConfig = customAPMDataCollectionInfo.getApmConfig();
+        validateCollectorConfig = APMValidateCollectorConfig.builder().baseUrl(apmConfig.getUrl()).build();
         break;
       } else if (config instanceof APMValidateCollectorConfig) {
         validateCollectorConfig = (APMValidateCollectorConfig) config;

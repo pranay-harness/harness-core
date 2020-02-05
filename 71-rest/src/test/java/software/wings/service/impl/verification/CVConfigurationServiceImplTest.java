@@ -780,7 +780,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateUniqueTxnMetricNameCombination() {
-    APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfig(true);
+    APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfig(true, appId, accountId);
     assertThat(apmcvServiceConfiguration.validate()).isTrue();
     assertThat(apmcvServiceConfiguration.validateUniqueMetricTxnCombination(
                    apmcvServiceConfiguration.getMetricCollectionInfos()))
@@ -802,7 +802,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateUniqueTxnMetricNameCombinationInvalidCaseTxnJsonPath() {
-    APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfig(true);
+    APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfig(true, appId, accountId);
 
     List<MetricCollectionInfo> metricCollectionInfos = new ArrayList<>();
     APMVerificationState.ResponseMapping responseMapping = new APMVerificationState.ResponseMapping(null, "sometxnName",
@@ -843,7 +843,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetMetricTxnCombination() {
-    APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfig(true);
+    APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfig(true, appId, accountId);
     String cvConfigId = generateUuid();
     apmcvServiceConfiguration.setUuid(cvConfigId);
     wingsPersistence.save(apmcvServiceConfiguration);
@@ -1001,9 +1001,9 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
                                                          .withName(generateUuid())
                                                          .withValue(apmVerificationConfig)
                                                          .build());
-    APMCVServiceConfiguration config1 = createAPMCVConfig(true);
+    APMCVServiceConfiguration config1 = createAPMCVConfig(true, appId, accountId);
     config1.setConnectorId(connectorId);
-    APMCVServiceConfiguration config2 = createAPMCVConfig(true);
+    APMCVServiceConfiguration config2 = createAPMCVConfig(true, appId, accountId);
     config2.setConnectorId(connectorId);
 
     final String configId1 = cvConfigurationService.saveConfiguration(
@@ -1081,7 +1081,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     return numOfOpenAlerts;
   }
 
-  private APMCVServiceConfiguration createAPMCVConfig(boolean enabled24x7) {
+  public static APMCVServiceConfiguration createAPMCVConfig(boolean enabled24x7, String appId, String accountId) {
     APMCVServiceConfiguration apmcvServiceConfiguration = new APMCVServiceConfiguration();
     apmcvServiceConfiguration.setName("APM config " + generateUuid());
     apmcvServiceConfiguration.setAccountId(accountId);
@@ -1095,12 +1095,12 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
 
     List<MetricCollectionInfo> metricCollectionInfos = new ArrayList<>();
     APMVerificationState.ResponseMapping responseMapping =
-        new APMVerificationState.ResponseMapping("myhardcodedtxnName", null, "sometxnname", "somemetricjsonpath",
-            "hostpath", "hostregex", "timestamppath", "formattimestamp");
+        new APMVerificationState.ResponseMapping("myhardcodedtxnName", null, "sometxnname",
+            "series[*].pointlist[*].[1]", null, null, "series[*].pointlist[*].[0]", null);
 
-    MetricCollectionInfo metricCollectionInfo =
-        new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag", "dummyuri", null, "bodycollection",
-            APMVerificationState.ResponseType.JSON, responseMapping, APMVerificationState.Method.POST);
+    MetricCollectionInfo metricCollectionInfo = new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag",
+        "dummyuri", null, "{\"bodycollection\":\"body\"}", APMVerificationState.ResponseType.JSON, responseMapping,
+        APMVerificationState.Method.POST);
 
     metricCollectionInfos.add(metricCollectionInfo);
     apmcvServiceConfiguration.setMetricCollectionInfos(metricCollectionInfos);
@@ -1108,7 +1108,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   private APMCVServiceConfiguration createAPMCVConfigWithInvalidCollectionInfo(boolean enabled24x7) {
-    APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfig(true);
+    APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfig(true, appId, accountId);
 
     List<MetricCollectionInfo> metricCollectionInfos = new ArrayList<>();
     APMVerificationState.ResponseMapping responseMapping = new APMVerificationState.ResponseMapping("sometxnName", null,

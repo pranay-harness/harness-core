@@ -27,6 +27,7 @@ import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollect
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
@@ -165,7 +166,15 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
       }
 
       @Override
-      public <U> U executeRequest(String thirdPartyApiCallTitle, Call<U> request) {
+      public <U> U executeRequest(
+          String thirdPartyApiCallTitle, Call<U> request, Map<String, String> patternsToMaskInCallLog) {
+        ThirdPartyApiCallLog thirdPartyApiCallLog = createApiCallLog();
+        thirdPartyApiCallLog.setTitle(thirdPartyApiCallTitle);
+        return requestExecutor.executeRequest(thirdPartyApiCallLog, request, patternsToMaskInCallLog);
+      }
+
+      @Override
+      public <T> T executeRequest(String thirdPartyApiCallTitle, Call<T> request) {
         ThirdPartyApiCallLog thirdPartyApiCallLog = createApiCallLog();
         thirdPartyApiCallLog.setTitle(thirdPartyApiCallTitle);
         return requestExecutor.executeRequest(thirdPartyApiCallLog, request);

@@ -102,6 +102,9 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
   @Indexed private Long logAnalysisIteration;
   @Indexed private Long logClusterIteration;
   @Indexed private Long cvTaskCreationIteration;
+  private int initialDelaySeconds;
+  private int dataCollectionIntervalMins;
+  private boolean isHistoricalDataCollection;
 
   @JsonIgnore
   @SchemaIgnore
@@ -121,7 +124,8 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
       Map<String, List<TimeSeries>> timeSeriesToCollect, boolean runTillConvergence, String delegateTaskId,
       MLAnalysisType analysisType, ExecutionStatus executionStatus, String managerVersion, String envId,
       String hostNameField, int collectionInterval, long startDataCollectionMinute,
-      DataCollectionInfo dataCollectionInfo, String customThresholdRefId) {
+      DataCollectionInfo dataCollectionInfo, int initialDelaySeconds, int dataCollectionIntervalMins,
+      boolean isHistoricalDataCollection, String customThresholdRefId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, syncFromGit);
     this.accountId = accountId;
     this.workflowId = workflowId;
@@ -160,6 +164,9 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
     this.collectionInterval = collectionInterval;
     this.startDataCollectionMinute = startDataCollectionMinute;
     this.dataCollectionInfo = dataCollectionInfo;
+    this.initialDelaySeconds = initialDelaySeconds;
+    this.dataCollectionIntervalMins = dataCollectionIntervalMins;
+    this.isHistoricalDataCollection = isHistoricalDataCollection;
     this.customThresholdRefId = customThresholdRefId;
   }
 

@@ -78,7 +78,10 @@ public enum FeatureName {
   WORKFLOW_TS_RECORDS_NEW,
   TEMPLATE_YAML_SUPPORT,
   ADD_WORKFLOW_FORMIK,
-  CV_INSTANA;
+  CV_INSTANA,
+  CUSTOM_APM_CV_TASK,
+  CUSTOM_APM_24_X_7_CV_TASK;
+
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
   }

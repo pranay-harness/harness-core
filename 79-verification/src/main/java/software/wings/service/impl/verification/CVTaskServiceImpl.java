@@ -1,10 +1,14 @@
 package software.wings.service.impl.verification;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static software.wings.common.VerificationConstants.DELAY_MINUTES;
+import static software.wings.common.VerificationConstants.CANARY_DAYS_TO_COLLECT;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
+import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
+import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
@@ -58,24 +62,65 @@ public class CVTaskServiceImpl implements CVTaskService {
     if (context.getComparisonStrategy() == PREDICTIVE) {
       cvTasks.addAll(createCVTasksForPredictiveComparisionStrategy(context, startTime));
     }
+
     int timeDuration = context.getTimeDuration();
+    if (COMPARE_WITH_CURRENT.equals(context.getComparisonStrategy()) && context.isHistoricalDataCollection()) {
+      cvTasks.addAll(createCVTasksForHistoricalDataCollection(context, timeDuration));
+      enqueueSequentialTasks(cvTasks);
+      return;
+    }
     for (int minute = 0; minute < timeDuration; minute++) {
       long startTimeMSForCurrentMinute = startTime + Duration.ofMinutes(minute).toMillis();
       DataCollectionInfoV2 copy = context.getDataCollectionInfov2().deepCopy();
       copy.setStartTime(Instant.ofEpochMilli(startTimeMSForCurrentMinute));
       Duration duration = Duration.ofMinutes(Math.min(timeDuration - minute, 1));
       copy.setEndTime(Instant.ofEpochMilli(startTimeMSForCurrentMinute + duration.toMillis()));
-      CVTask cvTask = CVTask.builder()
-                          .accountId(context.getAccountId())
-                          .stateExecutionId(context.getStateExecutionId())
-                          .dataCollectionInfo(copy)
-                          .correlationId(context.getCorrelationId())
-                          .status(ExecutionStatus.WAITING)
-                          .validAfter(startTimeMSForCurrentMinute + Duration.ofMinutes(DELAY_MINUTES).toMillis())
-                          .build();
+      CVTask cvTask =
+          CVTask.builder()
+              .accountId(context.getAccountId())
+              .stateExecutionId(context.getStateExecutionId())
+              .dataCollectionInfo(copy)
+              .correlationId(context.getCorrelationId())
+              .status(ExecutionStatus.WAITING)
+              .validAfter(startTimeMSForCurrentMinute + Duration.ofSeconds(context.getInitialDelaySeconds()).toMillis())
+              .build();
       cvTasks.add(cvTask);
     }
     enqueueSequentialTasks(cvTasks);
+  }
+
+  private String getHostNameForTestControl(int i) {
+    return i == 0 ? TEST_HOST_NAME : CONTROL_HOST_NAME + "-" + i;
+  }
+
+  private List<CVTask> createCVTasksForHistoricalDataCollection(AnalysisContext context, int timeDuration) {
+    List<CVTask> cvTasks = new ArrayList<>();
+    long startTime = TimeUnit.MINUTES.toMillis(context.getStartDataCollectionMinute());
+    for (int minute = 0; minute < timeDuration; minute++) {
+      long startTimeMillis = startTime + Duration.ofMinutes(minute).toMillis();
+      long endTimeMillis = Duration.ofMinutes(Math.min(timeDuration - minute, 1)).toMillis();
+      for (int i = 0; i <= CANARY_DAYS_TO_COLLECT; i++) {
+        String hostName = getHostNameForTestControl(i);
+        long thisEndTime = endTimeMillis - TimeUnit.DAYS.toMillis(i);
+        long thisStartTime = startTimeMillis - TimeUnit.DAYS.toMillis(i);
+        DataCollectionInfoV2 copy = context.getDataCollectionInfov2().deepCopy();
+        copy.setStartTime(Instant.ofEpochMilli(thisStartTime));
+        copy.setEndTime(Instant.ofEpochMilli(thisEndTime));
+        copy.setHosts(Sets.newHashSet(hostName));
+        CVTask cvTask =
+            CVTask.builder()
+                .accountId(context.getAccountId())
+                .stateExecutionId(context.getStateExecutionId())
+                .dataCollectionInfo(copy)
+                .correlationId(context.getCorrelationId())
+                .status(ExecutionStatus.WAITING)
+                .validAfter(startTimeMillis + Duration.ofSeconds(context.getInitialDelaySeconds()).toMillis())
+                .build();
+        cvTasks.add(cvTask);
+      }
+    }
+
+    return cvTasks;
   }
 
   private List<CVTask> createCVTasksForPredictiveComparisionStrategy(AnalysisContext context, long startTimeMillis) {

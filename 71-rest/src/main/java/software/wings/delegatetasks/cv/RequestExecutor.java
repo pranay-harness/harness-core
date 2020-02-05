@@ -24,7 +24,9 @@ import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+
 @Slf4j
 @Singleton
 public class RequestExecutor {
@@ -44,11 +46,12 @@ public class RequestExecutor {
     }
   }
 
-  public <U> U executeRequest(ThirdPartyApiCallLog thirdPartyApiCallLog, Call<U> request) {
+  public <U> U executeRequest(
+      ThirdPartyApiCallLog thirdPartyApiCallLog, Call<U> request, Map<String, String> patternsToMask) {
     int retryCount = 0;
     while (true) {
       try {
-        return executeRequest(thirdPartyApiCallLog, retryCount, request);
+        return executeRequest(thirdPartyApiCallLog, retryCount, request, patternsToMask);
       } catch (RateLimitExceededException e) {
         int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
         logger.info("Encountered Rate limiting. Sleeping {} seconds", RETRY_SLEEP_DURATION.getSeconds() + randomNum);
@@ -67,6 +70,10 @@ public class RequestExecutor {
     }
   }
 
+  public <U> U executeRequest(ThirdPartyApiCallLog thirdPartyApiCallLog, Call<U> request) {
+    return executeRequest(thirdPartyApiCallLog, request, null);
+  }
+
   private String bodyToString(final Request request) {
     try {
       final Request copy = request.newBuilder().build();
@@ -77,15 +84,25 @@ public class RequestExecutor {
       throw new DataCollectionException(e);
     }
   }
-  private <U> U executeRequest(ThirdPartyApiCallLog apiCallLog, int retryCount, Call<U> request) {
+
+  private String maskRequiredFieldsFromCallLogs(String field, Map<String, String> patternsToMask) {
+    if (isNotEmpty(patternsToMask)) {
+      for (Map.Entry<String, String> entry : patternsToMask.entrySet()) {
+        field = field.replace(entry.getKey(), entry.getValue());
+      }
+    }
+    return field;
+  }
+
+  private <U> U executeRequest(
+      ThirdPartyApiCallLog apiCallLog, int retryCount, Call<U> request, Map<String, String> patternsToMask) {
     apiCallLog = apiCallLog.copy();
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     try {
-      apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                       .name(URL_STRING)
-                                       .value(request.request().url().toString())
-                                       .type(FieldType.URL)
-                                       .build());
+      String urlString = request.request().url().toString();
+      urlString = maskRequiredFieldsFromCallLogs(urlString, patternsToMask);
+      apiCallLog.addFieldToRequest(
+          ThirdPartyApiCallField.builder().name(URL_STRING).value(urlString).type(FieldType.URL).build());
       if (retryCount != 0) {
         apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                          .name("RETRY")
@@ -101,6 +118,7 @@ public class RequestExecutor {
       if (request.request().body() != null) {
         String body = bodyToString(request.request());
         if (isNotEmpty(body)) {
+          body = maskRequiredFieldsFromCallLogs(body, patternsToMask);
           apiCallLog.addFieldToRequest(
               ThirdPartyApiCallField.builder().name("body").value(body).type(FieldType.JSON).build());
         }

@@ -462,8 +462,10 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     if (metricDataRecord != null) {
       if (metricDataRecord.getValues().containsKey(AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName())
           && AppdynamicsTimeSeries.getErrorMetrics().contains(metricName)) {
-        double errorCount = metricDataRecord.getValues().get(metricName);
-        double callsCount = metricDataRecord.getValues().get(AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName());
+        double errorCount = metricDataRecord.getValues() != null ? metricDataRecord.getValues().get(metricName) : 0;
+        double callsCount = metricDataRecord.getValues() != null
+            ? metricDataRecord.getValues().get(AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName())
+            : 0;
 
         if (callsCount != 0.0) {
           DecimalFormat twoDForm = new DecimalFormat("#.00");

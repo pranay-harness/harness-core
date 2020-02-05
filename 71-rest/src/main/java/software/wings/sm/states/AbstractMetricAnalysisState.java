@@ -439,6 +439,9 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .startDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
             .parallelProcesses(PARALLEL_PROCESSES)
             .managerVersion(versionInfoManager.getVersionInfo().getVersion())
+            .isHistoricalDataCollection(isHistoricalAnalysis())
+            .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
+            .dataCollectionIntervalMins(getDataCollectionRate())
             .build();
     if (getCVTaskFeatureName().isPresent()) {
       analysisContext.setFeatureFlag(
@@ -449,6 +452,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       analysisContext.setDataCollectionInfo(dataCollectionInfo);
     }
     return analysisContext;
+  }
+
+  public int getDataCollectionRate() {
+    return 1;
   }
 
   private DataCollectionInfo createDataCollectionInfo(ExecutionContext context) {
@@ -480,6 +487,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       default:
         return null;
     }
+  }
+
+  protected boolean isHistoricalAnalysis() {
+    return false;
   }
 
   @Override

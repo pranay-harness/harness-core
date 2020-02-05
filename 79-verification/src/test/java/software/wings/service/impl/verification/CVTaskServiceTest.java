@@ -2,6 +2,7 @@ package software.wings.service.impl.verification;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static java.lang.Thread.sleep;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,7 +50,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -326,6 +329,7 @@ public class CVTaskServiceTest extends VerificationBaseTest {
     analysisContext.setAccountId(accountId);
     analysisContext.setDataCollectionInfov2(createDataCollectionInfo());
     analysisContext.setTimeDuration(10);
+    analysisContext.setInitialDelaySeconds(120);
     analysisContext.setStateExecutionId(stateExecutionId);
     cvTaskService.createCVTasks(analysisContext);
     List<CVTask> cvTasks = getByStateExecutionId(stateExecutionId);
@@ -351,6 +355,7 @@ public class CVTaskServiceTest extends VerificationBaseTest {
     analysisContext.setDataCollectionInfov2(createDataCollectionInfo());
     analysisContext.setTimeDuration(10);
     analysisContext.setPredictiveHistoryMinutes(120);
+    analysisContext.setInitialDelaySeconds(120);
     analysisContext.setComparisonStrategy(AnalysisComparisonStrategy.PREDICTIVE);
     analysisContext.setStateExecutionId(stateExecutionId);
     cvTaskService.createCVTasks(analysisContext);
@@ -371,6 +376,38 @@ public class CVTaskServiceTest extends VerificationBaseTest {
     for (int i = 1; i < 18; i++) {
       assertThat(cvTasks.get(i).getStatus()).isEqualTo(ExecutionStatus.WAITING);
     }
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testCreateCVTasks_forHistorical() {
+    AnalysisContext analysisContext = AnalysisContext.builder().build();
+    analysisContext.setStartDataCollectionMinute(TimeUnit.MILLISECONDS.toMillis(Timestamp.currentMinuteBoundary()));
+    analysisContext.setAccountId(accountId);
+    analysisContext.setDataCollectionInfov2(createDataCollectionInfo());
+    analysisContext.setTimeDuration(10);
+    analysisContext.setInitialDelaySeconds(120);
+    analysisContext.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT);
+    analysisContext.setHistoricalDataCollection(true);
+    analysisContext.setStateExecutionId(stateExecutionId);
+
+    cvTaskService.createCVTasks(analysisContext);
+    List<CVTask> cvTasks = getByStateExecutionId(stateExecutionId);
+
+    // there should be 10 tasks for each of the past 7 days.
+    assertThat(cvTasks).isNotEmpty();
+    assertThat(cvTasks.size()).isEqualTo(80);
+    Map<Integer, List<CVTask>> dayTaskMap = new HashMap<>();
+    cvTasks.forEach(task -> {
+      long day = TimeUnit.MILLISECONDS.toDays(Instant.now().toEpochMilli())
+          - TimeUnit.MILLISECONDS.toDays(task.getDataCollectionInfo().getStartTime().toEpochMilli());
+      if (!dayTaskMap.containsKey((int) day)) {
+        dayTaskMap.put((int) day, new ArrayList<>());
+      }
+      dayTaskMap.get((int) day).add(task);
+    });
+    dayTaskMap.forEach((day, taskList) -> { assertThat(taskList.size()).isEqualTo(10); });
   }
 
   private List<CVTask> getByStateExecutionId(String stateExecutionId) {

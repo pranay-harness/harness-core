@@ -91,7 +91,6 @@ public class VerificationConstants {
   public static final String URL_STRING = "Url";
   public static final String BODY_STRING = "Body";
   public static final String CONNECTOR = ":";
-  @Deprecated
   public static final String VERIFICATION_HOST_PLACEHOLDER =
       "${host}"; // we want to use VERIFICATION_HOST_PLACEHOLDERV2 everywhere now.
   public static final String VERIFICATION_HOST_PLACEHOLDERV2 = "${host.hostName}";
