@@ -91,6 +91,7 @@ public class MongoModule extends DependencyProviderModule {
     primaryDatastore.setQueryFactory(new QueryFactory());
 
     ensureIndex(primaryDatastore, morphia);
+
     updateMovedClasses(primaryDatastore, objectFactory.getMorphiaInterfaceImplementers());
 
     objectFactory.setDatastore(primaryDatastore);
