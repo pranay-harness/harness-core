@@ -76,6 +76,7 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
+import io.harness.mongo.QuartzCleaner;
 import io.harness.perpetualtask.internal.DisconnectedDelegateHandler;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
 import io.harness.persistence.HPersistence;
@@ -110,6 +111,7 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
@@ -697,6 +699,15 @@ public class WingsApplication extends Application<MainConfiguration> {
         InstancesPurgeJob.add(jobScheduler);
       }
     }
+
+    WingsPersistence wingsPersistence = injector.getInstance(Key.get(WingsPersistence.class));
+
+    new Thread(() -> {
+      AdvancedDatastore datastore = wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE);
+      QuartzCleaner.cleanup(datastore, "quartz");
+      QuartzCleaner.cleanup(datastore, "quartz_verification");
+    })
+        .start();
   }
 
   private void registerJerseyProviders(Environment environment) {
