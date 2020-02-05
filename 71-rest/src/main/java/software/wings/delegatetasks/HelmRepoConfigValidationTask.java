@@ -35,6 +35,9 @@ import java.util.function.Supplier;
 public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
   private static final String WORKING_DIR_BASE = "./repository/helm-validation/";
   private static final HelmVersion defaultHelmVersion = HelmVersion.V3;
+  // We do not want to generate index when validating a helm repo, so a dummy path serves the purpose by checking if the
+  // s3/gcs bucket is accessible or not
+  private static final String DUMMY_BASE_PATH = generateUuid();
 
   @Inject private EncryptionService encryptionService;
   @Inject private HelmTaskHelper helmTaskHelper;
@@ -107,8 +110,8 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     List<EncryptedDataDetail> connectorEncryptedDataDetails = taskParams.getConnectorEncryptedDataDetails();
     encryptionService.decrypt(gcpConfig, connectorEncryptedDataDetails);
 
-    helmTaskHelper.addHelmRepo(
-        helmRepoConfig, gcpConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory, "", defaultHelmVersion);
+    helmTaskHelper.addHelmRepo(helmRepoConfig, gcpConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory,
+        DUMMY_BASE_PATH, defaultHelmVersion);
   }
 
   private void tryAddingHttpHelmRepo(HelmRepoConfig helmRepoConfig, String repoName, String repoDisplayName,
@@ -125,7 +128,7 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     List<EncryptedDataDetail> connectorEncryptedDataDetails = taskParams.getConnectorEncryptedDataDetails();
     encryptionService.decrypt(awsConfig, connectorEncryptedDataDetails);
 
-    helmTaskHelper.addHelmRepo(
-        helmRepoConfig, awsConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory, "", defaultHelmVersion);
+    helmTaskHelper.addHelmRepo(helmRepoConfig, awsConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory,
+        DUMMY_BASE_PATH, defaultHelmVersion);
   }
 }

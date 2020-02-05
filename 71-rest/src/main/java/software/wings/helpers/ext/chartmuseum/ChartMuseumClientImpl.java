@@ -12,12 +12,14 @@ import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.BUCKET
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_START_RETRIES;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.GCS_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.GOOGLE_APPLICATION_CREDENTIALS;
+import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.HEALTH_CHECK_TIME_GAP_SECONDS;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.INVALID_ACCESS_KEY_ID_ERROR;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.INVALID_ACCESS_KEY_ID_ERROR_CODE;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.NO_SUCH_BBUCKET_ERROR;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.NO_SUCH_BBUCKET_ERROR_CODE;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.PORTS_BOUND;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.PORTS_START_POINT;
+import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.SERVER_HEALTH_CHECK_RETRIES;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.SIGNATURE_DOES_NOT_MATCH_ERROR;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.SIGNATURE_DOES_NOT_MATCH_ERROR_CODE;
 
@@ -140,6 +142,10 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
       }
     }
 
+    if (!isPortInUse(port)) {
+      logger.error("Port {} is still not in use", port);
+    }
+
     if (process == null || !process.getProcess().isAlive()) {
       throw new InvalidRequestException(getErrorMessage(stringBuffer.toString()), WingsException.USER);
     }
@@ -179,10 +185,10 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
   private boolean waitForServerReady(StartedProcess process, int port) {
     int count = -1;
 
-    while (count < 3) {
+    while (count < SERVER_HEALTH_CHECK_RETRIES) {
       logger.info("Waiting for chart museum server to get ready");
       count++;
-      sleep(ofSeconds(5));
+      sleep(ofSeconds(HEALTH_CHECK_TIME_GAP_SECONDS));
 
       if (!process.getProcess().isAlive()) {
         return false;
