@@ -423,6 +423,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .hostNameField(hostNameField)
             .startDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
             .predictiveHistoryMinutes(Integer.parseInt(getPredictiveHistoryMinutes()))
+            .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
+            .isHistoricalDataCollection(isHistoricalAnalysis())
             .build();
 
     // Saving data collection info as part of context.

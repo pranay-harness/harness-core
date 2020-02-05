@@ -1131,4 +1131,8 @@ public abstract class AbstractAnalysisState extends State {
     Collections.shuffle(hosts);
     return hosts.subList(0, Math.min(maxHosts, hosts.size()));
   }
+
+  protected boolean isHistoricalAnalysis() {
+    return false;
+  }
 }
