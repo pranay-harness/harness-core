@@ -362,13 +362,13 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       QLEntityTableData existingDataPoint = tagNameDataPointMap.get(tagName);
       if (existingDataPoint != null) {
         existingDataPoint.setTotalCost(
-            existingDataPoint.getTotalCost().doubleValue() + dataPoint.getTotalCost().doubleValue());
+            billingDataHelper.getRoundedDoubleValue(existingDataPoint.getTotalCost() + dataPoint.getTotalCost()));
         existingDataPoint.setIdleCost(
-            existingDataPoint.getIdleCost().doubleValue() + dataPoint.getIdleCost().doubleValue());
+            billingDataHelper.getRoundedDoubleValue(existingDataPoint.getIdleCost() + dataPoint.getIdleCost()));
         existingDataPoint.setCpuIdleCost(
-            existingDataPoint.getCpuIdleCost().doubleValue() + dataPoint.getCpuIdleCost().doubleValue());
-        existingDataPoint.setMemoryIdleCost(
-            existingDataPoint.getMemoryIdleCost().doubleValue() + dataPoint.getMemoryIdleCost().doubleValue());
+            billingDataHelper.getRoundedDoubleValue(existingDataPoint.getCpuIdleCost() + dataPoint.getCpuIdleCost()));
+        existingDataPoint.setMemoryIdleCost(billingDataHelper.getRoundedDoubleValue(
+            existingDataPoint.getMemoryIdleCost() + dataPoint.getMemoryIdleCost()));
         return true;
       }
 
@@ -403,21 +403,21 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       QLEntityTableData existingDataPoint = labelNameDataPointMap.get(label);
       if (existingDataPoint != null) {
         existingDataPoint.setTotalCost(
-            existingDataPoint.getTotalCost().doubleValue() + dataPoint.getTotalCost().doubleValue());
+            billingDataHelper.getRoundedDoubleValue(existingDataPoint.getTotalCost() + dataPoint.getTotalCost()));
         existingDataPoint.setIdleCost(
-            existingDataPoint.getIdleCost().doubleValue() + dataPoint.getIdleCost().doubleValue());
+            billingDataHelper.getRoundedDoubleValue(existingDataPoint.getIdleCost() + dataPoint.getIdleCost()));
         existingDataPoint.setCpuIdleCost(
-            existingDataPoint.getCpuIdleCost().doubleValue() + dataPoint.getCpuIdleCost().doubleValue());
-        existingDataPoint.setMemoryIdleCost(
-            existingDataPoint.getMemoryIdleCost().doubleValue() + dataPoint.getMemoryIdleCost().doubleValue());
-        existingDataPoint.setMaxCpuUtilization(Math.max(
-            existingDataPoint.getMaxCpuUtilization().doubleValue(), dataPoint.getMaxCpuUtilization().doubleValue()));
-        existingDataPoint.setMaxMemoryUtilization(Math.max(existingDataPoint.getMaxMemoryUtilization().doubleValue(),
-            dataPoint.getMaxMemoryUtilization().doubleValue()));
+            billingDataHelper.getRoundedDoubleValue(existingDataPoint.getCpuIdleCost() + dataPoint.getCpuIdleCost()));
+        existingDataPoint.setMemoryIdleCost(billingDataHelper.getRoundedDoubleValue(
+            existingDataPoint.getMemoryIdleCost() + dataPoint.getMemoryIdleCost()));
+        existingDataPoint.setMaxCpuUtilization(
+            Math.max(existingDataPoint.getMaxCpuUtilization(), dataPoint.getMaxCpuUtilization()));
+        existingDataPoint.setMaxMemoryUtilization(
+            Math.max(existingDataPoint.getMaxMemoryUtilization(), dataPoint.getMaxMemoryUtilization()));
         existingDataPoint.setAvgCpuUtilization(
-            existingDataPoint.getAvgCpuUtilization().doubleValue() + dataPoint.getAvgCpuUtilization().doubleValue());
-        existingDataPoint.setAvgMemoryUtilization(existingDataPoint.getAvgMemoryUtilization().doubleValue()
-            + dataPoint.getAvgMemoryUtilization().doubleValue());
+            existingDataPoint.getAvgCpuUtilization() + dataPoint.getAvgCpuUtilization());
+        existingDataPoint.setAvgMemoryUtilization(
+            existingDataPoint.getAvgMemoryUtilization() + dataPoint.getAvgMemoryUtilization());
         numberOfDataPoints.put(label, numberOfDataPoints.get(label) + 1);
         return true;
       }
@@ -432,9 +432,9 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
 
     labelNameDataPointMap.forEach((key, dataPoint) -> {
       dataPoint.setAvgCpuUtilization(billingDataHelper.getRoundedDoubleValue(
-          dataPoint.getAvgCpuUtilization().doubleValue() / numberOfDataPoints.get(dataPoint.getId())));
+          dataPoint.getAvgCpuUtilization() / numberOfDataPoints.get(dataPoint.getId())));
       dataPoint.setAvgMemoryUtilization(billingDataHelper.getRoundedDoubleValue(
-          dataPoint.getAvgMemoryUtilization().doubleValue() / numberOfDataPoints.get(dataPoint.getId())));
+          dataPoint.getAvgMemoryUtilization() / numberOfDataPoints.get(dataPoint.getId())));
     });
   }
 
