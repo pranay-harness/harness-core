@@ -11,6 +11,7 @@ import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Data
 @Builder
@@ -29,6 +30,7 @@ public class WinRmSessionConfig implements EncryptableSetting {
   private boolean skipCertChecks;
   private String workingDirectory;
   private final Map<String, String> environment;
+  @Builder.Default private Integer timeout = (int) TimeUnit.MINUTES.toMillis(30);
 
   @SchemaIgnore private String encryptedPassword;
 
