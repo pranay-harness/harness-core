@@ -1,15 +1,16 @@
-package software.wings.integration.service;
+package software.wings.service.impl.infrastructuredefinition;
 
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
+import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,14 +27,16 @@ import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure.AwsInstanceInfrastructureBuilder;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionBuilder;
+import software.wings.infra.PhysicalInfra;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrationTest {
   @InjectMocks @Inject private AppService appService;
@@ -43,7 +46,6 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
   private Application app1, app2;
   private Environment app1_env1, app2_env2;
   private SettingAttribute cloudProvider;
-  private Set<String> allInfraDefinitionsCreated = new HashSet<>();
 
   @Override
   @Before
@@ -88,7 +90,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
         InfrastructureDefinition.builder().appId(app2.getUuid()).envId(app2_env2.getUuid()).name("id4").build();
     saveAll(id1, id2, id3, id4);
     List<String> infraDefNames = infrastructureDefinitionService.listNamesByProvisionerId(app1.getUuid(), "prov_1");
-    Assertions.assertThat(infraDefNames).containsExactlyInAnyOrder("id1", "id2");
+    assertThat(infraDefNames).containsExactlyInAnyOrder("id1", "id2");
   }
 
   @Test
@@ -122,7 +124,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
             .build();
     saveAll(id1, id2, id3);
     List<String> infraDefNames = infrastructureDefinitionService.listNamesByConnectionAttr(accountId, connectionAttr1);
-    Assertions.assertThat(infraDefNames).containsExactlyInAnyOrder("id1", "id3");
+    assertThat(infraDefNames).containsExactlyInAnyOrder("id1", "id3");
   }
 
   @Test
@@ -151,15 +153,116 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
     saveAll(id1, id2, id3);
     List<String> infraDefNames =
         infrastructureDefinitionService.listNamesByComputeProviderId(accountId, cloudProvider.getUuid());
-    Assertions.assertThat(infraDefNames).containsExactlyInAnyOrder("id1", "id3");
+    assertThat(infraDefNames).containsExactlyInAnyOrder("id1", "id3");
   }
 
-  private void saveAll(InfrastructureDefinition... defs) {
+  private List<InfrastructureDefinition> saveAll(InfrastructureDefinition... defs) {
+    List<InfrastructureDefinition> infrastructureDefinitionsCreated = new ArrayList<>();
     for (InfrastructureDefinition infrastructureDefinition : defs) {
       setRequiredFields(infrastructureDefinition);
       wingsPersistence.save(infrastructureDefinition);
-      allInfraDefinitionsCreated.add(infrastructureDefinition.getUuid());
+      infrastructureDefinitionsCreated.add(infrastructureDefinition);
     }
+    return infrastructureDefinitionsCreated;
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(IntegrationTests.class)
+  public void testGetNameAndIdForEnvironment() {
+    Environment env = createEnvironment("testGetNameAndIdForEnvironment");
+
+    try {
+      shouldGetWhenNoEntries(env);
+      shouldLimitWhenMoreEntries(env);
+    } finally {
+      deleteEnvironment(env);
+    }
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(IntegrationTests.class)
+  public void testGetCountForEnvironments() {
+    Environment env1 = createEnvironment("testGetCountForEnvironments1");
+    Environment env2 = createEnvironment("testGetCountForEnvironments2");
+
+    try {
+      shouldGetZeroAndCorrectCount(env1, env2);
+    } finally {
+      deleteEnvironment(env1);
+      deleteEnvironment(env2);
+    }
+  }
+
+  private void shouldGetZeroAndCorrectCount(Environment env1, Environment env2) {
+    InfrastructureDefinition infraDef1 = InfrastructureDefinition.builder()
+                                             .appId(env2.getAppId())
+                                             .envId(env2.getUuid())
+                                             .name("infra1")
+                                             .infrastructure(PhysicalInfra.builder().build())
+                                             .build();
+    InfrastructureDefinition infraDef2 = InfrastructureDefinition.builder()
+                                             .appId(env2.getAppId())
+                                             .envId(env2.getUuid())
+                                             .name("infra2")
+                                             .infrastructure(PhysicalInfra.builder().build())
+                                             .build();
+    saveAll(infraDef1, infraDef2);
+
+    try {
+      Map<String, Integer> countForEnvironments = infrastructureDefinitionService.getCountForEnvironments(
+          env1.getAppId(), Arrays.asList(env1.getUuid(), env2.getUuid()));
+
+      assertThat(countForEnvironments.get(env1.getUuid())).isEqualTo(0);
+      assertThat(countForEnvironments.get(env2.getUuid())).isEqualTo(2);
+    } finally {
+      deleteAllInfraDefs(infraDef1, infraDef2);
+    }
+  }
+
+  private void deleteAllInfraDefs(InfrastructureDefinition... infrastructureDefinitions) {
+    for (InfrastructureDefinition infrastructureDefinition : infrastructureDefinitions) {
+      wingsPersistence.delete(InfrastructureDefinition.class, infrastructureDefinition.getUuid());
+    }
+  }
+
+  private void deleteEnvironment(Environment env) {
+    environmentService.delete(env.getAppId(), env.getUuid());
+  }
+
+  private Environment createEnvironment(String name) {
+    Environment env = Environment.Builder.anEnvironment().appId(app1.getUuid()).name(name).build();
+    return environmentService.save(env);
+  }
+
+  private void shouldLimitWhenMoreEntries(Environment env) {
+    InfrastructureDefinition infraDef1 = InfrastructureDefinition.builder()
+                                             .appId(env.getAppId())
+                                             .envId(env.getUuid())
+                                             .name("infra1")
+                                             .infrastructure(PhysicalInfra.builder().build())
+                                             .build();
+    InfrastructureDefinition infraDef2 = InfrastructureDefinition.builder()
+                                             .appId(env.getAppId())
+                                             .envId(env.getUuid())
+                                             .name("infra2")
+                                             .infrastructure(PhysicalInfra.builder().build())
+                                             .build();
+    saveAll(infraDef1, infraDef2);
+
+    try {
+      List<InfrastructureDefinition> result =
+          infrastructureDefinitionService.getNameAndIdForEnvironment(env.getAppId(), env.getUuid(), 1);
+
+      assertThat(result).hasSize(1);
+    } finally {
+      deleteAllInfraDefs(infraDef1, infraDef2);
+    }
+  }
+
+  private void shouldGetWhenNoEntries(Environment env) {
+    assertThat(infrastructureDefinitionService.getNameAndIdForEnvironment(env.getAppId(), env.getUuid(), 1)).isEmpty();
   }
 
   @After

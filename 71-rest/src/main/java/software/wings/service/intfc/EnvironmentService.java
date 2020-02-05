@@ -44,11 +44,12 @@ public interface EnvironmentService extends OwnedByApplication {
    * List.
    *
    * @param request     the request
-   * @param withSummary the with summary
    * @return the page response
    */
-  PageResponse<Environment> list(
-      PageRequest<Environment> request, boolean withSummary, boolean withTags, String tagFilter);
+  PageResponse<Environment> list(PageRequest<Environment> request, boolean withTags, String tagFilter);
+
+  PageResponse<Environment> listWithSummary(
+      PageRequest<Environment> request, boolean withTags, String tagFilter, String appId);
 
   /**
    * Gets the.

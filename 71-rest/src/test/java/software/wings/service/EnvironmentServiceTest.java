@@ -163,7 +163,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private EnvironmentService environmentService;
   @Inject @InjectMocks private ResourceLookupService resourceLookupService;
 
-  @Spy @InjectMocks private EnvironmentService spyEnvService = new EnvironmentServiceImpl();
+  @Spy @InjectMocks private EnvironmentServiceImpl spyEnvService = new EnvironmentServiceImpl();
 
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private HQuery<Environment> query;
@@ -215,7 +215,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
         .thenReturn(serviceTemplatePageResponse);
 
-    PageResponse<Environment> environments = environmentService.list(envPageRequest, true, false, null);
+    PageResponse<Environment> environments =
+        environmentService.listWithSummary(envPageRequest, false, null, environment.getAppId());
 
     assertThat(environments).containsAll(asList(environment));
     assertThat(environments.get(0).getServiceTemplates()).containsAll(asList(serviceTemplate));

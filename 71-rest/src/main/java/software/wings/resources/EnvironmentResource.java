@@ -84,7 +84,11 @@ public class EnvironmentResource {
     if (appId != null) {
       pageRequest.addFilter("appId", EQ, appId);
     }
-    return new RestResponse<>(environmentService.list(pageRequest, details, withTags, tagFilter));
+    if (details) {
+      return new RestResponse<>(environmentService.listWithSummary(pageRequest, withTags, tagFilter, appId));
+    } else {
+      return new RestResponse<>(environmentService.list(pageRequest, withTags, tagFilter));
+    }
   }
 
   /**

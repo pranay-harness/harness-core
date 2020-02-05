@@ -190,7 +190,7 @@ public class UsageMetricsService {
                                                  .addFilter("appId", Operator.IN, appIds.toArray())
                                                  .addFieldsIncluded("_id")
                                                  .build();
-      return environmentService.list(pageRequest, false, false, null).getTotal();
+      return environmentService.list(pageRequest, false, null).getTotal();
     } else {
       return 0;
     }

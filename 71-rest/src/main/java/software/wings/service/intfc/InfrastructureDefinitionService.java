@@ -21,6 +21,7 @@ import software.wings.sm.ExecutionContext;
 import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   PageResponse<InfrastructureDefinition> list(PageRequest<InfrastructureDefinition> pageRequest);
@@ -96,6 +97,9 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   Integer getPcfRunningInstances(String appId, String infraMappingId, String appNameExpression, String serviceId);
 
   List<InfrastructureDefinition> getNameAndIdForEnvironments(String appId, List<String> envIds);
+
+  List<InfrastructureDefinition> getNameAndIdForEnvironment(String appId, String envId, int limit);
+  Map<String, Integer> getCountForEnvironments(String appId, @NotNull List<String> envIds);
 
   List<InfrastructureDefinition> getDefinitionWithFieldsForEnvironments(
       String appId, List<String> envIds, List<String> projections);

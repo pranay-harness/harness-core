@@ -112,7 +112,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,6 +120,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -161,29 +161,45 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    * {@inheritDoc}
    */
   @Override
-  public PageResponse<Environment> list(
-      PageRequest<Environment> request, boolean withSummary, boolean withTags, String tagFilter) {
-    PageResponse<Environment> pageResponse =
-        resourceLookupService.listWithTagFilters(request, tagFilter, EntityType.ENVIRONMENT, withTags);
+  public PageResponse<Environment> list(PageRequest<Environment> request, boolean withTags, String tagFilter) {
+    return resourceLookupService.listWithTagFilters(request, tagFilter, EntityType.ENVIRONMENT, withTags);
+  }
+
+  @Override
+  public PageResponse<Environment> listWithSummary(
+      PageRequest<Environment> request, boolean withTags, String tagFilter, String appId) {
+    PageResponse<Environment> pageResponse = list(request, withTags, tagFilter);
 
     if (pageResponse.getResponse() == null) {
       return pageResponse;
     }
-    if (withSummary) {
-      pageResponse.getResponse().forEach(environment -> {
-        if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, environment.getAccountId())) {
-          environment.setInfrastructureDefinitions(infrastructureDefinitionService.getNameAndIdForEnvironments(
-              environment.getAppId(), Collections.singletonList(environment.getUuid())));
-        }
-        try {
-          addServiceTemplates(environment);
-        } catch (Exception e) {
-          logger.error("Failed to add service templates to environment {}", environment.toString(), e);
-        }
-      });
-    }
+    addInfraDefDetailToEnv(appId, pageResponse);
+    pageResponse.getResponse().forEach(environment -> {
+      try {
+        addServiceTemplates(environment);
+      } catch (Exception e) {
+        logger.error("Failed to add service templates to environment {}", environment.toString(), e);
+      }
+    });
 
     return pageResponse;
+  }
+
+  void addInfraDefDetailToEnv(String appId, @Nonnull PageResponse<Environment> pageResponse) {
+    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId))) {
+      return;
+    }
+    List<String> envIds = new ArrayList<>();
+    for (Environment environment : pageResponse.getResponse()) {
+      envIds.add(environment.getUuid());
+    }
+    Map<String, Integer> countForEnvironments = infrastructureDefinitionService.getCountForEnvironments(appId, envIds);
+
+    for (Environment environment : pageResponse.getResponse()) {
+      environment.setInfrastructureDefinitions(
+          infrastructureDefinitionService.getNameAndIdForEnvironment(appId, environment.getUuid(), 5));
+      environment.setInfraDefinitionsCount(countForEnvironments.getOrDefault(environment.getUuid(), 0));
+    }
   }
 
   /**
@@ -253,7 +269,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public Map<String, String> getData(String appId, Map<String, String> params) {
     PageRequest<Environment> pageRequest = new PageRequest<>();
     pageRequest.addFilter(EnvironmentKeys.appId, EQ, appId);
-    return list(pageRequest, false, false, null).stream().collect(toMap(Environment::getUuid, Environment::getName));
+    return list(pageRequest, false, null).stream().collect(toMap(Environment::getUuid, Environment::getName));
   }
 
   /**
@@ -572,7 +588,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                                .addFieldsIncluded("_id", "appId", "environmentType")
                                                .build();
 
-    List<Environment> list = wingsPersistence.getAllEntities(pageRequest, () -> list(pageRequest, false, false, null));
+    List<Environment> list = wingsPersistence.getAllEntities(pageRequest, () -> list(pageRequest, false, null));
 
     List<Base> emptyList = new ArrayList<>();
 

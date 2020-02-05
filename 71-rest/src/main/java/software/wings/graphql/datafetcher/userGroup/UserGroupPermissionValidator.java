@@ -95,7 +95,7 @@ public class UserGroupPermissionValidator {
                                        .addFilter("accountId", SearchFilter.Operator.EQ, accountId)
                                        .addFilter("_id", IN, envIds.toArray())
                                        .build();
-    PageResponse<Environment> res = environmentService.list(req, false, false, null);
+    PageResponse<Environment> res = environmentService.list(req, false, null);
     // This Ids are wrong
     List<String> idsPresent = res.stream().map(Environment::getUuid).collect(Collectors.toList());
     checkForInvalidIds(ids, idsPresent);
