@@ -6,6 +6,8 @@ public interface PcfConstants {
   String PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX = "PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX: ";
   String PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION = "Pivotal Client Exception: ";
   String CF_HOME = "CF_HOME";
+  String CF_USERNAME = "CF_USERNAME";
+  String CF_PASSWORD = "CF_PASSWORD";
   String CF_PLUGIN_HOME = "CF_PLUGIN_HOME";
   String SYS_VAR_CF_PLUGIN_HOME = "harness.pcf.plugin.home";
   String CF_COMMAND_FOR_CHECKING_AUTOSCALAR = "cf plugins | grep autoscaling-apps";
