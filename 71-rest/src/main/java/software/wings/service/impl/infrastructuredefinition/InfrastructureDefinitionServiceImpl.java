@@ -1,6 +1,6 @@
 package software.wings.service.impl.infrastructuredefinition;
 
-import static io.harness.beans.PageResponse.PageRequestBuilder;
+import static io.harness.beans.PageRequest.PageRequestBuilder;
 import static io.harness.beans.PageResponse.PageResponseBuilder;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -22,6 +22,9 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
+import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
+import static org.mongodb.morphia.aggregation.Group.grouping;
+import static org.mongodb.morphia.aggregation.Projection.projection;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
@@ -83,12 +86,16 @@ import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.aggregation.Group;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CloudProviderType;
@@ -187,6 +194,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
@@ -1361,6 +1369,49 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Override
   public List<InfrastructureDefinition> getNameAndIdForEnvironments(String appId, List<String> envIds) {
     return getDefinitionWithFieldsForEnvironments(appId, envIds, null);
+  }
+
+  @Override
+  public List<InfrastructureDefinition> getNameAndIdForEnvironment(String appId, String envId, int limit) {
+    Query<InfrastructureDefinition> infrastructureDefinitionQuery =
+        wingsPersistence.createQuery(InfrastructureDefinition.class)
+            .project(InfrastructureDefinitionKeys.uuid, true)
+            .project(InfrastructureDefinitionKeys.name, true)
+            .filter(InfrastructureDefinitionKeys.appId, appId)
+            .filter(InfrastructureDefinitionKeys.envId, envId);
+    FindOptions findOptions = new FindOptions();
+    findOptions.limit(limit);
+    return infrastructureDefinitionQuery.asList(findOptions);
+  }
+
+  @Override
+  public Map<String, Integer> getCountForEnvironments(String appId, @NotNull List<String> envIds) {
+    Map<String, Integer> envIdInfraDefCountMap =
+        envIds.stream().collect(Collectors.toMap(envId -> envId, envId -> 0, (a, b) -> b));
+
+    Query<InfrastructureDefinition> query = wingsPersistence.createQuery(InfrastructureDefinition.class)
+                                                .project(InfrastructureDefinitionKeys.uuid, true)
+                                                .project(InfrastructureDefinitionKeys.envId, true)
+                                                .project(InfrastructureDefinitionKeys.name, true)
+                                                .filter(InfrastructureDefinitionKeys.appId, appId)
+                                                .field(InfrastructureDefinitionKeys.envId)
+                                                .in(envIds);
+    wingsPersistence.getDatastore(InfrastructureDefinition.class)
+        .createAggregation(InfrastructureDefinition.class)
+        .match(query)
+        .group(Group.id(grouping("envId")), grouping("count", accumulator("$sum", 1)))
+        .project(projection("envId", "_id.envId"), projection("count"))
+        .aggregate(EnvInfraDefStats.class)
+        .forEachRemaining(envInfraDefStat -> envIdInfraDefCountMap.put(envInfraDefStat.envId, envInfraDefStat.count));
+
+    return envIdInfraDefCountMap;
+  }
+
+  @Data
+  @NoArgsConstructor
+  private static class EnvInfraDefStats {
+    private String envId;
+    private int count;
   }
 
   @Override

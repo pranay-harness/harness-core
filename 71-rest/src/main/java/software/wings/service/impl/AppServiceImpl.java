@@ -271,8 +271,8 @@ public class AppServiceImpl implements AppService {
       if (details) {
         PageRequest<Environment> envPageRequest =
             PageRequestBuilder.aPageRequest().addFilter("appId", Operator.IN, appIdArray).build();
-        List<Environment> envList = wingsPersistence.getAllEntities(
-            envPageRequest, () -> environmentService.list(envPageRequest, false, false, null));
+        List<Environment> envList =
+            wingsPersistence.getAllEntities(envPageRequest, () -> environmentService.list(envPageRequest, false, null));
         appIdEnvMap = envList.stream().collect(groupingBy(Environment::getAppId));
 
         PageRequest<Service> servicePageRequest =

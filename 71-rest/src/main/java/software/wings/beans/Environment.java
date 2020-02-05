@@ -69,6 +69,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
   @Transient private List<ConfigFile> configFiles;
   @Transient private Setup setup;
   @Transient private List<InfrastructureDefinition> infrastructureDefinitions;
+  @Transient private int infraDefinitionsCount;
   @SchemaIgnore private Set<String> keywords;
   @Indexed private String accountId;
   private boolean sample;
