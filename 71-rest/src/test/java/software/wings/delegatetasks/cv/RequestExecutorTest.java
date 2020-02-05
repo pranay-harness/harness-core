@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.cv;
 
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Matchers.eq;
@@ -34,7 +35,9 @@ import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class RequestExecutorTest extends CategoryTest {
@@ -174,6 +177,34 @@ public class RequestExecutorTest extends CategoryTest {
     when(call.execute()).thenReturn(rateLimitResponse);
     assertThatThrownBy(() -> requestExecutor.executeRequest(create(), call))
         .isInstanceOf(DataCollectionException.class);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testMaskFieldsInThirdPartyCalls() throws Exception {
+    Request request = new Request.Builder().url("http://example.com/test&apiKey=12345&appKey=98765").build();
+    Call<String> call = mock(Call.class);
+    when(call.clone()).thenReturn(call);
+    when(call.request()).thenReturn(request);
+    String responseStr = "This is test response";
+    Response<String> response = Response.success(responseStr);
+    when(call.execute()).thenReturn(response);
+    Map<String, String> maskMap = new HashMap<>();
+    maskMap.put("12345", "<apiKey>");
+    maskMap.put("98765", "<appKey>");
+    String returnedStr = requestExecutor.executeRequest(create(), call, maskMap);
+    assertThat(returnedStr).isEqualTo(responseStr);
+    ArgumentCaptor<ThirdPartyApiCallLog> thirdPartyApiCallLogArgumentCaptor =
+        ArgumentCaptor.forClass(ThirdPartyApiCallLog.class);
+    verify(delegateLogService, times(1)).save(eq(accountId), thirdPartyApiCallLogArgumentCaptor.capture());
+    assertThat(thirdPartyApiCallLogArgumentCaptor.getValue()).isNotNull();
+    ThirdPartyApiCallLog thirdPartyApiCallLog = thirdPartyApiCallLogArgumentCaptor.getValue();
+    thirdPartyApiCallLog.getRequest().forEach(requestLog -> {
+      if (requestLog.getType().equals(FieldType.URL)) {
+        assertThat(requestLog.getValue()).isEqualTo("http://example.com/test&apiKey=<apiKey>&appKey=<appKey>");
+      }
+    });
   }
 
   @Test

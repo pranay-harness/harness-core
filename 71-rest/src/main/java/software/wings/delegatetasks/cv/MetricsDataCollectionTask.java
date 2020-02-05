@@ -78,6 +78,7 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
         .host(metricElement.getHost())
         .values(metricElement.getValues())
         .groupName(metricElement.getGroupName())
+        .tag(metricElement.getTag())
         .dataCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(metricElement.getTimestamp()))
         .build();
   }

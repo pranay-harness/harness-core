@@ -447,9 +447,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   public boolean collectCVData(String cvTaskId, DataCollectionInfoV2 dataCollectionInfo) {
     dataCollectionInfo.setCvTaskId(cvTaskId);
     dataCollectionInfo.setSettingValue(settingsService.get(dataCollectionInfo.getConnectorId()).getValue());
-    dataCollectionInfo.getEncryptableSetting().ifPresent(encryptableSetting
-        -> dataCollectionInfo.setEncryptedDataDetails(secretManager.getEncryptionDetails(
-            encryptableSetting, dataCollectionInfo.getApplicationId(), dataCollectionInfo.getWorkflowExecutionId())));
+    dataCollectionInfo.setEncryptionDataDetails(secretManager);
     dataCollectionInfo.validate();
     DelegateTask delegateTask = createDelegateTask(dataCollectionInfo.getTaskType(), dataCollectionInfo.getAccountId(),
         dataCollectionInfo.getApplicationId(), null, new Object[] {dataCollectionInfo}, dataCollectionInfo.getEnvId(),

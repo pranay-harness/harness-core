@@ -323,8 +323,12 @@ public class NewRelicState extends AbstractMetricAnalysisState {
       if (metricName.equals(NewRelicMetricValueDefinition.ERROR)
           && metricDataRecord.getValues().containsKey(NewRelicMetricValueDefinition.ERROR)
           && metricDataRecord.getValues().containsKey(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE)) {
-        double errorCount = metricDataRecord.getValues().get(NewRelicMetricValueDefinition.ERROR);
-        double callsCount = metricDataRecord.getValues().get(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE);
+        double errorCount = metricDataRecord.getValues() != null
+            ? metricDataRecord.getValues().get(NewRelicMetricValueDefinition.ERROR)
+            : 0;
+        double callsCount = metricDataRecord.getValues() != null
+            ? metricDataRecord.getValues().get(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE)
+            : 0;
 
         if (callsCount != 0.0) {
           DecimalFormat twoDForm = new DecimalFormat("#.00");

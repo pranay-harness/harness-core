@@ -1,0 +1,131 @@
+package software.wings.service.impl.apm;
+
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.TaskType.CUSTOM_APM_COLLECT_METRICS_V2;
+
+import com.google.common.base.Preconditions;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptionConfig;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
+import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.APMVerificationConfig;
+import software.wings.beans.TaskType;
+import software.wings.delegatetasks.cv.CustomAPMDataCollector;
+import software.wings.delegatetasks.cv.DataCollector;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
+import software.wings.service.impl.analysis.MetricsDataCollectionInfo;
+import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue;
+import software.wings.sm.StateType;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+@FieldNameConstants(innerTypeName = "CustomAPMDataCollectionInfoKeys")
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class CustomAPMDataCollectionInfo extends MetricsDataCollectionInfo {
+  private APMVerificationConfig apmConfig;
+  private Map<String, String> headers;
+  private Map<String, String> options;
+  private List<APMMetricInfo> canaryMetricInfos;
+  private List<APMMetricInfo> metricEndpoints;
+
+  @Builder
+  public CustomAPMDataCollectionInfo(String accountId, String applicationId, String envId, Instant startTime,
+      Instant endTime, Set<String> hosts, String cvConfigId, String stateExecutionId, String workflowId,
+      String workflowExecutionId, String serviceId, String cvTaskId, String connectorId,
+      Map<String, String> hostsToGroupNameMap, APMVerificationConfig apmConfig, Map<String, String> headers,
+      Map<String, String> options, List<EncryptedDataDetail> encryptedDataDetails,
+      List<APMMetricInfo> canaryMetricInfos, List<APMMetricInfo> metricEndpoints) {
+    super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
+        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, hostsToGroupNameMap);
+    this.apmConfig = apmConfig;
+    this.headers = headers;
+    this.options = options;
+    this.canaryMetricInfos = canaryMetricInfos;
+    this.metricEndpoints = metricEndpoints;
+  }
+  @Override
+  public TaskType getTaskType() {
+    return CUSTOM_APM_COLLECT_METRICS_V2;
+  }
+
+  @Override
+  public StateType getStateType() {
+    return StateType.APM_VERIFICATION;
+  }
+
+  @Override
+  public Class<? extends DataCollector<? extends DataCollectionInfoV2>> getDataCollectorImplClass() {
+    return CustomAPMDataCollector.class;
+  }
+
+  @Override
+  public Optional<String> getUrlForValidation() {
+    // We will use APMValidation.java for the validation of this task
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Optional<EncryptionConfig> getEncryptionConfig() {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<EncryptableSetting> getEncryptableSetting() {
+    return Optional.of(apmConfig);
+  }
+
+  @Override
+  public DataCollectionInfoV2 deepCopy() {
+    CustomAPMDataCollectionInfo customAPMDataCollectionInfo =
+        CustomAPMDataCollectionInfo.builder()
+            .apmConfig(apmConfig)
+            .metricEndpoints(metricEndpoints)
+            .headers(headers)
+            .options(options)
+            .canaryMetricInfos(canaryMetricInfos != null ? new ArrayList<>(canaryMetricInfos) : null)
+            .build();
+    super.copy(customAPMDataCollectionInfo);
+    return customAPMDataCollectionInfo;
+  }
+
+  @Override
+  protected void validateParams() {
+    Preconditions.checkNotNull(apmConfig, CustomAPMDataCollectionInfoKeys.apmConfig);
+    Preconditions.checkNotNull(metricEndpoints, CustomAPMDataCollectionInfoKeys.metricEndpoints);
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return null;
+  }
+
+  @JsonIgnore
+  public boolean isCanaryUrlPresent() {
+    return isNotEmpty(canaryMetricInfos);
+  }
+
+  @Override
+  public void setSettingValue(SettingValue settingValue) {
+    apmConfig = (APMVerificationConfig) settingValue;
+  }
+
+  @Override
+  public void setEncryptionDataDetails(SecretManager secretManager) {
+    setEncryptedDataDetails(getApmConfig().encryptedDataDetails(secretManager));
+  }
+}

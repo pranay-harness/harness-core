@@ -227,6 +227,7 @@ public enum TaskType {
   BUGSNAG_GET_APP_TASK(TaskGroup.LOG, ServiceImplDelegateTask.class, APMValidation.class),
   BUGSNAG_GET_RECORDS(TaskGroup.LOG, ServiceImplDelegateTask.class, APMValidation.class),
   CUSTOM_COLLECT_24_7_LOG_DATA(TaskGroup.GUARD_24x7, LogDataCollectionTask.class, APMValidation.class),
+  CUSTOM_APM_COLLECT_METRICS_V2(TaskGroup.APM, MetricsDataCollectionTask.class, APMValidation.class),
   NEWRELIC_GET_APP_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_RESOLVE_APP_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_RESOLVE_APP_ID_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),

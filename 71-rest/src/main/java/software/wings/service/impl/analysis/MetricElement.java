@@ -12,6 +12,7 @@ public class MetricElement {
   private String name;
   private String host;
   private String groupName;
+  private String tag;
   private long timestamp;
   @Builder.Default private Map<String, Double> values = new HashMap<>();
 

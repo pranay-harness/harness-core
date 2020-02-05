@@ -14,6 +14,7 @@ import lombok.experimental.FieldNameConstants;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cv.DataCollector;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
 
@@ -92,5 +93,11 @@ public abstract class DataCollectionInfoV2 implements TaskParameters, ExecutionC
     Preconditions.checkNotNull(stateExecutionId, DataCollectionInfoV2Keys.stateExecutionId);
     Preconditions.checkNotNull(applicationId, DataCollectionInfoV2Keys.applicationId);
     validateParams();
+  }
+
+  public void setEncryptionDataDetails(SecretManager secretManager) {
+    getEncryptableSetting().ifPresent(encryptableSetting
+        -> setEncryptedDataDetails(
+            secretManager.getEncryptionDetails(encryptableSetting, getApplicationId(), getWorkflowExecutionId())));
   }
 }

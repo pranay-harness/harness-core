@@ -2,6 +2,7 @@ package software.wings.verification.apm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
@@ -10,6 +11,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.metrics.MetricType;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
+import software.wings.service.impl.apm.CustomAPMDataCollectionInfo;
+import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
 import software.wings.verification.CVConfiguration;
 
@@ -17,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Data
@@ -35,6 +40,18 @@ public class APMCVServiceConfiguration extends CVConfiguration {
     return clonedConfig;
   }
 
+  @Override
+  public DataCollectionInfoV2 toDataCollectionInfo() {
+    Map<String, String> hostsMap = new HashMap<>();
+    hostsMap.put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME);
+    CustomAPMDataCollectionInfo customAPMDataCollectionInfo =
+        CustomAPMDataCollectionInfo.builder()
+            .metricEndpoints(APMVerificationState.buildMetricInfoList(metricCollectionInfos, Optional.empty()))
+            .hostsToGroupNameMap(hostsMap)
+            .build();
+    fillDataCollectionInfoWithCommonFields(customAPMDataCollectionInfo);
+    return customAPMDataCollectionInfo;
+  }
   @Data
   @Builder
   @AllArgsConstructor

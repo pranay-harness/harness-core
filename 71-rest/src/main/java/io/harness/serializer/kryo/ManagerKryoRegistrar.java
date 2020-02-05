@@ -129,6 +129,7 @@ import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.APMValidateCollectorConfig;
+import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Account;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
@@ -483,6 +484,7 @@ import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
+import software.wings.service.impl.apm.CustomAPMDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -1459,6 +1461,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureArtifactsCollectionTaskParameters.class, 7289);
     kryo.register(GcpKmsConfig.class, 7290);
     kryo.register(UtmInfo.class, 7291);
+
     kryo.register(TerraformApplyMarkerParam.class, 7292);
     kryo.register(InstanaConfig.class, 7293);
     kryo.register(InstanaInfraMetricMetadata.class, 7294);
@@ -1472,5 +1475,9 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BillingReportConfig.class, 7302);
     kryo.register(HelmVersion.class, 7303);
     kryo.register(InstanaTagFilter.class, 7304);
+
+    kryo.register(CustomAPMDataCollectionInfo.class, 7305);
+    kryo.register(APMVerificationConfig.class, 7306);
+    kryo.register(APMVerificationConfig.KeyValues.class, 7307);
   }
 }
