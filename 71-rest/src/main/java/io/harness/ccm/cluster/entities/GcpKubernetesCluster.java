@@ -4,18 +4,23 @@ import static io.harness.ccm.cluster.entities.ClusterType.GCP_KUBERNETES;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.query.Query;
+import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
+import software.wings.settings.SettingValue;
+
+import java.util.List;
 
 @Data
 @JsonTypeName("GCP_KUBERNETES")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "GcpKubernetesClusterKeys")
-public class GcpKubernetesCluster implements Cluster {
+public class GcpKubernetesCluster implements Cluster, KubernetesCluster {
   final String cloudProviderId;
   final String clusterName;
 
@@ -40,5 +45,14 @@ public class GcpKubernetesCluster implements Cluster {
         .equal(this.getCloudProviderId())
         .field(clusterNameField)
         .equal(this.getClusterName());
+  }
+
+  @Override
+  public K8sClusterConfig toK8sClusterConfig(SettingValue cloudProvider, List<EncryptedDataDetail> encryptionDetails) {
+    return K8sClusterConfig.builder()
+        .cloudProvider(cloudProvider)
+        .cloudProviderEncryptionDetails(encryptionDetails)
+        .gcpKubernetesCluster(software.wings.beans.GcpKubernetesCluster.builder().clusterName(clusterName).build())
+        .build();
   }
 }
