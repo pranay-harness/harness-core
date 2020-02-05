@@ -80,6 +80,7 @@ import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
+import software.wings.beans.CustomArtifactServerConfig;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
@@ -455,6 +456,31 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
+  public SettingAttribute saveWithPruning(SettingAttribute settingAttribute, String appId, String accountId) {
+    prePruneSettingAttribute(appId, accountId, settingAttribute);
+    return save(settingAttribute);
+  }
+
+  private void prePruneSettingAttribute(final String appId, final String accountId, final SettingAttribute variable) {
+    variable.setAppId(appId);
+    if (accountId != null) {
+      variable.setAccountId(accountId);
+    }
+    if (variable.getValue() != null) {
+      if (variable.getValue() instanceof EncryptableSetting) {
+        ((EncryptableSetting) variable.getValue()).setAccountId(variable.getAccountId());
+        ((EncryptableSetting) variable.getValue()).setDecrypted(true);
+      }
+      if (variable.getValue() instanceof CustomArtifactServerConfig) {
+        ((CustomArtifactServerConfig) variable.getValue()).setAccountId(variable.getAccountId());
+      }
+    }
+    if (null != variable.getValue()) {
+      variable.setCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
+    }
+  }
+
+  @Override
   @ValidationGroups(Create.class)
   public SettingAttribute forceSave(SettingAttribute settingAttribute) {
     usageRestrictionsService.validateUsageRestrictionsOnEntitySave(
@@ -522,6 +548,13 @@ public class SettingsServiceImpl implements SettingsService {
     }
   }
 
+  @Override
+  public ValidationResult validateConnectivityWithPruning(
+      SettingAttribute settingAttribute, String appId, String accountId) {
+    prePruneSettingAttribute(appId, accountId, settingAttribute);
+    return validateConnectivity(settingAttribute);
+  }
+
   private ValidationResult validateInternal(final SettingAttribute settingAttribute) {
     try {
       return new ValidationResult(settingValidationService.validate(settingAttribute), "");
@@ -532,6 +565,12 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public ValidationResult validate(final SettingAttribute settingAttribute) {
+    return validateInternal(settingAttribute);
+  }
+
+  @Override
+  public ValidationResult validateWithPruning(final SettingAttribute settingAttribute, String appId, String accountId) {
+    prePruneSettingAttribute(appId, accountId, settingAttribute);
     return validateInternal(settingAttribute);
   }
 

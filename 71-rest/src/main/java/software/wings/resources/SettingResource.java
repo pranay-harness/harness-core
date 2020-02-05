@@ -35,7 +35,6 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.CustomArtifactServerConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.NameValuePair;
@@ -170,25 +169,6 @@ public class SettingResource {
     }
   }
 
-  private void prePruneSettingAttribute(final String appId, final String accountId, final SettingAttribute variable) {
-    variable.setAppId(appId);
-    if (accountId != null) {
-      variable.setAccountId(accountId);
-    }
-    if (variable.getValue() != null) {
-      if (variable.getValue() instanceof EncryptableSetting) {
-        ((EncryptableSetting) variable.getValue()).setAccountId(variable.getAccountId());
-        ((EncryptableSetting) variable.getValue()).setDecrypted(true);
-      }
-      if (variable.getValue() instanceof CustomArtifactServerConfig) {
-        ((CustomArtifactServerConfig) variable.getValue()).setAccountId(variable.getAccountId());
-      }
-    }
-    if (null != variable.getValue()) {
-      variable.setCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
-    }
-  }
-
   /**
    * Save.
    *
@@ -201,9 +181,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<SettingAttribute> save(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
-    prePruneSettingAttribute(appId, accountId, variable);
-    SettingAttribute savedSettingAttribute = settingsService.save(variable);
-
+    SettingAttribute savedSettingAttribute = settingsService.saveWithPruning(variable, appId, accountId);
     return new RestResponse<>(savedSettingAttribute);
   }
 
@@ -220,8 +198,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<ValidationResult> validate(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
-    prePruneSettingAttribute(appId, accountId, variable);
-    return new RestResponse<>(settingsService.validate(variable));
+    return new RestResponse<>(settingsService.validateWithPruning(variable, appId, accountId));
   }
 
   @POST
@@ -231,8 +208,7 @@ public class SettingResource {
   public RestResponse<ValidationResult> validateConnectivity(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
       SettingAttribute variable) {
-    prePruneSettingAttribute(appId, accountId, variable);
-    return new RestResponse<>(settingsService.validateConnectivity(variable));
+    return new RestResponse<>(settingsService.validateConnectivityWithPruning(variable, appId, accountId));
   }
 
   /**
