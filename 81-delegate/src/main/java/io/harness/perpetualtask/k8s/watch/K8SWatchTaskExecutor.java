@@ -102,7 +102,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                                                   .setLastProcessedTimestamp(timestamp)
                                                   .build();
     eventPublisher.publishMessage(
-        k8SClusterSyncEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, watchTaskParams.getClusterName()));
+        k8SClusterSyncEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, watchTaskParams.getClusterId()));
   }
 
   @VisibleForTesting
