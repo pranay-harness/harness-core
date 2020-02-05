@@ -8,6 +8,7 @@ import static io.harness.pcf.model.PcfConstants.CF_PLUGIN_HOME;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -77,6 +78,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -1062,6 +1064,23 @@ public class PivotalClientTest extends WingsBaseTest {
     } catch (PivotalClientApiException e) {
       assertThat(e.getCause().getMessage()).contains("Failed to login");
     }
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void test_doLogin() throws Exception {
+    PcfClientImpl client = spy(PcfClientImpl.class);
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doReturn(0).when(client).executeCommand(anyString(), any(), any());
+    Map<String, String> env = new HashMap<>();
+    env.put("CF_HOME", "CF_HOME");
+    doReturn(env).when(client).getEnvironmentMapForPcfExecutor(anyString());
+    PcfRequestConfig config =
+        PcfRequestConfig.builder().endpointUrl("api.pivotal.io").userName("user").password("passwd").build();
+    client.doLogin(config, mockCallback, "conf");
+    verify(client, times(3)).executeCommand(anyString(), anyMap(), any());
   }
 
   @Test

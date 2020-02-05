@@ -8,7 +8,9 @@ import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_APP_LOG_TAILING;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_APP_AUTOSCALAR_BINDING;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCALAR;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
+import static io.harness.pcf.model.PcfConstants.CF_PASSWORD;
 import static io.harness.pcf.model.PcfConstants.CF_PLUGIN_HOME;
+import static io.harness.pcf.model.PcfConstants.CF_USERNAME;
 import static io.harness.pcf.model.PcfConstants.CONFIGURE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.DISABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.ENABLE_AUTOSCALING;
@@ -16,6 +18,7 @@ import static io.harness.pcf.model.PcfConstants.PCF_ROUTE_PATH_SEPARATOR;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static io.harness.pcf.model.PcfConstants.SYS_VAR_CF_PLUGIN_HOME;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -730,9 +733,11 @@ public class PcfClientImpl implements PcfClient {
     return builder.toString();
   }
 
-  private Map<String, String> getEnvironmentMapForPcfExecutor(String configPathVar) {
+  @VisibleForTesting
+  Map<String, String> getEnvironmentMapForPcfExecutor(String configPathVar) {
     return getEnvironmentMapForPcfExecutor(configPathVar, null);
   }
+
   private Map<String, String> getEnvironmentMapForPcfExecutor(String configPathVar, String pluginHomeAbsPath) {
     final Map<String, String> map = new HashMap<>();
     map.put(CF_HOME, configPathVar);
@@ -742,36 +747,49 @@ public class PcfClientImpl implements PcfClient {
     return map;
   }
 
+  int executeCommand(String command, Map<String, String> env, ExecutionLogCallback logCallback)
+      throws IOException, InterruptedException, TimeoutException {
+    ProcessExecutor executor = new ProcessExecutor()
+                                   .timeout(5, TimeUnit.MINUTES)
+                                   .command(BIN_SH, "-c", command)
+                                   .readOutput(true)
+                                   .environment(env)
+                                   .redirectOutput(new LogOutputStream() {
+                                     @Override
+                                     protected void processLine(String line) {
+                                       logCallback.saveExecutionLog(line);
+                                     }
+                                   });
+    ProcessResult result = executor.execute();
+    return result.getExitValue();
+  }
+
   boolean doLogin(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback, String configPathVar)
       throws IOException, InterruptedException, TimeoutException {
     executionLogCallback.saveExecutionLog("# Performing \"login\"");
-    String password = handlePwdForSpecialCharsForShell(pcfRequestConfig.getPassword());
-    ProcessExecutor processExecutor = new ProcessExecutor()
-                                          .timeout(5, TimeUnit.MINUTES)
-                                          .command(BIN_SH, "-c",
-                                              new StringBuilder(128)
-                                                  .append("cf login -a ")
-                                                  .append(pcfRequestConfig.getEndpointUrl())
-                                                  .append(" -o ")
-                                                  .append(pcfRequestConfig.getOrgName())
-                                                  .append(" -s ")
-                                                  .append(pcfRequestConfig.getSpaceName())
-                                                  .append(" --skip-ssl-validation -u ")
-                                                  .append(pcfRequestConfig.getUserName())
-                                                  .append(" -p ")
-                                                  .append(password)
-                                                  .toString())
-                                          .readOutput(true)
-                                          .environment(getEnvironmentMapForPcfExecutor(configPathVar))
-                                          .redirectOutput(new LogOutputStream() {
-                                            @Override
-                                            protected void processLine(String line) {
-                                              executionLogCallback.saveExecutionLog(line);
-                                            }
-                                          });
-    ProcessResult processResult = processExecutor.execute();
-    executionLogCallback.saveExecutionLog(processResult.getExitValue() == 0 ? "# Login Successful" : "# Login Failed");
-    return processResult.getExitValue() == 0;
+
+    String command;
+    int exitValue;
+    Map<String, String> env = getEnvironmentMapForPcfExecutor(configPathVar);
+
+    command = format("cf api %s --skip-ssl-validation", pcfRequestConfig.getEndpointUrl());
+    exitValue = executeCommand(command, env, executionLogCallback);
+
+    if (exitValue == 0) {
+      Map<String, String> envForAuth = new HashMap<>(env);
+      envForAuth.put(CF_USERNAME, pcfRequestConfig.getUserName());
+      envForAuth.put(CF_PASSWORD, pcfRequestConfig.getPassword());
+      command = "cf auth";
+      exitValue = executeCommand(command, envForAuth, executionLogCallback);
+    }
+
+    if (exitValue == 0) {
+      command = format("cf target -o %s -s %s", pcfRequestConfig.getOrgName(), pcfRequestConfig.getSpaceName());
+      exitValue = executeCommand(command, env, executionLogCallback);
+    }
+
+    executionLogCallback.saveExecutionLog(exitValue == 0 ? "# Login Successful" : "# Login Failed");
+    return exitValue == 0;
   }
 
   String handlePwdForSpecialCharsForShell(String password) {
