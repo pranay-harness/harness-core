@@ -468,7 +468,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
-  private void validateAppManifestForEnvironment(ApplicationManifest appManifest) {
+  @VisibleForTesting
+  void validateAppManifestForEnvironment(ApplicationManifest appManifest) {
     if (isNotBlank(appManifest.getEnvId())) {
       if (HELM_CHART_OVERRIDE == appManifest.getKind()) {
         validateStoreTypeForHelmChartOverride(appManifest.getStoreType());
@@ -488,7 +489,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
-  private void validateHelmChartRepoAppManifest(ApplicationManifest applicationManifest) {
+  @VisibleForTesting
+  void validateHelmChartRepoAppManifest(ApplicationManifest applicationManifest) {
     if (applicationManifest.getGitFileConfig() != null) {
       throw new InvalidRequestException(
           "gitFileConfig cannot be used with HelmChartRepo. Use helmChartConfig instead.", USER);
@@ -590,7 +592,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
-  private void validateApplicationManifest(ApplicationManifest applicationManifest) {
+  @VisibleForTesting
+  void validateApplicationManifest(ApplicationManifest applicationManifest) {
     if (isBlank(applicationManifest.getServiceId()) && isBlank(applicationManifest.getEnvId())) {
       throw new InvalidRequestException("Both envId and serviceId cannot be empty for application manifest", USER);
     }
@@ -617,6 +620,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
       default:
         unhandled(applicationManifest.getStoreType());
+    }
+
+    // Special validation for HELM_CHART_OVERRIDE
+    if (HELM_CHART_OVERRIDE == applicationManifest.getKind() && isBlank(applicationManifest.getServiceId())) {
+      throw new InvalidRequestException("Override For all Services is not Applicable for HELM_CHART_OVERRIDE", USER);
     }
   }
 

@@ -14,6 +14,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
@@ -445,6 +446,12 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     serviceTemplate.setValuesOverrideAppManifest(applicationManifestService.getAppManifest(
         serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getServiceId(), appManifestKind));
+
+    // This is Helm_Chart_Override which is only supported for Service level override
+    if (service.isK8sV2()) {
+      serviceTemplate.setHelmChartOverride(applicationManifestService.getAppManifest(
+          serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getServiceId(), HELM_CHART_OVERRIDE));
+    }
   }
 
   private void populateServiceAndOverrideValuesManifestFile(ServiceTemplate template) {

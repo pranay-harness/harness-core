@@ -14,6 +14,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
@@ -186,6 +187,10 @@ public class K8sStateHelper {
 
       case Remote:
       case HelmSourceRepo:
+        ApplicationManifest appManifestWithSourceRepoOverrideApplied =
+            applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context);
+        appManifest =
+            appManifestWithSourceRepoOverrideApplied == null ? appManifest : appManifestWithSourceRepoOverrideApplied;
         GitFileConfig gitFileConfig =
             gitFileConfigHelperService.renderGitFileConfig(context, appManifest.getGitFileConfig());
         GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
@@ -200,6 +205,10 @@ public class K8sStateHelper {
         break;
 
       case HelmChartRepo:
+        ApplicationManifest appManifestWithChartRepoOverrideApplied =
+            applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context);
+        appManifest =
+            appManifestWithChartRepoOverrideApplied == null ? appManifest : appManifestWithChartRepoOverrideApplied;
         manifestConfigBuilder.helmChartConfigParams(
             helmChartConfigHelperService.getHelmChartConfigTaskParams(context, appManifest));
         break;
@@ -543,6 +552,7 @@ public class K8sStateHelper {
 
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
           applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
+
       boolean valuesInGit = isValuesInGit(appManifestMap);
       boolean valuesInHelmChartRepo = applicationManifestUtils.isValuesInHelmChartRepo(context);
 
@@ -758,8 +768,9 @@ public class K8sStateHelper {
   }
 
   private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(ExecutionContext context, String activityId) {
-    ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
-    if (StoreType.HelmChartRepo != applicationManifest.getStoreType()) {
+    ApplicationManifest applicationManifest =
+        applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context);
+    if (applicationManifest == null || HelmChartRepo != applicationManifest.getStoreType()) {
       return null;
     }
 

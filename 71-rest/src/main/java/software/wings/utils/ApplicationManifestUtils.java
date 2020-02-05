@@ -9,6 +9,9 @@ import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
+import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 
@@ -149,6 +152,12 @@ public class ApplicationManifestUtils {
 
       if (StoreType.Remote == applicationManifest.getStoreType()
           || StoreType.HelmSourceRepo == applicationManifest.getStoreType()) {
+        // use env override if available. We do not support merge config at service and env for HelmChartConfig
+        Service service = fetchServiceFromContext(context);
+        if (service.isK8sV2() && StoreType.HelmSourceRepo == applicationManifest.getStoreType()) {
+          applicationManifest = getAppManifestByApplyingHelmChartOverride(context);
+        }
+
         GitFileConfig gitFileConfig =
             gitFileConfigHelperService.renderGitFileConfig(context, applicationManifest.getGitFileConfig());
         GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
@@ -188,6 +197,47 @@ public class ApplicationManifestUtils {
     }
 
     return false;
+  }
+
+  public ApplicationManifest getAppManifestByApplyingHelmChartOverride(ExecutionContext context) {
+    ApplicationManifest manifestAtService = getApplicationManifestForService(context);
+    if (manifestAtService == null
+        || (HelmChartRepo != manifestAtService.getStoreType() && HelmSourceRepo != manifestAtService.getStoreType())) {
+      return null;
+    }
+
+    Map<K8sValuesLocation, ApplicationManifest> manifestsMap =
+        getOverrideApplicationManifests(context, HELM_CHART_OVERRIDE);
+    ApplicationManifest applicationManifest = null;
+
+    if (manifestsMap.containsKey(K8sValuesLocation.Environment)) {
+      applicationManifest = manifestsMap.get(K8sValuesLocation.Environment);
+    } else {
+      applicationManifest = manifestAtService;
+    }
+
+    if (applicationManifest != null && applicationManifest.getStoreType() != manifestAtService.getStoreType()) {
+      throw new InvalidRequestException(new StringBuilder("Environment Override should not change Manifest Format. ")
+                                            .append(getManifestFormatName(manifestAtService.getStoreType()))
+                                            .append(" is mentioned at Service, but mentioned as ")
+                                            .append(getManifestFormatName(manifestAtService.getStoreType()))
+                                            .append(" at Environment Override")
+                                            .toString());
+    }
+
+    return applicationManifest;
+  }
+
+  private String getManifestFormatName(StoreType storeType) {
+    StringBuilder stringBuilder = new StringBuilder(128).append('"');
+    if (HelmChartRepo == storeType) {
+      stringBuilder.append("Helm Chart from Helm Repository");
+    } else {
+      stringBuilder.append("Helm Chart from Source Repository");
+    }
+
+    stringBuilder.append('"');
+    return stringBuilder.toString();
   }
 
   public Map<K8sValuesLocation, String> getValuesFilesFromGitFetchFilesResponse(
@@ -308,19 +358,22 @@ public class ApplicationManifestUtils {
   }
 
   public ApplicationManifest getApplicationManifestForService(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
-    Application app = appService.get(context.getAppId());
-    ServiceElement serviceElement = phaseElement.getServiceElement();
-    Service service = serviceResourceService.get(app.getUuid(), serviceElement.getUuid(), false);
-
+    Service service = fetchServiceFromContext(context);
     ApplicationManifest applicationManifest =
-        applicationManifestService.getManifestByServiceId(app.getUuid(), serviceElement.getUuid());
+        applicationManifestService.getManifestByServiceId(context.getAppId(), service.getUuid());
 
     if (service.isK8sV2() && applicationManifest == null) {
       throw new InvalidRequestException("Manifests not found for service.");
     }
 
     return applicationManifest;
+  }
+
+  public Service fetchServiceFromContext(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    Application app = appService.get(context.getAppId());
+    ServiceElement serviceElement = phaseElement.getServiceElement();
+    return serviceResourceService.get(app.getUuid(), serviceElement.getUuid(), false);
   }
 
   public boolean isValuesInHelmChartRepo(ExecutionContext context) {
