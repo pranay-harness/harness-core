@@ -7,6 +7,8 @@ public class ChartMuseumConstants {
   public static final int CHART_MUSEUM_SERVER_START_RETRIES = 5;
   public static final int PORTS_START_POINT = 35000;
   public static final int PORTS_BOUND = 5000;
+  public static final int SERVER_HEALTH_CHECK_RETRIES = 12;
+  public static final int HEALTH_CHECK_TIME_GAP_SECONDS = 5; // 12*5 = 60 seconds is the timeout for health check
 
   public static final String CHART_MUSEUM_SERVER_URL = "http://127.0.0.1:${PORT}";
 
