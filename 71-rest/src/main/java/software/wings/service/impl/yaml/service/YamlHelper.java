@@ -4,6 +4,8 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.yaml.YamlConstants.HELM_CHART_OVERRIDE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.PCF_OVERRIDES_FOLDER;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
@@ -206,9 +208,14 @@ public class YamlHelper {
   }
 
   public Service getServiceOverrideFromAppManifestPath(String appId, String yamlFilePath) {
-    String prefixExpression = yamlFilePath.contains(PCF_OVERRIDES_FOLDER)
-        ? APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE.getPrefixExpression()
-        : APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE.getPrefixExpression();
+    String prefixExpression = null;
+    if (yamlFilePath.contains(HELM_CHART_OVERRIDE_FOLDER)) {
+      prefixExpression = YamlType.APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE.getPrefixExpression();
+    } else {
+      prefixExpression = yamlFilePath.contains(PCF_OVERRIDES_FOLDER)
+          ? APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE.getPrefixExpression()
+          : APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE.getPrefixExpression();
+    }
 
     String serviceOverrideName = extractParentEntityName(prefixExpression, yamlFilePath, PATH_DELIMITER);
     if (isNotBlank(serviceOverrideName)) {
@@ -233,6 +240,12 @@ public class YamlHelper {
         YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
     if (isNotBlank(kind) || isNotBlank(kind2)) {
       return AppManifestKind.PCF_OVERRIDE;
+    }
+
+    kind = extractParentEntityName(
+        YamlType.APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    if (isNotBlank(kind)) {
+      return HELM_CHART_OVERRIDE;
     }
 
     return AppManifestKind.K8S_MANIFEST;

@@ -334,6 +334,7 @@ public class YamlHandlerFactory {
       case APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE:
       case APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE:
       case APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE:
+      case APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE:
         yamlHandler = applicationManifestYamlHandler;
         break;
       case MANIFEST_FILE:

@@ -5,11 +5,13 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.TAGS_YAML;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
@@ -789,6 +791,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       yamlType = APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
     } else if (AppManifestKind.PCF_OVERRIDE == applicationManifest.getKind()) {
       yamlType = APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
+    } else if (HELM_CHART_OVERRIDE == applicationManifest.getKind()) {
+      yamlType = APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE;
     } else {
       throw new UnknownEnumTypeException("ApplicationManifestKind",
           applicationManifest.getKind() == null ? "null" : applicationManifest.getKind().name());
