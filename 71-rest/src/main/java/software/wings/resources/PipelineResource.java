@@ -143,7 +143,7 @@ public class PipelineResource {
     pipeline.setUuid(pipelineId);
     authService.checkPipelinePermissionsForEnv(appId, pipeline, Action.UPDATE);
     try {
-      return new RestResponse<>(pipelineService.update(pipeline, false));
+      return new RestResponse<>(pipelineService.update(pipeline, false, false));
     } catch (WingsException exception) {
       // When the pipeline update is coming from the user there is no harness engineer wrong doing to alerted for
       exception.excludeReportTarget(DUPLICATE_STATE_NAMES, EnumSet.of(LOG_SYSTEM));

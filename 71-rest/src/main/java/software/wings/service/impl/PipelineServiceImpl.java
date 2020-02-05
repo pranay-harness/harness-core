@@ -202,13 +202,16 @@ public class PipelineServiceImpl implements PipelineService {
    * {@inheritDoc}
    */
   @Override
-  public Pipeline update(Pipeline pipeline, boolean migration) {
+  public Pipeline update(Pipeline pipeline, boolean migration, boolean fromYaml) {
     Pipeline savedPipeline = wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
     notNullCheck("Pipeline not saved", savedPipeline, USER);
 
     Set<String> keywords = pipeline.generateKeywords();
     checkUniquePipelineStepName(pipeline);
     checkUniqueApprovalPublishedVariable(pipeline);
+
+    handlePipelineStageDeletion(pipeline, savedPipeline, fromYaml);
+
     ensurePipelineStageUuidAndParallelIndex(pipeline);
 
     validatePipeline(pipeline, keywords);
@@ -243,6 +246,41 @@ public class PipelineServiceImpl implements PipelineService {
     }
 
     return updatedPipeline;
+  }
+
+  @VisibleForTesting
+  void handlePipelineStageDeletion(Pipeline pipeline, Pipeline savedPipeline, boolean fromYaml) {
+    List<PipelineStage> newPipelineStages = pipeline.getPipelineStages();
+    List<PipelineStage> savedPipelineStages = savedPipeline.getPipelineStages();
+    // Not deletion case also we dont want to handle this from yaml. YAML we consider that as source of truth
+    if (fromYaml || isEmpty(newPipelineStages) || isEmpty(savedPipelineStages)
+        || savedPipelineStages.size() <= newPipelineStages.size()) {
+      return;
+    }
+
+    List<String> stepNames = newPipelineStages.stream()
+                                 .map(pipelineStage -> pipelineStage.getPipelineStageElements().get(0).getName())
+                                 .collect(toList());
+    for (PipelineStage pipelineStage : savedPipelineStages) {
+      String stepName = pipelineStage.getPipelineStageElements().get(0).getName();
+      if (!stepNames.contains(stepName)) {
+        // This stage is being deleted
+        int indexDeleted = savedPipelineStages.indexOf(pipelineStage);
+        if (newPipelineStages.size() - 1 >= indexDeleted && indexDeleted != 0) {
+          PipelineStage before = newPipelineStages.get(indexDeleted - 1);
+          PipelineStage after = newPipelineStages.get(indexDeleted);
+          if (after.isParallel()) {
+            int parallelIndexBefore = before.getPipelineStageElements().get(0).getParallelIndex();
+            int parallelIndexAfter = after.getPipelineStageElements().get(0).getParallelIndex();
+            if (parallelIndexAfter != parallelIndexBefore) {
+              logger.info("Pipeline Stage {} should not be parallel to pipeline stage {} in pipeline {}",
+                  after.getName(), before.getName(), pipeline.getUuid());
+              after.setParallel(false);
+            }
+          }
+        }
+      }
+    }
   }
 
   public static void ensurePipelineStageUuidAndParallelIndex(Pipeline pipeline) {
@@ -284,7 +322,7 @@ public class PipelineServiceImpl implements PipelineService {
     notNullCheck("pipeline", savedPipeline);
 
     savedPipeline.setFailureStrategies(failureStrategies);
-    Pipeline pipeline = update(savedPipeline, false);
+    Pipeline pipeline = update(savedPipeline, false, false);
     return pipeline.getFailureStrategies();
   }
 

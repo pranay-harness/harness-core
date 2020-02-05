@@ -139,7 +139,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
     Pipeline k8sPipeline = pipelineService.getPipelineByName(sampleApp.getAppId(), K8S_PIPELINE_NAME);
     assertThat(k8sPipeline).isNotNull();
     k8sPipeline.setName("Test K8s Pipeline");
-    pipelineService.update(k8sPipeline, false);
+    pipelineService.update(k8sPipeline, false, false);
 
     SampleAppStatus updatedStatus =
         harnessSampleAppService.getSampleAppHealth(sampleApp.getAccountId(), DeploymentType.KUBERNETES.name());

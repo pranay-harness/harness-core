@@ -80,9 +80,10 @@ public interface PipelineService extends OwnedByApplication {
    *
    * @param pipeline the pipeline
    * @param migration
+   * @param fromYaml
    * @return the pipeline
    */
-  @ValidationGroups(Update.class) Pipeline update(@Valid Pipeline pipeline, boolean migration);
+  @ValidationGroups(Update.class) Pipeline update(@Valid Pipeline pipeline, boolean migration, boolean fromYaml);
 
   /**
    * Update pipeline failure strategies.
