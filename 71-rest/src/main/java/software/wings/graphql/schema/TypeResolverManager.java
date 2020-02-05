@@ -65,6 +65,8 @@ import software.wings.graphql.schema.type.instance.QLEcsContainerInstance;
 import software.wings.graphql.schema.type.instance.QLK8SPodInstance;
 import software.wings.graphql.schema.type.instance.QLPcfInstance;
 import software.wings.graphql.schema.type.instance.QLPhysicalHostInstance;
+import software.wings.graphql.schema.type.secrets.QLEncryptedText;
+import software.wings.graphql.schema.type.secrets.QLWinRMCredential;
 import software.wings.graphql.schema.type.usergroup.QLLDAPSettings;
 import software.wings.graphql.schema.type.usergroup.QLSAMLSettings;
 
@@ -87,6 +89,7 @@ public class TypeResolverManager {
     public static final String PhysicalInstance = "PhysicalInstance";
     public static final String ChangeSet = "ChangeSet";
     public static final String LinkedSSOSetting = "LinkedSSOSetting";
+    public static final String Secret = "Secret";
   }
 
   @UtilityClass
@@ -154,6 +157,8 @@ public class TypeResolverManager {
     public static final String GenericChangeSet = "GenericChangeSet";
     public static final String ldapSettings = "LDAPSettings";
     public static final String samlSettings = "SAMLSettings";
+    public static final String encryptedText = "EncryptedText";
+    public static final String winRMCredential = "WinRMCredential";
   }
 
   /**
@@ -265,6 +270,11 @@ public class TypeResolverManager {
             getResultTypeResolver(ImmutableMap.<Class, String>builder()
                                       .put(QLLDAPSettings.class, TypeResolverManagerTypes.ldapSettings)
                                       .put(QLSAMLSettings.class, TypeResolverManagerTypes.samlSettings)
+                                      .build()))
+        .put(TypeResolverManagerUnifaces.Secret,
+            getResultTypeResolver(ImmutableMap.<Class, String>builder()
+                                      .put(QLEncryptedText.class, TypeResolverManagerTypes.encryptedText)
+                                      .put(QLWinRMCredential.class, TypeResolverManagerTypes.winRMCredential)
                                       .build()))
         .build();
   }

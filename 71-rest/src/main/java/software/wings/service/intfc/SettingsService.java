@@ -42,6 +42,9 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
 
   @ValidationGroups(Create.class) SettingAttribute save(@Valid SettingAttribute settingAttribute);
 
+  @ValidationGroups(Create.class)
+  SettingAttribute saveWithPruning(SettingAttribute settingAttribute, String appId, String accountId);
+
   @ValidationGroups(Create.class) SettingAttribute forceSave(@Valid SettingAttribute settingAttribute);
 
   @ValidationGroups(Create.class) SettingAttribute save(@Valid SettingAttribute settingAttribute, boolean pushToGit);
@@ -108,9 +111,13 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
 
   ValidationResult validate(SettingAttribute settingAttribute);
 
+  ValidationResult validateWithPruning(SettingAttribute settingAttribute, String appId, String accountId);
+
   ValidationResult validate(String varId);
 
   ValidationResult validateConnectivity(SettingAttribute settingAttribute);
+
+  ValidationResult validateConnectivityWithPruning(SettingAttribute settingAttribute, String appId, String accountId);
 
   void deleteByYamlGit(String appId, String settingAttributeId, boolean syncFromGit);
   Map<String, String> listAccountDefaults(String accountId);

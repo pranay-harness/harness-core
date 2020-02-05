@@ -1,0 +1,11 @@
+input EncryptedTextInput {
+  secretManagerId: String
+  name: String!
+  value: String!
+}
+
+type EncryptedText implements Secret {
+  secretManagerId: String
+  name: String
+  id: String
+}
