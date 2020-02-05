@@ -199,9 +199,8 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   }
 
   private void cleanupDockerArtifacts(ArtifactStream artifactStream, List<Artifact> deletedArtifacts) {
-    Set<String> buildNumbers = isEmpty(builds)
-        ? new HashSet<>()
-        : builds.parallelStream().map(BuildDetails::getNumber).collect(Collectors.toSet());
+    Set<String> buildNumbers =
+        isEmpty(builds) ? new HashSet<>() : builds.stream().map(BuildDetails::getNumber).collect(Collectors.toSet());
     List<Artifact> deletedArtifactsNew = new ArrayList<>();
     try (HIterator<Artifact> artifacts = new HIterator<>(artifactService.prepareCleanupQuery(artifactStream).fetch())) {
       for (Artifact artifact : artifacts) {
@@ -220,9 +219,8 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   }
 
   private void cleanupAMIArtifacts(ArtifactStream artifactStream, List<Artifact> deletedArtifacts) {
-    Set<String> revisionNumbers = isEmpty(builds)
-        ? new HashSet<>()
-        : builds.parallelStream().map(BuildDetails::getRevision).collect(Collectors.toSet());
+    Set<String> revisionNumbers =
+        isEmpty(builds) ? new HashSet<>() : builds.stream().map(BuildDetails::getRevision).collect(Collectors.toSet());
     List<Artifact> artifactsToBeDeleted = new ArrayList<>();
     try (HIterator<Artifact> artifacts = new HIterator<>(artifactService.prepareCleanupQuery(artifactStream).fetch())) {
       for (Artifact artifact : artifacts) {

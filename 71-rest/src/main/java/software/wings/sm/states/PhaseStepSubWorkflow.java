@@ -493,24 +493,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private void validateServiceInstanceIdsParams(ExecutionContext contextIntf) {}
 
-  private void validateServiceElement(ExecutionContext context, PhaseElement phaseElement) {
-    List<ContextElement> contextElements = context.getContextElementList(ContextElementType.CONTAINER_SERVICE);
-    if (isEmpty(contextElements)) {
-      throw new InvalidRequestException("Setup not done");
-    }
-    Optional<ContextElement> containerServiceElement =
-        contextElements.parallelStream()
-            .filter(contextElement
-                -> contextElement instanceof ContainerServiceElement && contextElement.getUuid() != null
-                    && contextElement.getUuid().equals(phaseElement.getServiceElement().getUuid()))
-            .findFirst();
-
-    if (!containerServiceElement.isPresent()) {
-      throw new InvalidRequestException(
-          "containerServiceElement not present for the service " + phaseElement.getServiceElement().getUuid());
-    }
-  }
-
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();

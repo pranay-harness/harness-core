@@ -56,7 +56,7 @@ public class PipelinePreDeploymentValidator {
       }
     } else {
       return getPipelineWorkflows(pipeline)
-          .parallelStream()
+          .stream()
           .map(w -> workflowPreDeploymentValidator.validate(accountType, w))
           .flatMap(Collection::stream)
           .collect(Collectors.toList());
