@@ -16,11 +16,9 @@ import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
-import software.wings.service.intfc.SettingsService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 public class K8sWatchPerpetualTaskServiceClient
     implements PerpetualTaskServiceClient<K8WatchPerpetualTaskClientParams> {
   @Inject private PerpetualTaskService perpetualTaskService;
-  @Inject private SettingsService settingsService;
   @Inject private K8sClusterConfigFactory k8sClusterConfigFactory;
 
   private static final String CLOUD_PROVIDER_ID = "cloudProviderId";
@@ -69,9 +66,7 @@ public class K8sWatchPerpetualTaskServiceClient
     String cloudProviderId = clientParams.get(CLOUD_PROVIDER_ID);
     String clusterId = clientParams.get(CLUSTER_ID);
     String clusterName = clientParams.get(CLUSTER_NAME);
-
-    SettingAttribute settingAttribute = settingsService.get(cloudProviderId);
-    K8sClusterConfig config = k8sClusterConfigFactory.getK8sClusterConfig(settingAttribute);
+    K8sClusterConfig config = k8sClusterConfigFactory.getK8sClusterConfig(clusterId);
     ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(config));
 
     // TODO(Tang): throw exception upon validation failure

@@ -164,6 +164,8 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
             (AzureKubernetesService) infraMappingInfrastructureProvider;
         cluster = AzureKubernetesCluster.builder()
                       .cloudProviderId(azureKubernetesInfrastructure.getCloudProviderId())
+                      .subscriptionId(azureKubernetesInfrastructure.getSubscriptionId())
+                      .resourceGroup(azureKubernetesInfrastructure.getResourceGroup())
                       .clusterName(azureKubernetesInfrastructure.getClusterName())
                       .build();
         break;
@@ -212,6 +214,8 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
             (AzureKubernetesInfrastructureMapping) infraMapping;
         cluster = AzureKubernetesCluster.builder()
                       .cloudProviderId(azureKubernetesInfrastructureMapping.getComputeProviderSettingId())
+                      .subscriptionId(azureKubernetesInfrastructureMapping.getSubscriptionId())
+                      .resourceGroup(azureKubernetesInfrastructureMapping.getResourceGroup())
                       .clusterName(azureKubernetesInfrastructureMapping.getClusterName())
                       .build();
         break;
