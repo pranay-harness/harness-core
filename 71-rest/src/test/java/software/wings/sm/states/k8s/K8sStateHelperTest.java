@@ -1,10 +1,16 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -38,11 +44,16 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmChartConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -51,13 +62,21 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.EventEmitter;
+import software.wings.service.impl.GitFileConfigHelperService;
+import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +87,11 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
   @Mock private EventEmitter eventEmitter;
+  @Mock private ApplicationManifestUtils applicationManifestUtils;
+  @Mock private GitFileConfigHelperService gitFileConfigHelperService;
+  @Mock private SettingsService settingsService;
+  @Mock private SecretManager secretManager;
+  @Mock private HelmChartConfigHelperService helmChartConfigHelperService;
 
   @Inject @InjectMocks private K8sStateHelper k8sStateHelper;
 
@@ -117,6 +141,107 @@ public class K8sStateHelperTest extends WingsBaseTest {
     assertThat(activity.getCommandName()).isEqualTo(K8S_SCALE_COMMAND_NAME);
     assertThat(activity.getCommandType()).isEqualTo(K8S_SCALE.name());
     assertThat(activity.getCommandUnits()).isEqualTo(commandUnits);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testCreateDelegateManifestConfig_GitSourceRepo() {
+    ExecutionContext context = mock(ExecutionContext.class);
+
+    GitFileConfig gitConfigAtService = GitFileConfig.builder().branch("1").filePath("abc").connectorId("c1").build();
+    GitFileConfig gitConfigAtEnvOverride =
+        GitFileConfig.builder().branch("2").filePath("def").connectorId("d1").build();
+
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .gitFileConfig(gitConfigAtService)
+                                          .kind(AppManifestKind.HELM_CHART_OVERRIDE)
+                                          .storeType(StoreType.HelmSourceRepo)
+                                          .build();
+
+    ApplicationManifest appManifestOverride = ApplicationManifest.builder()
+                                                  .gitFileConfig(gitConfigAtEnvOverride)
+                                                  .kind(AppManifestKind.HELM_CHART_OVERRIDE)
+                                                  .storeType(StoreType.HelmSourceRepo)
+                                                  .build();
+
+    doReturn(appManifest)
+        .doReturn(appManifestOverride)
+        .when(applicationManifestUtils)
+        .getAppManifestByApplyingHelmChartOverride(context);
+    when(gitFileConfigHelperService.renderGitFileConfig(any(), any())).thenAnswer(new Answer<GitFileConfig>() {
+      @Override
+      public GitFileConfig answer(InvocationOnMock invocation) throws Throwable {
+        Object[] args = invocation.getArguments();
+        return (GitFileConfig) args[1];
+      }
+    });
+
+    doReturn(GitConfig.builder().build()).when(settingsService).fetchGitConfigFromConnectorId(anyString());
+    doReturn(emptyList()).when(secretManager).getEncryptionDetails(any(), anyString(), any());
+
+    K8sDelegateManifestConfig delegateManifestConfig =
+        k8sStateHelper.createDelegateManifestConfig(context, appManifest);
+    assertThat(delegateManifestConfig.getGitFileConfig()).isEqualTo(gitConfigAtService);
+    assertThat(delegateManifestConfig.getGitFileConfig().getFilePath()).isEqualTo("abc/");
+    assertThat(delegateManifestConfig.getGitFileConfig().getConnectorId()).isEqualTo("c1");
+    assertThat(delegateManifestConfig.getGitFileConfig().getBranch()).isEqualTo("1");
+
+    delegateManifestConfig = k8sStateHelper.createDelegateManifestConfig(context, appManifest);
+    assertThat(delegateManifestConfig.getGitFileConfig()).isEqualTo(gitConfigAtEnvOverride);
+    assertThat(delegateManifestConfig.getGitFileConfig().getFilePath()).isEqualTo("def/");
+    assertThat(delegateManifestConfig.getGitFileConfig().getConnectorId()).isEqualTo("d1");
+    assertThat(delegateManifestConfig.getGitFileConfig().getBranch()).isEqualTo("2");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testCreateDelegateManifestConfig_HelmChartRepo() {
+    ExecutionContext context = mock(ExecutionContext.class);
+
+    HelmChartConfig helmChartConfigAtService =
+        HelmChartConfig.builder().chartName("n1").chartVersion("v1").connectorId("c1").build();
+    HelmChartConfig helmChartConfigOverride =
+        HelmChartConfig.builder().chartName("m1").chartVersion("w1").connectorId("d1").build();
+
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .helmChartConfig(helmChartConfigAtService)
+                                          .kind(AppManifestKind.HELM_CHART_OVERRIDE)
+                                          .storeType(StoreType.HelmChartRepo)
+                                          .build();
+
+    ApplicationManifest appManifestOverride = ApplicationManifest.builder()
+                                                  .helmChartConfig(helmChartConfigOverride)
+                                                  .kind(AppManifestKind.HELM_CHART_OVERRIDE)
+                                                  .storeType(StoreType.HelmChartRepo)
+                                                  .build();
+
+    doReturn(appManifest)
+        .doReturn(appManifestOverride)
+        .when(applicationManifestUtils)
+        .getAppManifestByApplyingHelmChartOverride(context);
+    when(helmChartConfigHelperService.getHelmChartConfigTaskParams(any(), any()))
+        .thenAnswer(new Answer<HelmChartConfigParams>() {
+          @Override
+          public HelmChartConfigParams answer(InvocationOnMock invocation) throws Throwable {
+            Object[] args = invocation.getArguments();
+            ApplicationManifest applicationManifest = (ApplicationManifest) args[1];
+            HelmChartConfig helmChartConfig = applicationManifest.getHelmChartConfig();
+            return HelmChartConfigParams.builder()
+                .chartName(helmChartConfig.getChartName())
+                .chartVersion(helmChartConfig.getChartVersion())
+                .build();
+          }
+        });
+    K8sDelegateManifestConfig delegateManifestConfig =
+        k8sStateHelper.createDelegateManifestConfig(context, appManifest);
+    assertThat(delegateManifestConfig.getHelmChartConfigParams().getChartName()).isEqualTo("n1");
+    assertThat(delegateManifestConfig.getHelmChartConfigParams().getChartVersion()).isEqualTo("v1");
+
+    delegateManifestConfig = k8sStateHelper.createDelegateManifestConfig(context, appManifest);
+    assertThat(delegateManifestConfig.getHelmChartConfigParams().getChartName()).isEqualTo("m1");
+    assertThat(delegateManifestConfig.getHelmChartConfigParams().getChartVersion()).isEqualTo("w1");
   }
 
   @Test

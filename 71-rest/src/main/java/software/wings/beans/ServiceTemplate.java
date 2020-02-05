@@ -51,6 +51,7 @@ public class ServiceTemplate extends Base {
   @Transient private String helmValueYamlOverride;
   @Transient private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
   @Getter @Setter private transient ApplicationManifest valuesOverrideAppManifest;
+  @Getter @Setter private transient ApplicationManifest helmChartOverride;
   @Getter @Setter private transient ManifestFile valuesOverrideManifestFile;
 
   private boolean defaultServiceTemplate;
@@ -271,6 +272,7 @@ public class ServiceTemplate extends Base {
         && Objects.equals(this.helmValueYamlOverride, other.helmValueYamlOverride)
         && Objects.equals(this.valuesOverrideAppManifest, other.valuesOverrideAppManifest)
         && Objects.equals(this.valuesOverrideManifestFile, other.valuesOverrideManifestFile)
+        && Objects.equals(this.helmChartOverride, other.helmChartOverride)
         && Objects.equals(this.defaultServiceTemplate, other.defaultServiceTemplate);
   }
 
@@ -287,6 +289,7 @@ public class ServiceTemplate extends Base {
         .add("helmValueYamlOverride", helmValueYamlOverride)
         .add("valuesOverrideAppManifest", valuesOverrideAppManifest)
         .add("valuesOverrideManifestFile", valuesOverrideManifestFile)
+        .add("helmChartOverride", helmChartOverride)
         .add("defaultServiceTemplate", defaultServiceTemplate)
         .toString();
   }
@@ -342,6 +345,7 @@ public class ServiceTemplate extends Base {
     private String configMapYamlOverride;
     private String helmValueYamlOverride;
     private ApplicationManifest valuesOverrideAppManifest;
+    private ApplicationManifest helmChartOverride;
     private ManifestFile valuesOverrideManifestFile;
     private String uuid;
     private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
@@ -466,6 +470,11 @@ public class ServiceTemplate extends Base {
       return this;
     }
 
+    public Builder withHelmChartOverride(ApplicationManifest helmChartOverride) {
+      this.helmChartOverride = helmChartOverride;
+      return this;
+    }
+
     public Builder withValuesOverrideManifestFile(ManifestFile valuesOverrideManifestFile) {
       this.valuesOverrideManifestFile = valuesOverrideManifestFile;
       return this;
@@ -578,6 +587,7 @@ public class ServiceTemplate extends Base {
           .withHelmValueYamlOverride(helmValueYamlOverride)
           .withValuesOverrideAppManifest(valuesOverrideAppManifest)
           .withValuesOverrideManifestFile(valuesOverrideManifestFile)
+          .withHelmChartOverride(helmChartOverride)
           .withUuid(uuid)
           .withInfrastructureMappings(infrastructureMappings)
           .withAppId(appId)
@@ -606,6 +616,7 @@ public class ServiceTemplate extends Base {
       serviceTemplate.setConfigMapYamlOverride(configMapYamlOverride);
       serviceTemplate.setHelmValueYamlOverride(helmValueYamlOverride);
       serviceTemplate.setValuesOverrideManifestFile(valuesOverrideManifestFile);
+      serviceTemplate.setHelmChartOverride(helmChartOverride);
       serviceTemplate.setValuesOverrideAppManifest(valuesOverrideAppManifest);
       serviceTemplate.setUuid(uuid);
       serviceTemplate.setInfrastructureMappings(infrastructureMappings);

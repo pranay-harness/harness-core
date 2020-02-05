@@ -4,6 +4,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -19,7 +20,11 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.appmanifest.AppManifestKind.VALUES;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
+import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
+import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -390,5 +395,70 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     ServiceTemplate serviceTemplate = pageResponse.getResponse().get(0);
     assertThat(serviceTemplate.getValuesOverrideManifestFile().getFileName()).isEqualTo(VALUES_YAML_KEY);
     assertThat(serviceTemplate.getValuesOverrideManifestFile().getFileContent()).isEqualTo("values");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testPopulateServiceAndOverrideAppManifest() {
+    PageResponse<ServiceTemplate> pageResponse =
+        aPageResponse().withResponse(asList(builder.but().withServiceId(SERVICE_ID).build())).build();
+
+    when(wingsPersistence.query(ServiceTemplate.class, aPageRequest().build())).thenReturn(pageResponse);
+    when(infrastructureMappingService.list(any(PageRequest.class))).thenReturn(aPageResponse().build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().isK8sV2(true).build());
+
+    ApplicationManifest appManifestValues =
+        ApplicationManifest.builder().storeType(StoreType.Local).kind(AppManifestKind.VALUES).build();
+    appManifestValues.setUuid(APP_MANIFEST_ID);
+    appManifestValues.setAppId(APP_ID);
+
+    ApplicationManifest appManifestHelmOverride = ApplicationManifest.builder()
+                                                      .storeType(StoreType.HelmChartRepo)
+                                                      .kind(AppManifestKind.HELM_CHART_OVERRIDE)
+                                                      .build();
+    appManifestHelmOverride.setAppId(APP_ID);
+    appManifestHelmOverride.setUuid(APP_MANIFEST_ID);
+    when(appManifestService.getAppManifest(APP_ID, ENV_ID, SERVICE_ID, AppManifestKind.VALUES))
+        .thenReturn(appManifestValues);
+    when(appManifestService.getAppManifest(APP_ID, ENV_ID, SERVICE_ID, AppManifestKind.HELM_CHART_OVERRIDE))
+        .thenReturn(appManifestHelmOverride);
+    when(appManifestService.getManifestFilesByAppManifestId(APP_ID, APP_MANIFEST_ID))
+        .thenReturn(Arrays.asList(ManifestFile.builder().fileName(VALUES_YAML_KEY).fileContent("values").build()));
+
+    PageResponse<ServiceTemplate> templatePageResponse =
+        templateService.list(aPageRequest().build(), true, OBTAIN_VALUE);
+    assertThat(templatePageResponse).isInstanceOf(PageResponse.class);
+    ServiceTemplate serviceTemplate = pageResponse.getResponse().get(0);
+
+    assertThat(serviceTemplate.getHelmChartOverride()).isNotNull();
+    assertThat(serviceTemplate.getHelmChartOverride()).isEqualTo(appManifestHelmOverride);
+
+    assertThat(serviceTemplate.getValuesOverrideAppManifest()).isNotNull();
+    assertThat(serviceTemplate.getValuesOverrideAppManifest()).isEqualTo(appManifestValues);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testServiceTemplate() {
+    ApplicationManifest helmManifest =
+        ApplicationManifest.builder().kind(HELM_CHART_OVERRIDE).storeType(HelmChartRepo).build();
+    ApplicationManifest valuesManifest = ApplicationManifest.builder().kind(VALUES).storeType(Local).build();
+
+    ServiceTemplate serviceTemplate = aServiceTemplate()
+                                          .withValuesOverrideAppManifest(valuesManifest)
+                                          .withHelmValueYamlOverride("helm")
+                                          .withHelmChartOverride(helmManifest)
+                                          .build();
+
+    assertThat(serviceTemplate.getHelmChartOverride()).isEqualTo(helmManifest);
+
+    ServiceTemplate serviceTemplate2 =
+        aServiceTemplate().withValuesOverrideAppManifest(valuesManifest).withHelmValueYamlOverride("helm").build();
+
+    assertThat(serviceTemplate.equals(serviceTemplate2)).isFalse();
+    serviceTemplate2.setHelmChartOverride(helmManifest);
+    assertThat(serviceTemplate.equals(serviceTemplate2)).isTrue();
   }
 }
