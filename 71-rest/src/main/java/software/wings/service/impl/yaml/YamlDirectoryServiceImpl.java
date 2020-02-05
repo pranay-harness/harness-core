@@ -6,9 +6,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.emptySet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.APPLICATION_TEMPLATE_LIBRARY_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
@@ -23,6 +25,7 @@ import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_F
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GLOBAL_TEMPLATE_LIBRARY_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.HELM_CHART_OVERRIDE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.INFRA_DEFINITION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
@@ -1360,12 +1363,19 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         }
         // ------------------- END VALUES FILES SECTION -----------------------
 
-        // ------------------- VALUES FILES SECTION -----------------------
+        // ------------------- PCF OVERRIDE SECTION -----------------------
         FolderNode pcfOverridesFolder = generateEnvPcfOverridesFolder(accountId, environment, envPath);
         if (pcfOverridesFolder != null) {
           envFolder.addChild(pcfOverridesFolder);
         }
-        // ------------------- END VALUES FILES SECTION -----------------------
+        // ------------------- END PCF OVERRIDE SECTION -----------------------
+
+        // ------------------- HELM OVERRIDE SECTION -----------------------
+        FolderNode helmServiceOverridesFolder = generateEnvServiceHelmOverridesFolder(accountId, environment, envPath);
+        if (helmServiceOverridesFolder != null) {
+          envFolder.addChild(helmServiceOverridesFolder);
+        }
+        // ------------------- END HELM OVERRIDE SECTION -----------------------
       }
     }
 
@@ -1420,6 +1430,41 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     return pcfOverridesFolder;
+  }
+
+  @VisibleForTesting
+  FolderNode generateEnvServiceHelmOverridesFolder(String accountId, Environment env, DirectoryPath envPath) {
+    List<ApplicationManifest> applicationManifests =
+        applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), HELM_CHART_OVERRIDE);
+
+    if (isEmpty(applicationManifests)) {
+      return null;
+    }
+
+    FolderNode helmOverridesFolder =
+        getEnvOverrideFolderNode(envPath, accountId, env.getAppId(), HELM_CHART_OVERRIDE_FOLDER);
+
+    // Fetch service specific environment overrides
+    FolderNode serviceSpecificoverridesFolder = generateEnvServiceSpecificHelmOverridesFolder(
+        accountId, env, helmOverridesFolder.getDirectoryPath(), applicationManifests);
+    if (serviceSpecificoverridesFolder != null) {
+      helmOverridesFolder.addChild(serviceSpecificoverridesFolder);
+    }
+
+    return helmOverridesFolder;
+  }
+
+  private FolderNode getEnvOverrideFolderNode(
+      DirectoryPath envPath, String accountId, String appId, String folderName) {
+    DirectoryPath pcfOverridesPath = envPath.clone().add(folderName);
+    return new FolderNode(
+        accountId, folderName, ApplicationManifest.class, pcfOverridesPath, appId, yamlGitSyncService);
+  }
+
+  private FolderNode getOverrideServiceFolder(DirectoryPath overridePath, String accountId, String appId) {
+    DirectoryPath serviceOverridesPath = overridePath.clone().add(SERVICES_FOLDER);
+    return new FolderNode(
+        accountId, SERVICES_FOLDER, ApplicationManifest.class, serviceOverridesPath, appId, yamlGitSyncService);
   }
 
   private FolderNode generateEnvServiceSpecificValuesFolder(
@@ -1478,6 +1523,41 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     return overridesServicesFolder;
+  }
+
+  private FolderNode generateEnvServiceSpecificHelmOverridesFolder(
+      String accountId, Environment env, DirectoryPath valuesPath, List<ApplicationManifest> applicationManifests) {
+    if (isEmpty(applicationManifests)) {
+      return null;
+    }
+
+    FolderNode overridesServicesFolder = getOverrideServiceFolder(valuesPath, accountId, env.getAppId());
+    for (ApplicationManifest appManifest : applicationManifests) {
+      // Helm override for all services is not allowed, ignore
+      if (isBlank(appManifest.getServiceId())) {
+        continue;
+      }
+
+      Service service = isNotBlank(appManifest.getServiceId())
+          ? serviceResourceService.get(env.getAppId(), appManifest.getServiceId(), false)
+          : null;
+      if (isNotBlank(appManifest.getEnvId()) && service != null) {
+        DirectoryPath serviceFolderPath = overridesServicesFolder.getDirectoryPath().clone().add(service.getName());
+        FolderNode serviceFolder = new FolderNode(accountId, service.getName(), ApplicationManifest.class,
+            serviceFolderPath, env.getAppId(), yamlGitSyncService);
+        overridesServicesFolder.addChild(serviceFolder);
+        serviceFolder.addChild(getEnvLevelYamlNodeForAppManifest(env, appManifest, serviceFolderPath));
+      }
+    }
+
+    return overridesServicesFolder;
+  }
+
+  private EnvLevelYamlNode getEnvLevelYamlNodeForAppManifest(
+      Environment env, ApplicationManifest applicationManifest, DirectoryPath serviceFolderPath) {
+    return new EnvLevelYamlNode(env.getAccountId(), applicationManifest.getUuid(), env.getAppId(), env.getUuid(),
+        INDEX_YAML, ApplicationManifest.class, serviceFolderPath.clone().add(INDEX_YAML), yamlGitSyncService,
+        Type.APPLICATION_MANIFEST);
   }
 
   private void addValuesFolderFiles(String accountId, Environment env, DirectoryPath valuesPath,
@@ -2039,7 +2119,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         notNullCheck("Environment not found", environment);
         return new StringBuilder(getRootPathByEnvironment(environment, getRootPathByApp(application)))
             .append(PATH_DELIMITER)
-            .append(isPcfOverrideAppManifest(applicationManifest) ? PCF_OVERRIDES_FOLDER : VALUES_FOLDER)
+            .append(fetchManifestEnvServiceOverrideFolderName(applicationManifest))
             .append(PATH_DELIMITER)
             .append(SERVICES_FOLDER)
             .append(PATH_DELIMITER)
@@ -2072,6 +2152,24 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private boolean isPcfOverrideAppManifest(ApplicationManifest applicationManifest) {
     return AppManifestKind.PCF_OVERRIDE == applicationManifest.getKind();
+  }
+
+  String fetchManifestEnvServiceOverrideFolderName(ApplicationManifest applicationManifest) {
+    String folderName;
+    switch (applicationManifest.getKind()) {
+      case PCF_OVERRIDE:
+        folderName = PCF_OVERRIDES_FOLDER;
+        break;
+
+      case HELM_CHART_OVERRIDE:
+        folderName = HELM_CHART_OVERRIDE_FOLDER;
+        break;
+
+      default:
+        folderName = VALUES_FOLDER;
+    }
+
+    return folderName;
   }
 
   @Override

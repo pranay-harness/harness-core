@@ -17,6 +17,7 @@ import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GLOBAL_TEMPLATE_LIBRARY_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.HELM_CHART_OVERRIDE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.INFRA_DEFINITION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
@@ -166,6 +167,14 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
           PCF_OVERRIDES_FOLDER, SERVICES_FOLDER, ANY),
       ApplicationManifest.class),
+  // Helm Env Service Override
+  APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE(YamlConstants.VALUES,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          HELM_CHART_OVERRIDE_FOLDER, SERVICES_FOLDER, ANY, INDEX_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          HELM_CHART_OVERRIDE_FOLDER, SERVICES_FOLDER, ANY),
+      ApplicationManifest.class),
+
   MANIFEST_FILE(YamlConstants.MANIFEST_FILE,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER,
           MANIFEST_FILE_FOLDER, MANIFEST_FILE_EXPRESSION),

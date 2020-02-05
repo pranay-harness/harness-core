@@ -103,6 +103,7 @@ public interface YamlConstants {
   String VALUES = "VALUES";
   String VALUES_FOLDER = "Values";
   String PCF_OVERRIDES_FOLDER = "PCF Overrides";
+  String HELM_CHART_OVERRIDE_FOLDER = "Helm Chart Overrides";
 
   String VALUES_YAML_KEY = "values.yaml";
 
