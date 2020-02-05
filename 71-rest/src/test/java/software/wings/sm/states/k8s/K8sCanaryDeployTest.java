@@ -66,15 +66,15 @@ public class K8sCanaryDeployTest extends WingsBaseTest {
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
         .thenAnswer(i -> i.getArguments()[0]);
+
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("evaluator", evaluator);
   }
 
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecute() {
-    on(context).set("variableProcessor", variableProcessor);
-    on(context).set("evaluator", evaluator);
-
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
     when(k8sStateHelper.getRenderedValuesFiles(any(), any())).thenReturn(Collections.emptyList());
     when(k8sStateHelper.getContainerInfrastructureMapping(context))
@@ -98,5 +98,13 @@ public class K8sCanaryDeployTest extends WingsBaseTest {
     assertThat(taskParams.getInstanceUnitType()).isEqualTo(InstanceUnitType.COUNT);
     assertThat(taskParams.getInstances()).isEqualTo(5);
     assertThat(taskParams.isSkipDryRun()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testValidateParameters() {
+    k8sCanaryDeploy.validateParameters(context);
+    verify(k8sStateHelper, times(1)).validateK8sV2TypeServiceUsed(context);
   }
 }

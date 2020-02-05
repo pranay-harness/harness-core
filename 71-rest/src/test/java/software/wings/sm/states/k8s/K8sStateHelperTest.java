@@ -30,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
@@ -47,6 +48,8 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
+import software.wings.api.PhaseElement;
+import software.wings.api.ServiceElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Environment;
@@ -55,6 +58,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.Service;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -356,5 +360,27 @@ public class K8sStateHelperTest extends WingsBaseTest {
         .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
         .withUuid(INFRA_MAPPING_ID)
         .build();
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testValidateK8sV2TypeServiceUsed() {
+    PhaseElement phaseElement =
+        PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build()).build();
+    context.pushContextElement(phaseElement);
+
+    try {
+      wingsPersistence.save(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
+      k8sStateHelper.validateK8sV2TypeServiceUsed(context);
+
+      fail("Should not reach here");
+    } catch (InvalidRequestException ex) {
+      assertThat(ex.getMessage())
+          .isEqualTo("Service SERVICE_NAME used in workflow is of incompatible type. Use Kubernetes V2 type service");
+    }
+
+    wingsPersistence.save(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).isK8sV2(true).build());
+    k8sStateHelper.validateK8sV2TypeServiceUsed(context);
   }
 }

@@ -49,6 +49,7 @@ import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
+import software.wings.api.ServiceElement;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
@@ -61,6 +62,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.Service;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -872,5 +874,16 @@ public class K8sStateHelper {
     }
 
     return workflowStandardParams.getEnv().getUuid();
+  }
+
+  public void validateK8sV2TypeServiceUsed(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
+    ServiceElement serviceElement = phaseElement.getServiceElement();
+    Service service = serviceResourceService.get(serviceElement.getUuid());
+
+    if (!service.isK8sV2()) {
+      throw new InvalidRequestException(format(
+          "Service %s used in workflow is of incompatible type. Use Kubernetes V2 type service", service.getName()));
+    }
   }
 }

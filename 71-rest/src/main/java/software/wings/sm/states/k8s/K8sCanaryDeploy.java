@@ -87,6 +87,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
   @Override
   public void validateParameters(ExecutionContext context) {
     parseInt(context.renderExpression(this.instances));
+    k8sStateHelper.validateK8sV2TypeServiceUsed(context);
   }
 
   @Override
