@@ -59,4 +59,13 @@ public interface PublishMessageOrBuilder extends
    * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
    */
   com.google.protobuf.TimestampOrBuilder getOccurredAtOrBuilder();
+
+  /**
+   * <code>string message_id = 4;</code>
+   */
+  java.lang.String getMessageId();
+  /**
+   * <code>string message_id = 4;</code>
+   */
+  com.google.protobuf.ByteString getMessageIdBytes();
 }

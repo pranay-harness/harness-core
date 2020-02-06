@@ -7,6 +7,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
 
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.event.PublishMessage;
 
 import java.util.Collections;
@@ -29,6 +30,7 @@ public abstract class EventPublisher {
   public void publishMessage(Message message, Timestamp occurredAt, Map<String, String> attributes) {
     checkArgument(!(message instanceof PublishMessage)); // to avoid accidental nesting
     publish(PublishMessage.newBuilder()
+                .setMessageId(UUIDGenerator.generateUuid())
                 .setPayload(Any.pack(message))
                 .setOccurredAt(occurredAt)
                 .putAllAttributes(attributes)
