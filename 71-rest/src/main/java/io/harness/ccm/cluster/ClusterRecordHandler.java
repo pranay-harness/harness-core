@@ -61,7 +61,9 @@ public class ClusterRecordHandler
 
   private void upsertClusterRecord(SettingAttribute cloudProvider) {
     ClusterRecord clusterRecord = clusterRecordService.from(cloudProvider);
-    clusterRecordService.upsert(clusterRecord);
+    if (clusterRecord != null) {
+      clusterRecordService.upsert(clusterRecord);
+    }
   }
 
   @Override

@@ -124,7 +124,6 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
     if (!isNull(cluster)) {
       clusterRecord = ClusterRecord.builder().accountId(cloudProvider.getAccountId()).cluster(cluster).build();
     }
-
     return clusterRecord;
   }
 
