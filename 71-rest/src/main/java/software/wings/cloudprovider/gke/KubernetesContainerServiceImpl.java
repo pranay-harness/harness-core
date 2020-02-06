@@ -647,8 +647,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         ? waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, previousCount, desiredCount,
               serviceSteadyStateTimeout, originalPods, isNotVersioned, startTime, namespace, executionLogCallback)
         : originalPods;
-    int controllerDesiredCount =
-        getControllerPodCount(getController(kubernetesConfig, encryptedDataDetails, controllerName, namespace));
+
+    HasMetadata controllerInfo = getController(kubernetesConfig, encryptedDataDetails, controllerName, namespace);
+    if (controllerInfo == null) {
+      throw new InvalidRequestException(format("Could not find a controller named %s", controllerName));
+    }
+    int controllerDesiredCount = getControllerPodCount(controllerInfo);
 
     if (desiredCount == -1) {
       // This indicates wait for all pods to be in steady state. In case of HPA you won't know absolute numbers

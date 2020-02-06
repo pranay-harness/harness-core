@@ -220,7 +220,7 @@ public class ApplicationManifestUtils {
       throw new InvalidRequestException(new StringBuilder("Environment Override should not change Manifest Format. ")
                                             .append(getManifestFormatName(manifestAtService.getStoreType()))
                                             .append(" is mentioned at Service, but mentioned as ")
-                                            .append(getManifestFormatName(manifestAtService.getStoreType()))
+                                            .append(getManifestFormatName(applicationManifest.getStoreType()))
                                             .append(" at Environment Override")
                                             .toString());
     }
