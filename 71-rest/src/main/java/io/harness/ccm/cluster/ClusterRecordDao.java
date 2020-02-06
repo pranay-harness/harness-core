@@ -2,6 +2,7 @@ package io.harness.ccm.cluster;
 
 import static io.harness.persistence.HQuery.excludeValidate;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.ccm.cluster.entities.Cluster;
@@ -33,6 +34,7 @@ public class ClusterRecordDao {
   }
 
   public ClusterRecord get(ClusterRecord clusterRecord) {
+    Preconditions.checkNotNull(clusterRecord);
     Query<ClusterRecord> query = getQuery(clusterRecord);
     return query.get();
   }
