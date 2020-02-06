@@ -202,7 +202,7 @@ public class DelegateQueueTask implements Runnable {
         wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
             .filter(DelegateTaskKeys.status, QUEUED)
             .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
-            .field(DelegateTaskKeys.nextBroadast)
+            .field(DelegateTaskKeys.nextBroadcast)
             .lessThan(now)
             .field(DelegateTaskKeys.delegateId)
             .doesNotExist();
@@ -219,7 +219,7 @@ public class DelegateQueueTask implements Runnable {
             wingsPersistence.createUpdateOperations(DelegateTask.class)
                 .set(DelegateTaskKeys.lastBroadcastAt, now)
                 .set(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount() + 1)
-                .set(DelegateTaskKeys.nextBroadast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask))
+                .set(DelegateTaskKeys.nextBroadcast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask))
                 .unset(DelegateTaskKeys.preAssignedDelegateId);
 
         delegateTask =

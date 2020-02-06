@@ -44,32 +44,38 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private List<ExecutionCapability> executionCapabilities;
 
   @Id private String uuid;
+  @NotEmpty private String accountId;
   @Indexed protected String appId;
-  private long createdAt;
-  private long lastUpdatedAt;
+  private String envId;
+  private String infrastructureMappingId;
+  private String serviceTemplateId;
+  private String artifactStreamId;
+  private String workflowExecutionId;
 
   private String version;
   private List<String> tags;
-  @NotEmpty private String accountId;
-  private String waitId;
-  @Indexed private Status status;
-  private String delegateId;
   @Indexed private boolean async;
-  private String envId;
-  private String infrastructureMappingId;
+
+  private String waitId;
+  private String correlationId;
+
+  private long createdAt;
+  private long lastUpdatedAt;
+
+  @Indexed private Status status;
+  private ResponseData notifyResponse;
+
   private Long validationStartedAt;
-  private Long lastBroadcastAt;
-  private int broadcastCount;
   private Set<String> validatingDelegateIds;
   private Set<String> validationCompleteDelegateIds;
+
+  private String delegateId;
   private String preAssignedDelegateId;
   private Set<String> alreadyTriedDelegates;
-  private String serviceTemplateId;
-  private String artifactStreamId;
-  private String correlationId;
-  private String workflowExecutionId;
-  private ResponseData notifyResponse;
-  private long nextBroadast;
+
+  private Long lastBroadcastAt;
+  private int broadcastCount;
+  private long nextBroadcast;
 
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   @Default

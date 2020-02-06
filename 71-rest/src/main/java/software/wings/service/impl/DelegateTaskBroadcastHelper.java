@@ -41,10 +41,6 @@ public class DelegateTaskBroadcastHelper {
   // afterwards}
   private Integer[] syncIntervals = new Integer[] {0, 5, 60, 120, 240, 300};
 
-  /**
-   * This method will first update task with preAssignedDelegate if it finds one,
-   * and then broadcast the task.
-   */
   public void broadcastNewDelegateTaskAsync(final DelegateTask task) {
     executorService.submit(() -> {
       try {
@@ -55,15 +51,21 @@ public class DelegateTaskBroadcastHelper {
     });
   }
 
+  /**
+   * This method will first update task with preAssignedDelegate if it finds one,
+   * and then broadcast the task.
+   */
   public DelegateTask broadcastNewDelegateTask(DelegateTask task) {
     String preAssignedDelegateId = assignDelegateService.pickFirstAttemptDelegate(task);
 
-    // Update fields for DelegateTask, preAssignedDelegateId and executionCapabilities if not empty
     task = updateDelegateTaskWithPreAssignedDelegateId(task, preAssignedDelegateId, task.getExecutionCapabilities());
-    rebroadcastDelegateTask(task);
+    if (task != null) {
+      rebroadcastDelegateTask(task);
+    }
     return task;
   }
 
+  // Update fields for DelegateTask, preAssignedDelegateId and executionCapabilities if not empty
   private DelegateTask updateDelegateTaskWithPreAssignedDelegateId(
       DelegateTask delegateTask, String preAssignedDelegateId, List<ExecutionCapability> executionCapabilities) {
     if (isBlank(preAssignedDelegateId) && isEmpty(executionCapabilities)) {
@@ -97,9 +99,7 @@ public class DelegateTaskBroadcastHelper {
   }
 
   public void rebroadcastDelegateTask(DelegateTask delegateTask) {
-    if (delegateTask != null) {
-      broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true).broadcast(delegateTask);
-    }
+    broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true).broadcast(delegateTask);
   }
 
   public long findNextBroadcastTimeForTask(DelegateTask delegateTask) {
