@@ -3,6 +3,7 @@ package io.harness.manage;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.manage.GlobalContextManager.ensureGlobalContextGuard;
 import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
+import static io.harness.manage.GlobalContextManager.obtainGlobalContext;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -13,7 +14,10 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.context.GlobalContext;
+import io.harness.context.GlobalContextData;
+import io.harness.context.MdcGlobalContextData;
 import io.harness.logging.AutoLogContext;
+import io.harness.logging.AutoLogRemoveContext;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -57,6 +61,26 @@ public class ManagedExecutorServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void testObtainGlobalContext() {
+    ImmutableMap<String, String> map = ImmutableMap.of("foo", "bar");
+    GlobalContext globalContext = null;
+    try (GlobalContextGuard globalContextGuard = initGlobalContextGuard(new GlobalContext());
+         AutoLogContext ignore = new AutoLogContext(map, OVERRIDE_ERROR)) {
+      globalContext = obtainGlobalContext();
+
+      assertThat(((MdcGlobalContextData) globalContext.get(MdcGlobalContextData.MDC_ID)).getMap()).isEqualTo(map);
+    }
+
+    try (GlobalContextGuard globalContextGuard = initGlobalContextGuard(globalContext);
+         AutoLogRemoveContext ignore = new AutoLogRemoveContext("foo")) {
+      GlobalContext globalContext2 = obtainGlobalContext();
+      assertThat((GlobalContextData) globalContext2.get(MdcGlobalContextData.MDC_ID)).isNull();
+    }
+  }
+
+  @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSubmitRunnable() throws Exception {
@@ -72,7 +96,7 @@ public class ManagedExecutorServiceTest extends CategoryTest {
       // managedExecutorService.submit(Runnable task) is expected to make sure, new thread executing runnable task,
       // gets GlobalContext from thread creating it.
       Future future = managedExecutorService.submit(() -> {
-        GlobalContext globalContext = GlobalContextManager.obtainGlobalContext();
+        GlobalContext globalContext = obtainGlobalContext();
         isGlobalContextSetInChildThread.set(globalContext.get("AUDIT_KEY") != null);
         isTestContextSetInChildThread.set(globalContext.get("TEST_KEY") != null);
       });
