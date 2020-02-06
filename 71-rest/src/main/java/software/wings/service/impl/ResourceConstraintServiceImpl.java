@@ -9,8 +9,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
-import static java.util.Collections.EMPTY_LIST;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ResourceConstraintInstance.NOT_FINISHED_STATES;
 import static software.wings.sm.states.HoldingScope.WORKFLOW;
@@ -193,7 +191,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
     }
 
     Set<String> constraintIds = new HashSet<>();
-    try (HIterator<ResourceConstraintInstance> iterator = new HIterator<>(query.fetch())) {
+    try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(query.fetch())) {
       for (ResourceConstraintInstance instance : iterator) {
         if (updateActiveConstraintForInstance(instance)) {
           constraintIds.add(instance.getResourceConstraintId());
@@ -207,26 +205,13 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   @Override
   public boolean updateActiveConstraintForInstance(ResourceConstraintInstance instance) {
     boolean isConstraint = false;
-    boolean finished = checkFinished(instance);
-    if (finished) {
-      Map<String, Object> constraintContext =
-          ImmutableMap.of(ResourceConstraintInstanceKeys.appId, instance.getAppId());
-      if (getRegistry().finishAndUnblockConsumers(new ConstraintId(instance.getResourceConstraintId()),
-              new ConstraintUnit(instance.getResourceUnit()), new ConsumerId(instance.getUuid()), constraintContext)) {
-        isConstraint = true;
-      }
-    }
-    return isConstraint;
-  }
-
-  private boolean checkFinished(ResourceConstraintInstance instance) {
     final HoldingScope holdingScope = HoldingScope.valueOf(instance.getReleaseEntityType());
     boolean finished = false;
     switch (holdingScope) {
       case WORKFLOW:
         final WorkflowExecution workflowExecution =
             workflowExecutionService.getWorkflowExecution(instance.getAppId(), instance.getReleaseEntityId());
-        finished = workflowExecution == null || ExecutionStatus.isFinalStatus(workflowExecution.getStatus());
+        finished = workflowExecution != null && ExecutionStatus.isFinalStatus(workflowExecution.getStatus());
         break;
       case PHASE:
         final StateExecutionData stateExecutionData = stateExecutionService.phaseStateExecutionData(instance.getAppId(),
@@ -237,7 +222,17 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
       default:
         unhandled(holdingScope);
     }
-    return finished;
+
+    if (finished) {
+      Map<String, Object> constraintContext =
+          ImmutableMap.of(ResourceConstraintInstanceKeys.appId, instance.getAppId());
+
+      if (getRegistry().consumerFinished(new ConstraintId(instance.getResourceConstraintId()),
+              new ConstraintUnit(instance.getResourceUnit()), new ConsumerId(instance.getUuid()), constraintContext)) {
+        isConstraint = true;
+      }
+    }
+    return isConstraint;
   }
 
   @Override
@@ -274,24 +269,10 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
         .in(asList(State.BLOCKED.name(), State.ACTIVE.name()));
   }
 
-  private Query<ResourceConstraintInstance> blockedQuery(String constraintId) {
-    return wingsPersistence.createQuery(ResourceConstraintInstance.class, excludeAuthority)
-        .filter(ResourceConstraintInstanceKeys.resourceConstraintId, constraintId)
-        .filter(ResourceConstraintInstanceKeys.state, State.BLOCKED.name());
-  }
-
   private List<ConstraintUnit> units(ResourceConstraint constraint) {
-    return getConstraintUnits(runnableQuery(constraint.getUuid()));
-  }
-
-  private List<ConstraintUnit> blockedUnits(ResourceConstraint constraint) {
-    return getConstraintUnits(blockedQuery(constraint.getUuid()));
-  }
-
-  private List<ConstraintUnit> getConstraintUnits(Query<ResourceConstraintInstance> query) {
     Set<String> units = new HashSet<>();
-    try (HIterator<ResourceConstraintInstance> iterator =
-             new HIterator<>(query.project(ResourceConstraintInstanceKeys.resourceUnit, true).fetch())) {
+    try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(
+             runnableQuery(constraint.getUuid()).project(ResourceConstraintInstanceKeys.resourceUnit, true).fetch())) {
       for (ResourceConstraintInstance instance : iterator) {
         units.add(instance.getResourceUnit());
       }
@@ -420,11 +401,11 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   public List<Consumer> loadConsumers(ConstraintId id, ConstraintUnit unit) {
     List<Consumer> consumers = new ArrayList<>();
 
-    try (HIterator<ResourceConstraintInstance> iterator =
-             new HIterator<>(runnableQuery(id.getValue())
-                                 .filter(ResourceConstraintInstanceKeys.resourceUnit, unit.getValue())
-                                 .order(Sort.ascending(ResourceConstraintInstanceKeys.order))
-                                 .fetch())) {
+    try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(
+             runnableQuery(id.getValue())
+                 .filter(ResourceConstraintInstanceKeys.resourceUnit, unit.getValue())
+                 .order(Sort.ascending(ResourceConstraintInstanceKeys.order))
+                 .fetch())) {
       for (ResourceConstraintInstance instance : iterator) {
         consumers.add(Consumer.builder()
                           .id(new ConsumerId(instance.getUuid()))
@@ -549,85 +530,6 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
       return false;
     }
     return true;
-  }
-
-  @Override
-  public boolean finishAndUnblockConsumers(
-      ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
-    ResourceConstraint resourceConstraint = wingsPersistence.createQuery(ResourceConstraint.class, excludeAuthority)
-                                                .filter(ResourceConstraintKeys.uuid, id.getValue())
-                                                .get();
-    List<ConsumerId> unblockableConsumerIds = getUnblockableConsumers(resourceConstraint, singletonList(consumerId));
-    if (!finishActiveConsumer(id, unit, consumerId, context)) {
-      return false;
-    }
-    if (isNotEmpty(unblockableConsumerIds)) {
-      unblockableConsumerIds.forEach(unblockableConsumerId -> unblockConsumer(unit, context, unblockableConsumerId));
-      return true;
-    }
-    return false;
-  }
-
-  private boolean unblockConsumer(ConstraintUnit unit, Map<String, Object> context, ConsumerId unblockableConsumerId) {
-    ResourceConstraintInstance unblockableInstance = fetchInstance(unit, unblockableConsumerId, context).get();
-    Map<String, Object> constraintContext =
-        ImmutableMap.of(ResourceConstraintInstanceKeys.appId, unblockableInstance.getAppId());
-    if (checkFinished(unblockableInstance)) {
-      return finishAndUnblockConsumers(new ConstraintId(unblockableInstance.getResourceConstraintId()),
-          new ConstraintUnit(unblockableInstance.getResourceUnit()), new ConsumerId(unblockableInstance.getUuid()),
-          constraintContext);
-    } else {
-      return consumerUnblocked(new ConstraintId(unblockableInstance.getResourceConstraintId()),
-          new ConstraintUnit(unblockableInstance.getResourceUnit()), new ConsumerId(unblockableInstance.getUuid()),
-          constraintContext);
-    }
-  }
-
-  private boolean finishActiveConsumer(
-      ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
-    final Query<ResourceConstraintInstance> query =
-        wingsPersistence.createQuery(ResourceConstraintInstance.class)
-            .filter(ResourceConstraintInstanceKeys.appId, context.get(ResourceConstraintInstanceKeys.appId))
-            .filter(ResourceConstraintInstanceKeys.uuid, consumerId.getValue())
-            .filter(ResourceConstraintInstanceKeys.resourceUnit, unit.getValue());
-
-    final UpdateOperations<ResourceConstraintInstance> ops =
-        wingsPersistence.createUpdateOperations(ResourceConstraintInstance.class)
-            .set(ResourceConstraintInstanceKeys.state, State.FINISHED.name());
-
-    final UpdateResults updateResults = wingsPersistence.update(query, ops);
-    if (updateResults == null || updateResults.getUpdatedCount() == 0) {
-      logger.error("The attempt to finish {}.{} for {} failed", id.getValue(), unit.getValue(), consumerId.getValue());
-      return false;
-    }
-    return true;
-  }
-
-  private Query<ResourceConstraintInstance> fetchInstance(
-      ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
-    return wingsPersistence.createQuery(ResourceConstraintInstance.class)
-        .filter(ResourceConstraintInstanceKeys.appId, context.get(ResourceConstraintInstanceKeys.appId))
-        .filter(ResourceConstraintInstanceKeys.uuid, consumerId.getValue())
-        .filter(ResourceConstraintInstanceKeys.resourceUnit, unit.getValue());
-  }
-
-  private List<ConsumerId> getUnblockableConsumers(
-      ResourceConstraint resourceConstraint, List<ConsumerId> filteredConsumers) {
-    final Constraint constraint = createAbstraction(resourceConstraint);
-    final List<ConstraintUnit> constraintUnits = blockedUnits(resourceConstraint);
-    if (isEmpty(constraintUnits)) {
-      logger.info("No Consumer Present To unblock");
-      return EMPTY_LIST;
-    }
-    List<ConsumerId> unblockableConsumers = new ArrayList<>();
-    for (ConstraintUnit constraintUnit : constraintUnits) {
-      final List<ConsumerId> unblockableConsumerIds =
-          constraint.getUnblockableConsumer(constraintUnit, getRegistry(), filteredConsumers);
-      if (isNotEmpty(unblockableConsumerIds)) {
-        unblockableConsumers.addAll(unblockableConsumerIds);
-      }
-    }
-    return unblockableConsumers;
   }
 
   @Override

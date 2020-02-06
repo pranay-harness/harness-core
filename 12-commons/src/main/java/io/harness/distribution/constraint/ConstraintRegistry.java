@@ -21,7 +21,4 @@ public interface ConstraintRegistry {
   boolean consumerFinished(ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context);
 
   boolean overlappingScope(Consumer consumer, Consumer blockedConsumer);
-
-  boolean finishAndUnblockConsumers(
-      ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context);
 }
