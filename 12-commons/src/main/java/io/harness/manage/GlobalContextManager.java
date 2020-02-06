@@ -67,12 +67,14 @@ public class GlobalContextManager {
   }
 
   public static AutoLogContext set(GlobalContext globalContext) {
-    contextThreadLocal.set(globalContext);
+    AutoLogContext autoLogContext = null;
     final MdcGlobalContextData globalContextData = globalContext.get(MdcGlobalContextData.MDC_ID);
-    if (globalContextData == null) {
-      return null;
+    if (globalContextData != null) {
+      autoLogContext = new AutoLogContext(globalContextData.getMap(), OVERRIDE_ERROR);
     }
-    return new AutoLogContext(globalContextData.getMap(), OVERRIDE_ERROR);
+    globalContext.unset(MdcGlobalContextData.MDC_ID);
+    contextThreadLocal.set(globalContext);
+    return autoLogContext;
   }
 
   public static void unset() {

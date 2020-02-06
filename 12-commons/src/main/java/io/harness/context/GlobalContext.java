@@ -27,4 +27,8 @@ public class GlobalContext {
   public void upsertGlobalContextRecord(GlobalContextData data) {
     map.put(data.getKey(), data);
   }
+
+  public void unset(String key) {
+    map.remove(key);
+  }
 }
