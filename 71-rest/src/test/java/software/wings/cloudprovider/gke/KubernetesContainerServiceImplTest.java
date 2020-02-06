@@ -2,6 +2,7 @@ package software.wings.cloudprovider.gke;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
@@ -33,6 +34,7 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -203,5 +205,27 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     } catch (Exception ex) {
       assertThat(ex.getMessage()).isEqualTo("Unhandled kubernetes resource type [Service] for getting the pod count");
     }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testNPEInGetContainerInfosWhenReady() throws Exception {
+    when(timeLimiter.callWithTimeout(any(), anyLong(), isA(TimeUnit.class), anyBoolean())).thenReturn(null);
+
+    try {
+      kubernetesContainerService.getContainerInfosWhenReady(
+          KUBERNETES_CONFIG, null, "controllerName", 0, 0, 0, asList(), false, null, false, 0L, "default");
+      fail("Should not reach here.");
+    } catch (InvalidRequestException ex) {
+      assertThat(ex.getMessage()).isEqualTo("Could not find a controller named controllerName");
+    } catch (Exception ex) {
+      fail("Should not reach here.");
+    }
+
+    when(timeLimiter.callWithTimeout(any(), anyLong(), isA(TimeUnit.class), anyBoolean()))
+        .thenReturn(replicationController);
+    kubernetesContainerService.getContainerInfosWhenReady(
+        KUBERNETES_CONFIG, null, "controllerName", 0, 0, 0, asList(), false, null, false, 0L, "default");
   }
 }
