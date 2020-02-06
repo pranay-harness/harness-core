@@ -8,11 +8,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Streams;
 import com.google.protobuf.Any;
 import com.google.protobuf.Message;
 
@@ -26,10 +27,12 @@ import io.harness.event.PublishMessage;
 import io.harness.event.PublishRequest;
 import io.harness.event.PublishResponse;
 import io.harness.event.payloads.Lifecycle;
+import io.harness.event.service.intfc.LastReceivedPublishedMessageRepository;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -43,6 +46,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EventPublisherServerImplTest extends CategoryTest {
@@ -50,6 +55,7 @@ public class EventPublisherServerImplTest extends CategoryTest {
 
   @Mock private HPersistence hPersistence;
   @Mock private StreamObserver<PublishResponse> observer;
+  @Mock private LastReceivedPublishedMessageRepository lastReceivedPublishedMessageRepository;
 
   @InjectMocks private EventPublisherServerImpl publisherServer;
 
@@ -71,29 +77,29 @@ public class EventPublisherServerImplTest extends CategoryTest {
       ArgumentCaptor<List<PublishedMessage>> captor = ArgumentCaptor.forClass((Class) List.class);
       PublishRequest publishRequest =
           PublishRequest.newBuilder()
-              .addAllMessages(testMessages()
-                                  .stream()
-                                  .map(message
+              .addAllMessages(streamWithIndex(testMessages().stream())
+                                  .map(pair
                                       -> PublishMessage.newBuilder()
+                                             .setMessageId("id-" + pair.getLeft())
                                              .putAttributes("key1", "val1")
-                                             .putAttributes("key2", message.toString())
-                                             .setPayload(Any.pack(message))
+                                             .putAttributes("key2", pair.getRight().toString())
+                                             .setPayload(Any.pack(pair.getRight()))
                                              .setOccurredAt(HTimestamps.fromInstant(occurredAt))
                                              .build())
                                   .collect(toList()))
               .build();
       publisherServer.publish(publishRequest, observer);
-      verify(hPersistence).save(captor.capture());
+      verify(hPersistence).saveIgnoringDuplicateKeys(captor.capture());
       List<PublishedMessage> captured = captor.getValue();
       assertThat(captured).containsExactlyElementsOf(
-          testMessages()
-              .stream()
-              .map(message
+          streamWithIndex(testMessages().stream())
+              .map(pair
                   -> PublishedMessage.builder()
+                         .uuid("id-" + pair.getLeft())
                          .type(Lifecycle.class.getName())
-                         .data(Any.pack(message).toByteArray())
+                         .data(Any.pack(pair.getRight()).toByteArray())
                          .accountId(TEST_ACC_ID)
-                         .attributes(ImmutableMap.of("key1", "val1", "key2", message.toString()))
+                         .attributes(ImmutableMap.of("key1", "val1", "key2", pair.getRight().toString()))
                          .occurredAt(occurredAt.toEpochMilli())
                          .build())
               .collect(toList()));
@@ -105,7 +111,7 @@ public class EventPublisherServerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldRespondErrorWhenPersistFail() {
     RuntimeException exception = new RuntimeException("Persistence error");
-    when(hPersistence.save(anyListOf(PublishedMessage.class))).thenThrow(exception);
+    doThrow(exception).when(hPersistence).saveIgnoringDuplicateKeys(anyListOf(PublishedMessage.class));
     ArgumentCaptor<StatusException> captor = ArgumentCaptor.forClass(StatusException.class);
     Context.current().withValue(DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY, TEST_ACC_ID).run(() -> {
       publisherServer.publish(
@@ -129,5 +135,9 @@ public class EventPublisherServerImplTest extends CategoryTest {
         Lifecycle.newBuilder().setType(EVENT_TYPE_START).setInstanceId("instance-2").build(),
         Lifecycle.newBuilder().setType(EVENT_TYPE_STOP).setInstanceId("instance-2").build(),
         Lifecycle.newBuilder().setType(EVENT_TYPE_STOP).setInstanceId("instance-1").build());
+  }
+
+  public <T> Stream<ImmutablePair<Integer, T>> streamWithIndex(Stream<T> stream) {
+    return Streams.zip(IntStream.iterate(0, i -> i + 1).boxed(), stream, (i, item) -> ImmutablePair.of(i, item));
   }
 }

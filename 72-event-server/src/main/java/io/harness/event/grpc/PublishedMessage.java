@@ -51,7 +51,8 @@ public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidA
 
   @Builder
   private PublishedMessage(
-      String accountId, String type, byte[] data, Map<String, String> attributes, long occurredAt) {
+      String uuid, String accountId, String type, byte[] data, Map<String, String> attributes, long occurredAt) {
+    this.uuid = uuid;
     this.accountId = accountId;
     this.type = type;
     this.data = data;

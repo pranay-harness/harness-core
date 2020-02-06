@@ -15,7 +15,9 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
   private PublishMessage(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private PublishMessage() {}
+  private PublishMessage() {
+    messageId_ = "";
+  }
 
   @java.
   lang.Override
@@ -73,6 +75,12 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
               occurredAt_ = subBuilder.buildPartial();
             }
 
+            break;
+          }
+          case 34: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            messageId_ = s;
             break;
           }
           default: {
@@ -228,6 +236,36 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     return getOccurredAt();
   }
 
+  public static final int MESSAGE_ID_FIELD_NUMBER = 4;
+  private volatile java.lang.Object messageId_;
+  /**
+   * <code>string message_id = 4;</code>
+   */
+  public java.lang.String getMessageId() {
+    java.lang.Object ref = messageId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      messageId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string message_id = 4;</code>
+   */
+  public com.google.protobuf.ByteString getMessageIdBytes() {
+    java.lang.Object ref = messageId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      messageId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -250,6 +288,9 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
         output, internalGetAttributes(), AttributesDefaultEntryHolder.defaultEntry, 2);
     if (occurredAt_ != null) {
       output.writeMessage(3, getOccurredAt());
+    }
+    if (!getMessageIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 4, messageId_);
     }
     unknownFields.writeTo(output);
   }
@@ -274,6 +315,9 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     }
     if (occurredAt_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, getOccurredAt());
+    }
+    if (!getMessageIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, messageId_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -304,6 +348,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       if (!getOccurredAt().equals(other.getOccurredAt()))
         return false;
     }
+    if (!getMessageId().equals(other.getMessageId()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -328,6 +374,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       hash = (37 * hash) + OCCURRED_AT_FIELD_NUMBER;
       hash = (53 * hash) + getOccurredAt().hashCode();
     }
+    hash = (37 * hash) + MESSAGE_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getMessageId().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -469,6 +517,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
         occurredAt_ = null;
         occurredAtBuilder_ = null;
       }
+      messageId_ = "";
+
       return this;
     }
 
@@ -512,6 +562,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       } else {
         result.occurredAt_ = occurredAtBuilder_.build();
       }
+      result.messageId_ = messageId_;
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -561,6 +612,10 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       internalGetMutableAttributes().mergeFrom(other.internalGetAttributes());
       if (other.hasOccurredAt()) {
         mergeOccurredAt(other.getOccurredAt());
+      }
+      if (!other.getMessageId().isEmpty()) {
+        messageId_ = other.messageId_;
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -928,6 +983,68 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
         occurredAt_ = null;
       }
       return occurredAtBuilder_;
+    }
+
+    private java.lang.Object messageId_ = "";
+    /**
+     * <code>string message_id = 4;</code>
+     */
+    public java.lang.String getMessageId() {
+      java.lang.Object ref = messageId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        messageId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string message_id = 4;</code>
+     */
+    public com.google.protobuf.ByteString getMessageIdBytes() {
+      java.lang.Object ref = messageId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        messageId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string message_id = 4;</code>
+     */
+    public Builder setMessageId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      messageId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string message_id = 4;</code>
+     */
+    public Builder clearMessageId() {
+      messageId_ = getDefaultInstance().getMessageId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string message_id = 4;</code>
+     */
+    public Builder setMessageIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      messageId_ = value;
+      onChanged();
+      return this;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

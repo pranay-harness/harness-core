@@ -1,5 +1,6 @@
 package io.harness.event.grpc;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.grpc.IdentifierKeys.DELEGATE_ID;
 import static io.harness.grpc.auth.DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -22,6 +23,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,6 +53,7 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
               .stream()
               .map(publishMessage
                   -> PublishedMessage.builder()
+                         .uuid(StringUtils.defaultIfEmpty(publishMessage.getMessageId(), generateUuid()))
                          .accountId(accountId)
                          .data(publishMessage.getPayload().toByteArray())
                          .type(AnyUtils.toFqcn(publishMessage.getPayload()))
@@ -59,7 +62,7 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
                          .build())
               .collect(Collectors.toList());
       try {
-        hPersistence.save(publishedMessages);
+        hPersistence.saveIgnoringDuplicateKeys(publishedMessages);
       } catch (Exception e) {
         logger.warn("Encountered error while persisting messages", e);
         responseObserver.onError(Status.INTERNAL.withCause(e).asException());
