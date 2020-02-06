@@ -1495,7 +1495,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public String queueTask(DelegateTask task) {
-    saveDelegateTask(task, true);
+    task.setAsync(true);
+    saveDelegateTask(task);
+
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
@@ -1511,7 +1513,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     // Wait for task to complete
     DelegateTask completedTask;
     ResponseData responseData;
-    saveDelegateTask(task, false);
+
+    task.setAsync(false);
+    saveDelegateTask(task);
+
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
@@ -1561,17 +1566,16 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @VisibleForTesting
-  void saveDelegateTask(DelegateTask task, boolean async) {
+  void saveDelegateTask(DelegateTask task) {
     task.setStatus(QUEUED);
-    task.setAsync(async);
     task.setVersion(getVersion());
     task.setLastBroadcastAt(clock.millis());
 
     generateCapabilitiesForTaskIfFeatureEnabled(task);
 
     // Ensure that broadcast happens at least 5 seconds from current time for async tasks
-    if (async) {
-      task.setNextBroadast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
+    if (task.isAsync()) {
+      task.setNextBroadcast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
     }
 
     wingsPersistence.save(task);
