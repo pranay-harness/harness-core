@@ -965,7 +965,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     PageRequest<GitSyncError> pageRequest = aPageRequest()
                                                 .addFilter("accountId", EQ, accountId)
                                                 .withLimit("500")
-                                                .addOrder(GitSyncError.LAST_UPDATED_AT_KEY, OrderType.ASC)
+                                                .addOrder(GitSyncError.CREATED_AT_KEY, OrderType.ASC)
                                                 .build();
     PageResponse<GitSyncError> response = wingsPersistence.query(GitSyncError.class, pageRequest);
     return RestResponse.Builder.aRestResponse().withResource(response.getResponse()).build();
