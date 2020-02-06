@@ -101,9 +101,10 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
     List<QLSunburstChartDataPoint> sunburstChartData = sunburstChartStatsDataFetcher.getSunburstChartData(
         ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, true, Collections.emptyMap());
     assertThat(sunburstChartData.get(0).getId()).isEqualTo(ROOT_PARENT_ID);
-    assertThat(sunburstChartData.get(1).getId()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
+    assertThat(sunburstChartData.get(1).getId())
+        .isEqualTo(CLUSTER1_ID + ":" + NAMESPACE1 + ":" + WORKLOAD_NAME_ACCOUNT1);
     assertThat(sunburstChartData.get(1).getValue()).isEqualTo(TOTAL_COST);
-    assertThat(sunburstChartData.get(2).getId()).isEqualTo(NAMESPACE1);
+    assertThat(sunburstChartData.get(2).getId()).isEqualTo(CLUSTER1_ID + ":" + NAMESPACE1);
     assertThat(sunburstChartData.get(3).getId()).isEqualTo(CLUSTER1_ID);
   }
 
@@ -160,10 +161,11 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
         ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, true, Collections.emptyMap());
     assertThat(sunburstChartData.get(0).getId()).isEqualTo(ROOT_PARENT_ID);
     assertThat(sunburstChartData.get(0).getParent()).isEqualTo(ROOT_PARENT);
-    assertThat(sunburstChartData.get(1).getId()).isEqualTo(SERVICE1_ID_APP1_ACCOUNT1);
+    assertThat(sunburstChartData.get(1).getId())
+        .isEqualTo(APP1_ID_ACCOUNT1 + ":" + ENV1_ID_APP1_ACCOUNT1 + ":" + SERVICE1_ID_APP1_ACCOUNT1);
     assertThat(sunburstChartData.get(1).getName()).isEqualTo(SERVICE1_ID_APP1_ACCOUNT1);
-    assertThat(sunburstChartData.get(1).getParent()).isEqualTo(ENV1_ID_APP1_ACCOUNT1);
-    assertThat(sunburstChartData.get(2).getId()).isEqualTo(ENV1_ID_APP1_ACCOUNT1);
+    assertThat(sunburstChartData.get(1).getParent()).isEqualTo(APP1_ID_ACCOUNT1 + ":" + ENV1_ID_APP1_ACCOUNT1);
+    assertThat(sunburstChartData.get(2).getId()).isEqualTo(APP1_ID_ACCOUNT1 + ":" + ENV1_ID_APP1_ACCOUNT1);
     assertThat(sunburstChartData.get(2).getName()).isEqualTo(ENV1_ID_APP1_ACCOUNT1);
     assertThat(sunburstChartData.get(2).getParent()).isEqualTo(APP1_ID_ACCOUNT1);
     assertThat(sunburstChartData.get(3).getId()).isEqualTo(APP1_ID_ACCOUNT1);
@@ -180,10 +182,12 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(makeStartTimeFilter(START_TIME));
     filters.add(makeEndTimeFilter(END_TIME));
-    List<QLCCMGroupBy> groupBy = Arrays.asList(makeNamespaceEntityGroupBy());
+    List<QLCCMGroupBy> groupBy =
+        Arrays.asList(makeClusterEntityGroupBy(), makeNamespaceEntityGroupBy(), makeWorkloadNameEntityGroupBy());
     List<QLSunburstGridDataPoint> sunburstGridData = sunburstChartStatsDataFetcher.getSunburstGridData(
         ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, false);
-    assertThat(sunburstGridData.get(0).getName()).isEqualTo(NAMESPACE1);
+    assertThat(sunburstGridData.get(0).getId())
+        .isEqualTo(CLUSTER1_ID + ":" + NAMESPACE1 + ":" + WORKLOAD_NAME_ACCOUNT1);
   }
 
   private QLCCMAggregationFunction makeBillingAmtAggregation() {
