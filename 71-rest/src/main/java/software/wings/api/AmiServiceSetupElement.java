@@ -49,6 +49,7 @@ public class AmiServiceSetupElement implements ContextElement {
   public Map<String, Object> paramMap(ExecutionContext context) {
     Map<String, Object> map = newHashMap();
     map.put("newAsgName", newAutoScalingGroupName);
+    map.put("oldAsgName", oldAutoScalingGroupName);
     return ImmutableMap.of("ami", map);
   }
 
