@@ -109,7 +109,8 @@ public class LogAnalysisGeneratorTest extends CategoryTest {
     ArgumentCaptor<LearningEngineAnalysisTask> taskCaptor = ArgumentCaptor.forClass(LearningEngineAnalysisTask.class);
 
     verify(learningEngineService).addLearningEngineAnalysisTask(taskCaptor.capture());
-    assertThat(taskCaptor.getValue().getFeature_name()).isNull();
+    assertThat(taskCaptor.getValue().getFeature_name()).isNotNull();
+    assertThat(taskCaptor.getValue().getFeature_name()).isEqualTo("DISABLE_LOGML_NEURAL_NET");
   }
 
   @Test

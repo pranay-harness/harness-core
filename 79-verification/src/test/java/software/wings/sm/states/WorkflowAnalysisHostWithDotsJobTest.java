@@ -116,7 +116,7 @@ public class WorkflowAnalysisHostWithDotsJobTest extends VerificationBaseTest {
     when(featureFlagFalseMock.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
         .thenReturn(featureFlagFalseMock);
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.LOGML_NEURAL_NET, accountId))
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, accountId))
         .thenReturn(featureFlagFalseMock);
 
     final Call<RestResponse<List<String>>> managerVersionsCall = mock(Call.class);

@@ -3,7 +3,7 @@ package io.harness.jobs;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static software.wings.beans.FeatureName.LOGML_NEURAL_NET;
+import static software.wings.beans.FeatureName.DISABLE_LOGML_NEURAL_NET;
 import static software.wings.common.VerificationConstants.GET_LOG_FEEDBACKS;
 
 import com.google.common.collect.Lists;
@@ -202,12 +202,12 @@ public class LogMLAnalysisGenerator implements Runnable {
       }
 
       boolean isFlagEnabled =
-          managerClientHelper.callManagerWithRetry(managerClient.isFeatureEnabled(LOGML_NEURAL_NET, accountId))
+          managerClientHelper.callManagerWithRetry(managerClient.isFeatureEnabled(DISABLE_LOGML_NEURAL_NET, accountId))
               .getResource();
-      String featureName = isFlagEnabled ? null : "NEURAL_NET";
+      String featureName = isFlagEnabled ? "DISABLE_LOGML_NEURAL_NET" : null;
 
       if (context.getStateType() == StateType.BUG_SNAG) {
-        featureName = null;
+        featureName = "DISABLE_LOGML_NEURAL_NET";
       }
 
       String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
