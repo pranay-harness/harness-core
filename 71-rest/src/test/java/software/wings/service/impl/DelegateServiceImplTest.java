@@ -93,11 +93,10 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSaveDelegateTaskWithPreAssignedDelegateId_Sync() {
     DelegateTask delegateTask = getDelegateTask();
-    when(broadcastHelper.broadcastNewDelegateTask(any())).thenReturn(delegateTask);
     delegateTask.setAsync(false);
     delegateService.saveDelegateTask(delegateTask);
     assertThat(delegateTask.getBroadcastCount()).isEqualTo(0);
-    verify(broadcastHelper, times(0)).broadcastNewDelegateTask(any());
+    verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
   }
 
   @Test
@@ -108,7 +107,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     delegateTask.setAsync(true);
     delegateService.saveDelegateTask(delegateTask);
     assertThat(delegateTask.getBroadcastCount()).isEqualTo(0);
-    verify(broadcastHelper, times(0)).broadcastNewDelegateTask(any());
+    verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
   }
 
   private DelegateTask getDelegateTask() {

@@ -1528,7 +1528,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       try {
         logger.info("Executing sync task");
-        broadcastHelper.broadcastNewDelegateTask(task);
+        broadcastHelper.rebroadcastDelegateTask(task);
         AtomicLong endAt = syncTaskWaitMap.computeIfAbsent(
             task.getUuid(), k -> new AtomicLong(clock.millis() + task.getData().getTimeout()));
         synchronized (endAt) {
@@ -1570,6 +1570,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     task.setStatus(QUEUED);
     task.setVersion(getVersion());
     task.setLastBroadcastAt(clock.millis());
+    task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
 
     generateCapabilitiesForTaskIfFeatureEnabled(task);
 
