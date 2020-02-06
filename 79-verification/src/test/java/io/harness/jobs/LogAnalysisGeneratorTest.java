@@ -102,7 +102,7 @@ public class LogAnalysisGeneratorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testBugsnagNonNN() {
     analysisContext.setStateType(StateType.BUG_SNAG);
-    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(new RestResponse<Boolean>(false));
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(new RestResponse<>(false));
     logMLAnalysisGenerator = new LogMLAnalysisGenerator(analysisContext, logAnalysisMinute, false, analysisService,
         learningEngineService, managerClient, managerClientHelper, null);
     logMLAnalysisGenerator.run();
@@ -114,11 +114,11 @@ public class LogAnalysisGeneratorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = PRAVEEN, intermittent = true)
   @Category(UnitTests.class)
   public void testNonBugsnagNN() {
     analysisContext.setStateType(StateType.APP_DYNAMICS);
-    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(new RestResponse<Boolean>(false));
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(new RestResponse<>(false));
     logMLAnalysisGenerator = new LogMLAnalysisGenerator(analysisContext, logAnalysisMinute, false, analysisService,
         learningEngineService, managerClient, managerClientHelper, null);
     logMLAnalysisGenerator.run();
@@ -133,7 +133,7 @@ public class LogAnalysisGeneratorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testFeedbackAnalsyisRecordIs24x7FlagFalse() {
     analysisContext.setStateType(StateType.APP_DYNAMICS);
-    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(new RestResponse<Boolean>(false));
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(new RestResponse<>(false));
     logMLAnalysisGenerator = new LogMLAnalysisGenerator(analysisContext, logAnalysisMinute, false, analysisService,
         learningEngineService, managerClient, managerClientHelper, MLAnalysisType.FEEDBACK_ANALYSIS);
     logMLAnalysisGenerator.run();

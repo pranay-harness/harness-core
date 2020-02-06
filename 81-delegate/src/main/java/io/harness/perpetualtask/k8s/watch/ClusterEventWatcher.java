@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
@@ -77,7 +79,7 @@ public class ClusterEventWatcher implements Watcher<Event> {
     logger.info("Creating new ClusterEventWatcher for cluster with id: {} name: {} ", params.getClusterId(),
         params.getClusterName());
     this.client = client;
-    this.client.events().watch(this);
+    this.client.events().inAnyNamespace().watch(this);
     this.eventPublisher = eventPublisher;
     clusterEventPrototype = K8sClusterEvent.newBuilder()
                                 .setClusterId(params.getClusterId())
@@ -102,7 +104,7 @@ public class ClusterEventWatcher implements Watcher<Event> {
     builder.setInvolvedObject(K8sClusterEvent.InvolvedObject.newBuilder()
                                   .setKind(event.getInvolvedObject().getKind())
                                   .setName(event.getInvolvedObject().getName())
-                                  .setNamespace(event.getInvolvedObject().getNamespace())
+                                  .setNamespace(defaultIfNull(event.getInvolvedObject().getNamespace(), ""))
                                   .setUid(event.getInvolvedObject().getUid())
                                   .setResourceVersion(event.getInvolvedObject().getResourceVersion())
                                   .build());
@@ -112,7 +114,9 @@ public class ClusterEventWatcher implements Watcher<Event> {
       if (workload.getMetadata().getResourceVersion().equals(event.getInvolvedObject().getResourceVersion())) {
         builder.setInvolvedObjectDetails(ByteString.copyFromUtf8(gson.toJson(workload)));
       } else {
-        logger.warn("Non-matching resourceVersion for event and fetched resource");
+        logger.warn("Non-matching resourceVersion ({} != {}) for fetched resource and that in event for {}",
+            workload.getMetadata().getResourceVersion(), event.getInvolvedObject().getResourceVersion(),
+            event.getInvolvedObject());
       }
     }
   }
