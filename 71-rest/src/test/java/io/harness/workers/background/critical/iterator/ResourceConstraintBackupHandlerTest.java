@@ -7,7 +7,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
@@ -56,6 +58,28 @@ public class ResourceConstraintBackupHandlerTest extends WingsBaseTest {
     verify(mockPersistenceIteratorFactory, times(1))
         .createPumpIteratorWithDedicatedThreadPool(any(PumpExecutorOptions.class),
             eq(ResourceConstraintBackupHandler.class), any(MongoPersistenceIteratorBuilder.class));
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testHandleBlockedInstance() {
+    resourceConstraintInstance.setState(State.BLOCKED.name());
+    resourceConstraintBackupHandler.handle(resourceConstraintInstance);
+    verify(mockResourceConstraintService, times(1))
+        .updateBlockedConstraints(Sets.newHashSet(resourceConstraintInstance.getResourceConstraintId()));
+    verify(mockResourceConstraintService, never()).updateActiveConstraintForInstance(any());
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testHandleActiveInstance() {
+    resourceConstraintInstance.setState(State.ACTIVE.name());
+    when(mockResourceConstraintService.updateActiveConstraintForInstance(resourceConstraintInstance)).thenReturn(true);
+    resourceConstraintBackupHandler.handle(resourceConstraintInstance);
+    verify(mockResourceConstraintService, times(1))
+        .updateBlockedConstraints(Sets.newHashSet(resourceConstraintInstance.getResourceConstraintId()));
   }
 
   @Test

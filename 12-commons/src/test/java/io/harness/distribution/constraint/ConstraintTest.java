@@ -5,7 +5,6 @@ import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.FINISHED;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -171,22 +170,6 @@ public class ConstraintTest extends CategoryTest {
     assertThat(constraint.consumerFinished(unit1, consumer1, registry)).isTrue();
 
     assertThat(constraint.runnableConsumers(unit1, registry).getConsumerIds()).contains(consumer2, consumer4);
-  }
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
-  public void testFinishAndUnblockASAP() throws UnableToSaveConstraintException, InvalidPermitsException,
-                                                UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
-    ConstraintRegistry registry = new InprocConstraintRegistry();
-
-    Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.ASAP).limits(10).build(), registry);
-    constraint.registerConsumer(unit1, consumer1, 7, null, registry);
-    constraint.registerConsumer(unit1, consumer2, 3, null, registry);
-    constraint.registerConsumer(unit1, consumer3, 8, null, registry);
-    constraint.registerConsumer(unit1, consumer4, 3, null, registry);
-
-    assertThat(registry.finishAndUnblockConsumers(id, unit1, consumer2, null)).isTrue();
   }
 
   @Test

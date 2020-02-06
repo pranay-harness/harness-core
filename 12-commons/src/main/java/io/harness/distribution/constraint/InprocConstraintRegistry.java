@@ -3,13 +3,11 @@ package io.harness.distribution.constraint;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.FINISHED;
-import static java.util.Collections.singletonList;
 import static java.util.Collections.synchronizedMap;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import io.harness.distribution.constraint.Constraint.Spec;
 import io.harness.distribution.constraint.Consumer.State;
-import lombok.SneakyThrows;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,23 +29,6 @@ public class InprocConstraintRegistry implements ConstraintRegistry {
     if (map.putIfAbsent(id, spec) != null) {
       throw new UnableToSaveConstraintException("The constraint with this id already exists");
     }
-  }
-
-  @SneakyThrows(UnableToLoadConstraintException.class)
-  @Override
-  public boolean finishAndUnblockConsumers(
-      ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
-    final List<ConsumerId> unblockableConsumers =
-        load(id).getUnblockableConsumer(unit, this, singletonList(consumerId));
-    if (!consumerFinished(id, unit, consumerId, context)) {
-      return false;
-    }
-    if (!unblockableConsumers.isEmpty()) {
-      unblockableConsumers.forEach(
-          unblockableConsumerId -> consumerUnblocked(id, unit, unblockableConsumerId, context));
-      return true;
-    }
-    return false;
   }
 
   @Override
