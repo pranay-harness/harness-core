@@ -114,7 +114,7 @@ public class LogAnalysisGeneratorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = PRAVEEN, intermittent = true)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testNonBugsnagNN() {
     analysisContext.setStateType(StateType.APP_DYNAMICS);
@@ -125,7 +125,7 @@ public class LogAnalysisGeneratorTest extends CategoryTest {
     ArgumentCaptor<LearningEngineAnalysisTask> taskCaptor = ArgumentCaptor.forClass(LearningEngineAnalysisTask.class);
 
     verify(learningEngineService).addLearningEngineAnalysisTask(taskCaptor.capture());
-    assertThat(taskCaptor.getValue().getFeature_name()).isNotNull();
+    assertThat(taskCaptor.getValue().getFeature_name()).isNull();
   }
 
   @Test
