@@ -1,27 +1,14 @@
 package software.wings.service.impl;
 
-import static io.harness.beans.DelegateTask.Status.QUEUED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
-import io.harness.beans.DelegateTask.DelegateTaskKeys;
-import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.BroadcasterFactory;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AssignDelegateService;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -44,62 +31,17 @@ public class DelegateTaskBroadcastHelper {
   public void broadcastNewDelegateTaskAsync(final DelegateTask task) {
     executorService.submit(() -> {
       try {
-        broadcastNewDelegateTask(task);
+        rebroadcastDelegateTask(task);
       } catch (Exception e) {
         logger.error("Failed to broadcast task {} for account {}", task.getUuid(), task.getAccountId(), e);
       }
     });
   }
 
-  /**
-   * This method will first update task with preAssignedDelegate if it finds one,
-   * and then broadcast the task.
-   */
-  public DelegateTask broadcastNewDelegateTask(DelegateTask task) {
-    String preAssignedDelegateId = assignDelegateService.pickFirstAttemptDelegate(task);
-
-    task = updateDelegateTaskWithPreAssignedDelegateId(task, preAssignedDelegateId, task.getExecutionCapabilities());
-    if (task != null) {
-      rebroadcastDelegateTask(task);
-    }
-    return task;
-  }
-
-  // Update fields for DelegateTask, preAssignedDelegateId and executionCapabilities if not empty
-  private DelegateTask updateDelegateTaskWithPreAssignedDelegateId(
-      DelegateTask delegateTask, String preAssignedDelegateId, List<ExecutionCapability> executionCapabilities) {
-    if (isBlank(preAssignedDelegateId) && isEmpty(executionCapabilities)) {
-      // Reason here we are fetching delegateTask again from DB  is,
-      // Before this call is made, we try to generate Capabilities required for this delegate Task.
-      // During this, we try to evaluateExpressions, which will replace secrets in parameters with expressions,
-      // like secretFunctor.obtain(),
-      // We want to broadcast original DelegateTask and not this modified one.
-      // So here we fetch original task and return it, so it will be broadcasted.
-      return wingsPersistence.get(DelegateTask.class, delegateTask.getUuid());
-    }
-
-    Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
-                                    .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
-                                    .filter(DelegateTaskKeys.status, QUEUED)
-                                    .field(DelegateTaskKeys.delegateId)
-                                    .doesNotExist()
-                                    .filter(ID_KEY, delegateTask.getUuid());
-
-    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class);
-
-    if (isNotBlank(preAssignedDelegateId)) {
-      updateOperations.set(DelegateTaskKeys.preAssignedDelegateId, preAssignedDelegateId);
-    }
-
-    if (isNotEmpty(executionCapabilities)) {
-      updateOperations.set(DelegateTaskKeys.executionCapabilities, executionCapabilities);
-    }
-
-    return wingsPersistence.findAndModifySystemData(query, updateOperations, HPersistence.returnNewOptions);
-  }
-
   public void rebroadcastDelegateTask(DelegateTask delegateTask) {
-    broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true).broadcast(delegateTask);
+    if (delegateTask != null) {
+      broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true).broadcast(delegateTask);
+    }
   }
 
   public long findNextBroadcastTimeForTask(DelegateTask delegateTask) {

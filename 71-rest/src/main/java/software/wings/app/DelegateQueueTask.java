@@ -25,10 +25,10 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.HPersistence;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FindOptions;
@@ -219,11 +219,13 @@ public class DelegateQueueTask implements Runnable {
             wingsPersistence.createUpdateOperations(DelegateTask.class)
                 .set(DelegateTaskKeys.lastBroadcastAt, now)
                 .set(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount() + 1)
-                .set(DelegateTaskKeys.nextBroadcast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask))
-                .unset(DelegateTaskKeys.preAssignedDelegateId);
+                .set(DelegateTaskKeys.nextBroadcast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask));
 
-        delegateTask =
-            wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions().returnNew(true));
+        if (delegateTask.getPreAssignedDelegateId() != null && delegateTask.getBroadcastCount() > 0) {
+          updateOperations.unset(DelegateTaskKeys.preAssignedDelegateId);
+        }
+
+        delegateTask = wingsPersistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
         // update failed, means this was broadcast by some other manager
         if (delegateTask == null) {
           continue;
@@ -233,7 +235,6 @@ public class DelegateQueueTask implements Runnable {
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR);
              AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId(), OVERRIDE_ERROR)) {
           logger.info("Rebroadcast queued task. broadcast count: {}", delegateTask.getBroadcastCount());
-          delegateTask.setPreAssignedDelegateId(null);
           broadcastHelper.rebroadcastDelegateTask(delegateTask);
           count++;
         }

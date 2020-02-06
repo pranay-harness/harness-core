@@ -169,7 +169,7 @@ public class CVTaskServiceTest extends VerificationBaseTest {
     assertThat(cvTaskService.getNextTask(accountId).isPresent()).isFalse();
   }
   @Test
-  @Owner(developers = KAMAL)
+  @Owner(developers = KAMAL, intermittent = true)
   @Category(UnitTests.class)
   public void testIfCVTaskValidUntilIsBeingSetToOneMonth() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId();
