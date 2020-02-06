@@ -29,6 +29,7 @@ public class TimeSeriesDataRecordTest extends CategoryTest {
   String workflowId = "workflowId";
   String serviceId = "serviceId";
   StateType stateType = StateType.APP_DYNAMICS;
+  String groupName = "group";
 
   private NewRelicMetricDataRecord getNewRelicInputForTest(long timestamp, int dataCollectionMinute, String host,
       ClusterLevel level, String transactionName, List<String> metricNames) {
@@ -40,6 +41,7 @@ public class TimeSeriesDataRecordTest extends CategoryTest {
         .workflowExecutionId(workflowExecutionId)
         .serviceId(serviceId)
         .stateExecutionId(stateExecutionId)
+        .groupName(groupName)
         .timeStamp(timestamp)
         .dataCollectionMinute(dataCollectionMinute)
         .host(host)
@@ -59,6 +61,7 @@ public class TimeSeriesDataRecordTest extends CategoryTest {
         .workflowExecutionId(workflowExecutionId)
         .serviceId(serviceId)
         .stateExecutionId(stateExecutionId)
+        .groupName(groupName)
         .timeStamp(timestamp)
         .dataCollectionMinute(dataCollectionMinute)
         .host(host)
