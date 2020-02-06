@@ -367,7 +367,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
     final long createdTimeOfInstanceAtTimestamp = serverlessDashboardService.getCreatedTimeOfInstanceAtTimestamp(
         ACCOUNTID, Instant.now().minusSeconds(100).toEpochMilli(), queryMock, true);
     assertThat(createdTimeOfInstanceAtTimestamp)
-        .isBetween(Instant.now().minusSeconds(3).toEpochMilli(), Instant.now().toEpochMilli());
+        .isBetween(Instant.now().minusSeconds(3).toEpochMilli(), Instant.now().plusSeconds(1).toEpochMilli());
     verify(queryMock, times(1)).get();
   }
 
