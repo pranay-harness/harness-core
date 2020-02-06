@@ -9,7 +9,7 @@ import software.wings.beans.FeatureFlag.Scope;
  */
 public enum FeatureName {
   CV_DEMO,
-  LOGML_NEURAL_NET,
+  DISABLE_LOGML_NEURAL_NET,
   GIT_BATCH_SYNC,
   GLOBAL_CV_DASH,
   CV_SUCCEED_FOR_ANOMALY,
