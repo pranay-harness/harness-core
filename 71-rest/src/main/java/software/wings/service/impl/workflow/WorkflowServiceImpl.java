@@ -45,6 +45,7 @@ import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVI
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
+import static software.wings.beans.FeatureName.ADD_WORKFLOW_FORMIK;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
@@ -798,6 +799,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       orchestrationWorkflow.onSave();
       workflowServiceTemplateHelper.populatePropertiesFromWorkflow(workflow);
 
+      if (featureFlagService.isEnabled(ADD_WORKFLOW_FORMIK, workflow.getAccountId())) {
+        workflowServiceTemplateHelper.setServiceTemplateExpressionMetadata(workflow, orchestrationWorkflow);
+      }
+
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap(workflow.getAppId()),
           infraRefactor, false);
@@ -999,8 +1004,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,
       boolean onSaveCallNeeded, boolean infraChanged, boolean envChanged, boolean cloned, boolean migration) {
-    boolean infraRefactor =
-        featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(workflow.getAppId()));
+    final String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, accountId);
     Workflow savedWorkflow = readWorkflow(workflow.getAppId(), workflow.getUuid());
 
     UpdateOperations<Workflow> ops = wingsPersistence.createUpdateOperations(Workflow.class);
@@ -1033,6 +1038,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         templateExpressions, workflow.getAppId(), serviceId, infraRefactor ? infraDefinitionId : inframappingId,
         envChanged, infraChanged, migration);
 
+    if (featureFlagService.isEnabled(ADD_WORKFLOW_FORMIK, accountId)) {
+      workflowServiceTemplateHelper.setServiceTemplateExpressionMetadata(workflow, orchestrationWorkflow);
+    }
     setUnset(ops, "templateExpressions", templateExpressions);
 
     List<String> linkedTemplateUuids = new ArrayList<>();
@@ -1074,7 +1082,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     Workflow finalWorkflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
 
-    String accountId = appService.getAccountIdByAppId(finalWorkflow.getAppId());
     if (!migration) {
       yamlPushService.pushYamlChangeSet(accountId, savedWorkflow, finalWorkflow, Type.UPDATE, isSyncFromGit, isRename);
     }
@@ -1477,7 +1484,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("Workflow", workflow, USER);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    notNullCheck("OrchestrationWorkflow", orchestrationWorkflow, USER);
+    notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow, USER);
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
       return workflowServiceHelper.workflowHasSshDeploymentPhase(canaryOrchestrationWorkflow);

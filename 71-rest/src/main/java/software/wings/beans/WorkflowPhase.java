@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
@@ -367,7 +368,10 @@ public class WorkflowPhase implements UuidAccess {
                templateExpression -> templateExpression.getFieldName().equals(fieldName));
   }
 
-  private TemplateExpression fetchServiceTemplateExpression() {
+  public TemplateExpression fetchServiceTemplateExpression() {
+    if (isEmpty(templateExpressions)) {
+      return null;
+    }
     return templateExpressions.stream()
         .filter(templateExpression -> templateExpression.getFieldName().equals("serviceId"))
         .findFirst()
@@ -375,6 +379,9 @@ public class WorkflowPhase implements UuidAccess {
   }
 
   private TemplateExpression fetchInfraMappingTemplateExpression() {
+    if (isEmpty(templateExpressions)) {
+      return null;
+    }
     return templateExpressions.stream()
         .filter(templateExpression -> templateExpression.getFieldName().equals("infraMappingId"))
         .findFirst()
@@ -382,6 +389,9 @@ public class WorkflowPhase implements UuidAccess {
   }
 
   private TemplateExpression fetchInfraDefinitonTemplateExpression() {
+    if (isEmpty(templateExpressions)) {
+      return null;
+    }
     return templateExpressions.stream()
         .filter(templateExpression -> templateExpression.getFieldName().equals("infraDefinitionId"))
         .findFirst()

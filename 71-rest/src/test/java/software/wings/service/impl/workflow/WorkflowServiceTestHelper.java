@@ -786,6 +786,7 @@ public class WorkflowServiceTestHelper {
     assertThat(orchestrationWorkflow.getUserVariables())
         .extracting(Variable::obtainEntityType)
         .containsSequence(ENVIRONMENT, SERVICE, INFRASTRUCTURE_MAPPING);
+    assertThat(workflowPhase.fetchServiceTemplateExpression().getMetadata()).containsKey(Variable.ARTIFACT_TYPE);
   }
 
   public static List<TemplateExpression> constructAppdTemplateExpressions() {
@@ -856,11 +857,9 @@ public class WorkflowServiceTestHelper {
   }
 
   public static TemplateExpression getServiceTemplateExpression() {
-    return TemplateExpression.builder()
-        .fieldName("serviceId")
-        .expression("${Service}")
-        .metadata(ImmutableMap.of("entityType", "SERVICE"))
-        .build();
+    Map<String, Object> metadata = new HashMap<>();
+    metadata.put(Variable.ENTITY_TYPE, SERVICE.name());
+    return TemplateExpression.builder().fieldName("serviceId").expression("${Service}").metadata(metadata).build();
   }
 
   public static TemplateExpression getInfraTemplateExpression() {

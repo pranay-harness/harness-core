@@ -308,7 +308,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
         canaryOrchestrationWorkflow, templateExpressions, APP_ID, null, null, false, false);
 
     assertThat(workflowPhases.get(0).getServiceId()).isNull();
-    assertThat(workflowPhases.get(0).getInfraDefinitionId()).isNull();
+    assertThat(workflowPhases.get(0).getInfraDefinitionId()).isNotNull().isEqualTo(INFRA_DEFINITION_ID);
   }
 
   @Test
