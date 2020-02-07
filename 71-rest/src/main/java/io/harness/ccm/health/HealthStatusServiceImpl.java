@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class HealthStatusServiceImpl implements HealthStatusService {
   public static final Long PERPETUAL_TASK_RECENCY_THRESHOLD = TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS);
-  static final String IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME = "identifier_clusterId";
 
   @Inject SettingsService settingsService;
   @Inject CCMSettingService ccmSettingService;
@@ -72,7 +71,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         .clusterId(clusterRecord.getUuid())
         .clusterRecord(clusterRecord)
         .errors(getErrors(clusterRecord))
-        .lastEventTimestamp(getLastEventTimestamp(clusterRecord.getAccountId(), IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME))
+        .lastEventTimestamp(getLastEventTimestamp(clusterRecord.getAccountId(), clusterRecord.getUuid()))
         .build();
   }
 
