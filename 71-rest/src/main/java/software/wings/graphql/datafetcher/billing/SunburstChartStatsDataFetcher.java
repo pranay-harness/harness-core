@@ -335,6 +335,7 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
 
       String id = resultSet.getString(leafField.getFieldName());
       dataPointBuilder.name(billingStatsHelper.getEntityName(leafField, id));
+      dataPointBuilder.type(leafField.getFieldName());
 
       String parentId = parentFieldName + ":" + chileFieldName;
       dataPointBuilder.parent(parentFieldName + ":" + chileFieldName);
@@ -355,6 +356,7 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
       String id = parentId + ":" + childId;
       dataPointBuilder.id(id);
       dataPointBuilder.name(billingStatsHelper.getEntityName(childField, childId));
+      dataPointBuilder.type(childField.getFieldName());
       dataPointBuilder.metadata(sunburstGridDataPointMap.get(parentId));
       dataPointBuilder.value(childIdCostMap.get(id));
       dataPointBuilder.parent(parentId);
@@ -368,6 +370,7 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
       QLSunburstChartDataPointBuilder dataPointBuilder = QLSunburstChartDataPoint.builder();
       dataPointBuilder.id(id);
       dataPointBuilder.name(billingStatsHelper.getEntityName(parentField, id));
+      dataPointBuilder.type(parentField.getFieldName());
       dataPointBuilder.parent(ROOT_PARENT_ID);
       dataPointBuilder.clusterType(clusterType);
       sunburstChartDataPoints.add(dataPointBuilder.build());
