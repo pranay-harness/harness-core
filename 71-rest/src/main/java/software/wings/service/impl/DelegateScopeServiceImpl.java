@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -59,18 +60,18 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
   @Override
   public DelegateScope update(DelegateScope delegateScope) {
     if (!delegateScope.isValid()) {
-      logger.warn("Delegate scope cannot be empty.");
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
+      throw new InvalidArgumentsException("Delegate scope cannot be empty.", USER);
     }
     UpdateOperations<DelegateScope> updateOperations = wingsPersistence.createUpdateOperations(DelegateScope.class);
-    setUnset(updateOperations, "name", delegateScope.getName());
-    setUnset(updateOperations, "taskTypes", delegateScope.getTaskTypes());
-    setUnset(updateOperations, "environmentTypes", delegateScope.getEnvironmentTypes());
-    setUnset(updateOperations, "applications", delegateScope.getApplications());
-    setUnset(updateOperations, "environments", delegateScope.getEnvironments());
-    setUnset(updateOperations, "serviceInfrastructures", delegateScope.getServiceInfrastructures());
-    setUnset(updateOperations, "infrastructureDefinitions", delegateScope.getInfrastructureDefinitions());
-    setUnset(updateOperations, "services", delegateScope.getServices());
+    setUnset(updateOperations, DelegateScopeKeys.name, delegateScope.getName());
+    setUnset(updateOperations, DelegateScopeKeys.taskTypes, delegateScope.getTaskTypes());
+    setUnset(updateOperations, DelegateScopeKeys.environmentTypes, delegateScope.getEnvironmentTypes());
+    setUnset(updateOperations, DelegateScopeKeys.applications, delegateScope.getApplications());
+    setUnset(updateOperations, DelegateScopeKeys.environments, delegateScope.getEnvironments());
+    setUnset(updateOperations, DelegateScopeKeys.serviceInfrastructures, delegateScope.getServiceInfrastructures());
+    setUnset(
+        updateOperations, DelegateScopeKeys.infrastructureDefinitions, delegateScope.getInfrastructureDefinitions());
+    setUnset(updateOperations, DelegateScopeKeys.services, delegateScope.getServices());
 
     Query<DelegateScope> query = wingsPersistence.createQuery(DelegateScope.class)
                                      .filter(DelegateScopeKeys.accountId, delegateScope.getAccountId())
@@ -81,7 +82,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
     auditServiceHelper.reportForAuditingUsingAccountId(
         updatedDelegateScope.getAccountId(), null, updatedDelegateScope, Event.Type.UPDATE);
     logger.info(
-        "Auditing updation of DelegateScope={} for account={}", delegateScope.getUuid(), delegateScope.getAccountId());
+        "Auditing updating of DelegateScope={} for account={}", delegateScope.getUuid(), delegateScope.getAccountId());
 
     List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class)
                                    .filter(DelegateKeys.accountId, updatedDelegateScope.getAccountId())
