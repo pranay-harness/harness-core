@@ -439,6 +439,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     when(appService.get(APP_ID)).thenReturn(application);
     when(accountService.get(anyString())).thenReturn(account);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(workflowExecutionService.workflowExecutionsRunning(WorkflowType.ORCHESTRATION, APP_ID, WORKFLOW_ID))
         .thenReturn(false);
     when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
@@ -452,6 +453,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .thenReturn(anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).build());
 
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
+    when(serviceResourceService.get(SERVICE_ID)).thenReturn(service);
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
     when(serviceResourceService.fetchServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
@@ -479,6 +481,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
              application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
         .thenReturn(notificationGroups);
     when(personalizationService.fetch(anyString(), anyString(), any())).thenReturn(null);
+
+    when(featureFlagService.isEnabled(FeatureName.ADD_WORKFLOW_FORMIK, ACCOUNT_ID)).thenReturn(true);
   }
 
   @Test
@@ -2653,6 +2657,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     List<WorkflowPhase> workflowPhases;
     WorkflowPhase workflowPhase;
 
+    Map<String, Object> serviceMetadata = new HashMap<>();
+    serviceMetadata.put("entityType", "SERVICE");
     // Now update template expressions with different names
     workflow2.setTemplateExpressions(asList(TemplateExpression.builder()
                                                 .fieldName("envId")
@@ -2667,7 +2673,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         TemplateExpression.builder()
             .fieldName("serviceId")
             .expression("${Service_Changed}")
-            .metadata(ImmutableMap.of("entityType", "SERVICE"))
+            .metadata(serviceMetadata)
             .build()));
 
     workflowService.updateWorkflow(workflow2, null, false);
@@ -4521,7 +4527,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .thenReturn(Personalization.builder()
                         .steps(Personalization.Steps.builder().favorites(favorites).recent(recents).build())
                         .build());
-    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, null)).thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
         .thenReturn(InfrastructureDefinition.builder()
                         .name("def1")

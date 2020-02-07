@@ -1994,9 +1994,9 @@ public class WorkflowServiceHelper {
         }
 
         if (infraRefactor) {
-          setInfraDefinitionDetails(appId, infraId, phase, envChanged, infraChanged, formikWorkflowEnabled);
+          setInfraDefinitionDetails(appId, infraId, phase, envChanged, infraChanged);
         } else {
-          setInframappingDetails(appId, infraId, phase, envChanged, infraChanged, formikWorkflowEnabled);
+          setInframappingDetails(appId, infraId, phase, envChanged, infraChanged);
         }
         if (infraChanged || envChanged) {
           resetNodeSelection(phase);
@@ -2009,15 +2009,10 @@ public class WorkflowServiceHelper {
         if (serviceId != null) {
           phase.setServiceId(serviceId);
         }
-
-        if (formikWorkflowEnabled && serviceId == null && phase.checkServiceTemplatized()) {
-          phase.setServiceId(serviceId);
-        }
-
         if (infraRefactor) {
-          setInfraDefinitionDetails(appId, infraId, phase, envChanged, infraChanged, formikWorkflowEnabled);
+          setInfraDefinitionDetails(appId, infraId, phase, envChanged, infraChanged);
         } else {
-          setInframappingDetails(appId, infraId, phase, envChanged, infraChanged, formikWorkflowEnabled);
+          setInframappingDetails(appId, infraId, phase, envChanged, infraChanged);
         }
       });
     }
@@ -2029,8 +2024,8 @@ public class WorkflowServiceHelper {
    * @param inframappingId
    * @param phase
    */
-  private void setInframappingDetails(String appId, String inframappingId, WorkflowPhase phase, boolean envChanged,
-      boolean infraChanged, boolean formikWorkflowEnabled) {
+  private void setInframappingDetails(
+      String appId, String inframappingId, WorkflowPhase phase, boolean envChanged, boolean infraChanged) {
     if (inframappingId != null) {
       if (!inframappingId.equals(phase.getInfraMappingId())) {
         phase.setInfraMappingId(inframappingId);
@@ -2048,14 +2043,10 @@ public class WorkflowServiceHelper {
     } else if (envChanged && !infraChanged) {
       unsetInfraMappingDetails(phase);
     }
-
-    if (formikWorkflowEnabled && inframappingId == null && phase.checkInfraTemplatized()) {
-      phase.setInfraMappingId(inframappingId);
-    }
   }
 
-  private void setInfraDefinitionDetails(String appId, String infraDefinitionId, WorkflowPhase phase,
-      boolean envChanged, boolean infraChanged, boolean formikWorkflowEnabled) {
+  private void setInfraDefinitionDetails(
+      String appId, String infraDefinitionId, WorkflowPhase phase, boolean envChanged, boolean infraChanged) {
     if (infraDefinitionId != null) {
       if (!infraDefinitionId.equals(phase.getInfraDefinitionId())) {
         phase.setInfraDefinitionId(infraDefinitionId);
@@ -2068,10 +2059,6 @@ public class WorkflowServiceHelper {
       }
     } else if (envChanged && !infraChanged) {
       unsetInfraDefinitionsDetails(phase);
-    }
-
-    if (formikWorkflowEnabled && infraDefinitionId == null && phase.checkInfraDefinitionTemplatized()) {
-      phase.setInfraDefinitionId(infraDefinitionId);
     }
   }
 

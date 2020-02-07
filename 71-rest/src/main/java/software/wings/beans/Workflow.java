@@ -303,6 +303,16 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
         .orElse(null);
   }
 
+  public TemplateExpression fetchServiceTemplateExpression() {
+    if (isEmpty(templateExpressions)) {
+      return null;
+    }
+    return templateExpressions.stream()
+        .filter(templateExpression -> templateExpression.getFieldName().equals(WorkflowKeys.serviceId))
+        .findFirst()
+        .orElse(null);
+  }
+
   public boolean envValid() {
     return isNotBlank(envId) || checkEnvironmentTemplatized();
   }

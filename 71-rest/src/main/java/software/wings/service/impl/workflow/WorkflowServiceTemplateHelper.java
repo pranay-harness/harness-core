@@ -32,6 +32,7 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.StateType;
 
@@ -58,6 +59,7 @@ public class WorkflowServiceTemplateHelper {
 
   @Inject private TemplateService templateService;
   @Inject private TemplateHelper templateHelper;
+  @Inject private ServiceResourceService serviceResourceService;
 
   public void updateLinkedPhaseStepTemplate(PhaseStep phaseStep, PhaseStep oldPhaseStep) {
     updateLinkedPhaseStepTemplate(phaseStep, oldPhaseStep, false);
@@ -595,5 +597,40 @@ public class WorkflowServiceTemplateHelper {
       }
     }
     return "";
+  }
+
+  public void setServiceTemplateExpressionMetadata(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow) {
+    // Get Workflow Template Expressions
+    setArtifactType(workflow.getServiceId(), workflow.fetchServiceTemplateExpression());
+    // Find serviceTemplateExpression -> setMetadata
+    setServiceTemplateExpressionMetadata(orchestrationWorkflow);
+  }
+
+  private void setServiceTemplateExpressionMetadata(OrchestrationWorkflow orchestrationWorkflow) {
+    if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+      // Go over all phases
+      List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
+      if (isNotEmpty(workflowPhases)) {
+        for (WorkflowPhase workflowPhase : workflowPhases) {
+          setArtifactType(workflowPhase.getServiceId(), workflowPhase.fetchServiceTemplateExpression());
+        }
+      }
+    }
+  }
+
+  private void setArtifactType(String serviceId, TemplateExpression serviceTemplateExpression) {
+    if (serviceTemplateExpression != null) {
+      // Check if ServiceTemplate Expression contains ArtifactType return it
+      final Map<String, Object> metadata = serviceTemplateExpression.getMetadata();
+      if (metadata == null || metadata.get(Variable.ARTIFACT_TYPE) != null || serviceId == null) {
+        return;
+      }
+      Service service = serviceResourceService.get(serviceId);
+      if (service == null) {
+        return;
+      }
+      metadata.put(Variable.ARTIFACT_TYPE, service.getArtifactType().name());
+    }
   }
 }
