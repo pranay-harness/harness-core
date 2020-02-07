@@ -46,10 +46,13 @@ public class MongoConfig {
   private byte[] encryptedUri;
   private byte[] encryptedLocksUri;
 
-  private int connectTimeout = 30000;
-  private int serverSelectionTimeout = 90000;
-  private int maxConnectionIdleTime = 600000;
-  private int connectionsPerHost = 300;
+  @JsonProperty(defaultValue = "30000") @Builder.Default @NotEmpty private int connectTimeout = 30000;
+
+  @JsonProperty(defaultValue = "90000") @Builder.Default @NotEmpty private int serverSelectionTimeout = 90000;
+
+  @JsonProperty(defaultValue = "600000") @Builder.Default @NotEmpty private int maxConnectionIdleTime = 600000;
+
+  @JsonProperty(defaultValue = "300") @Builder.Default @NotEmpty private int connectionsPerHost = 300;
 
   @JsonIgnore
   public ReadPreference getReadPreference() {
