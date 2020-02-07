@@ -481,7 +481,7 @@ public class AuditServiceImpl implements AuditService {
         case UPDATE_SCOPE:
         case CREATE: {
           saveEntityYamlForAudit(newEntity, record, accountId);
-          resourceLookupService.saveResourceLookupRecordIfNeeded(record, accountId);
+          resourceLookupService.updateResourceLookupRecordIfNeeded(record, accountId, newEntity, oldEntity);
           break;
         }
         case ENABLE:

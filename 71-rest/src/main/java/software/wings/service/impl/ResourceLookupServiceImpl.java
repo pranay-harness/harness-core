@@ -268,12 +268,10 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
     if (Application.GLOBAL_APP_ID.equals(record.getAppId())) {
       return true;
     }
-
     if (resourceTypeSet.contains(record.getEntityType())
         || resourceTypeSet.contains(record.getAffectedResourceType())) {
       return true;
     }
-
     return false;
   }
 
