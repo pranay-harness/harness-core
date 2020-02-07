@@ -21,7 +21,7 @@ TIMESCALE_IMAGE="timescale/timescaledb:${TIMESCALE_VERSION}"
 PROM_IMAGE="prom/prometheus:${PROM_VERSION}"
 GRAFANA_IMAGE="grafana/grafana:${GRAFANA_VERSION}"
 CADVISOR_IMAGE="google/cadvisor:${CADVISOR_VERSION}"
-ALERT_MANAGER_IMAGE="prom/alertmanager:${ALERT_MANAGER_VERSION}"
+ALERT_MANAGER_IMAGE="prom/alertmanager:${ALERT_MAN_VERSION}"
 
 MANAGER_IMAGE_TAR="${IMAGES_DIR}/manager.tar"
 VERIFICATION_SERVICE_IMAGE_TAR="${IMAGES_DIR}/verification_service.tar"
@@ -89,10 +89,9 @@ echo "Learning Engine version is ${LEARNING_ENGINE_VERSION}"
 echo "kubectl version is ${KUBECTL_VERSION}"
 echo "oc version is ${OC_VERSION}"
 echo "Prometheus version is ${PROM_VERSION}"
-echo "Grafana version is ${GRAFANA_IMAGE}"
+echo "Grafana version is ${GRAFANA_VERSION}"
 echo "Cadvisor version is ${CADVISOR_VERSION}"
-echo "Alert manager version is ${ALERT_MANAGER_VERSION}"
-
+echo "Alert manager version is ${ALERT_MAN_VERSION}"
 
 cp -r ../${INSTALLER_TEMPLATE_DIR}/* ${INSTALLER_DIR}/
 cp "${VERSION_PROPERTIES_FILE}" "${INSTALLER_DIR}/"
