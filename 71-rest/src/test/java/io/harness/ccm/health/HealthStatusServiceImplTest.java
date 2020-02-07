@@ -1,6 +1,5 @@
 package io.harness.ccm.health;
 
-import static io.harness.ccm.health.HealthStatusServiceImpl.IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -46,6 +45,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   private static final String password = "dummyPassword";
   private CCMConfig ccmConfig = CCMConfig.builder().cloudCostEnabled(true).build();
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
+  private String clusterId = "CLUSTER_ID";
 
   private SettingAttribute cloudProvider;
   private Cluster k8sCluster;
@@ -84,8 +84,12 @@ public class HealthStatusServiceImplTest extends CategoryTest {
                         .build();
 
     k8sCluster = DirectKubernetesCluster.builder().cloudProviderId(cloudProviderId).build();
-    clusterRecord =
-        ClusterRecord.builder().accountId(accountId).cluster(k8sCluster).perpetualTaskIds(perpetualTaskIds).build();
+    clusterRecord = ClusterRecord.builder()
+                        .accountId(accountId)
+                        .uuid(clusterId)
+                        .cluster(k8sCluster)
+                        .perpetualTaskIds(perpetualTaskIds)
+                        .build();
 
     taskRecord =
         PerpetualTaskRecord.builder().delegateId(delegateId).lastHeartbeat(Instant.now().toEpochMilli()).build();
@@ -95,7 +99,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
     when(clusterRecordService.list(eq(accountId), eq(cloudProviderId))).thenReturn(Arrays.asList(clusterRecord));
     when(perpetualTaskService.getTaskRecord(anyString())).thenReturn(taskRecord);
     when(delegateService.isDelegateConnected(eq(delegateId))).thenReturn(true);
-    when(lastReceivedPublishedMessageDao.get(eq(accountId), eq(IDENTIFIER_CLUSTER_ID_ATTRIBUTE_NAME)))
+    when(lastReceivedPublishedMessageDao.get(eq(accountId), eq(clusterId)))
         .thenReturn(LastReceivedPublishedMessage.builder().build());
   }
 
