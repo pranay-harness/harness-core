@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.NameValuePair;
 import software.wings.beans.artifact.AmiArtifactStream;
+import software.wings.beans.artifact.AmiArtifactStream.FilterClass;
 import software.wings.beans.artifact.AmiArtifactStream.Tag;
 import software.wings.beans.artifact.AmiArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -25,6 +26,7 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
     yaml.setPlatform(bean.getPlatform());
     yaml.setRegion(bean.getRegion());
     yaml.setAmiTags(getTagsYaml(bean.getTags()));
+    yaml.setAmiFilters(getFiltersYaml(bean.getFilters()));
     return yaml;
   }
 
@@ -40,6 +42,7 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
     bean.setRegion(yaml.getRegion());
     bean.setPlatform(yaml.getPlatform());
     bean.setTags(getTags(yaml.getAmiTags()));
+    bean.setFilters(getFilters(yaml.getAmiFilters()));
   }
 
   @Override
@@ -63,6 +66,27 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
           tag.setKey(tagYaml.getName());
           tag.setValue(tagYaml.getValue());
           return tag;
+        })
+        .collect(toList());
+  }
+
+  private List<NameValuePair.Yaml> getFiltersYaml(List<FilterClass> filterClassList) {
+    if (isEmpty(filterClassList)) {
+      return Lists.newArrayList();
+    }
+    return filterClassList.stream()
+        .map(filterClass
+            -> NameValuePair.Yaml.builder().name(filterClass.getKey()).value(filterClass.getValue()).build())
+        .collect(toList());
+  }
+
+  private List<FilterClass> getFilters(List<NameValuePair.Yaml> filterYamlList) {
+    return filterYamlList.stream()
+        .map(filterYaml -> {
+          FilterClass filterClass = new FilterClass();
+          filterClass.setKey(filterYaml.getName());
+          filterClass.setValue(filterYaml.getValue());
+          return filterClass;
         })
         .collect(toList());
   }
