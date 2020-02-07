@@ -147,6 +147,7 @@ type SunburstChartDataPoint {
   id: String
   parent: String
   name: String
+  type: String
   value: Number
   clusterType: String
   metadata: SunburstGridDataPoint
