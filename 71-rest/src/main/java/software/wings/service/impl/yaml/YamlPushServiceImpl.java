@@ -20,6 +20,7 @@ import software.wings.service.intfc.entitycrud.EntityCrudOperationObserver;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
@@ -35,9 +36,9 @@ public class YamlPushServiceImpl implements YamlPushService {
   @Getter private Subject<EntityCrudOperationObserver> entityCrudSubject = new Subject<>();
 
   @Override
-  public <T> void pushYamlChangeSet(
+  public <T> Future<?> pushYamlChangeSet(
       String accountId, T oldEntity, T newEntity, Type type, boolean syncFromGit, boolean isRename) {
-    executorService.submit(() -> {
+    return executorService.submit(() -> {
       try {
         performAuditForEntityChange(accountId, oldEntity, newEntity, type);
 

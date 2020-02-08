@@ -88,7 +88,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -453,11 +455,22 @@ public class TemplateServiceImpl implements TemplateService {
     // TODO: AUDIT: Once the feature flag is on for all, this can be removed. All audit will be sent through
     // yamlPushService.
     if (templateDeleted) {
-      for (Template template : templates) {
-        if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, template.getAccountId())) {
-          yamlPushService.pushYamlChangeSet(
+      if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, templateFolder.getAccountId())) {
+        for (Template template : templates) {
+          Future<?> future = yamlPushService.pushYamlChangeSet(
               template.getAccountId(), template, null, Type.DELETE, template.isSyncFromGit(), false);
-        } else {
+          try {
+            future.get();
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+          } catch (ExecutionException e) {
+            logger.error("Couldn't delete templates.", e);
+            return false;
+          }
+        }
+      } else {
+        for (Template template : templates) {
           auditServiceHelper.reportDeleteForAuditingUsingAccountId(template.getAccountId(), template);
         }
       }
