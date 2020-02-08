@@ -68,10 +68,10 @@ import javax.validation.constraints.NotNull;
       fields = { @Field(WorkflowExecutionKeys.workflowId)
                  , @Field(WorkflowExecutionKeys.status) })
   ,
-      @Index(options = @IndexOptions(name = "list"), fields = {
+      @Index(options = @IndexOptions(name = "app_pipExecutionId_createdAt"), fields = {
         @Field(WorkflowExecutionKeys.appId)
-        , @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC),
-            @Field(WorkflowExecutionKeys.pipelineExecutionId)
+        , @Field(WorkflowExecutionKeys.pipelineExecutionId),
+            @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
       }), @Index(options = @IndexOptions(name = "service_guard"), fields = {
         @Field(WorkflowExecutionKeys.appId), @Field(value = WorkflowExecutionKeys.startTs)
       }), @Index(options = @IndexOptions(name = "lastDeployedSearch"), fields = {
@@ -90,14 +90,14 @@ import javax.validation.constraints.NotNull;
             @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
       }), @Index(options = @IndexOptions(name = "accountId_endTs", background = true), fields = {
         @Field(WorkflowExecutionKeys.accountId), @Field(value = WorkflowExecutionKeys.endTs, type = IndexType.DESC)
-      }), @Index(options = @IndexOptions(name = "accountId_createdAt"), fields = {
-        @Field(WorkflowExecutionKeys.accountId)
-        , @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC),
-            @Field(WorkflowExecutionKeys.pipelineExecutionId)
+      }), @Index(options = @IndexOptions(name = "accountId_createdAt2"), fields = {
+        @Field(WorkflowExecutionKeys.accountId), @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
       }), @Index(options = @IndexOptions(name = "workflowExecutionMonitor", background = true), fields = {
         @Field(WorkflowExecutionKeys.status), @Field(WorkflowExecutionKeys.nextIteration)
-      }), @Index(options = @IndexOptions(name = "accountId_pipelineExecutionId"), fields = {
-        @Field(WorkflowExecutionKeys.accountId), @Field(WorkflowExecutionKeys.pipelineExecutionId)
+      }), @Index(options = @IndexOptions(name = "accountId_pipExecutionId_createdAt"), fields = {
+        @Field(WorkflowExecutionKeys.accountId)
+        , @Field(WorkflowExecutionKeys.pipelineExecutionId),
+            @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
       })
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
