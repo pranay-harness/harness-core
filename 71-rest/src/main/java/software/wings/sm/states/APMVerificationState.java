@@ -217,12 +217,18 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  protected boolean isHistoricalAnalysis() {
+  protected boolean isHistoricalAnalysis(String accountId) {
+    if (!getCVTaskFeatureName().isPresent() || !featureFlagService.isEnabled(getCVTaskFeatureName().get(), accountId)) {
+      return false;
+    }
+
     boolean isHistorical = true;
     if (isNotEmpty(metricCollectionInfos)) {
       for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfos) {
-        if (metricCollectionInfo.getCollectionUrl().contains(VERIFICATION_HOST_PLACEHOLDER)
-            || metricCollectionInfo.getCollectionBody().contains(VERIFICATION_HOST_PLACEHOLDER)) {
+        if ((isNotEmpty(metricCollectionInfo.getCollectionUrl())
+                && metricCollectionInfo.getCollectionUrl().contains(VERIFICATION_HOST_PLACEHOLDER))
+            || (isNotEmpty(metricCollectionInfo.getCollectionBody())
+                   && metricCollectionInfo.getCollectionBody().contains(VERIFICATION_HOST_PLACEHOLDER))) {
           isHistorical = false;
         }
       }
@@ -536,7 +542,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     List<APMMetricInfo> metricInfos = new ArrayList<>();
     for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfos) {
       final String collectionUrl = metricCollectionInfo.getCollectionUrl();
-      if (collectionUrl.contains("\n") && collectionUrl.split("\n").length == 2) {
+      if (collectionUrl != null && collectionUrl.contains("\n") && collectionUrl.split("\n").length == 2) {
         final String[] canaryCollectionUrls = collectionUrl.split("\n");
         logger.info("for {} canary url is provided", context.getStateExecutionInstanceId());
         metricCollectionInfo.setCollectionUrl(canaryCollectionUrls[0]);
@@ -633,7 +639,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
 
     public String getCollectionUrl() {
       try {
-        return collectionUrl.replaceAll("`", URLEncoder.encode("`", "UTF-8"));
+        return collectionUrl == null ? collectionUrl : collectionUrl.replaceAll("`", URLEncoder.encode("`", "UTF-8"));
       } catch (UnsupportedEncodingException e) {
         throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
             "Unsupported encoding exception while encoding backticks in " + collectionUrl);
