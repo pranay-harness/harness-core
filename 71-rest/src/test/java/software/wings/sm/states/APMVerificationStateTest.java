@@ -26,14 +26,18 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.Owner;
 import io.harness.serializer.YamlUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.FeatureName;
 import software.wings.service.impl.apm.APMMetricInfo;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
@@ -52,12 +56,16 @@ public class APMVerificationStateTest extends WingsBaseTest {
   @Mock private WorkflowStandardParams workflowStandardParameters;
 
   private ExecutionContextImpl context;
-
+  private String accountId;
+  @Mock private FeatureFlagService featureFlagService;
+  private APMVerificationState apmVerificationState;
   /**
    * Sets context.
    */
   @Before
-  public void setupContext() {
+  public void setupContext() throws Exception {
+    accountId = generateUuid();
+    apmVerificationState = new APMVerificationState("dummy");
     StateExecutionInstance stateExecutionInstance =
         aStateExecutionInstance().displayName("healthCheck1").uuid(STATE_EXECUTION_ID).build();
     when(workflowStandardParameters.getApp()).thenReturn(anApplication().uuid(APP_ID).name(APP_NAME).build());
@@ -70,13 +78,15 @@ public class APMVerificationStateTest extends WingsBaseTest {
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
     context.pushContextElement(workflowStandardParameters);
     context.pushContextElement(HostElement.builder().hostName("localhost").build());
+    FieldUtils.writeField(apmVerificationState, "featureFlagService", featureFlagService, true);
+    when(featureFlagService.isEnabled(FeatureName.CUSTOM_APM_CV_TASK, accountId)).thenReturn(true);
+    MockitoAnnotations.initMocks(this);
   }
 
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void metricCollectionInfos() throws IOException {
-    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
     YamlUtils yamlUtils = new YamlUtils();
     String yamlStr =
         Resources.toString(APMVerificationStateTest.class.getResource("/apm/apm_config.yml"), Charsets.UTF_8);
@@ -107,7 +117,6 @@ public class APMVerificationStateTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateFields() {
-    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
     apmVerificationState.setMetricCollectionInfos(null);
     Map<String, String> invalidFields = apmVerificationState.validateFields();
     assertThat(invalidFields.size() == 1).isTrue();
@@ -118,7 +127,6 @@ public class APMVerificationStateTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateFieldsResponseMapping() {
-    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
     MetricCollectionInfo info =
         MetricCollectionInfo.builder().collectionUrl("This is a sample URL").metricName("name").build();
     apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
@@ -131,7 +139,6 @@ public class APMVerificationStateTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateFieldsResponseMappingMetricValue() {
-    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
     MetricCollectionInfo info =
         MetricCollectionInfo.builder().collectionUrl("This is a sample URL").metricName("name").build();
     ResponseMapping mapping =
@@ -147,7 +154,6 @@ public class APMVerificationStateTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateFieldsResponseMappingHostName() {
-    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
     MetricCollectionInfo info =
         MetricCollectionInfo.builder().collectionUrl("This is a sample URL ${host}").metricName("name").build();
     ResponseMapping mapping = ResponseMapping.builder()
@@ -166,7 +172,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHostAndBaseline() {
     String metricName = generateUuid();
-    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
+
     MetricCollectionInfo info = MetricCollectionInfo.builder()
                                     .collectionUrl("This is a sample URL " + VERIFICATION_HOST_PLACEHOLDER)
                                     .baselineCollectionUrl("some baseline url")
@@ -191,7 +197,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testBaselineUrlHasHost() {
     String metricName = generateUuid();
-    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
+
     MetricCollectionInfo info = MetricCollectionInfo.builder()
                                     .collectionUrl("This is a sample URL")
                                     .baselineCollectionUrl("some baseline url " + VERIFICATION_HOST_PLACEHOLDER)
@@ -217,7 +223,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   public void testInvalidMultipleBaselineUrl() {
     String metricName1 = generateUuid();
     String metricName2 = generateUuid();
-    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
+
     MetricCollectionInfo info1 = MetricCollectionInfo.builder()
                                      .collectionUrl("This is a sample URL")
                                      .baselineCollectionUrl("some baseline url")
@@ -246,7 +252,6 @@ public class APMVerificationStateTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidInitialDelay() throws Exception {
-    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
     YamlUtils yamlUtils = new YamlUtils();
     String yamlStr =
         Resources.toString(APMVerificationStateTest.class.getResource("/apm/apm_config.yml"), Charsets.UTF_8);
@@ -261,7 +266,6 @@ public class APMVerificationStateTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testInValidInitialDelay_Minutes() throws Exception {
-    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
     YamlUtils yamlUtils = new YamlUtils();
     String yamlStr =
         Resources.toString(APMVerificationStateTest.class.getResource("/apm/apm_config.yml"), Charsets.UTF_8);
@@ -276,7 +280,6 @@ public class APMVerificationStateTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidInitialDelay_Seconds() throws Exception {
-    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
     YamlUtils yamlUtils = new YamlUtils();
     String yamlStr =
         Resources.toString(APMVerificationStateTest.class.getResource("/apm/apm_config.yml"), Charsets.UTF_8);
@@ -291,7 +294,6 @@ public class APMVerificationStateTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testInValidInitialDelay_Seconds() throws Exception {
-    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
     YamlUtils yamlUtils = new YamlUtils();
     String yamlStr =
         Resources.toString(APMVerificationStateTest.class.getResource("/apm/apm_config.yml"), Charsets.UTF_8);
@@ -300,5 +302,101 @@ public class APMVerificationStateTest extends WingsBaseTest {
     apmVerificationState.setMetricCollectionInfos(mcInfo);
     apmVerificationState.setInitialAnalysisDelay("500s");
     assertThat(apmVerificationState.validateFields().containsKey("initialAnalysisDelay")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testIfIsHistoricalAnalysis() throws Exception {
+    when(featureFlagService.isEnabled(FeatureName.CUSTOM_APM_CV_TASK, accountId)).thenReturn(true);
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr =
+        Resources.toString(APMVerificationStateTest.class.getResource("/apm/apm_config.yml"), Charsets.UTF_8);
+    List<APMVerificationState.MetricCollectionInfo> mcInfo =
+        yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
+    apmVerificationState.setMetricCollectionInfos(mcInfo);
+
+    assertThat(apmVerificationState.isHistoricalAnalysis(accountId)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testIfIsHistoricalAnalysis_NotTrue() throws Exception {
+    when(featureFlagService.isEnabled(FeatureName.CUSTOM_APM_CV_TASK, accountId)).thenReturn(true);
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr = Resources.toString(
+        APMVerificationStateTest.class.getResource("/apm/apm_collection_info_not_historical.yml"), Charsets.UTF_8);
+    List<APMVerificationState.MetricCollectionInfo> mcInfo =
+        yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
+    apmVerificationState.setMetricCollectionInfos(mcInfo);
+
+    assertThat(apmVerificationState.isHistoricalAnalysis(accountId)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testIfIsHistoricalAnalysis_NotTrueWithUrl() throws Exception {
+    when(featureFlagService.isEnabled(FeatureName.CUSTOM_APM_CV_TASK, accountId)).thenReturn(true);
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr = Resources.toString(
+        APMVerificationStateTest.class.getResource("/apm/apm_collection_info_not_historical.yml"), Charsets.UTF_8);
+    List<APMVerificationState.MetricCollectionInfo> mcInfo =
+        yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
+    mcInfo.forEach(info -> info.setCollectionUrl(info.getCollectionUrl() + VERIFICATION_HOST_PLACEHOLDER));
+    apmVerificationState.setMetricCollectionInfos(mcInfo);
+
+    assertThat(apmVerificationState.isHistoricalAnalysis(accountId)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testIfIsHistoricalAnalysis_TrueWithNullBody() throws Exception {
+    when(featureFlagService.isEnabled(FeatureName.CUSTOM_APM_CV_TASK, accountId)).thenReturn(true);
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr = Resources.toString(
+        APMVerificationStateTest.class.getResource("/apm/apm_collection_info_not_historical.yml"), Charsets.UTF_8);
+    List<APMVerificationState.MetricCollectionInfo> mcInfo =
+        yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
+    mcInfo.forEach(info -> info.setCollectionBody(null));
+    mcInfo.forEach(info -> info.setCollectionUrl("dummyURLwithoutHost"));
+    apmVerificationState.setMetricCollectionInfos(mcInfo);
+
+    assertThat(apmVerificationState.isHistoricalAnalysis(accountId)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testIfIsHistoricalAnalysis_NotTrueWithNullUrl() throws Exception {
+    when(featureFlagService.isEnabled(FeatureName.CUSTOM_APM_CV_TASK, accountId)).thenReturn(true);
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr = Resources.toString(
+        APMVerificationStateTest.class.getResource("/apm/apm_collection_info_not_historical.yml"), Charsets.UTF_8);
+    List<APMVerificationState.MetricCollectionInfo> mcInfo =
+        yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
+    mcInfo.forEach(info -> info.setCollectionUrl(null));
+    apmVerificationState.setMetricCollectionInfos(mcInfo);
+
+    assertThat(apmVerificationState.isHistoricalAnalysis(accountId)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testIfIsHistoricalAnalysis_FFDisabled() throws Exception {
+    when(featureFlagService.isEnabled(FeatureName.CUSTOM_APM_CV_TASK, accountId)).thenReturn(false);
+    FieldUtils.writeField(apmVerificationState, "featureFlagService", featureFlagService, true);
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr = Resources.toString(
+        APMVerificationStateTest.class.getResource("/apm/apm_collection_info_not_historical.yml"), Charsets.UTF_8);
+    List<APMVerificationState.MetricCollectionInfo> mcInfo =
+        yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
+    mcInfo.forEach(info -> info.setCollectionUrl(null));
+    apmVerificationState.setMetricCollectionInfos(mcInfo);
+
+    assertThat(apmVerificationState.isHistoricalAnalysis(accountId)).isFalse();
   }
 }

@@ -439,7 +439,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .startDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
             .parallelProcesses(PARALLEL_PROCESSES)
             .managerVersion(versionInfoManager.getVersionInfo().getVersion())
-            .isHistoricalDataCollection(isHistoricalAnalysis())
+            .isHistoricalDataCollection(isHistoricalAnalysis(context.getAccountId()))
             .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
             .dataCollectionIntervalMins(getDataCollectionRate())
             .build();

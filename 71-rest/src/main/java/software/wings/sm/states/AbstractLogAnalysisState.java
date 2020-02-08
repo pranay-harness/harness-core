@@ -424,7 +424,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .startDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
             .predictiveHistoryMinutes(Integer.parseInt(getPredictiveHistoryMinutes()))
             .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
-            .isHistoricalDataCollection(isHistoricalAnalysis())
+            .isHistoricalDataCollection(isHistoricalAnalysis(context.getAccountId()))
             .build();
 
     // Saving data collection info as part of context.

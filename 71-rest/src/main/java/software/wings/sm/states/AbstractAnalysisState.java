@@ -1132,7 +1132,7 @@ public abstract class AbstractAnalysisState extends State {
     return hosts.subList(0, Math.min(maxHosts, hosts.size()));
   }
 
-  protected boolean isHistoricalAnalysis() {
+  protected boolean isHistoricalAnalysis(String accountId) {
     return false;
   }
 }
