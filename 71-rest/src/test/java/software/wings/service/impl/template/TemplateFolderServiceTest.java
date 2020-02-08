@@ -1,6 +1,7 @@
 package software.wings.service.impl.template;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -9,6 +10,7 @@ import static software.wings.beans.template.TemplateType.SSH;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.JBOSS_COMMANDS;
 import static software.wings.common.TemplateConstants.LOAD_BALANCERS;
+import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 import static software.wings.common.TemplateConstants.TOMCAT_COMMANDS;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_INSTALL_PATH;
 import static software.wings.utils.TemplateTestConstants.GLOBAL_FOLDER;
@@ -21,6 +23,7 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_DESC;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INVALID_NAME;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -31,9 +34,16 @@ import io.harness.rule.Owner;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.beans.EntityType;
+import software.wings.beans.FeatureName;
+import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
+import software.wings.beans.template.command.SshCommandTemplate;
+import software.wings.common.TemplateConstants;
 import software.wings.utils.WingsTestConstants;
+import software.wings.yaml.gitSync.YamlChangeSet;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.Arrays;
 import javax.validation.ConstraintViolationException;
@@ -610,5 +620,37 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
     assertThat(templateFolder.getAppId()).isNotNull().isEqualTo(APP_ID);
     assertThat(templateFolder.getPathId()).isNotNull();
     assertThat(templateFolder.getUuid()).isEqualTo(appLevelFolder.getUuid());
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldDeleteTemplateFolderAndGenerateYamlPush() {
+    YamlGitConfig yamlGitConfig = YamlGitConfig.builder()
+                                      .entityType(EntityType.ACCOUNT)
+                                      .entityId(GLOBAL_ACCOUNT_ID)
+                                      .accountId(GLOBAL_ACCOUNT_ID)
+                                      .enabled(true)
+                                      .syncMode(YamlGitConfig.SyncMode.BOTH)
+                                      .build();
+    wingsPersistence.save(yamlGitConfig);
+    featureFlagService.enableAccount(FeatureName.TEMPLATE_YAML_SUPPORT, GLOBAL_ACCOUNT_ID);
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateFolder myTemplateFolder = templateFolderService.save(constructTemplateBuilder(parentFolder.getUuid()));
+    TemplateFolder childFolder = templateFolderService.save(
+        constructTemplateBuilder("Child Folder", myTemplateFolder.getUuid(), myTemplateFolder.getAppId()));
+    templateService.save(Template.builder()
+                             .folderId(childFolder.getUuid())
+                             .accountId(GLOBAL_ACCOUNT_ID)
+                             .appId(GLOBAL_APP_ID)
+                             .type(TemplateConstants.SSH)
+                             .templateObject(SshCommandTemplate.builder().build())
+                             .version(1)
+                             .name(TEMPLATE_NAME)
+                             .build());
+    templateFolderService.delete(childFolder.getUuid());
+    assertThat(wingsPersistence.createQuery(YamlChangeSet.class).get().getGitFileChanges().get(0).getFilePath())
+        .isEqualTo("Setup/Template Library/" + parentFolder.getName() + PATH_DELIMITER + myTemplateFolder.getName()
+            + PATH_DELIMITER + childFolder.getName() + PATH_DELIMITER + TEMPLATE_NAME + ".yaml");
   }
 }

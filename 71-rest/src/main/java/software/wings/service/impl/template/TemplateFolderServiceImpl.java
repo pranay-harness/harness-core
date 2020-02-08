@@ -199,12 +199,17 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     }
     if (templateService.deleteByFolder(templateFolder)) {
       // Delete children
-      wingsPersistence.delete(wingsPersistence.createQuery(TemplateFolder.class)
-                                  .filter(TemplateFolderKeys.accountId, templateFolder.getAccountId())
-                                  .field(TemplateFolder.PATH_ID_KEY)
-                                  .contains(templateFolderUuid));
+      Query<TemplateFolder> childFolders = wingsPersistence.createQuery(TemplateFolder.class)
+                                               .filter(TemplateFolderKeys.accountId, templateFolder.getAccountId())
+                                               .field(TemplateFolder.PATH_ID_KEY)
+                                               .contains(templateFolderUuid);
+      List<TemplateFolder> childFoldersList = childFolders.asList();
+      wingsPersistence.delete(childFolders);
+      childFoldersList.forEach(childFolder -> {
+        auditServiceHelper.reportDeleteForAuditingUsingAccountId(childFolder.getAccountId(), childFolder);
+      });
+
       boolean deleted = wingsPersistence.delete(TemplateFolder.class, templateFolderUuid);
-      // TODO: AUDIT: Once this entity is yamlized, this can be removed
       if (deleted) {
         auditServiceHelper.reportDeleteForAuditingUsingAccountId(templateFolder.getAccountId(), templateFolder);
       }

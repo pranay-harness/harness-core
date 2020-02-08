@@ -4,9 +4,11 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.service.intfc.yaml.YamlPushService;
 
+import java.util.concurrent.Future;
+
 public class NoOpYamlPushService implements YamlPushService {
   @Override
-  public <T> void pushYamlChangeSet(
+  public <T> Future<?> pushYamlChangeSet(
       String accountId, T oldEntity, T newEntity, Type type, boolean syncFromGit, boolean isRename) {
     throw new UnsupportedOperationException();
   }
