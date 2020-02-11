@@ -48,7 +48,6 @@ public class CVActivityLog implements PersistentEntity, UuidAware, CreatedAtAwar
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(ACTIVITY_LOG_TTL_WEEKS).toInstant());
-  ;
 
   @Override
   @JsonIgnore

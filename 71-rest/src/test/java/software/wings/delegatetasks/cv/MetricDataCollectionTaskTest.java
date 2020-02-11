@@ -2,6 +2,7 @@ package software.wings.delegatetasks.cv;
 
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -139,6 +140,28 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
     assertThat(records.get(0).getDataCollectionMinute())
         .isEqualTo(TimeUnit.MILLISECONDS.toMinutes(metricElement.getTimestamp()));
     assertThat(records.get(0).getCvConfigId()).isEqualTo(metricsDataCollectionInfo.getCvConfigId());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCollectAndSaveData_withNewRelicRecordsSaveCallsReturnsFalse() throws DataCollectionException {
+    when(metricStoreService.saveNewRelicMetrics(any(), any(), any(), any(), any())).thenReturn(false);
+    MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
+    when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1"));
+    Instant now = Instant.now();
+    when(metricsDataCollectionInfo.getStartTime()).thenReturn(now.minus(10, ChronoUnit.MINUTES));
+    when(metricsDataCollectionInfo.getEndTime()).thenReturn(now);
+    MetricElement metricElement = MetricElement.builder()
+                                      .name("metric1")
+                                      .host("host1")
+                                      .groupName("default")
+                                      .timestamp(System.currentTimeMillis())
+                                      .build();
+    when(metricsDataCollector.fetchMetrics(any())).thenReturn(Lists.newArrayList(metricElement));
+    assertThatThrownBy(() -> metricsDataCollectionTask.collectAndSaveData(metricsDataCollectionInfo))
+        .isInstanceOf(DataCollectionException.class)
+        .hasMessage("Unable to save metrics elements. Manager API returned false");
   }
 
   public MetricsDataCollectionInfo createMetricDataCollectionInfo() {

@@ -35,7 +35,7 @@ import java.util.function.Supplier;
 
 @Slf4j
 public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2> extends AbstractDelegateRunnableTask {
-  private static final int MAX_RETRIES = 3;
+  private static final int MAX_RETRIES = 2;
   @Inject private DelegateLogService delegateLogService;
   @Inject private Injector injector;
   @Inject private DataCollectorFactory dataCollectorFactory;
@@ -144,7 +144,7 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
     activityLogger =
         cvActivityLogService.getLogger(dataCollectionInfo.getAccountId(), dataCollectionInfo.getCvConfigId(),
             TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getEndTime().toEpochMilli()),
-            dataCollectionInfo.getStateExecutionId(), " Time range %t to %t",
+            dataCollectionInfo.getStateExecutionId(), "[Time range: %t-%t]",
             dataCollectionInfo.getStartTime().toEpochMilli(), dataCollectionInfo.getEndTime().toEpochMilli() + 1);
   }
 

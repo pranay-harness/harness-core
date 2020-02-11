@@ -146,9 +146,9 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     DataCollectionTaskResult taskResult = (DataCollectionTaskResult) responseData;
     verify(dataCollector, times(2)).init(any(), eq(dataCollectionInfo));
     verify(abstractDataCollectionTask, times(1)).collectAndSaveData(dataCollectionInfo);
-    assertThat(DataCollectionTaskStatus.SUCCESS).isEqualTo(taskResult.getStatus());
-    assertThat(StateType.SPLUNKV2).isEqualTo(taskResult.getStateType());
-    assertThat("error message from test").isEqualTo(taskResult.getErrorMessage());
+    assertThat(taskResult.getStatus()).isEqualTo(DataCollectionTaskStatus.SUCCESS);
+    assertThat(taskResult.getStateType()).isEqualTo(StateType.SPLUNKV2);
+    assertThat(taskResult.getErrorMessage()).isEqualTo("error message from test");
   }
 
   @Test
@@ -163,7 +163,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     doThrow(new RuntimeException("error message from test")).when(dataCollector).init(any(), any());
     ResponseData responseData = abstractDataCollectionTask.run(dataCollectionInfo);
 
-    verify(dataCollector, times(4)).init(any(), eq(dataCollectionInfo));
+    verify(dataCollector, times(3)).init(any(), eq(dataCollectionInfo));
     verify(abstractDataCollectionTask, times(0)).collectAndSaveData(dataCollectionInfo);
     DataCollectionTaskResult taskResult = (DataCollectionTaskResult) responseData;
     assertThat(DataCollectionTaskStatus.FAILURE).isEqualTo(taskResult.getStatus());
@@ -183,12 +183,12 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     doThrow(new RuntimeException("error message from test")).when(abstractDataCollectionTask).collectAndSaveData(any());
     ResponseData responseData = abstractDataCollectionTask.run(dataCollectionInfo);
 
-    verify(dataCollector, times(4)).init(any(), eq(dataCollectionInfo));
-    verify(abstractDataCollectionTask, times(4)).collectAndSaveData(dataCollectionInfo);
+    verify(dataCollector, times(3)).init(any(), eq(dataCollectionInfo));
+    verify(abstractDataCollectionTask, times(3)).collectAndSaveData(dataCollectionInfo);
     DataCollectionTaskResult taskResult = (DataCollectionTaskResult) responseData;
-    assertThat(DataCollectionTaskStatus.FAILURE).isEqualTo(taskResult.getStatus());
-    assertThat(StateType.SPLUNKV2).isEqualTo(taskResult.getStateType());
-    assertThat("error message from test").isEqualTo(taskResult.getErrorMessage());
+    assertThat(taskResult.getStatus()).isEqualTo(DataCollectionTaskStatus.FAILURE);
+    assertThat(taskResult.getStateType()).isEqualTo(StateType.SPLUNKV2);
+    assertThat(taskResult.getErrorMessage()).isEqualTo("error message from test");
     verify(cvTaskService)
         .updateCVTaskStatus(dataCollectionInfo.getAccountId(), dataCollectionInfo.getCvTaskId(), taskResult);
   }
@@ -205,7 +205,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     doThrow(new RuntimeException("error message from test")).when(abstractDataCollectionTask).collectAndSaveData(any());
     abstractDataCollectionTask.run(dataCollectionInfo);
     verify(logger, times(1)).error(eq("Data collection failed with exception: error message from test"));
-    verify(logger, times(4)).warn(eq("[Retrying] Data collection task failed with exception: error message from test"));
+    verify(logger, times(3)).warn(eq("[Retrying] Data collection task failed with exception: error message from test"));
   }
 
   @Test

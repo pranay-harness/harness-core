@@ -191,8 +191,8 @@ public class CVTaskServiceImpl implements CVTaskService {
 
   @Override
   public void updateTaskStatus(String cvTaskId, DataCollectionTaskResult result) {
+    logger.info("Updating CVTask status for id: {} and DataCollectionTaskResult: {}", cvTaskId, result);
     CVTask cvTask = getCVTask(cvTaskId);
-    logActivity(result, cvTask);
     if (result.getStatus() == DataCollectionTaskStatus.FAILURE) {
       Map<String, Object> updateMap =
           ImmutableMap.of(CVTaskKeys.status, ExecutionStatus.FAILED, CVTaskKeys.exception, result.getErrorMessage());
@@ -205,8 +205,9 @@ public class CVTaskServiceImpl implements CVTaskService {
       wingsPersistence.updateField(CVTask.class, cvTaskId, CVTaskKeys.status, ExecutionStatus.SUCCESS);
       enqueueNextTask(cvTask);
     } else {
-      throw new RuntimeException("Not implemented: " + result.getStatus());
+      throw new IllegalStateException("Not implemented: " + result.getStatus());
     }
+    logActivity(result, cvTask);
   }
 
   private void logActivity(DataCollectionTaskResult result, CVTask cvTask) {
