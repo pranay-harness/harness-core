@@ -21,6 +21,7 @@ xxxxxxxx
     validateCerts: false
   requestLog:
     appenders: []
+  maxThreads: 1024
 
 backgroundScheduler:
   enabled: true
@@ -191,6 +192,10 @@ mongo:
 
 events-mongo:
   uri: mongodb://localhost:27017/events
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
 
 searchEnabled: false
 

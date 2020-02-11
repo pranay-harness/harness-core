@@ -30,6 +30,10 @@ if [[ "" != "$GRPC_SERVER_PORT" ]]; then
   yq write -i $CONFIG_FILE grpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
 fi
 
+if [[ "" != "$SERVER_MAX_THREADS" ]]; then
+  yq write -i $CONFIG_FILE server.maxThreads "$SERVER_MAX_THREADS"
+fi
+
 if [[ "" != "$UI_SERVER_URL" ]]; then
   yq write -i $CONFIG_FILE portal.url "$UI_SERVER_URL"
 fi
