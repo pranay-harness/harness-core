@@ -45,7 +45,6 @@ public class VerificationServiceConfiguration extends Configuration implements A
       AssetsConfiguration.builder()
           .mimeTypes(of("js", "application/json; charset=UTF-8", "zip", "application/zip"))
           .build();
-  private static final String IS_OPTION_HEAD_HTTP_METHOD_BLOCKED = "IS_OPTION_HEAD_REQUEST_METHOD_BLOCKED";
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
   private int applicationPort;
@@ -71,13 +70,8 @@ public class VerificationServiceConfiguration extends Configuration implements A
   }
 
   private Set<String> getAllowedMethods() {
-    if (System.getenv(IS_OPTION_HEAD_HTTP_METHOD_BLOCKED) != null
-        && Boolean.parseBoolean(System.getenv(IS_OPTION_HEAD_HTTP_METHOD_BLOCKED))) {
-      return new HashSet<>(Arrays.asList(HttpMethod.GET.name(), HttpMethod.PUT.name(), HttpMethod.POST.name(),
-          HttpMethod.PATCH.name(), HttpMethod.DELETE.name()));
-    }
-    return new HashSet<>(Arrays.asList(HttpMethod.OPTIONS.name(), HttpMethod.POST.name(), HttpMethod.GET.name(),
-        HttpMethod.PUT.name(), HttpMethod.HEAD.name(), HttpMethod.PATCH.name(), HttpMethod.DELETE.name()));
+    return new HashSet<>(Arrays.asList(HttpMethod.GET.name(), HttpMethod.PUT.name(), HttpMethod.POST.name(),
+        HttpMethod.PATCH.name(), HttpMethod.DELETE.name()));
   }
 
   @Override
