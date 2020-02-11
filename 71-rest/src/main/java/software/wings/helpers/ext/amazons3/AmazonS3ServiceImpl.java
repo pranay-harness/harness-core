@@ -4,7 +4,6 @@ import static io.harness.eraro.ErrorCode.AWS_ACCESS_DENIED;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.EVERYBODY;
 import static io.harness.exception.WingsException.USER;
-import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -18,6 +17,7 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -33,6 +33,7 @@ import software.wings.service.impl.AwsHelperService;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,22 +60,22 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
     listObjectsV2Request.withBucketName(bucketName).withMaxKeys(FETCH_FILE_COUNT_IN_BUCKET);
     ListObjectsV2Result result;
-    List<String> objectKeyList = Lists.newArrayList();
 
+    List<S3ObjectSummary> objectSummaryListFinal = new ArrayList<>();
     do {
       result = awsHelperService.listObjectsInS3(awsConfig, encryptionDetails, listObjectsV2Request);
       List<S3ObjectSummary> objectSummaryList = result.getObjectSummaries();
-      sortDescending(objectSummaryList);
+      if (EmptyPredicate.isNotEmpty(objectSummaryList)) {
+        objectSummaryListFinal.addAll(objectSummaryList.stream()
+                                          .filter(objectSummary -> !objectSummary.getKey().endsWith("/"))
+                                          .collect(Collectors.toList()));
+      }
 
-      List<String> objectKeyListForCurrentBatch = objectSummaryList.stream()
-                                                      .filter(objectSummary -> !objectSummary.getKey().endsWith("/"))
-                                                      .map(S3ObjectSummary::getKey)
-                                                      .collect(toList());
-      objectKeyList.addAll(objectKeyListForCurrentBatch);
       listObjectsV2Request.setContinuationToken(result.getNextContinuationToken());
-    } while (result.isTruncated() == true && objectKeyList.size() < MAX_FILES_TO_SHOW_IN_UI);
+    } while (result.isTruncated() && objectSummaryListFinal.size() < MAX_FILES_TO_SHOW_IN_UI);
 
-    return objectKeyList;
+    sortDescending(objectSummaryListFinal);
+    return objectSummaryListFinal.stream().map(S3ObjectSummary::getKey).collect(toList());
   }
 
   private String getPrefix(String artifactPath) {
@@ -116,16 +117,21 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
       ListObjectsV2Result result;
       Pattern pattern = Pattern.compile(artifactPath.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
 
+      List<S3ObjectSummary> objectSummaryListFinal = new ArrayList<>();
       do {
         result = awsHelperService.listObjectsInS3(awsConfig, encryptionDetails, listObjectsV2Request);
         List<S3ObjectSummary> objectSummaryList = result.getObjectSummaries();
-        sortDescending(objectSummaryList);
+        if (EmptyPredicate.isNotEmpty(objectSummaryList)) {
+          objectSummaryListFinal.addAll(objectSummaryList);
+        }
 
-        List<BuildDetails> pageBuildDetails =
-            getObjectSummaries(pattern, objectSummaryList, awsConfig, encryptionDetails, versioningEnabledForBucket);
-        buildDetailsList.addAll(pageBuildDetails);
         listObjectsV2Request.setContinuationToken(result.getNextContinuationToken());
-      } while (result.isTruncated() == true);
+      } while (result.isTruncated());
+
+      sortAscending(objectSummaryListFinal);
+      List<BuildDetails> pageBuildDetails =
+          getObjectSummaries(pattern, objectSummaryListFinal, awsConfig, encryptionDetails, versioningEnabledForBucket);
+      buildDetailsList.addAll(pageBuildDetails);
     } else {
       long size = 0;
       ObjectMetadata objectMetadata =
@@ -143,8 +149,19 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
   }
 
   private void sortDescending(List<S3ObjectSummary> objectSummaryList) {
-    // in descending order. The most recent one comes first
-    sort(objectSummaryList, (o1, o2) -> o2.getLastModified().compareTo(o1.getLastModified()));
+    if (EmptyPredicate.isEmpty(objectSummaryList)) {
+      return;
+    }
+
+    objectSummaryList.sort((o1, o2) -> o2.getLastModified().compareTo(o1.getLastModified()));
+  }
+
+  private void sortAscending(List<S3ObjectSummary> objectSummaryList) {
+    if (EmptyPredicate.isEmpty(objectSummaryList)) {
+      return;
+    }
+
+    objectSummaryList.sort((o1, o2) -> o1.getLastModified().compareTo(o2.getLastModified()));
   }
 
   private List<String> getObjectSummaries(Pattern pattern, List<S3ObjectSummary> objectSummaryList) {
