@@ -458,9 +458,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   public Delegate update(Delegate delegate) {
     UpdateOperations<Delegate> updateOperations = getDelegateUpdateOperations(delegate);
 
-    auditServiceHelper.reportForAuditingUsingAccountId(delegate.getAccountId(), null, delegate, Type.UPDATE);
-    logger.info("Auditing updation of Delegate={} for account={}", delegate.getUuid(), delegate.getAccountId());
-
     if (ECS.equals(delegate.getDelegateType())) {
       return updateEcsDelegate(delegate, true);
     } else {
