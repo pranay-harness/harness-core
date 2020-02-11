@@ -6,6 +6,8 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static java.lang.Thread.sleep;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -39,6 +41,8 @@ import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
+import software.wings.service.intfc.verification.CVActivityLogService;
+import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -71,7 +75,9 @@ public class CVTaskServiceTest extends VerificationBaseTest {
     accountId = generateUUID();
     stateExecutionId = generateUUID();
     cvConfigId = generateUUID();
+
     cvTaskService = Mockito.spy(cvTaskService);
+
     FieldUtils.writeField(cvTaskService, "verificationManagerClientHelper", verificationManagerClientHelper, true);
   }
 
@@ -222,7 +228,11 @@ public class CVTaskServiceTest extends VerificationBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testUpdateTaskStatusWhenTaskResultIsSuccessful() {
+  public void testUpdateTaskStatusWhenTaskResultIsSuccessful() throws IllegalAccessException {
+    CVActivityLogService activityLogService = mock(CVActivityLogService.class);
+    Logger logger = mock(Logger.class);
+    when(activityLogService.getLogger(any(), anyLong(), any())).thenReturn(logger);
+    FieldUtils.writeField(cvTaskService, "activityLogService", activityLogService, true);
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.RUNNING);
     CVTask nextTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.WAITING);
     cvTask.setNextTaskId(nextTask.getUuid());
@@ -232,12 +242,19 @@ public class CVTaskServiceTest extends VerificationBaseTest {
     cvTaskService.updateTaskStatus(cvTask.getUuid(), dataCollectionTaskResult);
     assertThat(cvTaskService.getCVTask(cvTask.getUuid()).getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(cvTaskService.getCVTask(nextTask.getUuid()).getStatus()).isEqualTo(ExecutionStatus.QUEUED);
+    verify(logger).info(eq("Data collection successful for time range %t to %t"),
+        eq(cvTask.getDataCollectionInfo().getStartTime().toEpochMilli()),
+        eq(cvTask.getDataCollectionInfo().getEndTime().toEpochMilli() + 1));
   }
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testUpdateTaskStatusWhenTaskHasFailed() {
+  public void testUpdateTaskStatusWhenTaskHasFailed() throws IllegalAccessException {
+    CVActivityLogService activityLogService = mock(CVActivityLogService.class);
+    Logger logger = mock(Logger.class);
+    when(activityLogService.getLogger(any(), anyLong(), any())).thenReturn(logger);
+    FieldUtils.writeField(cvTaskService, "activityLogService", activityLogService, true);
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.RUNNING);
     CVTask nextTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.WAITING);
     cvTask.setNextTaskId(nextTask.getUuid());
@@ -253,6 +270,9 @@ public class CVTaskServiceTest extends VerificationBaseTest {
     CVTask updatedTask2 = cvTaskService.getCVTask(nextTask.getUuid());
     assertThat(updatedTask2.getStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(updatedTask2.getException()).isEqualTo("Previous task failed");
+    verify(logger).error(eq("Data collection failed for time range %t to %t. Error: Error from unit test"),
+        eq(cvTask.getDataCollectionInfo().getStartTime().toEpochMilli()),
+        eq(cvTask.getDataCollectionInfo().getEndTime().toEpochMilli() + 1));
   }
 
   @Test

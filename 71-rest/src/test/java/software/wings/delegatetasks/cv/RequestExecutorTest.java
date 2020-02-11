@@ -125,9 +125,9 @@ public class RequestExecutorTest extends CategoryTest {
 
     ArgumentCaptor<ThirdPartyApiCallLog> thirdPartyApiCallLogArgumentCaptor =
         ArgumentCaptor.forClass(ThirdPartyApiCallLog.class);
-    verify(delegateLogService, times(4)).save(eq(accountId), thirdPartyApiCallLogArgumentCaptor.capture());
+    verify(delegateLogService, times(3)).save(eq(accountId), thirdPartyApiCallLogArgumentCaptor.capture());
     List<ThirdPartyApiCallLog> thirdPartyApiCallLogs = thirdPartyApiCallLogArgumentCaptor.getAllValues();
-    assertThat(thirdPartyApiCallLogs.size()).isEqualTo(4);
+    assertThat(thirdPartyApiCallLogs.size()).isEqualTo(3);
     for (int i = 0; i < thirdPartyApiCallLogs.size(); i++) {
       ThirdPartyApiCallLog thirdPartyApiCallLog = thirdPartyApiCallLogs.get(i);
       assertThat(thirdPartyApiCallLog.getRequest().get(0).getValue()).isEqualTo("http://example.com/test");

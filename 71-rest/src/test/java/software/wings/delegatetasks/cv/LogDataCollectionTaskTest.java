@@ -100,6 +100,22 @@ public class LogDataCollectionTaskTest extends WingsBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  public void testCollectAndSave_whenLogElementsSaveCallReturnsFalse() throws DataCollectionException, IOException {
+    when(logAnalysisStoreService.save(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        .thenReturn(false);
+    LogDataCollectionInfoV2 logDataCollectionInfo = createLogDataCollectionInfo();
+    when(logDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1", "host2", "host3"));
+    Instant now = Instant.now();
+    when(logDataCollectionInfo.getStartTime()).thenReturn(now.minus(10, ChronoUnit.MINUTES));
+    when(logDataCollectionInfo.getEndTime()).thenReturn(now);
+    assertThatThrownBy(() -> logDataCollectionTask.collectAndSaveData(logDataCollectionInfo))
+        .isInstanceOf(DataCollectionException.class)
+        .hasMessage("Unable to save log elements. Manager API returned false.");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
   public void testCollectAndSave_IfNumberOfLogsPerHostsAreLessThanTheThreshold()
       throws DataCollectionException, IOException {
     LogDataCollectionInfoV2 logDataCollectionInfo = createLogDataCollectionInfo();
@@ -124,8 +140,7 @@ public class LogDataCollectionTaskTest extends WingsBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testCollectAndSave_IfNumberOfLogsPerHostsAreMoreThanTheThreshold()
-      throws DataCollectionException, IOException {
+  public void testCollectAndSave_IfNumberOfLogsPerHostsAreMoreThanTheThreshold() throws DataCollectionException {
     LogDataCollectionInfoV2 logDataCollectionInfo = createLogDataCollectionInfo();
     when(logDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1"));
     Instant now = Instant.ofEpochMilli(Timestamp.currentMinuteBoundary());

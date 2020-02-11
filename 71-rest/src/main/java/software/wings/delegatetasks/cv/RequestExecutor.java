@@ -31,7 +31,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Singleton
 public class RequestExecutor {
   @Inject private DelegateLogService delegateLogService;
-  private static final int MAX_RETRIES = 3;
+  private static final int MAX_RETRIES = 2;
   public <U> U executeRequest(Call<U> request) {
     try {
       Response<U> response = request.clone().execute();

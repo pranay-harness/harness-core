@@ -88,7 +88,7 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
     boolean response = metricStoreService.saveNewRelicMetrics(dataCollectionInfo.getAccountId(),
         dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), getTaskId(), records);
     if (!response) {
-      throw new DataCollectionException("Unable to save metrics elements. API returned false");
+      throw new DataCollectionException("Unable to save metrics elements. Manager API returned false");
     }
   }
 

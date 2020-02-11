@@ -87,7 +87,7 @@ public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends Ab
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getWorkflowId(),
           dataCollectionInfo.getWorkflowExecutionId(), dataCollectionInfo.getServiceId(), getTaskId(), logElements);
       if (!response) {
-        throw new DataCollectionException("Unable to save log elements. API returned false");
+        throw new DataCollectionException("Unable to save log elements. Manager API returned false.");
       }
     } catch (IOException e) {
       throw new DataCollectionException(e);

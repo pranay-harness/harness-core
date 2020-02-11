@@ -45,7 +45,6 @@ public class CVTask implements PersistentEntity, UuidAware, CreatedAtAware, Upda
   private int retryCount;
 
   private String exception;
-  private int exceptionCode;
   private long validAfter;
   private String correlationId;
   private DataCollectionInfoV2 dataCollectionInfo;
