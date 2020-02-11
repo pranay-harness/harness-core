@@ -149,7 +149,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
     defaultServerFactory.setApplicationConnectors(singletonList(getDefaultApplicationConnectorFactory()));
     defaultServerFactory.setRequestLogFactory(getDefaultlogbackAccessRequestLogFactory());
     defaultServerFactory.setAllowedMethods(getAllowedMethods());
-
     super.setServerFactory(defaultServerFactory);
   }
 
@@ -160,6 +159,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
         .setApplicationConnectors(defaultServerFactory.getApplicationConnectors());
     ((DefaultServerFactory) getServerFactory()).setAdminConnectors(defaultServerFactory.getAdminConnectors());
     ((DefaultServerFactory) getServerFactory()).setRequestLogFactory(defaultServerFactory.getRequestLogFactory());
+    ((DefaultServerFactory) getServerFactory()).setMaxThreads(defaultServerFactory.getMaxThreads());
   }
 
   /**
