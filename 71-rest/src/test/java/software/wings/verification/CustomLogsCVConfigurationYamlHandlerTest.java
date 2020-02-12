@@ -61,9 +61,7 @@ public class CustomLogsCVConfigurationYamlHandlerTest extends CVConfigurationYam
     CustomLogsCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
     assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
-    assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
-    assertThat(yaml.getEnvName()).isEqualTo(envName);
     assertThat(yaml.getQuery()).isEqualTo(cvServiceConfiguration.getQuery());
     assertThat(yaml.getBaselineStartMinute()).isEqualTo(cvServiceConfiguration.getBaselineStartMinute());
     assertThat(yaml.getBaselineEndMinute()).isEqualTo(cvServiceConfiguration.getBaselineEndMinute());
@@ -82,7 +80,7 @@ public class CustomLogsCVConfigurationYamlHandlerTest extends CVConfigurationYam
     when(yamlHelper.getNameFromYamlFilePath("TestAppDConfig.yaml")).thenReturn("TestAppDConfig");
 
     ChangeContext<LogsCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestAppDConfig.yaml").build();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestAppDConfig.yaml").build();
     changeContext.setChange(c);
     CustomLogsCVConfigurationYaml yaml = CustomLogsCVConfigurationYaml.builder().build();
     buildYaml(yaml);
@@ -122,7 +120,7 @@ public class CustomLogsCVConfigurationYamlHandlerTest extends CVConfigurationYam
     cvConfig.setUuid("testUUID");
     when(cvConfigurationService.getConfiguration("TestAppDConfig", appId, envId)).thenReturn(cvConfig);
     ChangeContext<LogsCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestAppDConfig.yaml").build();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestAppDConfig.yaml").build();
     changeContext.setChange(c);
     CustomLogsCVConfigurationYaml yaml = CustomLogsCVConfigurationYaml.builder().build();
     buildYaml(yaml);

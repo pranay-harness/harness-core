@@ -19,7 +19,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
-import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
@@ -54,8 +53,6 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
   private String connectorId;
   private String accountId;
 
-  private String envName = "EnvName";
-  private String appName = "AppName";
   private String serviceName = "serviceName";
   private String connectorName = "prometheusConnector";
 
@@ -69,17 +66,9 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
 
     MockitoAnnotations.initMocks(this);
 
-    Environment env = Environment.Builder.anEnvironment().uuid(envId).name(envName).build();
-    when(environmentService.getEnvironmentByName(appId, envName)).thenReturn(env);
-    when(environmentService.get(appId, envId)).thenReturn(env);
-
     Service service = Service.builder().uuid(serviceId).name(serviceName).build();
     when(serviceResourceService.getWithDetails(appId, serviceId)).thenReturn(service);
     when(serviceResourceService.getServiceByName(appId, serviceName)).thenReturn(service);
-
-    Application app = Application.Builder.anApplication().name(appName).uuid(appId).build();
-    when(appService.get(appId)).thenReturn(app);
-    when(appService.getAppByName(accountId, appName)).thenReturn(app);
 
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withName(connectorName).withUuid(connectorId).build();
@@ -92,6 +81,9 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
     FieldUtils.writeField(yamlHandler, "yamlHelper", yamlHelper, true);
     FieldUtils.writeField(yamlHandler, "cvConfigurationService", cvConfigurationService, true);
     FieldUtils.writeField(yamlHandler, "appService", appService, true);
+
+    Application app = Application.Builder.anApplication().name(generateUUID()).uuid(appId).build();
+    when(appService.get(appId)).thenReturn(app);
   }
 
   private void setBasicInfo(PrometheusCVServiceConfiguration cvServiceConfiguration) {
@@ -109,11 +101,8 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
     PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml yaml =
         PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml.builder().timeSeriesList(timeSeriesList).build();
     yaml.setName("TestPrometheusConfig");
-    yaml.setAccountId(accountId);
     yaml.setServiceName(serviceName);
-    yaml.setEnvName(envName);
     yaml.setConnectorName(connectorName);
-    yaml.setHarnessApplicationName(appName);
     return yaml;
   }
 
@@ -141,11 +130,8 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
         yamlHandler.toYaml(cvServiceConfiguration, appId);
 
     assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
-    assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
-    assertThat(yaml.getEnvName()).isEqualTo(envName);
     assertThat(yaml.getTimeSeriesList()).isEqualTo(timeSeriesList);
-    assertThat(yaml.getHarnessApplicationName()).isEqualTo(appName);
   }
 
   @Test

@@ -2,6 +2,7 @@ package software.wings.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -18,7 +19,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
-import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
@@ -49,8 +49,6 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   private String connectorId;
   private String accountId;
 
-  private String envName = "EnvName";
-  private String appName = "AppName";
   private String serviceName = "serviceName";
   private String connectorName = "dynaTraceConnector";
 
@@ -70,22 +68,17 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
     FieldUtils.writeField(yamlHandler, "serviceResourceService", serviceService, true);
     FieldUtils.writeField(yamlHandler, "settingsService", settingsService, true);
 
-    Environment env = Environment.Builder.anEnvironment().uuid(envId).name(envName).build();
-    when(envService.getEnvironmentByName(appId, envName)).thenReturn(env);
-    when(envService.get(appId, envId)).thenReturn(env);
-
     Service service = Service.builder().uuid(serviceId).name(serviceName).build();
     when(serviceService.getWithDetails(appId, serviceId)).thenReturn(service);
     when(serviceService.getServiceByName(appId, serviceName)).thenReturn(service);
-
-    Application app = Application.Builder.anApplication().name(appName).uuid(appId).build();
-    when(appService.get(appId)).thenReturn(app);
-    when(appService.getAppByName(accountId, appName)).thenReturn(app);
 
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withName(connectorName).withUuid(connectorId).build();
     when(settingsService.getSettingAttributeByName(accountId, connectorName)).thenReturn(settingAttribute);
     when(settingsService.get(connectorId)).thenReturn(settingAttribute);
+
+    Application app = Application.Builder.anApplication().name(generateUUID()).uuid(appId).build();
+    when(appService.get(appId)).thenReturn(app);
   }
 
   private void setBasicInfo(DynaTraceCVServiceConfiguration cvServiceConfiguration) {
@@ -102,11 +95,8 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   private DynaTraceCVConfigurationYaml buildYaml() {
     DynaTraceCVConfigurationYaml yaml = DynaTraceCVConfigurationYaml.builder().build();
     yaml.setName("TestDynaTraceConfig");
-    yaml.setAccountId(accountId);
     yaml.setServiceName(serviceName);
-    yaml.setEnvName(envName);
     yaml.setConnectorName(connectorName);
-    yaml.setHarnessApplicationName(appName);
     return yaml;
   }
 
@@ -121,9 +111,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
     DynaTraceCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
     assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
-    assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
-    assertThat(yaml.getEnvName()).isEqualTo(envName);
   }
 
   @Test
@@ -136,9 +124,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
     DynaTraceCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
     assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
-    assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
-    assertThat(yaml.getEnvName()).isEqualTo(envName);
   }
 
   @Test

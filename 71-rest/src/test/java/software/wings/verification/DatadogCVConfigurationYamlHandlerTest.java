@@ -65,9 +65,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
     DatadogCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
     assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
-    assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
-    assertThat(yaml.getEnvName()).isEqualTo(envName);
     assertThat(yaml.getDockerMetrics().keySet().iterator().next())
         .isEqualTo(cvServiceConfiguration.getDockerMetrics().keySet().iterator().next());
     assertThat(yaml.getDockerMetrics().values()).isEqualTo(cvServiceConfiguration.getDockerMetrics().values());
@@ -82,7 +80,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
     when(yamlHelper.getNameFromYamlFilePath("TestDDConfig.yaml")).thenReturn("TestDDConfig");
 
     ChangeContext<DatadogCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestDDConfig.yaml").build();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestDDConfig.yaml").build();
     changeContext.setChange(c);
     Map<String, String> dockerMetrics = new HashMap<>();
     dockerMetrics.put("cluster:harness-test", "kubernetes.cpu.usage.total");
@@ -110,7 +108,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
     when(yamlHelper.getNameFromYamlFilePath("TestDDConfig.yaml")).thenReturn("TestDDConfig");
 
     ChangeContext<DatadogCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestDDConfig.yaml").build();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestDDConfig.yaml").build();
     changeContext.setChange(c);
     YamlUtils yamlUtils = new YamlUtils();
     DatadogCVConfigurationYaml yaml = yamlUtils.read(yamlString, new TypeReference<DatadogCVConfigurationYaml>() {});
@@ -138,7 +136,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
     when(yamlHelper.getNameFromYamlFilePath("TestAppDConfig.yaml")).thenReturn("TestAppDConfig");
 
     ChangeContext<DatadogCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestAppDConfig.yaml").build();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestAppDConfig.yaml").build();
     changeContext.setChange(c);
     Map<String, String> dockerMetrics = new HashMap<>();
     dockerMetrics.put("cluster:harness-test", "kubernetes.cpu.usage.total");
@@ -158,7 +156,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
     when(yamlHelper.getNameFromYamlFilePath("TestAppDConfig.yaml")).thenReturn("TestAppDConfig");
 
     ChangeContext<DatadogCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestAppDConfig.yaml").build();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestAppDConfig.yaml").build();
     changeContext.setChange(c);
 
     Map<String, String> dockerMetrics = new HashMap<>();
@@ -180,7 +178,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
     when(yamlHelper.getNameFromYamlFilePath("TestAppDConfig.yaml")).thenReturn("TestAppDConfig");
 
     ChangeContext<DatadogCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestAppDConfig.yaml").build();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestAppDConfig.yaml").build();
     changeContext.setChange(c);
     Map<String, String> dockerMetrics = new HashMap<>();
     dockerMetrics.put("cluster:harness-test", "kubernetes.cpu.usage.total");
@@ -209,7 +207,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
     cvConfig.setUuid("testUUID");
     when(cvConfigurationService.getConfiguration("TestDDConfig", appId, envId)).thenReturn(cvConfig);
     ChangeContext<DatadogCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestDDConfig.yaml").build();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestDDConfig.yaml").build();
     changeContext.setChange(c);
     Map<String, String> dockerMetrics = new HashMap<>();
     dockerMetrics.put("cluster:harness-test", "kubernetes.cpu.usage.total");
