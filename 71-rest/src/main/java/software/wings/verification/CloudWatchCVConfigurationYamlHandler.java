@@ -54,7 +54,7 @@ public class CloudWatchCVConfigurationYamlHandler
     CloudWatchCVConfigurationYaml yaml = changeContext.getYaml();
 
     try {
-      validateYaml(yaml);
+      validateYaml(yaml, accountId);
 
       bean.setEc2InstanceNames(yaml.getEc2InstanceNames());
       bean.setEc2Metrics(yaml.getEc2Metrics());
@@ -82,9 +82,9 @@ public class CloudWatchCVConfigurationYamlHandler
     return bean;
   }
 
-  private void validateYaml(CloudWatchCVConfigurationYaml yaml) {
+  private void validateYaml(CloudWatchCVConfigurationYaml yaml, String accountId) {
     SettingAttribute cloudWatchConnector =
-        settingsService.getSettingAttributeByName(yaml.getAccountId(), yaml.getConnectorName());
+        settingsService.getSettingAttributeByName(accountId, yaml.getConnectorName());
 
     String settingId = cloudWatchConnector.getUuid();
     String region = yaml.getRegion();

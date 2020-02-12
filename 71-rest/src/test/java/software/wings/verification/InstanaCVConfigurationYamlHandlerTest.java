@@ -18,7 +18,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.Application;
-import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
@@ -51,8 +50,6 @@ public class InstanaCVConfigurationYamlHandlerTest extends CategoryTest {
   private String connectorId;
   private String accountId;
 
-  private String envName = "EnvName";
-  private String appName = "AppName";
   private String serviceName = "serviceName";
   private String connectorName = "instanaConnector";
 
@@ -74,22 +71,17 @@ public class InstanaCVConfigurationYamlHandlerTest extends CategoryTest {
     FieldUtils.writeField(yamlHandler, "serviceResourceService", serviceResourceService, true);
     FieldUtils.writeField(yamlHandler, "settingsService", settingsService, true);
 
-    Environment env = Environment.Builder.anEnvironment().uuid(envId).name(envName).build();
-    when(environmentService.getEnvironmentByName(appId, envName)).thenReturn(env);
-    when(environmentService.get(appId, envId)).thenReturn(env);
-
     Service service = Service.builder().uuid(serviceId).name(serviceName).build();
     when(serviceResourceService.getWithDetails(appId, serviceId)).thenReturn(service);
     when(serviceResourceService.getServiceByName(appId, serviceName)).thenReturn(service);
-
-    Application app = Application.Builder.anApplication().name(appName).uuid(appId).build();
-    when(appService.get(appId)).thenReturn(app);
-    when(appService.getAppByName(accountId, appName)).thenReturn(app);
 
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withName(connectorName).withUuid(connectorId).build();
     when(settingsService.getSettingAttributeByName(accountId, connectorName)).thenReturn(settingAttribute);
     when(settingsService.get(connectorId)).thenReturn(settingAttribute);
+
+    Application app = Application.Builder.anApplication().name(generateUUID()).uuid(appId).build();
+    when(appService.get(appId)).thenReturn(app);
   }
 
   private void setBasicInfo(InstanaCVConfiguration cvServiceConfiguration) {
@@ -106,11 +98,8 @@ public class InstanaCVConfigurationYamlHandlerTest extends CategoryTest {
   private InstanaCVConfigurationYaml buildYaml() {
     InstanaCVConfigurationYaml yaml = InstanaCVConfigurationYaml.builder().query(query).metrics(metrics).build();
     yaml.setName("testInstanaConfig");
-    yaml.setAccountId(accountId);
     yaml.setServiceName(serviceName);
-    yaml.setEnvName(envName);
     yaml.setConnectorName(connectorName);
-    yaml.setHarnessApplicationName(appName);
     return yaml;
   }
 
@@ -126,9 +115,7 @@ public class InstanaCVConfigurationYamlHandlerTest extends CategoryTest {
     InstanaCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
     assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
-    assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
-    assertThat(yaml.getEnvName()).isEqualTo(envName);
     assertThat(yaml.getQuery()).isEqualTo(query);
     assertThat(yaml.getMetrics()).isEqualTo(metrics);
   }
@@ -142,7 +129,7 @@ public class InstanaCVConfigurationYamlHandlerTest extends CategoryTest {
     when(yamlHelper.getNameFromYamlFilePath("InstanaConfig.yaml")).thenReturn("InstanaConfig");
 
     ChangeContext<InstanaCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("InstanaConfig.yaml").build();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("InstanaConfig.yaml").build();
     changeContext.setChange(c);
     changeContext.setYaml(buildYaml());
     InstanaCVConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);

@@ -9,7 +9,6 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import software.wings.beans.Application;
-import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
@@ -34,18 +33,13 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
   @Inject ServiceResourceService serviceResourceService;
 
   public void toYaml(CVConfigurationYaml yaml, CVConfiguration bean) {
-    yaml.setAccountId(bean.getAccountId());
     yaml.setAnalysisTolerance(bean.getAnalysisTolerance());
     yaml.setConnectorName(settingsService.get(bean.getConnectorId()).getName());
     yaml.setName(bean.getName());
     yaml.setEnabled24x7(bean.isEnabled24x7());
 
     Application application = appService.get(bean.getAppId());
-    Environment environment = environmentService.get(application.getUuid(), bean.getEnvId());
     Service service = serviceResourceService.getWithDetails(application.getUuid(), bean.getServiceId());
-
-    yaml.setHarnessApplicationName(application.getName());
-    yaml.setEnvName(environment.getName());
     yaml.setServiceName(service.getName());
     yaml.setAlertThreshold(bean.getAlertThreshold());
     if (bean.getSnoozeStartTime() > 0) {
@@ -71,28 +65,18 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
 
   public void toBean(ChangeContext<Y> changeContext, B bean, String appId, String yamlPath) {
     Y yaml = changeContext.getYaml();
+    String accountId = changeContext.getChange().getAccountId();
     String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
+    String envId = yamlHelper.getEnvironmentId(appId, yamlPath);
     bean.setAppId(appId);
     bean.setName(name);
-
-    Application harnessApp = appService.getAppByName(yaml.getAccountId(), yaml.getHarnessApplicationName());
-    if (harnessApp == null) {
-      throw new VerificationOperationException(
-          ErrorCode.APM_CONFIGURATION_ERROR, "Invalid Harness ApplicationName provided in Yaml for CVConfiguration.");
-    }
-    Environment environment = environmentService.getEnvironmentByName(harnessApp.getUuid(), yaml.getEnvName());
-    if (environment == null) {
-      throw new VerificationOperationException(
-          ErrorCode.APM_CONFIGURATION_ERROR, "Invalid Environment name in Yaml for CVConfiguration.");
-    }
-
-    Service service = serviceResourceService.getServiceByName(harnessApp.getUuid(), yaml.getServiceName());
+    Service service = serviceResourceService.getServiceByName(appId, yaml.getServiceName());
     if (service == null) {
       throw new VerificationOperationException(
           ErrorCode.APM_CONFIGURATION_ERROR, "Invalid Service name in Yaml for CVConfiguration.");
     }
-    bean.setAccountId(yaml.getAccountId());
-    bean.setEnvId(environment.getUuid());
+    bean.setAccountId(accountId);
+    bean.setEnvId(envId);
     bean.setEnabled24x7(yaml.isEnabled24x7());
     bean.setAnalysisTolerance(yaml.getAnalysisTolerance());
     bean.setServiceId(service.getUuid());
@@ -104,15 +88,15 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
     if (yaml.getSnoozeEndTime() != null) {
       bean.setSnoozeEndTime(yaml.getSnoozeEndTime().getTime());
     }
-    SettingAttribute connector = getConnector(yaml);
+    SettingAttribute connector = getConnector(yaml, accountId);
     if (connector == null) {
       throw new WingsException("Invalid connector name specified in yaml: " + yaml.getConnectorName());
     }
     bean.setConnectorId(connector.getUuid());
   }
 
-  SettingAttribute getConnector(CVConfigurationYaml yaml) {
-    return settingsService.getSettingAttributeByName(yaml.getAccountId(), yaml.getConnectorName());
+  SettingAttribute getConnector(CVConfigurationYaml yaml, String accountId) {
+    return settingsService.getSettingAttributeByName(accountId, yaml.getConnectorName());
   }
 
   protected CVConfiguration getPreviousCVConfiguration(ChangeContext<? extends CVConfigurationYaml> changeContext) {

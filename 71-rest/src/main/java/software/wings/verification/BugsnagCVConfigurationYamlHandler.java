@@ -111,10 +111,10 @@ public class BugsnagCVConfigurationYamlHandler extends LogsCVConfigurationYamlHa
     return (BugsnagCVConfiguration) yamlHelper.getCVConfiguration(accountId, yamlFilePath);
   }
   private void toBean(BugsnagCVConfiguration bean, ChangeContext<LogsCVConfigurationYaml> changeContext, String appId) {
+    String accountId = changeContext.getChange().getAccountId();
     BugsnagCVConfigurationYaml yaml = (BugsnagCVConfigurationYaml) changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
-    SettingAttribute bugsnagConnector =
-        settingsService.getSettingAttributeByName(yaml.getAccountId(), yaml.getConnectorName());
+    SettingAttribute bugsnagConnector = settingsService.getSettingAttributeByName(accountId, yaml.getConnectorName());
 
     super.toBean(changeContext, bean, appId, yamlFilePath);
     try {

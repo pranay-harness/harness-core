@@ -82,11 +82,8 @@ public class CVConfiguration extends Base implements NameAccess {
   @EqualsAndHashCode(callSuper = true)
   public abstract static class CVConfigurationYaml extends BaseEntityYaml {
     private String name;
-    private String accountId;
     private String connectorName;
-    private String envName;
     private String serviceName;
-    private String harnessApplicationName;
     private AnalysisTolerance analysisTolerance;
     private boolean enabled24x7;
     private double alertThreshold;

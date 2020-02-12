@@ -102,8 +102,8 @@ public class AppDynamicsCVConfigurationYamlHandler
       ChangeContext<AppDynamicsCVConfigurationYaml> changeContext, String appId) throws HarnessException {
     AppDynamicsCVConfigurationYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
-    SettingAttribute appDConnector =
-        settingsService.getSettingAttributeByName(yaml.getAccountId(), yaml.getConnectorName());
+    String accountId = changeContext.getChange().getAccountId();
+    SettingAttribute appDConnector = settingsService.getSettingAttributeByName(accountId, yaml.getConnectorName());
 
     super.toBean(changeContext, bean, appId, yamlFilePath);
     try {

@@ -58,9 +58,7 @@ public class StackdriverMetricCVConfigurationYamlHandlerTest extends CVConfigura
     StackDriverMetricCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
     assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
-    assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
-    assertThat(yaml.getEnvName()).isEqualTo(envName);
     assertThat(yaml.getMetricDefinitions()).isEqualTo(getMetricDefinitions());
   }
 
@@ -73,8 +71,7 @@ public class StackdriverMetricCVConfigurationYamlHandlerTest extends CVConfigura
     when(yamlHelper.getNameFromYamlFilePath("TestStackdriverConfig.yaml")).thenReturn("TestStackdriverConfig");
 
     ChangeContext<StackDriverMetricCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c =
-        Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestStackdriverConfig.yaml").build();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestStackdriverConfig.yaml").build();
     changeContext.setChange(c);
     StackDriverMetricCVConfigurationYaml yaml =
         StackDriverMetricCVConfigurationYaml.builder().metricDefinitions(getMetricDefinitions()).build();
@@ -98,7 +95,7 @@ public class StackdriverMetricCVConfigurationYamlHandlerTest extends CVConfigura
     when(yamlHelper.getNameFromYamlFilePath("TestAppDConfig.yaml")).thenReturn("TestAppDConfig");
 
     ChangeContext<StackDriverMetricCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestAppDConfig.yaml").build();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestAppDConfig.yaml").build();
     changeContext.setChange(c);
     StackDriverMetricCVConfigurationYaml yaml =
         StackDriverMetricCVConfigurationYaml.builder().metricDefinitions(getMetricDefinitions()).build();

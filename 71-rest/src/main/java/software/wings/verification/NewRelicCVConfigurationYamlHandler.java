@@ -74,9 +74,10 @@ public class NewRelicCVConfigurationYamlHandler
       NewRelicCVServiceConfiguration bean, ChangeContext<NewRelicCVConfigurationYaml> changeContext, String appId) {
     NewRelicCVConfigurationYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
+    String accountId = changeContext.getChange().getAccountId();
     super.toBean(changeContext, bean, appId, yamlFilePath);
     bean.setMetrics(yaml.getMetrics() == null ? new ArrayList<>() : yaml.getMetrics());
-    SettingAttribute connector = getConnector(yaml);
+    SettingAttribute connector = getConnector(yaml, accountId);
     List<NewRelicApplication> newRelicApplications =
         newRelicService.getApplications(connector.getUuid(), StateType.NEW_RELIC);
     for (NewRelicApplication newRelicApplication : newRelicApplications) {

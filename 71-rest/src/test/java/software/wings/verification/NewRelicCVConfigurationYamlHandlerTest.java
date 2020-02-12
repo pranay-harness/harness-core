@@ -17,7 +17,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.Application;
-import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
@@ -51,7 +50,6 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
   private String connectorId;
   private String accountId;
 
-  private String envName = "EnvName";
   private String appName = "AppName";
   private String serviceName = "serviceName";
   private String connectorName = "newRelicConnector";
@@ -75,17 +73,9 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
     FieldUtils.writeField(yamlHandler, "settingsService", settingsService, true);
     FieldUtils.writeField(yamlHandler, "newRelicService", newRelicService, true);
 
-    Environment env = Environment.Builder.anEnvironment().uuid(envId).name(envName).build();
-    when(environmentService.getEnvironmentByName(appId, envName)).thenReturn(env);
-    when(environmentService.get(appId, envId)).thenReturn(env);
-
     Service service = Service.builder().uuid(serviceId).name(serviceName).build();
     when(serviceResourceService.getWithDetails(appId, serviceId)).thenReturn(service);
     when(serviceResourceService.getServiceByName(appId, serviceName)).thenReturn(service);
-
-    Application app = Application.Builder.anApplication().name(appName).uuid(appId).build();
-    when(appService.get(appId)).thenReturn(app);
-    when(appService.getAppByName(accountId, appName)).thenReturn(app);
 
     when(newRelicService.getApplications(connectorId, StateType.NEW_RELIC))
         .thenReturn(Arrays.asList(NewRelicApplication.builder().id(1234).name(appName).build()));
@@ -94,6 +84,9 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
         SettingAttribute.Builder.aSettingAttribute().withName(connectorName).withUuid(connectorId).build();
     when(settingsService.getSettingAttributeByName(accountId, connectorName)).thenReturn(settingAttribute);
     when(settingsService.get(connectorId)).thenReturn(settingAttribute);
+
+    Application app = Application.Builder.anApplication().name(generateUUID()).uuid(appId).build();
+    when(appService.get(appId)).thenReturn(app);
   }
 
   private void setBasicInfo(NewRelicCVServiceConfiguration cvServiceConfiguration) {
@@ -110,11 +103,8 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
   private NewRelicCVConfigurationYaml buildYaml() {
     NewRelicCVConfigurationYaml yaml = NewRelicCVConfigurationYaml.builder().newRelicApplicationName(appName).build();
     yaml.setName("TestAppDConfig");
-    yaml.setAccountId(accountId);
     yaml.setServiceName(serviceName);
-    yaml.setEnvName(envName);
     yaml.setConnectorName(connectorName);
-    yaml.setHarnessApplicationName(appName);
     return yaml;
   }
 
@@ -130,9 +120,7 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
     NewRelicCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
     assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
-    assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
-    assertThat(yaml.getEnvName()).isEqualTo(envName);
     assertThat(yaml.getNewRelicApplicationName()).isEqualTo(appName);
   }
 
@@ -145,7 +133,7 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
     when(yamlHelper.getNameFromYamlFilePath("TestAppDConfig.yaml")).thenReturn("TestAppDConfig");
 
     ChangeContext<NewRelicCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestAppDConfig.yaml").build();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestAppDConfig.yaml").build();
     changeContext.setChange(c);
     changeContext.setYaml(buildYaml());
     NewRelicCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
@@ -166,7 +154,7 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
     when(yamlHelper.getNameFromYamlFilePath("TestAppDConfig.yaml")).thenReturn("TestAppDConfig");
 
     ChangeContext<NewRelicCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestAppDConfig.yaml").build();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestAppDConfig.yaml").build();
     changeContext.setChange(c);
     NewRelicCVConfigurationYaml yaml = buildYaml();
     yaml.setNewRelicApplicationName("dummyBadName");
@@ -186,7 +174,7 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
     cvConfig.setUuid("testUUID");
     when(cvConfigurationService.getConfiguration("TestAppDConfig", appId, envId)).thenReturn(cvConfig);
     ChangeContext<NewRelicCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestAppDConfig.yaml").build();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestAppDConfig.yaml").build();
     changeContext.setChange(c);
     changeContext.setYaml(buildYaml());
     NewRelicCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
