@@ -13,6 +13,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -37,22 +38,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
-/**
- * Created by anubhaw on 8/15/16.
- */
 @Singleton
 public class StatisticsServiceImpl implements StatisticsService {
   @Inject private WorkflowExecutionService workflowExecutionService;
 
+  private static final String[] workflowExecutionKeys = {WorkflowExecutionKeys.uuid, WorkflowExecutionKeys.accountId,
+      WorkflowExecutionKeys.appId, WorkflowExecutionKeys.appName, WorkflowExecutionKeys.createdAt,
+      WorkflowExecutionKeys.createdBy, WorkflowExecutionKeys.endTs, WorkflowExecutionKeys.envId,
+      WorkflowExecutionKeys.envIds, WorkflowExecutionKeys.envType, WorkflowExecutionKeys.pipelineExecution,
+      WorkflowExecutionKeys.pipelineExecutionId, WorkflowExecutionKeys.pipelineSummary, WorkflowExecutionKeys.releaseNo,
+      WorkflowExecutionKeys.rollbackDuration, WorkflowExecutionKeys.rollbackStartTs,
+      WorkflowExecutionKeys.serviceExecutionSummaries, WorkflowExecutionKeys.startTs, WorkflowExecutionKeys.serviceIds,
+      WorkflowExecutionKeys.status, WorkflowExecutionKeys.name, WorkflowExecutionKeys.workflowId,
+      WorkflowExecutionKeys.orchestrationType, WorkflowExecutionKeys.workflowType, WorkflowExecutionKeys.startTs,
+      WorkflowExecutionKeys.environments, WorkflowExecutionKeys.deploymentTriggerId, WorkflowExecutionKeys.triggeredBy};
   @Override
   public DeploymentStatistics getDeploymentStatistics(String accountId, List<String> appIds, int numOfDays) {
     long fromDateEpochMilli = getEpochMilliPSTZone(numOfDays);
     DeploymentStatistics deploymentStats = new DeploymentStatistics();
     List<WorkflowExecution> workflowExecutions;
     if (isEmpty(appIds)) {
-      workflowExecutions = workflowExecutionService.obtainWorkflowExecutions(accountId, fromDateEpochMilli);
+      workflowExecutions =
+          workflowExecutionService.obtainWorkflowExecutions(accountId, fromDateEpochMilli, workflowExecutionKeys);
     } else {
-      workflowExecutions = workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli);
+      workflowExecutions =
+          workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli, workflowExecutionKeys);
     }
 
     if (isEmpty(workflowExecutions)) {
@@ -81,9 +91,11 @@ public class StatisticsServiceImpl implements StatisticsService {
     ServiceInstanceStatistics instanceStats = new ServiceInstanceStatistics();
     List<WorkflowExecution> workflowExecutions;
     if (isEmpty(appIds)) {
-      workflowExecutions = workflowExecutionService.obtainWorkflowExecutions(accountId, fromDateEpochMilli);
+      workflowExecutions =
+          workflowExecutionService.obtainWorkflowExecutions(accountId, fromDateEpochMilli, workflowExecutionKeys);
     } else {
-      workflowExecutions = workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli);
+      workflowExecutions =
+          workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli, workflowExecutionKeys);
     }
     if (isEmpty(workflowExecutions)) {
       return instanceStats;

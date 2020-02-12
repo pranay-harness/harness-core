@@ -71,7 +71,8 @@ public class StatisticsServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {
     when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(asList(APP_ID));
     when(appService.getAppsByAccountId(ACCOUNT_ID)).thenReturn(asList(anApplication().uuid(APP_ID).build()));
-    when(workflowExecutionService.obtainWorkflowExecutionIterator(anyList(), anyLong())).thenReturn(executionIterator);
+    when(workflowExecutionService.obtainWorkflowExecutionIterator(anyList(), anyLong(), any()))
+        .thenReturn(executionIterator);
     when(workflowExecutionService.getInstancesDeployedFromExecution(any(WorkflowExecution.class))).thenCallRealMethod();
   }
 
@@ -96,7 +97,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
     List<WorkflowExecution> executions =
         constructWorkflowExecutions(serviceExecutionSummaries, serviceFailureExecutionSummaries);
 
-    when(workflowExecutionService.obtainWorkflowExecutions(anyString(), anyLong())).thenReturn(executions);
+    when(workflowExecutionService.obtainWorkflowExecutions(anyString(), anyLong(), any())).thenReturn(executions);
 
     ServiceInstanceStatistics statistics = statisticsService.getServiceInstanceStatistics(ACCOUNT_ID, null, 30);
     assertThat(statistics.getStatsMap()).isNotEmpty();
@@ -129,7 +130,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
     List<WorkflowExecution> executions = constructWorkflowServiceExecutions(serviceExecutionSummaries);
 
-    when(workflowExecutionService.obtainWorkflowExecutions(anyList(), anyLong())).thenReturn(executions);
+    when(workflowExecutionService.obtainWorkflowExecutions(anyList(), anyLong(), any())).thenReturn(executions);
 
     DeploymentStatistics deploymentStatistics =
         statisticsService.getDeploymentStatistics(ACCOUNT_ID, asList(APP_ID), 30);

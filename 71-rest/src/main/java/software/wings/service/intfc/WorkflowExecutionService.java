@@ -166,11 +166,13 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   WorkflowExecutionBaseline getBaselineDetails(
       String appId, String workflowExecutionId, String stateExecutionId, String currentExecId);
 
-  List<WorkflowExecution> obtainWorkflowExecutions(List<String> appIds, long fromDateEpochMilli);
+  List<WorkflowExecution> obtainWorkflowExecutions(
+      List<String> appIds, long fromDateEpochMilli, String[] projectedKeys);
 
-  List<WorkflowExecution> obtainWorkflowExecutions(String accountId, long fromDateEpochMilli);
+  List<WorkflowExecution> obtainWorkflowExecutions(String accountId, long fromDateEpochMilli, String[] projectedKeys);
 
-  HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(List<String> appIds, long epochMilli);
+  HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(
+      List<String> appIds, long epochMilli, String[] projectedKeys);
 
   List<Artifact> obtainLastGoodDeployedArtifacts(@NotEmpty String appId, @NotEmpty String workflowId);
 
