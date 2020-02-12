@@ -211,6 +211,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
   }
 
   private String psWrappedCommand(String command) {
+    command = "$ErrorActionPreference=\"Stop\"\n" + command;
     String base64Command = encodeBase64String(command.getBytes(StandardCharsets.UTF_8));
     String wrappedCommand = format(
         "$decoded = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\\\"%s\\\")); Invoke-Expression $decoded",
