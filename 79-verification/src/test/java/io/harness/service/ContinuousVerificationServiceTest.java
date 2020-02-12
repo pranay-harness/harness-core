@@ -31,6 +31,7 @@ import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
+import static software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import static software.wings.service.impl.analysis.MLAnalysisType.FEEDBACK_ANALYSIS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL;
@@ -71,6 +72,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.alerts.AlertCategory;
@@ -1389,140 +1391,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .thenReturn(managerFeatureFlagCall);
   }
 
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testCreateFeedbackAnalysisTaskNoPrevFeedbackAnalysisRecord() throws Exception {
-    // setup mocks
-    setupFeedbacks(true);
-
-    // initally there should be no tasks even if we trigger
-    continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
-            .asList();
-    assertThat(learningEngineAnalysisTasks).isEmpty();
-
-    int oldMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 15;
-
-    LogMLAnalysisRecord oldLogAnalysisRecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(oldMinute).build();
-
-    oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
-
-    wingsPersistence.save(oldLogAnalysisRecord);
-
-    continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-                                      .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
-                                      .asList();
-    assertThat(learningEngineAnalysisTasks).hasSize(1);
-    assertThat(learningEngineAnalysisTasks.get(0).getAnalysis_minute()).isEqualTo(oldMinute);
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testCreateFeedbackAnalysisTaskNoFeedbacks() throws Exception {
-    // setup mocks
-    setupFeedbacks(false);
-    // initally there should be no tasks even if we trigger
-    continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
-            .asList();
-    assertThat(learningEngineAnalysisTasks).isEmpty();
-
-    int oldMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 15;
-
-    LogMLAnalysisRecord oldFeedbackRecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(oldMinute).build();
-
-    oldFeedbackRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
-
-    wingsPersistence.save(oldFeedbackRecord);
-
-    continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-                                      .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
-                                      .asList();
-    assertThat(learningEngineAnalysisTasks).isEmpty();
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testCreateFeedbackAnalysisTaskNotYetTimeForNewTask() throws Exception {
-    // setup mocks
-    setupFeedbacks(false);
-    // initally there should be no tasks even if we trigger
-    continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
-            .asList();
-    assertThat(learningEngineAnalysisTasks).isEmpty();
-
-    int oldMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 1;
-
-    LogMLAnalysisRecord oldFeedbackRecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(oldMinute).build();
-
-    oldFeedbackRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
-
-    wingsPersistence.save(oldFeedbackRecord);
-
-    LogMLAnalysisRecord oldLERecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(oldMinute).build();
-
-    oldLERecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
-
-    wingsPersistence.save(oldLERecord);
-
-    continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-                                      .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
-                                      .asList();
-    assertThat(learningEngineAnalysisTasks).isEmpty();
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testCreateFeedbackAnalysisTaskBasedOnOldLE() throws Exception {
-    // setup mocks
-    setupFeedbacks(true);
-    // initally there should be no tasks even if we trigger
-    continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
-            .asList();
-    assertThat(learningEngineAnalysisTasks).isEmpty();
-
-    int oldMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 1;
-    LogMLAnalysisRecord oldFeedbackRecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(oldMinute - 15).build();
-    oldFeedbackRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
-    wingsPersistence.save(oldFeedbackRecord);
-
-    LogMLAnalysisRecord oldLERecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(oldMinute).build();
-
-    oldLERecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
-
-    wingsPersistence.save(oldLERecord);
-
-    continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-                                      .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
-                                      .asList();
-    assertThat(learningEngineAnalysisTasks).hasSize(1);
-    assertThat(learningEngineAnalysisTasks.get(0).getAnalysis_minute()).isEqualTo(oldMinute);
-  }
-
   private AnalysisContext createDatadogLogAnalysisContext(int startMinute) {
     String messageField = UUID.randomUUID().toString();
     String timestampFieldFormat = UUID.randomUUID().toString();
@@ -2698,6 +2566,282 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .thenReturn(Optional.empty());
     continuousVerificationService.processNextCVTasks(accountId);
     verify(verificationManagerClient, times(2)).collectCVData(cvTask.getUuid(), cvTask.getDataCollectionInfo());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testCreateFeedbackAnalysisTask_NoPrevFeedbackAnalysisRecord() throws Exception {
+    // setup mocks
+    setupFeedbacks(true);
+
+    // initally there should be no tasks even if we trigger
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+            .asList();
+    assertThat(learningEngineAnalysisTasks).isEmpty();
+
+    int oldMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 15;
+
+    LogMLAnalysisRecord oldLogAnalysisRecord =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(oldMinute).build();
+
+    oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+
+    wingsPersistence.save(oldLogAnalysisRecord);
+
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                      .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+                                      .asList();
+    assertThat(learningEngineAnalysisTasks).hasSize(1);
+    assertThat(learningEngineAnalysisTasks.get(0).getAnalysis_minute()).isEqualTo(oldMinute);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testCreateFeedbackTask_happyCase() throws Exception {
+    // setup mocks
+    setupFeedbacks(true);
+
+    // Save a previously analysed feedback record and log record.
+    Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
+    LogMLAnalysisRecord oldLogAnalysisRecord =
+        LogMLAnalysisRecord.builder()
+            .appId(appId)
+            .cvConfigId(cvConfigId)
+            .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()))
+            .build();
+    oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(oldLogAnalysisRecord);
+    LogMLAnalysisRecord oldFeedbackAnalysisRecord = LogMLAnalysisRecord.builder()
+                                                        .appId(appId)
+                                                        .cvConfigId(cvConfigId)
+                                                        .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(
+                                                            oldMinute.minus(15, ChronoUnit.MINUTES).toEpochMilli()))
+                                                        .build();
+    oldFeedbackAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+    wingsPersistence.save(oldFeedbackAnalysisRecord);
+
+    // behavior under test
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+
+    // when triggered, next feedback analysis timie should be "oldMinute"
+    LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                          .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
+                                          .get();
+
+    assertThat(task).isNotNull();
+    assertThat(task.getAnalysis_minute()).isEqualTo(TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()));
+    assertThat(task.getMl_analysis_type().name()).isEqualTo(FEEDBACK_ANALYSIS.name());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testCreateFeedbackTask_workflowConfig() throws Exception {
+    // setup mocks
+    setupFeedbacks(true);
+
+    // Save a previously analysed feedback record and log record.
+    Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
+    LogMLAnalysisRecord oldLogAnalysisRecord =
+        LogMLAnalysisRecord.builder()
+            .appId(appId)
+            .cvConfigId(cvConfigId)
+            .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()))
+            .build();
+    oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(oldLogAnalysisRecord);
+    LogMLAnalysisRecord oldFeedbackAnalysisRecord = LogMLAnalysisRecord.builder()
+                                                        .appId(appId)
+                                                        .cvConfigId(cvConfigId)
+                                                        .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(
+                                                            oldMinute.minus(15, ChronoUnit.MINUTES).toEpochMilli()))
+                                                        .build();
+    oldFeedbackAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+    wingsPersistence.save(oldFeedbackAnalysisRecord);
+
+    CVConfiguration config = wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    config.setWorkflowConfig(true);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(config));
+
+    // behavior under test
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+
+    // when triggered, next feedback analysis timie should be "oldMinute"
+    LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                          .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
+                                          .get();
+
+    assertThat(task).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testCreateFeedbackTask_mismatchedLogMinute() throws Exception {
+    // setup mocks
+    setupFeedbacks(true);
+
+    // Save a previously analysed feedback record and log record.
+    Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
+    LogMLAnalysisRecord oldLogAnalysisRecord =
+        LogMLAnalysisRecord.builder()
+            .appId(appId)
+            .cvConfigId(cvConfigId)
+            .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()))
+            .build();
+    oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(oldLogAnalysisRecord);
+    // here we are setting the old feedback analysis record just 5mins before the new LE analysis record.
+    int previousMinute = (int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.minus(5, ChronoUnit.MINUTES).toEpochMilli());
+    LogMLAnalysisRecord previousLogAnalysisMinute =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(previousMinute).build();
+    previousLogAnalysisMinute.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(previousLogAnalysisMinute);
+    LogMLAnalysisRecord oldFeedbackAnalysisRecord =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(previousMinute).build();
+    oldFeedbackAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+
+    wingsPersistence.save(oldFeedbackAnalysisRecord);
+
+    // behavior under test
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+
+    // when triggered, next feedback analysis timie should be "oldMinute"
+    LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                          .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
+                                          .get();
+
+    assertThat(task).isNotNull();
+    assertThat(task.getAnalysis_minute()).isEqualTo(TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()));
+    assertThat(task.getMl_analysis_type().name()).isEqualTo(FEEDBACK_ANALYSIS.name());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testCreateFeedbackAnalysisTask_notYetTimeForNewTask() throws Exception {
+    // setup mocks
+    setupFeedbacks(true);
+    // initally there should be no tasks even if we trigger
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+            .asList();
+    assertThat(learningEngineAnalysisTasks).isEmpty();
+
+    Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
+
+    LogMLAnalysisRecord oldFeedbackRecord =
+        LogMLAnalysisRecord.builder()
+            .appId(appId)
+            .cvConfigId(cvConfigId)
+            .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()))
+            .build();
+
+    oldFeedbackRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+
+    wingsPersistence.save(oldFeedbackRecord);
+
+    LogMLAnalysisRecord oldLERecord =
+        LogMLAnalysisRecord.builder()
+            .appId(appId)
+            .cvConfigId(cvConfigId)
+            .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()))
+            .build();
+
+    oldLERecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+
+    wingsPersistence.save(oldLERecord);
+
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                      .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+                                      .asList();
+    assertThat(learningEngineAnalysisTasks).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testCreateFeedbackAnalysisTask_noFeedbacks() throws Exception {
+    // setup mocks
+    setupFeedbacks(false);
+    // initally there should be no tasks even if we trigger
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+            .asList();
+    assertThat(learningEngineAnalysisTasks).isEmpty();
+
+    Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
+    int minute = (int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli());
+    int previousMinute = minute - CRON_POLL_INTERVAL_IN_MINUTES;
+
+    LogMLAnalysisRecord oldFeedbackRecord =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(previousMinute).build();
+
+    oldFeedbackRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+
+    wingsPersistence.save(oldFeedbackRecord);
+
+    LogMLAnalysisRecord newLogMLAnalysisRecord =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(minute).build();
+
+    newLogMLAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+
+    wingsPersistence.save(newLogMLAnalysisRecord);
+
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                      .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+                                      .asList();
+    assertThat(learningEngineAnalysisTasks).isEmpty();
+
+    LogMLAnalysisRecord latestFeedbackRecord =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+            .filter(LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE)
+            .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
+            .get();
+
+    assertThat(latestFeedbackRecord).isNotNull();
+    assertThat(latestFeedbackRecord.getLogCollectionMinute()).isEqualTo(minute);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testCreateFeedbackTask_featureFlagDisabled() throws Exception {
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
+    writeField(continuousVerificationService, "verificationManagerClient", verificationManagerClient, true);
+    // Save a previously analysed feedback record and log record.
+    Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
+    LogMLAnalysisRecord oldLogAnalysisRecord =
+        LogMLAnalysisRecord.builder()
+            .appId(appId)
+            .cvConfigId(cvConfigId)
+            .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()))
+            .build();
+    oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(oldLogAnalysisRecord);
+
+    // behavior under test
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+            .asList();
+    assertThat(learningEngineAnalysisTasks).isEmpty();
   }
 
   private void waitForAlert(int expectedNumOfAlerts, Optional<AlertStatus> alertStatus) {
