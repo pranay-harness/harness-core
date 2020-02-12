@@ -93,6 +93,8 @@ public interface LogAnalysisService {
 
   boolean isAnalysisPresent(String stateExecutionId, String appId);
 
+  boolean isAnalysisPresentForMinute(String cvConfigId, int analysisMinute, LogMLAnalysisStatus analysisStatus);
+
   void createAndSaveSummary(StateType stateType, String appId, String stateExecutionId, String query, String message);
 
   Optional<LogDataRecord> getHearbeatRecordForL0(String appId, String stateExecutionId, StateType type, String host);

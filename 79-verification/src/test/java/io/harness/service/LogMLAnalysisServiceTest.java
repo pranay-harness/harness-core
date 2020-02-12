@@ -2158,4 +2158,48 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     wingsPersistence.save(failedTask);
   }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testIsAnalysisPresentForMinute_IsPresent() {
+    Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
+    String cvConfigId = generateUuid();
+    int minute = (int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli());
+    LogMLAnalysisRecord oldLogAnalysisRecord =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(minute).build();
+    oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(oldLogAnalysisRecord);
+
+    assertThat(analysisService.isAnalysisPresentForMinute(cvConfigId, minute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE))
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testIsAnalysisPresentForMinute_IsPresentButDifferentStatus() {
+    Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
+    String cvConfigId = generateUuid();
+    int minute = (int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli());
+    LogMLAnalysisRecord oldLogAnalysisRecord =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(minute).build();
+    oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(oldLogAnalysisRecord);
+
+    assertThat(
+        analysisService.isAnalysisPresentForMinute(cvConfigId, minute, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE))
+        .isFalse();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testIsAnalysisPresentForMinute_IsNotPresent() {
+    Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
+    String cvConfigId = generateUuid();
+    int minute = (int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli());
+    assertThat(analysisService.isAnalysisPresentForMinute(cvConfigId, minute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE))
+        .isFalse();
+  }
 }

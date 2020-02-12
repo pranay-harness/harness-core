@@ -107,7 +107,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -1092,63 +1091,55 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         });
   }
 
-  private long getFeedbackAnalysisMinute(LogsCVConfiguration logsCVConfiguration) {
+  private Optional<Long> getFeedbackAnalysisMinute(LogsCVConfiguration logsCVConfiguration) {
     long lastFeedbackAnalysisMinute = logAnalysisService.getLastCVAnalysisMinute(
         logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid(), LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
-    long minuteForFeedbackAnalysis = lastFeedbackAnalysisMinute + CRON_POLL_INTERVAL_IN_MINUTES;
+
     long lastLogMLAnalysisMinute = logAnalysisService.getLastCVAnalysisMinute(
         logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid(), LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
-    if (isBeforeTwoHours(minuteForFeedbackAnalysis)) {
-      if (isBeforeTwoHours(lastLogMLAnalysisMinute)) {
-        logger.info(
-            "The last LogML analysis was also more than 2 hours ago, we dont have anything to do for feedback tasks.");
-        return -1;
-      }
 
-      while (isBeforeTwoHours(minuteForFeedbackAnalysis)) {
-        minuteForFeedbackAnalysis += CRON_POLL_INTERVAL_IN_MINUTES;
-      }
+    if (lastLogMLAnalysisMinute <= 0) {
+      logger.info("There has been no logML analysis done for this yet. Retuning {}", logsCVConfiguration.getUuid());
+      return Optional.empty();
+    }
+    if (lastFeedbackAnalysisMinute <= 0) {
+      logger.info(
+          "There have been no feedback analysis records for this configuration {}. Creating the first one for minute {}",
+          logsCVConfiguration.getUuid(), lastLogMLAnalysisMinute);
+      return Optional.of(lastLogMLAnalysisMinute);
     }
 
-    if (lastFeedbackAnalysisMinute <= 0
-        || !hasBaselineAnalysisStartedForFeedback(logsCVConfiguration, lastFeedbackAnalysisMinute)) {
-      if (lastLogMLAnalysisMinute <= 0) {
-        logger.info(
-            "For account {} and CV config {} name {} type {} no LogML analysis has happened yet. Skipping feedback analysis",
-            logsCVConfiguration.getAccountId(), logsCVConfiguration.getUuid(), logsCVConfiguration.getName(),
-            logsCVConfiguration.getStateType());
-        return -1;
-      } else {
-        minuteForFeedbackAnalysis = lastLogMLAnalysisMinute;
-      }
-    } else if (minuteForFeedbackAnalysis > lastLogMLAnalysisMinute) {
-      logger.info("It is not time for the next feedback analysis yet. We'll wait for some time.");
-      return -1;
+    long minuteForFeedbackAnalysis = lastFeedbackAnalysisMinute + CRON_POLL_INTERVAL_IN_MINUTES;
+
+    // check if there is a logAnalysis record for this minute
+    boolean isLogMLAnalysisPresent = logAnalysisService.isAnalysisPresentForMinute(
+        logsCVConfiguration.getUuid(), (int) minuteForFeedbackAnalysis, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+
+    if (isLogMLAnalysisPresent) {
+      logger.info(
+          "Returning the feedbackAnalysisTime for {} as {}", logsCVConfiguration.getUuid(), minuteForFeedbackAnalysis);
+      return Optional.of(minuteForFeedbackAnalysis);
     }
 
-    return minuteForFeedbackAnalysis;
-  }
-
-  private boolean hasBaselineAnalysisStartedForFeedback(
-      LogsCVConfiguration cvConfiguration, long lastFeedbackAnalysisMinute) {
-    boolean hasBaselineAnalysisStarted = false;
-    if (lastFeedbackAnalysisMinute >= cvConfiguration.getBaselineStartMinute()) {
-      return true;
+    if (lastLogMLAnalysisMinute > lastFeedbackAnalysisMinute) {
+      logger.info(
+          "There has been a mismatch in the log and feedback records for {}. We are self-correcting now. New feedback minute is {}",
+          logsCVConfiguration.getUuid(), lastLogMLAnalysisMinute);
+      return Optional.of(lastLogMLAnalysisMinute);
     }
-    return false;
+    logger.info("It is not time for a new feedback task yet for {}. Returning -1", logsCVConfiguration.getUuid());
+    return Optional.empty();
   }
 
   @Override
   @Counted
   @Timed
   public void triggerFeedbackAnalysis(String accountId) {
-    boolean isFlagEnabled = isFeatureFlagEnabled(FeatureName.CV_FEEDBACKS, accountId);
-    if (!isFlagEnabled) {
+    if (!isFeatureFlagEnabled(FeatureName.CV_FEEDBACKS, accountId)) {
       logger.info(
           "CV Feedbacks feature flag is not enabled for account {}, not going to create a feedback task", accountId);
       return;
     }
-    // List all the CV configurations for a given account
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
 
     cvConfigurations.stream()
@@ -1157,38 +1148,31 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
         .forEach(cvConfiguration -> {
           LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
-          try (VerificationLogContext ignored = new VerificationLogContext(logsCVConfiguration.getAccountId(),
-                   logsCVConfiguration.getUuid(), null, logsCVConfiguration.getStateType(), OVERRIDE_ERROR)) {
-            if (!logsCVConfiguration.isWorkflowConfig()) {
-              long minuteForFeedbackAnalysis = getFeedbackAnalysisMinute(logsCVConfiguration);
+          if (logsCVConfiguration.isWorkflowConfig()) {
+            logger.info("{} is a workflow configuration. Not going to trigger feedback tasks for this.",
+                logsCVConfiguration.getUuid());
+            return;
+          }
 
-              if (minuteForFeedbackAnalysis <= 0) {
-                return;
-              }
+          Optional<Long> feedbackAnalysisMinute = getFeedbackAnalysisMinute(logsCVConfiguration);
+          if (!feedbackAnalysisMinute.isPresent()) {
+            return;
+          }
+          long minuteForFeedbackAnalysis = feedbackAnalysisMinute.get();
 
-              long lastLogMLAnalysisMinute = logAnalysisService.getLastCVAnalysisMinute(logsCVConfiguration.getAppId(),
-                  logsCVConfiguration.getUuid(), LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+          Map<FeedbackAction, List<CVFeedbackRecord>> feedbacks =
+              logAnalysisService.getUserFeedback(cvConfiguration.getUuid(), null, cvConfiguration.getAppId());
+          boolean areAllFeedbacksEmpty = feedbacks.entrySet().stream().allMatch(entry -> isEmpty(entry.getValue()));
 
-              AtomicBoolean isEmptyFeedbacks = new AtomicBoolean(true);
-
-              Map<FeedbackAction, List<CVFeedbackRecord>> feedbacks =
-                  logAnalysisService.getUserFeedback(cvConfiguration.getUuid(), null, cvConfiguration.getAppId());
-              feedbacks.forEach((action, list) -> {
-                if (isNotEmpty(list)) {
-                  isEmptyFeedbacks.set(false);
-                }
-              });
-              if (isEmptyFeedbacks.get()) {
-                logAnalysisService.createAndUpdateFeedbackAnalysis(
-                    LogMLAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid(), lastLogMLAnalysisMinute);
-              } else {
-                boolean feedbackTask = createFeedbackAnalysisTask(logsCVConfiguration, minuteForFeedbackAnalysis);
-                logger.info("Created Feedback analysis task for {} and minute {}", logsCVConfiguration.getUuid(),
-                    minuteForFeedbackAnalysis);
-                if (feedbackTask) {
-                  createExperimentalFeedbackTask(logsCVConfiguration, minuteForFeedbackAnalysis);
-                }
-              }
+          if (areAllFeedbacksEmpty) {
+            logAnalysisService.createAndUpdateFeedbackAnalysis(
+                LogMLAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid(), minuteForFeedbackAnalysis);
+          } else {
+            boolean feedbackTask = createFeedbackAnalysisTask(logsCVConfiguration, minuteForFeedbackAnalysis);
+            logger.info("Created Feedback analysis task for {} and minute {}", logsCVConfiguration.getUuid(),
+                minuteForFeedbackAnalysis);
+            if (feedbackTask) {
+              createExperimentalFeedbackTask(logsCVConfiguration, minuteForFeedbackAnalysis);
             }
           }
         });

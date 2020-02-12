@@ -877,6 +877,17 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
+  public boolean isAnalysisPresentForMinute(
+      String cvConfigId, int analysisMinute, LogMLAnalysisStatus logMLAnalysisStatus) {
+    LogMLAnalysisRecord analysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+                                             .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
+                                             .filter(LogMLAnalysisRecordKeys.logCollectionMinute, analysisMinute)
+                                             .filter(LogMLAnalysisRecordKeys.analysisStatus, logMLAnalysisStatus)
+                                             .get();
+    return analysisRecord != null;
+  }
+
+  @Override
   public void createAndSaveSummary(
       StateType stateType, String appId, String stateExecutionId, String query, String message) {
     final LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
