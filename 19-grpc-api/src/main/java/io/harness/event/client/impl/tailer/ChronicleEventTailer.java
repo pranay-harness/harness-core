@@ -6,7 +6,6 @@ import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
 import io.harness.event.PublishMessage;
@@ -16,8 +15,7 @@ import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
 import net.openhft.chronicle.wire.DocumentContext;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,11 +25,15 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class ChronicleEventTailer extends AbstractScheduledService {
   private static final String READ_TAILER = "read-tailer";
-  private static final int MAX_BATCH_SIZE = 5000;
+  private static final int MAX_COUNT = 5000;
+  private static final int MAX_BYTES = 1024 * 1024; // 1MiB
+  private static final Duration MIN_DELAY = Duration.ofMillis(200);
+  private static final Duration MAX_DELAY = Duration.ofMinutes(5);
 
   private final EventPublisherBlockingStub blockingStub;
   private final ExcerptTailer readTailer;
   private final FileDeletionManager fileDeletionManager;
+  private final BackoffScheduler scheduler;
 
   @Inject
   ChronicleEventTailer(EventPublisherBlockingStub blockingStub, @Named("tailer") RollingChronicleQueue chronicleQueue,
@@ -41,48 +43,49 @@ public class ChronicleEventTailer extends AbstractScheduledService {
     this.readTailer = chronicleQueue.createTailer(READ_TAILER);
     fileDeletionManager.setQueue(chronicleQueue);
     this.fileDeletionManager = fileDeletionManager;
+    this.scheduler = new BackoffScheduler(MIN_DELAY, MAX_DELAY);
   }
 
   @Override
-  protected void startUp() throws Exception {
+  protected void startUp() {
     logger.info("Starting up");
   }
 
   @Override
-  protected void shutDown() throws Exception {
+  protected void shutDown() {
     logger.info("Shutting down");
   }
 
   @Override
-  protected void runOneIteration() throws Exception {
+  protected void runOneIteration() {
     // service will terminate if exception is not caught.
     try {
-      List<PublishMessage> batchToSend = new ArrayList<>();
+      Batch batchToSend = new Batch(MAX_BYTES, MAX_COUNT);
       long prevIndex = getReadIndex();
-      for (int i = 0; i < MAX_BATCH_SIZE; i++) {
+      while (!batchToSend.isFull()) {
         try (DocumentContext dc = readTailer.readingDocument()) {
           if (!dc.isPresent()) {
             break;
           }
           try {
-            // dc.wire annotated with a different @NonNull annotation.
-            PublishMessage result = PublishMessage.parseFrom(requireNonNull(dc.wire()).read().bytes());
-            batchToSend.add(result);
-          } catch (InvalidProtocolBufferException e) {
+            PublishMessage message = PublishMessage.parseFrom(requireNonNull(dc.wire()).read().bytes());
+            batchToSend.add(message);
+          } catch (Exception e) {
             logger.error("Exception while parsing message", e);
           }
         }
       }
       if (!batchToSend.isEmpty()) {
-        PublishRequest publishRequest = PublishRequest.newBuilder().addAllMessages(batchToSend).build();
+        PublishRequest publishRequest = PublishRequest.newBuilder().addAllMessages(batchToSend.getMessages()).build();
         try {
-          blockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).publish(publishRequest);
+          blockingStub.withDeadlineAfter(30, TimeUnit.SECONDS).publish(publishRequest);
           logger.debug("Published {} messages successfully", batchToSend.size());
           fileDeletionManager.setSentCycle(readTailer.cycle());
+          scheduler.recordSuccess();
         } catch (Exception e) {
           logger.warn("Exception during message publish", e);
           readTailer.moveToIndex(prevIndex);
-          throw e;
+          scheduler.recordFailure();
         }
       }
     } catch (Exception e) {
@@ -92,7 +95,7 @@ public class ChronicleEventTailer extends AbstractScheduledService {
 
   @Override
   protected Scheduler scheduler() {
-    return Scheduler.newFixedDelaySchedule(0, 1, TimeUnit.SECONDS);
+    return scheduler;
   }
 
   private long getReadIndex() {
