@@ -96,6 +96,8 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
     return setExecutionData(executionDetails);
   }
   private Map<String, ExecutionDataValue> setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
+    putNotNull(executionDetails, "activityId",
+        ExecutionDataValue.builder().displayName("Activity Id").value(activityId).build());
     putNotNull(executionDetails, "approvalId",
         ExecutionDataValue.builder().displayName("Approval Id").value(approvalId).build());
     putNotNull(executionDetails, "status",
