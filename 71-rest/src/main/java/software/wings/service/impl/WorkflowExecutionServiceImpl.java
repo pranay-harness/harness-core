@@ -3313,9 +3313,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public List<WorkflowExecution> obtainWorkflowExecutions(List<String> appIds, long fromDateEpochMilli) {
+  public List<WorkflowExecution> obtainWorkflowExecutions(
+      List<String> appIds, long fromDateEpochMilli, String[] projectedKeys) {
     List<WorkflowExecution> workflowExecutions = new ArrayList<>();
-    try (HIterator<WorkflowExecution> iterator = obtainWorkflowExecutionIterator(appIds, fromDateEpochMilli)) {
+    try (HIterator<WorkflowExecution> iterator =
+             obtainWorkflowExecutionIterator(appIds, fromDateEpochMilli, projectedKeys)) {
       while (iterator.hasNext()) {
         workflowExecutions.add(iterator.next());
       }
@@ -3324,9 +3326,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public List<WorkflowExecution> obtainWorkflowExecutions(String accountId, long fromDateEpochMilli) {
+  public List<WorkflowExecution> obtainWorkflowExecutions(
+      String accountId, long fromDateEpochMilli, String[] projectedKeys) {
     List<WorkflowExecution> workflowExecutions = new ArrayList<>();
-    try (HIterator<WorkflowExecution> iterator = obtainWorkflowExecutionIterator(accountId, fromDateEpochMilli)) {
+    try (HIterator<WorkflowExecution> iterator =
+             obtainWorkflowExecutionIterator(accountId, fromDateEpochMilli, projectedKeys)) {
       while (iterator.hasNext()) {
         workflowExecutions.add(iterator.next());
       }
@@ -3335,27 +3339,34 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(List<String> appIds, long epochMilli) {
+  public HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(
+      List<String> appIds, long epochMilli, String[] projectedKeys) {
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .field(WorkflowExecutionKeys.createdAt)
                                          .greaterThanOrEq(epochMilli)
-                                         .field(WorkflowExecutionKeys.pipelineExecutionId)
-                                         .doesNotExist()
                                          .field(WorkflowExecutionKeys.appId)
                                          .in(appIds)
-                                         .project(WorkflowExecutionKeys.stateMachine, false);
+                                         .field(WorkflowExecutionKeys.pipelineExecutionId)
+                                         .doesNotExist();
+    for (String projectedKey : projectedKeys) {
+      query.project(projectedKey, true);
+    }
+
     return new HIterator<>(query.fetch());
   }
 
-  private HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(String accountId, long epochMilli) {
+  private HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(
+      String accountId, long epochMilli, String[] projectedKeys) {
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .field(WorkflowExecutionKeys.createdAt)
                                          .greaterThanOrEq(epochMilli)
-                                         .field(WorkflowExecutionKeys.pipelineExecutionId)
-                                         .doesNotExist()
                                          .field(WorkflowExecutionKeys.accountId)
                                          .equal(accountId)
-                                         .project(WorkflowExecutionKeys.stateMachine, false);
+                                         .field(WorkflowExecutionKeys.pipelineExecutionId)
+                                         .doesNotExist();
+    for (String projectedKey : projectedKeys) {
+      query.project(projectedKey, true);
+    }
     return new HIterator<>(query.fetch());
   }
 
