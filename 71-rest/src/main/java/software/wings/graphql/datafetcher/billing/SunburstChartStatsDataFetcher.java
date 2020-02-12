@@ -28,7 +28,6 @@ import software.wings.graphql.schema.type.aggregation.billing.QLSunburstGridData
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -341,10 +340,11 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
       dataPointBuilder.parent(parentFieldName + ":" + chileFieldName);
       String uniqueId = parentId + ":" + id;
       dataPointBuilder.id(uniqueId);
-      dataPointBuilder.metadata(sunburstGridDataPointMap.get(parentId));
-      BigDecimal value = resultSet.getBigDecimal(BillingDataQueryMetadata.BillingDataMetaDataFields.SUM.getFieldName());
+      dataPointBuilder.metadata(sunburstGridDataPointMap.get(uniqueId));
+      double value = billingDataHelper.getRoundedDoubleValue(
+          resultSet.getBigDecimal(BillingDataQueryMetadata.BillingDataMetaDataFields.SUM.getFieldName()));
       dataPointBuilder.value(value);
-      childIdCostMap.put(parentId, childIdCostMap.getOrDefault(parentId, 0.0) + value.doubleValue());
+      childIdCostMap.put(parentId, childIdCostMap.getOrDefault(parentId, 0.0) + value);
       sunburstChartDataPoints.add(dataPointBuilder.build());
     }
 
@@ -357,8 +357,9 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
       dataPointBuilder.id(id);
       dataPointBuilder.name(billingStatsHelper.getEntityName(childField, childId));
       dataPointBuilder.type(childField.getFieldName());
-      dataPointBuilder.metadata(sunburstGridDataPointMap.get(parentId));
-      dataPointBuilder.value(childIdCostMap.get(id));
+      dataPointBuilder.metadata(sunburstGridDataPointMap.get(id));
+      dataPointBuilder.value(
+          childIdCostMap.get(id) != null ? billingDataHelper.getRoundedDoubleValue(childIdCostMap.get(id)) : null);
       dataPointBuilder.parent(parentId);
       sunburstChartDataPoints.add(dataPointBuilder.build());
     }
@@ -369,6 +370,7 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
       String clusterType = parentIds.getValue();
       QLSunburstChartDataPointBuilder dataPointBuilder = QLSunburstChartDataPoint.builder();
       dataPointBuilder.id(id);
+      dataPointBuilder.metadata(sunburstGridDataPointMap.get(id));
       dataPointBuilder.name(billingStatsHelper.getEntityName(parentField, id));
       dataPointBuilder.type(parentField.getFieldName());
       dataPointBuilder.parent(ROOT_PARENT_ID);
