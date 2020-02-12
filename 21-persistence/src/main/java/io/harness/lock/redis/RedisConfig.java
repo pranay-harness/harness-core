@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * @author rktummala on 05/08/19
  */
@@ -18,5 +20,8 @@ import lombok.NoArgsConstructor;
 @Singleton
 public class RedisConfig {
   @JsonProperty(defaultValue = "false") private boolean enabled;
-  private String url;
+  private boolean sentinel;
+  private String masterName;
+  private String redisUrl;
+  private List<String> sentinelUrls;
 }

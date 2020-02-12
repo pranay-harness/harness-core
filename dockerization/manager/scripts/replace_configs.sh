@@ -265,14 +265,6 @@ if [[ "" != "$DATADOG_APIKEY" ]]; then
   yq write -i $CONFIG_FILE datadogConfig.apiKey "$DATADOG_APIKEY"
 fi
 
-if [[ "" != "$REDIS_ENABLED" ]]; then
-  yq write -i $CONFIG_FILE redisConfig.enabled "$REDIS_ENABLED"
-fi
-
-if [[ "" != "$REDIS_URL" ]]; then
-  yq write -i $CONFIG_FILE redisConfig.url "$REDIS_URL"
-fi
-
 if [[ "" != "$DELEGATE_DOCKER_IMAGE" ]]; then
   yq write -i $CONFIG_FILE portal.delegateDockerImage "$DELEGATE_DOCKER_IMAGE"
 fi
@@ -471,5 +463,30 @@ if [[ "" != "$PUBLISHERS" ]]; then
     PUBLISHER=`echo $ITEM | awk -F= '{print $1}'`
     PUBLISHER_FLAG=`echo $ITEM | awk -F= '{print $2}'`
     yq write -i $CONFIG_FILE publishers.active.[$PUBLISHER] "${PUBLISHER_FLAG}"
+  done
+fi
+
+if [[ "$REDIS_ENABLED" == "true" ]]; then
+  yq write -i $CONFIG_FILE redisConfig.enabled true
+fi
+
+if [[ "$REDIS_SENTINEL" == "true" ]]; then
+  yq write -i $CONFIG_FILE redisConfig.sentinel true
+fi
+
+if [[ "" != "$REDIS_URL" ]]; then
+  yq write -i $CONFIG_FILE redisConfig.redisUrl "$REDIS_URL"
+fi
+
+if [[ "" != "$REDIS_MASTER_NAME" ]]; then
+  yq write -i $CONFIG_FILE redisConfig.masterName "$REDIS_MASTER_NAME"
+fi
+
+if [[ "" != "$REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra REDIS_SENTINEL_URLS <<< "$REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${REDIS_SENTINEL_URLS[@]}"; do
+    yq write -i $CONFIG_FILE redisConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
   done
 fi

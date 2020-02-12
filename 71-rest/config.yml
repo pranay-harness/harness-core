@@ -89,7 +89,13 @@ datadogConfig:
 
 redisConfig:
   enabled: false #redisConfigEnable
-  url: "redis_url"
+  sentinel: false
+  masterName: "test"
+  redisUrl: "redis://localhost:6379"
+  sentinelUrls:
+    - "redis://redis1:26379"
+    - "redis://redis2:26379"
+    - "redis://redis3:26379"
 
 githubConfig:
   clientId: githubClientId
