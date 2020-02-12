@@ -54,6 +54,9 @@ public class VariableProcessor {
               .get();
 
       InstanceElement instance = (InstanceElement) instanceElement.get();
+      if (instance == null || instance.getServiceTemplateElement() == null) {
+        return variables;
+      }
       List<ServiceVariable> serviceSettingMap = serviceTemplateService.computeServiceVariables(standardParam.getAppId(),
           standardParam.getEnvId(), instance.getServiceTemplateElement().getUuid(), workflowExecutionId, OBTAIN_VALUE);
       variables = serviceSettingMap.stream()
