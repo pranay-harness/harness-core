@@ -103,7 +103,7 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(sunburstChartData.get(0).getId()).isEqualTo(ROOT_PARENT_ID);
     assertThat(sunburstChartData.get(1).getId())
         .isEqualTo(CLUSTER1_ID + ":" + NAMESPACE1 + ":" + WORKLOAD_NAME_ACCOUNT1);
-    assertThat(sunburstChartData.get(1).getValue()).isEqualTo(TOTAL_COST);
+    assertThat(sunburstChartData.get(1).getValue()).isEqualTo(TOTAL_COST.doubleValue());
     assertThat(sunburstChartData.get(2).getId()).isEqualTo(CLUSTER1_ID + ":" + NAMESPACE1);
     assertThat(sunburstChartData.get(3).getId()).isEqualTo(CLUSTER1_ID);
   }
