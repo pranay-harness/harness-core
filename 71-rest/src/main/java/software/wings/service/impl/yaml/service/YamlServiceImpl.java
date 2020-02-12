@@ -327,6 +327,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         logger.error(GIT_YAML_LOG_PREFIX + "Failed to push templates for app {}", appId, ex);
       }
     });
+    logger.info(GIT_YAML_LOG_PREFIX + "Completed pushing templates for account {}", accountId);
   }
 
   protected List<GitFileChange> getChangesForZipFile(String accountId, InputStream fileInputStream, String yamlPath)

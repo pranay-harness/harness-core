@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
@@ -2023,8 +2024,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     final TemplateFolder templateTree =
         templateService.getTemplateTree(accountId, appId, null, TEMPLATE_TYPES_WITH_YAML_SUPPORT);
     // get all the templates and group them by folderId
-    final List<Template> templates = ListUtils.emptyIfNull(
-        templateService.list(aPageRequest().addFilter(Template.APP_ID_KEY, Operator.EQ, appId).build()).getResponse());
+    final List<Template> templates =
+        ListUtils.emptyIfNull(templateService
+                                  .list(aPageRequest()
+                                            .addFilter(Template.APP_ID_KEY, Operator.EQ, appId)
+                                            .addFilter(Template.ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                                            .withLimit(UNLIMITED)
+                                            .build())
+                                  .getResponse());
 
     final Map<String, List<Template>> folderIdTemplateMap =
         templates.stream().collect(Collectors.groupingBy(Template::getFolderId));
