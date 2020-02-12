@@ -1,6 +1,6 @@
 package io.harness.lock.redis;
 
-import static io.harness.exception.WingsException.NOBODY;
+import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 
@@ -12,6 +12,7 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -21,8 +22,10 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
+@Slf4j
 public class RedisPersistentLocker implements PersistentLocker {
   private RedissonClient client;
+  private static final String ERROR_MESSAGE = "Failed to acquire distributed lock for %s";
 
   @Inject
   public RedisPersistentLocker(RedisConfig redisConfig) {
@@ -56,12 +59,13 @@ public class RedisPersistentLocker implements PersistentLocker {
       RLock lock = client.getLock(name);
       boolean locked = lock.tryLock(0, timeout.toMillis(), TimeUnit.MILLISECONDS);
       if (locked) {
+        logger.info("Lock acquired on {} for timeout {}", name, timeout);
         return RedisAcquiredLock.builder().lock(lock).build();
       }
     } catch (Exception ex) {
-      throw new GeneralException(format("Failed to acquire distributed lock for %s", name), ex, NOBODY);
+      throw new GeneralException(format(ERROR_MESSAGE, name), ex, SRE);
     }
-    throw new GeneralException(format("Failed to acquire distributed lock for %s", name), NOBODY);
+    throw new GeneralException(format(ERROR_MESSAGE, name), SRE);
   }
 
   @Override
@@ -114,12 +118,13 @@ public class RedisPersistentLocker implements PersistentLocker {
       RLock lock = client.getLock(name);
       boolean locked = lock.tryLock(waitTimeout.toMillis(), lockTimeout.toMillis(), TimeUnit.MILLISECONDS);
       if (locked) {
+        logger.info("Acquired lock on {} for {} having a wait Timeout of {}", name, lockTimeout, waitTimeout);
         return RedisAcquiredLock.builder().lock(lock).build();
       }
     } catch (Exception ex) {
-      throw new GeneralException(format("Failed to acquire distributed lock for %s", name), ex, NOBODY);
+      throw new GeneralException(format(ERROR_MESSAGE, name), ex, SRE);
     }
-    throw new GeneralException(format("Failed to acquire distributed lock for %s", name), NOBODY);
+    throw new GeneralException(format(ERROR_MESSAGE, name), SRE);
   }
 
   @Override
