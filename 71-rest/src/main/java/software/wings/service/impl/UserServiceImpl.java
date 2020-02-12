@@ -2336,10 +2336,9 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    List<User> users = wingsPersistence.createQuery(User.class).filter(User.ACCOUNT_ID_KEY, accountId).asList();
+    List<User> users = wingsPersistence.createQuery(User.class).filter(UserKeys.accounts, accountId).asList();
     for (User user : users) {
-      wingsPersistence.delete(User.class, user.getUuid());
-      evictUserFromCache(user.getUuid());
+      delete(accountId, user.getUuid());
     }
   }
 

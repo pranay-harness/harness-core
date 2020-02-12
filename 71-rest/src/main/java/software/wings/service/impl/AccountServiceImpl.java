@@ -108,6 +108,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.features.GovernanceFeature;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.licensing.LicenseService;
+import software.wings.resources.UserResource;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
 import software.wings.scheduler.LdapGroupSyncJob;
@@ -223,6 +224,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private EventPublisher eventPublisher;
   @Inject private SegmentGroupEventJobService segmentGroupEventJobService;
+  @Inject private UserResource userResource;
+  @Inject private AccountService accountService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -428,19 +431,19 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public boolean delete(String accountId) {
     logger.info("Started deleting account '{}'", accountId);
-    boolean deleted = wingsPersistence.delete(Account.class, accountId);
-    if (deleted) {
-      dbCache.invalidate(Account.class, accountId);
-      deleteQuartzJobs(accountId);
-      executorService.submit(() -> {
-        List<OwnedByAccount> services = descendingServices(OwnedByAccount.class);
-        services.forEach(service -> service.deleteByAccountId(accountId));
-      });
-      //      refreshUsersForAccountDelete(accountId);
+    Account account = wingsPersistence.get(Account.class, accountId);
+    if (null == account) {
+      return false;
     }
 
+    dbCache.invalidate(Account.class, accountId);
+    deleteQuartzJobs(accountId);
+    executorService.submit(() -> {
+      List<OwnedByAccount> services = descendingServices(OwnedByAccount.class);
+      services.forEach(service -> service.deleteByAccountId(accountId));
+    });
     logger.info("Successfully deleted account {}", accountId);
-    return deleted;
+    return wingsPersistence.delete(account);
   }
 
   @Override
