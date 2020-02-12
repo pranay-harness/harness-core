@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.MEHUL;
+import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -63,6 +64,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.Role;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
@@ -77,6 +79,7 @@ import software.wings.features.GovernanceFeature;
 import software.wings.features.api.PremiumFeature;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.licensing.LicenseService;
+import software.wings.resources.UserResource;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
@@ -123,6 +126,7 @@ public class AccountServiceTest extends WingsBaseTest {
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
   @InjectMocks @Inject private LicenseService licenseService;
   @InjectMocks @Inject private AccountService accountService;
+  @InjectMocks @Inject private UserResource userResource;
 
   @Mock private GovernanceConfigService governanceConfigService;
   @Inject @Named(GovernanceFeature.FEATURE_NAME) private PremiumFeature governanceFeature;
@@ -344,6 +348,48 @@ public class AccountServiceTest extends WingsBaseTest {
     verify(appService).deleteByAccountId(accountId);
     verify(settingsService).deleteByAccountId(accountId);
     verify(templateGalleryService).deleteByAccountId(accountId);
+  }
+
+  @Test
+  @Owner(developers = MOHIT)
+  @Category(UnitTests.class)
+  public void shouldUpdateUserAfterDeletingAccount() {
+    String accountId = generateUuid();
+    Account account = anAccount().withUuid(accountId).withCompanyName(HARNESS_NAME).build();
+    wingsPersistence.save(account);
+
+    String accountId2 = generateUuid();
+    Account account2 = anAccount().withUuid(accountId2).withCompanyName(HARNESS_NAME).build();
+    wingsPersistence.save(account2);
+
+    String userId = generateUuid();
+    User user = User.Builder.anUser().uuid(userId).name("name1").email("user1@harness.io").build();
+    user.setAccounts(Arrays.asList(account, account2));
+    Role role1 = new Role();
+    role1.setName("testRole1");
+    role1.setUuid(generateUuid());
+    role1.setAccountId(account.getUuid());
+    Role role2 = new Role();
+    role2.setName("testRole2");
+    role2.setUuid(generateUuid());
+    role2.setAccountId(account2.getUuid());
+    wingsPersistence.save(role1);
+    wingsPersistence.save(role2);
+    user.setRoles(Arrays.asList(role1, role2));
+    wingsPersistence.save(user);
+
+    assertThat(user.getAccounts().contains(account)).isTrue();
+    assertThat(user.getRoles().contains(role1)).isTrue();
+    assertThat(user.getAccounts().contains(account2)).isTrue();
+    assertThat(user.getRoles().contains(role2)).isTrue();
+
+    accountService.delete(account.getUuid());
+    User updatedUser = wingsPersistence.get(User.class, userId);
+
+    assertThat(updatedUser.getAccounts().contains(account)).isFalse();
+    assertThat(updatedUser.getRoles().contains(role1)).isFalse();
+    assertThat(updatedUser.getAccounts().contains(account2)).isTrue();
+    assertThat(updatedUser.getRoles().contains(role2)).isTrue();
   }
 
   @Test
