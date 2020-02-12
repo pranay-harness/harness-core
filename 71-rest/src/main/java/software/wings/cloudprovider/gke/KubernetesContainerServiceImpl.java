@@ -411,7 +411,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
 
     List<String> verbs = new ArrayList<>(Arrays.asList("watch"));
-    List<String> resources = new ArrayList<>(Arrays.asList("nodes", "pods"));
+    List<String> resources = new ArrayList<>(Arrays.asList("nodes", "pods", "events"));
 
     validateAuth(kubectl, workingDirectory, resources, verbs);
   }
