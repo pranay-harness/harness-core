@@ -2,6 +2,7 @@ package software.wings.common;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -67,7 +68,7 @@ public class VariableProcessorTest extends CategoryTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void shouldGetVariablesForInstanceElement() throws Exception {
+  public void shouldGetVariablesForInstanceElement() {
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, OBTAIN_VALUE))
         .thenReturn(asList(ServiceVariable.builder().name("PORT").value("8080".toCharArray()).build()));
 
@@ -82,5 +83,23 @@ public class VariableProcessorTest extends CategoryTest {
     assertThat(variableProcessor.getVariables(new ArrayDeque<>(asList(workflowStandardParams, instanceElement)), null))
         .hasSize(1)
         .containsAllEntriesOf(ImmutableMap.of("PORT", "8080"));
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldGetVariablesForInstanceElementWithoutServiceTemplate() {
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, OBTAIN_VALUE))
+        .thenReturn(asList(ServiceVariable.builder().name("PORT").value("8080".toCharArray()).build()));
+
+    WorkflowStandardParams workflowStandardParams =
+        aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
+    InstanceElement instanceElement = anInstanceElement()
+
+                                          .host(HostElement.builder().uuid(HOST_ID).build())
+                                          .build();
+
+    assertThat(variableProcessor.getVariables(new ArrayDeque<>(asList(workflowStandardParams, instanceElement)), null))
+        .hasSize(0);
   }
 }
