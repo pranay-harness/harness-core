@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -72,6 +73,7 @@ import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure.AwsInstanceInfrastructureKeys;
 import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure.AwsLambdaInfrastructureKeys;
+import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.GoogleKubernetesEngine.GoogleKubernetesEngineKeys;
 import software.wings.infra.InfrastructureDefinition;
@@ -112,6 +114,9 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   @Mock private EventPublishHelper eventPublishHelper;
 
   @Spy @InjectMocks private InfrastructureDefinitionServiceImpl infrastructureDefinitionService;
+
+  private static final String DEFAULT = "default";
+  private static final String USER_INPUT_NAMESPACE = "USER_INPUT_NAMESPACE";
 
   @Test
   @Owner(developers = VAIBHAV_SI)
@@ -823,4 +828,60 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   //  public void testListHostedZones() {
   //    InfrastructureDefinition awsEcsInfra = getValidInfra(AWS_ECS, true);
   //  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void googleKubernetesEngineSetDefaultsTest() {
+    InfrastructureDefinition googleKubernetesInfraDef =
+        InfrastructureDefinition.builder().infrastructure(GoogleKubernetesEngine.builder().build()).build();
+
+    infrastructureDefinitionService.setDefaults(googleKubernetesInfraDef);
+
+    assertThat(((GoogleKubernetesEngine) (googleKubernetesInfraDef.getInfrastructure())).getNamespace())
+        .isEqualTo(DEFAULT);
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void googleKubernetesEngineSetDefaultsNoChangeTest() {
+    InfrastructureDefinition googleKubernetesInfraDef =
+        InfrastructureDefinition.builder()
+            .infrastructure(GoogleKubernetesEngine.builder().namespace(USER_INPUT_NAMESPACE).build())
+            .build();
+
+    infrastructureDefinitionService.setDefaults(googleKubernetesInfraDef);
+
+    assertThat(((GoogleKubernetesEngine) (googleKubernetesInfraDef.getInfrastructure())).getNamespace())
+        .isEqualTo(USER_INPUT_NAMESPACE);
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void directKubernetesSetDefaultsTest() {
+    InfrastructureDefinition directKubernetesInfraDef =
+        InfrastructureDefinition.builder().infrastructure(DirectKubernetesInfrastructure.builder().build()).build();
+
+    infrastructureDefinitionService.setDefaults(directKubernetesInfraDef);
+
+    assertThat(((DirectKubernetesInfrastructure) (directKubernetesInfraDef.getInfrastructure())).getNamespace())
+        .isEqualTo(DEFAULT);
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void directKubernetesSetDefaultsNoChangeTest() {
+    InfrastructureDefinition directKubernetesInfraDef =
+        InfrastructureDefinition.builder()
+            .infrastructure(DirectKubernetesInfrastructure.builder().namespace(USER_INPUT_NAMESPACE).build())
+            .build();
+
+    infrastructureDefinitionService.setDefaults(directKubernetesInfraDef);
+
+    assertThat(((DirectKubernetesInfrastructure) (directKubernetesInfraDef.getInfrastructure())).getNamespace())
+        .isEqualTo(USER_INPUT_NAMESPACE);
+  }
 }

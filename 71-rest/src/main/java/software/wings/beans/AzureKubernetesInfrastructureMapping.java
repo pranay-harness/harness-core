@@ -87,7 +87,7 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
     }
 
     public Builder withMasterUrl(String masterUrl) {
-      this.clusterName = masterUrl;
+      this.masterUrl = masterUrl;
       return this;
     }
 
@@ -227,6 +227,7 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
       azureKubernetesInfrastructureMapping.setName(name);
       azureKubernetesInfrastructureMapping.setAutoPopulate(autoPopulate);
       azureKubernetesInfrastructureMapping.setAccountId(accountId);
+      azureKubernetesInfrastructureMapping.setMasterUrl(masterUrl);
       return azureKubernetesInfrastructureMapping;
     }
   }

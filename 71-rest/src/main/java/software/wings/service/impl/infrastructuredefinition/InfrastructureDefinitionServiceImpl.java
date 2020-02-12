@@ -133,6 +133,7 @@ import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure.AwsLambdaInfrastructureKeys;
 import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.CloudProviderInfrastructure;
+import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.GoogleKubernetesEngine.GoogleKubernetesEngineKeys;
 import software.wings.infra.InfraDefinitionDetail;
@@ -202,6 +203,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class InfrastructureDefinitionServiceImpl implements InfrastructureDefinitionService {
   public static final String NULL = "null";
+  public static final String DEFAULT = "default";
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceTemplateService serviceTemplateService;
@@ -344,6 +346,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   public InfrastructureDefinition save(
       InfrastructureDefinition infrastructureDefinition, boolean migration, boolean skipValidation) {
     String accountId = appService.getAccountIdByAppId(infrastructureDefinition.getAppId());
+    setDefaults(infrastructureDefinition);
+
     if (!migration && !skipValidation) {
       validateInfraDefinition(infrastructureDefinition);
     }
@@ -370,6 +374,23 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       logger.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }
     return infrastructureDefinition;
+  }
+
+  @VisibleForTesting
+  void setDefaults(InfrastructureDefinition infraDefinition) {
+    if (infraDefinition.getInfrastructure() instanceof GoogleKubernetesEngine) {
+      GoogleKubernetesEngine googleKubernetesEngine = (GoogleKubernetesEngine) infraDefinition.getInfrastructure();
+      if (isBlank(googleKubernetesEngine.getNamespace())) {
+        googleKubernetesEngine.setNamespace(DEFAULT);
+      }
+    }
+    if (infraDefinition.getInfrastructure() instanceof DirectKubernetesInfrastructure) {
+      DirectKubernetesInfrastructure directKubernetesInfrastructure =
+          (DirectKubernetesInfrastructure) infraDefinition.getInfrastructure();
+      if (isBlank(directKubernetesInfrastructure.getNamespace())) {
+        directKubernetesInfrastructure.setNamespace(DEFAULT);
+      }
+    }
   }
 
   @VisibleForTesting
@@ -535,6 +556,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Override
   public InfrastructureDefinition update(InfrastructureDefinition infrastructureDefinition) {
     String accountId = appService.getAccountIdByAppId(infrastructureDefinition.getAppId());
+    setDefaults(infrastructureDefinition);
     validateInfraDefinition(infrastructureDefinition);
     InfrastructureDefinition savedInfraDefinition =
         get(infrastructureDefinition.getAppId(), infrastructureDefinition.getUuid());
@@ -633,6 +655,12 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         return null;
       }
     }
+
+    /*
+     * setDefaults is called as the namespace is empty
+     * for already saved infraDef, could remove setDef() after DB migration
+     * */
+    setDefaults(infrastructureDefinition);
     return getInfrastructureMapping(serviceId, infrastructureDefinition);
   }
 

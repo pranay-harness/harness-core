@@ -41,6 +41,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AzureKubernetesInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -72,6 +73,7 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
   @InjectMocks @Inject protected YamlHelper yamlHelper;
   @InjectMocks @Inject protected InfrastructureMappingService infrastructureMappingService;
   @InjectMocks @Inject protected AzureKubernetesInfraMappingYamlHandler azureKubernetesInfraMappingYamlHandler;
+  @InjectMocks @Inject protected ContainerMasterUrlHelper containerMasterUrlHelper;
 
   private String validYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: AZURE_KUBERNETES\n"
@@ -146,6 +148,8 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
+    when(containerMasterUrlHelper.fetchMasterUrl(any(), any())).thenReturn("master_url");
+
     ChangeContext<AzureKubernetesInfrastructureMapping.Yaml> changeContext =
         getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 

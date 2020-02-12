@@ -108,6 +108,7 @@ import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.InfrastructureType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -192,6 +193,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class InfrastructureMappingServiceImpl implements InfrastructureMappingService {
   private static final String COMPUTE_PROVIDER_SETTING_ID_KEY = "computeProviderSettingId";
   private static final Integer REFERENCED_ENTITIES_TO_SHOW = 10;
+  private static final String DEFAULT = "default";
   @Inject @Getter private Subject<InfrastructureMappingServiceObserver> subject = new Subject<>();
 
   @Inject private WingsPersistence wingsPersistence;
@@ -266,6 +268,50 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
+  @VisibleForTesting
+  void setDefaults(InfrastructureMapping infraMapping) {
+    switch (infraMapping.getInfraMappingType()) {
+      case InfrastructureType.GCP_KUBERNETES_ENGINE:
+        GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
+            (GcpKubernetesInfrastructureMapping) infraMapping;
+        if (containerMasterUrlHelper.masterUrlRequiredWithProvisioner(gcpKubernetesInfrastructureMapping)) {
+          gcpKubernetesInfrastructureMapping.setMasterUrl(
+              containerMasterUrlHelper.fetchMasterUrl(getGcpContainerServiceParams(gcpKubernetesInfrastructureMapping),
+                  getSyncTaskContext(gcpKubernetesInfrastructureMapping)));
+        }
+        if (isBlank(gcpKubernetesInfrastructureMapping.getNamespace())) {
+          gcpKubernetesInfrastructureMapping.setNamespace(DEFAULT);
+        }
+        break;
+      case InfrastructureType.AZURE_KUBERNETES:
+        AzureKubernetesInfrastructureMapping azureKubernetesInfrastructureMapping =
+            (AzureKubernetesInfrastructureMapping) infraMapping;
+        if (containerMasterUrlHelper.masterUrlRequiredWithProvisioner(azureKubernetesInfrastructureMapping)) {
+          azureKubernetesInfrastructureMapping.setMasterUrl(containerMasterUrlHelper.fetchMasterUrl(
+              getAzureContainerServiceParams(azureKubernetesInfrastructureMapping),
+              getSyncTaskContext(azureKubernetesInfrastructureMapping)));
+        }
+        break;
+      case InfrastructureType.DIRECT_KUBERNETES:
+        DirectKubernetesInfrastructureMapping directKubernetesInfraMapping =
+            (DirectKubernetesInfrastructureMapping) infraMapping;
+        if (isBlank(directKubernetesInfraMapping.getNamespace())) {
+          directKubernetesInfraMapping.setNamespace(DEFAULT);
+        }
+        break;
+      case InfrastructureType.PHYSICAL_INFRA:
+        PhysicalInfrastructureMapping pyInfraMapping = (PhysicalInfrastructureMapping) infraMapping;
+        pyInfraMapping.setHostNames(getUniqueHostNames(pyInfraMapping));
+        break;
+      case InfrastructureType.PHYSICAL_INFRA_WINRM:
+        PhysicalInfrastructureMappingWinRm physicalInfraMappingWinRm =
+            (PhysicalInfrastructureMappingWinRm) infraMapping;
+        physicalInfraMappingWinRm.setHostNames(getUniqueHostNames(physicalInfraMappingWinRm));
+        break;
+      default:
+    }
+  }
+
   @Override
   public void validateInfraMapping(@Valid InfrastructureMapping infraMapping, boolean skipValidation) {
     if (skipValidation) {
@@ -299,26 +345,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (infraMapping instanceof GcpKubernetesInfrastructureMapping) {
       GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
           (GcpKubernetesInfrastructureMapping) infraMapping;
-      if (isBlank(gcpKubernetesInfrastructureMapping.getNamespace())) {
-        gcpKubernetesInfrastructureMapping.setNamespace("default");
-      }
       validateGcpInfraMapping(gcpKubernetesInfrastructureMapping);
-      if (containerMasterUrlHelper.masterUrlRequiredWithProvisioner(gcpKubernetesInfrastructureMapping)) {
-        gcpKubernetesInfrastructureMapping.setMasterUrl(
-            containerMasterUrlHelper.fetchMasterUrl(getGcpContainerServiceParams(gcpKubernetesInfrastructureMapping),
-                getSyncTaskContext(gcpKubernetesInfrastructureMapping)));
-      }
     }
 
     if (infraMapping instanceof AzureKubernetesInfrastructureMapping) {
       AzureKubernetesInfrastructureMapping azureKubernetesInfrastructureMapping =
           (AzureKubernetesInfrastructureMapping) infraMapping;
       validateAzureKubernetesInfraMapping(azureKubernetesInfrastructureMapping);
-      if (containerMasterUrlHelper.masterUrlRequiredWithProvisioner(azureKubernetesInfrastructureMapping)) {
-        azureKubernetesInfrastructureMapping.setMasterUrl(containerMasterUrlHelper.fetchMasterUrl(
-            getAzureContainerServiceParams(azureKubernetesInfrastructureMapping),
-            getSyncTaskContext(azureKubernetesInfrastructureMapping)));
-      }
     }
 
     if (infraMapping instanceof AzureInfrastructureMapping) {
@@ -329,14 +362,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (infraMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infraMapping;
-      if (isBlank(directKubernetesInfrastructureMapping.getNamespace())) {
-        directKubernetesInfrastructureMapping.setNamespace("default");
-      }
       validateDirectKubernetesInfraMapping(directKubernetesInfrastructureMapping);
-    }
-
-    if (infraMapping instanceof PhysicalInfrastructureMapping) {
-      validatePyInfraMapping((PhysicalInfrastructureMapping) infraMapping);
     }
 
     if (infraMapping instanceof PhysicalInfrastructureMappingWinRm) {
@@ -426,6 +452,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       ((ContainerInfrastructureMapping) infraMapping).setReleaseName(fetchReleaseName(infraMapping));
     }
 
+    setDefaults(infraMapping);
     validateInfraMapping(infraMapping, skipValidation);
     InfrastructureMapping savedInfraMapping;
     try {
@@ -508,6 +535,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
     }
 
+    setDefaults(infrastructureMapping);
+
     if (infrastructureMapping instanceof EcsInfrastructureMapping) {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
       validateInfraMapping(ecsInfrastructureMapping, skipValidation);
@@ -520,8 +549,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       if (isNotBlank(directKubernetesInfrastructureMapping.getNamespace())) {
         keyValuePairs.put("namespace", directKubernetesInfrastructureMapping.getNamespace());
       } else {
-        directKubernetesInfrastructureMapping.setNamespace("default");
-        keyValuePairs.put("namespace", "default");
+        directKubernetesInfrastructureMapping.setNamespace(DEFAULT);
+        keyValuePairs.put("namespace", DEFAULT);
       }
       if (directKubernetesInfrastructureMapping.getClusterName() != null) {
         keyValuePairs.put("clusterName", directKubernetesInfrastructureMapping.getClusterName());
@@ -552,7 +581,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       keyValuePairs.put("namespace",
           isNotBlank(azureKubernetesInfrastructureMapping.getNamespace())
               ? azureKubernetesInfrastructureMapping.getNamespace()
-              : "default");
+              : DEFAULT);
     } else if (infrastructureMapping instanceof AzureInfrastructureMapping) {
       AzureInfrastructureMapping azureInfrastructureMapping = (AzureInfrastructureMapping) infrastructureMapping;
       validateInfraMapping(azureInfrastructureMapping, skipValidation);
@@ -932,7 +961,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
-  private ContainerServiceParams getGcpContainerServiceParams(GcpKubernetesInfrastructureMapping infraMapping) {
+  ContainerServiceParams getGcpContainerServiceParams(GcpKubernetesInfrastructureMapping infraMapping) {
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     notNullCheck(format("No cloud provider found with given id : [%s]", infraMapping.getComputeProviderSettingId()),
         settingAttribute, USER);
@@ -984,7 +1013,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
-  private ContainerServiceParams getAzureContainerServiceParams(AzureKubernetesInfrastructureMapping infraMapping) {
+  ContainerServiceParams getAzureContainerServiceParams(AzureKubernetesInfrastructureMapping infraMapping) {
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     notNullCheck("SettingAttribute", settingAttribute, USER);
     List<EncryptedDataDetail> encryptionDetails =
@@ -1000,7 +1029,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         .build();
   }
 
-  private SyncTaskContext getSyncTaskContext(InfrastructureMapping infraMapping) {
+  SyncTaskContext getSyncTaskContext(InfrastructureMapping infraMapping) {
     Application app = appService.get(infraMapping.getAppId());
     return SyncTaskContext.builder()
         .accountId(app.getAccountId())
@@ -1087,13 +1116,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         ecsInfrastructureMapping.getExecutionRole() == null ? EMPTY : ecsInfrastructureMapping.getExecutionRole());
   }
 
-  private void validatePyInfraMapping(PhysicalInfrastructureMapping pyInfraMapping) {
-    pyInfraMapping.setHostNames(getUniqueHostNames(pyInfraMapping));
-  }
-
   private void validatePhysicalInfrastructureMappingWinRm(PhysicalInfrastructureMappingWinRm infraMapping) {
-    infraMapping.setHostNames(getUniqueHostNames(infraMapping));
-
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     notNullCheck("ComputeProviderSettingAttribute", settingAttribute);
 
