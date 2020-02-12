@@ -1,12 +1,14 @@
 package io.harness.lock.redis;
 
 import static io.harness.exception.WingsException.NOBODY;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.GeneralException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -33,8 +35,18 @@ public class RedisPersistentLocker implements PersistentLocker {
   }
 
   private RedissonClient init(RedisConfig redisConfig) {
+    if (!redisConfig.isEnabled()) {
+      throw new UnauthorizedException("Creating a redisson client is disabled in the configuration", USER);
+    }
     Config config = new Config();
-    config.useSingleServer().setAddress(redisConfig.getUrl());
+    if (!redisConfig.isSentinel()) {
+      config.useSingleServer().setAddress(redisConfig.getRedisUrl());
+    } else {
+      config.useSentinelServers().setMasterName(redisConfig.getMasterName());
+      for (String sentinelUrl : redisConfig.getSentinelUrls()) {
+        config.useSentinelServers().addSentinelAddress(sentinelUrl);
+      }
+    }
     return Redisson.create(config);
   }
 
