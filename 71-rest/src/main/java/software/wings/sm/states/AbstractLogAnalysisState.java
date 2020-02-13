@@ -154,7 +154,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
       if (isEmpty(canaryNewHostNames)) {
         getLogger().warn("Could not find test nodes to compare the data");
-        return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
+        return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
             "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
       }
 

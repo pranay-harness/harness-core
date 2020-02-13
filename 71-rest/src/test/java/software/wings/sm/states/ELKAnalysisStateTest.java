@@ -122,7 +122,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(response.getErrorMessage())
         .isEqualTo(
             "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
