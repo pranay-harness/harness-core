@@ -85,6 +85,8 @@ public class SpotInstServiceSetup extends State {
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
+    blueGreen = spotinstStateHelper.isBlueGreenWorkflow(context);
+
     // Override if not so.
     if (blueGreen) {
       resizeStrategy = ResizeStrategy.RESIZE_NEW_FIRST;
@@ -182,7 +184,7 @@ public class SpotInstServiceSetup extends State {
             .useCurrentRunningInstanceCount(stateExecutionData.isUseCurrentRunningInstanceCount())
             .resizeStrategy(resizeStrategy)
             .spotInstSetupTaskResponse(spotInstSetupTaskResponse)
-            .isBlueGreen(blueGreen)
+            .isBlueGreen(spotinstStateHelper.isBlueGreenWorkflow(context))
             .serviceId(stateExecutionData.getServiceId())
             .infraMappingId(stateExecutionData.getInfraMappingId())
             .appId(stateExecutionData.getAppId())

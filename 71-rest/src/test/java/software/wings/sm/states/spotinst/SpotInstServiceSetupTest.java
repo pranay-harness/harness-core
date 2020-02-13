@@ -14,6 +14,7 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -49,8 +50,10 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testExecute() {
-    state.setBlueGreen(true);
+    // We should not reply on this flag anymore
+    state.setBlueGreen(false);
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doReturn(OrchestrationWorkflowType.BLUE_GREEN).when(mockContext).getOrchestrationWorkflowType();
     SpotInstSetupStateExecutionData data =
         SpotInstSetupStateExecutionData.builder()
             .spotinstCommandRequest(SpotInstCommandRequest.builder()
