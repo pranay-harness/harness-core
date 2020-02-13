@@ -10,7 +10,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -57,7 +56,6 @@ import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
@@ -980,21 +978,6 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertThat(
         instanceHelper.hasDeploymentKey(
             DeploymentSummary.builder().awsLambdaDeploymentKey(AwsLambdaDeploymentKey.builder().build()).build()))
-        .isTrue();
-  }
-
-  @Test
-  @Owner(developers = ROHIT_KUMAR)
-  @Category(UnitTests.class)
-  public void test_isSyncEnabledForAccount() {
-    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.SERVERLESS_DASHBOARD_AWS_LAMBDA), anyString());
-    assertThat(instanceHelper.isSyncEnabledForAccount(InfrastructureMappingType.AWS_AWS_LAMBDA.name(), ACCOUNT_ID))
-        .isTrue();
-    doReturn(false).when(featureFlagService).isEnabled(eq(FeatureName.SERVERLESS_DASHBOARD_AWS_LAMBDA), anyString());
-    assertThat(instanceHelper.isSyncEnabledForAccount(InfrastructureMappingType.AWS_AWS_LAMBDA.name(), ACCOUNT_ID))
-        .isFalse();
-    assertThat(
-        instanceHelper.isSyncEnabledForAccount(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name(), ACCOUNT_ID))
         .isTrue();
   }
 }

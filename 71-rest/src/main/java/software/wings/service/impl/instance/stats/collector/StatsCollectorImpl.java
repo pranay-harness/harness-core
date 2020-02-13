@@ -5,14 +5,12 @@ import com.google.inject.Inject;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.FeatureName;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.ServerlessInstance;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.beans.infrastructure.instance.stats.Mapper;
 import software.wings.beans.infrastructure.instance.stats.ServerlessInstanceStats;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.ServerlessDashboardService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
@@ -40,19 +38,17 @@ public class StatsCollectorImpl implements StatsCollector {
   private DashboardStatisticsService dashboardStatisticsService;
   private UsageMetricsEventPublisher usageMetricsEventPublisher;
   private ServerlessDashboardService serverlessDashboardService;
-  private FeatureFlagService featureFlagService;
 
   @Inject
   public StatsCollectorImpl(DashboardStatisticsService dashboardStatisticsService, InstanceStatService statService,
       WingsPersistence persistence, UsageMetricsEventPublisher usageMetricsEventPublisher,
       ServerlessInstanceStatService serverlessInstanceStatService,
-      ServerlessDashboardService serverlessDashboardService, FeatureFlagService featureFlagService) {
+      ServerlessDashboardService serverlessDashboardService) {
     this.dashboardStatisticsService = dashboardStatisticsService;
     this.statService = statService;
     this.usageMetricsEventPublisher = usageMetricsEventPublisher;
     this.serverlessInstanceStatService = serverlessInstanceStatService;
     this.serverlessDashboardService = serverlessDashboardService;
-    this.featureFlagService = featureFlagService;
   }
 
   @Override
@@ -78,10 +74,6 @@ public class StatsCollectorImpl implements StatsCollector {
 
   @Override
   public boolean createServerlessStats(String accountId) {
-    if (!featureFlagService.isEnabled(FeatureName.SERVERLESS_DASHBOARD_AWS_LAMBDA, accountId)) {
-      log.info("Skipping Serverless Stats Sync. Flag is disabled for account id {}", accountId);
-      return true;
-    }
     Instant lastSnapshot = serverlessInstanceStatService.getLastSnapshotTime(accountId);
     if (null == lastSnapshot) {
       return createServerlessStats(accountId, alignedWithMinute(Instant.now(), SYNC_INTERVAL_MINUTES));

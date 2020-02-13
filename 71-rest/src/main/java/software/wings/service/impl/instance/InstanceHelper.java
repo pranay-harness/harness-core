@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.validation.Validator.notNullCheck;
-import static software.wings.beans.InfrastructureMappingType.AWS_AWS_LAMBDA;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
@@ -40,7 +39,6 @@ import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.ElementExecutionSummary;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
@@ -147,12 +145,6 @@ public class InstanceHelper {
       }
 
       InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, context.fetchInfraMappingId());
-
-      if (!isSyncEnabledForAccount(infrastructureMapping.getInfraMappingType(), infrastructureMapping.getAccountId())) {
-        logger.info("Sync not enabled for InfraMappingType= [{}], accountId=[{}]",
-            infrastructureMapping.getInfraMappingType(), infrastructureMapping.getAccountId());
-        return;
-      }
 
       if (PHYSICAL_DATA_CENTER_SSH.getName().equals(infrastructureMapping.getInfraMappingType())
           || PHYSICAL_DATA_CENTER_WINRM.getName().equals(infrastructureMapping.getInfraMappingType())
@@ -568,14 +560,6 @@ public class InstanceHelper {
         logger.warn("Could not locate phase for phase step {}", phaseStepSubWorkflow.getId());
       }
     }
-  }
-
-  @VisibleForTesting
-  boolean isSyncEnabledForAccount(String infrastructureMappingType, String accountId) {
-    if (AWS_AWS_LAMBDA.getName().equals(infrastructureMappingType)) {
-      return featureFlagService.isEnabled(FeatureName.SERVERLESS_DASHBOARD_AWS_LAMBDA, accountId);
-    }
-    return true;
   }
 
   public String manualSync(String appId, String infraMappingId) {

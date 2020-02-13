@@ -6,10 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import com.google.inject.Inject;
 
@@ -23,7 +20,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import software.wings.beans.FeatureName;
 import software.wings.beans.infrastructure.instance.ServerlessInstance;
 import software.wings.beans.infrastructure.instance.stats.ServerlessInstanceStats;
 import software.wings.service.intfc.FeatureFlagService;
@@ -65,7 +61,6 @@ public class StatsCollectorImplTest extends CategoryTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_createServerlessStats() {
-    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.SERVERLESS_DASHBOARD_AWS_LAMBDA), anyString());
     final boolean serverlessStats = setup_createServerlessStats();
     assertThat(serverlessStats).isTrue();
   }
@@ -82,18 +77,7 @@ public class StatsCollectorImplTest extends CategoryTest {
   @Test
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
-  public void test_createServerlessStats_nofeature_flag() {
-    doReturn(false).when(featureFlagService).isEnabled(eq(FeatureName.SERVERLESS_DASHBOARD_AWS_LAMBDA), anyString());
-    final boolean serverlessStats = setup_createServerlessStats();
-    assertThat(serverlessStats).isTrue();
-    verify(serverlessInstanceStatService, times(0)).getLastSnapshotTime(anyString());
-  }
-
-  @Test
-  @Owner(developers = ROHIT_KUMAR)
-  @Category(UnitTests.class)
   public void test_createServerlessStats_no_last_snapshot() {
-    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.SERVERLESS_DASHBOARD_AWS_LAMBDA), anyString());
     doReturn(null).when(serverlessInstanceStatService).getLastSnapshotTime(anyString());
     doReturn(Collections.singletonList(getServerlessInstance()))
         .when(serverlessDashboardService)
