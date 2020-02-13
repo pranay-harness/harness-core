@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -1019,5 +1020,39 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   public void testGetOverrideManifestFilesByEnvIdEmptyCase() {
     List<ManifestFile> manifestFiles = applicationManifestService.getOverrideManifestFilesByEnvId(APP_ID, ENV_ID);
     assertThat(manifestFiles).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testValidateManifestFileNameForDotsInPath() {
+    ApplicationManifest appManifest = createAppManifest();
+
+    ManifestFile manifestFile = getManifestFileWithName("templates/../abc");
+    validateDotsInPath(manifestFile, appManifest, true);
+    validateDotsInPath(manifestFile, appManifest, false);
+
+    manifestFile = getManifestFileWithName("../templates/../abc");
+    validateDotsInPath(manifestFile, appManifest, true);
+    validateDotsInPath(manifestFile, appManifest, false);
+
+    manifestFile = getManifestFileWithName(".../templates/.../abc");
+    assertThat(manifestFile.getFileName()).isEqualTo(".../templates/.../abc");
+
+    manifestFile = getManifestFileWithName("../templates/abc");
+    assertThat(manifestFile.getFileName()).isEqualTo("../templates/abc");
+
+    manifestFile = getManifestFileWithName("templates/../abc");
+    assertThat(manifestFile.getFileName()).isEqualTo("templates/../abc");
+  }
+
+  private void validateDotsInPath(ManifestFile manifestFile, ApplicationManifest appManifest, boolean create) {
+    try {
+      applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, create);
+      fail("Should not reach here.");
+    } catch (Exception ex) {
+      assertThat(ex instanceof InvalidRequestException).isTrue();
+      assertThat(ex.getMessage()).isEqualTo("Manifest file path component cannot contain [..]");
+    }
   }
 }
