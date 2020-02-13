@@ -17,6 +17,7 @@ import software.wings.sm.StateExecutionData;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Data
 @Builder
@@ -75,24 +76,48 @@ public class SpotInstListenerUpdateStateExecutionData
   }
 
   private String getActiveTargetGroups() {
+    if (isEmpty(lbDetails)) {
+      return StringUtils.EMPTY;
+    }
+
     List<String> tgNames;
     if (isRollback) {
       // If rollback, we are restoring original prodTargetGroups.
-      tgNames = lbDetails.stream().map(LoadBalancerDetailsForBGDeployment::getProdTargetGroupName).collect(toList());
+      tgNames = lbDetails.stream()
+                    .filter(Objects::nonNull)
+                    .map(LoadBalancerDetailsForBGDeployment::getProdTargetGroupName)
+                    .filter(Objects::nonNull)
+                    .collect(toList());
     } else {
-      tgNames = lbDetails.stream().map(LoadBalancerDetailsForBGDeployment::getStageListenerArn).collect(toList());
+      tgNames = lbDetails.stream()
+                    .filter(Objects::nonNull)
+                    .map(LoadBalancerDetailsForBGDeployment::getStageListenerArn)
+                    .filter(Objects::nonNull)
+                    .collect(toList());
     }
 
     return returnTargetGroupDisplayString(tgNames);
   }
 
   private String getInactiveTargetGroups() {
+    if (isEmpty(lbDetails)) {
+      return StringUtils.EMPTY;
+    }
+
     List<String> tgNames;
     if (isRollback) {
       // If rollback, we are restoring original prodTargetGroups.
-      tgNames = lbDetails.stream().map(LoadBalancerDetailsForBGDeployment::getStageListenerArn).collect(toList());
+      tgNames = lbDetails.stream()
+                    .filter(Objects::nonNull)
+                    .map(LoadBalancerDetailsForBGDeployment::getStageListenerArn)
+                    .filter(Objects::nonNull)
+                    .collect(toList());
     } else {
-      tgNames = lbDetails.stream().map(LoadBalancerDetailsForBGDeployment::getProdTargetGroupName).collect(toList());
+      tgNames = lbDetails.stream()
+                    .filter(Objects::nonNull)
+                    .map(LoadBalancerDetailsForBGDeployment::getProdTargetGroupName)
+                    .filter(Objects::nonNull)
+                    .collect(toList());
     }
 
     return returnTargetGroupDisplayString(tgNames);

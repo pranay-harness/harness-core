@@ -25,6 +25,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
@@ -373,5 +374,9 @@ public class SpotInstStateHelper {
     return setupContextElement.getOldElastiGroupOriginalConfig() != null
         ? setupContextElement.getOldElastiGroupOriginalConfig()
         : null;
+  }
+
+  public boolean isBlueGreenWorkflow(ExecutionContext context) {
+    return OrchestrationWorkflowType.BLUE_GREEN == context.getOrchestrationWorkflowType();
   }
 }

@@ -1,5 +1,10 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.beans.OrchestrationWorkflowType.BASIC;
+import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
+import static io.harness.beans.OrchestrationWorkflowType.CANARY;
+import static io.harness.beans.OrchestrationWorkflowType.MULTI_SERVICE;
+import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
@@ -271,5 +276,25 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
     assertThat(task.getTags().size()).isEqualTo(1);
     assertThat(task.getTags().get(0)).isEqualTo(tag);
     verify(mockCommandHelper).nonEmptyTag(any());
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testIsBlueGreenWorkflow() {
+    ExecutionContext execContext = mock(ExecutionContext.class);
+    doReturn(BASIC)
+        .doReturn(CANARY)
+        .doReturn(ROLLING)
+        .doReturn(MULTI_SERVICE)
+        .doReturn(BLUE_GREEN)
+        .when(execContext)
+        .getOrchestrationWorkflowType();
+
+    assertThat(spotInstStateHelper.isBlueGreenWorkflow(execContext)).isFalse();
+    assertThat(spotInstStateHelper.isBlueGreenWorkflow(execContext)).isFalse();
+    assertThat(spotInstStateHelper.isBlueGreenWorkflow(execContext)).isFalse();
+    assertThat(spotInstStateHelper.isBlueGreenWorkflow(execContext)).isFalse();
+    assertThat(spotInstStateHelper.isBlueGreenWorkflow(execContext)).isTrue();
   }
 }

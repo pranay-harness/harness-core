@@ -225,22 +225,23 @@ public class SpotInstDeployState extends State {
             stateExecutionData.getAppId(), stateExecutionData.getInfraId());
 
     List<InstanceElement> instanceElements = newArrayList();
-    List<InstanceElement> newInstanceElements = awsStateHelper.generateInstanceElements(
-        spotInstDeployTaskResponse.getEc2InstancesAdded(), awsAmiInfrastructureMapping, context);
-    if (isNotEmpty(newInstanceElements)) {
-      // These are newly launched instances, set NewInstance = true for verification service
-      newInstanceElements.forEach(instanceElement -> instanceElement.setNewInstance(true));
-      instanceElements.addAll(newInstanceElements);
-    }
+    if (spotInstDeployTaskResponse != null) {
+      List<InstanceElement> newInstanceElements = awsStateHelper.generateInstanceElements(
+          spotInstDeployTaskResponse.getEc2InstancesAdded(), awsAmiInfrastructureMapping, context);
+      if (isNotEmpty(newInstanceElements)) {
+        // These are newly launched instances, set NewInstance = true for verification service
+        newInstanceElements.forEach(instanceElement -> instanceElement.setNewInstance(true));
+        instanceElements.addAll(newInstanceElements);
+      }
 
-    List<InstanceElement> existingInstanceElements = awsStateHelper.generateInstanceElements(
-        spotInstDeployTaskResponse.getEc2InstancesExisting(), awsAmiInfrastructureMapping, context);
-    if (isNotEmpty(existingInstanceElements)) {
-      // These are Existing instances for older elastiGroup, set NewInstance = false for verification service
-      existingInstanceElements.forEach(instanceElement -> instanceElement.setNewInstance(false));
-      instanceElements.addAll(existingInstanceElements);
+      List<InstanceElement> existingInstanceElements = awsStateHelper.generateInstanceElements(
+          spotInstDeployTaskResponse.getEc2InstancesExisting(), awsAmiInfrastructureMapping, context);
+      if (isNotEmpty(existingInstanceElements)) {
+        // These are Existing instances for older elastiGroup, set NewInstance = false for verification service
+        existingInstanceElements.forEach(instanceElement -> instanceElement.setNewInstance(false));
+        instanceElements.addAll(existingInstanceElements);
+      }
     }
-
     InstanceElementListParam instanceElementListParam =
         InstanceElementListParam.builder().instanceElements(instanceElements).build();
 
