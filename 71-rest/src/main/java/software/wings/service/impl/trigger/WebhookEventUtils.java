@@ -6,6 +6,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_COMMIT_ID;
+import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_ON_PREM_PULL_BRANCH_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_PULL_BRANCH_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_PUSH_BRANCH_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_REFS_CHANGED_REF;
@@ -131,7 +132,12 @@ public class WebhookEventUtils {
             case PULL_REQUEST_COMMENT_CREATED:
             case PULL_REQUEST_COMMENT_UPDATED:
             case PULL_REQUEST_COMMENT_DELETED:
-              return expressionEvaluator.substitute(BIT_BUCKET_PULL_BRANCH_REF, payload);
+              String substitutedValue = expressionEvaluator.substitute(BIT_BUCKET_PULL_BRANCH_REF, payload);
+              if (substitutedValue.equals(BIT_BUCKET_PULL_BRANCH_REF)) {
+                return expressionEvaluator.substitute(BIT_BUCKET_ON_PREM_PULL_BRANCH_REF, payload);
+              } else {
+                return substitutedValue;
+              }
 
             default:
               return null;
