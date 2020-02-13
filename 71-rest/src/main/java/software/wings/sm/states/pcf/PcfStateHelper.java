@@ -704,7 +704,10 @@ public class PcfStateHelper {
     InfoVariables infoVariables = (InfoVariables) sweepingOutputService.findSweepingOutput(
         context.prepareSweepingOutputInquiryBuilder().name(InfoVariables.SWEEPING_OUTPUT_NAME).build());
     if (infoVariables == null) {
-      sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.PHASE)
+      Scope outputScope = workflowExecutionService.isMultiService(context.getAppId(), context.getWorkflowExecutionId())
+          ? Scope.PHASE
+          : Scope.WORKFLOW;
+      sweepingOutputService.save(context.prepareSweepingOutputBuilder(outputScope)
                                      .name(InfoVariables.SWEEPING_OUTPUT_NAME)
                                      .value(setupSweepingOutputPcf.fetchPcfVariableInfo())
                                      .build());

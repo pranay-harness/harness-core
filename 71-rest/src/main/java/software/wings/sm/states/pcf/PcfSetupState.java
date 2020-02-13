@@ -38,7 +38,6 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
-import software.wings.api.pcf.InfoVariables;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.api.pcf.SetupSweepingOutputPcf.SetupSweepingOutputPcfBuilder;
@@ -537,11 +536,7 @@ public class PcfSetupState extends State {
                                    .name(pcfStateHelper.obtainSetupSweepingOutputName(context, isRollback()))
                                    .value(setupSweepingOutputPcf)
                                    .build());
-
-    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.PHASE)
-                                   .name(InfoVariables.SWEEPING_OUTPUT_NAME)
-                                   .value(setupSweepingOutputPcf.fetchPcfVariableInfo())
-                                   .build());
+    pcfStateHelper.populatePcfVariables(context, setupSweepingOutputPcf);
 
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)

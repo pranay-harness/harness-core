@@ -101,6 +101,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -133,6 +134,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
   @Mock private EncryptionService encryptionService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";
@@ -188,8 +190,10 @@ public class PcfDeployStateTest extends WingsBaseTest {
   @Before
   public void setup() throws IllegalAccessException {
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    when(workflowExecutionService.isMultiService(any(), any())).thenReturn(false);
     PcfStateHelper pcfStateHelper = new PcfStateHelper();
     on(pcfStateHelper).set("sweepingOutputService", sweepingOutputService);
+    on(pcfStateHelper).set("workflowExecutionService", workflowExecutionService);
     FieldUtils.writeField(pcfDeployState, "secretManager", secretManager, true);
     FieldUtils.writeField(pcfDeployState, "pcfStateHelper", pcfStateHelper, true);
 
