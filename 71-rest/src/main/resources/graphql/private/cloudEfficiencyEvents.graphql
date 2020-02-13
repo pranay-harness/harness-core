@@ -1,0 +1,35 @@
+extend type Query {
+  ceEventStats(filters: [EventsFilter], sortCriteria: [EventsSortCriteria]): EventsData @dataFetcher(name: eventsStats)
+}
+
+type EventsData {
+  data: [EventsDataPoint]
+}
+
+type EventsDataPoint {
+  time: Number
+  source: String
+  type: String
+  details: String
+}
+
+input EventsFilter {
+  application: IdFilter
+  service: IdFilter
+  environment: IdFilter
+  cluster: IdFilter
+  cloudServiceName: IdFilter
+  taskId: IdFilter
+  namespace: IdFilter
+  workloadName: IdFilter
+  startTime: TimeFilter
+}
+
+input EventsSortCriteria {
+  sortType: EventsSortType
+  sortOrder: SortOrder
+}
+
+enum EventsSortType {
+  Time
+}
