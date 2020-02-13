@@ -169,7 +169,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       if (isEmpty(canaryNewHostNames) && !isAwsLambdaState(context)) {
         getLogger().warn(
             "id: {}, Could not find test nodes to compare the data", context.getStateExecutionInstanceId());
-        return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
+        return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
             "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
       }
 
