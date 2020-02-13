@@ -14,11 +14,12 @@ import io.harness.generator.Randomizer;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
+import lombok.Data;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
-import software.wings.graphql.schema.type.secrets.QLSecret;
+import software.wings.graphql.schema.type.secrets.QLWinRMCredential;
 
 public class CreateWinRMSecretTest extends GraphQLTest {
   @Inject private AccountGenerator accountGenerator;
@@ -55,6 +56,12 @@ public class CreateWinRMSecretTest extends GraphQLTest {
     return input;
   }
 
+  @Data
+  public static class CreateWinRMSecretResult {
+    String clientMutationId;
+    QLWinRMCredential secret;
+  }
+
   @Test
   @Owner(developers = DEEPAK)
   @Category({GraphQLTests.class, UnitTests.class})
@@ -78,9 +85,8 @@ public class CreateWinRMSecretTest extends GraphQLTest {
     }
    */ getCreateWinRMCredentialInput());
     final QLTestObject qlTestObject = qlExecute(query, accountId);
-    final CreateEncryptedTextTest.CreateSecretResult result =
-        JsonUtils.convertValue(qlTestObject.getMap(), CreateEncryptedTextTest.CreateSecretResult.class);
-    QLSecret winrm = result.getSecret();
+    final CreateWinRMSecretResult result = JsonUtils.convertValue(qlTestObject.getMap(), CreateWinRMSecretResult.class);
+    QLWinRMCredential winrm = result.getSecret();
     assertThat(winrm.getId()).isNotNull();
     assertThat(winrm.getName()).isEqualTo(secretName);
   }

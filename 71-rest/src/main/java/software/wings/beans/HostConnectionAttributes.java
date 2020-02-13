@@ -146,6 +146,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     private char[] passphrase;
     private String encryptedPassphrase;
     private char[] sshPassword;
+    private char[] kerberosPassword;
     private String encryptedSshPassword;
 
     private Builder() {}
@@ -224,6 +225,11 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       return this;
     }
 
+    public Builder withKerberosPassword(char[] kerberosPassword) {
+      this.kerberosPassword = kerberosPassword == null ? null : kerberosPassword.clone();
+      return this;
+    }
+
     public Builder withEncryptedSshPassword(String encryptedSshPassword) {
       this.encryptedSshPassword = encryptedSshPassword;
       return this;
@@ -245,6 +251,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
           .withPassphrase(passphrase)
           .withEncryptedPassphrase(encryptedPassphrase)
           .withSshPassword(sshPassword)
+          .withKerberosPassword(kerberosPassword)
           .withEncryptedSshPassword(encryptedSshPassword);
     }
 
@@ -265,6 +272,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       hostConnectionAttributes.setEncryptedPassphrase(encryptedPassphrase);
       hostConnectionAttributes.setSshPassword(sshPassword);
       hostConnectionAttributes.setEncryptedSshPassword(encryptedSshPassword);
+      hostConnectionAttributes.setKerberosPassword(kerberosPassword);
       return hostConnectionAttributes;
     }
   }

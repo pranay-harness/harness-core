@@ -39,7 +39,6 @@ import software.wings.graphql.schema.type.usergroup.QLUserGroup.QLUserGroupKeys;
 import software.wings.graphql.schema.type.usergroup.QLUserGroupConnection;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
-import software.wings.service.intfc.UserService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,7 +58,6 @@ public class UserGroupTest extends GraphQLTest {
   private SamlSettings samlSettings;
   private LdapSettings ldapSettings;
   @Inject SSOSettingService ssoSettingService;
-  @Inject UserService userService;
 
   @Before
   public void setup() {
