@@ -60,11 +60,14 @@ public class ChronicleEventTailer extends AbstractScheduledService {
   protected void runOneIteration() {
     // service will terminate if exception is not caught.
     try {
+      logger.trace("Checking for messages to publish");
       Batch batchToSend = new Batch(MAX_BYTES, MAX_COUNT);
       long prevIndex = getReadIndex();
+      logger.trace("Read index: {}", prevIndex);
       while (!batchToSend.isFull()) {
         try (DocumentContext dc = readTailer.readingDocument()) {
           if (!dc.isPresent()) {
+            logger.trace("Reached end of queue");
             break;
           }
           try {
@@ -74,6 +77,9 @@ public class ChronicleEventTailer extends AbstractScheduledService {
             logger.error("Exception while parsing message", e);
           }
         }
+      }
+      if (batchToSend.isFull()) {
+        logger.trace("Batch is full");
       }
       if (!batchToSend.isEmpty()) {
         PublishRequest publishRequest = PublishRequest.newBuilder().addAllMessages(batchToSend.getMessages()).build();
@@ -87,6 +93,8 @@ public class ChronicleEventTailer extends AbstractScheduledService {
           readTailer.moveToIndex(prevIndex);
           scheduler.recordFailure();
         }
+      } else {
+        logger.trace("Skipping message publish as batch is empty");
       }
     } catch (Exception e) {
       logger.error("Encountered exception", e);
