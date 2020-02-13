@@ -172,10 +172,10 @@ public class UserGroupTest extends GraphQLTest {
     return ssoSettingService.createLdapSettings(ldapSettings);
   }
 
-  private String getCreateUserGroupGQL(String userId) {
+  private String getCreateUserGroupGQL(String userGroupName, String userId) {
     String newUserGroup = $GQL(
         /* {
-              name: "userGroupTest",
+              name: "%s",
               description: "descc",
               permissions: {
                    accountPermissions: {
@@ -203,7 +203,7 @@ public class UserGroupTest extends GraphQLTest {
               clientMutationId: "abc"
          }
        */
-        ldapSettings.getUuid(), groupDN, groupName, userId);
+        userGroupName, ldapSettings.getUuid(), groupDN, groupName, userId);
     return newUserGroup;
   }
 
@@ -267,12 +267,12 @@ public class UserGroupTest extends GraphQLTest {
                  }
               }
            }
-      }*/ getCreateUserGroupGQL(user.getUuid()));
+      }*/ getCreateUserGroupGQL("NewUserGroup", user.getUuid()));
       final QLTestObject qlTestObject = qlExecute(query, accountId);
       final CreateUserGroupResult userGroupResult =
           JsonUtils.convertValue(qlTestObject.getMap(), CreateUserGroupResult.class);
       assertThat(userGroupResult.getUserGroup().getId()).isNotNull();
-      assertThat(userGroupResult.getUserGroup().getName()).isEqualTo("userGroupTest");
+      assertThat(userGroupResult.getUserGroup().getName()).isEqualTo("NewUserGroup");
       assertThat(userGroupResult.getUserGroup().getDescription()).isEqualTo("descc");
       assertThat(userGroupResult.getUserGroup().getIsSSOLinked()).isEqualTo(true);
       assertThat(userGroupResult.getUserGroup().getImportedByScim()).isEqualTo(false);
@@ -283,10 +283,36 @@ public class UserGroupTest extends GraphQLTest {
     }
   }
 
-  private String getUpdatedUserGroupGQL(String userGroupId) {
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testCreatingUserGroupWithDuplicateName() {
+    ldapSettings = createLdapSettings();
+    UserGroup userGroup = createUserGroup("UserGroupUpdate", "description");
+    final User user = accountGenerator.ensureUser(
+        "userId", random(String.class), random(String.class), random(String.class).toCharArray(), account);
+    {
+      String query = $GQL(/*
+        mutation{
+             createUserGroup(input:%s){
+             userGroup{
+                   id
+                   name
+              }
+           }
+      }*/ getCreateUserGroupGQL("UserGroupUpdate", user.getUuid()));
+      final ExecutionResult result = qlResult(query, accountId);
+      assertThat(result.getErrors().size()).isEqualTo(1);
+      assertThat(result.getErrors().get(0).getMessage())
+          .isEqualTo(
+              "Exception while fetching data (/createUserGroup) : Invalid request: A user group already exists with the name UserGroupUpdate");
+    }
+  }
+
+  private String getUpdatedUserGroupGQL(String groupName, String userGroupId) {
     String updatedUserGroup = $GQL(
         /* {
-              name: "gqltests",
+              name: "%s",
               description: "descc",
               permissions: {
                    accountPermissions: {
@@ -307,7 +333,7 @@ public class UserGroupTest extends GraphQLTest {
            clientMutationId: "abc"
          }
        */
-        userGroupId);
+        groupName, userGroupId);
     return updatedUserGroup;
   }
 
@@ -328,7 +354,7 @@ mutation{
   updateUserGroup(input:%s){
     clientMutationId
   }
-}*/ getUpdatedUserGroupGQL(userGroup.getUuid()));
+}*/ getUpdatedUserGroupGQL("gqltests", userGroup.getUuid()));
       final ExecutionResult result = qlResult(query, accountId);
       UserGroup updatedUserGroup = userGroupService.get(userGroup.getAccountId(), userGroup.getUuid());
       assertThat(userGroup.getUuid()).isEqualTo(updatedUserGroup.getUuid());
@@ -340,6 +366,27 @@ mutation{
           .isEqualTo("https://abc");
       assertThat(updatedUserGroup.getNotificationSettings().getSlackConfig().getName()).isEqualTo("cool");
       assertThat(updatedUserGroup.getNotificationSettings().getEmailAddresses().contains("abc@gmail.com")).isTrue();
+    }
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testUpdatingUserGroupWithDuplicateName() {
+    UserGroup userGroup = createUserGroup("GroupNameWhichAlreadyExists", "description");
+    UserGroup userGroup1 = createUserGroup("someUserGroup", "description");
+    {
+      String query = $GQL(/*
+      mutation{
+        updateUserGroup(input:%s){
+          clientMutationId
+        }
+      }*/ getUpdatedUserGroupGQL("GroupNameWhichAlreadyExists", userGroup1.getUuid()));
+      final ExecutionResult result = qlResult(query, accountId);
+      assertThat(result.getErrors().size()).isEqualTo(1);
+      assertThat(result.getErrors().get(0).getMessage())
+          .isEqualTo(
+              "Exception while fetching data (/updateUserGroup) : Invalid request: A user group already exists with the name GroupNameWhichAlreadyExists");
     }
   }
 
