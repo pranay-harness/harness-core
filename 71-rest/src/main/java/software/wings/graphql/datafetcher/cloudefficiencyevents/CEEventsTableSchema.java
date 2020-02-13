@@ -1,0 +1,99 @@
+package software.wings.graphql.datafetcher.cloudefficiencyevents;
+
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbTable;
+import lombok.AccessLevel;
+import lombok.Value;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
+
+@Value
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldNameConstants(innerTypeName = "CEEventsTableKeys")
+public class CEEventsTableSchema {
+  /**
+   STARTTIME TIMESTAMPTZ NOT NULL,
+   ACCOUNTID TEXT NOT NULL,
+   SETTINGID TEXT,
+   CLUSTERID TEXT,
+   CLUSTERTYPE TEXT,
+   INSTANCEID TEXT,
+   INSTANCETYPE TEXT,
+   APPID TEXT,
+   SERVICEID TEXT,
+   ENVID TEXT,
+   CLOUDPROVIDERID TEXT,
+   DEPLOYMENTID TEXT,
+   CLOUDPROVIDER TEXT,
+   EVENTDESCRIPTION TEXT,
+   COSTEVENTTYPE TEXT,
+   COSTEVENTSOURCE TEXT,
+   NAMESPACE TEXT,
+   WORKLOADNAME TEXT,
+   WORKLOADTYPE TEXT,
+   CLOUDSERVICENAME TEXT,
+   TASKID TEXT,
+   LAUNCHTYPE TEXT,
+   BILLINGAMOUNT DOUBLE PRECISION
+   );
+   */
+  DbSpec dbSpec;
+  DbSchema dbSchema;
+  DbTable ceEventsTable;
+  DbColumn startTime;
+  DbColumn accountId;
+  DbColumn settingId;
+  DbColumn clusterId;
+  DbColumn clusterType;
+  DbColumn instanceId;
+  DbColumn instanceType;
+  DbColumn serviceId;
+  DbColumn appId;
+  DbColumn cloudProviderId;
+  DbColumn envId;
+  DbColumn deploymentId;
+  DbColumn cloudProvider;
+  DbColumn namespace;
+  DbColumn workloadName;
+  DbColumn workloadType;
+  DbColumn cloudServiceName;
+  DbColumn taskId;
+  DbColumn launchType;
+  DbColumn billingAmount;
+  DbColumn eventDescription;
+  DbColumn costEventType;
+  DbColumn costEventSource;
+
+  private static String doubleType = "double";
+
+  public CEEventsTableSchema() {
+    dbSpec = new DbSpec();
+    dbSchema = dbSpec.addDefaultSchema();
+    ceEventsTable = dbSchema.addTable("cost_event_data");
+    startTime = ceEventsTable.addColumn("starttime", "timestamp", null);
+    accountId = ceEventsTable.addColumn("accountid", "text", null);
+    settingId = ceEventsTable.addColumn("settingid", "text", null);
+    instanceId = ceEventsTable.addColumn("instanceid", "text", null);
+    instanceType = ceEventsTable.addColumn("instancetype", "text", null);
+    serviceId = ceEventsTable.addColumn("serviceid", "text", null);
+    appId = ceEventsTable.addColumn("appid", "text", null);
+    cloudProviderId = ceEventsTable.addColumn("cloudproviderid", "text", null);
+    envId = ceEventsTable.addColumn("envid", "text", null);
+    clusterId = ceEventsTable.addColumn("clusterid", "text", null);
+    launchType = ceEventsTable.addColumn("launchtype", "text", null);
+    clusterType = ceEventsTable.addColumn("clustertype", "text", null);
+    workloadName = ceEventsTable.addColumn("workloadname", "text", null);
+    workloadType = ceEventsTable.addColumn("workloadtype", "text", null);
+    cloudProvider = ceEventsTable.addColumn("cloudprovider", "text", null);
+    billingAmount = ceEventsTable.addColumn("billingamount", doubleType, null);
+    cloudServiceName = ceEventsTable.addColumn("cloudServiceName", "text", null);
+    taskId = ceEventsTable.addColumn("taskId", "text", null);
+    namespace = ceEventsTable.addColumn("namespace", "text", null);
+    deploymentId = ceEventsTable.addColumn("namespace", "text", null);
+    eventDescription = ceEventsTable.addColumn("eventdescription", "text", null);
+    costEventSource = ceEventsTable.addColumn("costeventsource", "text", null);
+    costEventType = ceEventsTable.addColumn("costeventtype", "text", null);
+  }
+}

@@ -24,6 +24,7 @@ enum DataFetcherEnum {
   environment
   environmentConnection
   environmentStats
+  eventsStats
   execution
   executionConnection
   idleCostTrendStats
