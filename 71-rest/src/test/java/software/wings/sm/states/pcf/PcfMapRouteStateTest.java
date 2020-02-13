@@ -316,7 +316,10 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
     when(sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(outputName).build()))
         .thenReturn(sweepingOutputInstance);
-    when(sweepingOutputService.findSweepingOutput(context.prepareSweepingOutputInquiryBuilder().name(any()).build()))
+    when(sweepingOutputService.findSweepingOutput(
+             context.prepareSweepingOutputInquiryBuilder()
+                 .name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseName().trim())
+                 .build()))
         .thenReturn(setupSweepingOutputPcf);
     doReturn(true).when(featureFlagService).isEnabled(eq(USE_PCF_CLI), anyString());
   }

@@ -120,6 +120,7 @@ public class MapRouteState extends State {
         application.getUuid(), context.fetchInfraMappingId());
 
     SetupSweepingOutputPcf setupSweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, isRollback());
+    pcfStateHelper.populatePcfVariables(context, setupSweepingOutputPcf);
 
     Activity activity = createActivity(context);
     SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());

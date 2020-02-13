@@ -3940,6 +3940,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public boolean isMultiService(String appId, String workflowExecutionId) {
+    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
+    notNullCheck("Workflow Execution cannot be null", workflowExecution);
+    return isNotEmpty(workflowExecution.getServiceIds()) && workflowExecution.getServiceIds().size() > 1;
+  }
+
+  @Override
   public WorkflowExecutionInfo getWorkflowExecutionInfo(String workflowExecutionId) {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
     if (workflowExecution == null) {

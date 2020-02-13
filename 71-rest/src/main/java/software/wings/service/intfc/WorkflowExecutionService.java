@@ -238,4 +238,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   boolean checkIfOnDemand(String appId, String workflowExecutionId);
 
   WorkflowExecutionInfo getWorkflowExecutionInfo(String workflowExecutionId);
+
+  boolean isMultiService(String appId, String workflowExecutionId);
 }

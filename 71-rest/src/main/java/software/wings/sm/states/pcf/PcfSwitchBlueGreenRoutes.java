@@ -109,6 +109,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
         (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
     SetupSweepingOutputPcf setupSweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, isRollback());
+    pcfStateHelper.populatePcfVariables(context, setupSweepingOutputPcf);
     PcfRouteUpdateRequestConfigData requestConfigData = getPcfRouteUpdateRequestConfigData(setupSweepingOutputPcf);
 
     if (isRollback()) {
