@@ -20,7 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
-import software.wings.graphql.schema.type.secrets.QLSecret;
+import software.wings.graphql.schema.type.secrets.QLEncryptedText;
 
 @Slf4j
 public class CreateEncryptedTextTest extends GraphQLTest {
@@ -50,9 +50,9 @@ public class CreateEncryptedTextTest extends GraphQLTest {
   }
 
   @Data
-  public static class CreateSecretResult {
+  public static class CreateEncryptedTextResult {
     String clientMutationId;
-    QLSecret secret;
+    QLEncryptedText secret;
   }
 
   @Test
@@ -73,8 +73,9 @@ public class CreateEncryptedTextTest extends GraphQLTest {
      }
    */ getCreateEncryptedTextInput());
     final QLTestObject qlTestObject = qlExecute(query, accountId);
-    final CreateSecretResult result = JsonUtils.convertValue(qlTestObject.getMap(), CreateSecretResult.class);
-    QLSecret encryptedText = result.getSecret();
+    final CreateEncryptedTextResult result =
+        JsonUtils.convertValue(qlTestObject.getMap(), CreateEncryptedTextResult.class);
+    QLEncryptedText encryptedText = result.getSecret();
     assertThat(encryptedText.getId()).isNotNull();
     assertThat(encryptedText.getName()).isEqualTo(secretName);
   }

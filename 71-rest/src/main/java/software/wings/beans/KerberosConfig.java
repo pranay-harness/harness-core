@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -13,6 +14,7 @@ import java.beans.Transient;
  */
 @JsonTypeName("KERBEROS_CONFIG")
 @Data
+@Builder
 public class KerberosConfig {
   @Attributes(title = "Principal", required = true) @NotEmpty private String principal;
   @Attributes(title = "Generate TGT") private boolean generateTGT;

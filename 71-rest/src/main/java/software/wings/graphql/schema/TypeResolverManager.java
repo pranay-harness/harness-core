@@ -66,6 +66,9 @@ import software.wings.graphql.schema.type.instance.QLK8SPodInstance;
 import software.wings.graphql.schema.type.instance.QLPcfInstance;
 import software.wings.graphql.schema.type.instance.QLPhysicalHostInstance;
 import software.wings.graphql.schema.type.secrets.QLEncryptedText;
+import software.wings.graphql.schema.type.secrets.QLKerberosAuthentication;
+import software.wings.graphql.schema.type.secrets.QLSSHAuthentication;
+import software.wings.graphql.schema.type.secrets.QLSSHCredential;
 import software.wings.graphql.schema.type.secrets.QLWinRMCredential;
 import software.wings.graphql.schema.type.usergroup.QLLDAPSettings;
 import software.wings.graphql.schema.type.usergroup.QLSAMLSettings;
@@ -90,6 +93,7 @@ public class TypeResolverManager {
     public static final String ChangeSet = "ChangeSet";
     public static final String LinkedSSOSetting = "LinkedSSOSetting";
     public static final String Secret = "Secret";
+    public static final String SSHAuthenticationType = "SSHAuthenticationType";
   }
 
   @UtilityClass
@@ -159,6 +163,9 @@ public class TypeResolverManager {
     public static final String samlSettings = "SAMLSettings";
     public static final String encryptedText = "EncryptedText";
     public static final String winRMCredential = "WinRMCredential";
+    public static final String sshCredential = "SSHCredential";
+    public static final String sshAuthentication = "SSHAuthentication";
+    public static final String kerberosAuthentication = "KerberosAuthentication";
   }
 
   /**
@@ -275,7 +282,14 @@ public class TypeResolverManager {
             getResultTypeResolver(ImmutableMap.<Class, String>builder()
                                       .put(QLEncryptedText.class, TypeResolverManagerTypes.encryptedText)
                                       .put(QLWinRMCredential.class, TypeResolverManagerTypes.winRMCredential)
+                                      .put(QLSSHCredential.class, TypeResolverManagerTypes.sshCredential)
                                       .build()))
+        .put(TypeResolverManagerUnifaces.SSHAuthenticationType,
+            getResultTypeResolver(
+                ImmutableMap.<Class, String>builder()
+                    .put(QLSSHAuthentication.class, TypeResolverManagerTypes.sshAuthentication)
+                    .put(QLKerberosAuthentication.class, TypeResolverManagerTypes.kerberosAuthentication)
+                    .build()))
         .build();
   }
 
