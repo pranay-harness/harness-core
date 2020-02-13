@@ -333,6 +333,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         throw new InvalidRequestException(
             "Manifest file path component cannot contain leading or trailing whitespaces", USER);
       }
+
+      // We dont allow this as it gets saved outside manifest files folder in git
+      if (filePathComponent.equals("..")) {
+        throw new InvalidRequestException("Manifest file path component cannot contain [..]", USER);
+      }
     }
   }
 
