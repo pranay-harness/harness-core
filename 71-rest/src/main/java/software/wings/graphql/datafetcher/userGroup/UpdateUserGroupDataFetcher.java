@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.userGroup;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -16,7 +19,10 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class UpdateUserGroupDataFetcher
@@ -42,18 +48,37 @@ public class UpdateUserGroupDataFetcher
   protected QLUpdateUserGroupPayload mutateAndFetch(QLUpdateUserGroupInput parameter, MutationContext mutationContext) {
     String userGroupId = parameter.getUserGroupId();
     UserGroup existingUserGroup = userGroupService.get(mutationContext.getAccountId(), userGroupId);
+
     if (existingUserGroup == null) {
       throw new InvalidRequestException(String.format("No user group exists with the id %s", userGroupId));
     }
     QLUpdateUserGroupInput userGroupInput = parameter;
+    boolean overViewUpdated = false;
     // Update name
     if (userGroupInput.getName().hasBeenSet()) {
-      existingUserGroup.setName(userGroupInput.getName().getValue().map(StringUtils::strip).orElse(null));
-      userGroupService.updateOverview(existingUserGroup);
+      String name = userGroupInput.getName().getValue().map(StringUtils::strip).orElse(null);
+      if (isBlank(name)) {
+        throw new InvalidRequestException("The name supplied in the update user group request is blank");
+      }
+      List<UserGroup> userGroups = userGroupService.listByName(mutationContext.getAccountId(), Arrays.asList(name));
+      List<String> userGroupIds = Collections.emptyList();
+      if (userGroups != null) {
+        userGroupIds = userGroups.stream().map(UserGroup::getUuid).collect(Collectors.toList());
+      }
+      // We will throw a error whenever someone update the name, with which a usergroup already exists
+      if (!isEmpty(userGroups) && !userGroupIds.contains(userGroupId)) {
+        throw new InvalidRequestException(String.format("A user group already exists with the name %s", name));
+      }
+      existingUserGroup.setName(name);
+      overViewUpdated = true;
     }
     // Update Description
     if (userGroupInput.getDescription().hasBeenSet()) {
       existingUserGroup.setDescription(userGroupInput.getDescription().getValue().orElse(null));
+      overViewUpdated = true;
+    }
+
+    if (overViewUpdated) {
       userGroupService.updateOverview(existingUserGroup);
     }
 
