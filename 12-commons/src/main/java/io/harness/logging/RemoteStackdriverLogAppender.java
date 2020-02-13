@@ -112,6 +112,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   @VisibleForTesting
   public static Severity logLevelToSeverity(Level logLevel) {
     switch (logLevel.toInt()) {
+      case Level.TRACE_INT:
       case Level.DEBUG_INT:
         return Severity.DEBUG;
       case Level.INFO_INT:
