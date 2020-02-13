@@ -58,6 +58,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SweepingOutputInstance;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -363,6 +364,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infraMapping;
       validateDirectKubernetesInfraMapping(directKubernetesInfrastructureMapping);
+    }
+
+    if (infraMapping instanceof PhysicalInfrastructureMapping) {
+      PhysicalInfrastructureMapping physicalInfrastructureMapping = (PhysicalInfrastructureMapping) infraMapping;
+      validatePhysicalInfrastructureMapping(physicalInfrastructureMapping);
     }
 
     if (infraMapping instanceof PhysicalInfrastructureMappingWinRm) {
@@ -853,16 +859,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private List<String> getUniqueHostNames(PhysicalInfrastructureMappingBase physicalInfrastructureMapping) {
-    List<String> hostNames = physicalInfrastructureMapping.getHostNames()
-                                 .stream()
-                                 .map(String::trim)
-                                 .filter(StringUtils::isNotEmpty)
-                                 .distinct()
-                                 .collect(toList());
-    if (hostNames.isEmpty()) {
-      throw new InvalidRequestException("Host names must not be empty", USER);
-    }
-    return hostNames;
+    return CollectionUtils.emptyIfNull(physicalInfrastructureMapping.getHostNames())
+        .stream()
+        .map(String::trim)
+        .filter(StringUtils::isNotEmpty)
+        .distinct()
+        .collect(toList());
   }
 
   /**
@@ -1116,7 +1118,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         ecsInfrastructureMapping.getExecutionRole() == null ? EMPTY : ecsInfrastructureMapping.getExecutionRole());
   }
 
+  private void validatePhysicalInfrastructureMapping(PhysicalInfrastructureMapping infraMapping) {
+    if (isEmpty(infraMapping.getHostNames())) {
+      throw new InvalidRequestException("Host names must not be empty", USER);
+    }
+  }
+
   private void validatePhysicalInfrastructureMappingWinRm(PhysicalInfrastructureMappingWinRm infraMapping) {
+    if (isEmpty(infraMapping.getHostNames())) {
+      throw new InvalidRequestException("Host names must not be empty", USER);
+    }
+
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     notNullCheck("ComputeProviderSettingAttribute", settingAttribute);
 
