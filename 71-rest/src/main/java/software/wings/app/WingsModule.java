@@ -362,6 +362,8 @@ import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.EntityUpdateServiceImpl;
 import software.wings.service.impl.yaml.GitClientUnsupported;
+import software.wings.service.impl.yaml.GitSyncService;
+import software.wings.service.impl.yaml.GitSyncServiceImpl;
 import software.wings.service.impl.yaml.K8sGlobalConfigServiceUnsupported;
 import software.wings.service.impl.yaml.YamlArtifactStreamServiceImpl;
 import software.wings.service.impl.yaml.YamlChangeSetServiceImpl;
@@ -803,6 +805,7 @@ public class WingsModule extends DependencyModule {
     bind(NotificationRulesStatusService.class).to(NotificationRulesStatusServiceImpl.class);
     bind(TimeSeriesMLAnalysisRecordService.class).to(TimeSeriesMLAnalysisRecordServiceImpl.class);
     bind(ExperimentalMetricAnalysisRecordService.class).to(ExperimentalMetricAnalysisRecordServiceImpl.class);
+    bind(GitSyncService.class).to(GitSyncServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
