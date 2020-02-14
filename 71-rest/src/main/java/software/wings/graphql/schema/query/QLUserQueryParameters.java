@@ -5,4 +5,5 @@ import lombok.Value;
 @Value
 public class QLUserQueryParameters {
   private String id;
+  private String name;
 }

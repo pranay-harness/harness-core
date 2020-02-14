@@ -161,4 +161,31 @@ public class UserTest extends GraphQLTest {
     assertThat(pageInfo.getTotal()).isEqualTo(1);
     assertThat(pageInfo.getHasMore()).isEqualTo(false);
   }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void test_userByName() {
+    String userQueryPattern = MultilineStringMixin.$.GQL(/*
+  {
+  userByName(name:"%s"){
+    name
+    id
+    isEmailVerified
+    email
+  }
+}
+*/ UserTest.class);
+    String query = String.format(userQueryPattern, "harnessUser");
+    final Account account =
+        accountGenerator.ensureAccount(random(String.class), random(String.class), AccountType.TRIAL);
+    final User user = accountGenerator.ensureUser(
+        "userId", "harnessUser", random(String.class), random(String.class).toCharArray(), account);
+
+    final QLTestObject qlUserObject = qlExecute(query, account.getUuid());
+    assertThat(qlUserObject.get(QLUserKeys.id)).isEqualTo(user.getUuid());
+    assertThat(qlUserObject.get(QLUserKeys.name)).isEqualTo(user.getName());
+    assertThat(qlUserObject.get(QLUserKeys.email)).isEqualTo(user.getEmail());
+    assertThat(qlUserObject.get(QLUserKeys.isEmailVerified)).isEqualTo(user.isEmailVerified());
+  }
 }

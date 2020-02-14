@@ -1,9 +1,11 @@
 extend type Query {
-  # Get details about a Harness Application.
+  # Get details about a Harness Application
   application(applicationId: String!): Application @dataFetcher(name: application)
 
   # Get details about Harness Applications.
   applications(limit: Int!, offset: Int): ApplicationConnection @dataFetcher(name: applicationConnection)
+  # Fetch details about a Harness Application by it's name
+  applicationByName(name: String!): Application @dataFetcher(name: application)
 }
 
 type Application {

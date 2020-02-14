@@ -4,9 +4,11 @@ import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLApplicationQueryParameters;
 import software.wings.graphql.schema.type.QLApplication;
@@ -27,6 +29,14 @@ public class ApplicationDataFetcher extends AbstractObjectDataFetcher<QLApplicat
     Application application = null;
     if (qlQuery.getApplicationId() != null) {
       application = persistence.get(Application.class, qlQuery.getApplicationId());
+    }
+    if (qlQuery.getName() != null) {
+      try (HIterator<Application> iterator = new HIterator<>(
+               persistence.createQuery(Application.class).filter(ApplicationKeys.name, qlQuery.getName()).fetch())) {
+        if (iterator.hasNext()) {
+          application = iterator.next();
+        }
+      }
     }
     if (application == null) {
       throw new InvalidRequestException(APP_DOES_NOT_EXIST_MSG, WingsException.USER);
