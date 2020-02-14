@@ -17,7 +17,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class EventsStatsDataFetcher
@@ -60,12 +64,16 @@ public class EventsStatsDataFetcher
 
   private QLEventData generateEventsData(CEEventsQueryMetaData queryData, ResultSet resultSet) throws SQLException {
     List<QLEventsDataPoint> dataPointList = new ArrayList<>();
+    Map<Long, Integer> chartData = new HashMap<>();
     while (null != resultSet && resultSet.next()) {
       QLEventsDataPointBuilder eventDataBuilder = QLEventsDataPoint.builder();
       for (CEEventsQueryMetaData.CEEventsMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
           case STARTTIME:
-            eventDataBuilder.time(resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime());
+            long timeStamp = resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime();
+            long truncatedTimestamp = timeStamp - (timeStamp % TimeUnit.DAYS.toMillis(1));
+            eventDataBuilder.time(timeStamp);
+            chartData.put(truncatedTimestamp, chartData.getOrDefault(truncatedTimestamp, 0) + 1);
             break;
           case EVENTDESCRIPTION:
             eventDataBuilder.details(resultSet.getString(field.getFieldName()));
@@ -82,7 +90,14 @@ public class EventsStatsDataFetcher
       }
       dataPointList.add(eventDataBuilder.build());
     }
-    return QLEventData.builder().data(dataPointList).build();
+
+    List<QLChartDataPoint> chartDataPoints =
+        chartData.entrySet()
+            .stream()
+            .map(entry -> QLChartDataPoint.builder().time(entry.getKey()).eventsCount(entry.getValue()).build())
+            .collect(Collectors.toList());
+
+    return QLEventData.builder().data(dataPointList).chartData(chartDataPoints).build();
   }
 
   @Override
