@@ -2,6 +2,7 @@ package software.wings.service.impl.workflow;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -85,6 +86,12 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
       "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/env/ENV_ID/executions/WORKFLOW_EXECUTION_ID/details";
   private static final String EXPECTED_PIPELINE_URL =
       "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/pipeline-execution/PIPELINE_EXECUTION_ID/workflow-execution/WORKFLOW_EXECUTION_ID/details";
+
+  private static final String EXPECTED_APP_URL =
+      "*Application:* <<<https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/details|-|APP_NAME>>>";
+
+  private static final String EXPECTED_SERVICE_URL =
+      "*Services:* <<<https://env.harness.io/#/account/ACCOUNT_ID/app/null/services/service-1/details|-|Service One>>>, <<<https://env.harness.io/#/account/ACCOUNT_ID/app/null/services/service-2/details|-|Service Two>>>";
 
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
   private static final String ARTIFACT_STREAM_ID_2 = "ARTIFACT_STREAM_ID_2";
@@ -177,6 +184,15 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldSendApplicationURL() {
+    assertThat(workflowNotificationHelper.calculateApplicationURL(
+                   ACCOUNT_ID, APP_ID, anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).name(APP_NAME).build()))
+        .isEqualTo(EXPECTED_APP_URL);
+  }
+
+  @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationForTemplatedNotificationGroup() {
@@ -223,11 +239,13 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
             .put("VERB", "completed")
             .put("PHASE_NAME", "")
-            .put("ARTIFACTS", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
+            .put("ARTIFACTS",
+                "*Artifacts:* Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", "")
             .put("APP_NAME", APP_NAME)
             .put("ENV_NAME", ENV_NAME)
+            .put("SERVICE", EXPECTED_SERVICE_URL)
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
@@ -262,9 +280,10 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
             .put("VERB", "failed")
             .put("PHASE_NAME", "")
-            .put("ARTIFACTS", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
+            .put("ARTIFACTS",
+                "*Artifacts:* Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
             .put("USER_NAME", USER_NAME)
-            .put("PIPELINE", " as part of <<<" + EXPECTED_PIPELINE_URL + "|-|Pipeline Name>>> pipeline")
+            .put("PIPELINE", " in pipeline <<<" + EXPECTED_PIPELINE_URL + "|-|Pipeline Name>>>")
             .put("APP_NAME", APP_NAME)
             .put("ENV_NAME", ENV_NAME)
             .build();
@@ -291,17 +310,18 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     Notification notification = notificationArgumentCaptor.getAllValues().get(0);
     assertThat(notification).isInstanceOf(FailureNotification.class);
     assertThat(notification.getNotificationTemplateId()).isEqualTo(WORKFLOW_NOTIFICATION.name());
-    ImmutableMap<String, String> placeholders = ImmutableMap.<String, String>builder()
-                                                    .put("WORKFLOW_NAME", WORKFLOW_NAME)
-                                                    .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
-                                                    .put("VERB", "failed")
-                                                    .put("PHASE_NAME", "Phase1 of ")
-                                                    .put("ARTIFACTS", "Service Two: artifact-2 (build# build-2)")
-                                                    .put("USER_NAME", USER_NAME)
-                                                    .put("PIPELINE", "")
-                                                    .put("ENV_NAME", ENV_NAME)
-                                                    .put("APP_NAME", APP_NAME)
-                                                    .build();
+    ImmutableMap<String, String> placeholders =
+        ImmutableMap.<String, String>builder()
+            .put("WORKFLOW_NAME", WORKFLOW_NAME)
+            .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
+            .put("VERB", "failed")
+            .put("PHASE_NAME", "Phase1 of ")
+            .put("ARTIFACTS", "*Artifacts:* Service Two: artifact-2 (build# build-2)")
+            .put("USER_NAME", USER_NAME)
+            .put("PIPELINE", "")
+            .put("ENV_NAME", ENV_NAME)
+            .put("APP_NAME", APP_NAME)
+            .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
 
@@ -328,7 +348,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
             .put("VERB", "failed")
             .put("PHASE_NAME", "")
-            .put("ARTIFACTS", "Service One: no artifact, Service Two: no artifact")
+            .put("ARTIFACTS", "*Artifacts:* Service One: no artifact, Service Two: no artifact")
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", "")
             .put("ENV_NAME", ENV_NAME)
@@ -365,7 +385,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
             .put("VERB", "failed")
             .put("PHASE_NAME", "")
-            .put("ARTIFACTS", "Service One: artifact-1 (build# build-1), Service Two: no artifact")
+            .put("ARTIFACTS", "*Artifacts:* Service One: artifact-1 (build# build-1), Service Two: no artifact")
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", "")
             .put("ENV_NAME", ENV_NAME)
@@ -399,7 +419,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                                                     .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
                                                     .put("VERB", "failed")
                                                     .put("PHASE_NAME", "")
-                                                    .put("ARTIFACTS", "no services")
+                                                    .put("ARTIFACTS", "*Artifacts:* no artifacts")
                                                     .put("USER_NAME", USER_NAME)
                                                     .put("PIPELINE", "")
                                                     .put("ENV_NAME", ENV_NAME)
@@ -438,7 +458,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                 "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/env/build/executions/WORKFLOW_EXECUTION_ID/details")
             .put("VERB", "failed")
             .put("PHASE_NAME", "")
-            .put("ARTIFACTS", "no services")
+            .put("ARTIFACTS", "*Artifacts:* no artifacts")
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", "")
             .put("ENV_NAME", "no environment")
