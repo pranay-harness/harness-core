@@ -179,7 +179,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                              .build());
     doReturn(previousReleases).when(pcfDeploymentManager).getPreviousReleases(any(), anyString());
     doReturn(previousReleases).when(pcfDeploymentManager).getDeployedServicesWithNonZeroInstances(any(), anyString());
-    doNothing().when(pcfDeploymentManager).unmapRouteMapForApplication(any(), anyList());
+    doNothing().when(pcfDeploymentManager).unmapRouteMapForApplication(any(), anyList(), any());
 
     doNothing().when(pcfDeploymentManager).deleteApplication(any());
     doReturn(ApplicationDetail.builder()
@@ -219,7 +219,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     verify(pcfDeploymentManager, times(1)).createApplication(any(), any());
     verify(pcfDeploymentManager, times(3)).deleteApplication(any());
     verify(pcfDeploymentManager, times(1)).resizeApplication(any());
-    verify(pcfDeploymentManager, times(1)).unmapRouteMapForApplication(any(), anyList());
+    verify(pcfDeploymentManager, times(1)).unmapRouteMapForApplication(any(), anyList(), any());
 
     PcfSetupCommandResponse pcfSetupCommandResponse =
         (PcfSetupCommandResponse) pcfCommandExecutionResponse.getPcfCommandResponse();

@@ -25,11 +25,11 @@ public interface PcfDeploymentManager {
 
   ApplicationDetail getApplicationByName(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException;
 
-  void unmapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths)
-      throws PivotalClientApiException;
+  void unmapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException;
 
-  void mapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths)
-      throws PivotalClientApiException;
+  void mapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException;
 
   List<ApplicationSummary> getDeployedServicesWithNonZeroInstances(PcfRequestConfig pcfRequestConfig, String prefix)
       throws PivotalClientApiException;

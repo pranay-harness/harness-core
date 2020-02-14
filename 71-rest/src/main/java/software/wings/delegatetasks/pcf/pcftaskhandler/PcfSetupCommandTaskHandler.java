@@ -461,7 +461,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
       // Unmap routes from application having 0 instances
       if (isNotEmpty(applicationDetail.getUrls())) {
-        pcfDeploymentManager.unmapRouteMapForApplication(pcfRequestConfig, applicationDetail.getUrls());
+        pcfDeploymentManager.unmapRouteMapForApplication(
+            pcfRequestConfig, applicationDetail.getUrls(), executionLogCallback);
       }
     } catch (PivotalClientApiException e) {
       executionLogCallback.saveExecutionLog(new StringBuilder(128)

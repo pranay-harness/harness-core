@@ -5,10 +5,14 @@ import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_APP_LOG_TAILING;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCALAR;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
 import static io.harness.pcf.model.PcfConstants.CF_PLUGIN_HOME;
+import static io.harness.pcf.model.PcfRouteType.PCF_ROUTE_TYPE_HTTP;
+import static io.harness.pcf.model.PcfRouteType.PCF_ROUTE_TYPE_TCP;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -36,6 +40,7 @@ import static software.wings.helpers.ext.pcf.PcfClientImpl.BIN_SH;
 
 import io.harness.category.element.UnitTests;
 import io.harness.filesystem.FileIo;
+import io.harness.pcf.model.PcfRouteInfo;
 import io.harness.rule.Owner;
 import org.cloudfoundry.doppler.LogMessage;
 import org.cloudfoundry.doppler.MessageType;
@@ -77,7 +82,6 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -276,7 +280,7 @@ public class PivotalClientTest extends WingsBaseTest {
     when(routes.list(any())).thenReturn(result);
 
     List<Route> routeMaps =
-        client.getRouteMapsByNames(Arrays.asList("stage.harness.io", "qa.harness.io/api"), getPcfRequestConfig());
+        client.getRouteMapsByNames(asList("stage.harness.io", "qa.harness.io/api"), getPcfRequestConfig());
     assertThat(routeMaps).isNotNull();
     List<String> routes = routeMaps.stream().map(route -> client.getPathFromRouteMap(route)).collect(toList());
     assertThat(routes).containsExactly("stage.harness.io", "qa.harness.io/api");
@@ -638,26 +642,26 @@ public class PivotalClientTest extends WingsBaseTest {
     routes.add(path1);
     Route route = Route.builder().id("id").host("myapp").domain("cfapps.io").space(space).build();
 
-    List<String> routeToBeCreated = pcfClient.findRoutesNeedToBeCreated(routes, Arrays.asList(route));
+    List<String> routeToBeCreated = pcfClient.findRoutesNeedToBeCreated(routes, asList(route));
     assertThat(routeToBeCreated).isNotNull();
     assertThat(routeToBeCreated).isEmpty();
 
     routes.clear();
     routes.add(path2);
     Route route1 = Route.builder().id("id").host("myapp").domain("cfapps.io").path("/path").space(space).build();
-    routeToBeCreated = pcfClient.findRoutesNeedToBeCreated(routes, Arrays.asList(route1));
+    routeToBeCreated = pcfClient.findRoutesNeedToBeCreated(routes, asList(route1));
     assertThat(routeToBeCreated).isNotNull();
     assertThat(routeToBeCreated).isEmpty();
 
     routes.clear();
     routes.add(path1);
     routes.add(path2);
-    routeToBeCreated = pcfClient.findRoutesNeedToBeCreated(routes, Arrays.asList(route1, route));
+    routeToBeCreated = pcfClient.findRoutesNeedToBeCreated(routes, asList(route1, route));
     assertThat(routeToBeCreated).isNotNull();
     assertThat(routeToBeCreated).isEmpty();
 
     routes.add(path3);
-    routeToBeCreated = pcfClient.findRoutesNeedToBeCreated(routes, Arrays.asList(route1, route));
+    routeToBeCreated = pcfClient.findRoutesNeedToBeCreated(routes, asList(route1, route));
     assertThat(routeToBeCreated).isNotNull();
     assertThat(routeToBeCreated).isNotEmpty();
     assertThat(routeToBeCreated.size()).isEqualTo(1);
@@ -673,7 +677,7 @@ public class PivotalClientTest extends WingsBaseTest {
     Route route = Route.builder().id("id").host("myapp").domain("cfapps.io").space(space).build();
     Route route1 = Route.builder().id("id").host("myapp").domain("cfapps.io").path("/path").space(space).build();
 
-    doReturn(Arrays.asList(route, route1)).when(pcfClient1).getRouteMapsByNames(anyList(), any());
+    doReturn(asList(route, route1)).when(pcfClient1).getRouteMapsByNames(anyList(), any());
     doNothing().when(pcfClient1).mapRouteMapForApp(any(), any());
     PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().spaceName(space).build();
 
@@ -692,7 +696,7 @@ public class PivotalClientTest extends WingsBaseTest {
         .when(pcfClient1)
         .createRouteMap(any(), anyString(), anyString(), anyString(), anyBoolean(), anyBoolean(), anyInt());
     doNothing().when(pcfClient1).mapRouteMapForApp(any(), any());
-    doReturn(Arrays.asList(Domain.builder().id("id1").name("cfapps.io").status(Status.SHARED).build()))
+    doReturn(asList(Domain.builder().id("id1").name("cfapps.io").status(Status.SHARED).build()))
         .when(pcfClient1)
         .getAllDomainsForSpace(any());
 
@@ -1081,6 +1085,71 @@ public class PivotalClientTest extends WingsBaseTest {
         PcfRequestConfig.builder().endpointUrl("api.pivotal.io").userName("user").password("passwd").build();
     client.doLogin(config, mockCallback, "conf");
     verify(client, times(3)).executeCommand(anyString(), anyMap(), any());
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void test_extractRouteInfoFromPath() throws Exception {
+    PcfClientImpl client = spy(PcfClientImpl.class);
+    Set<String> domains = new HashSet<>(asList("example.com", "z.example.com"));
+
+    PcfRouteInfo info = client.extractRouteInfoFromPath(domains, "example.com:5000");
+    assertThat(info.getType()).isEqualTo(PCF_ROUTE_TYPE_TCP);
+    assertThat(info.getDomain()).isEqualTo("example.com");
+    assertThat(info.getPort()).isEqualTo("5000");
+
+    info = client.extractRouteInfoFromPath(domains, "cdp-10515.z.example.com/path");
+    assertThat(info.getType()).isEqualTo(PCF_ROUTE_TYPE_HTTP);
+    assertThat(info.getDomain()).isEqualTo("z.example.com");
+    assertThat(info.getHostName()).isEqualTo("cdp-10515");
+    assertThat(info.getPath()).isEqualTo("path");
+
+    info = client.extractRouteInfoFromPath(domains, "cdp-10515.z.example.com");
+    assertThat(info.getType()).isEqualTo(PCF_ROUTE_TYPE_HTTP);
+    assertThat(info.getDomain()).isEqualTo("z.example.com");
+    assertThat(info.getHostName()).isEqualTo("cdp-10515");
+    assertThat(info.getPath()).isNullOrEmpty();
+
+    info = client.extractRouteInfoFromPath(domains, "z.example.com");
+    assertThat(info.getType()).isEqualTo(PCF_ROUTE_TYPE_HTTP);
+    assertThat(info.getDomain()).isEqualTo("z.example.com");
+    assertThat(info.getHostName()).isNullOrEmpty();
+    assertThat(info.getPath()).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void test_executeRoutesOperationForApplicationUsingCli() throws Exception {
+    PcfClientImpl client = spy(PcfClientImpl.class);
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    PcfRequestConfig requestConfig = PcfRequestConfig.builder()
+                                         .useCFCLI(true)
+                                         .loggedin(false)
+                                         .cfHomeDirPath("/cf/home")
+                                         .applicationName("App_BG_00")
+                                         .build();
+    doReturn(true).when(client).doLogin(any(), any(), anyString());
+    List<Domain> domains = singletonList(Domain.builder().name("example.com").id("id").status(Status.OWNED).build());
+    doReturn(domains).when(client).getAllDomainsForSpace(any());
+    Map<String, String> envMap = new HashMap<>();
+    envMap.put("CF_HOME", "/cf/home");
+    PcfRouteInfo info = PcfRouteInfo.builder()
+                            .type(PCF_ROUTE_TYPE_HTTP)
+                            .domain("example.com")
+                            .hostName("cdp-10515")
+                            .path("path")
+                            .build();
+    doReturn(info).when(client).extractRouteInfoFromPath(any(), anyString());
+    doReturn(0).when(client).executeCommand(anyString(), any(), any());
+    client.executeRoutesOperationForApplicationUsingCli(
+        "cf map-route", requestConfig, singletonList("cdp-10515.z.example.com/path"), mockCallback);
+    ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+    verify(client).executeCommand(captor.capture(), any(), any());
+    String value = captor.getValue();
+    assertThat(value).isEqualTo("cf map-route App_BG_00 example.com --hostname cdp-10515  --path path ");
   }
 
   @Test

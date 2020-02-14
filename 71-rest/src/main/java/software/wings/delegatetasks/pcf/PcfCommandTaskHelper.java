@@ -501,7 +501,7 @@ public class PcfCommandTaskHelper {
     executionLogCallback.saveExecutionLog("ROUTE: \n[" + getRouteString(routes));
     // map
     pcfRequestConfig.setApplicationName(applicationName);
-    pcfDeploymentManager.mapRouteMapForApplication(pcfRequestConfig, routes);
+    pcfDeploymentManager.mapRouteMapForApplication(pcfRequestConfig, routes, executionLogCallback);
   }
 
   public void unmapExistingRouteMaps(ApplicationDetail applicationDetail, PcfRequestConfig pcfRequestConfig,
@@ -511,7 +511,8 @@ public class PcfCommandTaskHelper {
     executionLogCallback.saveExecutionLog("ROUTE: \n[" + getRouteString(applicationDetail.getUrls()));
     // map
     pcfRequestConfig.setApplicationName(applicationDetail.getName());
-    pcfDeploymentManager.unmapRouteMapForApplication(pcfRequestConfig, applicationDetail.getUrls());
+    pcfDeploymentManager.unmapRouteMapForApplication(
+        pcfRequestConfig, applicationDetail.getUrls(), executionLogCallback);
   }
 
   public void unmapRouteMaps(String applicationName, List<String> routes, PcfRequestConfig pcfRequestConfig,
@@ -521,7 +522,7 @@ public class PcfCommandTaskHelper {
     executionLogCallback.saveExecutionLog("ROUTES: \n[" + getRouteString(routes));
     // unmap
     pcfRequestConfig.setApplicationName(applicationName);
-    pcfDeploymentManager.unmapRouteMapForApplication(pcfRequestConfig, routes);
+    pcfDeploymentManager.unmapRouteMapForApplication(pcfRequestConfig, routes, executionLogCallback);
     executionLogCallback.saveExecutionLog("# Unmapping Routes was successfully completed");
   }
 
