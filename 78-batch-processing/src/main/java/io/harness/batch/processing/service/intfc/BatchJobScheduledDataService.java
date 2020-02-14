@@ -9,4 +9,6 @@ public interface BatchJobScheduledDataService {
   boolean create(BatchJobScheduledData batchJobScheduledData);
 
   Instant fetchLastBatchJobScheduledTime(String accountId, BatchJobType batchJobType);
+
+  Instant fetchLastDependentBatchJobScheduledTime(String accountId, BatchJobType batchJobType);
 }

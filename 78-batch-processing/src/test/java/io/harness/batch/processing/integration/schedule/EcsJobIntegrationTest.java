@@ -16,6 +16,7 @@ import io.harness.batch.processing.integration.EcsEventGenerator;
 import io.harness.batch.processing.schedule.BatchJobRunner;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
 import io.harness.grpc.utils.HTimestamps;
@@ -46,6 +47,7 @@ public class EcsJobIntegrationTest extends CategoryTest implements EcsEventGener
   private final String TEST_CLUSTER_ID = "EC2_INSTANCE_INFO_CLUSTER_ID_" + this.getClass().getSimpleName();
   private final String TEST_INSTANCE_ID = "EC2_INSTANCE_INFO_INSTANCE_ID_" + this.getClass().getSimpleName();
   private final String TEST_CLUSTER_ARN = "EC2_INSTANCE_INFO_CLUSTER_ARN_" + this.getClass().getSimpleName();
+  private final String TEST_EC2_INSTANCE_ID = "EC2_TEST_INSTANCE_INFO_INSTANCE_ID_" + this.getClass().getSimpleName();
 
   private final Instant NOW = Instant.now();
   private final Timestamp INSTANCE_START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(4, ChronoUnit.DAYS));
@@ -64,6 +66,16 @@ public class EcsJobIntegrationTest extends CategoryTest implements EcsEventGener
     batchJobDataDs.delete(batchJobDataDs.createQuery(BatchJobScheduledData.class));
 
     Instant createdTimestamp = NOW.minus(3, ChronoUnit.DAYS);
+
+    LastReceivedPublishedMessage lastReceivedPublishedMessage =
+        LastReceivedPublishedMessage.builder()
+            .accountId(TEST_ACCOUNT_ID)
+            .identifier("TEST_EC2_INSTANCE_ID")
+            .lastReceivedAt(createdTimestamp.toEpochMilli())
+            .createdAt(NOW.minus(10, ChronoUnit.DAYS).toEpochMilli())
+            .build();
+    hPersistence.save(lastReceivedPublishedMessage);
+
     PublishedMessage ec2InstanceInfoMessage =
         getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN, TEST_CLUSTER_ID);
     ec2InstanceInfoMessage.setCreatedAt(createdTimestamp.toEpochMilli());

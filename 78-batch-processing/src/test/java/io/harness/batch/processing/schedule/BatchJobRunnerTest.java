@@ -32,9 +32,9 @@ public class BatchJobRunnerTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldReturnTrueIfAllDependentJobFinished() {
-    when(batchJobScheduledDataService.fetchLastBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.ECS_UTILIZATION))
+    when(batchJobScheduledDataService.fetchLastDependentBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.ECS_UTILIZATION))
         .thenReturn(NOW.minus(2, ChronoUnit.DAYS));
-    when(batchJobScheduledDataService.fetchLastBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.K8S_UTILIZATION))
+    when(batchJobScheduledDataService.fetchLastDependentBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.K8S_UTILIZATION))
         .thenReturn(NOW.minus(2, ChronoUnit.DAYS));
     BatchJobType batchJobType = BatchJobType.INSTANCE_BILLING;
     boolean jobFinished = batchJobRunner.checkDependentJobFinished(
@@ -46,9 +46,9 @@ public class BatchJobRunnerTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfAllDependentJobNotFinished() {
-    when(batchJobScheduledDataService.fetchLastBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.ECS_UTILIZATION))
+    when(batchJobScheduledDataService.fetchLastDependentBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.ECS_UTILIZATION))
         .thenReturn(NOW.minus(2, ChronoUnit.DAYS));
-    when(batchJobScheduledDataService.fetchLastBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.K8S_UTILIZATION))
+    when(batchJobScheduledDataService.fetchLastDependentBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.K8S_UTILIZATION))
         .thenReturn(NOW.minus(4, ChronoUnit.DAYS));
     BatchJobType batchJobType = BatchJobType.INSTANCE_BILLING;
     boolean jobFinished = batchJobRunner.checkDependentJobFinished(
@@ -60,7 +60,8 @@ public class BatchJobRunnerTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfDependentJobFinished() {
-    when(batchJobScheduledDataService.fetchLastBatchJobScheduledTime(any(), any(BatchJobType.class))).thenReturn(NOW);
+    when(batchJobScheduledDataService.fetchLastDependentBatchJobScheduledTime(any(), any(BatchJobType.class)))
+        .thenReturn(NOW);
     BatchJobType batchJobType = BatchJobType.INSTANCE_BILLING;
     boolean jobFinished =
         batchJobRunner.checkDependentJobFinished(ACCOUNT_ID, NOW, batchJobType.getDependentBatchJobs());
