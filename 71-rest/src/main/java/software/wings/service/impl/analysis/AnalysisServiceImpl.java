@@ -979,68 +979,34 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public void validateConfig(
       final SettingAttribute settingAttribute, StateType stateType, List<EncryptedDataDetail> encryptedDataDetails) {
-    ErrorCode errorCode = null;
-
-    try {
-      switch (stateType) {
-        case SPLUNKV2:
-          errorCode = ErrorCode.SPLUNK_CONFIGURATION_ERROR;
-          SyncTaskContext splunkTaskContext = SyncTaskContext.builder()
-                                                  .accountId(settingAttribute.getAccountId())
-                                                  .appId(GLOBAL_APP_ID)
-                                                  .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                                  .build();
-          delegateProxyFactory.get(SplunkDelegateService.class, splunkTaskContext)
-              .validateConfig((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails);
-          break;
-        case ELK:
-          errorCode = ErrorCode.ELK_CONFIGURATION_ERROR;
-          SyncTaskContext elkTaskContext = SyncTaskContext.builder()
-                                               .accountId(settingAttribute.getAccountId())
-                                               .appId(GLOBAL_APP_ID)
-                                               .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
-                                               .build();
-          delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
-              .validateConfig((ElkConfig) settingAttribute.getValue(), encryptedDataDetails);
-          break;
-        case LOGZ:
-          errorCode = ErrorCode.LOGZ_CONFIGURATION_ERROR;
-          SyncTaskContext logzTaskContext = SyncTaskContext.builder()
-                                                .accountId(settingAttribute.getAccountId())
-                                                .appId(GLOBAL_APP_ID)
-                                                .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                                .build();
-          delegateProxyFactory.get(LogzDelegateService.class, logzTaskContext)
-              .validateConfig((LogzConfig) settingAttribute.getValue(), encryptedDataDetails);
-          break;
-        case SUMO:
-          errorCode = ErrorCode.SUMO_CONFIGURATION_ERROR;
-          SyncTaskContext sumoTaskContext = SyncTaskContext.builder()
-                                                .accountId(settingAttribute.getAccountId())
-                                                .appId(GLOBAL_APP_ID)
-                                                .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                                .build();
-          delegateProxyFactory.get(SumoDelegateService.class, sumoTaskContext)
-              .validateConfig((SumoConfig) settingAttribute.getValue(), encryptedDataDetails);
-          break;
-        case INSTANA:
-          errorCode = ErrorCode.INSTANA_CONFIGURATION_ERROR;
-          SyncTaskContext instanaTaskContext = SyncTaskContext.builder()
-                                                   .accountId(settingAttribute.getAccountId())
-                                                   .appId(GLOBAL_APP_ID)
-                                                   .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                                   .build();
-          delegateProxyFactory.get(InstanaDelegateService.class, instanaTaskContext)
-              .validateConfig((InstanaConfig) settingAttribute.getValue(), encryptedDataDetails);
-          break;
-        default:
-          errorCode = ErrorCode.DEFAULT_ERROR_CODE;
-          throw new IllegalStateException("Invalid state type: " + stateType);
-      }
-    } catch (VerificationOperationException verificationException) {
-      throw verificationException;
-    } catch (Exception e) {
-      throw new WingsException(errorCode, USER, e).addParam("reason", ExceptionUtils.getMessage(e));
+    SyncTaskContext taskContext = SyncTaskContext.builder()
+                                      .accountId(settingAttribute.getAccountId())
+                                      .appId(GLOBAL_APP_ID)
+                                      .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
+                                      .build();
+    switch (stateType) {
+      case SPLUNKV2:
+        delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
+            .validateConfig((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails);
+        return;
+      case ELK:
+        delegateProxyFactory.get(ElkDelegateService.class, taskContext)
+            .validateConfig((ElkConfig) settingAttribute.getValue(), encryptedDataDetails);
+        return;
+      case LOGZ:
+        delegateProxyFactory.get(LogzDelegateService.class, taskContext)
+            .validateConfig((LogzConfig) settingAttribute.getValue(), encryptedDataDetails);
+        return;
+      case SUMO:
+        delegateProxyFactory.get(SumoDelegateService.class, taskContext)
+            .validateConfig((SumoConfig) settingAttribute.getValue(), encryptedDataDetails);
+        return;
+      case INSTANA:
+        delegateProxyFactory.get(InstanaDelegateService.class, taskContext)
+            .validateConfig((InstanaConfig) settingAttribute.getValue(), encryptedDataDetails);
+        return;
+      default:
+        unhandled(stateType);
     }
   }
 

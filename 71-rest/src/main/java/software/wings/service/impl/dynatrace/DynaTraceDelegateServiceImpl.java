@@ -20,6 +20,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.dynatrace.DynaTraceRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
@@ -44,19 +45,14 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
   @Inject private DataCollectionExecutorService dataCollectionService;
+  @Inject private RequestExecutor requestExecutor;
 
   @Override
-  public boolean validateConfig(DynaTraceConfig dynaTraceConfig, List<EncryptedDataDetail> encryptedDataDetails)
-      throws IOException {
+  public boolean validateConfig(DynaTraceConfig dynaTraceConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     final Call<Object> request = getDynaTraceRestClient(dynaTraceConfig)
                                      .listTimeSeries(getHeaderWithCredentials(dynaTraceConfig, encryptedDataDetails));
-    final Response<Object> response = request.execute();
-    if (response.isSuccessful()) {
-      return true;
-    } else {
-      logger.error("Request not successful. Reason: {}", response);
-      throw new IllegalArgumentException(response.errorBody().string());
-    }
+    requestExecutor.executeRequest(request);
+    return true;
   }
 
   @Override

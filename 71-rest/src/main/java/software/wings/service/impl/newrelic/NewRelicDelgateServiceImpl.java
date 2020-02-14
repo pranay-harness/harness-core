@@ -158,24 +158,17 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
   @Override
 
-  public boolean validateConfig(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails)
-      throws IOException {
+  public boolean validateConfig(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     validateApplications(newRelicConfig, encryptedDataDetails, 1);
     return true;
   }
 
   private List<NewRelicApplication> validateApplications(
-      NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails, int pageCount) throws IOException {
+      NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails, int pageCount) {
     final Call<NewRelicApplicationsResponse> request =
         getNewRelicRestClient(newRelicConfig)
             .listAllApplications(getApiKey(newRelicConfig, encryptedDataDetails), pageCount);
-    Response<NewRelicApplicationsResponse> response;
-    response = request.execute();
-    if (response.isSuccessful()) {
-      return response.body().getApplications();
-    } else {
-      throw new IllegalArgumentException(response.errorBody().string());
-    }
+    return requestExecutor.executeRequest(request).getApplications();
   }
 
   @Override

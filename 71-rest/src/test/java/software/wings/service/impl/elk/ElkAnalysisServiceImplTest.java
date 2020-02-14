@@ -184,7 +184,8 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
       service.validateQuery(accountId, appId, settingId, query, "test", null, "hostname", "log", "@timestamp");
       fail("validate query should throw wings exception..");
     } catch (VerificationOperationException e) {
-      assertThat("Too many logs returned using query: '" + query + "'. Please refine your query.")
+      assertThat("Error in Elasticsearch configuration. Too many logs returned using query: '" + query
+          + "'. Please refine your query.")
           .isEqualTo(e.getParams().get("reason"));
       assertThat(e.getCode()).isEqualTo(ErrorCode.ELK_CONFIGURATION_ERROR);
     }
@@ -213,7 +214,8 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
       service.validateQuery(accountId, appId, settingId, query, "test", null, "hostname", "log", "@timestamp");
       fail("validate query should throw wings exception..");
     } catch (WingsException e) {
-      assertThat("Too many logs returned using query: '" + query + "'. Please refine your query.")
+      assertThat("Error in Elasticsearch configuration. Too many logs returned using query: '" + query
+          + "'. Please refine your query.")
           .isEqualTo(e.getParams().get("reason"));
       assertThat(e.getCode()).isEqualTo(ErrorCode.ELK_CONFIGURATION_ERROR);
     }

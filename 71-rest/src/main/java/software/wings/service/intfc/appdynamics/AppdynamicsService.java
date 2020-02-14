@@ -1,7 +1,5 @@
 package software.wings.service.intfc.appdynamics;
 
-import io.harness.security.encryption.EncryptedDataDetail;
-import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
@@ -27,13 +25,6 @@ public interface AppdynamicsService {
       throws IOException;
   Set<AppdynamicsTier> getDependentTiers(String settingId, long appdynamicsAppId, AppdynamicsTier tier,
       ThirdPartyApiCallLog apiCallLog) throws IOException;
-
-  /**
-   * Method to validate the appdynamics config.
-   * @param settingAttribute
-   * @return
-   */
-  boolean validateConfig(@NotNull SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails);
 
   /**
    * Api to fetch metric data for given node.

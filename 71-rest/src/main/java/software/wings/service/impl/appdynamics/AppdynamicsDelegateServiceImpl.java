@@ -556,26 +556,11 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Override
   public boolean validateConfig(AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    Response<List<NewRelicApplication>> response;
-    try {
-      final Call<List<NewRelicApplication>> request =
-          getAppdynamicsRestClient(appDynamicsConfig)
-              .listAllApplications(getHeaderWithCredentials(appDynamicsConfig, encryptedDataDetails));
-      response = request.execute();
-      if (response.isSuccessful()) {
-        return true;
-      }
-    } catch (Exception exception) {
-      throw new WingsException(
-          "Could not reach AppDynamics server. " + ExceptionUtils.getMessage(exception), exception);
-    }
-
-    final int errorCode = response.code();
-    if (errorCode == HttpStatus.SC_UNAUTHORIZED) {
-      throw new IllegalArgumentException("Could not login to AppDynamics server with the given credentials");
-    }
-
-    throw new WingsException(response.message());
+    final Call<List<NewRelicApplication>> request =
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .listAllApplications(getHeaderWithCredentials(appDynamicsConfig, encryptedDataDetails));
+    requestExecutor.executeRequest(request);
+    return true;
   }
 
   AppdynamicsRestClient getAppdynamicsRestClient(final AppDynamicsConfig appDynamicsConfig) {

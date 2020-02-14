@@ -20,7 +20,6 @@ import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +29,7 @@ import org.apache.http.HttpStatus;
 import org.apache.xerces.impl.dv.util.Base64;
 import software.wings.beans.SplunkConfig;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
@@ -75,15 +75,10 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       createSearchJob(splunkService, getQuery("*exception*", null, null, false),
           System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(5), System.currentTimeMillis());
       return true;
-    } catch (HttpException httpException) {
-      if (httpException.getStatus() == HttpStatus.SC_NOT_FOUND) {
-        throw new IllegalArgumentException(
-            "Can not reach url " + splunkConfig.getSplunkUrl() + " to create splunk serach job", httpException);
-      }
-      throw new VerificationOperationException(
-          ErrorCode.APM_CONFIGURATION_ERROR, ExceptionUtils.getMessage(httpException), httpException);
-    } catch (Exception exception) {
-      throw new WingsException("Error connecting to Splunk " + ExceptionUtils.getMessage(exception), exception);
+    } catch (HttpException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new DataCollectionException(e);
     }
   }
 

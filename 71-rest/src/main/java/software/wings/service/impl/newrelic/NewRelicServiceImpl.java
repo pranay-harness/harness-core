@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
@@ -155,41 +156,32 @@ public class NewRelicServiceImpl implements NewRelicService {
   @Override
   public void validateConfig(
       SettingAttribute settingAttribute, StateType stateType, List<EncryptedDataDetail> encryptedDataDetails) {
-    ErrorCode errorCode = ErrorCode.DEFAULT_ERROR_CODE;
-    try {
-      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                            .accountId(settingAttribute.getAccountId())
-                                            .appId(GLOBAL_APP_ID)
-                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                            .build();
-      switch (stateType) {
-        case NEW_RELIC:
-          errorCode = ErrorCode.NEWRELIC_CONFIGURATION_ERROR;
-          delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
-              .validateConfig((NewRelicConfig) settingAttribute.getValue(), encryptedDataDetails);
-          break;
-        case APP_DYNAMICS:
-          errorCode = ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR;
-          AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-          delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-              .validateConfig(appDynamicsConfig, encryptedDataDetails);
-          break;
-        case DYNA_TRACE:
-          errorCode = ErrorCode.DYNA_TRACE_CONFIGURATION_ERROR;
-          DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingAttribute.getValue();
-          delegateProxyFactory.get(DynaTraceDelegateService.class, syncTaskContext)
-              .validateConfig(dynaTraceConfig, encryptedDataDetails);
-          break;
-        case PROMETHEUS:
-          errorCode = ErrorCode.PROMETHEUS_CONFIGURATION_ERROR;
-          PrometheusConfig prometheusConfig = (PrometheusConfig) settingAttribute.getValue();
-          delegateProxyFactory.get(PrometheusDelegateService.class, syncTaskContext).validateConfig(prometheusConfig);
-          break;
-        default:
-          throw new IllegalStateException("Invalid state" + stateType);
-      }
-    } catch (Exception e) {
-      throw new WingsException(errorCode, USER, e).addParam("reason", ExceptionUtils.getMessage(e));
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(settingAttribute.getAccountId())
+                                          .appId(GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
+    switch (stateType) {
+      case NEW_RELIC:
+        delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
+            .validateConfig((NewRelicConfig) settingAttribute.getValue(), encryptedDataDetails);
+        return;
+      case APP_DYNAMICS:
+        AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
+        delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
+            .validateConfig(appDynamicsConfig, encryptedDataDetails);
+        return;
+      case DYNA_TRACE:
+        DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingAttribute.getValue();
+        delegateProxyFactory.get(DynaTraceDelegateService.class, syncTaskContext)
+            .validateConfig(dynaTraceConfig, encryptedDataDetails);
+        return;
+      case PROMETHEUS:
+        PrometheusConfig prometheusConfig = (PrometheusConfig) settingAttribute.getValue();
+        delegateProxyFactory.get(PrometheusDelegateService.class, syncTaskContext).validateConfig(prometheusConfig);
+        return;
+      default:
+        unhandled(stateType);
     }
   }
 

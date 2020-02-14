@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -13,7 +12,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
@@ -38,7 +36,9 @@ import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -51,6 +51,7 @@ import java.util.UUID;
  */
 public class AppdynamicsTest extends WingsBaseTest {
   @Inject private AppdynamicsService appdynamicsService;
+  @Inject private NewRelicService newRelicService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EncryptionService encryptionService;
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
@@ -73,6 +74,7 @@ public class AppdynamicsTest extends WingsBaseTest {
     FieldUtils.writeField(appdynamicsDelegateService, "encryptionService", encryptionService, true);
     when(appdDelegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(appdynamicsDelegateService);
     FieldUtils.writeField(appdynamicsService, "delegateProxyFactory", appdDelegateProxyFactory, true);
+    FieldUtils.writeField(newRelicService, "delegateProxyFactory", appdDelegateProxyFactory, true);
 
     accountId = UUID.randomUUID().toString();
 
@@ -100,20 +102,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   public void validateConfig() {
     ((AppDynamicsConfig) settingAttribute.getValue())
         .setPassword(scmSecret.decryptToCharArray(new SecretName("appd_config_password")));
-    appdynamicsService.validateConfig(settingAttribute, Collections.emptyList());
-  }
-
-  @Test
-  @Owner(developers = PRANJAL)
-  @Category(UnitTests.class)
-  public void validateConfigInvalidURL() {
-    ((AppDynamicsConfig) settingAttribute.getValue())
-        .setPassword(scmSecret.decryptToCharArray(new SecretName("appd_config_password")));
-    ((AppDynamicsConfig) settingAttribute.getValue())
-        .setControllerUrl("https://appd-bi-alpha-test.company.intranet/controller");
-
-    thrown.expect(WingsException.class);
-    appdynamicsService.validateConfig(settingAttribute, Collections.emptyList());
+    newRelicService.validateConfig(settingAttribute, StateType.APP_DYNAMICS, Collections.emptyList());
   }
 
   @Test

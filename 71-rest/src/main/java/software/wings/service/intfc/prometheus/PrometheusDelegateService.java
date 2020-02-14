@@ -13,7 +13,7 @@ import java.io.IOException;
  */
 public interface PrometheusDelegateService {
   @DelegateTaskType(TaskType.PROMETHEUS_VALIDATE_CONFIGURATION_TASK)
-  boolean validateConfig(PrometheusConfig prometheusConfig) throws IOException;
+  boolean validateConfig(PrometheusConfig prometheusConfig);
 
   @DelegateTaskType(TaskType.PROMETHEUS_METRIC_DATA_PER_HOST)
   PrometheusMetricDataResponse fetchMetricData(

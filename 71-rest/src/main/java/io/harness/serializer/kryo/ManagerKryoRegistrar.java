@@ -15,6 +15,9 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.esotericsoftware.kryo.Kryo;
+import com.splunk.HttpException;
+import com.sumologic.client.SumoClientException;
+import com.sumologic.client.SumoException;
 import io.harness.ccm.BillingReportConfig;
 import io.harness.ccm.CCMConfig;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
@@ -1479,5 +1482,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CustomAPMDataCollectionInfo.class, 7305);
     kryo.register(APMVerificationConfig.class, 7306);
     kryo.register(APMVerificationConfig.KeyValues.class, 7307);
+    kryo.register(HttpException.class, 7308);
+    kryo.register(SumoException.class, 7309);
+    kryo.register(SumoClientException.class, 7310);
   }
 }
