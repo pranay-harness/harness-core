@@ -3,6 +3,7 @@ package io.harness.event.client.impl.tailer;
 import static java.util.Objects.requireNonNull;
 
 import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -10,6 +11,7 @@ import com.google.inject.name.Named;
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
 import io.harness.event.PublishMessage;
 import io.harness.event.PublishRequest;
+import io.harness.logging.LoggingListener;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
@@ -44,6 +46,7 @@ public class ChronicleEventTailer extends AbstractScheduledService {
     fileDeletionManager.setQueue(chronicleQueue);
     this.fileDeletionManager = fileDeletionManager;
     this.scheduler = new BackoffScheduler(MIN_DELAY, MAX_DELAY);
+    addListener(new LoggingListener(this), MoreExecutors.directExecutor());
   }
 
   @Override

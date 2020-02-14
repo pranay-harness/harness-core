@@ -4,10 +4,12 @@ import static java.util.Arrays.stream;
 import static net.openhft.chronicle.queue.impl.single.SingleChronicleQueue.SUFFIX;
 
 import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.logging.LoggingListener;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
 
@@ -31,6 +33,7 @@ public class ChronicleQueueMonitor extends AbstractScheduledService {
   @Inject
   public ChronicleQueueMonitor(@Named("appender") RollingChronicleQueue queue) {
     this.queue = queue;
+    addListener(new LoggingListener(this), MoreExecutors.directExecutor());
   }
 
   @Override

@@ -1,6 +1,7 @@
 package io.harness.grpc.server;
 
 import com.google.common.util.concurrent.AbstractIdleService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import io.grpc.BindableService;
 import io.grpc.Server;
@@ -8,6 +9,7 @@ import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptor;
 import io.grpc.health.v1.HealthCheckResponse.ServingStatus;
 import io.grpc.services.HealthStatusManager;
+import io.harness.logging.LoggingListener;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -32,6 +34,7 @@ public class GrpcServer extends AbstractIdleService {
     services.forEach(builder::addService);
     server = builder.build();
     this.healthStatusManager = healthStatusManager;
+    addListener(new LoggingListener(this), MoreExecutors.directExecutor());
   }
 
   @Override
