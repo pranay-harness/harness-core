@@ -267,11 +267,6 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     String bucketName = metadata.get(ArtifactMetadataKeys.bucketName);
     String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath);
     String artifactFileName = metadata.get(ArtifactMetadataKeys.artifactFileName);
-    int lastIndexOfSlash = artifactFileName.lastIndexOf('/');
-    if (lastIndexOfSlash > 0) {
-      artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
-      logger.info("Got filename: " + artifactFileName);
-    }
 
     AwsConfig awsConfig = (AwsConfig) artifactStreamAttributes.getServerSetting().getValue();
     String region = awsHelperService.getBucketRegion(awsConfig, encryptionDetails, bucketName);
@@ -285,10 +280,16 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
             + "    Authorization = \"" + authorizationHeader + "\"\n"
             + "    Date = \"" + date + "\"\n"
             + "    Host = \"" + hostName + "\"\n"
-            + "}\n Invoke-WebRequest -Uri \"" + url + "\" -Headers $Headers -OutFile \"" + getCommandPath() + "\\"
-            + artifactFileName + "\"";
+            + "}\n Invoke-WebRequest -Uri \"" + url + "\" -Headers $Headers -OutFile (New-Item -Path \""
+            + getCommandPath() + "\\" + artifactFileName + "\""
+            + " -Force)";
         break;
       case BASH:
+        int lastIndexOfSlash = artifactFileName.lastIndexOf('/');
+        if (lastIndexOfSlash > 0) {
+          artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
+          logger.info("Got filename: " + artifactFileName);
+        }
         command = "curl --progress-bar \"" + url + "\" -H \"Host: " + hostName + "\" \\\n"
             + "-H \"Date: " + date + "\" \\\n"
             + "-H \"Authorization: " + authorizationHeader + "\" -o \"" + getCommandPath() + "/" + artifactFileName

@@ -282,6 +282,17 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                                            .build());
 
   @InjectMocks
+  private ShellCommandExecutionContext amazonS3ContextFolder =
+      new ShellCommandExecutionContext(aCommandExecutionContext()
+                                           .withArtifactStreamAttributes(artifactStreamAttributesForAmazonS3)
+                                           .withMetadata(mockMetadataForS3Folder())
+                                           .withHostConnectionAttributes(hostConnectionAttributes)
+                                           .withAppId(WingsTestConstants.APP_ID)
+                                           .withActivityId(ACTIVITY_ID)
+                                           .withHost(host)
+                                           .build());
+
+  @InjectMocks
   private ShellCommandExecutionContext artifactoryContext =
       new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .withArtifactStreamAttributes(artifactStreamAttributesForArtifactory)
@@ -507,6 +518,24 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     assertThat(argument.getValue()).isEqualTo(command);
   }
 
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  @Parameters(method = "getS3Data")
+  public void shouldDownloadFromS3(ShellCommandExecutionContext context, String command) {
+    context.setExecutor(executor);
+    downloadArtifactCommandUnit.setScriptType(ScriptType.POWERSHELL);
+    downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+        .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
+    when(awsHelperService.getBucketRegion(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), anyString()))
+        .thenReturn("us-west-1");
+    downloadArtifactCommandUnit.executeInternal(context);
+    ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
+    verify(executor).executeCommandString(argument.capture(), anyBoolean());
+    assertThat(argument.getValue()).endsWith(command);
+  }
+
   private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {
     Map<String, String> map = new HashMap<>();
     switch (artifactStreamType) {
@@ -531,6 +560,18 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
       default:
         break;
     }
+    return map;
+  }
+
+  private Map<String, String> mockMetadataForS3Folder() {
+    Map<String, String> map = new HashMap<>();
+    map.put(ArtifactMetadataKeys.bucketName, BUCKET_NAME);
+    map.put(ArtifactMetadataKeys.artifactFileName, "test1/test2/todolist.zip");
+    map.put(ArtifactMetadataKeys.artifactPath, "test1/test2/todolist.zip");
+    map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
+    map.put(ArtifactMetadataKeys.artifactFileSize, String.valueOf(WingsTestConstants.ARTIFACT_FILE_SIZE));
+    map.put(ArtifactMetadataKeys.key, ACCESS_KEY);
+    map.put(ArtifactMetadataKeys.url, S3_URL);
     return map;
   }
 
@@ -602,5 +643,13 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                 + " [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n"
                 + " Invoke-WebRequest -Uri \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar\" -Headers $Headers -OutFile \"DESTINATION_DIR_PATH\\todolist.tar\"\n"
                 + " Invoke-WebRequest -Uri \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war\" -Headers $Headers -OutFile \"DESTINATION_DIR_PATH\\todolist.war\""}};
+  }
+
+  private Object[][] getS3Data() {
+    return new Object[][] {
+        {amazonS3Context,
+            " Invoke-WebRequest -Uri \"https://BUCKET_NAME.s3-us-west-1.amazonaws.com/ARTIFACT_PATH\" -Headers $Headers -OutFile (New-Item -Path \"DESTINATION_DIR_PATH\\ARTIFACT_FILE_NAME\" -Force)"},
+        {amazonS3ContextFolder,
+            " Invoke-WebRequest -Uri \"https://BUCKET_NAME.s3-us-west-1.amazonaws.com/test1/test2/todolist.zip\" -Headers $Headers -OutFile (New-Item -Path \"DESTINATION_DIR_PATH\\test1/test2/todolist.zip\" -Force)"}};
   }
 }
