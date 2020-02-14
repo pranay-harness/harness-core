@@ -9,4 +9,5 @@ public class HarnessServiceInfo {
   private String cloudProviderId;
   private String envId;
   private String infraMappingId;
+  private String deploymentSummaryId;
 }

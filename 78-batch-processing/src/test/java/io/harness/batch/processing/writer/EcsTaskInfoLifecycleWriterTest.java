@@ -148,6 +148,7 @@ public class EcsTaskInfoLifecycleWriterTest extends CategoryTest implements EcsE
   }
 
   private Optional<HarnessServiceInfo> createHarnessServiceInfo() {
-    return Optional.of(new HarnessServiceInfo("serviceId", "appId", "cloudProviderId", "envId", "infraMappingId"));
+    return Optional.of(new HarnessServiceInfo(
+        "serviceId", "appId", "cloudProviderId", "envId", "infraMappingId", "deploymentSummaryId"));
   }
 }

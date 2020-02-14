@@ -22,7 +22,7 @@ public class MongoEventReaderFactory implements EventReaderFactory {
 
   @Override
   public ItemReader<PublishedMessage> getEventReader(
-      String accountId, String messageType, Long startDate, Long endDate) {
+      String accountId, String messageType, Long startDate, Long endDate, int batchSize) {
     Query query = new Query();
     query.addCriteria(new Criteria().andOperator(Criteria.where(PublishedMessageKeys.accountId).is(accountId),
         Criteria.where(PublishedMessageKeys.type).is(messageType),
@@ -38,7 +38,13 @@ public class MongoEventReaderFactory implements EventReaderFactory {
     reader.setCollection("publishedMessages");
     reader.setTargetType(PublishedMessage.class);
     reader.setQuery(query);
-    reader.setPageSize(READER_BATCH_SIZE);
+    reader.setPageSize(batchSize);
     return reader;
+  }
+
+  @Override
+  public ItemReader<PublishedMessage> getEventReader(
+      String accountId, String messageType, Long startDate, Long endDate) {
+    return getEventReader(accountId, messageType, startDate, endDate, READER_BATCH_SIZE);
   }
 }

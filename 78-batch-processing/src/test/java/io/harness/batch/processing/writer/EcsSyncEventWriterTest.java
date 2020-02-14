@@ -85,6 +85,7 @@ public class EcsSyncEventWriterTest extends CategoryTest implements EcsEventGene
   }
 
   private Optional<HarnessServiceInfo> createHarnessServiceInfo() {
-    return Optional.of(new HarnessServiceInfo("serviceId", "appId", "cloudProviderId", "envId", "infraMappingId"));
+    return Optional.of(new HarnessServiceInfo(
+        "serviceId", "appId", "cloudProviderId", "envId", "infraMappingId", "deploymentSummaryId"));
   }
 }

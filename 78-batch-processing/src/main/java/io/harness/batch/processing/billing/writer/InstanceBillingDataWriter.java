@@ -114,7 +114,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
     if (null != instanceData.getHarnessServiceInfo()) {
       return instanceData.getHarnessServiceInfo();
     }
-    return new HarnessServiceInfo(null, null, null, null, null);
+    return new HarnessServiceInfo(null, null, null, null, null, null);
   }
 
   String getValueForKeyFromInstanceMetaData(String metaDataKey, InstanceData instanceData) {

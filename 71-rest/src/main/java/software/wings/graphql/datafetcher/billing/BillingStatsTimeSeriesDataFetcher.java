@@ -59,7 +59,9 @@ public class BillingStatsTimeSeriesDataFetcher
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria) {
-    if (!timeScaleDBService.isValid()) {
+    boolean timeScaleDBServiceValid = timeScaleDBService.isValid();
+    logger.info("Timescale db service status {}", timeScaleDBServiceValid);
+    if (!timeScaleDBServiceValid) {
       throw new InvalidRequestException("Cannot process request in BillingStatsTimeSeriesDataFetcher");
     }
     try {

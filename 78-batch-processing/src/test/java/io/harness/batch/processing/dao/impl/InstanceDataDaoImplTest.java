@@ -189,7 +189,8 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   }
 
   private HarnessServiceInfo harnessServiceInfo() {
-    return new HarnessServiceInfo("serviceId", "appId", "cloudProviderId", "envId", "infraMappingId");
+    return new HarnessServiceInfo(
+        "serviceId", "appId", "cloudProviderId", "envId", "infraMappingId", "deploymentSummaryId");
   }
 
   private Resource resource() {

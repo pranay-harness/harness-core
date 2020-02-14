@@ -11,6 +11,7 @@ import java.util.List;
 @Getter
 public enum BatchJobType {
   SYNC_BILLING_REPORT_S3(100, 1, ChronoUnit.DAYS, Collections.EMPTY_LIST),
+  DEPLOYMENT_EVENT(150, 1, ChronoUnit.DAYS, Collections.EMPTY_LIST),
   ECS_EVENT(200, 1, ChronoUnit.DAYS, Collections.EMPTY_LIST),
   K8S_EVENT(300, 1, ChronoUnit.DAYS, Collections.EMPTY_LIST),
   ECS_UTILIZATION(400, 1, ChronoUnit.HOURS, Collections.singletonList(BatchJobType.ECS_EVENT)),

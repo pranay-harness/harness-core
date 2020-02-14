@@ -255,6 +255,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   }
 
   private Optional<HarnessServiceInfo> harnessServiceInfo() {
-    return Optional.of(new HarnessServiceInfo("serviceId", "appId", "cloudProviderId", "envId", "infraMappingId"));
+    return Optional.of(new HarnessServiceInfo(
+        "serviceId", "appId", "cloudProviderId", "envId", "infraMappingId", "deploymentSummaryId"));
   }
 }

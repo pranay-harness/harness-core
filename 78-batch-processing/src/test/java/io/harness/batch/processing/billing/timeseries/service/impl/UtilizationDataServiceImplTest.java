@@ -62,6 +62,7 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
   private static final String CLOUD_PROVIDER_ID = "cloud_provider_id";
   private static final String ENV_ID = "env_id";
   private static final String INFRA_MAPPING_ID = "infra_mapping_id";
+  private static final String DEPLOYMENT_SUMMARY_ID = "deployment_summary_id";
   private static final String START_TIME = "start_time";
   private static final String END_TIME = "end_time";
   private static final double CPU_UTILIZATION = 0.5;
@@ -167,7 +168,8 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
   }
 
   private HarnessServiceInfo getHarnessServiceInfo() {
-    return new HarnessServiceInfo(SERVICE_ID, APP_ID, CLOUD_PROVIDER_ID, ENV_ID, INFRA_MAPPING_ID);
+    return new HarnessServiceInfo(
+        SERVICE_ID, APP_ID, CLOUD_PROVIDER_ID, ENV_ID, INFRA_MAPPING_ID, DEPLOYMENT_SUMMARY_ID);
   }
 
   private void mockResultSet() throws SQLException {

@@ -53,6 +53,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   private static final String CLOUD_PROVIDER_ID = "cloud_provider_id";
   private static final String ENV_ID = "env_id";
   private static final String INFRA_MAPPING_ID = "infra_mapping_id";
+  private static final String DEPLOYMENT_SUMMARY_ID = "deployment_summary_id";
   private static final String CLUSTER_ID = "cluster_id";
   private static final String CLUSTER_NAME = "cluster_name";
 
@@ -175,6 +176,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   }
 
   private HarnessServiceInfo getHarnessServiceInfo() {
-    return new HarnessServiceInfo(SERVICE_ID, APP_ID, CLOUD_PROVIDER_ID, ENV_ID, INFRA_MAPPING_ID);
+    return new HarnessServiceInfo(
+        SERVICE_ID, APP_ID, CLOUD_PROVIDER_ID, ENV_ID, INFRA_MAPPING_ID, DEPLOYMENT_SUMMARY_ID);
   }
 }
