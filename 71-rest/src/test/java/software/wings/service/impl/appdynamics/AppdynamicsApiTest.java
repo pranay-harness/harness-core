@@ -4,8 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PARNIAN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
@@ -24,18 +22,11 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Protocol;
 import okhttp3.Request;
-import okhttp3.Response.Builder;
-import okhttp3.internal.http.RealResponseBody;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -106,27 +97,6 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU, intermittent = true)
-  @Category(UnitTests.class)
-  public void testUnreachableAppdynamicsServer() throws IOException {
-    Call<List<NewRelicApplication>> restCall = mock(Call.class);
-    RuntimeException runtimeException = new RuntimeException(UUID.randomUUID().toString());
-    when(restCall.execute()).thenThrow(runtimeException);
-    when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
-
-    String savedAttributeId = saveAppdynamicsConfig();
-    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
-
-    Throwable thrown =
-        catchThrowable(() -> appdynamicsService.validateConfig(settingAttribute, Collections.emptyList()));
-    assertThat(thrown).isInstanceOf(WingsException.class);
-    assertThat(((WingsException) thrown).getCode()).isEqualTo(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR);
-    assertThat(((WingsException) thrown).getParams().get("reason"))
-        .isEqualTo("Could not reach AppDynamics server. " + ExceptionUtils.getMessage(runtimeException));
-  }
-
-  @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testNullApplicationName() throws IOException {
@@ -143,49 +113,6 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     final List<NewRelicApplication> applications = appdynamicsService.getApplications(savedAttributeId);
     assertThat(applications.size()).isEqualTo(1);
     assertThat(applications.get(0).getId()).isEqualTo(123);
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testInvalidCredential() throws IOException {
-    Call<List<NewRelicApplication>> restCall = mock(Call.class);
-    when(restCall.execute())
-        .thenReturn(Response.error(new RealResponseBody("Invalid credential", 0, null),
-            new Builder()
-                .code(HttpStatus.SC_UNAUTHORIZED)
-                .request(new Request.Builder().url("https://app.harness.io").build())
-                .protocol(Protocol.HTTP_1_1)
-                .message("Invalid Credential")
-                .build()));
-    when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
-
-    String savedAttributeId = saveAppdynamicsConfig();
-    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
-    try {
-      appdynamicsService.validateConfig(settingAttribute, Collections.emptyList());
-      fail("Validated invalid config");
-    } catch (WingsException e) {
-      assertThat(e.getCode()).isEqualTo(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR);
-      logger.info("got exception", e);
-      assertThat(e.getParams().get("reason"))
-          .isEqualTo("IllegalArgumentException: Could not login to AppDynamics server with the given credentials");
-    }
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testValidConfig() throws IOException {
-    Call<List<NewRelicApplication>> restCall = mock(Call.class);
-    when(restCall.execute()).thenReturn(Response.success(Collections.emptyList()));
-    when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
-
-    String savedAttributeId = saveAppdynamicsConfig();
-    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
-    assertThat(appdynamicsService.validateConfig(settingAttribute, Collections.emptyList())).isTrue();
   }
 
   @Test

@@ -233,7 +233,7 @@ public class RequestExecutorTest extends CategoryTest {
     when(call.execute()).thenReturn(response);
     assertThatThrownBy(() -> requestExecutor.executeRequest(call))
         .isInstanceOf(DataCollectionException.class)
-        .hasMessage("Response code: 429 Error: to many requests");
+        .hasMessage("Response code: 429, Message: test, Error: to many requests");
   }
 
   @Test

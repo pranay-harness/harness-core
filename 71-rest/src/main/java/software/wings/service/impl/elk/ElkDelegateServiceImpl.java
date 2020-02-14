@@ -29,6 +29,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.ElkConfig;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.elk.ElkRestClient;
 import software.wings.helpers.ext.elk.KibanaRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -64,22 +65,19 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
+  @Inject private RequestExecutor requestExecutor;
 
   @Override
   public boolean validateConfig(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    try {
-      if (isNotBlank(elkConfig.getUsername()) && isEmpty(elkConfig.getPassword())) {
-        throw new IllegalArgumentException("User name is given but password is empty");
-      }
-
-      if (isBlank(elkConfig.getUsername()) && isNotEmpty(elkConfig.getPassword())) {
-        throw new IllegalArgumentException("User name is empty but password is given");
-      }
-      getLogSample(elkConfig, "*", false, encryptedDataDetails);
-      return true;
-    } catch (Exception exception) {
-      throw new WingsException(ExceptionUtils.getMessage(exception));
+    if (isNotBlank(elkConfig.getUsername()) && isEmpty(elkConfig.getPassword())) {
+      throw new IllegalArgumentException("User name is given but password is empty");
     }
+
+    if (isBlank(elkConfig.getUsername()) && isNotEmpty(elkConfig.getPassword())) {
+      throw new IllegalArgumentException("User name is empty but password is given");
+    }
+    getLogSample(elkConfig, "*", false, encryptedDataDetails);
+    return true;
   }
 
   @Override
@@ -198,19 +196,15 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   }
 
   @Override
-  public Object getLogSample(ElkConfig elkConfig, String index, boolean shouldSort,
-      List<EncryptedDataDetail> encryptedDataDetails) throws IOException {
+  public Object getLogSample(
+      ElkConfig elkConfig, String index, boolean shouldSort, List<EncryptedDataDetail> encryptedDataDetails) {
     final Call<Object> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig, encryptedDataDetails)
               .getLogSample(format(KibanaRestClient.searchPathPattern, index, 1), KibanaRestClient.searchMethod,
                   ElkLogFetchRequest.lastInsertedRecordObject(shouldSort))
         : getElkRestClient(elkConfig, encryptedDataDetails)
               .getLogSample(index, ElkLogFetchRequest.lastInsertedRecordObject(shouldSort));
-    final Response<Object> response = request.execute();
-    if (response.isSuccessful()) {
-      return response.body();
-    }
-    throw new IllegalArgumentException(response.errorBody().string());
+    return requestExecutor.executeRequest(request);
   }
 
   @Override

@@ -28,6 +28,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
 import software.wings.beans.SumoConfig;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
@@ -223,8 +224,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     try {
       sumoLogicClient.setURL(sumoConfig.getSumoUrl());
     } catch (MalformedURLException e) {
-      throw new VerificationOperationException(
-          ErrorCode.SUMO_DATA_COLLECTION_ERROR, "Unable to create SumoLogic Client");
+      throw new DataCollectionException(e);
     }
     return sumoLogicClient;
   }

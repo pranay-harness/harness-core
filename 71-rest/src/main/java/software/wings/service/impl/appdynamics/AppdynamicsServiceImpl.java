@@ -11,7 +11,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -136,25 +135,6 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     }
 
     return null;
-  }
-
-  @Override
-  public boolean validateConfig(
-      final SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
-    try {
-      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                            .accountId(settingAttribute.getAccountId())
-                                            .appId(GLOBAL_APP_ID)
-                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                            .build();
-      AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-      return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-          .validateConfig(appDynamicsConfig, encryptedDataDetails);
-    } catch (Exception e) {
-      logger.info("Failed to validate", e);
-      throw new WingsException(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR)
-          .addParam("reason", ExceptionUtils.getMessage(e));
-    }
   }
 
   @Override

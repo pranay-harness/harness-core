@@ -21,6 +21,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.config.LogzConfig;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.logz.LogzRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
@@ -43,19 +44,13 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
       Object.class);
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
+  @Inject private RequestExecutor requestExecutor;
 
   @Override
   public boolean validateConfig(LogzConfig logzConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    try {
-      final Call<Object> request = getLogzRestClient(logzConfig, encryptedDataDetails).search(logzQuery);
-      final Response<Object> response = request.execute();
-      if (response.isSuccessful()) {
-        return true;
-      }
-      throw new IllegalArgumentException(response.errorBody().string());
-    } catch (Exception exception) {
-      throw new WingsException("Error validating LOGZ config " + ExceptionUtils.getMessage(exception), exception);
-    }
+    final Call<Object> request = getLogzRestClient(logzConfig, encryptedDataDetails).search(logzQuery);
+    requestExecutor.executeRequest(request);
+    return true;
   }
 
   @Override

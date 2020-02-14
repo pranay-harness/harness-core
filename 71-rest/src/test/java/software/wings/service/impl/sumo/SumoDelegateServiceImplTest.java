@@ -9,7 +9,7 @@ import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.SumoServerException;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.VerificationOperationException;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SumoConfig;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -57,10 +58,11 @@ public class SumoDelegateServiceImplTest extends WingsBaseTest {
     String exceptionMsg = "";
     try {
       sumoDelegateService.validateConfig(sumoConfig, Collections.emptyList());
-    } catch (VerificationOperationException e) {
-      exceptionMsg = (String) e.getParams().get("reason");
+    } catch (DataCollectionException e) {
+      exceptionMsg = ExceptionUtils.getMessage(e);
     }
-    assertThat(exceptionMsg).contains("Unable to create SumoLogic Client");
+    assertThat(exceptionMsg)
+        .isEqualTo("DataCollectionException: java.net.MalformedURLException: no protocol: htt//localhost:9000/");
   }
 
   @Test(expected = SumoClientException.class)

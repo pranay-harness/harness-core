@@ -38,8 +38,8 @@ public class RequestExecutor {
       if (response.isSuccessful()) {
         return response.body();
       } else {
-        throw new DataCollectionException(
-            "Response code: " + response.code() + " Error: " + response.errorBody().string());
+        throw new DataCollectionException("Response code: " + response.code() + ", Message: " + response.message()
+            + ", Error: " + response.errorBody().string());
       }
     } catch (IOException e) {
       throw new DataCollectionException(e);

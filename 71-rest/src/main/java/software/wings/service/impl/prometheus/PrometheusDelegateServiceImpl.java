@@ -7,7 +7,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
@@ -16,6 +15,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.PrometheusConfig;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.prometheus.PrometheusRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
@@ -32,22 +32,14 @@ import java.time.OffsetDateTime;
 @Slf4j
 public class PrometheusDelegateServiceImpl implements PrometheusDelegateService {
   @Inject private DelegateLogService delegateLogService;
+  @Inject private RequestExecutor requestExecutor;
 
   @Override
-  public boolean validateConfig(PrometheusConfig prometheusConfig) throws IOException {
-    try {
-      final Call<PrometheusMetricDataResponse> request =
-          getRestClient(prometheusConfig).fetchMetricData("api/v1/query?query=up");
-      final Response<PrometheusMetricDataResponse> response = request.execute();
-      if (response.isSuccessful()) {
-        return true;
-      } else {
-        logger.error("Request not successful. Reason: {}", response);
-        throw new IllegalArgumentException(response.errorBody().string());
-      }
-    } catch (Exception e) {
-      throw new WingsException("Could not validate prometheus server. " + ExceptionUtils.getMessage(e), e);
-    }
+  public boolean validateConfig(PrometheusConfig prometheusConfig) {
+    final Call<PrometheusMetricDataResponse> request =
+        getRestClient(prometheusConfig).fetchMetricData("api/v1/query?query=up");
+    requestExecutor.executeRequest(request);
+    return true;
   }
 
   @Override
