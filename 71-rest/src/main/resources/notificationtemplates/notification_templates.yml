@@ -36,7 +36,7 @@ ARTIFACT_APPROVAL_NOTIFICATION_STATUS:
 
 WORKFLOW_NOTIFICATION:
       web: <<top-div>>${PHASE_NAME}<b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> ${VERB} for <b>${ARTIFACTS}</b> in <b>${ENV_NAME}</b>, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<${VERB}-color>><i>Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
-      slack: ${PHASE_NAME}\*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* ${VERB} for \*${ARTIFACTS}\* in \*${ENV_NAME}\*, triggered by \*${USER_NAME}\*${PIPELINE} in \*${APP_NAME}\* application||_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
+      slack: ${PHASE_NAME} Workflow \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* ${PIPELINE} ${VERB}\n${APPLICATION}\n${SERVICE}\n${ARTIFACTS}\n${ENVIRONMENT}\n${TRIGGER}||_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
       email:
           subject: ${PHASE_NAME}${WORKFLOW_NAME} ${VERB}
           body: <<top-div>>${PHASE_NAME}<b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> ${VERB} for <b>${ARTIFACTS}</b> in <b>${ENV_NAME}</b>, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<${VERB}-color>><i>Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
