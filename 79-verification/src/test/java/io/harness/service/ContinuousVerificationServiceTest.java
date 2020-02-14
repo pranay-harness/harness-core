@@ -2435,8 +2435,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                      .get();
 
     LogsCVConfiguration logConfig = (LogsCVConfiguration) sumoConfig;
-    logConfig.setBaselineStartMinute(currentMinute - 29);
-    logConfig.setBaselineEndMinute(currentMinute - 15);
+    logConfig.setBaselineStartMinute(currentMinute - 60);
+    logConfig.setBaselineEndMinute(currentMinute - 30);
     logConfig.set247LogsV2(true);
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
@@ -2446,7 +2446,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .thenReturn(managerFeatureFlagCall);
 
     // save some L2 records
-    for (long time = logConfig.getBaselineStartMinute(); time < currentMinute - 15; time++) {
+    for (long time = currentMinute - 29; time < currentMinute - 15; time++) {
       LogDataRecord record = LogDataRecord.builder()
                                  .cvConfigId(sumoConfig.getUuid())
                                  .clusterLevel(ClusterLevel.L2)
@@ -2468,8 +2468,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                           .get();
 
     assertThat(task).isNotNull();
-    assertThat(task.getAnalysis_minute())
-        .isEqualTo(logConfig.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1);
+    assertThat(task.getAnalysis_minute()).isEqualTo(currentMinute - CRON_POLL_INTERVAL_IN_MINUTES);
+    assertThat(task.getControl_input_url()).isNull();
     assertThat(task.getTest_input_url()).isNotNull();
   }
 
@@ -2516,6 +2516,56 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                           .get();
 
     assertThat(task).isNull();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testTrigger247LogDataV2Analysis_analysisTaskCreatedWithinBaselinePeriod() throws Exception {
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfigurationKeys.stateType, StateType.SUMO)
+                                     .get();
+
+    LogsCVConfiguration logConfig = (LogsCVConfiguration) sumoConfig;
+    logConfig.setBaselineStartMinute(currentMinute - 29);
+    logConfig.setBaselineEndMinute(currentMinute - 15);
+    logConfig.set247LogsV2(true);
+
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
+        .thenReturn(managerFeatureFlagCall);
+
+    // save some L2 records
+    for (long time = logConfig.getBaselineStartMinute(); time < currentMinute - 15; time++) {
+      LogDataRecord record = LogDataRecord.builder()
+                                 .cvConfigId(sumoConfig.getUuid())
+                                 .clusterLevel(ClusterLevel.L2)
+                                 .logCollectionMinute(time)
+                                 .build();
+
+      LogDataRecord record2 = LogDataRecord.builder()
+                                  .cvConfigId(sumoConfig.getUuid())
+                                  .clusterLevel(ClusterLevel.H2)
+                                  .logCollectionMinute(time)
+                                  .build();
+      wingsPersistence.save(Arrays.asList(record, record2));
+    }
+
+    continuousVerificationService.trigger247LogDataV2Analysis(logConfig);
+
+    LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                          .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
+                                          .get();
+
+    assertThat(task).isNotNull();
+    assertThat(task.getAnalysis_minute())
+        .isEqualTo(logConfig.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1);
+    assertThat(task.getControl_input_url()).isNotNull();
+    assertThat(task.getTest_input_url()).isNull();
   }
 
   @Test

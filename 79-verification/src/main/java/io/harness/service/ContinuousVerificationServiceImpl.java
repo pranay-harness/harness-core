@@ -1385,11 +1385,23 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       String taskId = generateUuid();
 
       String controlInputUrl = null;
+      String testInputUrl = null;
+      boolean isBaselineRun = false;
 
-      String testInputUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
-          + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId=" + logsCVConfiguration.getUuid()
-          + "&appId=" + logsCVConfiguration.getAppId() + "&clusterLevel=" + ClusterLevel.L2
-          + "&startMinute=" + analysisStartMin + "&endMinute=" + analysisEndMin;
+      if (startMinute < logsCVConfiguration.getBaselineStartMinute()
+          || (startMinute >= logsCVConfiguration.getBaselineStartMinute()
+                 && startMinute < logsCVConfiguration.getBaselineEndMinute())) {
+        controlInputUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
+            + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId=" + logsCVConfiguration.getUuid()
+            + "&appId=" + logsCVConfiguration.getAppId() + "&clusterLevel=" + ClusterLevel.L2
+            + "&startMinute=" + startMinute + "&endMinute=" + analysisEndMin;
+        isBaselineRun = true;
+      } else {
+        testInputUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
+            + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId=" + logsCVConfiguration.getUuid()
+            + "&appId=" + logsCVConfiguration.getAppId() + "&clusterLevel=" + ClusterLevel.L2
+            + "&startMinute=" + analysisStartMin + "&endMinute=" + analysisEndMin;
+      }
 
       String logAnalysisSaveUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
           + LogAnalysisResource.ANALYSIS_SAVE_24X7_ANALYSIS_RECORDS_URL + "?cvConfigId=" + logsCVConfiguration.getUuid()
@@ -1425,6 +1437,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .analysis_failure_url(failureUrl)
                 .service_guard_backoff_count(nextBackoffCount)
                 .ml_analysis_type(MLAnalysisType.LOG_ML)
+                .control_input_url(controlInputUrl)
                 .test_input_url(testInputUrl)
                 .test_nodes(Sets.newHashSet(DUMMY_HOST_NAME))
                 .feature_name("247_V2")
@@ -1437,24 +1450,23 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
         analysisTask.setAppId(logsCVConfiguration.getAppId());
         analysisTask.setUuid(taskId);
-        learningEngineService.addLearningEngineAnalysisTask(analysisTask);
 
-        final boolean taskQueued = learningEngineService.addLearningEngineAnalysisTask(analysisTask);
-        if (taskQueued) {
-          logger.info("24x7 Logs V2 Analysis queued for cvConfig {} for analysis minute {}",
-              logsCVConfiguration.getUuid(), analysisEndMin);
+        // Note: Baseline task is set valid for 6 months for the purpose of debugging.
+        if (isBaselineRun) {
+          analysisTask.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(6).toInstant()));
         }
-
-        analysisTask.setAppId(logsCVConfiguration.getAppId());
-        analysisTask.setUuid(taskId);
-
         if (logsCVConfiguration.getComparisonStrategy() == PREDICTIVE) {
           final String lastLogAnalysisGetUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
               + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL + "?appId=" + logsCVConfiguration.getAppId()
               + "&cvConfigId=" + logsCVConfiguration.getUuid() + "&analysisMinute=" + analysisEndMin;
           analysisTask.setPrevious_test_analysis_url(lastLogAnalysisGetUrl);
         }
-        learningEngineService.addLearningEngineAnalysisTask(analysisTask);
+
+        final boolean taskQueued = learningEngineService.addLearningEngineAnalysisTask(analysisTask);
+        if (taskQueued) {
+          logger.info("24x7 Logs V2 Analysis queued for cvConfig {} for analysis minute {}",
+              logsCVConfiguration.getUuid(), analysisEndMin);
+        }
 
         if (lastCVAnalysisMinute <= 0) {
           logger.info(
