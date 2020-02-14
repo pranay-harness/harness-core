@@ -42,6 +42,7 @@ import migrations.all.SetAccountIdProvisioners;
 import migrations.all.SetDummyTechStackForOldAccounts;
 import migrations.all.SetEmailToIndividualMemberFlag;
 import migrations.all.SetLastLoginTimeToAllUsers;
+import migrations.all.TemplateLibraryYamlMigration;
 import migrations.all.TerraformIsTemplatizedMigration;
 import migrations.all.TimeSeriesThresholdsMigration;
 import migrations.all.UpdateAccountEncryptionClassNames;
@@ -148,6 +149,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(85, WFEAddDeploymentMetaData.class))
         .add(Pair.of(86, SetAccountIdProvisioners.class))
         .add(Pair.of(87, InfraMappingToDefinitionMigration.class))
+        .add(Pair.of(88, TemplateLibraryYamlMigration.class))
         .build();
   }
 }
