@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
@@ -153,7 +154,7 @@ public class AwsAmiServiceSetup extends State {
             .minInstances(amiServiceSetupResponse.getMinInstances())
             .maxInstances(amiServiceSetupResponse.getMaxInstances())
             .desiredInstances(amiServiceSetupResponse.getDesiredInstances())
-            .blueGreen(amiServiceSetupResponse.isBlueGreen())
+            .blueGreen(isBlueGreenWorkflow(context))
             .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
             .autoScalingSteadyStateTimeout(getTimeOut())
             .commandName(commandName)
@@ -245,6 +246,7 @@ public class AwsAmiServiceSetup extends State {
         new ManagerExecutionLogCallback(logService, logBuilder, activity.getUuid());
 
     try {
+      blueGreen = isBlueGreenWorkflow(context);
       executionLogCallback.saveExecutionLog("Starting AWS AMI Setup");
 
       List<String> classicLbs;
@@ -330,6 +332,10 @@ public class AwsAmiServiceSetup extends State {
         .executionStatus(executionStatus)
         .errorMessage(errorMessage)
         .build();
+  }
+
+  boolean isBlueGreenWorkflow(ExecutionContext context) {
+    return BLUE_GREEN == context.getOrchestrationWorkflowType();
   }
 
   @Override
