@@ -1,11 +1,13 @@
 package io.harness.grpc.pingpong;
 
 import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import io.harness.delegate.service.DelegateServiceImpl;
 import io.harness.event.Ping;
 import io.harness.event.PingPongServiceGrpc.PingPongServiceBlockingStub;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.logging.LoggingListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.ProcessIdUtil;
 
@@ -21,6 +23,7 @@ public class PingPongClient extends AbstractScheduledService {
   PingPongClient(PingPongServiceBlockingStub pingPongServiceBlockingStub, String version) {
     this.pingPongServiceBlockingStub = pingPongServiceBlockingStub;
     this.version = version;
+    addListener(new LoggingListener(this), MoreExecutors.directExecutor());
   }
 
   @Override

@@ -4,12 +4,14 @@ import static io.harness.delegate.service.DelegateServiceImpl.getDelegateId;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.util.Durations;
 
+import io.harness.logging.LoggingListener;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +46,7 @@ public class PerpetualTaskWorker extends AbstractScheduledService {
     this.perpetualTaskServiceGrpcClient = perpetualTaskServiceGrpcClient;
     scheduledService = Executors.newSingleThreadScheduledExecutor(
         new ThreadFactoryBuilder().setNameFormat("perpetual-task-worker").build());
+    addListener(new LoggingListener(this), MoreExecutors.directExecutor());
   }
 
   private void handleTasks() {
