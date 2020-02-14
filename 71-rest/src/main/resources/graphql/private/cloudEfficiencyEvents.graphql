@@ -4,6 +4,13 @@ extend type Query {
 
 type EventsData {
   data: [EventsDataPoint]
+  chartData: [ChartDataPoint]
+}
+
+type ChartDataPoint {
+  time: Number
+  eventsCount: Number
+  notableEventsCount: Number
 }
 
 type EventsDataPoint {

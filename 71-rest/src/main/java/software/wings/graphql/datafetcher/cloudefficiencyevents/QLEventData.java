@@ -10,4 +10,5 @@ import java.util.List;
 @Builder
 public class QLEventData implements QLData {
   List<QLEventsDataPoint> data;
+  List<QLChartDataPoint> chartData;
 }
