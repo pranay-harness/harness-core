@@ -13,6 +13,8 @@ import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
+import software.wings.beans.ResourceLookup;
+import software.wings.beans.ResourceLookup.ResourceLookupKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.instance.HarnessServiceInfo;
@@ -22,6 +24,7 @@ import software.wings.service.intfc.instance.DeploymentService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -46,9 +49,10 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
               .get();
 
       if (infrastructureMapping != null) {
-        return Optional.of(new HarnessServiceInfo(infrastructureMapping.getServiceId(),
-            infrastructureMapping.getAppId(), infrastructureMapping.getComputeProviderSettingId(),
-            infrastructureMapping.getEnvId(), deploymentSummaryResponse.getInfraMappingId()));
+        return Optional.of(
+            new HarnessServiceInfo(infrastructureMapping.getServiceId(), infrastructureMapping.getAppId(),
+                infrastructureMapping.getComputeProviderSettingId(), infrastructureMapping.getEnvId(),
+                deploymentSummaryResponse.getInfraMappingId(), deploymentSummaryResponse.getUuid()));
       }
     }
     return Optional.empty();
@@ -58,6 +62,23 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   public Optional<SettingAttribute> getSettingAttribute(String id) {
     return Optional.ofNullable(
         persistence.createQuery(SettingAttribute.class).filter(SettingAttributeKeys.uuid, id).get());
+  }
+
+  @Override
+  public List<HarnessServiceInfo> getHarnessServiceInfoList(List<DeploymentSummary> deploymentSummaryList) {
+    List<String> infraMappingIds =
+        deploymentSummaryList.stream().map(DeploymentSummary::getInfraMappingId).collect(Collectors.toList());
+    List<InfrastructureMapping> infrastructureMappings =
+        persistence.createQuery(InfrastructureMapping.class, excludeAuthority)
+            .field(InfrastructureMappingKeys.uuid)
+            .in(infraMappingIds)
+            .asList();
+    return infrastructureMappings.stream()
+        .map(infrastructureMapping
+            -> new HarnessServiceInfo(infrastructureMapping.getServiceId(), infrastructureMapping.getAppId(),
+                infrastructureMapping.getComputeProviderSettingId(), infrastructureMapping.getEnvId(),
+                infrastructureMapping.getUuid(), null))
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -71,5 +92,14 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
       }
     }
     return accounts;
+  }
+
+  @Override
+  public List<ResourceLookup> getResourceList(String accountId, List<String> resourceIds) {
+    return persistence.createQuery(ResourceLookup.class)
+        .filter(ResourceLookupKeys.accountId, accountId)
+        .field(ResourceLookupKeys.resourceId)
+        .in(resourceIds)
+        .asList();
   }
 }

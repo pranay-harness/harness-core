@@ -35,6 +35,9 @@ public class EventJobScheduler {
 
   private void runJob(String accountId, Job job) {
     try {
+      if (BatchJobType.fromJob(job) == BatchJobType.DEPLOYMENT_EVENT) {
+        return;
+      }
       batchJobRunner.runJob(accountId, job);
     } catch (Exception ex) {
       logger.error("Exception while running job {}", job);

@@ -31,6 +31,7 @@ public class K8sDummyInstanceDataGeneratorTest extends CategoryTest {
   private static String ENV_ID = "envId";
   private static String INFRA_MAPPING_ID = "infraMappingId";
   private static String SERVICE_ID = "serviceId";
+  private static String DEPLOYMENT_SUMMARY_ID = "deploymentSummaryId";
 
   @Before
   public void setup() {
@@ -47,8 +48,8 @@ public class K8sDummyInstanceDataGeneratorTest extends CategoryTest {
     long ONE_DAY_MILLIS = 86400000;
     List<Integer> listOfNumberOfNodesInEachCluster = Arrays.asList(2, 2);
     List<List<Integer>> listOfNumberOfPodsInEachNode = Arrays.asList(Arrays.asList(1, 2), Arrays.asList(2, 4));
-    List<HarnessServiceInfo> harnessServiceInfoList =
-        Arrays.asList(new HarnessServiceInfo(SERVICE_ID, APP_ID, CLOUD_PROVIDER_ID, ENV_ID, INFRA_MAPPING_ID));
+    List<HarnessServiceInfo> harnessServiceInfoList = Arrays.asList(
+        new HarnessServiceInfo(SERVICE_ID, APP_ID, CLOUD_PROVIDER_ID, ENV_ID, INFRA_MAPPING_ID, DEPLOYMENT_SUMMARY_ID));
     long startTime = 15400000000L;
     long endTime = startTime + (numberOfDays * ONE_DAY_MILLIS);
     boolean isCreatedAndInsertedIntoDB = k8sDummyInstanceDataGenerator.createAndInsertDummyData(numberOfCluster,

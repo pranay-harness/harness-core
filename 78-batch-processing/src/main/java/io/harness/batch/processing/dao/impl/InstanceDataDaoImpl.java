@@ -10,6 +10,7 @@ import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
+import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -26,6 +27,7 @@ import java.util.List;
 @Repository
 public class InstanceDataDaoImpl implements InstanceDataDao {
   @Autowired @Inject private HPersistence hPersistence;
+  @Autowired private CostEventService costEventService;
 
   @Override
   public boolean create(InstanceData instanceData) {

@@ -29,7 +29,7 @@ import java.util.List;
 @Configuration
 public class K8sUtilizationConfiguration {
   private static final int BATCH_SIZE = 50;
-  private static final int GRANULAR_BATCH_SIZE = 1000;
+  private static final int GRANULAR_BATCH_SIZE = 2000;
 
   @Autowired @Qualifier("mongoEventReader") private EventReaderFactory eventReaderFactory;
   @Autowired private StepBuilderFactory stepBuilderFactory;
@@ -39,7 +39,8 @@ public class K8sUtilizationConfiguration {
   public ItemReader<PublishedMessage> k8sNodeUtilizationEventMessageReader(
       @Value("#{jobParameters[accountId]}") String accountId, @Value("#{jobParameters[startDate]}") Long startDate,
       @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.NODE_UTILIZATION, startDate, endDate);
+    return eventReaderFactory.getEventReader(
+        accountId, EventTypeConstants.NODE_UTILIZATION, startDate, endDate, GRANULAR_BATCH_SIZE);
   }
 
   @Bean
