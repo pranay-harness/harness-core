@@ -40,6 +40,10 @@ public class BatchJobRunner {
     ChronoUnit chronoUnit = batchJobType.getIntervalUnit();
     List<BatchJobType> dependentBatchJobs = batchJobType.getDependentBatchJobs();
     Instant startAt = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(accountId, batchJobType);
+    if (null == startAt) {
+      logger.warn("Event not received for account {} ", accountId);
+      return;
+    }
     Instant endAt = Instant.now().minus(4, ChronoUnit.HOURS);
     BatchJobScheduleTimeProvider batchJobScheduleTimeProvider =
         new BatchJobScheduleTimeProvider(startAt, endAt, duration, chronoUnit);
@@ -72,8 +76,9 @@ public class BatchJobRunner {
 
   boolean checkDependentJobFinished(String accountId, Instant startAt, List<BatchJobType> dependentBatchJobs) {
     for (BatchJobType dependentBatchJob : dependentBatchJobs) {
-      Instant instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(accountId, dependentBatchJob);
-      if (!instant.isAfter(startAt)) {
+      Instant instant =
+          batchJobScheduledDataService.fetchLastDependentBatchJobScheduledTime(accountId, dependentBatchJob);
+      if (null == instant || !instant.isAfter(startAt)) {
         return false;
       }
     }
