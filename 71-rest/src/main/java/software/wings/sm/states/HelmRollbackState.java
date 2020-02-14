@@ -32,7 +32,6 @@ import software.wings.stencils.DefaultValue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 4/3/18.
@@ -70,7 +69,7 @@ public class HelmRollbackState extends HelmDeployState {
         .appId(context.getAppId())
         .activityId(activityId)
         .commandName(HELM_COMMAND_NAME)
-        .timeoutInMillis(TimeUnit.MINUTES.toMillis(steadyStateTimeout))
+        .timeoutInMillis(getTimeout(steadyStateTimeout))
         .containerServiceParams(containerServiceParams)
         .chartSpecification(helmChartSpecification)
         .repoName(repoName)

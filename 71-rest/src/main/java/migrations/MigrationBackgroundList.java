@@ -23,6 +23,7 @@ import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
 import migrations.all.FetchAndSaveAccounts2;
+import migrations.all.HelmStateTimeoutMigration;
 import migrations.all.InfraMappingToDefinitionMigration;
 import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
@@ -150,6 +151,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(86, SetAccountIdProvisioners.class))
         .add(Pair.of(87, InfraMappingToDefinitionMigration.class))
         .add(Pair.of(88, TemplateLibraryYamlMigration.class))
+        .add(Pair.of(89, HelmStateTimeoutMigration.class))
         .build();
   }
 }

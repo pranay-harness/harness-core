@@ -58,6 +58,7 @@ import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.CLOUD_FORMATION_CREATE_STACK;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.sm.StateType.HELM_ROLLBACK;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.TERRAFORM_PROVISION;
 import static software.wings.sm.StateType.WAIT;
@@ -533,21 +534,66 @@ public class WorkflowServiceTestHelper {
         .envId(ENV_ID)
         .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
                                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
-                                   .addWorkflowPhase(aWorkflowPhase()
-                                                         .serviceId(SERVICE_ID)
-                                                         .infraMappingId(INFRA_MAPPING_ID)
-                                                         .deploymentType(DeploymentType.HELM)
-                                                         .phaseSteps(asList(aPhaseStep(HELM_DEPLOY, DEPLOY_CONTAINERS)
-                                                                                .addStep(GraphNode.builder()
-                                                                                             .id(generateUuid())
-                                                                                             .type(HELM_DEPLOY.name())
-                                                                                             .name(UPGRADE_CONTAINERS)
-                                                                                             .properties(properties)
-                                                                                             .build())
-                                                                                .build()))
-                                                         .build())
+                                   .addWorkflowPhase(getHelmDeployPhase(properties))
                                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                                    .build())
+        .build();
+  }
+
+  public static Workflow constructHelmRollbackWorkflowWithProperties(Map<String, Object> properties) {
+    WorkflowPhase helmDeployPhase = getHelmDeployPhase(properties);
+
+    WorkflowPhase rollbackPhase = getHelmRollbackyPhase(helmDeployPhase, properties);
+    Map<String, WorkflowPhase> rollbackMap = new HashMap<>();
+    rollbackMap.put(helmDeployPhase.getUuid(), rollbackPhase);
+
+    return aWorkflow()
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .envId(ENV_ID)
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .addWorkflowPhase(helmDeployPhase)
+                                   .withRollbackWorkflowPhaseIdMap(rollbackMap)
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
+        .build();
+  }
+
+  private static WorkflowPhase getHelmRollbackyPhase(WorkflowPhase phase, Map<String, Object> properties) {
+    return aWorkflowPhase()
+        .uuid(generateUuid())
+        .serviceId(phase.getServiceId())
+        .infraMappingId(phase.getInfraMappingId())
+        .deploymentType(DeploymentType.HELM)
+        .name("Rollback" + phase.getName())
+        .deploymentType(phase.getDeploymentType())
+        .rollback(true)
+        .phaseSteps(asList(aPhaseStep(HELM_DEPLOY, DEPLOY_CONTAINERS)
+                               .addStep(GraphNode.builder()
+                                            .id(generateUuid())
+                                            .type(HELM_ROLLBACK.name())
+                                            .name(UPGRADE_CONTAINERS)
+                                            .properties(properties)
+                                            .build())
+                               .build()))
+        .build();
+  }
+
+  private static WorkflowPhase getHelmDeployPhase(Map<String, Object> properties) {
+    return aWorkflowPhase()
+        .uuid(generateUuid())
+        .serviceId(SERVICE_ID)
+        .infraMappingId(INFRA_MAPPING_ID)
+        .deploymentType(DeploymentType.HELM)
+        .phaseSteps(asList(aPhaseStep(HELM_DEPLOY, DEPLOY_CONTAINERS)
+                               .addStep(GraphNode.builder()
+                                            .id(generateUuid())
+                                            .type(HELM_DEPLOY.name())
+                                            .name(UPGRADE_CONTAINERS)
+                                            .properties(properties)
+                                            .build())
+                               .build()))
         .build();
   }
 
