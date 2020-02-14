@@ -683,4 +683,12 @@ public class HelmDeployStateTest extends WingsBaseTest {
 
     assertThat(actualValuesYamlList).isEqualTo(expectedValuesYamlList);
   }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetTimeout() {
+    assertThat(helmDeployState.getTimeout(100)).isEqualTo(6000000);
+    assertThat(helmDeployState.getTimeout(60000 + 1)).isEqualTo(60001);
+  }
 }

@@ -173,6 +173,9 @@ public class HelmDeployState extends State {
   private static final String DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_TAG}";
   private static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
 
+  // Workaround for CDP-10845
+  private static final int minTimeoutInMs = 60000;
+
   /**
    * Instantiates a new state.
    *
@@ -260,6 +263,11 @@ public class HelmDeployState extends State {
     }
   }
 
+  protected long getTimeout(long steadyStateTimeout) {
+    // Temporary workaround for CDP-10845
+    return steadyStateTimeout > minTimeoutInMs ? steadyStateTimeout : TimeUnit.MINUTES.toMillis(steadyStateTimeout);
+  }
+
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageDetails,
@@ -282,7 +290,7 @@ public class HelmDeployState extends State {
             .namespace(containerServiceParams.getNamespace())
             .containerServiceParams(containerServiceParams)
             .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated)
-            .timeoutInMillis(TimeUnit.MINUTES.toMillis(steadyStateTimeout))
+            .timeoutInMillis(getTimeout(steadyStateTimeout))
             .repoName(repoName)
             .gitConfig(gitConfig)
             .encryptedDataDetails(encryptedDataDetails)
