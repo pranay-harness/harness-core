@@ -52,14 +52,14 @@ public class PcfDeploymentManagerUnsupported implements PcfDeploymentManager {
   }
 
   @Override
-  public void unmapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths)
-      throws PivotalClientApiException {
+  public void unmapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 
   @Override
-  public void mapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths)
-      throws PivotalClientApiException {
+  public void mapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 

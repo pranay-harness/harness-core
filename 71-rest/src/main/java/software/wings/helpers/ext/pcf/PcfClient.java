@@ -38,10 +38,14 @@ public interface PcfClient {
   void scaleApplications(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException;
   void unmapRoutesForApplication(PcfRequestConfig pcfRequestConfig, List<String> routes)
       throws PivotalClientApiException, InterruptedException;
+  void unmapRoutesForApplicationUsingCli(PcfRequestConfig pcfRequestConfig, List<String> routes,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException, InterruptedException;
   void unmapRouteMapForApp(PcfRequestConfig pcfRequestConfig, Route route)
       throws PivotalClientApiException, InterruptedException;
   void mapRoutesForApplication(PcfRequestConfig pcfRequestConfig, List<String> routes)
       throws PivotalClientApiException, InterruptedException;
+  void mapRoutesForApplicationUsingCli(PcfRequestConfig pcfRequestConfig, List<String> routes,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException, InterruptedException;
   void mapRouteMapForApp(PcfRequestConfig pcfRequestConfig, Route route)
       throws PivotalClientApiException, InterruptedException;
   List<Route> getRouteMapsByNames(List<String> paths, PcfRequestConfig pcfRequestConfig)

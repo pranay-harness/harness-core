@@ -205,20 +205,28 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   }
 
   @Override
-  public void unmapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths)
-      throws PivotalClientApiException {
+  public void unmapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException {
     try {
-      pcfClient.unmapRoutesForApplication(pcfRequestConfig, paths);
+      if (pcfRequestConfig.isUseCFCLI()) {
+        pcfClient.unmapRoutesForApplicationUsingCli(pcfRequestConfig, paths, logCallback);
+      } else {
+        pcfClient.unmapRoutesForApplication(pcfRequestConfig, paths);
+      }
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
 
   @Override
-  public void mapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths)
-      throws PivotalClientApiException {
+  public void mapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException {
     try {
-      pcfClient.mapRoutesForApplication(pcfRequestConfig, paths);
+      if (pcfRequestConfig.isUseCFCLI()) {
+        pcfClient.mapRoutesForApplicationUsingCli(pcfRequestConfig, paths, logCallback);
+      } else {
+        pcfClient.mapRoutesForApplication(pcfRequestConfig, paths);
+      }
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }

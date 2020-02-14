@@ -68,6 +68,8 @@ public interface PcfConstants {
   String CONTEXT_APP_TEMP_ROUTES_EXPR = "pcf.tempRoutes";
   String PCF_CONFIG_FILE_EXTENSION = ".yml";
   String PCF_ROUTE_PATH_SEPARATOR = "/";
+  char PCF_ROUTE_PORT_SEPARATOR = ':';
+  char PCF_ROUTE_PATH_SEPARATOR_CHAR = '/';
 
   String FILE_START_SERVICE_MANIFEST_REGEX = "\\$\\{service\\.manifest}";
   String FILE_START_REPO_ROOT_REGEX = "\\$\\{service\\.manifest\\.repoRoot}";

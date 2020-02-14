@@ -15,15 +15,21 @@ import static io.harness.pcf.model.PcfConstants.CONFIGURE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.DISABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.ENABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.PCF_ROUTE_PATH_SEPARATOR;
+import static io.harness.pcf.model.PcfConstants.PCF_ROUTE_PATH_SEPARATOR_CHAR;
+import static io.harness.pcf.model.PcfConstants.PCF_ROUTE_PORT_SEPARATOR;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static io.harness.pcf.model.PcfConstants.SYS_VAR_CF_PLUGIN_HOME;
+import static io.harness.pcf.model.PcfRouteType.PCF_ROUTE_TYPE_HTTP;
+import static io.harness.pcf.model.PcfRouteType.PCF_ROUTE_TYPE_TCP;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static software.wings.beans.Log.LogColor.Red;
+import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.color;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -32,6 +38,9 @@ import com.google.inject.Singleton;
 
 import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
+import io.harness.pcf.model.PcfRouteInfo;
+import io.harness.pcf.model.PcfRouteInfo.PcfRouteInfoBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -749,6 +758,7 @@ public class PcfClientImpl implements PcfClient {
 
   int executeCommand(String command, Map<String, String> env, ExecutionLogCallback logCallback)
       throws IOException, InterruptedException, TimeoutException {
+    logCallback.saveExecutionLog(format("Executing command: [%s]", command));
     ProcessExecutor executor = new ProcessExecutor()
                                    .timeout(5, TimeUnit.MINUTES)
                                    .command(BIN_SH, "-c", command)
@@ -1327,6 +1337,12 @@ public class PcfClientImpl implements PcfClient {
   }
 
   @Override
+  public void unmapRoutesForApplicationUsingCli(PcfRequestConfig pcfRequestConfig, List<String> routes,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException, InterruptedException {
+    executeRoutesOperationForApplicationUsingCli("cf unmap-route", pcfRequestConfig, routes, logCallback);
+  }
+
+  @Override
   public void unmapRoutesForApplication(PcfRequestConfig pcfRequestConfig, List<String> routes)
       throws PivotalClientApiException, InterruptedException {
     logger.info(new StringBuilder()
@@ -1340,6 +1356,122 @@ public class PcfClientImpl implements PcfClient {
     List<Route> routeList = getRouteMapsByNames(routes, pcfRequestConfig);
     for (Route route : routeList) {
       unmapRouteMapForApp(pcfRequestConfig, route);
+    }
+  }
+
+  @VisibleForTesting
+  PcfRouteInfo extractRouteInfoFromPath(Set<String> domainNames, String route) throws PivotalClientApiException {
+    PcfRouteInfoBuilder builder = PcfRouteInfo.builder();
+    int index = route.indexOf(PCF_ROUTE_PORT_SEPARATOR);
+    if (index != -1) {
+      // TCP
+      builder.type(PCF_ROUTE_TYPE_TCP);
+      String port = route.substring(index + 1);
+      builder.port(port);
+      String domain = route.substring(0, index);
+      builder.domain(domain);
+      return builder.build();
+    }
+
+    // HTTP
+    builder.type(PCF_ROUTE_TYPE_HTTP);
+    boolean foundMatch = false;
+    String longestMatchingDomain = EMPTY;
+    for (String domainName : domainNames) {
+      if (route.contains(domainName)) {
+        if (!foundMatch) {
+          foundMatch = true;
+          longestMatchingDomain = domainName;
+        } else {
+          if (domainName.length() > longestMatchingDomain.length()) {
+            longestMatchingDomain = domainName;
+          }
+        }
+      }
+    }
+    builder.domain(longestMatchingDomain);
+
+    if (!foundMatch) {
+      throw new PivotalClientApiException(new StringBuilder(128)
+                                              .append("Invalid Route Name: ")
+                                              .append(route)
+                                              .append(", used domain not present in this space")
+                                              .toString());
+    }
+
+    int domainStartIndex = route.indexOf(longestMatchingDomain);
+    String hostName = domainStartIndex == 0 ? null : route.substring(0, domainStartIndex - 1);
+    builder.hostName(hostName);
+
+    String path = null;
+    int indexForPath = route.indexOf(PCF_ROUTE_PATH_SEPARATOR_CHAR);
+    if (indexForPath != -1) {
+      path = route.substring(indexForPath + 1);
+    }
+    builder.path(path);
+    return builder.build();
+  }
+
+  @Override
+  public void mapRoutesForApplicationUsingCli(PcfRequestConfig pcfRequestConfig, List<String> routes,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException {
+    executeRoutesOperationForApplicationUsingCli("cf map-route", pcfRequestConfig, routes, logCallback);
+  }
+
+  @VisibleForTesting
+  void executeRoutesOperationForApplicationUsingCli(String operation, PcfRequestConfig pcfRequestConfig,
+      List<String> routes, ExecutionLogCallback logCallback) throws PivotalClientApiException {
+    try {
+      if (!pcfRequestConfig.isUseCFCLI()) {
+        throw new InvalidRequestException("Trying to map routes using Cli without flag in Pcf request Config");
+      }
+
+      if (!pcfRequestConfig.isLoggedin()) {
+        if (!doLogin(pcfRequestConfig, logCallback, pcfRequestConfig.getCfHomeDirPath())) {
+          String errorMessage = format("Failed to login when performing: [%s]", operation);
+          logCallback.saveExecutionLog(color(errorMessage, Red, LogWeight.Bold));
+          throw new InvalidRequestException(errorMessage);
+        }
+      }
+
+      List<Domain> allDomainsForSpace = getAllDomainsForSpace(pcfRequestConfig);
+      Set<String> domainNames = allDomainsForSpace.stream().map(Domain::getName).collect(toSet());
+      logCallback.saveExecutionLog(format("Found domain names: [%s]", join(", ", domainNames)));
+
+      if (isNotEmpty(routes)) {
+        int exitcode;
+        String command;
+        Map<String, String> env = getEnvironmentMapForPcfExecutor(pcfRequestConfig.getCfHomeDirPath());
+        for (String route : routes) {
+          logCallback.saveExecutionLog(format("Extracting info from route: [%s]", route));
+          PcfRouteInfo info = extractRouteInfoFromPath(domainNames, route);
+          if (PCF_ROUTE_TYPE_TCP == info.getType()) {
+            command = format("%s %s %s --port %s", operation, pcfRequestConfig.getApplicationName(), info.getDomain(),
+                info.getPort());
+          } else {
+            StringBuilder stringBuilder = new StringBuilder(
+                format("%s %s %s", operation, pcfRequestConfig.getApplicationName(), info.getDomain()));
+            if (isNotEmpty(info.getHostName())) {
+              stringBuilder.append(format(" --hostname %s ", info.getHostName()));
+            }
+            if (isNotEmpty(info.getPath())) {
+              stringBuilder.append(format(" --path %s ", info.getPath()));
+            }
+            command = stringBuilder.toString();
+          }
+          exitcode = executeCommand(command, env, logCallback);
+          if (exitcode != 0) {
+            String message = format("Failed to map route: [%s]", route);
+            logCallback.saveExecutionLog(message, ERROR);
+            throw new InvalidRequestException(message);
+          }
+        }
+      }
+    } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + "Failed mapping routes", ex);
+    } catch (IOException | TimeoutException ex) {
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + "Failed mapping routes", ex);
     }
   }
 
