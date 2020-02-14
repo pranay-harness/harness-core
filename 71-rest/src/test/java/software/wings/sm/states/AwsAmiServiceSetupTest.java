@@ -1,6 +1,12 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.OrchestrationWorkflowType.BASIC;
+import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
+import static io.harness.beans.OrchestrationWorkflowType.CANARY;
+import static io.harness.beans.OrchestrationWorkflowType.MULTI_SERVICE;
+import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -67,6 +73,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElement;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
@@ -200,5 +207,25 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
     localState.setMaxInstances(0);
     Map<String, String> fieldMap = localState.validateFields();
     assertThat(fieldMap.size()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testIsBlueGreenWorkflow() {
+    ExecutionContext execContext = mock(ExecutionContext.class);
+    doReturn(BASIC)
+        .doReturn(CANARY)
+        .doReturn(ROLLING)
+        .doReturn(MULTI_SERVICE)
+        .doReturn(BLUE_GREEN)
+        .when(execContext)
+        .getOrchestrationWorkflowType();
+
+    assertThat(state.isBlueGreenWorkflow(execContext)).isFalse();
+    assertThat(state.isBlueGreenWorkflow(execContext)).isFalse();
+    assertThat(state.isBlueGreenWorkflow(execContext)).isFalse();
+    assertThat(state.isBlueGreenWorkflow(execContext)).isFalse();
+    assertThat(state.isBlueGreenWorkflow(execContext)).isTrue();
   }
 }
