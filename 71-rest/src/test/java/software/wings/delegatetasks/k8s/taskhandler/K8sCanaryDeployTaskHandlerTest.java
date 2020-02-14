@@ -139,7 +139,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
     assertThat(commandExecutionStatusCaptor.getValue()).isEqualTo(FAILURE);
     assertThat(msgCaptor.getValue())
         .isEqualTo(
-            "\nNo workload found in the Manifests. Can't do Canary Deployment. Canary only supports workload of kind Deployment");
+            "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Canary workflow type.");
 
     kubernetesResources.addAll(ManifestHelper.processYaml(STATEFUL_SET_YAML));
     kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_DIRECT_APPLY_YAML));
@@ -162,7 +162,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
     assertThat(commandExecutionStatusCaptor.getValue()).isEqualTo(FAILURE);
     assertThat(msgCaptor.getValue())
         .isEqualTo(
-            "\nNo workload found in the Manifests. Can't do Canary Deployment. Canary only supports workload of kind Deployment");
+            "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Canary workflow type.");
 
     kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
     kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
@@ -205,5 +205,26 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
     KubernetesResourceId kubernetesResourceId = resourceIdArgumentCaptor.getValue();
     assertThat(kubernetesResourceId.getKind()).isEqualTo(Kind.Deployment.name());
     assertThat(kubernetesResourceId.getName()).isEqualTo("deployment");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testSupportedWorkloadsInBgWorkflow() {
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    kubernetesResources.addAll(ManifestHelper.processYaml(STATEFUL_SET_YAML));
+
+    on(k8sCanaryDeployTaskHandler).set("resources", kubernetesResources);
+
+    boolean result = k8sCanaryDeployTaskHandler.prepareForCanary(
+        delegateTaskParams, K8sCanaryDeployTaskParameters.builder().build(), executionLogCallback);
+    assertThat(result).isFalse();
+
+    verify(executionLogCallback, times(1))
+        .saveExecutionLog(
+            "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Canary workflow type.",
+            LogLevel.ERROR, CommandExecutionStatus.FAILURE);
   }
 }

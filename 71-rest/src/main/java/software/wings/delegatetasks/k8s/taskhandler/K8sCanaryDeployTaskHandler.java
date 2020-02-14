@@ -2,7 +2,7 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.k8s.manifest.ManifestHelper.getWorkloadsForCanary;
+import static io.harness.k8s.manifest.ManifestHelper.getWorkloadsForCanaryAndBG;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static java.util.Arrays.asList;
@@ -226,12 +226,12 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       executionLogCallback.saveExecutionLog(
           "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
 
-      List<KubernetesResource> workloads = getWorkloadsForCanary(resources);
+      List<KubernetesResource> workloads = getWorkloadsForCanaryAndBG(resources);
 
       if (workloads.size() != 1) {
         if (workloads.isEmpty()) {
           executionLogCallback.saveExecutionLog(
-              "\nNo workload found in the Manifests. Can't do Canary Deployment. Canary only supports workload of kind Deployment",
+              "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Canary workflow type.",
               ERROR, FAILURE);
         } else {
           executionLogCallback.saveExecutionLog(

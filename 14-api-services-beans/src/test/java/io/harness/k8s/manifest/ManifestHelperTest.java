@@ -15,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 
 import io.harness.CategoryTest;
@@ -300,16 +301,25 @@ public class ManifestHelperTest extends CategoryTest {
                                         .resourceId(KubernetesResourceId.builder().kind(Kind.Deployment.name()).build())
                                         .build();
 
-    List<KubernetesResource> kubernetesResources = ManifestHelper.getWorkloadsForCanary(asList(deployment));
+    List<KubernetesResource> kubernetesResources = ManifestHelper.getWorkloadsForCanaryAndBG(asList(deployment));
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
+
+    KubernetesResource deploymentConfig =
+        KubernetesResource.builder()
+            .resourceId(KubernetesResourceId.builder().kind(Kind.DeploymentConfig.name()).build())
+            .build();
+
+    kubernetesResources = ManifestHelper.getWorkloadsForCanaryAndBG(asList(deployment, deploymentConfig));
+    assertThat(kubernetesResources.size()).isEqualTo(2);
+    assertThat(kubernetesResources.containsAll(ImmutableList.of(deployment, deploymentConfig))).isTrue();
 
     KubernetesResource statefulSet =
         KubernetesResource.builder()
             .resourceId(KubernetesResourceId.builder().kind(Kind.StatefulSet.name()).build())
             .build();
 
-    kubernetesResources = ManifestHelper.getWorkloadsForCanary(asList(deployment, statefulSet));
+    kubernetesResources = ManifestHelper.getWorkloadsForCanaryAndBG(asList(deployment, statefulSet));
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
 
@@ -317,7 +327,7 @@ public class ManifestHelperTest extends CategoryTest {
                                        .resourceId(KubernetesResourceId.builder().kind(Kind.DaemonSet.name()).build())
                                        .build();
 
-    kubernetesResources = ManifestHelper.getWorkloadsForCanary(asList(deployment, statefulSet, daemonSet));
+    kubernetesResources = ManifestHelper.getWorkloadsForCanaryAndBG(asList(deployment, statefulSet, daemonSet));
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
 
@@ -330,8 +340,8 @@ public class ManifestHelperTest extends CategoryTest {
         + "spec:\n"
         + "  replicas: 1");
 
-    kubernetesResources =
-        ManifestHelper.getWorkloadsForCanary(asList(deployment, statefulSet, daemonSet, deploymentDirectApply.get(0)));
+    kubernetesResources = ManifestHelper.getWorkloadsForCanaryAndBG(
+        asList(deployment, statefulSet, daemonSet, deploymentDirectApply.get(0)));
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
   }
