@@ -3,6 +3,7 @@ package io.harness;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -14,6 +15,7 @@ import io.harness.category.layer.GraphQLTests;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
+import io.harness.multiline.MultilineStringMixin;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
@@ -23,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
+import software.wings.beans.AccountType;
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
@@ -474,8 +477,7 @@ mutation{
     assertThat(result.getErrors().size()).isEqualTo(1);
 
     assertThat(result.getErrors().get(0).getMessage())
-        .isEqualTo(
-            "Exception while fetching data (/userGroup) : Invalid request: No userGroup exists with the id blah");
+        .isEqualTo("Exception while fetching data (/userGroup) : Invalid request: No User Group exists");
   }
 
   @Test
@@ -546,5 +548,28 @@ mutation{
     if (userGroup != null) {
       assertThat(false).isTrue();
     }
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void test_userGroupByName() {
+    String userGroupQueryPattern = MultilineStringMixin.$.GQL(/*
+  {
+  userGroupByName(name:"%s"){
+    name
+    id
+    description
+  }
+}
+*/ UserGroupTest.class);
+    String query = String.format(userGroupQueryPattern, "harnessUserGroup");
+    final Account account =
+        accountGenerator.ensureAccount(random(String.class), random(String.class), AccountType.TRIAL);
+    UserGroup userGroup = createUserGroup("harnessUserGroup", "sample user group");
+
+    final QLTestObject qlUserGroupObject = qlExecute(query, account.getUuid());
+    assertThat(qlUserGroupObject.get(QLUserGroupKeys.name)).isEqualTo(userGroup.getName());
+    assertThat(qlUserGroupObject.get(QLUserGroupKeys.description)).isEqualTo(userGroup.getDescription());
   }
 }

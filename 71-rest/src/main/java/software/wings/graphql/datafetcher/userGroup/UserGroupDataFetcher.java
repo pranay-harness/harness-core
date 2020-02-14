@@ -3,10 +3,12 @@ package software.wings.graphql.datafetcher.userGroup;
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.persistence.HIterator;
 import software.wings.beans.security.UserGroup;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.type.usergroup.QLUserGroup;
 import software.wings.graphql.schema.type.usergroup.QLUserGroup.QLUserGroupBuilder;
+import software.wings.graphql.schema.type.usergroup.QLUserGroup.QLUserGroupKeys;
 import software.wings.graphql.schema.type.usergroup.QLUserGroupQueryParameters;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
@@ -23,8 +25,16 @@ public class UserGroupDataFetcher extends AbstractObjectDataFetcher<QLUserGroup,
     if (userGroupId != null) {
       userGroup = userGroupService.get(accountId, userGroupId);
     }
+    if (qlQuery.getName() != null) {
+      try (HIterator<UserGroup> iterator = new HIterator<>(
+               wingsPersistence.createQuery(UserGroup.class).filter(QLUserGroupKeys.name, qlQuery.getName()).fetch())) {
+        if (iterator.hasNext()) {
+          userGroup = iterator.next();
+        }
+      }
+    }
     if (userGroup == null) {
-      throw new InvalidRequestException(String.format("No userGroup exists with the id %s", userGroupId));
+      throw new InvalidRequestException("No User Group exists");
     }
 
     final QLUserGroupBuilder builder = QLUserGroup.builder();

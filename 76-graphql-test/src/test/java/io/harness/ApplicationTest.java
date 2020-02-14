@@ -1,7 +1,9 @@
 package io.harness;
 
+import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EntityType.APPLICATION;
@@ -18,12 +20,16 @@ import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
+import io.harness.multiline.MultilineStringMixin;
 import io.harness.rule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.beans.Account;
+import software.wings.beans.AccountType;
 import software.wings.beans.Application;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.HarnessTagLink;
 import software.wings.graphql.schema.type.QLApplication.QLApplicationKeys;
 import software.wings.graphql.schema.type.QLApplicationConnection;
@@ -212,5 +218,29 @@ public class ApplicationTest extends GraphQLTest {
                                     .key("color")
                                     .value("red")
                                     .build());
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void test_applicationByName() {
+    String applicationQueryPattern = MultilineStringMixin.$.GQL(/*
+  {
+  applicationByName(name:"%s"){
+    name
+    id
+  }
+}
+*/ UserGroupTest.class);
+    String query = String.format(applicationQueryPattern, "Test App");
+    final Seed seed = new Seed(0);
+    final Owners owners = ownerManager.create();
+    owners.add(EmbeddedUser.builder().uuid(generateUuid()).build());
+    final Account account =
+        accountGenerator.ensureAccount(random(String.class), random(String.class), AccountType.TRIAL);
+    final Application application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
+
+    final QLTestObject qlApplicationObject = qlExecute(query, account.getUuid());
+    assertThat(qlApplicationObject.get(ApplicationKeys.name)).isEqualTo(application.getName());
   }
 }

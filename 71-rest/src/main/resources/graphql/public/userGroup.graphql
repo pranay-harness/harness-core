@@ -9,6 +9,7 @@ extend type Mutation {
 extend type Query {
   userGroup(userGroupId: String!): UserGroup @dataFetcher(name: userGroup)
   userGroups(limit: Int!, offset: Int): UserGroupConnection @dataFetcher(name: userGroupConnection)
+  userGroupByName(name: String!): UserGroup @dataFetcher(name: userGroup)
 }
 
 input CreateUserGroupInput {

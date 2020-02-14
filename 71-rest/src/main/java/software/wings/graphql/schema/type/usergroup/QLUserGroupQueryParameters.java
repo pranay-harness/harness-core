@@ -5,4 +5,5 @@ import lombok.Value;
 @Value
 public class QLUserGroupQueryParameters {
   private String userGroupId;
+  private String name;
 }
