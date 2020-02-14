@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.SERVICE_YAML;
+import static software.wings.delegatetasks.k8s.K8sTestConstants.STATEFUL_SET_YAML;
 
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
@@ -184,5 +185,26 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     k8sBlueGreenDeployTaskHandler.cleanupForBlueGreen(delegateTaskParams, releaseHistory, executionLogCallback);
     verify(k8sTaskHelper, times(1))
         .delete(client, delegateTaskParams, asList(kubernetesResource.getResourceId()), executionLogCallback);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testSupportedWorkloadsInBgWorkflow() {
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    kubernetesResources.addAll(ManifestHelper.processYaml(STATEFUL_SET_YAML));
+
+    on(k8sBlueGreenDeployTaskHandler).set("resources", kubernetesResources);
+
+    boolean result = k8sBlueGreenDeployTaskHandler.prepareForBlueGreen(
+        K8sBlueGreenDeployTaskParameters.builder().build(), delegateTaskParams, executionLogCallback);
+    assertThat(result).isFalse();
+
+    verify(executionLogCallback, times(1))
+        .saveExecutionLog(
+            "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Blue/Green workflow type.",
+            LogLevel.ERROR, CommandExecutionStatus.FAILURE);
   }
 }

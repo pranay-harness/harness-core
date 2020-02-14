@@ -8,7 +8,7 @@ import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
 import static io.harness.k8s.manifest.ManifestHelper.getPrimaryService;
 import static io.harness.k8s.manifest.ManifestHelper.getServices;
 import static io.harness.k8s.manifest.ManifestHelper.getStageService;
-import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
+import static io.harness.k8s.manifest.ManifestHelper.getWorkloadsForCanaryAndBG;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static java.lang.String.format;
@@ -221,12 +221,18 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
   boolean prepareForBlueGreen(K8sBlueGreenDeployTaskParameters k8sBlueGreenDeployTaskParameters,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) {
     try {
-      List<KubernetesResource> workloads = getWorkloads(resources);
+      markVersionedResources(resources);
+
+      executionLogCallback.saveExecutionLog(
+          "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
+
+      List<KubernetesResource> workloads = getWorkloadsForCanaryAndBG(resources);
 
       if (workloads.size() != 1) {
         if (workloads.isEmpty()) {
           executionLogCallback.saveExecutionLog(
-              "\nNo workload found in the Manifests. Can't do Blue/Green Deployment.", ERROR, FAILURE);
+              "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Blue/Green workflow type.",
+              ERROR, FAILURE);
         } else {
           executionLogCallback.saveExecutionLog(
               "\nMore than one workloads found in the Manifests. Blue/Green deploy supports only one workload. Others should be marked with annotation "
@@ -235,11 +241,6 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         }
         return false;
       }
-
-      markVersionedResources(resources);
-
-      executionLogCallback.saveExecutionLog(
-          "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
 
       primaryService = getPrimaryService(resources);
       stageService = getStageService(resources);

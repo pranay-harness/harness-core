@@ -166,7 +166,7 @@ public class ManifestHelper {
         .collect(Collectors.toList());
   }
 
-  public static List<KubernetesResource> getWorkloadsForCanary(List<KubernetesResource> resources) {
+  public static List<KubernetesResource> getWorkloadsForCanaryAndBG(List<KubernetesResource> resources) {
     return resources.stream()
         .filter(resource
             -> ImmutableSet.of(Kind.Deployment.name(), Kind.DeploymentConfig.name())
