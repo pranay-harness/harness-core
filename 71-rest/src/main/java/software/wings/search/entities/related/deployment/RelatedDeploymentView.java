@@ -17,6 +17,7 @@ public class RelatedDeploymentView {
   private String name;
   private long createdAt;
   private String pipelineExecutionId;
+  private String workflowId;
   private String workflowType;
   private String envId;
 
@@ -28,5 +29,6 @@ public class RelatedDeploymentView {
     this.pipelineExecutionId = workflowExecution.getPipelineExecutionId();
     this.workflowType = workflowExecution.getWorkflowType().name();
     this.envId = workflowExecution.getEnvId();
+    this.workflowId = workflowExecution.getWorkflowId();
   }
 }

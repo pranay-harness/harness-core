@@ -24,7 +24,7 @@ public class EnvironmentSearchEntity implements SearchEntity<Environment> {
   @Inject private EnvironmentElasticsearchRequestHandler environmentSearchRequestHandler;
 
   public static final String TYPE = "environments";
-  public static final String VERSION = "0.1";
+  public static final String VERSION = "0.2";
   public static final Class<Environment> SOURCE_ENTITY_CLASS = Environment.class;
   private static final String CONFIGURATION_PATH = "environment/EnvironmentSchema.json";
   private static final List<Class<? extends PersistentEntity>> SUBSCRIPTION_ENTITIES =

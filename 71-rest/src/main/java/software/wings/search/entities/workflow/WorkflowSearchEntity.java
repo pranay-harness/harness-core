@@ -25,7 +25,7 @@ public class WorkflowSearchEntity implements SearchEntity<Workflow> {
   @Inject private WorkflowElasticsearchRequestHandler workflowSearchRequestHandler;
 
   public static final String TYPE = "workflows";
-  public static final String VERSION = "0.1";
+  public static final String VERSION = "0.2";
   public static final Class<Workflow> SOURCE_ENTITY_CLASS = Workflow.class;
   private static final String CONFIGURATION_PATH = "workflow/WorkflowSchema.json";
   private static final List<Class<? extends PersistentEntity>> SUBSCRIPTION_ENTITIES =
