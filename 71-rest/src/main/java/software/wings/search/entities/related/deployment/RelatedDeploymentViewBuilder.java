@@ -11,10 +11,10 @@ import java.util.Map;
 @Singleton
 public class RelatedDeploymentViewBuilder {
   public Map<String, Object> getDeploymentRelatedEntityViewMap(WorkflowExecution workflowExecution) {
-    RelatedDeploymentView relatedDeploymentView =
-        new RelatedDeploymentView(workflowExecution.getUuid(), workflowExecution.getStatus(),
-            workflowExecution.getName(), workflowExecution.getCreatedAt(), workflowExecution.getPipelineExecutionId(),
-            workflowExecution.getWorkflowType().name(), workflowExecution.getEnvId());
+    RelatedDeploymentView relatedDeploymentView = new RelatedDeploymentView(workflowExecution.getUuid(),
+        workflowExecution.getStatus(), workflowExecution.getName(), workflowExecution.getCreatedAt(),
+        workflowExecution.getPipelineExecutionId(), workflowExecution.getWorkflowId(),
+        workflowExecution.getWorkflowType().name(), workflowExecution.getEnvId());
     ObjectMapper mapper = new ObjectMapper();
     return mapper.convertValue(relatedDeploymentView, new TypeReference<Object>() {});
   }

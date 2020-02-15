@@ -102,6 +102,10 @@
           "workflowType": {
             "type": "keyword",
             "index": false
+          },
+          "workflowId": {
+            "type": "keyword",
+            "index": false
           }
         }
       },

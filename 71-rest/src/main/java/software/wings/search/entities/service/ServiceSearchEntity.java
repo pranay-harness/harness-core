@@ -24,7 +24,7 @@ public class ServiceSearchEntity implements SearchEntity<Service> {
   @Inject private ServiceElasticsearchRequestHandler serviceSearchRequestHandler;
 
   public static final String TYPE = "services";
-  public static final String VERSION = "0.1";
+  public static final String VERSION = "0.2";
   public static final Class<Service> SOURCE_ENTITY_CLASS = Service.class;
   private static final String CONFIGURATION_PATH = "service/ServiceSchema.json";
   private static final List<Class<? extends PersistentEntity>> SUBSCRIPTION_ENTITIES =

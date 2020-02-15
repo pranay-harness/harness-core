@@ -27,12 +27,12 @@ public class SearchEntityIndexStateTest extends WingsBaseTest {
     assertThat(shouldBulkSync).isTrue();
 
     searchEntityIndexState =
-        new SearchEntityIndexState(ApplicationSearchEntity.class.getCanonicalName(), "0.1", "indexName", false);
+        new SearchEntityIndexState(ApplicationSearchEntity.class.getCanonicalName(), "0.2", "indexName", false);
     shouldBulkSync = searchEntityIndexState.shouldBulkSync();
     assertThat(shouldBulkSync).isFalse();
 
     searchEntityIndexState =
-        new SearchEntityIndexState(ApplicationSearchEntity.class.getCanonicalName(), "0.1", "indexName", true);
+        new SearchEntityIndexState(ApplicationSearchEntity.class.getCanonicalName(), "0.2", "indexName", true);
     shouldBulkSync = searchEntityIndexState.shouldBulkSync();
     assertThat(shouldBulkSync).isTrue();
   }

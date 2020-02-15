@@ -24,7 +24,7 @@ public class ApplicationSearchEntity implements SearchEntity<Application> {
   @Inject private ApplicationElasticsearchRequestHandler applicationElasticsearchRequestHandler;
 
   public static final String TYPE = "applications";
-  public static final String VERSION = "0.1";
+  public static final String VERSION = "0.2";
   public static final Class<Application> SOURCE_ENTITY_CLASS = Application.class;
   private static final List<Class<? extends PersistentEntity>> SUBSCRIPTION_ENTITIES =
       ImmutableList.<Class<? extends PersistentEntity>>builder()
