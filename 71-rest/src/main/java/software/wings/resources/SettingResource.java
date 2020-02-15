@@ -287,15 +287,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<SettingAttribute> update(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @PathParam("attrId") String attrId, SettingAttribute variable) {
-    variable.setUuid(attrId);
-    variable.setAppId(appId);
-    if (variable.getValue() != null) {
-      if (variable.getValue() instanceof EncryptableSetting) {
-        ((EncryptableSetting) variable.getValue()).setAccountId(variable.getAccountId());
-        ((EncryptableSetting) variable.getValue()).setDecrypted(true);
-      }
-    }
-    return new RestResponse<>(settingsService.update(variable));
+    return new RestResponse<>(settingsService.updateWithSettingFields(variable, attrId, appId));
   }
 
   /**

@@ -849,6 +849,19 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
+  public SettingAttribute updateWithSettingFields(SettingAttribute settingAttribute, String attrId, String appId) {
+    settingAttribute.setUuid(attrId);
+    settingAttribute.setAppId(appId);
+    if (settingAttribute.getValue() != null) {
+      if (settingAttribute.getValue() instanceof EncryptableSetting) {
+        ((EncryptableSetting) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());
+        ((EncryptableSetting) settingAttribute.getValue()).setDecrypted(true);
+      }
+    }
+    return update(settingAttribute);
+  }
+
+  @Override
   public SettingAttribute update(SettingAttribute settingAttribute, boolean updateConnectivity) {
     return update(settingAttribute, updateConnectivity, true);
   }

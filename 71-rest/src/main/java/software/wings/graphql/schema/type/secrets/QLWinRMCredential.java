@@ -10,6 +10,7 @@ import lombok.experimental.FieldNameConstants;
 public class QLWinRMCredential implements QLSecret {
   private String id;
   private String name;
+  private QLSecretType secretType;
   private QLAuthScheme authenticationScheme;
   private String userName;
   private Boolean useSSL;

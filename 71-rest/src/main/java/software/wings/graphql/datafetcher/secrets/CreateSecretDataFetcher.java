@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.secrets;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -14,6 +16,7 @@ import software.wings.graphql.schema.type.secrets.QLSecretType;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
 @Slf4j
@@ -22,6 +25,7 @@ public class CreateSecretDataFetcher extends BaseMutatorDataFetcher<QLCreateSecr
   @Inject private WinRMCredentialController winRMCredentialController;
   @Inject private EncryptedTextController encryptedTextController;
   @Inject private SSHCredentialController sshCredentialController;
+  @Inject private SettingsService settingsService;
   @Inject
   public CreateSecretDataFetcher(SecretManager secretManager) {
     super(QLCreateSecretInput.class, QLCreateSecretPayload.class);
@@ -33,7 +37,9 @@ public class CreateSecretDataFetcher extends BaseMutatorDataFetcher<QLCreateSecr
       throw new InvalidRequestException(
           String.format("No ssh credential input provided with the request with secretType %s", input.getSecretType()));
     }
-    return sshCredentialController.createSettingAttribute(input.getSshCredential(), accountId);
+    SettingAttribute settingAttribute =
+        sshCredentialController.createSettingAttribute(input.getSshCredential(), accountId);
+    return settingsService.saveWithPruning(settingAttribute, GLOBAL_APP_ID, accountId);
   }
 
   private SettingAttribute saveWinRMCredential(QLCreateSecretInput input, String accountId) {
@@ -41,7 +47,9 @@ public class CreateSecretDataFetcher extends BaseMutatorDataFetcher<QLCreateSecr
       throw new InvalidRequestException(String.format(
           "No winRM credential input provided with the request with secretType %s", input.getSecretType()));
     }
-    return winRMCredentialController.createSettingAttribute(input.getWinRMCredential(), accountId);
+    SettingAttribute settingAttribute =
+        winRMCredentialController.createSettingAttribute(input.getWinRMCredential(), accountId);
+    return settingsService.saveWithPruning(settingAttribute, GLOBAL_APP_ID, accountId);
   }
 
   private EncryptedData saveEncryptedText(QLCreateSecretInput input, String accountId) {
