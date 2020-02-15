@@ -7,5 +7,6 @@ import software.wings.security.annotations.Scope;
 @Scope(PermissionAttribute.ResourceType.SETTING)
 public interface QLSecret extends QLObject {
   String getId();
+  QLSecretType getSecretType();
   String getName();
 }

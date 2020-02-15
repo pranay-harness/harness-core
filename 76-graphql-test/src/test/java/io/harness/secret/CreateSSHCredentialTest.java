@@ -14,7 +14,6 @@ import io.harness.generator.Randomizer;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
-import lombok.Data;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -75,6 +74,7 @@ public class CreateSSHCredentialTest extends GraphQLTest {
  */ variable);
     return query;
   }
+
   private String getSSHInlineCredentialInput() {
     String queryVariable = $GQL(/*
   {
@@ -98,30 +98,12 @@ public class CreateSSHCredentialTest extends GraphQLTest {
   */ secretName, port, userName);
     return queryVariable;
   }
-  @Data
-  public static class SSHAuthenticationType {
-    String userName;
-    int port;
-  }
 
-  @Data
-  public static class SSHCredentialResult {
-    String id;
-    String name;
-    SSHAuthenticationType authenticationType;
-  }
-
-  @Data
-  public static class SSHResult {
-    String clientMutationId;
-    SSHCredentialResult secret;
-  }
-
-  private void verifySSHResult(SSHResult result) {
-    SSHCredentialResult ssh = result.getSecret();
+  private void verifySSHResult(SSHCredentialHelper.SSHResult result) {
+    SSHCredentialHelper.SSHCredentialResult ssh = result.getSecret();
     assertThat(ssh.getId()).isNotNull();
     assertThat(ssh.getName()).isEqualTo(secretName);
-    SSHAuthenticationType authenticationType = ssh.getAuthenticationType();
+    SSHCredentialHelper.SSHAuthenticationType authenticationType = ssh.getAuthenticationType();
     assertThat(authenticationType.getUserName()).isEqualTo(userName);
     assertThat(authenticationType.getPort()).isEqualTo(port);
   }
@@ -132,7 +114,8 @@ public class CreateSSHCredentialTest extends GraphQLTest {
   public void testCreatingSSHCredWithInlineSSHKey() {
     String query = createMutationInput(getSSHInlineCredentialInput());
     final QLTestObject qlTestObject = qlExecute(query, accountId);
-    final SSHResult result = JsonUtils.convertValue(qlTestObject.getMap(), SSHResult.class);
+    final SSHCredentialHelper.SSHResult result =
+        JsonUtils.convertValue(qlTestObject.getMap(), SSHCredentialHelper.SSHResult.class);
     verifySSHResult(result);
   }
 
@@ -166,7 +149,8 @@ public class CreateSSHCredentialTest extends GraphQLTest {
   public void testCreatingSSHCredWithFilePathSSHKey() {
     String query = createMutationInput(getSSHFilePathInput());
     final QLTestObject qlTestObject = qlExecute(query, accountId);
-    final SSHResult result = JsonUtils.convertValue(qlTestObject.getMap(), SSHResult.class);
+    final SSHCredentialHelper.SSHResult result =
+        JsonUtils.convertValue(qlTestObject.getMap(), SSHCredentialHelper.SSHResult.class);
     verifySSHResult(result);
   }
 
@@ -200,28 +184,9 @@ public class CreateSSHCredentialTest extends GraphQLTest {
   public void testCreatingSSHCredWithPassword() {
     String query = createMutationInput(getSSHPasswordInput());
     final QLTestObject qlTestObject = qlExecute(query, accountId);
-    final SSHResult result = JsonUtils.convertValue(qlTestObject.getMap(), SSHResult.class);
+    final SSHCredentialHelper.SSHResult result =
+        JsonUtils.convertValue(qlTestObject.getMap(), SSHCredentialHelper.SSHResult.class);
     verifySSHResult(result);
-  }
-
-  @Data
-  public static class KerberosAuthenticationType {
-    String principal;
-    String realm;
-    int port;
-  }
-
-  @Data
-  public static class KerberosCredentialResult {
-    String id;
-    String name;
-    KerberosAuthenticationType authenticationType;
-  }
-
-  @Data
-  public static class KerberosResult {
-    String clientMutationId;
-    KerberosCredentialResult secret;
   }
 
   private String getkerberosPasswordInput() {
@@ -250,11 +215,11 @@ public class CreateSSHCredentialTest extends GraphQLTest {
     return queryVariable;
   }
 
-  private void verifyKerberosResult(KerberosResult result) {
-    KerberosCredentialResult ssh = result.getSecret();
+  private void verifyKerberosResult(SSHCredentialHelper.KerberosResult result) {
+    SSHCredentialHelper.KerberosCredentialResult ssh = result.getSecret();
     assertThat(ssh.getId()).isNotNull();
     assertThat(ssh.getName()).isEqualTo(secretName);
-    KerberosAuthenticationType authenticationType = ssh.getAuthenticationType();
+    SSHCredentialHelper.KerberosAuthenticationType authenticationType = ssh.getAuthenticationType();
     assertThat(authenticationType.getPrincipal()).isEqualTo(principal);
     assertThat(authenticationType.getPort()).isEqualTo(port);
     assertThat(authenticationType.getRealm()).isEqualTo(realm);
@@ -266,7 +231,8 @@ public class CreateSSHCredentialTest extends GraphQLTest {
   public void testCreatingKerberosCredWithKeyTabFile() {
     String query = createMutationInput(getKeyTabFileInput());
     final QLTestObject qlTestObject = qlExecute(query, accountId);
-    final KerberosResult result = JsonUtils.convertValue(qlTestObject.getMap(), KerberosResult.class);
+    final SSHCredentialHelper.KerberosResult result =
+        JsonUtils.convertValue(qlTestObject.getMap(), SSHCredentialHelper.KerberosResult.class);
     verifyKerberosResult(result);
   }
 
@@ -302,7 +268,8 @@ public class CreateSSHCredentialTest extends GraphQLTest {
   public void testCreatingKerberosCredWithPassword() {
     String query = createMutationInput(getkerberosPasswordInput());
     final QLTestObject qlTestObject = qlExecute(query, accountId);
-    final KerberosResult result = JsonUtils.convertValue(qlTestObject.getMap(), KerberosResult.class);
+    final SSHCredentialHelper.KerberosResult result =
+        JsonUtils.convertValue(qlTestObject.getMap(), SSHCredentialHelper.KerberosResult.class);
     verifyKerberosResult(result);
   }
 }

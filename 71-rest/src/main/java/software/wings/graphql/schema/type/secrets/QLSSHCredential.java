@@ -10,5 +10,6 @@ import lombok.experimental.FieldNameConstants;
 public class QLSSHCredential implements QLSecret {
   String id;
   String name;
+  private QLSecretType secretType;
   QLSSHAuthenticationType authenticationType;
 }

@@ -10,5 +10,6 @@ import lombok.experimental.FieldNameConstants;
 public class QLEncryptedText implements QLSecret {
   private String secretManagerId;
   private String name;
+  private QLSecretType secretType;
   private String id;
 }

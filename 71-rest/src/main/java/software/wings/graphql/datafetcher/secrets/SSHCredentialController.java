@@ -16,6 +16,7 @@ import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KerberosConfig;
 import software.wings.beans.SettingAttribute;
@@ -32,8 +33,10 @@ import software.wings.graphql.schema.type.secrets.QLSSHAuthenticationType;
 import software.wings.graphql.schema.type.secrets.QLSSHCredential;
 import software.wings.graphql.schema.type.secrets.QLSSHCredentialInput;
 import software.wings.graphql.schema.type.secrets.QLSSHCredentialType;
+import software.wings.graphql.schema.type.secrets.QLSSHCredentialUpdate;
 import software.wings.graphql.schema.type.secrets.QLSSHKeyFile;
 import software.wings.graphql.schema.type.secrets.QLSSHPassword;
+import software.wings.graphql.schema.type.secrets.QLSecretType;
 import software.wings.graphql.schema.type.secrets.QLTGTGenerationMethod;
 import software.wings.graphql.schema.type.secrets.QLTGTGenerationUsing;
 import software.wings.service.intfc.SettingsService;
@@ -62,6 +65,7 @@ public class SSHCredentialController {
     return QLSSHCredential.builder()
         .id(settingAttribute.getUuid())
         .name(settingAttribute.getName())
+        .secretType(QLSecretType.SSH_CREDENTIAL)
         .authenticationType(sshAuthenticationType)
         .build();
   }
@@ -134,8 +138,7 @@ public class SSHCredentialController {
         .build();
   }
 
-  private SSHSetting getSSHSettings(QLSSHCredentialInput sshCredentialInput) {
-    QLSSHAuthenticationInput sshCredential = sshCredentialInput.getSshAuthentication();
+  private SSHSetting getSSHSettings(QLSSHAuthenticationInput sshCredential) {
     if (sshCredential == null) {
       throw new InvalidRequestException(
           "No ssh authentication input provided for the SSH credential with auth scheme SSH");
@@ -205,8 +208,7 @@ public class SSHCredentialController {
     }
   }
 
-  private KerberosSettings getKerberosSettings(QLSSHCredentialInput sshCredentialInput) {
-    QLKerberosAuthenticationInput kerberosAuthentication = sshCredentialInput.getKerberosAuthentication();
+  private KerberosSettings getKerberosSettings(QLKerberosAuthenticationInput kerberosAuthentication) {
     validateKerberosSSHInput(kerberosAuthentication);
     // Extracting port, principal, realm
     int port = kerberosAuthentication.getPort();
@@ -231,12 +233,9 @@ public class SSHCredentialController {
         .build();
   }
 
-  public SettingAttribute createSettingAttribute(QLSSHCredentialInput sshCredentialInput, String accountId) {
+  public HostConnectionAttributes createHostConnectionAttribute(QLSSHAuthenticationScheme authSchemeInput,
+      QLSSHAuthenticationInput sshSettingInput, QLKerberosAuthenticationInput kerberosSettingInput) {
     HostConnectionAttributes.AuthenticationScheme authScheme = SSH_KEY;
-    if (sshCredentialInput.getAuthenticationScheme() == QLSSHAuthenticationScheme.KERBEROS) {
-      authScheme = KERBEROS;
-    }
-
     HostConnectionAttributes.AccessType accessType = KEY;
     String userName = null;
     int port = 22;
@@ -247,18 +246,19 @@ public class SSHCredentialController {
     String sshPassword = null;
     KerberosConfig kerberosConfig = null;
     String kerberosPassword = null;
-    if (sshCredentialInput.getAuthenticationScheme() == QLSSHAuthenticationScheme.SSH) {
-      SSHSetting sshSetting = getSSHSettings(sshCredentialInput);
-      userName = sshSetting.getUserName();
+    if (authSchemeInput == QLSSHAuthenticationScheme.SSH) {
+      SSHSetting sshSetting = getSSHSettings(sshSettingInput);
       accessType = sshSetting.getAccessType();
       port = sshSetting.getPort();
       key = sshSetting.getKey();
       passphrase = sshSetting.getPassphrase();
       keyless = sshSetting.isKeyless();
       keyPath = sshSetting.getKeyPath();
+      userName = sshSetting.getUserName();
       sshPassword = sshSetting.getSshPassword();
-    } else if (sshCredentialInput.getAuthenticationScheme() == QLSSHAuthenticationScheme.KERBEROS) {
-      KerberosSettings kerberoSettings = getKerberosSettings(sshCredentialInput);
+    } else if (authSchemeInput == QLSSHAuthenticationScheme.KERBEROS) {
+      authScheme = KERBEROS;
+      KerberosSettings kerberoSettings = getKerberosSettings(kerberosSettingInput);
       accessType = kerberoSettings.getAccessType();
       kerberosConfig = kerberoSettings.getKerberosConfig();
       port = kerberoSettings.getPort();
@@ -281,12 +281,52 @@ public class SSHCredentialController {
             .withAuthenticationScheme(authScheme)
             .build();
     settingValue.setSettingType(SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES);
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withName(sshCredentialInput.getName())
-                                            .withValue(settingValue)
-                                            .withAccountId(accountId)
-                                            .withCategory(SettingAttribute.SettingCategory.SETTING)
-                                            .build();
-    return settingsService.saveWithPruning(settingAttribute, GLOBAL_APP_ID, accountId);
+    return settingValue;
+  }
+
+  public SettingAttribute createSettingAttribute(QLSSHCredentialInput sshCredentialInput, String accountId) {
+    HostConnectionAttributes settingValue = createHostConnectionAttribute(sshCredentialInput.getAuthenticationScheme(),
+        sshCredentialInput.getSshAuthentication(), sshCredentialInput.getKerberosAuthentication());
+    return SettingAttribute.Builder.aSettingAttribute()
+        .withName(sshCredentialInput.getName())
+        .withValue(settingValue)
+        .withAccountId(accountId)
+        .withCategory(SettingAttribute.SettingCategory.SETTING)
+        .build();
+  }
+
+  public SettingAttribute updateSSHCredential(QLSSHCredentialUpdate updateInput, String sshCredId, String accountId) {
+    SettingAttribute existingSettingAttribute = settingsService.get(sshCredId);
+    if (existingSettingAttribute == null) {
+      throw new InvalidRequestException(String.format("No ssh credential exists with the id %s", sshCredId));
+    }
+    if (updateInput.getName().hasBeenSet()) {
+      String name = updateInput.getName().getValue().map(StringUtils::strip).orElse(null);
+      if (name == null) {
+        throw new InvalidRequestException("Cannot set the ssh credential name as null");
+      }
+      existingSettingAttribute.setName(name);
+    }
+    boolean needToUpdateCred = false;
+    QLSSHAuthenticationInput sshCredInput = null;
+    QLKerberosAuthenticationInput kerberosInput = null;
+    if (updateInput.getSshAuthentication().hasBeenSet()) {
+      sshCredInput = updateInput.getSshAuthentication().getValue().orElse(null);
+      needToUpdateCred = true;
+    }
+    if (updateInput.getKerberosAuthentication().hasBeenSet()) {
+      kerberosInput = updateInput.getKerberosAuthentication().getValue().orElse(null);
+      needToUpdateCred = true;
+    }
+    if (needToUpdateCred && (updateInput.getAuthenticationScheme() == null)) {
+      throw new InvalidRequestException("The SSH authentication scheme is not provided with the update request");
+    }
+    if (needToUpdateCred) {
+      HostConnectionAttributes sshSettings =
+          createHostConnectionAttribute(updateInput.getAuthenticationScheme(), sshCredInput, kerberosInput);
+      existingSettingAttribute.setValue(sshSettings);
+    }
+    return settingsService.updateWithSettingFields(
+        existingSettingAttribute, existingSettingAttribute.getUuid(), GLOBAL_APP_ID);
   }
 }

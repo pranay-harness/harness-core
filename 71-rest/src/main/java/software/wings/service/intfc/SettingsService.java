@@ -62,6 +62,9 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
   @ValidationGroups(Update.class) SettingAttribute update(@Valid SettingAttribute settingAttribute);
 
   @ValidationGroups(Update.class)
+  SettingAttribute updateWithSettingFields(SettingAttribute settingAttribute, String attrId, String appId);
+
+  @ValidationGroups(Update.class)
   SettingAttribute update(@Valid SettingAttribute settingAttribute, boolean updateConnectivity);
 
   @ValidationGroups(Update.class)
