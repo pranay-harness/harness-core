@@ -9,7 +9,6 @@ import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 
 import com.codahale.metrics.MetricRegistry;
-import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import graphql.GraphQL;
@@ -20,6 +19,7 @@ import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.govern.ServersModule;
+import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
@@ -67,7 +67,7 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.core.GenericType;
 
-public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorRuleMixin, DistributedLockRuleMixin {
+public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorRuleMixin {
   private int port;
   ClosingFactory closingFactory;
 
@@ -106,8 +106,6 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, dbName);
     datastore.setQueryFactory(new QueryFactory());
 
-    DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoClient, dbName, closingFactory);
-
     RestResponse<ElasticsearchConfig> elasticsearchConfigRestResponse =
         Setup.portal()
             .queryParam("configurationType", ConfigurationType.ELASTICSEARCH)
@@ -130,7 +128,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
 
     Configuration configuration = getConfiguration(mongoUri, elasticsearchConfig, isSearchEnabled);
 
-    List<Module> modules = getRequiredModules(configuration, distributedLockSvc);
+    List<Module> modules = getRequiredModules(configuration, mongoClient, dbName);
     modules.add(new ManagerQueueModule());
     return modules;
   }
@@ -150,7 +148,8 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     return configuration;
   }
 
-  protected List<Module> getRequiredModules(Configuration configuration, DistributedLockSvc distributedLockSvc) {
+  protected List<Module> getRequiredModules(
+      Configuration configuration, MongoClient locksMongoClient, String locksDatabase) {
     io.harness.threading.ExecutorModule.getInstance().setExecutorService(executorService);
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
@@ -170,7 +169,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     });
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
-    modules.addAll(new TestMongoModule(datastore, distributedLockSvc).cumulativeDependencies());
+    modules.addAll(new TestMongoModule(datastore, locksMongoClient, locksDatabase).cumulativeDependencies());
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
     modules.add(new YamlModule());
     modules.add(new ManagerExecutorModule());
@@ -207,5 +206,10 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
     return applyInjector(statement, frameworkMethod, target);
+  }
+
+  @Override
+  public void destroy(Injector injector, List<Module> modules) throws Exception {
+    injector.getInstance(MongoPersistentLocker.class).stop();
   }
 }

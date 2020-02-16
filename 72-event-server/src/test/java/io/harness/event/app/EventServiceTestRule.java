@@ -61,7 +61,7 @@ public class EventServiceTestRule implements MethodRule, MongoRuleMixin, Injecto
                              .build()),
         new EventServiceModule(
             EventServiceConfig.builder().connector(new Connector(PORT, true, "cert.pem", "key.pem")).build()),
-        new TestMongoModule(datastore, null));
+        new TestMongoModule(datastore));
   }
 
   @Override

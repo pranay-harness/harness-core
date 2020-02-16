@@ -9,7 +9,6 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 
-import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.hazelcast.core.HazelcastInstance;
 import graphql.GraphQL;
 import io.harness.event.EventsModule;
@@ -17,6 +16,7 @@ import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ServersModule;
+import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
@@ -59,7 +59,7 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
 @Slf4j
-public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
+public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
   @Getter private AdvancedDatastore datastore;
   @Getter private GraphQL graphQL;
@@ -116,12 +116,10 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
     datastore.setQueryFactory(new QueryFactory());
 
-    DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoInfo.getClient(), databaseName, closingFactory);
-
     List<Module> modules = new ArrayList();
     modules.add(VersionModule.getInstance());
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
-    modules.addAll(new TestMongoModule(datastore, distributedLockSvc).cumulativeDependencies());
+    modules.addAll(new TestMongoModule(datastore, mongoInfo.getClient(), databaseName).cumulativeDependencies());
 
     MainConfiguration configuration = getConfiguration("graphQL");
 
@@ -159,5 +157,10 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
     return applyInjector(statement, frameworkMethod, target);
+  }
+
+  @Override
+  public void destroy(Injector injector, List<Module> modules) throws Exception {
+    injector.getInstance(MongoPersistentLocker.class).stop();
   }
 }

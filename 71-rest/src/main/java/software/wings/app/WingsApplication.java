@@ -31,7 +31,6 @@ import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.name.Names;
 
 import com.codahale.metrics.MetricRegistry;
-import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
 import com.hazelcast.core.HazelcastInstance;
@@ -65,11 +64,10 @@ import io.harness.exception.WingsException;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.GrpcServerConfig;
 import io.harness.grpc.GrpcServiceConfigurationModule;
+import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
-import io.harness.lock.mongo.ManageDistributedLockSvc;
-import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
@@ -85,6 +83,8 @@ import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
+import io.harness.redis.RedisConfig;
+import io.harness.redis.RedisModule;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.state.inspection.StateInspectionService;
@@ -270,9 +270,16 @@ public class WingsApplication extends Application<MainConfiguration> {
       MongoConfig mongoConfig() {
         return configuration.getMongoConnectionFactory();
       }
+
+      @Provides
+      @Singleton
+      RedisConfig redisConfig() {
+        return configuration.getRedisConfig();
+      }
     });
 
     modules.addAll(new MongoModule().cumulativeDependencies());
+    modules.add(new RedisModule());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
@@ -499,8 +506,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     if (!injector.getInstance(FeatureFlagService.class).isGlobalEnabled(GLOBAL_DISABLE_HEALTH_CHECK)) {
       healthService.registerMonitor(injector.getInstance(HPersistence.class));
-      // abcd
-      healthService.registerMonitor(injector.getInstance(MongoPersistentLocker.class));
+      healthService.registerMonitor((HealthMonitor) injector.getInstance(PersistentLocker.class));
     }
   }
 
@@ -550,7 +556,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void registerManagedBeans(MainConfiguration configuration, Environment environment, Injector injector) {
     environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
-    environment.lifecycle().manage(new ManageDistributedLockSvc(injector.getInstance(DistributedLockSvc.class)));
+    environment.lifecycle().manage((Managed) injector.getInstance(PersistentLocker.class));
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
     environment.lifecycle().manage(injector.getInstance(ConfigurationController.class));

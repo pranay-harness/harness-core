@@ -1,4 +1,4 @@
-package io.harness.lock.redis;
+package io.harness.redis;
 
 import com.google.inject.Singleton;
 

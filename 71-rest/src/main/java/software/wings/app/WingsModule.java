@@ -1,5 +1,7 @@
 package software.wings.app;
 
+import static io.harness.lock.DistributedLockImplementation.REDIS;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Provides;
@@ -44,7 +46,6 @@ import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
 import io.harness.lock.PersistentLocker;
 import io.harness.lock.mongo.MongoPersistentLocker;
-import io.harness.lock.redis.RedisConfig;
 import io.harness.lock.redis.RedisPersistentLocker;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
@@ -605,16 +606,10 @@ public class WingsModule extends DependencyModule {
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
 
-    RedisConfig redisConfig = configuration.getRedisConfig();
-    if (redisConfig != null && redisConfig.isEnabled()) {
-      try {
-        logger.info("Initializing Redis Locker");
-        bind(PersistentLocker.class).toInstance(new RedisPersistentLocker(redisConfig));
-        logger.info("Initialized Redis Locker");
-      } catch (Exception ex) {
-        logger.error("Exception while initializing Redis Locker. Switching back to Mongo", ex);
-        bind(PersistentLocker.class).to(MongoPersistentLocker.class);
-      }
+    if (configuration.getDistributedLockImplementation() == REDIS) {
+      logger.info("Initializing Redis Locker");
+      bind(PersistentLocker.class).to(RedisPersistentLocker.class);
+      logger.info("Initialized Redis Locker");
     } else {
       logger.info("Initializing Mongo Locker");
       bind(PersistentLocker.class).to(MongoPersistentLocker.class);

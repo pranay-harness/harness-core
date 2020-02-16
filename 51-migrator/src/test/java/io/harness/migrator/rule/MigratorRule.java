@@ -4,7 +4,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
-import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ServersModule;
 import io.harness.module.TestMongoModule;
@@ -13,7 +12,6 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
-import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.rule.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
@@ -33,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class MigratorRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
+public class MigratorRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
   private AdvancedDatastore datastore;
 
@@ -52,8 +50,6 @@ public class MigratorRule implements MethodRule, InjectorRuleMixin, MongoRuleMix
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
     datastore.setQueryFactory(new QueryFactory());
-
-    DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoInfo.getClient(), databaseName, closingFactory);
 
     List<Module> modules = new ArrayList();
     modules.add(new AbstractModule() {
@@ -82,7 +78,7 @@ public class MigratorRule implements MethodRule, InjectorRuleMixin, MongoRuleMix
 
     modules.add(new VersionModule());
     modules.add(new TimeModule());
-    modules.addAll(new TestMongoModule(datastore, distributedLockSvc).cumulativeDependencies());
+    modules.addAll(new TestMongoModule(datastore).cumulativeDependencies());
     return modules;
   }
 
