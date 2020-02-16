@@ -34,7 +34,7 @@ public class TestConfiguration implements MongoRuleMixin {
     AdvancedDatastore primaryDatastore =
         (AdvancedDatastore) morphia.createDatastore(fakeMongoClient(closingFactory), databaseName());
     primaryDatastore.setQueryFactory(new QueryFactory());
-    return new TestMongoModule(primaryDatastore, null);
+    return new TestMongoModule(primaryDatastore);
   }
 
   @Bean

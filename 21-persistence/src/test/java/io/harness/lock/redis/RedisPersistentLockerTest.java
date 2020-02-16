@@ -14,9 +14,9 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.lock.AcquiredLock;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Spy;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 
@@ -27,8 +27,14 @@ import java.util.concurrent.TimeUnit;
  * @author rktummala on 01/07/2020
  */
 public class RedisPersistentLockerTest extends PersistenceTest {
-  private RedissonClient client = mock(RedissonClient.class);
-  @Spy private RedisPersistentLocker redisPersistentLocker = new RedisPersistentLocker(client);
+  private RedisPersistentLocker redisPersistentLocker;
+  private RedissonClient client;
+
+  @Before
+  public void setup() {
+    client = mock(RedissonClient.class);
+    redisPersistentLocker = new RedisPersistentLocker(client);
+  }
 
   @Test
   @Owner(developers = RAMA)

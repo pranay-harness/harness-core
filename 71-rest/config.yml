@@ -87,8 +87,10 @@ datadogConfig:
   enabled: false #datadogConfigEnable
   apiKey: "datadog_api_key"
 
+distributedLockImplementation: MONGO
+
 redisConfig:
-  enabled: false #redisConfigEnable
+  enabled: false
   sentinel: false
   masterName: "test"
   redisUrl: "redis://localhost:6379"

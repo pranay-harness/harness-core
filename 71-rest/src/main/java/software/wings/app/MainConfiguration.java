@@ -28,8 +28,9 @@ import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.grpc.GrpcServerConfig;
-import io.harness.lock.redis.RedisConfig;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoConfig;
+import io.harness.redis.RedisConfig;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import lombok.Data;
@@ -75,6 +76,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
+  @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
   @JsonProperty("events-mongo") private MongoConfig eventsMongo = MongoConfig.builder().uri("").build();
   @JsonProperty("elasticsearch")
   private ElasticsearchConfig elasticsearchConfig = ElasticsearchConfig.builder().build();

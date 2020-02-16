@@ -10,9 +10,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import com.deftlabs.lock.mongo.DistributedLockSvc;
-import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
-import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
@@ -100,20 +97,27 @@ public class MongoModule extends DependencyProviderModule {
   }
 
   @Provides
-  @Singleton
-  public DistributedLockSvc distributedLockSvc(MongoConfig mongoConfig) {
+  @Named("locksMongoClient")
+  public MongoClient getLocksMongoClient(MongoConfig mongoConfig) {
     MongoClientURI uri;
     if (isNotEmpty(mongoConfig.getLocksUri())) {
       uri = new MongoClientURI(mongoConfig.getLocksUri(), MongoClientOptions.builder(defaultMongoClientOptions));
     } else {
       uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(defaultMongoClientOptions));
     }
-    MongoClient mongoClient = new MongoClient(uri);
+    return new MongoClient(uri);
+  }
 
-    DistributedLockSvcOptions distributedLockSvcOptions =
-        new DistributedLockSvcOptions(mongoClient, uri.getDatabase(), "locks");
-    distributedLockSvcOptions.setEnableHistory(false);
-    return new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc();
+  @Provides
+  @Named("locksDatabase")
+  public String getLocksDatabase(MongoConfig mongoConfig) {
+    MongoClientURI uri;
+    if (isNotEmpty(mongoConfig.getLocksUri())) {
+      uri = new MongoClientURI(mongoConfig.getLocksUri(), MongoClientOptions.builder(defaultMongoClientOptions));
+    } else {
+      uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(defaultMongoClientOptions));
+    }
+    return uri.getDatabase();
   }
 
   @Override

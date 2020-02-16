@@ -466,6 +466,10 @@ if [[ "" != "$PUBLISHERS" ]]; then
   done
 fi
 
+if [[ "" != "$DISTRIBUTED_LOCK_IMPLEMENTATION" ]]; then
+  yq write -i $CONFIG_FILE distributedLockImplementation "$DISTRIBUTED_LOCK_IMPLEMENTATION"
+fi
+
 if [[ "$REDIS_ENABLED" == "true" ]]; then
   yq write -i $CONFIG_FILE redisConfig.enabled true
 fi

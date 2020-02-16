@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assumptions.assumeThat;
 
 import com.google.inject.Inject;
 
-import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -20,7 +19,6 @@ import io.harness.exception.WingsException;
 import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -33,7 +31,6 @@ import java.time.Duration;
  */
 @Slf4j
 public class MongoPersistentLockerDBTest extends PersistenceTest {
-  @Inject private DistributedLockSvc distributedLockSvc;
   @Inject private HPersistence persistence;
   @Inject private MongoPersistentLocker mongoPersistentLocker;
 
@@ -84,7 +81,6 @@ public class MongoPersistentLockerDBTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  @RealMongo
   public void testConcurrentAcquireEphemeralLock() {
     String uuid = generateUuid();
 

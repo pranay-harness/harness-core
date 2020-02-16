@@ -21,7 +21,6 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 
 import com.codahale.metrics.MetricRegistry;
-import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.hazelcast.core.HazelcastInstance;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
@@ -36,6 +35,7 @@ import io.harness.factory.ClosingFactory;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.module.TestMongoModule;
@@ -46,7 +46,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
-import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -99,7 +98,7 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
 @Slf4j
-public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRuleMixin {
+public class WingsRule implements MethodRule, MongoRuleMixin {
   protected ClosingFactory closingFactory = new ClosingFactory();
 
   protected Injector injector;
@@ -195,13 +194,11 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, dbName);
     datastore.setQueryFactory(new QueryFactory());
 
-    DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoClient, dbName, closingFactory);
-
     Configuration configuration = getConfiguration(annotations, dbName);
 
     HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
 
-    List<Module> modules = getRequiredModules(configuration, distributedLockSvc);
+    List<Module> modules = getRequiredModules(configuration, mongoClient, dbName);
     addQueueModules(modules);
 
     if (annotations.stream().filter(Cache.class ::isInstance).findFirst().isPresent()) {
@@ -295,7 +292,8 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
     return configuration;
   }
 
-  protected List<Module> getRequiredModules(Configuration configuration, DistributedLockSvc distributedLockSvc) {
+  protected List<Module> getRequiredModules(
+      Configuration configuration, MongoClient locksMongoClient, String locksDatabase) {
     ExecutorModule.getInstance().setExecutorService(executorService);
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
@@ -324,7 +322,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
 
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
-    modules.addAll(new TestMongoModule(datastore, distributedLockSvc).cumulativeDependencies());
+    modules.addAll(new TestMongoModule(datastore, locksMongoClient, locksDatabase).cumulativeDependencies());
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
     modules.add(new YamlModule());
     modules.add(new ManagerExecutorModule());
@@ -374,6 +372,14 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
             .isPresent()) {
       CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
       cacheManager.getCacheNames().forEach(cacheManager::destroyCache);
+    }
+
+    try {
+      log().info("Stopping mongo locker");
+      injector.getInstance(MongoPersistentLocker.class).stop();
+      log().info("Stopped mongo locker");
+    } catch (Exception ex) {
+      logger.error("", ex);
     }
 
     try {

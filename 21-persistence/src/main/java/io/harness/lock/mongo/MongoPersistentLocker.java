@@ -10,11 +10,16 @@ import static java.time.Duration.ofSeconds;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockOptions;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
+import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
+import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.mongodb.BasicDBObject;
+import com.mongodb.MongoClient;
+import io.dropwizard.lifecycle.Managed;
 import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
 import io.harness.health.HealthMonitor;
@@ -32,12 +37,26 @@ import java.util.concurrent.locks.Lock;
 
 @Singleton
 @Slf4j
-public class MongoPersistentLocker implements PersistentLocker, HealthMonitor {
-  public static final Store LOCKS_STORE = Store.builder().name("locks").build();
+public class MongoPersistentLocker implements PersistentLocker, HealthMonitor, Managed {
+  private static final String LOCKS_COLLECTION = "locks";
+  public static final Store LOCKS_STORE = Store.builder().name(LOCKS_COLLECTION).build();
+  private DistributedLockSvc distributedLockSvc;
+  private HPersistence persistence;
+  private TimeLimiter timeLimiter;
 
-  @Inject private DistributedLockSvc distributedLockSvc;
-  @Inject private HPersistence persistence;
-  @Inject private TimeLimiter timeLimiter;
+  @Inject
+  public MongoPersistentLocker(@Named("locksMongoClient") MongoClient mongoClient,
+      @Named("locksDatabase") String locksDB, HPersistence persistence, TimeLimiter timeLimiter) {
+    this.persistence = persistence;
+    this.timeLimiter = timeLimiter;
+    DistributedLockSvcOptions distributedLockSvcOptions =
+        new DistributedLockSvcOptions(mongoClient, locksDB, LOCKS_COLLECTION);
+    distributedLockSvcOptions.setEnableHistory(false);
+    this.distributedLockSvc = new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc();
+    if (distributedLockSvc != null && !distributedLockSvc.isRunning()) {
+      distributedLockSvc.startup();
+    }
+  }
 
   @Override
   public AcquiredLock acquireLock(String name, Duration timeout) {
@@ -64,6 +83,7 @@ public class MongoPersistentLocker implements PersistentLocker, HealthMonitor {
 
     try {
       if (lock.tryLock()) {
+        logger.info("Lock acquired on {} for timeout {}", name, timeout);
         long start = AcquiredDistributedLock.monotonicTimestamp();
         return builder.lock(lock).startTimestamp(start).build();
       }
@@ -141,7 +161,7 @@ public class MongoPersistentLocker implements PersistentLocker, HealthMonitor {
     // NOTE: DistributedLockSvc destroy does not work. Also it expects the lock to not be acquired which
     //       is design flow. The only safe moment to destroy lock is, when you currently have it acquired.
     final BasicDBObject filter = new BasicDBObject().append("_id", name);
-    persistence.getCollection(LOCKS_STORE, "locks").remove(filter);
+    persistence.getCollection(LOCKS_STORE, LOCKS_COLLECTION).remove(filter);
     acquiredLock.release();
     throw new GeneralException(
         format("Acquired distributed lock %s was destroyed and the lock was broken.", name), NOBODY);
@@ -161,6 +181,20 @@ public class MongoPersistentLocker implements PersistentLocker, HealthMonitor {
   public void isHealthy() {
     try (AcquiredLock dummy = acquireEphemeralLock("HEALTH_CHECK - " + generateUuid(), ofSeconds(1))) {
       // nothing to do
+    }
+  }
+
+  @Override
+  public void start() throws Exception {
+    if (distributedLockSvc != null && !distributedLockSvc.isRunning()) {
+      distributedLockSvc.startup();
+    }
+  }
+
+  @Override
+  public void stop() throws Exception {
+    if (distributedLockSvc != null) {
+      distributedLockSvc.shutdown();
     }
   }
 }

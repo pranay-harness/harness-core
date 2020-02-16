@@ -9,11 +9,11 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 
-import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ServersModule;
 import io.harness.iterator.TestIrregularIterableEntity;
 import io.harness.iterator.TestRegularIterableEntity;
+import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoPersistence;
@@ -47,7 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
+public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
   @Getter private AdvancedDatastore datastore;
 
@@ -103,8 +103,6 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
 
     objectFactory.setDatastore(datastore);
 
-    DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoInfo.getClient(), databaseName, closingFactory);
-
     List<Module> modules = new ArrayList();
     modules.add(new AbstractModule() {
       @Override
@@ -142,7 +140,7 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     });
 
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
-    modules.addAll(new TestMongoModule(datastore, distributedLockSvc).cumulativeDependencies());
+    modules.addAll(new TestMongoModule(datastore, mongoInfo.getClient(), databaseName).cumulativeDependencies());
 
     return modules;
   }
@@ -150,5 +148,10 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
     return applyInjector(statement, frameworkMethod, target);
+  }
+
+  @Override
+  public void destroy(Injector injector, List<Module> modules) throws Exception {
+    injector.getInstance(MongoPersistentLocker.class).stop();
   }
 }

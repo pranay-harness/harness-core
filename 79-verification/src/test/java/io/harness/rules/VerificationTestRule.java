@@ -3,7 +3,7 @@ package io.harness.rules;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
-import com.deftlabs.lock.mongo.DistributedLockSvc;
+import com.mongodb.MongoClient;
 import io.dropwizard.Configuration;
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.VerificationTestModule;
@@ -43,9 +43,10 @@ public class VerificationTestRule extends WingsRule {
   }
 
   @Override
-  protected List<Module> getRequiredModules(Configuration configuration, DistributedLockSvc distributedLockSvc) {
+  protected List<Module> getRequiredModules(
+      Configuration configuration, MongoClient locksMongoClient, String locksDatabase) {
     List<Module> modules = new ArrayList<>();
-    modules.addAll(new TestMongoModule(datastore, distributedLockSvc).cumulativeDependencies());
+    modules.addAll(new TestMongoModule(datastore).cumulativeDependencies());
     modules.add(new VerificationServiceModule((VerificationServiceConfiguration) configuration));
     modules.add(new VerificationTestModule());
     modules.add(new VerificationServiceSchedulerModule((VerificationServiceConfiguration) configuration));

@@ -1,56 +1,40 @@
 package io.harness.lock.redis;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.dropwizard.lifecycle.Managed;
 import io.harness.exception.GeneralException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
+import io.harness.health.HealthMonitor;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.redisson.config.Config;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
 @Slf4j
-public class RedisPersistentLocker implements PersistentLocker {
+public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, Managed {
   private RedissonClient client;
   private static final String ERROR_MESSAGE = "Failed to acquire distributed lock for %s";
 
   @Inject
-  public RedisPersistentLocker(RedisConfig redisConfig) {
-    this.client = init(redisConfig);
-  }
-
-  // For Testing
-  protected RedisPersistentLocker(RedissonClient client) {
-    this.client = client;
-  }
-
-  private RedissonClient init(RedisConfig redisConfig) {
-    if (!redisConfig.isEnabled()) {
-      throw new UnauthorizedException("Creating a redisson client is disabled in the configuration", USER);
+  RedisPersistentLocker(RedissonClient redissonClient) {
+    if (redissonClient == null) {
+      throw new UnauthorizedException("Redis was not setup in the environment", USER);
     }
-    Config config = new Config();
-    if (!redisConfig.isSentinel()) {
-      config.useSingleServer().setAddress(redisConfig.getRedisUrl());
-    } else {
-      config.useSentinelServers().setMasterName(redisConfig.getMasterName());
-      for (String sentinelUrl : redisConfig.getSentinelUrls()) {
-        config.useSentinelServers().addSentinelAddress(sentinelUrl);
-      }
-    }
-    return Redisson.create(config);
+    this.client = redissonClient;
   }
 
   @Override
@@ -130,5 +114,34 @@ public class RedisPersistentLocker implements PersistentLocker {
   @Override
   public void destroy(AcquiredLock acquiredLock) {
     acquiredLock.close();
+  }
+
+  @Override
+  public Duration healthExpectedResponseTimeout() {
+    return ofSeconds(10);
+  }
+
+  @Override
+  public Duration healthValidFor() {
+    return ofSeconds(15);
+  }
+
+  @Override
+  public void isHealthy() {
+    try (AcquiredLock dummy = acquireEphemeralLock("HEALTH_CHECK - " + generateUuid(), ofSeconds(1))) {
+      // nothing to do
+    }
+  }
+
+  @Override
+  public void start() throws Exception {
+    // Nothing to do here
+  }
+
+  @Override
+  public void stop() throws Exception {
+    if (client != null) {
+      client.shutdown();
+    }
   }
 }

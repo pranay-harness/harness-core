@@ -41,7 +41,6 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 
 import com.codahale.metrics.MetricRegistry;
-import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
 import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
 import io.dropwizard.Application;
@@ -66,7 +65,6 @@ import io.harness.jobs.workflow.collection.CVDataCollectionJob;
 import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob;
 import io.harness.jobs.workflow.logs.WorkflowLogClusterJob;
 import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
-import io.harness.lock.mongo.ManageDistributedLockSvc;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.managerclient.VerificationManagerClientModule;
 import io.harness.metrics.HarnessMetricRegistry;
@@ -297,7 +295,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
-    environment.lifecycle().manage(new ManageDistributedLockSvc(injector.getInstance(DistributedLockSvc.class)));
     environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
   }
 
