@@ -213,6 +213,11 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public SecretManagerConfig getSecretManager(String accountId, String kmsId) {
+    return secretManagerConfigService.getSecretManager(accountId, kmsId, true);
+  }
+
+  @Override
   public EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret, String path,
       EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {

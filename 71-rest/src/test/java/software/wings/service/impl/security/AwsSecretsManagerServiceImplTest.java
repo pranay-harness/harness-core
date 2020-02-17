@@ -6,6 +6,8 @@ import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.security.SimpleEncryption.CHARSET;
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertSame;
 import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
@@ -160,9 +162,11 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
     String savedConfigId =
         awsSecretsManagerService.saveAwsSecretsManagerConfig(accountId, KryoUtils.clone(awsSecretManagerConfig));
 
+    assertNotNull(secretManager.getSecretManager(accountId, savedConfigId));
+
     awsSecretsManagerService.deleteAwsSecretsManagerConfig(accountId, savedConfigId);
 
-    assertTrue(secretManager.listSecretManagers(accountId).isEmpty());
+    assertNull(secretManager.getSecretManager(accountId, savedConfigId));
   }
 
   @Test

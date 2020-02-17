@@ -30,4 +30,6 @@ public interface SecretManagerConfigService {
   List<SecretManagerConfig> getAllGlobalSecretManagers();
 
   SecretManagerConfig getSecretManager(String accountId, String entityId);
+
+  SecretManagerConfig getSecretManager(String accountId, String entityId, boolean maskSecrets);
 }

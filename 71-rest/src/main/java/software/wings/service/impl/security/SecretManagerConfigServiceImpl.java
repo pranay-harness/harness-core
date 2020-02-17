@@ -91,7 +91,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
                                                   .get();
 
     if (secretManagerConfig != null) {
-      secretManagerConfig = getEncryptionConfigInternal(accountId, secretManagerConfig);
+      decryptEncryptionConfigSecrets(accountId, secretManagerConfig, false);
       secretManagerConfig.setDefault(true);
       return secretManagerConfig;
     }
@@ -120,7 +120,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
     }
 
     if (secretManagerConfig != null) {
-      secretManagerConfig = getEncryptionConfigInternal(accountId, secretManagerConfig);
+      decryptEncryptionConfigSecrets(accountId, secretManagerConfig, false);
       secretManagerConfig.setDefault(true);
     }
     return secretManagerConfig;
@@ -128,43 +128,58 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
 
   @Override
   public SecretManagerConfig getSecretManager(String accountId, String entityId) {
-    SecretManagerConfig secretManagerConfig =
-        wingsPersistence.createQuery(SecretManagerConfig.class).field(ID_KEY).equal(entityId).get();
-    return secretManagerConfig == null ? null : getEncryptionConfigInternal(accountId, secretManagerConfig);
+    return getSecretManager(accountId, entityId, false);
+  }
+
+  @Override
+  public SecretManagerConfig getSecretManager(String accountId, String entityId, boolean maskSecrets) {
+    SecretManagerConfig secretManagerConfig;
+    if (entityId.equals(accountId)) {
+      secretManagerConfig = localEncryptionService.getEncryptionConfig(accountId);
+    } else {
+      secretManagerConfig = wingsPersistence.createQuery(SecretManagerConfig.class)
+                                .field(ACCOUNT_ID_KEY)
+                                .in(Arrays.asList(accountId, GLOBAL_ACCOUNT_ID))
+                                .field(ID_KEY)
+                                .equal(entityId)
+                                .get();
+    }
+    if (secretManagerConfig != null) {
+      decryptEncryptionConfigSecrets(accountId, secretManagerConfig, maskSecrets);
+      secretManagerConfig.setNumOfEncryptedValue(getEncryptedDataCount(accountId, entityId));
+    }
+    return secretManagerConfig;
   }
 
   // This method will decrypt the secret manager's encrypted fields
-  private SecretManagerConfig getEncryptionConfigInternal(String accountId, SecretManagerConfig secretManagerConfig) {
-    SecretManagerConfig encryptionConfig;
+  private void decryptEncryptionConfigSecrets(
+      String accountId, SecretManagerConfig secretManagerConfig, boolean maskSecrets) {
     EncryptionType encryptionType = secretManagerConfig.getEncryptionType();
-    String encryptionConfigId = secretManagerConfig.getUuid();
     switch (encryptionType) {
       case KMS:
-        encryptionConfig = kmsService.getKmsConfig(accountId, encryptionConfigId);
+        kmsService.decryptKmsConfigSecrets(accountId, (KmsConfig) secretManagerConfig, maskSecrets);
         break;
       case GCP_KMS:
-        encryptionConfig = gcpSecretsManagerService.getGcpKmsConfig(accountId, encryptionConfigId);
+        gcpSecretsManagerService.decryptGcpConfigSecrets((GcpKmsConfig) secretManagerConfig, maskSecrets);
         break;
       case VAULT:
-        encryptionConfig = vaultService.getVaultConfig(accountId, encryptionConfigId);
+        vaultService.decryptVaultConfigSecrets(accountId, (VaultConfig) secretManagerConfig, maskSecrets);
         break;
       case AWS_SECRETS_MANAGER:
-        encryptionConfig = secretsManagerService.getAwsSecretsManagerConfig(accountId, encryptionConfigId);
-        break;
-      case LOCAL:
-        encryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
+        secretsManagerService.decryptAsmConfigSecrets(
+            accountId, (AwsSecretsManagerConfig) secretManagerConfig, maskSecrets);
         break;
       case AZURE_VAULT:
-        encryptionConfig = azureSecretsManagerService.getEncryptionConfig(accountId, secretManagerConfig.getUuid());
+        azureSecretsManagerService.decryptAzureConfigSecrets((AzureVaultConfig) secretManagerConfig, maskSecrets);
         break;
       case CYBERARK:
-        encryptionConfig = cyberArkService.getConfig(accountId, secretManagerConfig.getUuid());
+        cyberArkService.decryptCyberArkConfigSecrets(accountId, (CyberArkConfig) secretManagerConfig, maskSecrets);
+        break;
+      case LOCAL:
         break;
       default:
         throw new IllegalArgumentException("Encryption type " + encryptionType + " is not valid");
     }
-
-    return encryptionConfig;
   }
 
   @Override
@@ -249,44 +264,29 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
             defaultSet = secretManagerConfig.isDefault() || defaultSet;
             rv.add(secretManagerConfig);
           }
-
-          Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
-                                                        .filter(EncryptedDataKeys.accountId, accountId)
-                                                        .filter(EncryptedDataKeys.kmsId, secretManagerConfig.getUuid());
-          secretManagerConfig.setNumOfEncryptedValue((int) encryptedDataQuery.count());
-
-          switch (secretManagerConfig.getEncryptionType()) {
-            case AWS_SECRETS_MANAGER:
-              secretsManagerService.decryptAsmConfigSecrets(
-                  accountId, (AwsSecretsManagerConfig) secretManagerConfig, maskSecret);
-              break;
-            case KMS:
-              kmsService.decryptKmsConfigSecrets(accountId, (KmsConfig) secretManagerConfig, maskSecret);
-              break;
-            case GCP_KMS:
-              gcpSecretsManagerService.decryptGcpConfigSecrets((GcpKmsConfig) secretManagerConfig, maskSecret);
-              break;
-            case VAULT:
-              vaultService.decryptVaultConfigSecrets(accountId, (VaultConfig) secretManagerConfig, maskSecret);
-              break;
-            case AZURE_VAULT:
-              azureSecretsManagerService.decryptAzureConfigSecrets((AzureVaultConfig) secretManagerConfig, maskSecret);
-              break;
-            case CYBERARK:
-              cyberArkService.decryptCyberArkConfigSecrets(accountId, (CyberArkConfig) secretManagerConfig, maskSecret);
-              break;
-            default:
-              break;
-          }
+          secretManagerConfig.setNumOfEncryptedValue(getEncryptedDataCount(accountId, secretManagerConfig.getUuid()));
+          decryptEncryptionConfigSecrets(accountId, secretManagerConfig, maskSecret);
         }
       }
       SecretManagerConfig globalSecretManager = getDefaultGlobalSecretManager(globalSecretManagerConfigList, accountId);
       if (globalSecretManager != null) {
         globalSecretManager.setDefault(!defaultSet);
         rv.add(globalSecretManager);
+      } else if (encryptionType == null) {
+        SecretManagerConfig localSecretManagerConfig = localEncryptionService.getEncryptionConfig(accountId);
+        localSecretManagerConfig.setNumOfEncryptedValue(
+            getEncryptedDataCount(accountId, localSecretManagerConfig.getUuid()));
+        rv.add(localSecretManagerConfig);
       }
     }
     return rv;
+  }
+
+  private int getEncryptedDataCount(String accountId, String kmsId) {
+    Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
+                                                  .filter(EncryptedDataKeys.accountId, accountId)
+                                                  .filter(EncryptedDataKeys.kmsId, kmsId);
+    return (int) encryptedDataQuery.count();
   }
 
   private SecretManagerConfig getDefaultGlobalSecretManager(
