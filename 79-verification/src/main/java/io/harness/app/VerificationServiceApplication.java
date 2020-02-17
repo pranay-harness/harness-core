@@ -378,7 +378,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
     final ScheduledThreadPoolExecutor serviceGuardExecutor =
         new ScheduledThreadPoolExecutor(15, new ThreadFactoryBuilder().setNameFormat("Iterator-ServiceGuard").build());
     registerIterator(injector, serviceGuardExecutor, new ServiceGuardDataCollectionJob(),
-        AccountKeys.serviceGuardDataCollectionIteration, ofMinutes(2), 7);
+        AccountKeys.serviceGuardDataCollectionIteration, ofMinutes(1), 7);
     registerIterator(injector, serviceGuardExecutor, new ServiceGuardLogAnalysisJob(),
         AccountKeys.serviceGuardDataAnalysisIteration, ofMinutes(1), 7);
     registerIterator(injector, serviceGuardExecutor, new CVDataCollectionJob(),
