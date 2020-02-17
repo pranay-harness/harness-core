@@ -109,7 +109,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = YOGESH)
+  @Owner(developers = YOGESH, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldFetchTerraformTargets() throws Exception {
     final String accountId = terraformInfrastructureProvisioner.getAccountId();
