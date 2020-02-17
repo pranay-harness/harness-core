@@ -53,7 +53,7 @@ public class SecretManagerConfigServiceTest extends WingsBaseTest {
     assertThat(secretManagerConfig.getAccountId()).isEqualTo(GLOBAL_ACCOUNT_ID);
 
     verify(featureFlagService, times(1)).isEnabled(FeatureName.SWITCH_GLOBAL_TO_GCP_KMS, accountId);
-    verify(kmsService, times(1)).getKmsConfig(accountId, configId);
+    verify(kmsService, times(1)).decryptKmsConfigSecrets(accountId, kmsConfig, false);
   }
 
   @Test
@@ -80,7 +80,7 @@ public class SecretManagerConfigServiceTest extends WingsBaseTest {
     assertThat(secretManagerConfig.getAccountId()).isEqualTo(GLOBAL_ACCOUNT_ID);
 
     verify(featureFlagService, times(1)).isEnabled(FeatureName.SWITCH_GLOBAL_TO_GCP_KMS, accountId);
-    verify(gcpSecretsManagerService, times(1)).getGcpKmsConfig(accountId, configId);
+    verify(gcpSecretsManagerService, times(1)).decryptGcpConfigSecrets(gcpKmsConfig, false);
   }
 
   @Test
@@ -108,7 +108,7 @@ public class SecretManagerConfigServiceTest extends WingsBaseTest {
     assertThat(secretManagerConfig.getAccountId()).isEqualTo(GLOBAL_ACCOUNT_ID);
 
     verify(featureFlagService, times(1)).isEnabled(FeatureName.SWITCH_GLOBAL_TO_GCP_KMS, accountId);
-    verify(kmsService, times(1)).getKmsConfig(accountId, kmsConfigId);
+    verify(kmsService, times(1)).decryptKmsConfigSecrets(accountId, kmsConfig, false);
   }
 
   @Test

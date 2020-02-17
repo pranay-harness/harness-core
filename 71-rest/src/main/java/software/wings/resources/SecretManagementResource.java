@@ -113,6 +113,15 @@ public class SecretManagementResource {
   }
 
   @GET
+  @Path("/get-config")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SecretManagerConfig> getEncryptionConfig(@QueryParam("accountId") final String accountId,
+      @QueryParam("secretsManagerConfigId") final String secretsManagerConfigId) {
+    return new RestResponse<>(secretManager.getSecretManager(accountId, secretsManagerConfigId));
+  }
+
+  @GET
   @Path("/transition-config")
   @Timed
   @ExceptionMetered

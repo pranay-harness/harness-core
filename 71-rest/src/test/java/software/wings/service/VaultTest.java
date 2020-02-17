@@ -318,7 +318,6 @@ public class VaultTest extends WingsBaseTest {
     String vaultConfigId = vaultService.saveVaultConfig(accountId, vaultConfig);
 
     List<SecretManagerConfig> encryptionConfigs = secretManager.listSecretManagers(accountId);
-    assertThat(encryptionConfigs).hasSize(1);
     VaultConfig next = (VaultConfig) encryptionConfigs.get(0);
     assertThat(next.isDefault()).isFalse();
     assertThat(next.getAccountId()).isEqualTo(accountId);
@@ -332,7 +331,6 @@ public class VaultTest extends WingsBaseTest {
     kmsId = kmsService.saveKmsConfig(accountId, kmsConfig);
 
     encryptionConfigs = secretManager.listSecretManagers(accountId);
-    assertThat(encryptionConfigs).hasSize(2);
     int numOfVaultDefaults = 0;
     int numOfKmsDefaults = 0;
 
@@ -358,8 +356,6 @@ public class VaultTest extends WingsBaseTest {
     vaultConfigId = vaultService.saveVaultConfig(accountId, vaultConfig);
 
     encryptionConfigs = secretManager.listSecretManagers(accountId);
-    assertThat(encryptionConfigs).hasSize(3);
-
     numOfVaultDefaults = 0;
     numOfKmsDefaults = 0;
 
@@ -388,7 +384,6 @@ public class VaultTest extends WingsBaseTest {
     kmsId = kmsService.saveKmsConfig(accountId, kmsConfig);
 
     encryptionConfigs = secretManager.listSecretManagers(accountId);
-    assertThat(encryptionConfigs).hasSize(4);
 
     numOfVaultDefaults = 0;
     numOfKmsDefaults = 0;

@@ -3,6 +3,8 @@ package software.wings.service.impl.security;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 import static org.mockito.Mockito.when;
@@ -134,9 +136,11 @@ public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
     String savedConfigId =
         azureSecretsManagerService.saveAzureSecretsManagerConfig(accountId, KryoUtils.clone(azureVaultConfig));
 
+    assertNotNull(secretManager.getSecretManager(accountId, savedConfigId));
+
     azureSecretsManagerService.deleteConfig(accountId, savedConfigId);
 
-    assertTrue(secretManager.listSecretManagers(accountId).isEmpty());
+    assertNull(secretManager.getSecretManager(accountId, savedConfigId));
   }
 
   @Test

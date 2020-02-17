@@ -30,7 +30,7 @@ import java.util.Set;
  * Created by rsingh on 10/30/17.
  */
 public interface SecretManager extends OwnedByAccount {
-  String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Manager";
+  String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Secrets Manager";
   String ENCRYPTED_FIELD_MASK = "*******";
   String ACCOUNT_ID_KEY = "accountId";
   String SECRET_NAME_KEY = "name";
@@ -40,6 +40,8 @@ public interface SecretManager extends OwnedByAccount {
   String ENCRYPTION_TYPE_KEY = "encryptionType";
 
   List<SecretManagerConfig> listSecretManagers(String accountId);
+
+  SecretManagerConfig getSecretManager(String accountId, String kmsId);
 
   EncryptionType getEncryptionType(String accountId);
 
