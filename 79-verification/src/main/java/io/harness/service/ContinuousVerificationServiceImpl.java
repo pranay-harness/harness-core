@@ -672,7 +672,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
             long startTime =
                 TimeUnit.MINUTES.toMillis(getCollectionStartTimeForLogs(logsCVConfiguration, maxCVCollectionMinute));
-            long endTime = startTime + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES - 1);
+            long endTime = startTime + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES / 3) - 1;
 
             if (PREDICTIVE == cvConfiguration.getComparisonStrategy()
                 && maxCVCollectionMinute >= logsCVConfiguration.getBaselineEndMinute()) {

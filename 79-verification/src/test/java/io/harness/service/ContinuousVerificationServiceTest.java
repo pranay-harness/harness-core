@@ -3,7 +3,6 @@ package io.harness.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PRANJAL;
@@ -390,13 +389,13 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertThat(delegateTasks).isEmpty();
 
-    logsCVConfiguration.setBaselineStartMinute(currentMinute - 2);
+    logsCVConfiguration.setExactBaselineStartMinute(currentMinute - 2);
     continuousVerificationService.triggerLogDataCollection(accountId);
     delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertThat(delegateTasks).isEmpty();
 
-    logsCVConfiguration.setBaselineStartMinute(currentMinute - 20);
+    logsCVConfiguration.setExactBaselineStartMinute(currentMinute - 20);
 
     continuousVerificationService.triggerLogDataCollection(accountId);
     delegateTasks =
@@ -409,7 +408,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testLogsCollectionBaselineInFuture() throws IOException {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
@@ -428,8 +427,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(sumoDataCollectionInfo.getStartTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
     assertThat(sumoDataCollectionInfo.getEndTime())
-        .isEqualTo(TimeUnit.MINUTES.toMillis(
-            logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1));
+        .isEqualTo(
+            TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES / 3)
+            - 1);
 
     assertThat(sumoDataCollectionInfo.getSumoConfig()).isEqualTo(sumoConfig);
     assertThat(sumoDataCollectionInfo.getCvConfigId()).isEqualTo(cvConfigId);
@@ -439,9 +439,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testLogsCollectionBaselineInFutureDatadogLog() throws IOException {
+  public void testLogsCollectionBaselineInFutureDatadogLog() {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     logger.info("currentMin: {}", currentMinute);
 
@@ -455,8 +455,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(customLogDataCollectionInfo.getStartTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
     assertThat(customLogDataCollectionInfo.getEndTime())
-        .isEqualTo(TimeUnit.MINUTES.toMillis(
-            logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1));
+        .isEqualTo(
+            TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES / 3)
+            - 1);
 
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
     assertThat(delegateTask.getAppId()).isEqualTo(appId);
@@ -525,8 +526,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(sumoDataCollectionInfo.getStartTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
     assertThat(sumoDataCollectionInfo.getEndTime())
-        .isEqualTo(TimeUnit.MINUTES.toMillis(
-            logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1));
+        .isEqualTo(
+            TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES / 3)
+            - 1);
 
     // save some log and trigger again
     long numOfMinutesSaved = 30;
@@ -558,8 +560,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(sumoDataCollectionInfo.getStartTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved + 1));
     assertThat(sumoDataCollectionInfo.getEndTime())
-        .isEqualTo(TimeUnit.MINUTES.toMillis(
-            logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES + numOfMinutesSaved));
+        .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()
+                       + CRON_POLL_INTERVAL_IN_MINUTES / 3 + numOfMinutesSaved + 1)
+            - 1);
   }
 
   @Test
@@ -609,8 +612,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(customLogDataCollectionInfo.getStartTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
     assertThat(customLogDataCollectionInfo.getEndTime())
-        .isEqualTo(TimeUnit.MINUTES.toMillis(
-            logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1));
+        .isEqualTo(
+            TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES / 3)
+            - 1);
 
     // save some log and trigger again
     long numOfMinutesSaved = 30;
@@ -641,8 +645,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(customLogDataCollectionInfo.getStartTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved + 1));
     assertThat(customLogDataCollectionInfo.getEndTime())
-        .isEqualTo(TimeUnit.MINUTES.toMillis(
-            logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES + numOfMinutesSaved));
+        .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()
+                       + CRON_POLL_INTERVAL_IN_MINUTES / 3 + numOfMinutesSaved + 1)
+            - 1);
   }
 
   @Test
@@ -669,8 +674,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(customLogDataCollectionInfo.getStartTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
     assertThat(customLogDataCollectionInfo.getEndTime())
-        .isEqualTo(TimeUnit.MINUTES.toMillis(
-            logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1));
+        .isEqualTo(
+            TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES / 3)
+            - 1);
 
     // save some log and trigger again
     long numOfMinutesSaved = 70;
@@ -690,7 +696,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testTriggerLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -717,7 +723,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testTriggerDatadogLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -1500,7 +1506,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
     List<LearningEngineAnalysisTask> feedbackTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
     assertThat(feedbackTasks).hasSize(1);
@@ -1523,7 +1529,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
     List<LearningEngineAnalysisTask> feedbackTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
     assertThat(feedbackTasks).hasSize(1);
@@ -1585,7 +1591,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
     assertThat(learningEngineAnalysisTasks).hasSize(1);
@@ -1702,7 +1708,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testLogsDataCollectionAfter2Hours() throws Exception {
+  public void testLogsDataCollectionAfter2Hours() {
     long currentTime = Timestamp.currentMinuteBoundary();
 
     LogsCVConfiguration sumoConfig = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
@@ -1720,7 +1726,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     // here it brings it closer to the actual 15min boundary
     sumoConfig.setBaselineStartMinute(expectedStart);
-    long expectedEnd = sumoConfig.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1;
+    long expectedEnd =
+        TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES / 3) - 1;
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     continuousVerificationService.triggerLogDataCollection(accountId);
@@ -1728,7 +1735,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     verify(delegateService).queueTask(taskCaptor.capture());
     SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertThat(TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute())).isEqualTo(info.getStartTime());
-    assertThat(TimeUnit.MINUTES.toMillis(expectedEnd)).isEqualTo(info.getEndTime());
+    assertThat(expectedEnd).isEqualTo(info.getEndTime());
   }
 
   @Test
@@ -1796,7 +1803,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(dataRecord);
     long expectedStart = currentTime - TimeUnit.MINUTES.toMillis(60) + TimeUnit.MINUTES.toMillis(1);
 
-    long expectedEnd = expectedStart + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES - 1);
+    long expectedEnd = expectedStart + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES / 3) - 1;
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     continuousVerificationService.triggerLogDataCollection(accountId);
@@ -1840,7 +1847,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testLogsDataCollectionBaselineEndMoreThan2Hours() throws Exception {
+  public void testLogsDataCollectionBaselineEndMoreThan2Hours() {
     long currentTime = Timestamp.currentMinuteBoundary();
 
     LogsCVConfiguration sumoConfig = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
@@ -1853,7 +1860,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     // here it brings it closer to the actual 15min boundary
     sumoConfig.setBaselineStartMinute(expectedStart);
-    long expectedEnd = sumoConfig.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1;
+    long expectedEnd =
+        TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES / 3) - 1;
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     continuousVerificationService.triggerLogDataCollection(accountId);
@@ -1861,7 +1869,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     verify(delegateService).queueTask(taskCaptor.capture());
     SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertThat(TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute())).isEqualTo(info.getStartTime());
-    assertThat(TimeUnit.MINUTES.toMillis(expectedEnd)).isEqualTo(info.getEndTime());
+    assertThat(expectedEnd).isEqualTo(info.getEndTime());
   }
 
   @Test
@@ -1901,7 +1909,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
 
     List<LearningEngineAnalysisTask> tasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
@@ -1947,7 +1955,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
 
     List<LearningEngineAnalysisTask> tasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
@@ -2628,7 +2636,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     // initally there should be no tasks even if we trigger
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
     assertThat(learningEngineAnalysisTasks).isEmpty();
@@ -2643,7 +2651,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(oldLogAnalysisRecord);
 
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
                                       .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
                                       .asList();
     assertThat(learningEngineAnalysisTasks).hasSize(1);
@@ -2781,7 +2789,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     // initally there should be no tasks even if we trigger
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
     assertThat(learningEngineAnalysisTasks).isEmpty();
@@ -2811,7 +2819,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(oldLERecord);
 
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
                                       .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
                                       .asList();
     assertThat(learningEngineAnalysisTasks).isEmpty();
@@ -2826,7 +2834,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     // initally there should be no tasks even if we trigger
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
     assertThat(learningEngineAnalysisTasks).isEmpty();
@@ -2850,7 +2858,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(newLogMLAnalysisRecord);
 
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
                                       .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
                                       .asList();
     assertThat(learningEngineAnalysisTasks).isEmpty();
@@ -2888,7 +2896,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     // behavior under test
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
     assertThat(learningEngineAnalysisTasks).isEmpty();
