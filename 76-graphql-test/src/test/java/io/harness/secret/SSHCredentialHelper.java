@@ -61,7 +61,7 @@ public class SSHCredentialHelper {
     KerberosCredentialResult secret;
   }
 
-  public String CreateSSHCredential() {
+  public String createSSHCredential() {
     final Randomizer.Seed seed = new Randomizer.Seed(0);
     final OwnerManager.Owners owners = ownerManager.create();
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);

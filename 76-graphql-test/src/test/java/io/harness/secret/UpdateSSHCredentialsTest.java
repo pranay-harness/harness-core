@@ -37,7 +37,7 @@ public class UpdateSSHCredentialsTest extends GraphQLTest {
     final Randomizer.Seed seed = new Randomizer.Seed(0);
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     accountId = account.getUuid();
-    secretId = sshCredentialHelper.CreateSSHCredential();
+    secretId = sshCredentialHelper.createSSHCredential();
   }
   private String updateMutationInput(String variable) {
     String query = $GQL(/*

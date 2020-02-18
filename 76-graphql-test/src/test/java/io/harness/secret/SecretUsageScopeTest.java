@@ -41,7 +41,7 @@ public class SecretUsageScopeTest extends GraphQLTest {
     final OwnerManager.Owners owners = ownerManager.create();
     account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     accountId = account.getUuid();
-    secretId = winRMCredentialHelper.CreateWinRMCredential();
+    secretId = winRMCredentialHelper.createWinRMCredential();
   }
 
   private String getUpdateWinRMCredentialWithScope() {
