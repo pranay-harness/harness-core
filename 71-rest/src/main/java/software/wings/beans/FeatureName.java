@@ -75,7 +75,8 @@ public enum FeatureName {
   ADD_WORKFLOW_FORMIK,
   CV_INSTANA,
   CUSTOM_APM_CV_TASK,
-  CUSTOM_APM_24_X_7_CV_TASK;
+  CUSTOM_APM_24_X_7_CV_TASK,
+  LOGZ_ENABLE_UI;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
