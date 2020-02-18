@@ -20,8 +20,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.ccm.BillingReportConfig;
-import io.harness.ccm.CCMSettingService;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -108,7 +106,6 @@ public class SettingResource {
   @Inject private YamlGitService yamlGitService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private K8sClusterConfigFactory k8sClusterConfigFactory;
-  @Inject private CCMSettingService ccmSettingService;
 
   /**
    * List.
@@ -417,21 +414,6 @@ public class SettingResource {
             .withValue(value);
 
     return new RestResponse<>(settingsService.validateConnectivity(settingAttribute.build()));
-  }
-
-  /**
-   * Validates AWS S3 Bucket Config
-   *
-   * @param billingReportConfig
-   * @return Validation Result
-   */
-  @POST
-  @Path("validate-aws-s3-config")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<ValidationResult> validateAwsS3Permissions(BillingReportConfig billingReportConfig,
-      @QueryParam("accountId") String accountId, @QueryParam("settingId") String settingId) {
-    return new RestResponse<>(ccmSettingService.validateS3SyncConfig(billingReportConfig, accountId, settingId));
   }
 
   /**

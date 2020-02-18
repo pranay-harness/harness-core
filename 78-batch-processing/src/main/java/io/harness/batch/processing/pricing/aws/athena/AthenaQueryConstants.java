@@ -1,11 +1,10 @@
 package io.harness.batch.processing.pricing.aws.athena;
 
-import io.harness.ccm.CCMSettingServiceImpl;
-
 public class AthenaQueryConstants {
+  private static final String HARNESS_BASE_PATH = "HARNESS_BASE_PATH";
   private AthenaQueryConstants() {}
 
-  public static final String ATHENA_OUTPUT_BUCKET = "s3://" + CCMSettingServiceImpl.HARNESS_BASE_PATH + "/%s/%s";
+  public static final String ATHENA_OUTPUT_BUCKET = "s3://" + HARNESS_BASE_PATH + "/%s/%s";
   public static final String ATHENA_COMPUTE_INSTANCE_PRICE_QUERY =
       "SELECT line_item_blended_rate, line_item_blended_cost, "
       + " line_item_unblended_rate, line_item_unblended_cost, "
