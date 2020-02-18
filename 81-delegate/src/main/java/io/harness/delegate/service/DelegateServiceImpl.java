@@ -172,6 +172,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -1404,9 +1405,44 @@ public class DelegateServiceImpl implements DelegateService {
         ExecutorService executorService = delegateTask.isAsync()
             ? asyncExecutorService
             : delegateTask.getData().getTaskType().contains("BUILD") ? artifactExecutorService : syncExecutorService;
-        currentlyValidatingFutures.put(delegateTask.getUuid(), executorService.submit(delegateValidateTask));
+
+        Future<List<DelegateConnectionResult>> future =
+            executorService.submit(() -> delegateValidateTask.validationResults());
+        currentlyValidatingFutures.put(delegateTask.getUuid(), future);
+
+        DelegateValidateTask delegateAlternativeValidateTask =
+            getAlternativeDelegateValidateTask(delegateTaskEvent, delegateTask);
+        injector.injectMembers(delegateAlternativeValidateTask);
+
+        if (delegateAlternativeValidateTask != null) {
+          executorService.submit(() -> {
+            try {
+              List<DelegateConnectionResult> alternativeResults = delegateAlternativeValidateTask.validationResults();
+              if (alternativeResults == null) {
+                return;
+              }
+
+              List<DelegateConnectionResult> originalResults = future.get();
+
+              boolean original = originalResults.stream().allMatch(result -> result.isValidated());
+              boolean alternative = alternativeResults.stream().allMatch(result -> result.isValidated());
+
+              if (original != alternative) {
+                logger.error("The original validation {} is different from the alternative for task type {}", original,
+                    delegateTask.getData().getTaskType());
+              }
+            } catch (InterruptedException exception) {
+              logger.error("Comparison failed.", exception);
+              Thread.currentThread().interrupt();
+            } catch (RuntimeException | ExecutionException exception) {
+              logger.error("Comparison failed.", exception);
+            }
+          });
+        }
+
         updateCounterIfLessThanCurrent(maxValidatingFuturesCount, currentlyValidatingFutures.size());
         logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
+
       } else if (delegateId.equals(delegateTask.getDelegateId())) {
         applyDelegateSecretFunctor(delegatePackage);
         // Whitelisted. Proceed immediately.
@@ -1418,16 +1454,19 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  // TODO: This is temporary hack till Capability feature is tested thoroughly and this flag is removed.
   private DelegateValidateTask getDelegateValidateTask(DelegateTaskEvent delegateTaskEvent, DelegateTask delegateTask) {
-    if (isNotEmpty(delegateTask.getExecutionCapabilities())) {
-      return TaskType.valueOf(delegateTask.getData().getTaskType())
-          .getDelegateValidateTaskVersionForCapabilityFramework(
-              delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask.getUuid()));
-    }
     return TaskType.valueOf(delegateTask.getData().getTaskType())
         .getDelegateValidateTask(
             delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask.getUuid()));
+  }
+
+  private DelegateValidateTask getAlternativeDelegateValidateTask(
+      DelegateTaskEvent delegateTaskEvent, DelegateTask delegateTask) {
+    if (isNotEmpty(delegateTask.getExecutionCapabilities())) {
+      return TaskType.valueOf(delegateTask.getData().getTaskType())
+          .getDelegateValidateTaskVersionForCapabilityFramework(delegateId, delegateTask, null);
+    }
+    return null;
   }
 
   private Consumer<List<DelegateConnectionResult>> getPostValidationFunction(
