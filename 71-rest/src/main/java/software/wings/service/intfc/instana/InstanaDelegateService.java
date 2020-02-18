@@ -21,6 +21,7 @@ public interface InstanaDelegateService {
   @DelegateTaskType(TaskType.INSTANA_VALIDATE_CONFIGURATION_TASK)
   boolean validateConfig(InstanaConfig instanaConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
+  @DelegateTaskType(TaskType.INSTANA_GET_TRACE_METRICS)
   InstanaAnalyzeMetrics getInstanaTraceMetrics(InstanaConfig instanaConfig,
       List<EncryptedDataDetail> encryptedDataDetails, InstanaAnalyzeMetricRequest instanaAnalyzeMetricRequest,
       ThirdPartyApiCallLog thirdPartyApiCallLog);

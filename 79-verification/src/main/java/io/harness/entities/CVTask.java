@@ -52,6 +52,7 @@ public class CVTask implements PersistentEntity, UuidAware, CreatedAtAware, Upda
   @JsonIgnore @SchemaIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
   @PrePersist
   public void onUpdate() {
-    validUntil = Date.from(OffsetDateTime.now().plusMonths(VerificationConstants.CV_TASK_TTL_MONTHS).toInstant());
+    // better to add days as plus month can vary and add complications to testing etc.
+    validUntil = Date.from(OffsetDateTime.now().plusDays(VerificationConstants.CV_TASK_TTL_MONTHS * 30).toInstant());
   }
 }

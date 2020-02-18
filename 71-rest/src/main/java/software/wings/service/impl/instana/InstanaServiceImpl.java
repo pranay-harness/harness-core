@@ -1,14 +1,18 @@
 package software.wings.service.impl.instana;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.INSTANA_DOCKER_PLUGIN;
+import static software.wings.common.VerificationConstants.INSTANA_GROUPBY_TAG_TRACE_NAME;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDERV2;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +28,7 @@ import software.wings.service.intfc.instana.InstanaDelegateService;
 import software.wings.service.intfc.instana.InstanaService;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
@@ -46,42 +51,90 @@ public class InstanaServiceImpl implements InstanaService {
                                           .build();
     InstanaConfig instanaConfig = (InstanaConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(instanaConfig);
-
-    InstanaInfraMetricRequest infraMetricRequest =
-        InstanaInfraMetricRequest.builder()
-            .timeframe(InstanaTimeFrame.builder()
-                           .windowSize(TimeUnit.MINUTES.toMillis(15))
-                           .to(Timestamp.currentMinuteBoundary())
-                           .build())
-            .metrics(setupTestNodeData.getMetrics())
-            .plugin(INSTANA_DOCKER_PLUGIN)
-            .rollup(60)
-            .query(setupTestNodeData.getQuery().replace(
-                VERIFICATION_HOST_PLACEHOLDERV2, "\"" + setupTestNodeData.getInstanceName() + "\""))
-            .build();
+    InstanaDelegateService instanaDelegateService =
+        delegateProxyFactory.get(InstanaDelegateService.class, syncTaskContext);
     VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =
         VerificationNodeDataSetupResponse.builder().build();
     VerificationNodeDataSetupResponse.VerificationLoadResponse verificationLoadResponse =
         VerificationNodeDataSetupResponse.VerificationLoadResponse.builder().isLoadPresent(false).build();
-    InstanaDelegateService instanaDelegateService =
-        delegateProxyFactory.get(InstanaDelegateService.class, syncTaskContext);
+    List<Object> load = new ArrayList<>();
+    InstanaTimeFrame timeFrame = InstanaTimeFrame.builder()
+                                     .windowSize(TimeUnit.MINUTES.toMillis(15))
+                                     .to(Timestamp.currentMinuteBoundary())
+                                     .build();
+    boolean isLoadPresent = false;
+    if (isNotEmpty(setupTestNodeData.getQuery())) {
+      InstanaInfraMetricRequest infraMetricRequest =
+          InstanaInfraMetricRequest.builder()
+              .timeframe(timeFrame)
+              .metrics(setupTestNodeData.getMetrics())
+              .plugin(INSTANA_DOCKER_PLUGIN)
+              .rollup(60)
+              .query(setupTestNodeData.getQuery().replace(
+                  VERIFICATION_HOST_PLACEHOLDERV2, "\"" + setupTestNodeData.getInstanceName() + "\""))
+              .build();
+
+      try {
+        ThirdPartyApiCallLog apiCallLog =
+            createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid());
+        InstanaInfraMetrics infraMetrics =
+            instanaDelegateService.getInfraMetrics(instanaConfig, encryptionDetails, infraMetricRequest, apiCallLog);
+        if (infraMetrics.getItems().size() > 1) {
+          throw new VerificationOperationException(ErrorCode.INSTANA_CONFIGURATION_ERROR,
+              "Multiple time series values are returned for query '" + setupTestNodeData.getQuery()
+                  + "'. Please add more filters to your query to return only one time series.");
+        }
+        if (infraMetrics.getItems().size() == 1) {
+          isLoadPresent = true;
+        }
+        load.add(infraMetrics);
+      } catch (DataCollectionException e) {
+        verificationNodeDataSetupResponse.setProviderReachable(false);
+      }
+    }
+    List<InstanaTagFilter> tagFilters = new ArrayList<>(setupTestNodeData.getTagFilters());
+    if (isNotEmpty(setupTestNodeData.getHostTagFilter())) {
+      tagFilters.add(InstanaTagFilter.builder()
+                         .name(setupTestNodeData.getHostTagFilter())
+                         .value(setupTestNodeData.getInstanceElement().getHostName())
+                         .operator(InstanaTagFilter.Operator.EQUALS)
+                         .build());
+    }
+    List<InstanaAnalyzeMetricRequest.Metric> metrics = new ArrayList<>();
+    InstanaUtils.getApplicationMetricTemplateMap().forEach(
+        (metricName, instanaMetricTemplate)
+            -> metrics.add(InstanaAnalyzeMetricRequest.Metric.builder()
+                               .metric(instanaMetricTemplate.getMetricName())
+                               .aggregation(instanaMetricTemplate.getAggregation())
+                               .granularity(60)
+                               .build()));
+    InstanaAnalyzeMetricRequest.Group group =
+        InstanaAnalyzeMetricRequest.Group.builder().groupByTag(INSTANA_GROUPBY_TAG_TRACE_NAME).build();
+    InstanaAnalyzeMetricRequest instanaAnalyzeMetricRequest = InstanaAnalyzeMetricRequest.builder()
+                                                                  .timeFrame(timeFrame)
+                                                                  .tagFilters(tagFilters)
+                                                                  .group(group)
+                                                                  .metrics(metrics)
+                                                                  .build();
+
     try {
       ThirdPartyApiCallLog apiCallLog = createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid());
-      InstanaInfraMetrics infraMetrics =
-          instanaDelegateService.getInfraMetrics(instanaConfig, encryptionDetails, infraMetricRequest, apiCallLog);
-      verificationNodeDataSetupResponse.setProviderReachable(true);
-      boolean isLoadPresent =
-          !infraMetrics.getItems().isEmpty() && !infraMetrics.getItems().get(0).getMetrics().isEmpty();
-      verificationLoadResponse.setLoadPresent(isLoadPresent);
-      if (isLoadPresent) {
-        verificationLoadResponse.setLoadResponse(infraMetrics);
-        verificationNodeDataSetupResponse.setDataForNode(infraMetrics);
+      InstanaAnalyzeMetrics instanaAnalyzeMetrics = instanaDelegateService.getInstanaTraceMetrics(
+          instanaConfig, encryptionDetails, instanaAnalyzeMetricRequest, apiCallLog);
+      if (instanaAnalyzeMetrics.getItems().size() > 0) {
+        isLoadPresent = true;
       }
-      verificationNodeDataSetupResponse.setLoadResponse(verificationLoadResponse);
+      verificationNodeDataSetupResponse.setProviderReachable(true);
+      load.add(instanaAnalyzeMetrics);
     } catch (DataCollectionException e) {
       verificationNodeDataSetupResponse.setProviderReachable(false);
     }
-
+    if (isNotEmpty(load) && isLoadPresent) {
+      verificationNodeDataSetupResponse.setDataForNode(load);
+      verificationLoadResponse.setLoadPresent(true);
+      verificationLoadResponse.setLoadResponse(load);
+      verificationNodeDataSetupResponse.setLoadResponse(verificationLoadResponse);
+    }
     return verificationNodeDataSetupResponse;
   }
 }

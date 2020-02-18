@@ -21,6 +21,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
+import software.wings.beans.FeatureName;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -108,6 +109,20 @@ public class CVConfiguration extends Base implements NameAccess {
   @JsonIgnore
   public DataCollectionInfoV2 toDataCollectionInfo() {
     throw new UnsupportedOperationException("DataCollectionInfo creation is not supported for this type.");
+  }
+
+  @JsonIgnore
+  public boolean isCVTaskBasedCollectionEnabled() {
+    return false;
+  }
+  @JsonIgnore
+  public boolean isCVTaskBasedCollectionFeatureFlagged() {
+    return false;
+  }
+  @JsonIgnore
+  public FeatureName getCVTaskBasedCollectionFeatureFlag() {
+    throw new UnsupportedOperationException(
+        "This needs to be implemented if isCVTaskBasedCollectionEnabled returns true");
   }
 
   protected void fillDataCollectionInfoWithCommonFields(DataCollectionInfoV2 dataCollectionInfo) {

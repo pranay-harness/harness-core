@@ -2,11 +2,13 @@ package software.wings.delegatetasks.cv;
 
 import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 import static software.wings.common.VerificationConstants.INSTANA_DOCKER_PLUGIN;
+import static software.wings.common.VerificationConstants.INSTANA_GROUPBY_TAG_TRACE_NAME;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDERV2;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.MetricElement;
 import software.wings.service.impl.instana.InstanaAnalyzeMetricRequest;
 import software.wings.service.impl.instana.InstanaAnalyzeMetrics;
@@ -28,7 +30,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class InstanaDataCollector implements MetricsDataCollector<InstanaDataCollectionInfo> {
-  public static final String INFRASTRUCTURE = "Infrastructure";
+  private static final String INFRASTRUCTURE = "Infrastructure";
+
   @Inject private InstanaDelegateService instanaDelegateService;
   private InstanaDataCollectionInfo dataCollectionInfo;
   private DataCollectionExecutionContext dataCollectionExecutionContext;
@@ -71,7 +74,7 @@ public class InstanaDataCollector implements MetricsDataCollector<InstanaDataCol
                                .granularity(60)
                                .build()));
     InstanaAnalyzeMetricRequest.Group group =
-        InstanaAnalyzeMetricRequest.Group.builder().groupByTag("trace.name").build();
+        InstanaAnalyzeMetricRequest.Group.builder().groupByTag(INSTANA_GROUPBY_TAG_TRACE_NAME).build();
     List<InstanaTagFilter> tagFilters = new ArrayList<>(dataCollectionInfo.getTagFilters());
     tagFilters.add(InstanaTagFilter.builder()
                        .name(dataCollectionInfo.getHostTagFilter())
@@ -135,31 +138,56 @@ public class InstanaDataCollector implements MetricsDataCollector<InstanaDataCol
 
   private List<MetricElement> getMetricElements(InstanaAnalyzeMetrics instanaAnalyzeMetrics, String host) {
     List<MetricElement> metricElements = new ArrayList<>();
+
     instanaAnalyzeMetrics.getItems().forEach(item -> {
-      MetricElement metricElement = MetricElement.builder()
-                                        .timestamp(item.getTimestamp())
-                                        .groupName(DEFAULT_GROUP_NAME)
-                                        .host(host)
-                                        .name(item.getName())
-                                        .build();
-      Map<String, Double> values = new HashMap<>();
-      // TODO: timeframe should be 1 min when implementing service guard for workflow value will always have one
-      // element.
+      Map<Long, MetricElement> metricElementsMap = new HashMap<>();
+
       Map<String, InstanaMetricTemplate> metricTemplateMap = InstanaUtils.getApplicationMetricTemplateMap();
-      item.getMetrics().forEach((metricName, value) -> {
-        metricName = metricName.split("\\.")[0]; // ex: latency.p99.60
-        values.put(metricTemplateMap.get(metricName).getDisplayName(), value.get(0).get(1).doubleValue());
-        Preconditions.checkState(value.size() <= 1, "metric size should less then 1 for metric name %s", metricName);
-        metricElement.setTimestamp(value.get(0).get(0).longValue()); // this will be same for all the values.
+      item.getMetrics().forEach((metricStr, values) -> {
+        String metricName = metricStr.split("\\.")[0]; // ex: latency.p99.60
+        values.forEach(value -> {
+          Long timestamp = value.get(0).longValue();
+          MetricElement metricElement = metricElementsMap.getOrDefault(timestamp,
+              MetricElement.builder()
+                  .timestamp(timestamp)
+                  .groupName(DEFAULT_GROUP_NAME)
+                  .host(host)
+                  .name(item.getName())
+                  .build());
+          metricElement.getValues().put(metricTemplateMap.get(metricName).getDisplayName(), value.get(1).doubleValue());
+          metricElementsMap.put(timestamp, metricElement);
+        });
       });
-      metricElement.setValues(values);
-      metricElements.add(metricElement);
+      metricElements.addAll(metricElementsMap.values());
     });
     return metricElements;
   }
 
   @Override
   public List<MetricElement> fetchMetrics() throws DataCollectionException {
-    throw new UnsupportedOperationException("Not supported");
+    List<InstanaAnalyzeMetricRequest.Metric> metrics = new ArrayList<>();
+    InstanaUtils.getApplicationMetricTemplateMap().forEach(
+        (metricName, instanaMetricTemplate)
+            -> metrics.add(InstanaAnalyzeMetricRequest.Metric.builder()
+                               .metric(instanaMetricTemplate.getMetricName())
+                               .aggregation(instanaMetricTemplate.getAggregation())
+                               .granularity(60)
+                               .build()));
+    InstanaAnalyzeMetricRequest.Group group =
+        InstanaAnalyzeMetricRequest.Group.builder().groupByTag(INSTANA_GROUPBY_TAG_TRACE_NAME).build();
+
+    InstanaAnalyzeMetricRequest instanaAnalyzeMetricRequest = InstanaAnalyzeMetricRequest.builder()
+                                                                  .metrics(metrics)
+                                                                  .group(group)
+                                                                  .tagFilters(dataCollectionInfo.getTagFilters())
+                                                                  .timeFrame(getTimeframeForTraceMetric())
+                                                                  .build();
+
+    InstanaAnalyzeMetrics instanaAnalyzeMetrics = instanaDelegateService.getInstanaTraceMetrics(
+        dataCollectionInfo.getInstanaConfig(), dataCollectionInfo.getEncryptedDataDetails(),
+        instanaAnalyzeMetricRequest, dataCollectionExecutionContext.createApiCallLog());
+    List<MetricElement> metricElements = new ArrayList<>();
+    metricElements.addAll(getMetricElements(instanaAnalyzeMetrics, VerificationConstants.DUMMY_HOST_NAME));
+    return metricElements;
   }
 }

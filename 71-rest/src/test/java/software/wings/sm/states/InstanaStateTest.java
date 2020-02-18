@@ -13,6 +13,7 @@ import com.google.common.collect.Sets;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.serializer.JsonUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,6 +33,7 @@ import software.wings.sm.StateType;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,6 +96,62 @@ public class InstanaStateTest extends APMStateVerificationTestBase {
     assertThat(instanaDataCollectionInfo.getHostsToGroupNameMap()).isEqualTo(hosts);
     assertThat(instanaDataCollectionInfo.getTagFilters()).isEqualTo(instanaTagFilters);
     assertThat(instanaDataCollectionInfo.getHostTagFilter()).isEqualTo("kubernetes.pod.name");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateDataCollectionInfo_withNullHostTagFilter() {
+    Map<String, String> hosts = new HashMap<>();
+    hosts.put("host1", "default");
+    instanaState.setTagFilters(null);
+    InstanaDataCollectionInfo instanaDataCollectionInfo =
+        (InstanaDataCollectionInfo) instanaState.createDataCollectionInfo(executionContext, hosts);
+    assertThat(instanaDataCollectionInfo.getTagFilters()).isEqualTo(Collections.emptyList());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testValidateConfig_whenValuesAreNull() {
+    instanaState.setMetrics(null);
+    List<InstanaTagFilter> instanaTagFilters = new ArrayList<>();
+    InstanaTagFilter invalid = InstanaTagFilter.builder().build();
+    instanaTagFilters.add(invalid);
+    instanaState.setTagFilters(instanaTagFilters);
+    instanaState.setHostTagFilter(null);
+    instanaState.setQuery(null);
+    String expected = "{\n"
+        + "  \"hostTagFilter\": \"hostTagFilter is a required field.\",\n"
+        + "  \"metrics\": \"select at least one metric value.\",\n"
+        + "  \"query\": \"query is a required field.\",\n"
+        + "  \"tagFilter.name\": \"tagFilter.name is a required field.\",\n"
+        + "  \"tagFilter.operator\": \"tagFilter.operator is a required field.\",\n"
+        + "  \"tagFilter.value\": \"tagFilter.value is a required field.\"\n"
+        + "}";
+    Map<String, String> errors = instanaState.validateFields();
+
+    assertThat(errors).isEqualTo(JsonUtils.asObject(expected, Map.class));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testValidateConfig_queryShouldContainHostPlaceholder() {
+    instanaState.setQuery("query.withouthostplaceholder");
+    String expected = "{\n"
+        + "  \"query\": \"query should contain ${host.hostName}\"\n"
+        + "}";
+    Map<String, String> errors = instanaState.validateFields();
+
+    assertThat(errors).isEqualTo(JsonUtils.asObject(expected, Map.class));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testValidateConfig_whenValuesAreValid() {
+    assertThat(instanaState.validateFields()).isEmpty();
   }
 
   @Test

@@ -20,8 +20,7 @@ public class InstanaCVConfigurationYamlHandler
 
     yaml.setType(StateType.INSTANA.name());
 
-    yaml.setQuery(bean.getQuery());
-    yaml.setMetrics(bean.getMetrics());
+    yaml.setTagFilters(bean.getTagFilters());
 
     return yaml;
   }
@@ -69,8 +68,7 @@ public class InstanaCVConfigurationYamlHandler
     InstanaCVConfigurationYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     super.toBean(changeContext, bean, appId, yamlFilePath);
-    bean.setQuery(yaml.getQuery());
-    bean.setMetrics(yaml.getMetrics());
+    bean.setTagFilters(yaml.getTagFilters());
     bean.setStateType(StateType.INSTANA);
   }
 }

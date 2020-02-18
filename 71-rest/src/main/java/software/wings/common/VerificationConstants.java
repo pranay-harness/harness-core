@@ -95,7 +95,7 @@ public class VerificationConstants {
       "${host}"; // we want to use VERIFICATION_HOST_PLACEHOLDERV2 everywhere now.
   public static final String VERIFICATION_HOST_PLACEHOLDERV2 = "${host.hostName}";
   public static final String INSTANA_DOCKER_PLUGIN = "docker";
-
+  public static final String INSTANA_GROUPBY_TAG_TRACE_NAME = "trace.name";
   public static final String STATIC_CLOUD_WATCH_METRIC_URL = "/configs/cloudwatch_metrics.yml";
 
   public static final String STACK_DRIVER_METRIC = "/configs/stackdriver_metrics.yml";

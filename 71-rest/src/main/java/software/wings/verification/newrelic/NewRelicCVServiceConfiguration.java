@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.verification.CVConfiguration;
@@ -51,6 +52,16 @@ public class NewRelicCVServiceConfiguration extends CVConfiguration {
             .build();
     fillDataCollectionInfoWithCommonFields(newRelicDataCollectionInfoV2);
     return newRelicDataCollectionInfoV2;
+  }
+
+  @Override
+  public boolean isCVTaskBasedCollectionFeatureFlagged() {
+    return true;
+  }
+
+  @Override
+  public FeatureName getCVTaskBasedCollectionFeatureFlag() {
+    return FeatureName.NEWRELIC_24_7_CV_TASK;
   }
 
   /**
