@@ -11,6 +11,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.service.impl.yaml.GitSyncErrorStatus;
 
 /**
  * @author rktummala on 12/15/17
@@ -32,6 +33,7 @@ public class GitSyncError extends Base {
   private String failureReason;
   private boolean fullSyncPath;
   private String lastAttemptedYaml;
+  private GitSyncErrorStatus status;
 
   @Builder
   public GitSyncError(String accountId, String yamlFilePath, String yamlContent, String gitCommitId, String changeType,
@@ -44,5 +46,6 @@ public class GitSyncError extends Base {
     this.failureReason = failureReason;
     this.fullSyncPath = fullSyncPath;
     this.lastAttemptedYaml = lastAttemptedYaml;
+    this.status = GitSyncErrorStatus.ACTIVE;
   }
 }
