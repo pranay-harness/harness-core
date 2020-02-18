@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.k8sLabel;
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
+import io.harness.ccm.cluster.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -16,6 +17,7 @@ import software.wings.graphql.schema.type.aggregation.k8sLabel.QLK8sLabelFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.Set;
 public class K8sLabelConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLK8sLabelFilter, QLNoOpSortCriteria, QLK8sLabelConnection> {
   @Inject K8sLabelQueryHelper k8sLabelQueryHelper;
+  @Inject K8sWorkloadDao k8sWorkloadDao;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -62,5 +65,27 @@ public class K8sLabelConnectionDataFetcher
   @Override
   protected QLK8sLabelFilter generateFilter(DataFetchingEnvironment environment, String key, String value) {
     return null;
+  }
+
+  // To fetch all labels (so that pagination is avoided)
+  public List<QLK8sLabel> fetchAllLabels(List<QLK8sLabelFilter> filters) {
+    Query<K8sWorkload> query = populateFilters(wingsPersistence, filters, K8sWorkload.class, true);
+    List<K8sWorkload> workloads = k8sWorkloadDao.list(query);
+    List<QLK8sLabel> fetchedLabels = new ArrayList<>();
+    Map<String, Set<String>> labels = new HashMap<>();
+    workloads.forEach(k8sWorkload -> {
+      if (k8sWorkload.getLabels() != null) {
+        k8sWorkload.getLabels().keySet().forEach(key -> {
+          if (!labels.containsKey(key)) {
+            labels.put(key, new HashSet<>());
+          }
+          labels.get(key).add(k8sWorkload.getLabels().get(key));
+        });
+      }
+    });
+
+    labels.keySet().forEach(key
+        -> fetchedLabels.add(QLK8sLabel.builder().name(key).values(labels.get(key).toArray(new String[0])).build()));
+    return fetchedLabels;
   }
 }

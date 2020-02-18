@@ -2,10 +2,6 @@ package software.wings.graphql.datafetcher.billing;
 
 import com.google.inject.Inject;
 
-import graphql.execution.MergedSelectionSet;
-import graphql.schema.DataFetchingFieldSelectionSet;
-import graphql.schema.GraphQLFieldDefinition;
-import graphql.schema.SelectedField;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -13,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.k8sLabel.K8sLabelConnectionDataFetcher;
-import software.wings.graphql.schema.query.QLK8sLabelQueryParameters;
 import software.wings.graphql.schema.type.QLK8sLabel;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
@@ -36,10 +31,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
@@ -147,12 +140,9 @@ public class BillingStatsFilterValuesDataFetcher
 
     // Fetching K8s labels if workload names are fetched
     if (!workloadNames.isEmpty()) {
-      k8sLabels =
-          k8sLabelConnectionDataFetcher
-              .fetchConnection(Arrays.asList(prepareLabelFilters(getClusterIdsFromFilters(queryData.getFilters()),
-                                   workloadNames.toArray(new String[0]), namespaces.toArray(new String[0]))),
-                  preparePageQueryParametersForK8sLabels(accountId), null)
-              .getNodes();
+      k8sLabels = k8sLabelConnectionDataFetcher.fetchAllLabels(
+          Arrays.asList(prepareLabelFilters(getClusterIdsFromFilters(queryData.getFilters()),
+              workloadNames.toArray(new String[0]), namespaces.toArray(new String[0]))));
     }
 
     filterValuesDataBuilder.cloudServiceNames(getEntity(BillingDataMetaDataFields.CLOUDSERVICENAME, cloudServiceNames))
@@ -208,38 +198,6 @@ public class BillingStatsFilterValuesDataFetcher
       builder.namespace(QLIdFilter.builder().operator(QLIdOperator.IN).values(namespaces).build());
     }
     return builder.build();
-  }
-
-  private QLK8sLabelQueryParameters preparePageQueryParametersForK8sLabels(String accountId) {
-    final DataFetchingFieldSelectionSet selectionSet = new DataFetchingFieldSelectionSet() {
-      public MergedSelectionSet get() {
-        return MergedSelectionSet.newMergedSelectionSet().build();
-      }
-      public Map<String, Map<String, Object>> getArguments() {
-        return Collections.emptyMap();
-      }
-      public Map<String, GraphQLFieldDefinition> getDefinitions() {
-        return Collections.emptyMap();
-      }
-      public boolean contains(String fieldGlobPattern) {
-        return false;
-      }
-      public SelectedField getField(String fieldName) {
-        return null;
-      }
-      public List<SelectedField> getFields() {
-        return Collections.emptyList();
-      }
-      public List<SelectedField> getFields(String fieldGlobPattern) {
-        return Collections.emptyList();
-      }
-    };
-    return QLK8sLabelQueryParameters.builder()
-        .accountId(accountId)
-        .limit(Integer.MAX_VALUE - 1)
-        .offset(0)
-        .selectionSet(selectionSet)
-        .build();
   }
 
   @Override

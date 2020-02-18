@@ -695,6 +695,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getString("CLUSTERID")).thenAnswer((Answer<String>) invocation -> CLUSTER1_ID);
     when(resultSet.getString("CLUSTERNAME")).thenAnswer((Answer<String>) invocation -> CLUSTER1_NAME);
     when(resultSet.getString("REGION")).thenAnswer((Answer<String>) invocation -> REGION1);
+    when(resultSet.getString("NAMESPACE")).thenAnswer((Answer<String>) invocation -> NAMESPACE1);
 
     when(resultSet.getTimestamp(BillingDataMetaDataFields.STARTTIME.getFieldName(), utils.getDefaultCalendar()))
         .thenAnswer((Answer<Timestamp>) invocation -> {

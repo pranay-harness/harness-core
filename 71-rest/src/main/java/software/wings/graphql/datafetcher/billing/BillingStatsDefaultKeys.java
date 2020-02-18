@@ -32,4 +32,5 @@ public class BillingStatsDefaultKeys {
   public static final String ENVIRONMENT = "Default_Environment";
   public static final String CLOUDPROVIDER = "Default_CloudProvider";
   public static final Double UNALLOCATEDCOST = 0.0;
+  public static final String TOKEN = ":";
 }

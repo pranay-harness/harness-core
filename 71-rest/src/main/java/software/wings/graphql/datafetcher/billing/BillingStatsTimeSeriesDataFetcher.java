@@ -119,6 +119,10 @@ public class BillingStatsTimeSeriesDataFetcher
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuUtilsPointMap = new LinkedHashMap<>();
 
     checkAndAddPrecedingZeroValuedData(queryData, resultSet, startTimeFromFilters, qlTimeDataPointMap);
+    // Checking if namespace should be appended to entity Id in order to distinguish between same workloadNames across
+    // Distinct namespaces
+    boolean addNamespaceToEntityId = queryData.groupByFields.contains(BillingDataMetaDataFields.WORKLOADNAME);
+    String additionalInfo = "";
 
     do {
       QLBillingTimeDataPointBuilder dataPointBuilder = QLBillingTimeDataPoint.builder();
@@ -159,14 +163,21 @@ public class BillingStatsTimeSeriesDataFetcher
             }
             break;
           case STRING:
-            final String entityId = resultSet.getString(field.getFieldName());
-            cpuPointBuilder.key(buildQLReference(field, entityId));
-            memoryPointBuilder.key(buildQLReference(field, entityId));
-            dataPointBuilder.key(buildQLReference(field, entityId));
-            cpuMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX", entityId));
-            cpuAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG", entityId));
-            memoryMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX", entityId));
-            memoryAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG", entityId));
+            if (addNamespaceToEntityId && field == BillingDataMetaDataFields.NAMESPACE) {
+              additionalInfo = resultSet.getString(field.getFieldName());
+              break;
+            }
+
+            String entityId = resultSet.getString(field.getFieldName());
+            String idWithInfo =
+                addNamespaceToEntityId ? entityId + BillingStatsDefaultKeys.TOKEN + additionalInfo : entityId;
+            cpuPointBuilder.key(buildQLReference(field, entityId, idWithInfo));
+            memoryPointBuilder.key(buildQLReference(field, entityId, idWithInfo));
+            dataPointBuilder.key(buildQLReference(field, entityId, idWithInfo));
+            cpuMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
+            cpuAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
+            memoryMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
+            memoryAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
             break;
           case TIMESTAMP:
             long time = resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime();
@@ -236,12 +247,20 @@ public class BillingStatsTimeSeriesDataFetcher
   private void checkAndAddPrecedingZeroValuedData(BillingDataQueryMetadata queryData, ResultSet resultSet,
       long startTimeFromFilters, Map<Long, List<QLBillingTimeDataPoint>> qlTimeDataPointMap) throws SQLException {
     if (resultSet != null && resultSet.next()) {
-      String id = "";
+      String entityId = "";
+      String idWithInfo = "";
+      String additionalInfo = "";
       String timeFieldName = BillingDataMetaDataFields.STARTTIME.getFieldName();
+      boolean addNamespaceToEntityId = queryData.groupByFields.contains(BillingDataMetaDataFields.WORKLOADNAME);
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field.getDataType()) {
           case STRING:
-            id = resultSet.getString(field.getFieldName());
+            if (addNamespaceToEntityId && field == BillingDataMetaDataFields.NAMESPACE) {
+              additionalInfo = resultSet.getString(field.getFieldName());
+              break;
+            }
+            entityId = resultSet.getString(field.getFieldName());
+            idWithInfo = addNamespaceToEntityId ? entityId + BillingStatsDefaultKeys.TOKEN + additionalInfo : entityId;
             break;
           case TIMESTAMP:
             timeFieldName = field.getFieldName();
@@ -252,14 +271,15 @@ public class BillingStatsTimeSeriesDataFetcher
       }
       if (checkStartTimeFilterIsValid(startTimeFromFilters)) {
         long timeOfFirstEntry = resultSet.getTimestamp(timeFieldName, utils.getDefaultCalendar()).getTime();
-        AddPrecedingZeroValuedData(queryData, qlTimeDataPointMap, id, timeOfFirstEntry, startTimeFromFilters);
+        AddPrecedingZeroValuedData(
+            queryData, qlTimeDataPointMap, entityId, idWithInfo, timeOfFirstEntry, startTimeFromFilters);
       }
     }
   }
 
   private void AddPrecedingZeroValuedData(BillingDataQueryMetadata queryData,
-      Map<Long, List<QLBillingTimeDataPoint>> qlTimeDataPointMap, String id, long timeOfFirstEntry,
-      long startTimeFromFilters) {
+      Map<Long, List<QLBillingTimeDataPoint>> qlTimeDataPointMap, String entityId, String idWithInfo,
+      long timeOfFirstEntry, long startTimeFromFilters) {
     int missingDays = (int) ((timeOfFirstEntry - startTimeFromFilters) / ONE_DAY_MILLIS);
     long startTime = timeOfFirstEntry - missingDays * ONE_DAY_MILLIS;
     while (timeOfFirstEntry > startTime) {
@@ -270,8 +290,7 @@ public class BillingStatsTimeSeriesDataFetcher
             dataPointBuilder.value(0);
             break;
           case STRING:
-            final String entityId = id;
-            dataPointBuilder.key(buildQLReference(field, entityId));
+            dataPointBuilder.key(buildQLReference(field, entityId, idWithInfo));
             break;
           case TIMESTAMP:
             dataPointBuilder.time(startTime);
@@ -287,8 +306,8 @@ public class BillingStatsTimeSeriesDataFetcher
     }
   }
 
-  private QLReference buildQLReference(BillingDataMetaDataFields field, String key) {
-    return QLReference.builder().type(field.getFieldName()).id(key).name(statsHelper.getEntityName(field, key)).build();
+  private QLReference buildQLReference(BillingDataMetaDataFields field, String key, String id) {
+    return QLReference.builder().type(field.getFieldName()).id(id).name(statsHelper.getEntityName(field, key)).build();
   }
 
   private QLReference buildQLReferenceForUtilization(String name, String id) {

@@ -25,6 +25,16 @@ public class K8sLabelHelper {
   }
 
   public Set<K8sWorkload> getLabelLinks(String accountId, Set<String> workloadNames, String labelName) {
-    return new HashSet<>(k8sWorkloadDao.list(accountId, workloadNames, labelName));
+    List<K8sWorkload> workloads = k8sWorkloadDao.list(accountId, workloadNames, labelName);
+    Set<K8sWorkload> uniqueWorkloads = new HashSet<>();
+    Map<String, Boolean> workloadAlreadyAdded = new HashMap<>();
+    workloads.forEach(workload -> {
+      String name = workload.getName() + ":" + workload.getNamespace();
+      if (!workloadAlreadyAdded.containsKey(name)) {
+        workloadAlreadyAdded.put(name, Boolean.TRUE);
+        uniqueWorkloads.add(workload);
+      }
+    });
+    return uniqueWorkloads;
   }
 }

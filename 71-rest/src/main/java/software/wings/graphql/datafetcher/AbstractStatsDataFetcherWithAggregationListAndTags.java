@@ -12,6 +12,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTagLink;
 import software.wings.graphql.datafetcher.billing.BillingDataHelper;
 import software.wings.graphql.datafetcher.billing.BillingDataTableSchema.BillingDataTableKeys;
+import software.wings.graphql.datafetcher.billing.BillingStatsDefaultKeys;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregateOperation;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
 import software.wings.graphql.datafetcher.k8sLabel.K8sLabelHelper;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -270,10 +272,13 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
   private List<QLBillingDataPoint> getLabelDataPoints(
       String accountId, List<QLBillingDataPoint> dataPoints, LA groupByLabel, QLCCMAggregateOperation operation) {
     Set<String> entityIdSet =
-        dataPoints.stream().map(dataPoint -> dataPoint.getKey().getId()).collect(Collectors.toSet());
+        dataPoints.stream()
+            .map(
+                dataPoint -> new StringTokenizer(dataPoint.getKey().getId(), BillingStatsDefaultKeys.TOKEN).nextToken())
+            .collect(Collectors.toSet());
     Set<K8sWorkload> labelLinks = k8sLabelHelper.getLabelLinks(accountId, entityIdSet, groupByLabel.getName());
-    Map<String, K8sWorkload> entityIdLabelLinkMap =
-        labelLinks.stream().collect(Collectors.toMap(K8sWorkload::getName, identity()));
+    Map<String, K8sWorkload> entityIdLabelLinkMap = labelLinks.stream().collect(Collectors.toMap(
+        k8sWorkload -> k8sWorkload.getName() + BillingStatsDefaultKeys.TOKEN + k8sWorkload.getNamespace(), identity()));
 
     ArrayMap<String, QLBillingDataPoint> labelNameDataPointMap = new ArrayMap<>();
     ArrayMap<String, Long> numberOfDataPoints = new ArrayMap<>();
@@ -386,14 +391,14 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
     }
     Set<String> entityIdSet = dataPoints.stream().map(QLEntityTableData::getWorkloadName).collect(Collectors.toSet());
     Set<K8sWorkload> labelLinks = k8sLabelHelper.getLabelLinks(accountId, entityIdSet, groupByLabel.getName());
-    Map<String, K8sWorkload> entityIdLabelLinkMap =
-        labelLinks.stream().collect(Collectors.toMap(K8sWorkload::getName, identity()));
+    Map<String, K8sWorkload> entityIdLabelLinkMap = labelLinks.stream().collect(Collectors.toMap(
+        k8sWorkload -> k8sWorkload.getName() + BillingStatsDefaultKeys.TOKEN + k8sWorkload.getNamespace(), identity()));
 
     ArrayMap<String, QLEntityTableData> labelNameDataPointMap = new ArrayMap<>();
     ArrayMap<String, Long> numberOfDataPoints = new ArrayMap<>();
     String labelName = groupByLabel.getName();
     dataPoints.removeIf(dataPoint -> {
-      String entityId = dataPoint.getWorkloadName();
+      String entityId = dataPoint.getWorkloadName() + BillingStatsDefaultKeys.TOKEN + dataPoint.getNamespace();
       K8sWorkload workload = entityIdLabelLinkMap.get(entityId);
       if (workload == null) {
         return true;
