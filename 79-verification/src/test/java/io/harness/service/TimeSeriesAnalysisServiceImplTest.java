@@ -52,7 +52,9 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
+import software.wings.metrics.Threshold;
 import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.metrics.TimeSeriesDataRecord.TimeSeriesMetricRecordKeys;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -61,6 +63,7 @@ import software.wings.service.impl.analysis.TimeSeriesKeyTransactions;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
+import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
@@ -1280,6 +1283,90 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
     assertThat(parser.parse(JsonUtils.asJson(metricTemplateWithCategorizedThresholds)))
         .isEqualTo(parser.parse(expectedJson));
   }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetMetricTemplate_WithoutCustomThresholds() {
+    Map<String, Map<String, TimeSeriesMetricDefinition>> metricTemplates =
+        timeSeriesAnalysisService.getMetricTemplate(appId, StateType.NEW_RELIC, stateExecutionId, serviceId, cvConfigId,
+            NewRelicMetricDataRecord.DEFAULT_GROUP_NAME);
+    assertThat(metricTemplates).isNotEmpty();
+    assertThat(metricTemplates.keySet().size()).isEqualTo(1);
+    assertThat(metricTemplates.get(DEFAULT_GROUP_NAME).keySet())
+        .isEqualTo(
+            new HashSet<>(Lists.newArrayList("averageResponseTime", "error", "requestsPerMinute", "apdexScore")));
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetMetricTemplate_WithCustomThresholdsAndGroupName() {
+    String metricName = "metric1";
+    String txnName = "txn1";
+    TimeSeriesMLTransactionThresholds transactionThresholds =
+        TimeSeriesMLTransactionThresholds.builder()
+            .serviceId(serviceId)
+            .stateType(StateType.NEW_RELIC)
+            .cvConfigId(cvConfigId)
+            .groupName(DEFAULT_GROUP_NAME)
+            .transactionName(txnName)
+            .metricName(metricName)
+            .thresholds(TimeSeriesMetricDefinition.builder()
+                            .metricName(metricName)
+                            .metricType(MetricType.INFRA)
+                            .customThresholds(Lists.newArrayList(Threshold.builder().ml(0.1).build()))
+                            .build())
+            .build();
+    transactionThresholds.setAppId(appId);
+    wingsPersistence.save(transactionThresholds);
+    Map<String, Map<String, TimeSeriesMetricDefinition>> metricTemplates =
+        timeSeriesAnalysisService.getMetricTemplate(appId, StateType.NEW_RELIC, stateExecutionId, serviceId, cvConfigId,
+            NewRelicMetricDataRecord.DEFAULT_GROUP_NAME);
+    assertThat(metricTemplates).isNotEmpty();
+    assertThat(metricTemplates.keySet().size()).isEqualTo(2);
+    assertThat(metricTemplates.get(DEFAULT_GROUP_NAME).keySet())
+        .isEqualTo(
+            new HashSet<>(Lists.newArrayList("averageResponseTime", "error", "requestsPerMinute", "apdexScore")));
+    assertThat(metricTemplates.get(txnName).values().size()).isEqualTo(1);
+    assertThat(metricTemplates.get(txnName).get(metricName).getCustomThresholds().size()).isEqualTo(1);
+    assertThat(metricTemplates.get(txnName).get(metricName).getCustomThresholds().get(0).getMl()).isEqualTo(0.1);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetMetricTemplate_WithCustomThresholdsAndWithoutGroupName() {
+    String metricName = "metric1";
+    String txnName = "txn1";
+    TimeSeriesMLTransactionThresholds transactionThresholds =
+        TimeSeriesMLTransactionThresholds.builder()
+            .serviceId(serviceId)
+            .stateType(StateType.NEW_RELIC)
+            .cvConfigId(cvConfigId)
+            .transactionName(txnName)
+            .metricName(metricName)
+            .thresholds(TimeSeriesMetricDefinition.builder()
+                            .metricName(metricName)
+                            .metricType(MetricType.INFRA)
+                            .customThresholds(Lists.newArrayList(Threshold.builder().ml(0.1).build()))
+                            .build())
+            .build();
+    transactionThresholds.setAppId(appId);
+    wingsPersistence.save(transactionThresholds);
+    Map<String, Map<String, TimeSeriesMetricDefinition>> metricTemplates =
+        timeSeriesAnalysisService.getMetricTemplate(appId, StateType.NEW_RELIC, stateExecutionId, serviceId, cvConfigId,
+            NewRelicMetricDataRecord.DEFAULT_GROUP_NAME);
+    assertThat(metricTemplates).isNotEmpty();
+    assertThat(metricTemplates.keySet().size()).isEqualTo(2);
+    assertThat(metricTemplates.get(DEFAULT_GROUP_NAME).keySet())
+        .isEqualTo(
+            new HashSet<>(Lists.newArrayList("averageResponseTime", "error", "requestsPerMinute", "apdexScore")));
+    assertThat(metricTemplates.get(txnName).values().size()).isEqualTo(1);
+    assertThat(metricTemplates.get(txnName).get(metricName).getCustomThresholds().size()).isEqualTo(1);
+    assertThat(metricTemplates.get(txnName).get(metricName).getCustomThresholds().get(0).getMl()).isEqualTo(0.1);
+  }
+
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)

@@ -634,7 +634,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     }
 
     result.putAll(getCustomMetricTemplates(
-        appId, stateType, serviceId, cvConfigId, groupName, getCustomThresholdRefIdForWorkflow(stateExecutionId)));
+        appId, stateType, serviceId, cvConfigId, getCustomThresholdRefIdForWorkflow(stateExecutionId)));
 
     return result;
   }
@@ -828,15 +828,14 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     return newRelicMetricTemplates == null ? null : newRelicMetricTemplates.getMetricTemplates();
   }
 
-  private Map<String, Map<String, TimeSeriesMetricDefinition>> getCustomMetricTemplates(String appId,
-      StateType stateType, String serviceId, String cvConfigId, String groupName, String customThresholdRefId) {
+  private Map<String, Map<String, TimeSeriesMetricDefinition>> getCustomMetricTemplates(
+      String appId, StateType stateType, String serviceId, String cvConfigId, String customThresholdRefId) {
     Query<TimeSeriesMLTransactionThresholds> thresholdsQuery;
     if (isEmpty(customThresholdRefId)) {
       thresholdsQuery = wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
                             .filter(TimeSeriesMLTransactionThresholds.BaseKeys.appId, appId)
                             .filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
                             .filter(TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
-                            .filter(TimeSeriesMLTransactionThresholdKeys.groupName, groupName)
                             .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId);
     } else {
       thresholdsQuery = wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
@@ -863,7 +862,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .filter(TimeSeriesMLTransactionThresholds.BaseKeys.appId, appId)
             .filter(TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
             .filter(TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
-            .filter(TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys.groupName, groupName)
             .filter(TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
             .asList();
     if (thresholds != null) {

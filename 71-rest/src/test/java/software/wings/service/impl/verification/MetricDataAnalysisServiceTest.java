@@ -99,7 +99,6 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
       TimeSeriesMLTransactionThresholds threshold = thresholds.get(i);
       assertThat(threshold.getServiceId()).isEqualTo(serviceId);
       assertThat(threshold.getStateType()).isEqualTo(StateType.NEW_RELIC);
-      assertThat(threshold.getGroupName()).isEqualTo(DEFAULT_GROUP_NAME);
       assertThat(threshold.getTransactionName()).isEqualTo("transaction-" + i);
       assertThat(threshold.getMetricName()).isEqualTo("metric-" + i);
       assertThat(threshold.getCvConfigId()).isEqualTo(cvConfigId);
@@ -154,7 +153,6 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
       TimeSeriesMLTransactionThresholds threshold = thresholds.get(i);
       assertThat(threshold.getServiceId()).isEqualTo(serviceId);
       assertThat(threshold.getStateType()).isEqualTo(StateType.NEW_RELIC);
-      assertThat(threshold.getGroupName()).isEqualTo(DEFAULT_GROUP_NAME);
       assertThat(threshold.getTransactionName()).isEqualTo("transaction-" + i);
       assertThat(threshold.getMetricName()).isEqualTo("metric-" + i);
       assertThat(threshold.getCvConfigId()).isEqualTo(cvConfigId);
@@ -186,7 +184,6 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     TimeSeriesMLTransactionThresholds timeSeriesMLTransactionThresholds =
         TimeSeriesMLTransactionThresholds.builder()
             .stateType(StateType.NEW_RELIC)
-            .groupName(null)
             .serviceId(serviceId)
             .cvConfigId(cvConfigId)
             .transactionName("transaction-name")
@@ -387,7 +384,6 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
         TimeSeriesMLTransactionThresholds.builder()
             .customThresholdRefId(customThresholdRefId)
             .stateType(StateType.NEW_RELIC)
-            .groupName(null)
             .serviceId(serviceId)
             .cvConfigId(cvConfigId)
             .transactionName("transaction-name")
@@ -410,7 +406,6 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
         TimeSeriesMLTransactionThresholds.builder()
             .customThresholdRefId(customThresholdRefId)
             .stateType(StateType.NEW_RELIC)
-            .groupName(null)
             .serviceId(serviceId)
             .cvConfigId(cvConfigId)
             .transactionName("transaction-name")

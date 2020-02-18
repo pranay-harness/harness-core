@@ -275,7 +275,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     return wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class, excludeAuthority)
         .filter(TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
         .filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
-        .filter(TimeSeriesMLTransactionThresholdKeys.groupName, groupName)
         .filter(TimeSeriesMLTransactionThresholdKeys.transactionName, transactionName)
         .filter(TimeSeriesMLTransactionThresholdKeys.metricName,
             URLDecoder.decode(metricName, StandardCharsets.UTF_8.name()))
@@ -471,7 +470,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
             .filter("appId", appId)
             .filter(TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
-            .filter(TimeSeriesMLTransactionThresholdKeys.groupName, groupName)
             .filter(TimeSeriesMLTransactionThresholdKeys.transactionName, transactionName)
             .filter(TimeSeriesMLTransactionThresholdKeys.metricName, metricDefinition.getMetricName());
 
@@ -493,7 +491,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       TimeSeriesMLTransactionThresholds timeSeriesMLTransactionThresholds =
           TimeSeriesMLTransactionThresholds.builder()
               .stateType(stateType)
-              .groupName(groupName)
               .serviceId(serviceId)
               .cvConfigId(cvConfigId)
               .transactionName(transactionName)
@@ -522,7 +519,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     Query<TimeSeriesMLTransactionThresholds> thresholdsQuery =
         wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class, excludeAuthority)
             .filter(TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
-            .filter(TimeSeriesMLTransactionThresholdKeys.groupName, groupName)
             .filter(TimeSeriesMLTransactionThresholdKeys.transactionName, transactionName)
             .filter(TimeSeriesMLTransactionThresholdKeys.metricName,
                 URLDecoder.decode(metricName, StandardCharsets.UTF_8.name()));
