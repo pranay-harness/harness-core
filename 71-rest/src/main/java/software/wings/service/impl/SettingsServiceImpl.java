@@ -1316,6 +1316,7 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   private void removeArtifactStreamBindings(ArtifactStream artifactStream) {
+    // TODO: Might require extra yaml push.
     List<ServiceVariable> serviceVariables =
         artifactStreamServiceBindingService.fetchArtifactServiceVariableByArtifactStreamId(
             artifactStream.getAccountId(), artifactStream.getUuid());

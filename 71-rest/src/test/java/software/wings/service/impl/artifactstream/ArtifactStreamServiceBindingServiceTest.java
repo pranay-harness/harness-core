@@ -3,6 +3,7 @@ package software.wings.service.impl.artifactstream;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -13,6 +14,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,6 +50,18 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+
+    when(serviceResourceService.removeArtifactStreamId(any(), any())).thenAnswer(invocation -> {
+      Service service = invocation.getArgumentAt(0, Service.class);
+      String artifactStreamId = invocation.getArgumentAt(1, String.class);
+      List<String> artifactStreamIds = service.getArtifactStreamIds();
+      if (EmptyPredicate.isEmpty(artifactStreamId) || !artifactStreamIds.contains(artifactStreamId)) {
+        return service;
+      }
+
+      artifactStreamIds.remove(artifactStreamId);
+      return service;
+    });
   }
 
   @Test
@@ -112,7 +126,7 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void shouldPruneByArtifactStream() {
+  public void shouldDeleteByArtifactStream() {
     ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, APP_ID);
     ArtifactStream artifactStream2 = getArtifactStream(ARTIFACT_STREAM_ID_2, APP_ID);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(artifactStream1);
@@ -128,11 +142,11 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
     when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_1)).thenReturn(asList(service1, service2));
     when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_2)).thenReturn(asList(service1));
 
-    artifactStreamServiceBindingService.pruneByArtifactStream(APP_ID, ARTIFACT_STREAM_ID_1);
+    artifactStreamServiceBindingService.deleteByArtifactStream(ARTIFACT_STREAM_ID_1);
     assertThat(service1.getArtifactStreamIds()).isEqualTo(Arrays.asList(ARTIFACT_STREAM_ID_2));
     assertThat(service2.getArtifactStreamIds()).isNullOrEmpty();
 
-    artifactStreamServiceBindingService.pruneByArtifactStream(APP_ID, ARTIFACT_STREAM_ID_2);
+    artifactStreamServiceBindingService.deleteByArtifactStream(ARTIFACT_STREAM_ID_2);
     assertThat(service1.getArtifactStreamIds()).isNullOrEmpty();
     assertThat(service2.getArtifactStreamIds()).isNullOrEmpty();
   }
@@ -140,7 +154,7 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void shouldPruneByArtifactStreamAtConnectorLevel() {
+  public void shouldDeleteByArtifactStreamAtConnectorLevel() {
     ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, GLOBAL_APP_ID);
     ArtifactStream artifactStream2 = getArtifactStream(ARTIFACT_STREAM_ID_2, GLOBAL_APP_ID);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(artifactStream1);
@@ -155,11 +169,11 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
     when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_1)).thenReturn(asList(service1, service2));
     when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_2)).thenReturn(asList(service1));
 
-    artifactStreamServiceBindingService.pruneByArtifactStream(GLOBAL_APP_ID, ARTIFACT_STREAM_ID_1);
+    artifactStreamServiceBindingService.deleteByArtifactStream(ARTIFACT_STREAM_ID_1);
     assertThat(service1.getArtifactStreamIds()).isEqualTo(Arrays.asList(ARTIFACT_STREAM_ID_2));
     assertThat(service2.getArtifactStreamIds()).isNullOrEmpty();
 
-    artifactStreamServiceBindingService.pruneByArtifactStream(GLOBAL_APP_ID, ARTIFACT_STREAM_ID_2);
+    artifactStreamServiceBindingService.deleteByArtifactStream(ARTIFACT_STREAM_ID_2);
     assertThat(service1.getArtifactStreamIds()).isNullOrEmpty();
     assertThat(service2.getArtifactStreamIds()).isNullOrEmpty();
   }

@@ -754,19 +754,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return deploymentType == HELM || deploymentType == KUBERNETES;
   }
 
-  @Override
-  public Service updateArtifactStreamIds(Service service, List<String> artifactStreamIds) {
-    if (artifactStreamIds == null) {
-      artifactStreamIds = new ArrayList<>();
-    }
-
-    Service savedService = get(service.getAppId(), service.getUuid(), false);
-    notNullCheck("Service", savedService);
-
-    UpdateOperations<Service> updateOperations =
-        wingsPersistence.createUpdateOperations(Service.class).set(ServiceKeys.artifactStreamIds, artifactStreamIds);
-
-    wingsPersistence.update(savedService, updateOperations);
+  private Service updateArtifactStreamIds(
+      Service service, Service savedService, UpdateOperations<Service> updateOperations) {
+    wingsPersistence.update(wingsPersistence.createQuery(Service.class)
+                                .filter(ServiceKeys.appId, service.getAppId())
+                                .filter(ServiceKeys.uuid, service.getUuid()),
+        updateOperations);
     Service updatedService = get(service.getAppId(), service.getUuid(), false);
 
     String accountId = appService.getAccountIdByAppId(service.getAppId());
@@ -774,6 +767,37 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         accountId, savedService, updatedService, Type.UPDATE, service.isSyncFromGit(), false);
 
     return updatedService;
+  }
+
+  @Override
+  public Service addArtifactStreamId(Service service, String artifactStreamId) {
+    Service savedService = get(service.getAppId(), service.getUuid(), false);
+    notNullCheck("Service", savedService);
+
+    // This check is needed because addToSet throws an error if the field is explicitly set to null.
+    if (savedService.getArtifactStreamIds() == null) {
+      wingsPersistence.update(wingsPersistence.createQuery(Service.class)
+                                  .filter(ServiceKeys.appId, service.getAppId())
+                                  .filter(ServiceKeys.uuid, service.getUuid())
+                                  .field(ServiceKeys.artifactStreamIds)
+                                  .exists()
+                                  .filter(ServiceKeys.artifactStreamIds, null),
+          wingsPersistence.createUpdateOperations(Service.class).unset(ServiceKeys.artifactStreamIds));
+    }
+
+    return updateArtifactStreamIds(service, savedService,
+        wingsPersistence.createUpdateOperations(Service.class)
+            .addToSet(ServiceKeys.artifactStreamIds, artifactStreamId));
+  }
+
+  @Override
+  public Service removeArtifactStreamId(Service service, String artifactStreamId) {
+    Service savedService = get(service.getAppId(), service.getUuid(), false);
+    notNullCheck("Service", savedService);
+
+    return updateArtifactStreamIds(service, savedService,
+        wingsPersistence.createUpdateOperations(Service.class)
+            .removeAll(ServiceKeys.artifactStreamIds, artifactStreamId));
   }
 
   @Override

@@ -68,7 +68,7 @@ public class NoOpAlertService implements AlertService {
   }
 
   @Override
-  public void pruneByArtifactStream(String appId, String artifactStreamId) {
+  public void deleteByArtifactStream(String appId, String artifactStreamId) {
     throw new UnsupportedOperationException();
   }
 }
