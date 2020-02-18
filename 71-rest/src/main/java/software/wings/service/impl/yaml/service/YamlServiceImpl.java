@@ -91,6 +91,7 @@ import io.harness.exception.YamlException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FileUtils;
@@ -128,6 +129,7 @@ import java.io.OutputStream;
 import java.io.StringWriter;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -202,6 +204,12 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     return processChangeSet(changeList, true);
   }
 
+  @AllArgsConstructor
+  public static class ChangeContextErrorMap {
+    Map<String, ChangeWithErrorMsg> errorMsgMap;
+    List<ChangeContext> changeContextList;
+  }
+
   @Override
   public List<ChangeContext> processChangeSet(List<Change> changeList, boolean isGitSyncPath)
       throws YamlProcessingException {
@@ -211,11 +219,27 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     // compute the order of processing
     computeProcessingOrder(changeList);
     // validate
-    List<ChangeContext> changeContextList = validate(changeList);
+    ChangeContextErrorMap pairErrorChange = validate(changeList);
     // process in the given order
-    process(changeContextList, isGitSyncPath);
+    Map<String, ChangeWithErrorMsg> processingError = process(pairErrorChange.changeContextList, isGitSyncPath);
+    Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap = new HashMap<>();
+    if (processingError != null) {
+      failedYamlFileChangeMap.putAll(processingError);
+    }
+    if (pairErrorChange.errorMsgMap != null) {
+      failedYamlFileChangeMap.putAll(pairErrorChange.errorMsgMap);
+    }
+    checkForErrors(failedYamlFileChangeMap);
+    return pairErrorChange.changeContextList;
+  }
 
-    return changeContextList;
+  private void checkForErrors(Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap) throws YamlProcessingException {
+    if (failedYamlFileChangeMap.isEmpty()) {
+      logger.info(GIT_YAML_LOG_PREFIX + "Processed all the changes from GIT without any error.");
+      return;
+    }
+    throw new YamlProcessingException(
+        "Error while processing some yaml files in the changeset.", failedYamlFileChangeMap);
   }
 
   @VisibleForTesting
@@ -266,8 +290,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         errorMsg = "Internal error";
       }
 
-      throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, "Update failed. Reason: " + errorMsg, USER)
-          .addParam("message", "Update failed. Reason: " + errorMsg);
+      throw new YamlException("Update failed. Reason: " + errorMsg, ex, USER);
     }
   }
 
@@ -433,8 +456,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     return yamlTypeToIgnore == givenYamlType && featureFlagService.isEnabled(featureName, accountId);
   }
 
-  private <T extends BaseYamlHandler> List<ChangeContext> validate(List<Change> changeList)
-      throws YamlProcessingException {
+  private <T extends BaseYamlHandler> ChangeContextErrorMap validate(List<Change> changeList) {
     logger.info(GIT_YAML_LOG_PREFIX + "Validating changeset");
     List<ChangeContext> changeContextList = Lists.newArrayList();
     Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap = Maps.newConcurrentMap();
@@ -521,12 +543,12 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     }
 
     if (failedYamlFileChangeMap.size() > 0) {
-      throw new YamlProcessingException(
-          "Error while processing some yaml files in the changeset", failedYamlFileChangeMap);
+      logger.error(
+          GIT_YAML_LOG_PREFIX + "Error while validating some yaml files in the changeset", failedYamlFileChangeMap);
     }
 
     logger.info(GIT_YAML_LOG_PREFIX + "Validated changeset");
-    return changeContextList;
+    return new ChangeContextErrorMap(failedYamlFileChangeMap, changeContextList);
   }
 
   @VisibleForTesting
@@ -558,10 +580,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     return (String) map.get("type");
   }
 
-  private void process(List<ChangeContext> changeContextList, boolean gitSyncPath) throws YamlProcessingException {
+  private Map<String, ChangeWithErrorMsg> process(List<ChangeContext> changeContextList, boolean gitSyncPath) {
     if (isEmpty(changeContextList)) {
       logger.info("No changes to process in the change set");
-      return;
+      return null;
     }
 
     String accountId = changeContextList.get(0).getChange().getAccountId();
@@ -616,9 +638,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
     if (failedYamlFileChangeMap.size() > 0) {
       logAllErrorsWhileYamlInjestion(failedYamlFileChangeMap);
-      throw new YamlProcessingException(
-          "Error while processing some yaml files in the changeset", failedYamlFileChangeMap);
+      logger.error(
+          GIT_YAML_LOG_PREFIX + "Error while processing some yaml files in the changeset", failedYamlFileChangeMap);
     }
+    return failedYamlFileChangeMap;
   }
 
   private void logAllErrorsWhileYamlInjestion(Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap) {

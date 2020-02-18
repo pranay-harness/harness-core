@@ -10,4 +10,9 @@ public class YamlException extends WingsException {
     super(message, null, ErrorCode.GENERAL_YAML_ERROR, Level.ERROR, reportTargets, null);
     super.getParams().put("message", message);
   }
+
+  public YamlException(String message, Throwable throwable, EnumSet<ReportTarget> reportTarget) {
+    super(message, throwable, ErrorCode.GENERAL_YAML_ERROR, Level.ERROR, reportTarget, null);
+    super.getParams().put("message", message);
+  }
 }
