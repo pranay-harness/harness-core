@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.lang.System.currentTimeMillis;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -109,8 +110,8 @@ public class DelegateQueueTask implements Runnable {
 
     List<Key<DelegateTask>> longQueuedTaskKeys = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                                      .filter(DelegateTaskKeys.status, QUEUED)
-                                                     .where("this." + DelegateTaskKeys.createdAt + " + this."
-                                                         + DelegateTaskKeys.data_timeout + " < " + clock.millis())
+                                                     .field(DelegateTaskKeys.expiry)
+                                                     .lessThan(currentTimeMillis())
                                                      .asKeyList(new FindOptions().limit(100));
 
     if (!longQueuedTaskKeys.isEmpty()) {

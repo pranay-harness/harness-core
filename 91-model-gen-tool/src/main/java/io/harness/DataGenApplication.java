@@ -18,6 +18,7 @@ import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.manage.GlobalContextManager;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.persistence.HPersistence;
@@ -194,7 +195,9 @@ public class DataGenApplication extends Application<MainConfiguration> {
     logger.info("Populating the data");
 
     DataGenService dataGenService = injector.getInstance(DataGenService.class);
-    try {
+
+    try (GlobalContextManager.GlobalContextGuard globalContextGuard =
+             GlobalContextManager.initGlobalContextGuard(null)) {
       dataGenService.populateData();
       logger.info("Populating data is completed");
       System.exit(0);

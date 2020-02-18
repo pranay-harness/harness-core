@@ -1,6 +1,7 @@
 package io.harness.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.DelegateTask.ParametersConverter;
 import io.harness.beans.DelegateTask.ResponseDataConverter;
 import io.harness.delegate.beans.ResponseData;
@@ -21,9 +22,12 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.converters.SimpleValueConverter;
 
 import java.time.OffsetDateTime;
@@ -39,6 +43,11 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = false)
 @Converters({ParametersConverter.class, ResponseDataConverter.class})
 @FieldNameConstants(innerTypeName = "DelegateTaskKeys")
+@Indexes({
+  @Index(options = @IndexOptions(name = "index"), fields = {
+    @Field(DelegateTaskKeys.status), @Field(DelegateTaskKeys.expiry)
+  })
+})
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @NotNull private TaskData data;
   private List<ExecutionCapability> executionCapabilities;
@@ -62,7 +71,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private long createdAt;
   private long lastUpdatedAt;
 
-  @Indexed private Status status;
+  private Status status;
   private ResponseData notifyResponse;
 
   private Long validationStartedAt;
@@ -76,6 +85,8 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private Long lastBroadcastAt;
   private int broadcastCount;
   private long nextBroadcast;
+
+  private long expiry;
 
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   @Default
