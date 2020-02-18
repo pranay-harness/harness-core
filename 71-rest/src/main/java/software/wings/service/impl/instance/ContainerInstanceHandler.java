@@ -29,6 +29,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sPod;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerDeploymentInfoWithLabels;
 import software.wings.api.ContainerDeploymentInfoWithNames;
@@ -46,6 +47,7 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.beans.container.Label;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -62,6 +64,7 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.ContainerMetadataType;
 import software.wings.service.impl.instance.sync.ContainerSync;
@@ -96,7 +99,7 @@ import java.util.Set;
 public class ContainerInstanceHandler extends InstanceHandler {
   @Inject private ContainerSync containerSync;
   @Inject private transient K8sStateHelper k8sStateHelper;
-
+  @Inject private WingsPersistence wingsPersistence;
   @Override
   public void syncInstances(String appId, String infraMappingId) {
     // Key - containerSvcName, Value - Instances
@@ -687,6 +690,19 @@ public class ContainerInstanceHandler extends InstanceHandler {
     builder.lastArtifactName(pod.getContainerList().get(0).getImage());
     builder.lastArtifactSourceName(artifactSource);
     builder.lastArtifactBuildNum(tag);
+
+    try {
+      if (deploymentSummary != null && deploymentSummary.getArtifactStreamId() != null) {
+        Query<Artifact> artifacts = wingsPersistence.createQuery(Artifact.class)
+                                        .filter(ArtifactKeys.artifactStreamId, deploymentSummary.getArtifactStreamId())
+                                        .filter(ArtifactKeys.appId, infraMapping.getAppId());
+        builder.lastArtifactId(artifacts.filter("metadata.image", image).disableValidation().get().getUuid());
+      } else {
+        logger.error("Instance Sync: Artifact Stream not found in deployment summary.");
+      }
+    } catch (Exception e) {
+      logger.error("Instance Sync: Artifact id not found.", e);
+    }
 
     return builder.build();
   }
