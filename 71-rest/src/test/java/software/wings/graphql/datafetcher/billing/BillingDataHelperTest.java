@@ -134,7 +134,8 @@ public class BillingDataHelperTest extends AbstractDataFetcherTest {
   @Category(UnitTests.class)
   public void testGetCostTrendForEntityForWorkload() throws SQLException {
     List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
-    List<QLCCMEntityGroupBy> groupBy = Arrays.asList(QLCCMEntityGroupBy.WorkloadName);
+    List<QLCCMEntityGroupBy> groupBy = new ArrayList<>();
+    groupBy.add(QLCCMEntityGroupBy.WorkloadName);
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(makeEndTimeFilter(currentTime));
     filters.add(makeStartTimeFilter(currentTime - ONE_DAY_MILLIS));

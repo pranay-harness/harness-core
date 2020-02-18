@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ROHIT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -103,6 +104,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     labels.put(LABEL_NAME, LABEL_VALUE);
     k8sWorkloadDao.save(getTestWorkload(WORKLOAD_NAME_ACCOUNT1, labels));
     aggregationFunction = Collections.singletonList(makeBillingAmtAggregation());
+    when(statsHelper.getEntityName(any(), anyString())).thenAnswer(i -> i.getArgumentAt(1, String.class));
 
     Connection mockConnection = mock(Connection.class);
     Statement mockStatement = mock(Statement.class);
@@ -572,7 +574,8 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
     assertThat(data).isNotNull();
-    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId())
+        .isEqualTo(WORKLOAD_NAME_ACCOUNT1 + ":" + NAMESPACE1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("WORKLOADNAME");
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
 
@@ -629,7 +632,8 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
     assertThat(data).isNotNull();
-    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId())
+        .isEqualTo(WORKLOAD_NAME_ACCOUNT1 + BillingStatsDefaultKeys.TOKEN + NAMESPACE1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("WORKLOADNAME");
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
   }

@@ -87,6 +87,12 @@ public class BillingDataQueryBuilder {
       addInstanceTypeFilter(filters);
     }
 
+    // To handle the cases of same workloadNames across different namespaces
+    if (isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.WorkloadName)
+        && !isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.Namespace)) {
+      groupBy.add(0, QLCCMEntityGroupBy.Namespace);
+    }
+
     decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
     if (isCostTrendQuery) {
       decorateQueryWithMinMaxStartTime(selectQuery, fieldNames);
@@ -559,10 +565,6 @@ public class BillingDataQueryBuilder {
     return groupByList.stream().anyMatch(groupBy -> groupBy == QLCCMEntityGroupBy.ClusterType);
   }
 
-  public void addClusterGroupBy(List<QLCCMEntityGroupBy> groupByList) {
-    groupByList.add(QLCCMEntityGroupBy.Cluster);
-  }
-
   public void addClusterNameGroupBy(List<QLCCMEntityGroupBy> groupByList) {
     groupByList.add(QLCCMEntityGroupBy.ClusterName);
   }
@@ -800,5 +802,9 @@ public class BillingDataQueryBuilder {
 
   protected QLCCMEntityGroupBy getGroupByEntityFromLabel(QLBillingDataLabelAggregation groupByLabel) {
     return QLCCMEntityGroupBy.WorkloadName;
+  }
+
+  protected boolean isGroupByEntityPresent(List<QLCCMEntityGroupBy> groupByList, QLCCMEntityGroupBy entityGroupBy) {
+    return groupByList.stream().anyMatch(groupBy -> groupBy == entityGroupBy);
   }
 }

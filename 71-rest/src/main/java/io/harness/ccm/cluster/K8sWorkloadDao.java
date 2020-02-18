@@ -49,4 +49,8 @@ public class K8sWorkloadDao {
     query.criteria(LABEL_FIELD + labelName).exists();
     return query.asList(new FindOptions());
   }
+
+  public List<K8sWorkload> list(Query<K8sWorkload> query) {
+    return query.asList(new FindOptions());
+  }
 }
