@@ -21,4 +21,5 @@ public class QLWinRMCredentialUpdate {
   RequestField<Boolean> useSSL;
   RequestField<Boolean> skipCertCheck;
   RequestField<Integer> port;
+  RequestField<QLUsageScope> usageScope;
 }

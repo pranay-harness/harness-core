@@ -12,4 +12,5 @@ public class QLSSHCredential implements QLSecret {
   String name;
   private QLSecretType secretType;
   QLSSHAuthenticationType authenticationType;
+  private QLUsageScope usageScope;
 }

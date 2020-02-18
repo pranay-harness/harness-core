@@ -12,4 +12,5 @@ public class QLEncryptedTextInput {
   private String name;
   private String value;
   private String clientMutationId;
+  private QLUsageScope usageScope;
 }

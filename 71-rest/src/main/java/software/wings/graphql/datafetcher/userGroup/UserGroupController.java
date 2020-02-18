@@ -5,9 +5,6 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.graphql.datafetcher.userGroup.UserGroupPermissionsController.populateUserGroupAccountPermissionEntity;
-import static software.wings.graphql.datafetcher.userGroup.UserGroupPermissionsController.populateUserGroupAppPermissionEntity;
-import static software.wings.graphql.datafetcher.userGroup.UserGroupPermissionsController.populateUserGroupPermissions;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -61,6 +58,7 @@ public class UserGroupController {
   @Inject private UserService userService;
   @Inject private SSOSettingService ssoSettingService;
   @Inject private AccountService accountService;
+  @Inject private UserGroupPermissionsController userGroupPermissionsController;
 
   private QLLinkedSSOSetting populateLDAPSettings(UserGroup userGroup) {
     return QLLDAPSettings.builder()
@@ -87,7 +85,7 @@ public class UserGroupController {
   }
 
   public QLUserGroupBuilder populateUserGroupOutput(UserGroup userGroup, QLUserGroupBuilder builder) {
-    QLGroupPermissions permissions = populateUserGroupPermissions(userGroup);
+    QLGroupPermissions permissions = userGroupPermissionsController.populateUserGroupPermissions(userGroup);
     QLNotificationSettings notificationSettings = populateNotificationSettings(userGroup);
     return builder.name(userGroup.getName())
         .id(userGroup.getUuid())
@@ -247,8 +245,10 @@ public class UserGroupController {
 
   public UserGroup populateUserGroupEntity(QLCreateUserGroupInput userGroupInput, String accountId) {
     userGroupPermissionValidator.validatePermission(userGroupInput.getPermissions(), accountId);
-    AccountPermissions accountPermissions = populateUserGroupAccountPermissionEntity(userGroupInput.getPermissions());
-    Set<AppPermission> appPermissions = populateUserGroupAppPermissionEntity(userGroupInput.getPermissions());
+    AccountPermissions accountPermissions =
+        userGroupPermissionsController.populateUserGroupAccountPermissionEntity(userGroupInput.getPermissions());
+    Set<AppPermission> appPermissions =
+        userGroupPermissionsController.populateUserGroupAppPermissionEntity(userGroupInput.getPermissions());
     validateTheUserIds(userGroupInput.getUserIds(), accountId);
     UserGroupSSOSettings userGroupSSOSettings = populateUserGroupSSOSettings(userGroupInput.getSsoSetting());
     if (isBlank(userGroupInput.getName())) {

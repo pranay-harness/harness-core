@@ -1086,7 +1086,7 @@ mutation {
     assertThat(result.getErrors().size()).isEqualTo(1);
 
     assertThat(result.getErrors().get(0).getMessage())
-        .isEqualTo(GenericErrorString + "Invalid id/s abc provided in the request");
+        .isEqualTo(GenericErrorString + "Invalid app id/s abc provided in the request");
   }
 
   private String createPermissionWithInvalidEnvId(String userGroupId) {
@@ -1125,6 +1125,6 @@ mutation {
     assertThat(result.getErrors().size()).isEqualTo(1);
 
     assertThat(result.getErrors().get(0).getMessage())
-        .isEqualTo(GenericErrorString + "Invalid id/s abc provided in the request");
+        .isEqualTo(GenericErrorString + "Invalid env id/s abc provided in the request");
   }
 }

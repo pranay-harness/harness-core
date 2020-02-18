@@ -14,7 +14,6 @@ import io.harness.generator.Randomizer;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
-import lombok.Data;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -59,22 +58,6 @@ public class UpdateWinRMCredentialsTest extends GraphQLTest {
     return input;
   }
 
-  @Data
-  private static class WinRMSecret {
-    String name;
-    String id;
-    int port;
-    boolean skipCertCheck;
-    boolean useSSL;
-    String userName;
-  }
-
-  @Data
-  private static class UpdateWinRMResult {
-    String clientMutationId;
-    WinRMSecret secret;
-  }
-
   @Test
   @Owner(developers = DEEPAK)
   @Category({GraphQLTests.class, UnitTests.class})
@@ -98,7 +81,8 @@ public class UpdateWinRMCredentialsTest extends GraphQLTest {
     }
     */ getUpdateWinRMCredentialNameInput());
     final QLTestObject qlTestObject = qlExecute(query, accountId);
-    final UpdateWinRMResult result = JsonUtils.convertValue(qlTestObject.getMap(), UpdateWinRMResult.class);
+    final WinRMCredentialHelper.UpdateWinRMResult result =
+        JsonUtils.convertValue(qlTestObject.getMap(), WinRMCredentialHelper.UpdateWinRMResult.class);
     assertThat(result.getSecret()).isNotNull();
     assertThat(result.getSecret().getId()).isNotNull();
     assertThat(result.getSecret().getName()).isEqualTo(updatedName);

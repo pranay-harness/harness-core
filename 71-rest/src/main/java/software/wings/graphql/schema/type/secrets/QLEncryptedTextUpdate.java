@@ -14,4 +14,5 @@ import software.wings.security.annotations.Scope;
 public class QLEncryptedTextUpdate {
   RequestField<String> name;
   RequestField<String> value;
+  RequestField<QLUsageScope> usageScope;
 }

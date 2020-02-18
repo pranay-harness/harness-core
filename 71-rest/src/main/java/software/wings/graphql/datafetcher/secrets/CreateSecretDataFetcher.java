@@ -12,7 +12,6 @@ import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.secrets.input.QLCreateSecretInput;
 import software.wings.graphql.schema.mutation.secrets.payload.QLCreateSecretPayload;
 import software.wings.graphql.schema.type.secrets.QLSecret;
-import software.wings.graphql.schema.type.secrets.QLSecretType;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.encryption.EncryptedData;
@@ -65,15 +64,21 @@ public class CreateSecretDataFetcher extends BaseMutatorDataFetcher<QLCreateSecr
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLCreateSecretPayload mutateAndFetch(QLCreateSecretInput input, MutationContext mutationContext) {
     QLSecret secret = null;
-    if (input.getSecretType() == QLSecretType.ENCRYPTED_TEXT) {
-      EncryptedData encryptedText = saveEncryptedText(input, mutationContext.getAccountId());
-      secret = encryptedTextController.populateEncryptedText(encryptedText);
-    } else if (input.getSecretType() == QLSecretType.WINRM_CREDENTIAL) {
-      SettingAttribute savedSettingAttribute = saveWinRMCredential(input, mutationContext.getAccountId());
-      secret = winRMCredentialController.populateWinRMCredential(savedSettingAttribute);
-    } else if (input.getSecretType() == QLSecretType.SSH_CREDENTIAL) {
-      SettingAttribute savedSettingAttribute = saveSSHCredential(input, mutationContext.getAccountId());
-      secret = sshCredentialController.populateSSHCredential(savedSettingAttribute);
+    switch (input.getSecretType()) {
+      case ENCRYPTED_TEXT:
+        EncryptedData encryptedText = saveEncryptedText(input, mutationContext.getAccountId());
+        secret = encryptedTextController.populateEncryptedText(encryptedText);
+        break;
+      case WINRM_CREDENTIAL:
+        SettingAttribute savedSettingAttribute = saveWinRMCredential(input, mutationContext.getAccountId());
+        secret = winRMCredentialController.populateWinRMCredential(savedSettingAttribute);
+        break;
+      case SSH_CREDENTIAL:
+        SettingAttribute savedSSH = saveSSHCredential(input, mutationContext.getAccountId());
+        secret = sshCredentialController.populateSSHCredential(savedSSH);
+        break;
+      default:
+        throw new InvalidRequestException("Invalid secret Type");
     }
     return QLCreateSecretPayload.builder().clientMutationId(mutationContext.getAccountId()).secret(secret).build();
   }

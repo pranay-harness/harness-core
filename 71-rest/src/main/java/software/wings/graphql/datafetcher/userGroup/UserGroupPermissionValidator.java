@@ -13,17 +13,15 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.Application;
-import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
+import software.wings.graphql.datafetcher.application.AppFilterController;
+import software.wings.graphql.datafetcher.environment.EnvFilterController;
+import software.wings.graphql.schema.type.QLAppFilter;
 import software.wings.graphql.schema.type.permissions.QLActions;
-import software.wings.graphql.schema.type.permissions.QLAppFilter;
 import software.wings.graphql.schema.type.permissions.QLAppPermissions;
 import software.wings.graphql.schema.type.permissions.QLPermissionType;
 import software.wings.graphql.schema.type.permissions.QLUserGroupPermissions;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 
@@ -41,10 +39,10 @@ import java.util.stream.Collectors;
 @Slf4j
 @Singleton
 public class UserGroupPermissionValidator {
-  @Inject AppService appService;
+  @Inject EnvFilterController envFilterController;
   @Inject ServiceResourceService serviceResourceService;
-  @Inject EnvironmentService environmentService;
   @Inject InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject AppFilterController appFilterController;
 
   private void checkForInvalidIds(List<String> idsInput, List<String> idsPresent) {
     idsInput.removeAll(idsPresent);
@@ -52,21 +50,6 @@ public class UserGroupPermissionValidator {
       throw new InvalidRequestException(
           String.format("Invalid id/s %s provided in the request", String.join(", ", idsInput)));
     }
-  }
-  private void checkApplicationsExists(Set<String> appIds, String accountId) {
-    if (isEmpty(appIds)) {
-      return;
-    }
-    List<String> ids = new ArrayList<>(appIds);
-    PageRequest<Application> req = aPageRequest()
-                                       .addFieldsIncluded("_id")
-                                       .addFilter("accountId", SearchFilter.Operator.EQ, accountId)
-                                       .addFilter("_id", IN, appIds.toArray())
-                                       .build();
-    PageResponse<Application> res = appService.list(req);
-    // This Ids are wrong
-    List<String> idsPresent = res.stream().map(Application::getUuid).collect(Collectors.toList());
-    checkForInvalidIds(ids, idsPresent);
   }
 
   private void checkServiceExists(Set<String> serviceIds, String accountId) {
@@ -82,22 +65,6 @@ public class UserGroupPermissionValidator {
     PageResponse<Service> res = serviceResourceService.list(req, false, false, false, null);
     // This Ids are wrong
     List<String> idsPresent = res.stream().map(Service::getUuid).collect(Collectors.toList());
-    checkForInvalidIds(ids, idsPresent);
-  }
-
-  private void checkEnvExists(Set<String> envIds, String accountId) {
-    if (isEmpty(envIds)) {
-      return;
-    }
-    List<String> ids = new ArrayList<>(envIds);
-    PageRequest<Environment> req = aPageRequest()
-                                       .addFieldsIncluded("_id")
-                                       .addFilter("accountId", SearchFilter.Operator.EQ, accountId)
-                                       .addFilter("_id", IN, envIds.toArray())
-                                       .build();
-    PageResponse<Environment> res = environmentService.list(req, false, null);
-    // This Ids are wrong
-    List<String> idsPresent = res.stream().map(Environment::getUuid).collect(Collectors.toList());
     checkForInvalidIds(ids, idsPresent);
   }
 
@@ -118,22 +85,22 @@ public class UserGroupPermissionValidator {
   }
 
   private void checkWhetherIdsAreCorrect(QLAppPermissions appPermissions, String accountId) {
-    checkApplicationsExists(appPermissions.getApplications().getAppIds(), accountId);
+    appFilterController.checkApplicationsExists(appPermissions.getApplications().getAppIds(), accountId);
     switch (appPermissions.getPermissionType()) {
       case SERVICE:
         checkServiceExists(appPermissions.getServices().getServiceIds(), accountId);
         break;
       case ENV:
-        checkEnvExists(appPermissions.getEnvironments().getEnvIds(), accountId);
+        envFilterController.checkEnvExists(appPermissions.getEnvironments().getEnvIds(), accountId);
         break;
       case WORKFLOW:
-        checkEnvExists(appPermissions.getWorkflows().getEnvIds(), accountId);
+        envFilterController.checkEnvExists(appPermissions.getWorkflows().getEnvIds(), accountId);
         break;
       case PIPELINE:
-        checkEnvExists(appPermissions.getPipelines().getEnvIds(), accountId);
+        envFilterController.checkEnvExists(appPermissions.getPipelines().getEnvIds(), accountId);
         break;
       case DEPLOYMENT:
-        checkEnvExists(appPermissions.getDeployments().getEnvIds(), accountId);
+        envFilterController.checkEnvExists(appPermissions.getDeployments().getEnvIds(), accountId);
         break;
       case PROVISIONER:
         checkProvisionerExists(appPermissions.getProvisioners().getProvisionerIds(), accountId);
@@ -232,21 +199,13 @@ public class UserGroupPermissionValidator {
         String.format("Invalid filter given in %s permissionType", appPermission.getPermissionType().getStringValue()));
   }
 
-  private void checkWhetherPermissionIsValid(QLAppPermissions appPermission) {
+  private void checkWhetherPermissionIsValid(QLAppPermissions appPermission, String accountId) {
     // Check that the appFilter should not be NULL
     QLAppFilter application = appPermission.getApplications();
     if (appPermission.getPermissionType() == null) {
       throw new InvalidRequestException("No permission type given in the Application Permission");
     }
-    if (application == null) {
-      throw new InvalidRequestException(String.format(
-          "No applications provided in the %s permission type", appPermission.getPermissionType().getStringValue()));
-    }
-    if (application.getAppIds() == null && application.getFilterType() == null) {
-      throw new InvalidRequestException(
-          String.format("No appIds or filterType provided for the applications in %s permission Type",
-              appPermission.getPermissionType()));
-    }
+    appFilterController.validateAppFilter(application, accountId);
     checkThePermissionFilterisNotNull(appPermission);
   }
 
@@ -306,7 +265,7 @@ public class UserGroupPermissionValidator {
     }
     for (QLAppPermissions appPermission : permissions.getAppPermissions()) {
       // Check that for a particular permissionType their filterType should also be given
-      checkWhetherPermissionIsValid(appPermission);
+      checkWhetherPermissionIsValid(appPermission, accountId);
       // Check that the action is valid for that permissionType
       validateTheActions(appPermission.getPermissionType(), appPermission.getActions());
       // Check that ids should not be supplied when filterType ALL is selected for the application

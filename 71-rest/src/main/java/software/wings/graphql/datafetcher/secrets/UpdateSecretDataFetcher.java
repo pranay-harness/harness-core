@@ -12,7 +12,6 @@ import software.wings.graphql.schema.mutation.secrets.payload.QLUpdateSecretPayl
 import software.wings.graphql.schema.type.secrets.QLEncryptedTextUpdate;
 import software.wings.graphql.schema.type.secrets.QLSSHCredentialUpdate;
 import software.wings.graphql.schema.type.secrets.QLSecret;
-import software.wings.graphql.schema.type.secrets.QLSecretType;
 import software.wings.graphql.schema.type.secrets.QLWinRMCredentialUpdate;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
@@ -31,15 +30,23 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
   }
 
   private SettingAttribute updateSSHCredentials(QLUpdateSecretInput updateSecretInput, String accountId) {
+    if (!updateSecretInput.getSshCredential().hasBeenSet()) {
+      throw new InvalidRequestException(String.format(
+          "No SSH credential input provided with the request with secretType %s", updateSecretInput.getSecretType()));
+    }
     QLSSHCredentialUpdate sshCredential = updateSecretInput.getSshCredential().getValue().orElse(null);
     if (sshCredential == null) {
       throw new InvalidRequestException(String.format(
-          "No ssh credential input provided with the request with secretType %s", updateSecretInput.getSecretType()));
+          "No SSH credential input provided with the request with secretType %s", updateSecretInput.getSecretType()));
     }
     return sshCredentialController.updateSSHCredential(sshCredential, updateSecretInput.getId(), accountId);
   }
 
   private SettingAttribute updateWinRMCredential(QLUpdateSecretInput updateSecretInput, String accountId) {
+    if (!updateSecretInput.getWinRMCredential().hasBeenSet()) {
+      throw new InvalidRequestException(String.format(
+          "No winRM credential input provided with the request with secretType %s", updateSecretInput.getSecretType()));
+    }
     QLWinRMCredentialUpdate encryptedTextUpdate = updateSecretInput.getWinRMCredential().getValue().orElse(null);
     if (encryptedTextUpdate == null) {
       throw new InvalidRequestException(String.format(
@@ -49,11 +56,16 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
   }
 
   private EncryptedData updateEncryptedText(QLUpdateSecretInput updateSecretInput, String accountId) {
-    QLEncryptedTextUpdate encryptedTextUpdate = updateSecretInput.getEncryptedText().getValue().orElse(null);
-    if (encryptedTextUpdate == null) {
+    if (!updateSecretInput.getEncryptedText().hasBeenSet()) {
       throw new InvalidRequestException(String.format(
           "No encrypted text input provided with the request with secretType %s", updateSecretInput.getSecretType()));
     }
+    final QLEncryptedTextUpdate encryptedTextUpdate = updateSecretInput.getEncryptedText().getValue().orElseThrow(
+        ()
+            -> new InvalidRequestException(
+                String.format("No encrypted text input provided with the request with secretType %s",
+                    updateSecretInput.getSecretType())));
+
     encryptedTextController.updateEncryptedText(encryptedTextUpdate, updateSecretInput.getId(), accountId);
     return secretManager.getSecretById(accountId, updateSecretInput.getId());
   }
@@ -63,17 +75,22 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
   protected QLUpdateSecretPayload mutateAndFetch(
       QLUpdateSecretInput updateSecretInput, MutationContext mutationContext) {
     QLSecret secret = null;
-    if (updateSecretInput.getSecretType() == QLSecretType.ENCRYPTED_TEXT) {
-      EncryptedData encryptedText = updateEncryptedText(updateSecretInput, mutationContext.getAccountId());
-      secret = encryptedTextController.populateEncryptedText(encryptedText);
-    } else if (updateSecretInput.getSecretType() == QLSecretType.WINRM_CREDENTIAL) {
-      SettingAttribute updatedSettingAttribute =
-          updateWinRMCredential(updateSecretInput, mutationContext.getAccountId());
-      secret = winRMCredentialController.populateWinRMCredential(updatedSettingAttribute);
-    } else if (updateSecretInput.getSecretType() == QLSecretType.SSH_CREDENTIAL) {
-      SettingAttribute updatedSettingAttribute =
-          updateSSHCredentials(updateSecretInput, mutationContext.getAccountId());
-      secret = sshCredentialController.populateSSHCredential(updatedSettingAttribute);
+    switch (updateSecretInput.getSecretType()) {
+      case ENCRYPTED_TEXT:
+        EncryptedData encryptedText = updateEncryptedText(updateSecretInput, mutationContext.getAccountId());
+        secret = encryptedTextController.populateEncryptedText(encryptedText);
+        break;
+      case WINRM_CREDENTIAL:
+        SettingAttribute updatedSettingAttribute =
+            updateWinRMCredential(updateSecretInput, mutationContext.getAccountId());
+        secret = winRMCredentialController.populateWinRMCredential(updatedSettingAttribute);
+        break;
+      case SSH_CREDENTIAL:
+        SettingAttribute savedSSH = updateSSHCredentials(updateSecretInput, mutationContext.getAccountId());
+        secret = sshCredentialController.populateSSHCredential(savedSSH);
+        break;
+      default:
+        throw new InvalidRequestException("Invalid Secret Type");
     }
     return QLUpdateSecretPayload.builder().clientMutationId(mutationContext.getAccountId()).secret(secret).build();
   }
