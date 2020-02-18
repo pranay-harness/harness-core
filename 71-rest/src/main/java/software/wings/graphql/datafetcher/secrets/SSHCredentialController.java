@@ -312,7 +312,7 @@ public class SSHCredentialController {
     }
     if (updateInput.getName().hasBeenSet()) {
       String name = updateInput.getName().getValue().map(StringUtils::strip).orElse(null);
-      if (name == null) {
+      if (isBlank(name)) {
         throw new InvalidRequestException("Cannot set the ssh credential name as null");
       }
       existingSettingAttribute.setName(name);

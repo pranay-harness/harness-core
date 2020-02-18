@@ -40,7 +40,7 @@ public class WinRMCredentialHelper {
     WinRMSecret secret;
   }
 
-  public String CreateWinRMCredential() {
+  public String createWinRMCredential() {
     final Randomizer.Seed seed = new Randomizer.Seed(0);
     final OwnerManager.Owners owners = ownerManager.create();
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
