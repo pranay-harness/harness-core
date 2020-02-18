@@ -22,7 +22,6 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -45,7 +44,9 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.io.File;
@@ -67,6 +68,7 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
   @Mock private HttpHeaders httpHeaders;
   @Mock private WebhookEventUtils webhookEventUtils;
   @Mock private WaitNotifyEngine waitNotifyEngine;
+  @Mock private YamlChangeSetService yamlChangeSetService;
 
   @InjectMocks @Inject private YamlGitServiceImpl yamlGitService;
 
@@ -113,12 +115,12 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
             .withFilePath("Setup/Applications/App1/Environments/env1/PCF Overrides/Services/SERVICE_NAME/Index.yaml")
             .build());
 
-    yamlGitService.checkForValidNameSyntax(gitFileChanges);
+    yamlGitService.ensureValidNameSyntax(gitFileChanges);
     gitFileChanges.add(GitFileChange.Builder.aGitFileChange()
                            .withFilePath("Setup/Applications/app1/Services/service/1/Index.yaml")
                            .build());
     try {
-      yamlGitService.checkForValidNameSyntax(gitFileChanges);
+      yamlGitService.ensureValidNameSyntax(gitFileChanges);
       assertThat(false).isTrue();
     } catch (Exception ex) {
       assertThat(ex instanceof WingsException).isTrue();
@@ -167,15 +169,16 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
     when(webhookEventUtils.obtainWebhookSource(httpHeaders)).thenReturn(GITHUB);
     doNothing().when(webhookEventUtils).validatePushEvent(GITHUB, httpHeaders);
     when(webhookEventUtils.obtainBranchName(any(), any(), any())).thenReturn("master");
-
+    final YamlChangeSet yamlChangeSet = YamlChangeSet.builder().build();
+    yamlChangeSet.setUuid("uuid");
+    doReturn(yamlChangeSet).when(yamlChangeSetService).save(any(YamlChangeSet.class));
     wingsPersistence.save(settingAttribute);
     wingsPersistence.save(yamlGitConfig);
 
-    String response =
-        yamlGitService.processWebhookPost(ACCOUNT_ID, WEBHOOK_TOKEN, obtainPayload(GH_PUSH_REQ_FILE), httpHeaders);
-    assertThat(response).isEqualTo("Successfully queued webhook request for processing");
-    verify(waitNotifyEngine, times(1)).waitForAllOn(any(), any(), any());
-    verify(delegateService, times(1)).queueTask(any(DelegateTask.class));
+    String response = yamlGitService.validateAndQueueWebhookRequest(
+        ACCOUNT_ID, WEBHOOK_TOKEN, obtainPayload(GH_PUSH_REQ_FILE), httpHeaders);
+    assertThat(response).isEqualTo("Successfully accepted webhook request for processing");
+    verify(yamlChangeSetService, times(1)).save(any(YamlChangeSet.class));
   }
 
   private String obtainPayload(String filePath) throws IOException {

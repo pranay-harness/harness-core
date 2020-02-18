@@ -46,7 +46,7 @@ public interface YamlChangeSetService {
    * @param accountId the account id
    * @return the queued change set
    */
-  List<YamlChangeSet> getQueuedChangeSet(String accountId);
+  YamlChangeSet getQueuedChangeSetForWaitingAccount(String accountId);
 
   /**
    * Update status boolean.
@@ -73,8 +73,6 @@ public interface YamlChangeSetService {
       String accountId, Status newStatus, List<Status> currentStatus, List<String> yamlChangeSetIds);
 
   boolean updateStatusForYamlChangeSets(String accountId, Status newStatus, Status currentStatus);
-
-  List<YamlChangeSet> getChangeSetsToSync(String accountId);
 
   List<YamlChangeSet> getChangeSetsToBeMarkedSkipped(String accountId);
 
