@@ -355,6 +355,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
         tagLinks.stream().collect(Collectors.toMap(HarnessTagLink::getEntityId, identity()));
 
     ArrayMap<String, QLEntityTableData> tagNameDataPointMap = new ArrayMap<>();
+    ArrayMap<String, Double> aggregatedPrevBillingAmount = new ArrayMap<>();
 
     dataPoints.removeIf(dataPoint -> {
       String entityId = dataPoint.getId();
@@ -374,15 +375,27 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
             billingDataHelper.getRoundedDoubleValue(existingDataPoint.getCpuIdleCost() + dataPoint.getCpuIdleCost()));
         existingDataPoint.setMemoryIdleCost(billingDataHelper.getRoundedDoubleValue(
             existingDataPoint.getMemoryIdleCost() + dataPoint.getMemoryIdleCost()));
+        existingDataPoint.setCostTrend(billingDataHelper.getRoundedDoubleValue(existingDataPoint.getCostTrend()
+            + billingDataHelper.getRoundedDoubleValue(dataPoint.getPrevBillingAmount() * dataPoint.getCostTrend())));
+        aggregatedPrevBillingAmount.put(
+            tagName, aggregatedPrevBillingAmount.get(tagName) + dataPoint.getPrevBillingAmount());
         return true;
       }
 
       dataPoint.setId(tagName);
       dataPoint.setName(tagName);
       dataPoint.setType(EntityType.TAG.name());
+      dataPoint.setCostTrend(
+          billingDataHelper.getRoundedDoubleValue(dataPoint.getPrevBillingAmount() * dataPoint.getCostTrend()));
+      aggregatedPrevBillingAmount.put(tagName, dataPoint.getPrevBillingAmount());
       tagNameDataPointMap.put(tagName, dataPoint);
       return false;
     });
+
+    tagNameDataPointMap.forEach(
+        (key, dataPoint)
+            -> dataPoint.setCostTrend(billingDataHelper.getRoundedDoubleValue(
+                dataPoint.getCostTrend() / aggregatedPrevBillingAmount.get(dataPoint.getId()))));
   }
 
   private void getLabelEntityTableDataPoints(String accountId, List<QLEntityTableData> dataPoints, LA groupByLabel) {
@@ -396,6 +409,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
 
     ArrayMap<String, QLEntityTableData> labelNameDataPointMap = new ArrayMap<>();
     ArrayMap<String, Long> numberOfDataPoints = new ArrayMap<>();
+    ArrayMap<String, Double> aggregatedPrevBillingAmount = new ArrayMap<>();
     String labelName = groupByLabel.getName();
     dataPoints.removeIf(dataPoint -> {
       String entityId = dataPoint.getWorkloadName() + BillingStatsDefaultKeys.TOKEN + dataPoint.getNamespace();
@@ -424,12 +438,19 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
         existingDataPoint.setAvgMemoryUtilization(
             existingDataPoint.getAvgMemoryUtilization() + dataPoint.getAvgMemoryUtilization());
         numberOfDataPoints.put(label, numberOfDataPoints.get(label) + 1);
+        existingDataPoint.setCostTrend(billingDataHelper.getRoundedDoubleValue(existingDataPoint.getCostTrend()
+            + billingDataHelper.getRoundedDoubleValue(dataPoint.getPrevBillingAmount() * dataPoint.getCostTrend())));
+        aggregatedPrevBillingAmount.put(
+            label, aggregatedPrevBillingAmount.get(label) + dataPoint.getPrevBillingAmount());
         return true;
       }
 
       dataPoint.setId(label);
       dataPoint.setName(label);
       dataPoint.setType(TYPE_LABEL);
+      dataPoint.setCostTrend(
+          billingDataHelper.getRoundedDoubleValue(dataPoint.getPrevBillingAmount() * dataPoint.getCostTrend()));
+      aggregatedPrevBillingAmount.put(label, dataPoint.getPrevBillingAmount());
       numberOfDataPoints.put(label, 1L);
       labelNameDataPointMap.put(label, dataPoint);
       return false;
@@ -440,6 +461,8 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
           dataPoint.getAvgCpuUtilization() / numberOfDataPoints.get(dataPoint.getId())));
       dataPoint.setAvgMemoryUtilization(billingDataHelper.getRoundedDoubleValue(
           dataPoint.getAvgMemoryUtilization() / numberOfDataPoints.get(dataPoint.getId())));
+      dataPoint.setCostTrend(billingDataHelper.getRoundedDoubleValue(
+          dataPoint.getCostTrend() / aggregatedPrevBillingAmount.get(dataPoint.getId())));
     });
   }
 

@@ -39,4 +39,5 @@ public class QLEntityTableData implements QLData {
   Double avgCpuUtilization;
   Double avgMemoryUtilization;
   Double unallocatedCost;
+  Double prevBillingAmount;
 }
