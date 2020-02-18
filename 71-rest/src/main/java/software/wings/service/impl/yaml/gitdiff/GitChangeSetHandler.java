@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.GitCommit.Status.COMPLETED;
+import static software.wings.beans.GitCommit.Status.FAILED;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 
@@ -57,7 +59,7 @@ public class GitChangeSetHandler {
       List<String> yamlGitConfigIds = obtainYamlGitConfigIds(accountId,
           gitDiffResult.getYamlGitConfig().getBranchName(), gitDiffResult.getYamlGitConfig().getGitConnectorId());
 
-      saveCommitFromGit(gitDiffResult, yamlGitConfigIds, accountId);
+      saveCommitFromGit(gitDiffResult, yamlGitConfigIds, accountId, COMPLETED);
       // this is for GitCommandType.DIFF, where we set gitToHarness = true explicitly as we are responding to
       // webhook invocation
       yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList, true);
@@ -66,6 +68,11 @@ public class GitChangeSetHandler {
       // this is for GitCommandType.DIFF, where we set gitToHarness = true explicitly as we are responding to
       // webhook invocation
       yamlGitService.processFailedChanges(accountId, ex.getFailedYamlFileChangeMap(), true);
+
+      List<String> yamlGitConfigIds = obtainYamlGitConfigIds(accountId,
+          gitDiffResult.getYamlGitConfig().getBranchName(), gitDiffResult.getYamlGitConfig().getGitConnectorId());
+      // Add to gitCommits a failed commit.
+      saveCommitFromGit(gitDiffResult, yamlGitConfigIds, accountId, FAILED);
       return ex.getFailedYamlFileChangeMap();
     }
     return Collections.EMPTY_MAP;
@@ -145,7 +152,8 @@ public class GitChangeSetHandler {
         .collect(Collectors.toList());
   }
 
-  private void saveCommitFromGit(GitDiffResult gitDiffResult, List<String> yamlGitConfigIds, String accountId) {
+  private void saveCommitFromGit(
+      GitDiffResult gitDiffResult, List<String> yamlGitConfigIds, String accountId, GitCommit.Status gitCommitStatus) {
     saveGitCommit(GitCommit.builder()
                       .accountId(accountId)
                       .yamlChangeSet(YamlChangeSet.builder()
@@ -156,7 +164,7 @@ public class GitChangeSetHandler {
                                          .gitFileChanges(gitDiffResult.getGitFileChanges())
                                          .build())
                       .yamlGitConfigIds(yamlGitConfigIds)
-                      .status(GitCommit.Status.COMPLETED)
+                      .status(gitCommitStatus)
                       .commitId(gitDiffResult.getCommitId())
                       .gitCommandResult(gitDiffResult)
                       .build());

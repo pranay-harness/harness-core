@@ -92,6 +92,7 @@ public class CollectionUtils {
 
   /**
    * Return Optional for element matching the Predicate
+   *
    * @param collection List of Objects
    * @return Optional
    */
