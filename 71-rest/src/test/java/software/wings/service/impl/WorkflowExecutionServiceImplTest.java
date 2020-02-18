@@ -169,6 +169,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.HoldingScope;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -177,7 +178,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -189,6 +189,8 @@ import java.util.function.Function;
 @Listeners({OrchestrationNotifyEventListener.class, ExecutionEventListener.class})
 @Slf4j
 public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
+  private static final SecureRandom random = new SecureRandom();
+
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
   @Mock private BackgroundJobScheduler jobScheduler;
@@ -2374,8 +2376,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(trimmedList).isEqualTo(Collections.emptyList());
   }
-
-  private static Random random = new Random();
 
   @Test
   @Owner(developers = SRINIVAS)

@@ -20,23 +20,24 @@ import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 public class AnalysisContextTest extends WingsBaseTest {
+  private static final SecureRandom random = new SecureRandom();
+
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testIteration() throws IllegalAccessException {
     final AnalysisContext analysisContext = AnalysisContext.builder().stateExecutionId(generateUuid()).build();
-    Random r = new Random();
-    long timeSeriesAnalysisIteration = r.nextLong();
+    long timeSeriesAnalysisIteration = random.nextLong();
     FieldUtils.writeField(
         analysisContext, AnalysisContextKeys.timeSeriesAnalysisIteration, timeSeriesAnalysisIteration, true);
-    long logAnalysisIteration = r.nextLong();
+    long logAnalysisIteration = random.nextLong();
     FieldUtils.writeField(analysisContext, AnalysisContextKeys.logAnalysisIteration, logAnalysisIteration, true);
 
     assertThat(analysisContext.obtainNextIteration(AnalysisContextKeys.timeSeriesAnalysisIteration))
@@ -44,18 +45,18 @@ public class AnalysisContextTest extends WingsBaseTest {
     assertThat(analysisContext.obtainNextIteration(AnalysisContextKeys.logAnalysisIteration))
         .isEqualTo(logAnalysisIteration);
 
-    timeSeriesAnalysisIteration = r.nextLong();
+    timeSeriesAnalysisIteration = random.nextLong();
     analysisContext.updateNextIteration(AnalysisContextKeys.timeSeriesAnalysisIteration, timeSeriesAnalysisIteration);
     assertThat(analysisContext.obtainNextIteration(AnalysisContextKeys.timeSeriesAnalysisIteration))
         .isEqualTo(timeSeriesAnalysisIteration);
 
-    logAnalysisIteration = r.nextLong();
+    logAnalysisIteration = random.nextLong();
     analysisContext.updateNextIteration(AnalysisContextKeys.logAnalysisIteration, logAnalysisIteration);
     assertThat(analysisContext.obtainNextIteration(AnalysisContextKeys.logAnalysisIteration))
         .isEqualTo(logAnalysisIteration);
 
     try {
-      analysisContext.updateNextIteration(generateUuid(), r.nextLong());
+      analysisContext.updateNextIteration(generateUuid(), random.nextLong());
       fail("Did not throw exception");
     } catch (IllegalArgumentException e) {
       // expected

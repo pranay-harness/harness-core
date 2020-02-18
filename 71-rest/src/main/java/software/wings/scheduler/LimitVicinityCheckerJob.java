@@ -17,9 +17,9 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
 import software.wings.service.intfc.limits.LimitVicinityHandler;
 
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Objects;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @DisallowConcurrentExecution
 public class LimitVicinityCheckerJob implements Job {
+  private static final SecureRandom random = new SecureRandom();
   public static final String GROUP = "LIMIT_VICINITY_CHECKER_CRON_GROUP";
 
   private static final int SYNC_INTERVAL_IN_MINUTES = 30;
@@ -39,7 +40,7 @@ public class LimitVicinityCheckerJob implements Job {
   public static void addWithDelay(PersistentScheduler jobScheduler, String accountId) {
     // Add some randomness in the trigger start time to avoid overloading quartz by firing jobs at the same time.
     long startTime =
-        System.currentTimeMillis() + new Random().nextInt((int) TimeUnit.MINUTES.toMillis(SYNC_INTERVAL_IN_MINUTES));
+        System.currentTimeMillis() + random.nextInt((int) TimeUnit.MINUTES.toMillis(SYNC_INTERVAL_IN_MINUTES));
     addInternal(jobScheduler, accountId, new Date(startTime));
   }
 

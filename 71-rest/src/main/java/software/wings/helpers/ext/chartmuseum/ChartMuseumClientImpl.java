@@ -43,6 +43,7 @@ import software.wings.settings.SettingValue;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -50,6 +51,8 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ChartMuseumClientImpl implements ChartMuseumClient {
+  private static final SecureRandom random = new SecureRandom();
+
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   @Override
@@ -114,13 +117,12 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     int port = 0;
     StartedProcess process = null;
     int retries = 0;
-    Random rand = new Random();
     StringBuffer stringBuffer = null;
 
     logger.info(command);
 
     while (retries < CHART_MUSEUM_SERVER_START_RETRIES) {
-      port = getNextRandomPort(rand);
+      port = getNextRandomPort(random);
       command = command.replace("${PORT}", Integer.toString(port));
       logger.info("Starting server at port {}. Retry #{}", port, retries);
 

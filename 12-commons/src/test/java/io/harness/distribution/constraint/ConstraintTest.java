@@ -17,11 +17,13 @@ import io.harness.threading.Concurrent;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.security.SecureRandom;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 public class ConstraintTest extends CategoryTest {
+  private static final SecureRandom random = new SecureRandom();
+
   ConstraintId id = new ConstraintId("foo");
 
   ConstraintUnit unit1 = new ConstraintUnit("unit1");
@@ -215,7 +217,6 @@ public class ConstraintTest extends CategoryTest {
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.FIFO).limits(10).build(), registry);
     assertThat(constraint.registerConsumer(unit1, consumer1, 10, null, registry)).isEqualTo(ACTIVE);
 
-    final Random random = new Random();
     for (int i = 0; i < 100; ++i) {
       ConsumerId consumerId = new ConsumerId("c" + i);
       assertThat(constraint.registerConsumer(unit1, consumerId, random.nextInt(10) + 1, null, registry))

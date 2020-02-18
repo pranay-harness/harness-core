@@ -116,6 +116,7 @@ import software.wings.stencils.DefaultValue;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -126,7 +127,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -134,6 +134,8 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 7/6/17.
  */
 public abstract class AbstractAnalysisState extends State {
+  private static final SecureRandom random = new SecureRandom();
+
   public static final String START_TIME_PLACE_HOLDER = "$startTime";
   public static final String END_TIME_PLACE_HOLDER = "$endTime";
   public static final String HOST_NAME_PLACE_HOLDER = "$hostName";
@@ -840,7 +842,6 @@ public abstract class AbstractAnalysisState extends State {
     List<ThirdPartyApiCallLog> thirdPartyApiCallLogs = new ArrayList<>();
     long startTime = dataCollectionStartTimestampMillis();
     int duration = Integer.parseInt(getTimeDuration());
-    Random random = new Random();
     for (int minute = 0; minute < duration; minute++) {
       long startTimeMSForCurrentMinute = startTime + Duration.ofMinutes(minute).toMillis();
       ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(accountId, stateExecutionId);

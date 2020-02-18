@@ -3,12 +3,12 @@ package io.harness.data.algorithm;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.codec.binary.Base32;
 
-import java.util.Random;
+import java.security.SecureRandom;
 
 @UtilityClass
 public class IdentifierName {
   private static Base32 base32 = new Base32();
-  private static Random random = new Random();
+  private static SecureRandom random = new SecureRandom();
   private static String prefix = "VAR";
 
   public static String random() {

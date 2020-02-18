@@ -45,11 +45,11 @@ import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,6 +59,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
+  private static final SecureRandom random = new SecureRandom();
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
@@ -595,7 +596,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
           }));
     }
 
-    final int workflowNum = new Random().nextInt(10) % numOfWorkflowExecutions;
+    final int workflowNum = random.nextInt(10) % numOfWorkflowExecutions;
     String envId = envIds.get(workflowNum);
     String serviceId = serviceIds.get(workflowNum);
 

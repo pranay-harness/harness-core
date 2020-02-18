@@ -19,13 +19,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Slf4j
 public class StressTest extends OrchestrationTest {
+  private static final SecureRandom random = new SecureRandom();
+
   @Inject private HPersistence persistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NotifyResponseCleaner notifyResponseCleaner;
@@ -41,7 +43,6 @@ public class StressTest extends OrchestrationTest {
 
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
       Concurrent.test(1, n -> {
-        final Random random = new Random();
         int i = 1;
 
         List<String> vector = new ArrayList<>();

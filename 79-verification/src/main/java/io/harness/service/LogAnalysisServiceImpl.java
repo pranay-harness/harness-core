@@ -87,6 +87,7 @@ import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -98,7 +99,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -110,7 +110,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   private static final double HIGH_RISK_THRESHOLD = 50;
   private static final double MEDIUM_RISK_THRESHOLD = 25;
 
-  private final Random random = new Random();
+  private static final SecureRandom random = new SecureRandom();
 
   @Inject protected WingsPersistence wingsPersistence;
   @Inject private DataStoreService dataStoreService;

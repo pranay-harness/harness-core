@@ -16,8 +16,8 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.SecureRandom;
 import java.time.Duration;
-import java.util.Random;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @Slf4j
 public final class PersistenceIteratorFactory {
-  private static final Random rand = new Random();
+  private static final SecureRandom random = new SecureRandom();
 
   @Inject Injector injector;
 
@@ -74,7 +74,7 @@ public final class PersistenceIteratorFactory {
     injector.injectMembers(iterator);
     final long millis = options.interval.toMillis();
     executor.scheduleAtFixedRate(
-        () -> iterator.process(ProcessMode.PUMP), rand.nextInt((int) millis), millis, TimeUnit.MILLISECONDS);
+        () -> iterator.process(ProcessMode.PUMP), random.nextInt((int) millis), millis, TimeUnit.MILLISECONDS);
 
     return iterator;
   }

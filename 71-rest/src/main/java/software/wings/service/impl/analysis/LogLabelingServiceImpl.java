@@ -32,6 +32,7 @@ import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.LogLabelingService;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,13 +42,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
 public class LogLabelingServiceImpl implements LogLabelingService {
+  private static final SecureRandom random = new SecureRandom();
+
   private static final int MAX_CASSIFICATION_COUNT = 3;
   private static final int MAX_LOG_RETURN_SIZE = 10;
   private static final int SAMPLE_SIZE = 2;
@@ -98,8 +100,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
       returnList.addAll(logDataRecords);
     } else {
       while (returnList.size() < MAX_LOG_RETURN_SIZE) {
-        Random randomizer = new Random();
-        returnList.add(logDataRecords.get(randomizer.nextInt(logDataRecords.size())));
+        returnList.add(logDataRecords.get(random.nextInt(logDataRecords.size())));
       }
     }
     return returnList;
@@ -226,9 +227,8 @@ public class LogLabelingServiceImpl implements LogLabelingService {
         if (samples.size() <= 2) {
           samplesForLabel = samples;
         } else {
-          Random randomizer = new Random();
           while (samplesForLabel.size() < SAMPLE_SIZE) {
-            samplesForLabel.add(samples.get(randomizer.nextInt(samples.size())));
+            samplesForLabel.add(samples.get(random.nextInt(samples.size())));
           }
         }
         returnSamples.put(label, samplesForLabel);
@@ -363,19 +363,17 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     if (isNotEmpty(labeledLogRecordList)) {
       labeledLogRecordList.forEach(record -> {
         List<String> feedbacksToFetch = new ArrayList<>(), l2IdsToFetch = new ArrayList<>();
-        Random rand = new Random();
         List<String> feedbackList =
             isNotEmpty(record.getFeedbackIds()) ? Lists.newArrayList(record.getFeedbackIds()) : new ArrayList<>();
         while (feedbacksToFetch.size() < feedbackList.size() && feedbacksToFetch.size() < 20) {
-          feedbacksToFetch.add(feedbackList.get(rand.nextInt(feedbackList.size())));
+          feedbacksToFetch.add(feedbackList.get(random.nextInt(feedbackList.size())));
         }
 
-        rand = new Random();
         List<String> l2List = isNotEmpty(record.getLogDataRecordIds())
             ? Lists.newArrayList(record.getLogDataRecordIds())
             : new ArrayList<>();
         while (l2IdsToFetch.size() < l2List.size() && l2IdsToFetch.size() < 20) {
-          l2IdsToFetch.add(l2List.get(rand.nextInt(l2List.size())));
+          l2IdsToFetch.add(l2List.get(random.nextInt(l2List.size())));
         }
 
         List<String> logTexts = new ArrayList<>();
@@ -407,9 +405,8 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     if (isNotEmpty(logs)) {
       logs = logs.stream().filter(log -> log.getTimesLabeled() == 0).collect(Collectors.toList());
       List<LogDataRecord> logsToReturn = new ArrayList<>();
-      Random rand = new Random();
       while (logsToReturn.size() < 5) {
-        logsToReturn.add(logs.get(rand.nextInt(logs.size())));
+        logsToReturn.add(logs.get(random.nextInt(logs.size())));
       }
       return logsToReturn;
     }

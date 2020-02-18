@@ -2,14 +2,14 @@ package io.harness;
 
 import com.google.common.collect.ImmutableList;
 
+import java.security.SecureRandom;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by anubhaw on 6/3/16.
  */
 public class SeedData {
-  private static Random random = new Random();
+  private static final SecureRandom random = new SecureRandom();
   /**
    * The constant randomSeedString.
    */

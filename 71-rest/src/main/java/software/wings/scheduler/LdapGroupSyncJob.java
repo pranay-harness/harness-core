@@ -50,6 +50,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Date;
@@ -57,7 +58,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -70,6 +70,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class LdapGroupSyncJob implements Job {
+  private static final SecureRandom random = new SecureRandom();
   private static final String SSO_PROVIDER_ID_KEY = "ssoId";
 
   public static final String GROUP = "LDAP_GROUP_SYNC_CRON_JOB";
@@ -89,7 +90,7 @@ public class LdapGroupSyncJob implements Job {
 
   public static void addWithDelay(PersistentScheduler jobScheduler, String accountId, String ssoId) {
     // Add some randomness in the trigger start time to avoid overloading quartz by firing jobs at the same time.
-    long startTime = System.currentTimeMillis() + new Random().nextInt((int) TimeUnit.SECONDS.toMillis(POLL_INTERVAL));
+    long startTime = System.currentTimeMillis() + random.nextInt((int) TimeUnit.SECONDS.toMillis(POLL_INTERVAL));
     addInternal(jobScheduler, accountId, ssoId, new Date(startTime));
   }
 

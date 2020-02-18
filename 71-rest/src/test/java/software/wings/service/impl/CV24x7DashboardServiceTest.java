@@ -51,13 +51,13 @@ import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.nio.charset.Charset;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -66,6 +66,8 @@ import java.util.concurrent.TimeUnit;
  * Created by Praveen
  */
 public class CV24x7DashboardServiceTest extends WingsBaseTest {
+  private static final SecureRandom random = new SecureRandom();
+
   @Inject WingsPersistence wingsPersistence;
   @Inject CV24x7DashboardService cv24x7DashboardService;
   @Inject CVConfigurationService cvConfigurationService;
@@ -186,21 +188,21 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   private SplunkAnalysisCluster getRandomClusterEvent() {
-    Random r = new Random(System.currentTimeMillis());
     SplunkAnalysisCluster analysisCluster = new SplunkAnalysisCluster();
-    analysisCluster.setCluster_label(r.nextInt(100));
-    analysisCluster.setAnomalous_counts(Lists.newArrayList(r.nextInt(100), r.nextInt(100), r.nextInt(100)));
+    analysisCluster.setCluster_label(random.nextInt(100));
+    analysisCluster.setAnomalous_counts(
+        Lists.newArrayList(random.nextInt(100), random.nextInt(100), random.nextInt(100)));
     analysisCluster.setText(UUID.randomUUID().toString());
     analysisCluster.setTags(
         Lists.newArrayList(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString()));
     analysisCluster.setDiff_tags(
         Lists.newArrayList(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString()));
-    analysisCluster.setX(r.nextDouble());
-    analysisCluster.setY(r.nextDouble());
-    analysisCluster.setUnexpected_freq(r.nextBoolean());
+    analysisCluster.setX(random.nextDouble());
+    analysisCluster.setY(random.nextDouble());
+    analysisCluster.setUnexpected_freq(random.nextBoolean());
     List<MessageFrequency> frequencyMapList = new ArrayList<>();
-    for (int i = 0; i < 1 + r.nextInt(10); i++) {
-      frequencyMapList.add(MessageFrequency.builder().count(r.nextInt(100)).build());
+    for (int i = 0; i < 1 + random.nextInt(10); i++) {
+      frequencyMapList.add(MessageFrequency.builder().count(random.nextInt(100)).build());
     }
 
     analysisCluster.setMessage_frequencies(frequencyMapList);

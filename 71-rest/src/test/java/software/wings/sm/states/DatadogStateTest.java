@@ -24,6 +24,7 @@ import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.sm.states.DatadogState.Metric;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -31,10 +32,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 
 public class DatadogStateTest extends WingsBaseTest {
+  private static final SecureRandom random = new SecureRandom();
+
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
@@ -212,9 +214,9 @@ public class DatadogStateTest extends WingsBaseTest {
     metricType.forEach(type -> {
       metrics.add(Metric.builder()
                       .txnName("transaction1")
-                      .displayName("display23" + new Random().nextInt())
+                      .displayName("display23" + random.nextInt())
                       .mlMetricType(type)
-                      .metricName("test.metric3" + new Random().nextInt())
+                      .metricName("test.metric3" + random.nextInt())
                       .datadogMetricType("Custom")
                       .build());
     });
