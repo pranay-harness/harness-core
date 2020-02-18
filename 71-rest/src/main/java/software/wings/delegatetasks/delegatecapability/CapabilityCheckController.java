@@ -2,7 +2,6 @@ package software.wings.delegatetasks.delegatecapability;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
@@ -11,6 +10,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import io.harness.delegate.task.executioncapability.CapabilityCheckFactory;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
@@ -46,12 +46,20 @@ public class CapabilityCheckController extends AbstractDelegateValidateTask {
 
       executionCapabilities.forEach(delegateCapability -> {
         logger.info("Checking Capability: " + delegateCapability.toString());
-        checkResponses.add(capabilityCheckFactory.obtainCapabilityCheck(delegateCapability.getCapabilityType())
-                               .performCapabilityCheck(delegateCapability));
+        CapabilityCheck capabilityCheck =
+            capabilityCheckFactory.obtainCapabilityCheck(delegateCapability.getCapabilityType());
+
+        if (capabilityCheck == null) {
+          logger.error("Unknown capability type: {}", delegateCapability.getCapabilityType());
+          return;
+        }
+
+        checkResponses.add(capabilityCheck.performCapabilityCheck(delegateCapability));
       });
 
-    } catch (Exception e) {
-      return emptyList();
+    } catch (RuntimeException exception) {
+      logger.error("Exception while evaluating capabilities", exception);
+      return null;
     }
 
     return convertResponsesIntoDelegateConnectionResults(checkResponses);

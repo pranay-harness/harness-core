@@ -40,7 +40,7 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
   }
 
   @Override
-  public void run() {
+  public List<DelegateConnectionResult> validationResults() {
     try (TaskLogContext ignore = new TaskLogContext(this.delegateTaskId, OVERRIDE_ERROR)) {
       List<DelegateConnectionResult> results = null;
       try {
@@ -61,12 +61,13 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
           consumer.accept(results);
         }
       }
+      return results;
     } catch (Exception e) {
       logger.error("Unexpected error executing delegate task {}", delegateId, e);
     }
+    return emptyList();
   }
 
-  @Override
   public List<DelegateConnectionResult> validate() {
     try {
       String criteria = getCriteria().get(0);
