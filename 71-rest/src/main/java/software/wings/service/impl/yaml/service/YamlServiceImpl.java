@@ -783,7 +783,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private final class FilePathComparator implements Comparator<Change> {
     @Override
     public int compare(Change lhs, Change rhs) {
-      return findOrdinal(lhs.getFilePath(), lhs.getAccountId()) - findOrdinal(rhs.getFilePath(), rhs.getAccountId());
+      final int lCoffecient = lhs.getChangeType() == ChangeType.DELETE ? -1 : 1;
+      final int rCoffecient = rhs.getChangeType() == ChangeType.DELETE ? -1 : 1;
+      return (lCoffecient * findOrdinal(lhs.getFilePath(), lhs.getAccountId()))
+          - (rCoffecient * findOrdinal(rhs.getFilePath(), rhs.getAccountId()));
     }
   }
 
@@ -800,7 +803,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     if (first.isPresent()) {
       return count.get();
     } else {
-      return -1;
+      return Integer.MIN_VALUE;
     }
   }
 
