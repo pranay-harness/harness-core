@@ -1,7 +1,6 @@
 package io.harness.ccm;
 
 import static io.harness.rule.OwnerRule.HANTANG;
-import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -22,12 +21,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
-import software.wings.beans.ValidationResult;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SettingsService;
 
@@ -40,13 +37,6 @@ public class CCMSettingServiceImplTest extends CategoryTest {
   public static final String username = "dummyUsername";
   public static final String password = "dummyPassword";
 
-  private static final String AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID";
-  private static final String AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY";
-  private static final String AWS_DEFAULT_REGION = "AWS_DEFAULT_REGION";
-  private static final String BILLING_ACCOUNT_ID = "BILLING_ACCOUNT_ID";
-  private static final String BILLING_BUCKET_PATH = "BILLING_BUCKET_PATH";
-  private static final String BILLING_BUCKET_REGION = "BILLING_BUCKET_REGION";
-
   private SettingAttribute settingAttribute;
 
   private Cluster k8sCluster;
@@ -54,7 +44,6 @@ public class CCMSettingServiceImplTest extends CategoryTest {
 
   @Mock AccountService accountService;
   @Mock SettingsService settingsService;
-  @Mock MainConfiguration configuration;
   @InjectMocks CCMSettingServiceImpl ccmSettingService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -84,15 +73,6 @@ public class CCMSettingServiceImplTest extends CategoryTest {
                            .withName(kubernetesClusterConfigName)
                            .withValue(kubernetesClusterConfig)
                            .build();
-
-    software.wings.security.authentication.AwsS3SyncConfig syncCredentials =
-        software.wings.security.authentication.AwsS3SyncConfig.builder()
-            .awsAccessKey(AWS_ACCESS_KEY_ID)
-            .awsSecretKey(AWS_SECRET_ACCESS_KEY)
-            .region(AWS_DEFAULT_REGION)
-            .build();
-
-    when(configuration.getAwsS3SyncConfig()).thenReturn(syncCredentials);
 
     when(settingsService.get(eq(cloudProviderId))).thenReturn(settingAttribute);
 
@@ -155,19 +135,5 @@ public class CCMSettingServiceImplTest extends CategoryTest {
     SettingAttribute maskedSettingAttribute = ccmSettingService.maskCCMConfig(settingAttribute);
     assertThat(maskedSettingAttribute.getValue() instanceof KubernetesClusterConfig).isTrue();
     assertThat(((KubernetesClusterConfig) maskedSettingAttribute.getValue()).getCcmConfig()).isNull();
-  }
-
-  @Test
-  @Owner(developers = ROHIT)
-  @Category(UnitTests.class)
-  public void testValidateS3SyncConfig() {
-    BillingReportConfig syncConfig = BillingReportConfig.builder()
-                                         .billingAccountId(BILLING_ACCOUNT_ID)
-                                         .billingBucketPath(BILLING_BUCKET_PATH)
-                                         .billingBucketRegion(BILLING_BUCKET_REGION)
-                                         .isBillingReportEnabled(true)
-                                         .build();
-    ValidationResult result = ccmSettingService.validateS3SyncConfig(syncConfig, accountIdWithCCM, cloudProviderId);
-    assertThat(result.isValid()).isFalse();
   }
 }

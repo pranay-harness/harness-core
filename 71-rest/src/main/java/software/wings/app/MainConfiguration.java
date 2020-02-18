@@ -43,7 +43,6 @@ import software.wings.beans.UrlInfo;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.search.framework.ElasticsearchConfig;
-import software.wings.security.authentication.AwsS3SyncConfig;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.security.authentication.oauth.AzureConfig;
 import software.wings.security.authentication.oauth.BitbucketConfig;
@@ -122,7 +121,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("bitbucketConfig") private BitbucketConfig bitbucketConfig;
   @JsonProperty("gitlabConfig") private GitlabConfig gitlabConfig;
   @JsonProperty("mktPlaceConfig") private MarketPlaceConfig marketPlaceConfig;
-  @JsonProperty("awsS3SyncConfig") private AwsS3SyncConfig awsS3SyncConfig;
   @JsonProperty("sampleTargetEnv") private String sampleTargetEnv;
   @JsonProperty("sampleTargetStatusHost") private String sampleTargetStatusHost;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;

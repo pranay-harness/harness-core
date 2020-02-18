@@ -1,6 +1,8 @@
 package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.reader.EventReaderFactory;
+import io.harness.batch.processing.writer.S3SyncEventWriter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -10,46 +12,44 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import software.wings.beans.SettingAttribute;
 
 @Slf4j
-// TODO(avmohan): Enable after adding implementations
-//@Configuration
+@Configuration
 public class S3SyncJobConfig {
   private static final int BATCH_SIZE = 10;
 
-  private final JobBuilderFactory jbf;
-  private final StepBuilderFactory sbf;
-
-  public S3SyncJobConfig(JobBuilderFactory jbf, StepBuilderFactory sbf) {
-    this.jbf = jbf;
-    this.sbf = sbf;
-  }
-
   @Bean
-  public Job s3SyncJob(Step s3SyncStep) {
-    return jbf.get(BatchJobType.SYNC_BILLING_REPORT_S3.name())
+  @Qualifier(value = "s3SyncJob")
+  public Job s3SyncJob(JobBuilderFactory jobBuilderFactory, Step s3SyncStep) {
+    return jobBuilderFactory.get(BatchJobType.SYNC_BILLING_REPORT_S3.name())
         .incrementer(new RunIdIncrementer())
         .start(s3SyncStep)
         .build();
   }
 
   @Bean
-  public Step s3SyncStep(ItemReader<?> s3SyncReader, ItemWriter<? super Object> s3SyncWriter) {
-    return sbf.get("s3SyncStep").chunk(BATCH_SIZE).reader(s3SyncReader).writer(s3SyncWriter).build();
+  public Step s3SyncStep(EventReaderFactory mongoEventReader, StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("s3SyncStep")
+        .<SettingAttribute, SettingAttribute>chunk(BATCH_SIZE)
+        .reader(s3SyncReader(mongoEventReader, null))
+        .writer(s3SyncWriter())
+        .build();
   }
 
   @Bean
   @StepScope
-  public ItemReader<S3SyncRecord> s3SyncReader() {
-    return null;
+  public ItemReader<SettingAttribute> s3SyncReader(
+      EventReaderFactory mongoEventReader, @Value("#{jobParameters[accountId]}") String accountId) {
+    return mongoEventReader.getS3JobConfigReader(accountId);
   }
 
   @Bean
-  @StepScope
-  public ItemWriter<S3SyncRecord> s3SyncWriter() {
-    return null;
+  public ItemWriter<SettingAttribute> s3SyncWriter() {
+    return new S3SyncEventWriter();
   }
-
-  private static class S3SyncRecord {}
 }

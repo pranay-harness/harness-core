@@ -9,5 +9,7 @@ public class BillingReportConfig {
   String billingAccountId;
   String billingBucketRegion;
   String billingBucketPath;
+  String roleArn;
+  String externalId;
   boolean isBillingReportEnabled;
 }
