@@ -5,6 +5,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.GitCommand.GitCommandType.COMMIT_AND_PUSH;
+import static software.wings.beans.yaml.GitCommand.GitCommandType.DIFF;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 
@@ -117,9 +118,16 @@ public class GitCommandCallback implements NotifyCallback {
             }
             yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.getGitFileChanges(), false);
           }
-        } else if (gitCommandResult.getGitCommandType() == GitCommandType.DIFF) {
-          GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
-          gitChangeSetProcesser.processGitChangeSet(accountId, gitDiffResult);
+        } else if (gitCommandResult.getGitCommandType() == DIFF) {
+          try {
+            GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
+            gitChangeSetProcesser.processGitChangeSet(accountId, gitDiffResult);
+            yamlChangeSetService.updateStatus(accountId, changeSetId, Status.COMPLETED);
+          } catch (Exception e) {
+            yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
+            throw e;
+          }
+
         } else {
           logger.warn("Unexpected commandType result: [{}]", gitCommandExecutionResponse.getErrorMessage());
           yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
@@ -171,7 +179,7 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   protected void updateChangeSetFailureStatusSafely() {
-    if (isNotEmpty(changeSetId) && COMMIT_AND_PUSH == gitCommandType) {
+    if (isNotEmpty(changeSetId) && (COMMIT_AND_PUSH == gitCommandType || DIFF == gitCommandType)) {
       yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
     }
   }

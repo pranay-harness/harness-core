@@ -3,18 +3,23 @@ package software.wings.yaml.gitSync;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 
+import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
+import io.harness.mongo.ProcessTimeLogContext;
+import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Base;
-import software.wings.beans.FeatureName;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
@@ -22,7 +27,6 @@ import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -43,9 +47,13 @@ public class GitChangeSetRunnable implements Runnable {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ConfigurationController configurationController;
   @Inject private GitChangeSetRunnableHelper gitChangeSetRunnableHelper;
+  @Inject private PersistentLocker persistentLocker;
 
   @Override
   public void run() {
+    final Stopwatch stopwatch = Stopwatch.createStarted();
+    logger.info(GIT_YAML_LOG_PREFIX + "Started job to pick changesets for processing");
+
     try {
       if (getMaintenanceFilename() || configurationController.isNotPrimary()) {
         logger.info("Not continuing with GitChangeSetRunnable job");
@@ -69,6 +77,7 @@ public class GitChangeSetRunnable implements Runnable {
           queuedAccountIdList.stream().filter(accountId -> !runningAccountIdList.contains(accountId)).collect(toList());
 
       if (waitingAccountIdList.isEmpty()) {
+        logger.info(GIT_YAML_LOG_PREFIX + "No waiting accounts found. Skip picking new changesets for processing");
         return;
       }
 
@@ -76,47 +85,41 @@ public class GitChangeSetRunnable implements Runnable {
           GIT_YAML_LOG_PREFIX + "queuedAccountIdList:[{}], runningAccountIdList:[{}], waitingAccountIdList:[{}]",
           queuedAccountIdList, runningAccountIdList, waitingAccountIdList);
 
-      // @TODO
-      // We should check here or create a cron job, that will check periodically if there is any task running for more
-      // than 10 mins (same as timeout duration for GitDelegateTask), just mark it as failed, so other YamlChangeSets
-      // for that account get unblocked
       if (isNotEmpty(runningAccountIdList)) {
         logger.info(GIT_YAML_LOG_PREFIX
                 + " Skipping processing of GitChangeSet for Accounts :[{}], as there is already running task for these accounts",
             runningAccountIdList);
       }
 
-      // nothing already in execution and lock acquired
       waitingAccountIdList.forEach(accountId -> {
-        List<YamlChangeSet> queuedChangeSets = new ArrayList<>();
-        try {
-          if (featureFlagService.isEnabled(FeatureName.GIT_BATCH_SYNC, accountId)) {
-            queuedChangeSets = yamlChangeSetService.getChangeSetsToSync(accountId);
+        YamlChangeSet queuedChangeSet = null;
+        try (AccountLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+          queuedChangeSet = yamlChangeSetService.getQueuedChangeSetForWaitingAccount(accountId);
+          if (queuedChangeSet != null) {
+            logger.info(GIT_YAML_LOG_PREFIX + "Processing  changeSetId: [{}]", queuedChangeSet.getUuid());
+            if (queuedChangeSet.isGitToHarness()) {
+              yamlGitSyncService.handleGitChangeSet(queuedChangeSet, accountId);
+            } else {
+              yamlGitSyncService.handleHarnessChangeSet(queuedChangeSet, accountId);
+            }
           } else {
-            queuedChangeSets = yamlChangeSetService.getQueuedChangeSet(accountId);
-          }
-          if (isNotEmpty(queuedChangeSets)) {
-            StringBuilder builder =
-                new StringBuilder("Processing ChangeSets: for Account: ").append(accountId).append("\n ");
-            queuedChangeSets.forEach(yamlChangeSet -> builder.append(yamlChangeSet).append("\n"));
-            logger.info(GIT_YAML_LOG_PREFIX + builder.toString());
-            yamlGitSyncService.handleChangeSet(queuedChangeSets, accountId);
-          } else {
-            logger.info(GIT_YAML_LOG_PREFIX + "No change set queued to process for accountId [{}]", accountId);
+            logger.info(GIT_YAML_LOG_PREFIX + "No change set queued to process for account");
           }
         } catch (Exception ex) {
           StringBuilder stringBuilder =
               new StringBuilder().append("Unexpected error while processing commit for accountId: ").append(accountId);
-          if (queuedChangeSets != null) {
+          if (queuedChangeSet != null) {
             yamlChangeSetService.updateStatusForYamlChangeSets(accountId, Status.FAILED, Status.RUNNING);
-            StringBuilder builder = new StringBuilder();
-            queuedChangeSets.stream().map(yamlChangeSet -> builder.append(yamlChangeSet.getUuid()).append("  "));
-            stringBuilder.append(" and for changeSet: ").append(builder.toString());
+            stringBuilder.append(" and for changeSet: ").append(queuedChangeSet.getUuid()).append("  ");
           }
           stringBuilder.append(" Reason: ").append(ExceptionUtils.getMessage(ex));
           logger.error(GIT_YAML_LOG_PREFIX + stringBuilder.toString(), ex);
         }
       });
+
+      try (ProcessTimeLogContext ignore4 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
+        logger.info(GIT_YAML_LOG_PREFIX + "Successfully handled changsets for waiting accounts");
+      }
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {

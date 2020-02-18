@@ -38,12 +38,14 @@ public class YamlChangeSet extends Base {
   private long queuedOn = System.currentTimeMillis();
   private boolean fullSync;
   private String parentYamlChangeSetId;
+  private GitWebhookRequestAttributes gitWebhookRequestAttributes;
 
   public enum Status { QUEUED, RUNNING, FAILED, COMPLETED, SKIPPED }
 
   @Builder
   public YamlChangeSet(String appId, String accountId, List<GitFileChange> gitFileChanges, Status status,
-      boolean gitToHarness, boolean forcePush, long queuedOn, boolean fullSync, String parentYamlChangeSetId) {
+      boolean gitToHarness, boolean forcePush, long queuedOn, boolean fullSync, String parentYamlChangeSetId,
+      GitWebhookRequestAttributes gitWebhookRequestAttributes) {
     this.appId = appId;
     this.accountId = accountId;
     this.gitFileChanges = gitFileChanges;
@@ -53,5 +55,6 @@ public class YamlChangeSet extends Base {
     this.queuedOn = queuedOn;
     this.fullSync = fullSync;
     this.parentYamlChangeSetId = parentYamlChangeSetId;
+    this.gitWebhookRequestAttributes = gitWebhookRequestAttributes;
   }
 }

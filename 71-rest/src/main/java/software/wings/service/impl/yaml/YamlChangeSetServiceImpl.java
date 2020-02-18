@@ -37,8 +37,6 @@ import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlChangeSet.YamlChangeSetKeys;
 
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -81,8 +79,13 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   @Override
-  public synchronized List<YamlChangeSet> getQueuedChangeSet(String accountId) {
-    try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId, Duration.ofMinutes(1))) {
+  public synchronized YamlChangeSet getQueuedChangeSetForWaitingAccount(String accountId) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId, Duration.ofMinutes(2))) {
+      if (anyChangeSetRunningForAccount(accountId)) {
+        logger.info("Found running changeset for account. Returning null");
+        return null;
+      }
+
       Query<YamlChangeSet> findQuery = wingsPersistence.createQuery(YamlChangeSet.class)
                                            .filter(YamlChangeSetKeys.accountId, accountId)
                                            .filter(YamlChangeSetKeys.status, Status.QUEUED)
@@ -93,16 +96,23 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
       if (modifiedChangeSet == null) {
         logger.info("No change set found in queued state");
-        return Arrays.asList();
       }
 
-      return Arrays.asList(modifiedChangeSet);
+      return modifiedChangeSet;
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.error("Error seen in fetching changeSet", exception);
     }
     return null;
+  }
+
+  private boolean anyChangeSetRunningForAccount(String accountId) {
+    return wingsPersistence.createQuery(YamlChangeSet.class)
+               .filter(YamlChangeSetKeys.accountId, accountId)
+               .filter(YamlChangeSetKeys.status, Status.RUNNING)
+               .count()
+        > 0;
   }
 
   @Override
@@ -132,52 +142,6 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
             .getResponse();
 
     return isNotEmpty(changeSetsWithCompletedStatus) ? changeSetsWithCompletedStatus.get(0) : null;
-  }
-
-  /**
-   * Get all changeSets marked as Failed or Queued.
-   * We will combine them together, with recent one overwriting any change for previous one
-   * @param accountId
-   * @return
-   */
-  @Override
-  public synchronized List<YamlChangeSet> getChangeSetsToSync(String accountId) {
-    List<YamlChangeSet> yamlChangeSets = Collections.EMPTY_LIST;
-    YamlChangeSet mostRecentCompletedChangeSet = null;
-    try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId, Duration.ofMinutes(1))) {
-      // Get most recent changeSet with Completed status,
-      // We will pick all Queued and Failed changeSets created after this
-      mostRecentCompletedChangeSet = getMostRecentChangeSetWithCompletedStatus(accountId);
-
-      PageRequestBuilder pageRequestBuilder = aPageRequest()
-                                                  .addFilter("accountId", Operator.EQ, accountId)
-                                                  .addFilter("status", Operator.IN, new Status[] {Status.QUEUED})
-                                                  .addOrder(YamlChangeSet.CREATED_AT_KEY, OrderType.ASC)
-                                                  .withLimit("50");
-
-      if (mostRecentCompletedChangeSet != null) {
-        pageRequestBuilder.addFilter(
-            YamlChangeSet.CREATED_AT_KEY, Operator.GE, mostRecentCompletedChangeSet.getCreatedAt());
-      }
-      yamlChangeSets = listYamlChangeSets(pageRequestBuilder.build()).getResponse();
-    } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
-    } catch (Exception exception) {
-      logger.error("Error seen in fetching changeSet", exception);
-    }
-
-    if (isEmpty(yamlChangeSets)) {
-      logger.info("No Change set was found for processing for account: " + accountId);
-      return Collections.EMPTY_LIST;
-    }
-
-    // Update status for these yamlChangeSets to "Running"
-    updateStatusForYamlChangeSets(Status.RUNNING,
-        wingsPersistence.createQuery(YamlChangeSet.class)
-            .field("_id")
-            .in(yamlChangeSets.stream().map(Base::getUuid).collect(Collectors.toList())));
-
-    return yamlChangeSets;
   }
 
   @Override
@@ -301,13 +265,5 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
     yamlChangeSet.setAppId(entityUpdateService.obtainAppIdFromEntity(entity));
     return save(yamlChangeSet);
-  }
-
-  private boolean updateStatusForYamlChangeSets(Status desiredStatus, Query<YamlChangeSet> query) {
-    UpdateOperations<YamlChangeSet> ops = wingsPersistence.createUpdateOperations(YamlChangeSet.class);
-    setUnset(ops, "status", desiredStatus);
-
-    UpdateResults status = wingsPersistence.update(query, ops);
-    return status.getUpdatedCount() != 0;
   }
 }

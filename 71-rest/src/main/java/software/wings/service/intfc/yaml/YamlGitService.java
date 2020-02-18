@@ -92,9 +92,12 @@ public interface YamlGitService {
    * @param accountId
    * @return
    */
-  boolean handleChangeSet(List<YamlChangeSet> yamlChangeSet, String accountId);
+  void handleHarnessChangeSet(YamlChangeSet yamlChangeSet, String accountId);
 
-  String processWebhookPost(String accountId, String webhookToken, String yamlWebHookPayload, HttpHeaders headers);
+  void handleGitChangeSet(YamlChangeSet yamlChangeSets, String accountId);
+
+  String validateAndQueueWebhookRequest(
+      String accountId, String webhookToken, String yamlWebHookPayload, HttpHeaders headers);
 
   /**
    * Is commit already processed boolean.
