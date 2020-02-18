@@ -52,6 +52,7 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
 import software.wings.common.Constants;
 import software.wings.common.WingsExpressionProcessorFactory;
+import software.wings.exception.DuplicateStateNameException;
 import software.wings.exception.StateMachineIssueException;
 import software.wings.sm.states.EnvState.EnvStateKeys;
 import software.wings.sm.states.ForkState;
@@ -525,18 +526,26 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
     Map<String, State> statesMap = new HashMap<>();
     HashSet<String> dupNames = new HashSet<>();
 
+    String dupName = null;
     if (states != null) {
       for (State state : states) {
-        if (statesMap.get(state.getName()) != null) {
+        if (statesMap.containsKey(state.getName())) {
           dupNames.add(state.getName());
+          if (!state.isRollback()) {
+            dupName = state.getName();
+          } else {
+            if (dupName == null) {
+              dupName = state.getName();
+            }
+          }
         } else {
           statesMap.put(state.getName(), state);
         }
       }
     }
-    if (!dupNames.isEmpty()) {
-      throw new StateMachineIssueException(
-          String.format("Duplicate States Detected %s", dupNames.toString()), ErrorCode.DUPLICATE_STATE_NAMES);
+
+    if (dupName != null) {
+      throw new DuplicateStateNameException(dupName);
     }
 
     cachedStatesMap = statesMap;
