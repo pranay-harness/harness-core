@@ -2902,6 +2902,120 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(learningEngineAnalysisTasks).isEmpty();
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerLogAnalysis_l1StillPresent() throws Exception {
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfigurationKeys.stateType, StateType.SUMO)
+                                     .get();
+
+    LogsCVConfiguration logConfig = (LogsCVConfiguration) sumoConfig;
+    logConfig.setBaselineStartMinute(currentMinute - 29);
+    logConfig.setBaselineEndMinute(currentMinute - 15);
+
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
+        .thenReturn(managerFeatureFlagCall);
+
+    LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
+                                             .cvConfigId(sumoConfig.getUuid())
+                                             .logCollectionMinute((int) logConfig.getBaselineEndMinute())
+                                             .build();
+
+    wingsPersistence.save(analysisRecord);
+
+    // save some L2 records
+    for (long time = logConfig.getBaselineEndMinute() + 2; time < logConfig.getBaselineEndMinute() + 16; time++) {
+      ClusterLevel level = ClusterLevel.L2, heartbeat = ClusterLevel.H2;
+      if (time % 2 == 0) {
+        level = ClusterLevel.L1;
+        heartbeat = ClusterLevel.H1;
+      }
+      LogDataRecord l2Record = LogDataRecord.builder()
+                                   .cvConfigId(sumoConfig.getUuid())
+                                   .clusterLevel(level)
+                                   .logCollectionMinute(time)
+                                   .build();
+
+      LogDataRecord l2Heartbeat = LogDataRecord.builder()
+                                      .cvConfigId(sumoConfig.getUuid())
+                                      .clusterLevel(heartbeat)
+                                      .logCollectionMinute(time)
+                                      .build();
+      wingsPersistence.save(Arrays.asList(l2Record, l2Heartbeat));
+    }
+
+    continuousVerificationService.triggerLogDataAnalysis(accountId);
+
+    LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                          .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
+                                          .get();
+
+    assertThat(task).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerLogAnalysis_l0StillPresent() throws Exception {
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfigurationKeys.stateType, StateType.SUMO)
+                                     .get();
+
+    LogsCVConfiguration logConfig = (LogsCVConfiguration) sumoConfig;
+    logConfig.setBaselineStartMinute(currentMinute - 29);
+    logConfig.setBaselineEndMinute(currentMinute - 15);
+
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
+        .thenReturn(managerFeatureFlagCall);
+
+    LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
+                                             .cvConfigId(sumoConfig.getUuid())
+                                             .logCollectionMinute((int) logConfig.getBaselineEndMinute())
+                                             .build();
+
+    wingsPersistence.save(analysisRecord);
+
+    // save some L2 records
+    for (long time = logConfig.getBaselineEndMinute() + 2; time < logConfig.getBaselineEndMinute() + 16; time++) {
+      ClusterLevel level = ClusterLevel.L2, heartbeat = ClusterLevel.H2;
+      if (time % 2 == 0) {
+        level = ClusterLevel.L1;
+        heartbeat = ClusterLevel.H1;
+      }
+      LogDataRecord l2Record = LogDataRecord.builder()
+                                   .cvConfigId(sumoConfig.getUuid())
+                                   .clusterLevel(level)
+                                   .logCollectionMinute(time)
+                                   .build();
+
+      LogDataRecord l2Heartbeat = LogDataRecord.builder()
+                                      .cvConfigId(sumoConfig.getUuid())
+                                      .clusterLevel(heartbeat)
+                                      .logCollectionMinute(time)
+                                      .build();
+      wingsPersistence.save(Arrays.asList(l2Record, l2Heartbeat));
+    }
+
+    continuousVerificationService.triggerLogDataAnalysis(accountId);
+
+    LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                          .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
+                                          .get();
+
+    assertThat(task).isNull();
+  }
+
   private void waitForAlert(int expectedNumOfAlerts, Optional<AlertStatus> alertStatus) {
     int tryCount = 0;
     long numOfAlerts;

@@ -1597,10 +1597,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
               for (long l2Min = startMinute, i = 0; l2Min <= analysisEndMin; l2Min++, i++) {
                 Set<String> hosts = logAnalysisService.getHostsForMinute(cvConfiguration.getAppId(),
-                    LogDataRecordKeys.cvConfigId, cvConfiguration.getUuid(), l2Min, ClusterLevel.L1, ClusterLevel.H1);
+                    LogDataRecordKeys.cvConfigId, cvConfiguration.getUuid(), l2Min, ClusterLevel.L1, ClusterLevel.H1,
+                    ClusterLevel.L0, ClusterLevel.H0);
+
                 if (isNotEmpty(hosts)) {
                   logger.info(
-                      "For CV config {} there is still L2 clustering pending for {} for minute {}. Skipping L2 Analysis",
+                      "For CV config {} there is still lustering pending for {} for minute {}. Skipping Log Data Analysis",
                       cvConfiguration.getUuid(), hosts, l2Min);
                   return;
                 }
