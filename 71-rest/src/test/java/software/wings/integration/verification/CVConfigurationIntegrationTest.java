@@ -75,6 +75,7 @@ import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.elk.ElkQueryType;
+import software.wings.service.impl.instana.InstanaTagFilter;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.intfc.AppService;
@@ -123,8 +124,8 @@ import javax.ws.rs.core.GenericType;
 public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
   private String appId, envId, serviceId, appDynamicsApplicationId;
-  private String instanaQuery = "entity.kubernetes.cluster.label:harness-test";
-  private List<String> instanaMetrics = Lists.newArrayList("cpu.total_usage", "memory.usage");
+  List<InstanaTagFilter> instanaTagFilters;
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject @InjectMocks private AppService appService;
   @Inject @InjectMocks private EnvironmentService environmentService;
@@ -248,8 +249,13 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     instanaCVConfiguration.setEnvId(envId);
     instanaCVConfiguration.setServiceId(serviceId);
     instanaCVConfiguration.setEnabled24x7(cv24x7);
-    instanaCVConfiguration.setQuery(instanaQuery);
-    instanaCVConfiguration.setMetrics(instanaMetrics);
+    instanaTagFilters = new ArrayList<>();
+    instanaTagFilters.add(InstanaTagFilter.builder()
+                              .name("kubernetes.cluster.name")
+                              .operator(InstanaTagFilter.Operator.EQUALS)
+                              .value("harness-test")
+                              .build());
+    instanaCVConfiguration.setTagFilters(instanaTagFilters);
     instanaCVConfiguration.setConnectorId(generateUuid());
     instanaCVConfiguration.setStateType(INSTANA);
     instanaCVConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
@@ -568,8 +574,14 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertThat(fetchedObject.getEnvId()).isEqualTo(envId);
     assertThat(fetchedObject.getServiceId()).isEqualTo(serviceId);
     assertThat(fetchedObject.getStateType()).isEqualTo(INSTANA);
-    assertThat(fetchedObject.getQuery()).isEqualTo(instanaQuery);
-    assertThat(fetchedObject.getMetrics()).isEqualTo(instanaMetrics);
+    List<InstanaTagFilter> instanaTagFilters = new ArrayList<>();
+    instanaTagFilters.add(InstanaTagFilter.builder()
+                              .name("kubernetes.cluster.name")
+                              .operator(InstanaTagFilter.Operator.EQUALS)
+                              .value("harness-test")
+                              .build());
+
+    assertThat(fetchedObject.getTagFilters()).isEqualTo(instanaTagFilters);
     assertThat(fetchedObject.getAnalysisTolerance()).isEqualTo(AnalysisTolerance.HIGH);
   }
 
@@ -591,7 +603,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     logger.info("PUT " + url);
     target = client.target(url);
     String updateApplicationId = generateUuid();
-    instanaCVConfiguration.setQuery(updateApplicationId);
+    instanaCVConfiguration.setTagFilters(new ArrayList<>());
     getRequestBuilderWithAuthHeader(target).put(
         entity(instanaCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
 
@@ -609,8 +621,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertThat(fetchedObject.getEnvId()).isEqualTo(envId);
     assertThat(fetchedObject.getServiceId()).isEqualTo(serviceId);
     assertThat(fetchedObject.getStateType()).isEqualTo(INSTANA);
-    assertThat(fetchedObject.getQuery()).isEqualTo(updateApplicationId);
-    assertThat(fetchedObject.getMetrics()).isEqualTo(instanaMetrics);
+    assertThat(fetchedObject.getTagFilters()).isEmpty();
     assertThat(fetchedObject.getAnalysisTolerance()).isEqualTo(AnalysisTolerance.HIGH);
   }
 

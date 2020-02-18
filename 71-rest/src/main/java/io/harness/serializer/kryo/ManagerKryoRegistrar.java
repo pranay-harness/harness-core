@@ -625,6 +625,8 @@ import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
+import software.wings.service.impl.instana.InstanaAnalyzeMetricRequest;
+import software.wings.service.impl.instana.InstanaAnalyzeMetrics;
 import software.wings.service.impl.instana.InstanaDataCollectionInfo;
 import software.wings.service.impl.instana.InstanaInfraMetricMetadata;
 import software.wings.service.impl.instana.InstanaInfraMetricRequest;
@@ -1485,5 +1487,11 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HttpException.class, 7308);
     kryo.register(SumoException.class, 7309);
     kryo.register(SumoClientException.class, 7310);
+    kryo.register(InstanaAnalyzeMetricRequest.class, 7311);
+    kryo.register(InstanaAnalyzeMetricRequest.Group.class, 7312);
+    kryo.register(InstanaAnalyzeMetricRequest.Metric.class, 7313);
+    kryo.register(InstanaTagFilter.Operator.class, 7314);
+    kryo.register(InstanaAnalyzeMetrics.class, 7315);
+    kryo.register(InstanaAnalyzeMetrics.Item.class, 7316);
   }
 }

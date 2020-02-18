@@ -53,6 +53,12 @@ public class SplunkCVConfiguration extends LogsCVConfiguration {
     fillDataCollectionInfoWithCommonFields(splunkDataCollectionInfoV2);
     return splunkDataCollectionInfoV2;
   }
+
+  @Override
+  public boolean isCVTaskBasedCollectionEnabled() {
+    return true;
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

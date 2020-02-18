@@ -39,7 +39,7 @@ public class InstanaServiceImplTest extends WingsBaseTest {
   private String accountId = UUID.randomUUID().toString();
   @Mock private SettingsService settingsService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
-  @Mock InstanaDelegateService instanaDelegateService;
+  @Mock private InstanaDelegateService instanaDelegateService;
   @Inject InstanaService instanaService;
   private InstanaConfig instanaConfig;
   private SettingAttribute settingAttribute;
@@ -76,12 +76,13 @@ public class InstanaServiceImplTest extends WingsBaseTest {
                                                             .query("entity.kubernetes.pod.name:${host.hostName}")
                                                             .metrics(metrics)
                                                             .build();
+    InstanaAnalyzeMetrics instanaAnalyzeMetrics = InstanaAnalyzeMetrics.builder().build();
+    instanaAnalyzeMetrics.setItems(Collections.emptyList());
+    when(instanaDelegateService.getInstanaTraceMetrics(any(), any(), any(), any())).thenReturn(instanaAnalyzeMetrics);
     VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =
         instanaService.getMetricsWithDataForNode(instanaSetupTestNodeData);
     assertThat(verificationNodeDataSetupResponse.isProviderReachable()).isTrue();
-    assertThat(verificationNodeDataSetupResponse.getLoadResponse()).isNotNull();
-    assertThat(verificationNodeDataSetupResponse.getLoadResponse().isLoadPresent()).isFalse();
-    assertThat(verificationNodeDataSetupResponse.getLoadResponse().getLoadResponse()).isNull();
+    assertThat(verificationNodeDataSetupResponse.getLoadResponse()).isNull();
   }
 
   @Test
@@ -96,6 +97,9 @@ public class InstanaServiceImplTest extends WingsBaseTest {
                                                             .query("entity.kubernetes.pod.name:${host.hostName}")
                                                             .metrics(metrics)
                                                             .build();
+
+    when(instanaDelegateService.getInstanaTraceMetrics(any(), any(), any(), any()))
+        .thenThrow(new DataCollectionException("failed to connect"));
     VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =
         instanaService.getMetricsWithDataForNode(instanaSetupTestNodeData);
     assertThat(verificationNodeDataSetupResponse.isProviderReachable()).isFalse();
@@ -121,6 +125,12 @@ public class InstanaServiceImplTest extends WingsBaseTest {
     InstanaInfraMetrics instanaInfraMetrics =
         InstanaInfraMetrics.builder().items(Lists.newArrayList(instanaMetricItem)).build();
     when(instanaDelegateService.getInfraMetrics(any(), any(), any(), any())).thenReturn(instanaInfraMetrics);
+
+    InstanaAnalyzeMetrics instanaAnalyzeMetrics = InstanaAnalyzeMetrics.builder().build();
+    InstanaAnalyzeMetrics.Item item = InstanaAnalyzeMetrics.Item.builder().build();
+    instanaAnalyzeMetrics.setItems(Lists.newArrayList(item));
+    when(instanaDelegateService.getInstanaTraceMetrics(any(), any(), any(), any())).thenReturn(instanaAnalyzeMetrics);
+
     List<String> metrics = Lists.newArrayList("cpu.total_usage", "memory.usage");
     InstanaSetupTestNodeData instanaSetupTestNodeData = InstanaSetupTestNodeData.builder()
                                                             .settingId(settingAttribute.getUuid())
@@ -134,6 +144,7 @@ public class InstanaServiceImplTest extends WingsBaseTest {
     assertThat(verificationNodeDataSetupResponse.getLoadResponse()).isNotNull();
     assertThat(verificationNodeDataSetupResponse.getLoadResponse().isLoadPresent()).isTrue();
     assertThat(verificationNodeDataSetupResponse.getLoadResponse().getLoadResponse()).isNotNull();
-    assertThat(verificationNodeDataSetupResponse.getLoadResponse().getLoadResponse()).isEqualTo(instanaInfraMetrics);
+    assertThat(verificationNodeDataSetupResponse.getLoadResponse().getLoadResponse())
+        .isEqualTo(Lists.newArrayList(instanaInfraMetrics, instanaAnalyzeMetrics));
   }
 }

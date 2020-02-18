@@ -49,6 +49,7 @@ import software.wings.service.impl.analysis.TimeSeriesKeyTransactions;
 import software.wings.service.impl.analysis.TimeSeriesKeyTransactions.TimeSeriesKeyTransactionsKeys;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
+import software.wings.service.impl.instana.InstanaUtils;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
@@ -653,8 +654,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("tierId", ((AppDynamicsCVServiceConfiguration) cvConfiguration).getTierId());
         break;
       case INSTANA:
-        updateOperations.set(InstanaCVConfigurationKeys.query, ((InstanaCVConfiguration) cvConfiguration).getQuery())
-            .set(InstanaCVConfigurationKeys.metrics, ((InstanaCVConfiguration) cvConfiguration).getMetrics());
+        updateOperations.set(
+            InstanaCVConfigurationKeys.tagFilters, ((InstanaCVConfiguration) cvConfiguration).getTagFilters());
         break;
       case DYNA_TRACE:
         break;
@@ -904,7 +905,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case DATA_DOG_LOG:
       case SPLUNKV2:
       case LOG_VERIFICATION:
+        break;
       case INSTANA:
+        metricTemplates = InstanaUtils.createApplicationMetricsTemplate();
         break;
       case PROMETHEUS:
         metricTemplates = PrometheusState.createMetricTemplates(

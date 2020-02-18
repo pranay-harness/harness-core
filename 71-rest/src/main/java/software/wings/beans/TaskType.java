@@ -221,6 +221,7 @@ public enum TaskType {
       TaskGroup.GUARD_24x7, AppdynamicsDataCollectionTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_METRIC_DATA_FOR_NODE(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
   INSTANA_GET_INFRA_METRICS(TaskGroup.INSTANA, ServiceImplDelegateTask.class, InstanaValidation.class),
+  INSTANA_GET_TRACE_METRICS(TaskGroup.INSTANA, ServiceImplDelegateTask.class, InstanaValidation.class),
   INSTANA_COLLECT_METRIC_DATA(TaskGroup.INSTANA, MetricsDataCollectionTask.class, DataCollectionValidator.class),
   INSTANA_VALIDATE_CONFIGURATION_TASK(TaskGroup.INSTANA, ServiceImplDelegateTask.class, InstanaValidation.class),
   NEWRELIC_VALIDATE_CONFIGURATION_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),

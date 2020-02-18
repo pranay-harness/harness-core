@@ -1,8 +1,11 @@
 package software.wings.service.impl.instana;
 
+import com.google.common.base.Preconditions;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.serializer.YamlUtils;
 import org.apache.commons.io.IOUtils;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.sm.states.InstanaState;
 
 import java.io.IOException;
@@ -48,5 +51,33 @@ public class InstanaUtils {
 
   public static Map<String, InstanaMetricTemplate> getApplicationMetricTemplateMap() {
     return INSTANA_METRIC_TEMPLATE_MAP_APPLICATION;
+  }
+
+  public static Map<String, TimeSeriesMetricDefinition> createMetricTemplates(List<String> infraMetricNames) {
+    Map<String, TimeSeriesMetricDefinition> metricDefinitionMap = new HashMap<>();
+    Map<String, InstanaMetricTemplate> infraMetricTemplateMap = getInfraMetricTemplateMap();
+    infraMetricNames.forEach(metric -> {
+      InstanaMetricTemplate instanaMetricTemplate = infraMetricTemplateMap.get(metric);
+      Preconditions.checkNotNull(instanaMetricTemplate, "instanaMetricTemplate can not be null");
+      metricDefinitionMap.put(instanaMetricTemplate.getDisplayName(),
+          TimeSeriesMetricDefinition.builder()
+              .metricName(instanaMetricTemplate.getDisplayName())
+              .metricType(instanaMetricTemplate.getMetricType())
+              .build());
+    });
+
+    metricDefinitionMap.putAll(createApplicationMetricsTemplate());
+    return metricDefinitionMap;
+  }
+
+  public static Map<String, TimeSeriesMetricDefinition> createApplicationMetricsTemplate() {
+    Map<String, TimeSeriesMetricDefinition> metricDefinitionMap = new HashMap<>();
+    getApplicationMetricTemplateMap().forEach((metricName, instanaMetricTemplate)
+                                                  -> metricDefinitionMap.put(instanaMetricTemplate.getDisplayName(),
+                                                      TimeSeriesMetricDefinition.builder()
+                                                          .metricName(instanaMetricTemplate.getDisplayName())
+                                                          .metricType(instanaMetricTemplate.getMetricType())
+                                                          .build()));
+    return metricDefinitionMap;
   }
 }

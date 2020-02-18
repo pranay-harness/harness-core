@@ -6,8 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Lists;
-
+import com.amazonaws.services.codedeploy.model.TagFilter;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -32,6 +31,7 @@ import software.wings.sm.StateType;
 import software.wings.verification.instana.InstanaCVConfiguration;
 import software.wings.verification.instana.InstanaCVConfiguration.InstanaCVConfigurationYaml;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class InstanaCVConfigurationYamlHandlerTest extends CategoryTest {
@@ -41,9 +41,7 @@ public class InstanaCVConfigurationYamlHandlerTest extends CategoryTest {
   @Mock ServiceResourceService serviceResourceService;
   @Mock AppService appService;
   @Mock SettingsService settingsService;
-  private String query = "entity.kubernetes.cluster.label:harness-test";
-  private String updatedQuery = "entity.kubernetes.cluster.label:harness";
-  private List<String> metrics = Lists.newArrayList("cpu.total_usage", "memory.usage");
+  List<TagFilter> tagFilters = new ArrayList<>();
   private String envId;
   private String serviceId;
   private String appId;
@@ -85,7 +83,7 @@ public class InstanaCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   private void setBasicInfo(InstanaCVConfiguration cvServiceConfiguration) {
-    cvServiceConfiguration.setStateType(StateType.NEW_RELIC);
+    cvServiceConfiguration.setStateType(StateType.INSTANA);
     cvServiceConfiguration.setAccountId(accountId);
     cvServiceConfiguration.setServiceId(serviceId);
     cvServiceConfiguration.setConnectorId(connectorId);
@@ -96,7 +94,7 @@ public class InstanaCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   private InstanaCVConfigurationYaml buildYaml() {
-    InstanaCVConfigurationYaml yaml = InstanaCVConfigurationYaml.builder().query(query).metrics(metrics).build();
+    InstanaCVConfigurationYaml yaml = InstanaCVConfigurationYaml.builder().build();
     yaml.setName("testInstanaConfig");
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
@@ -108,16 +106,13 @@ public class InstanaCVConfigurationYamlHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testToYaml() {
     final String appId = "appId";
-    InstanaCVConfiguration cvServiceConfiguration =
-        InstanaCVConfiguration.builder().query(query).metrics(metrics).build();
+    InstanaCVConfiguration cvServiceConfiguration = InstanaCVConfiguration.builder().build();
     setBasicInfo(cvServiceConfiguration);
 
     InstanaCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
     assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
-    assertThat(yaml.getQuery()).isEqualTo(query);
-    assertThat(yaml.getMetrics()).isEqualTo(metrics);
   }
 
   @Test
@@ -139,7 +134,5 @@ public class InstanaCVConfigurationYamlHandlerTest extends CategoryTest {
     assertThat(bean.getEnvId()).isEqualTo(envId);
     assertThat(bean.getServiceId()).isEqualTo(serviceId);
     assertThat(bean.getUuid()).isNotNull();
-    assertThat(bean.getQuery()).isEqualTo(query);
-    assertThat(bean.getMetrics()).isEqualTo(metrics);
   }
 }

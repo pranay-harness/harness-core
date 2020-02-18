@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.beans.FeatureName;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.apm.CustomAPMDataCollectionInfo;
@@ -31,6 +32,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @EqualsAndHashCode(callSuper = false)
 public class APMCVServiceConfiguration extends CVConfiguration {
   private List<MetricCollectionInfo> metricCollectionInfos;
+
+  @Override
+  public boolean isCVTaskBasedCollectionFeatureFlagged() {
+    return true;
+  }
+
+  @Override
+  public FeatureName getCVTaskBasedCollectionFeatureFlag() {
+    return FeatureName.CUSTOM_APM_24_X_7_CV_TASK;
+  }
 
   @Override
   public CVConfiguration deepCopy() {
