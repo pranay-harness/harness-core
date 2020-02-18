@@ -34,10 +34,11 @@ public class BillingDataServiceImpl {
              PreparedStatement statement = dbConnection.prepareStatement(INSERT_STATEMENT)) {
           updateInsertStatement(statement, instanceBillingData);
           statement.execute();
+          logger.debug("Prepared Statement in BillingDataServiceImpl: {} ", statement);
           successfulInsert = true;
-
         } catch (SQLException e) {
-          logger.error("Failed to save instance data,[{}],retryCount=[{}]", instanceBillingData, retryCount);
+          logger.error(
+              "Failed to save instance data,[{}],retryCount=[{}], Exception: ", instanceBillingData, retryCount, e);
           retryCount++;
         }
       }

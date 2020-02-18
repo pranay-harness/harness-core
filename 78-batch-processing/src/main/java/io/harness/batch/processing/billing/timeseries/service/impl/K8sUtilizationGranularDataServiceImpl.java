@@ -60,8 +60,8 @@ public class K8sUtilizationGranularDataServiceImpl {
           }
           successfulInsert = true;
         } catch (SQLException e) {
-          logger.info(
-              "Failed to save K8s Utilization data,[{}],retryCount=[{}]", k8sGranularUtilizationDataList, retryCount);
+          logger.error("Failed to save K8s Utilization data,[{}],retryCount=[{}], Exception: ",
+              k8sGranularUtilizationDataList, retryCount, e);
           retryCount++;
         }
       }

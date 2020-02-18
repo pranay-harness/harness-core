@@ -64,8 +64,8 @@ public class UtilizationDataServiceImpl {
           }
           successfulInsert = true;
         } catch (SQLException e) {
-          logger.info(
-              "Failed to save instance Utilization data,[{}],retryCount=[{}]", instanceUtilizationDataList, retryCount);
+          logger.error("Failed to save instance Utilization data,[{}],retryCount=[{}], Exception: ",
+              instanceUtilizationDataList, retryCount, e);
           retryCount++;
         }
       }
