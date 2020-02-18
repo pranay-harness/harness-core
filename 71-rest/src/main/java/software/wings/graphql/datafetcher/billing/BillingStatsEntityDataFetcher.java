@@ -133,6 +133,8 @@ public class BillingStatsEntityDataFetcher
       Double avgCpuUtilization = BillingStatsDefaultKeys.AVGCPUUTILIZATION;
       Double avgMemoryUtilization = BillingStatsDefaultKeys.AVGMEMORYUTILIZATION;
       Double unallocatedCost = BillingStatsDefaultKeys.UNALLOCATEDCOST;
+      // Used to recalculate cost trend in case of group by labels or tags
+      Double prevBillingAmount = BillingStatsDefaultKeys.TOTALCOST;
 
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
@@ -214,6 +216,7 @@ public class BillingStatsEntityDataFetcher
       if (entityIdToPrevBillingAmountData != null && entityIdToPrevBillingAmountData.containsKey(entityId)) {
         costTrend =
             billingDataHelper.getCostTrendForEntity(resultSet, entityIdToPrevBillingAmountData.get(entityId), filters);
+        prevBillingAmount = entityIdToPrevBillingAmountData.get(entityId).getCost().doubleValue();
       }
 
       if (unallocatedCostForCluster.containsKey(clusterId)) {
@@ -244,7 +247,8 @@ public class BillingStatsEntityDataFetcher
           .maxMemoryUtilization(maxMemoryUtilization)
           .avgCpuUtilization(avgCpuUtilization)
           .avgMemoryUtilization(avgMemoryUtilization)
-          .unallocatedCost(unallocatedCost);
+          .unallocatedCost(unallocatedCost)
+          .prevBillingAmount(prevBillingAmount);
 
       entityTableListData.add(entityTableDataBuilder.build());
     }
