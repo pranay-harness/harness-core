@@ -21,7 +21,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 
-import java.util.Random;
+import java.security.SecureRandom;
 
 /**
  * Created by rishi on 3/2/17.
@@ -30,6 +30,8 @@ import java.util.Random;
 @Integration
 @Slf4j
 public class ExecutionGenTest extends WingsBaseTest {
+  private static final SecureRandom random = new SecureRandom();
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
@@ -41,7 +43,6 @@ public class ExecutionGenTest extends WingsBaseTest {
 
     PageResponse<WorkflowExecution> response = wingsPersistence.query(WorkflowExecution.class, pageRequest);
 
-    Random random = new Random();
     for (int i = 0; i < 50; i++) {
       WorkflowExecution workflowExecution = KryoUtils.clone(response.get(random.nextInt(response.size())));
       if (workflowExecution.getStatus() != ExecutionStatus.SUCCESS

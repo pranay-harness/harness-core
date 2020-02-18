@@ -43,12 +43,12 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
+import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -57,6 +57,7 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @Slf4j
 public class AssignDelegateServiceImpl implements AssignDelegateService {
+  private static final SecureRandom random = new SecureRandom();
   public static final long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds
 
   private static final long WHITELIST_TTL = TimeUnit.HOURS.toMillis(6);
@@ -297,7 +298,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     if (delegates.isEmpty()) {
       return null;
     }
-    return delegates.get(new Random().nextInt(delegates.size()));
+    return delegates.get(random.nextInt(delegates.size()));
   }
 
   private static final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions();

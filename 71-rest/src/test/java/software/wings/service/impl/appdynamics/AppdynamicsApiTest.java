@@ -53,12 +53,12 @@ import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -68,6 +68,8 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class AppdynamicsApiTest extends WingsBaseTest {
+  private static final SecureRandom random = new SecureRandom();
+
   @Inject private AppdynamicsResource appdynamicsResource;
   @Inject private AppdynamicsService appdynamicsService;
   @Inject private WingsPersistence wingsPersistence;
@@ -121,8 +123,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   public void testGetApplications() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
     List<NewRelicApplication> applications = Lists.newArrayList(
-        NewRelicApplication.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build(),
-        NewRelicApplication.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build());
+        NewRelicApplication.builder().name(UUID.randomUUID().toString()).id(random.nextInt()).build(),
+        NewRelicApplication.builder().name(UUID.randomUUID().toString()).id(random.nextInt()).build());
 
     List<NewRelicApplication> sortedApplicationsByName =
         applications.stream().sorted(Comparator.comparing(NewRelicApplication::getName)).collect(Collectors.toList());
@@ -143,14 +145,14 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetTiers() throws IOException {
     Set<AppdynamicsTier> tiers =
-        Sets.newHashSet(AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build(),
-            AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build());
+        Sets.newHashSet(AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(random.nextInt()).build(),
+            AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(random.nextInt()).build());
     when(requestExecutor.executeRequest(any(), any())).thenReturn(tiers);
 
     String savedAttributeId = saveAppdynamicsConfig();
 
     RestResponse<Set<AppdynamicsTier>> allTiers =
-        appdynamicsResource.getAllTiers(accountId, savedAttributeId, new Random().nextLong());
+        appdynamicsResource.getAllTiers(accountId, savedAttributeId, random.nextLong());
     assertThat(allTiers.getResponseMessages().isEmpty()).isTrue();
     assertThat(allTiers.getResource()).isEqualTo(tiers);
   }
@@ -209,8 +211,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetBTs() throws IOException {
     Call<List<AppdynamicsTier>> tierRestCall = mock(Call.class);
-    AppdynamicsTier tier =
-        AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build();
+    AppdynamicsTier tier = AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(random.nextInt()).build();
     List<AppdynamicsTier> tiers = Lists.newArrayList(tier);
     when(requestExecutor.executeRequest(any(), eq(tierRestCall))).thenReturn(tiers);
     when(appdynamicsRestClient.getTierDetails(anyString(), anyLong(), anyLong())).thenReturn(tierRestCall);
@@ -230,8 +231,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                               .password(UUID.randomUUID().toString().toCharArray())
                                               .accountname(UUID.randomUUID().toString())
                                               .build();
-    List<AppdynamicsMetric> tierBTMetrics = delegateService.getTierBTMetrics(appDynamicsConfig, new Random().nextLong(),
-        new Random().nextLong(), Collections.emptyList(), createApiCallLog(accountId, null));
+    List<AppdynamicsMetric> tierBTMetrics = delegateService.getTierBTMetrics(appDynamicsConfig, random.nextLong(),
+        random.nextLong(), Collections.emptyList(), createApiCallLog(accountId, null));
     assertThat(tierBTMetrics).hasSize(2);
     assertThat(tierBTMetrics).isEqualTo(bts);
   }
@@ -241,8 +242,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetBTData() throws IOException {
     Call<List<AppdynamicsTier>> tierRestCall = mock(Call.class);
-    AppdynamicsTier tier =
-        AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build();
+    AppdynamicsTier tier = AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(random.nextInt()).build();
     List<AppdynamicsTier> tiers = Lists.newArrayList(tier);
     when(tierRestCall.execute()).thenReturn(Response.success(tiers));
     when(appdynamicsRestClient.getTierDetails(anyString(), anyLong(), anyLong())).thenReturn(tierRestCall);
@@ -250,63 +250,63 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     Call<List<AppdynamicsMetricData>> btDataCall = mock(Call.class);
     List<AppdynamicsMetricData> btData =
         Lists.newArrayList(AppdynamicsMetricData.builder()
-                               .metricId(new Random().nextLong())
+                               .metricId(random.nextLong())
                                .frequency(UUID.randomUUID().toString())
                                .metricName(UUID.randomUUID().toString())
                                .metricPath(UUID.randomUUID().toString())
                                .metricValues(Lists.newArrayList(AppdynamicsMetricDataValue.builder()
-                                                                    .count(new Random().nextLong())
-                                                                    .current(new Random().nextLong())
-                                                                    .max(new Random().nextLong())
-                                                                    .min(new Random().nextLong())
-                                                                    .occurrences(new Random().nextInt())
-                                                                    .standardDeviation(new Random().nextDouble())
-                                                                    .sum(new Random().nextLong())
-                                                                    .startTimeInMillis(new Random().nextLong())
-                                                                    .useRange(new Random().nextBoolean())
-                                                                    .value(new Random().nextDouble())
+                                                                    .count(random.nextLong())
+                                                                    .current(random.nextLong())
+                                                                    .max(random.nextLong())
+                                                                    .min(random.nextLong())
+                                                                    .occurrences(random.nextInt())
+                                                                    .standardDeviation(random.nextDouble())
+                                                                    .sum(random.nextLong())
+                                                                    .startTimeInMillis(random.nextLong())
+                                                                    .useRange(random.nextBoolean())
+                                                                    .value(random.nextDouble())
                                                                     .build(),
                                    AppdynamicsMetricDataValue.builder()
-                                       .count(new Random().nextLong())
-                                       .current(new Random().nextLong())
-                                       .max(new Random().nextLong())
-                                       .min(new Random().nextLong())
-                                       .occurrences(new Random().nextInt())
-                                       .standardDeviation(new Random().nextDouble())
-                                       .sum(new Random().nextLong())
-                                       .startTimeInMillis(new Random().nextLong())
-                                       .useRange(new Random().nextBoolean())
-                                       .value(new Random().nextDouble())
+                                       .count(random.nextLong())
+                                       .current(random.nextLong())
+                                       .max(random.nextLong())
+                                       .min(random.nextLong())
+                                       .occurrences(random.nextInt())
+                                       .standardDeviation(random.nextDouble())
+                                       .sum(random.nextLong())
+                                       .startTimeInMillis(random.nextLong())
+                                       .useRange(random.nextBoolean())
+                                       .value(random.nextDouble())
                                        .build()))
                                .build(),
             AppdynamicsMetricData.builder()
-                .metricId(new Random().nextLong())
+                .metricId(random.nextLong())
                 .frequency(UUID.randomUUID().toString())
                 .metricName(UUID.randomUUID().toString())
                 .metricPath(UUID.randomUUID().toString())
                 .metricValues(Lists.newArrayList(AppdynamicsMetricDataValue.builder()
-                                                     .count(new Random().nextLong())
-                                                     .current(new Random().nextLong())
-                                                     .max(new Random().nextLong())
-                                                     .min(new Random().nextLong())
-                                                     .occurrences(new Random().nextInt())
-                                                     .standardDeviation(new Random().nextDouble())
-                                                     .sum(new Random().nextLong())
-                                                     .startTimeInMillis(new Random().nextLong())
-                                                     .useRange(new Random().nextBoolean())
-                                                     .value(new Random().nextDouble())
+                                                     .count(random.nextLong())
+                                                     .current(random.nextLong())
+                                                     .max(random.nextLong())
+                                                     .min(random.nextLong())
+                                                     .occurrences(random.nextInt())
+                                                     .standardDeviation(random.nextDouble())
+                                                     .sum(random.nextLong())
+                                                     .startTimeInMillis(random.nextLong())
+                                                     .useRange(random.nextBoolean())
+                                                     .value(random.nextDouble())
                                                      .build(),
                     AppdynamicsMetricDataValue.builder()
-                        .count(new Random().nextLong())
-                        .current(new Random().nextLong())
-                        .max(new Random().nextLong())
-                        .min(new Random().nextLong())
-                        .occurrences(new Random().nextInt())
-                        .standardDeviation(new Random().nextDouble())
-                        .sum(new Random().nextLong())
-                        .startTimeInMillis(new Random().nextLong())
-                        .useRange(new Random().nextBoolean())
-                        .value(new Random().nextDouble())
+                        .count(random.nextLong())
+                        .current(random.nextLong())
+                        .max(random.nextLong())
+                        .min(random.nextLong())
+                        .occurrences(random.nextInt())
+                        .standardDeviation(random.nextDouble())
+                        .sum(random.nextLong())
+                        .startTimeInMillis(random.nextLong())
+                        .useRange(random.nextBoolean())
+                        .value(random.nextDouble())
                         .build()))
                 .build());
     when(btDataCall.request()).thenReturn(new Request.Builder().url("http://harness-test.appd.com").build());
@@ -322,8 +322,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                               .accountname(UUID.randomUUID().toString())
                                               .build();
     List<AppdynamicsMetricData> tierBTMetricData =
-        delegateService.getTierBTMetricData(appDynamicsConfig, new Random().nextLong(), generateUuid(), generateUuid(),
-            generateUuid(), System.currentTimeMillis() - new Random().nextInt(), System.currentTimeMillis(),
+        delegateService.getTierBTMetricData(appDynamicsConfig, random.nextLong(), generateUuid(), generateUuid(),
+            generateUuid(), System.currentTimeMillis() - random.nextInt(), System.currentTimeMillis(),
             Collections.emptyList(), createApiCallLog(accountId, null));
     assertThat(tierBTMetricData).hasSize(2);
     assertThat(tierBTMetricData).isEqualTo(btData);

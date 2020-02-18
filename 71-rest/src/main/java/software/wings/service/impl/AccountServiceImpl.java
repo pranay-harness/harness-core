@@ -149,6 +149,7 @@ import software.wings.verification.CVConfiguration;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.SocketTimeoutException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -159,7 +160,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -176,6 +176,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Slf4j
 public class AccountServiceImpl implements AccountService {
+  private static final SecureRandom random = new SecureRandom();
   private static final int SIZE_PER_SERVICES_REQUEST = 25;
   private static final String UNLIMITED_PAGE_SIZE = "UNLIMITED";
   private static final String ILLEGAL_ACCOUNT_NAME_CHARACTERS = "[~!@#$%^*\\[\\]{}<>'\"/:;\\\\]";
@@ -468,10 +469,9 @@ public class AccountServiceImpl implements AccountService {
    */
   @Override
   public String suggestAccountName(String accountName) {
-    Random rand = new Random();
     int count = 0;
     while (count < 20) {
-      String newAccountName = accountName + "-" + (1000 + rand.nextInt(9000));
+      String newAccountName = accountName + "-" + (1000 + random.nextInt(9000));
       if (!checkDuplicateAccountName(newAccountName)) {
         return newAccountName;
       }

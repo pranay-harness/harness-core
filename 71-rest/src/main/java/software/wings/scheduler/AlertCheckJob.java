@@ -37,10 +37,10 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
 import software.wings.utils.EmailHelperUtils;
 
+import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -50,6 +50,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class AlertCheckJob implements Job {
+  private static final SecureRandom random = new SecureRandom();
   public static final String GROUP = "ALERT_CHECK_CRON_GROUP";
 
   private static final int POLL_INTERVAL = 300;
@@ -66,7 +67,7 @@ public class AlertCheckJob implements Job {
 
   public static void addWithDelay(PersistentScheduler jobScheduler, String accountId) {
     // Add some randomness in the trigger start time to avoid overloading quartz by firing jobs at the same time.
-    long startTime = System.currentTimeMillis() + new Random().nextInt((int) TimeUnit.SECONDS.toMillis(POLL_INTERVAL));
+    long startTime = System.currentTimeMillis() + random.nextInt((int) TimeUnit.SECONDS.toMillis(POLL_INTERVAL));
     addInternal(jobScheduler, accountId, new Date(startTime));
   }
 

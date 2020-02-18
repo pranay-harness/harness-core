@@ -99,6 +99,7 @@ import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -106,7 +107,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -115,6 +115,8 @@ import java.util.stream.Collectors;
  * Created by peeyushaggarwal on 10/11/16.
  */
 public class AccountServiceTest extends WingsBaseTest {
+  private static final SecureRandom random = new SecureRandom();
+
   @Mock private AppService appService;
   @Mock private UserService userService;
   @Mock private SettingsService settingsService;
@@ -742,17 +744,16 @@ public class AccountServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAccountIteration() throws IllegalAccessException {
     final Account account = anAccount().withCompanyName(generateUuid()).build();
-    Random r = new Random();
-    long serviceGuardDataCollectionIteration = r.nextLong();
+    long serviceGuardDataCollectionIteration = random.nextLong();
     FieldUtils.writeField(
         account, AccountKeys.serviceGuardDataCollectionIteration, serviceGuardDataCollectionIteration, true);
-    long serviceGuardDataAnalysisIteration = r.nextLong();
+    long serviceGuardDataAnalysisIteration = random.nextLong();
     FieldUtils.writeField(
         account, AccountKeys.serviceGuardDataAnalysisIteration, serviceGuardDataAnalysisIteration, true);
-    long workflowDataCollectionIteration = r.nextLong();
+    long workflowDataCollectionIteration = random.nextLong();
     FieldUtils.writeField(account, AccountKeys.workflowDataCollectionIteration, workflowDataCollectionIteration, true);
 
-    long secretManagerValidationIterator = r.nextLong();
+    long secretManagerValidationIterator = random.nextLong();
     FieldUtils.writeField(account, AccountKeys.secretManagerValidationIterator, secretManagerValidationIterator, true);
 
     assertThat(account.obtainNextIteration(AccountKeys.serviceGuardDataCollectionIteration))
@@ -764,28 +765,28 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(account.obtainNextIteration(AccountKeys.secretManagerValidationIterator))
         .isEqualTo(secretManagerValidationIterator);
 
-    serviceGuardDataCollectionIteration = r.nextLong();
+    serviceGuardDataCollectionIteration = random.nextLong();
     account.updateNextIteration(AccountKeys.serviceGuardDataCollectionIteration, serviceGuardDataCollectionIteration);
     assertThat(account.obtainNextIteration(AccountKeys.serviceGuardDataCollectionIteration))
         .isEqualTo(serviceGuardDataCollectionIteration);
 
-    serviceGuardDataAnalysisIteration = r.nextLong();
+    serviceGuardDataAnalysisIteration = random.nextLong();
     account.updateNextIteration(AccountKeys.serviceGuardDataAnalysisIteration, serviceGuardDataAnalysisIteration);
     assertThat(account.obtainNextIteration(AccountKeys.serviceGuardDataAnalysisIteration))
         .isEqualTo(serviceGuardDataAnalysisIteration);
 
-    workflowDataCollectionIteration = r.nextLong();
+    workflowDataCollectionIteration = random.nextLong();
     account.updateNextIteration(AccountKeys.workflowDataCollectionIteration, workflowDataCollectionIteration);
     assertThat(account.obtainNextIteration(AccountKeys.workflowDataCollectionIteration))
         .isEqualTo(workflowDataCollectionIteration);
 
-    secretManagerValidationIterator = r.nextLong();
+    secretManagerValidationIterator = random.nextLong();
     account.updateNextIteration(AccountKeys.secretManagerValidationIterator, secretManagerValidationIterator);
     assertThat(account.obtainNextIteration(AccountKeys.secretManagerValidationIterator))
         .isEqualTo(secretManagerValidationIterator);
 
     try {
-      account.updateNextIteration(generateUuid(), r.nextLong());
+      account.updateNextIteration(generateUuid(), random.nextLong());
       fail("Did not throw exception");
     } catch (IllegalArgumentException e) {
       // expected

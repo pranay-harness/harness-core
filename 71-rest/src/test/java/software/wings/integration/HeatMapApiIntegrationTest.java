@@ -47,6 +47,7 @@ import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,7 +55,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -63,6 +63,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
+  private static final SecureRandom random = new SecureRandom();
+
   @Inject WingsPersistence wingsPersistence;
   @Inject private ContinuousVerificationService continuousVerificationService;
 
@@ -270,7 +272,6 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     logger.info("Creating {} units", minutesIn2Hours);
 
     List<NewRelicMetricDataRecord> metricDataRecords = new ArrayList<>();
-    Random random = new Random();
     for (int i = 0; i < minutesIn2Hours; i++) {
       TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
       timeSeriesMLAnalysisRecord.setAppId(savedApp.getUuid());
@@ -337,8 +338,6 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
 
   private NewRelicMetricDataRecord getNewRelicMetricRecord(
       String transactionName, int minute, String configId, List<String> metrics, StateType stateType) {
-    Random random = new Random();
-
     // Add new relic metric record for minute=currentMinute + i
     NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder()
                                                             .appId(savedApp.getUuid())

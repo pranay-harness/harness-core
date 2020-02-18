@@ -95,6 +95,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -117,6 +118,8 @@ import javax.ws.rs.core.Response;
 @SuppressWarnings("ALL")
 @Slf4j
 public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
+  private static final SecureRandom random = new SecureRandom();
+
   private static final StateType[] logAnalysisStates = new StateType[] {StateType.SPLUNKV2, StateType.ELK};
   private Set<String> hosts = new HashSet<>();
   @Inject private LogAnalysisService analysisService;
@@ -1243,7 +1246,6 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testGetCurrentExecutionLogs() throws Exception {
-    final Random r = new Random();
     final int numOfExecutions = 4;
     final int numOfHosts = 3;
     final int numOfMinutes = 3;
@@ -1321,7 +1323,6 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   @Category(DeprecatedIntegrationTests.class)
   @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testGetLastExecutionLogs() throws Exception {
-    final Random r = new Random();
     final int numOfExecutions = 1;
     final int numOfClusters = 10;
     final int numOfHosts = 1 + r.nextInt(5);

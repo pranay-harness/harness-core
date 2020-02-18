@@ -13,9 +13,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URISyntaxException;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
@@ -26,7 +26,7 @@ import javax.ws.rs.core.Response.Status;
  */
 @Slf4j
 public class IntegrationTestUtils {
-  private static Random random = new Random();
+  private static final SecureRandom random = new SecureRandom();
 
   /**
    * Creates the hosts file.

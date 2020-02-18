@@ -26,16 +26,17 @@ import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessH
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Date;
 import java.util.Objects;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 
 @DisallowConcurrentExecution
 @Slf4j
 public class InstanceStatsCollectorJob implements Job {
+  private static final SecureRandom random = new SecureRandom();
   public static final String GROUP = "INSTANCE_STATS_COLLECT_CRON_GROUP";
   public static final String ACCOUNT_ID_KEY = "accountId";
 
@@ -50,7 +51,7 @@ public class InstanceStatsCollectorJob implements Job {
 
   public static void addWithDelay(PersistentScheduler jobScheduler, String accountId) {
     // Add some randomness in the trigger start time to avoid overloading quartz by firing jobs at the same time.
-    long startTime = System.currentTimeMillis() + new Random().nextInt((int) TimeUnit.MINUTES.toMillis(SYNC_INTERVAL));
+    long startTime = System.currentTimeMillis() + random.nextInt((int) TimeUnit.MINUTES.toMillis(SYNC_INTERVAL));
     addInternal(jobScheduler, accountId, new Date(startTime));
   }
 

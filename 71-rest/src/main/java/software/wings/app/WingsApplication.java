@@ -178,10 +178,10 @@ import software.wings.sm.StateMachineExecutor;
 import software.wings.utils.CacheManager;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -202,9 +202,10 @@ import javax.ws.rs.Path;
  */
 @Slf4j
 public class WingsApplication extends Application<MainConfiguration> {
+  private static final SecureRandom random = new SecureRandom();
+
   private final MetricRegistry metricRegistry = new MetricRegistry();
   private HarnessMetricRegistry harnessMetricRegistry;
-  private final Random rand = new Random();
 
   /**
    * The entry point of application.
@@ -604,20 +605,20 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("Initializing scheduled jobs...");
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
-            injector.getInstance(NotifyResponseCleaner.class), rand.nextInt(300), 300L, TimeUnit.SECONDS);
+            injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), rand.nextInt(5), 5L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), random.nextInt(5), 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
         .scheduleWithFixedDelay(
-            injector.getInstance(GitChangeSetRunnable.class), rand.nextInt(4), 4L, TimeUnit.SECONDS);
+            injector.getInstance(GitChangeSetRunnable.class), random.nextInt(4), 4L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(
-            injector.getInstance(PersistentLockCleanup.class), rand.nextInt(60), 60L, TimeUnit.MINUTES);
+            injector.getInstance(PersistentLockCleanup.class), random.nextInt(60), 60L, TimeUnit.MINUTES);
     injector.getInstance(DeploymentReconExecutorService.class)
         .scheduleWithFixedDelay(
-            injector.getInstance(DeploymentReconTask.class), rand.nextInt(60), 15 * 60L, TimeUnit.SECONDS);
+            injector.getInstance(DeploymentReconTask.class), random.nextInt(60), 15 * 60L, TimeUnit.SECONDS);
   }
 
   public static void registerObservers(Injector injector) {

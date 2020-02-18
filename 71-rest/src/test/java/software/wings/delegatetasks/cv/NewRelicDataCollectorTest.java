@@ -47,15 +47,17 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataResponse;
 import software.wings.service.impl.newrelic.NewRelicMetricResponse;
 
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 
 public class NewRelicDataCollectorTest extends WingsBaseTest {
+  private static final SecureRandom random = new SecureRandom();
+
   private NewRelicConfig config;
   private NewRelicDataCollector newRelicDataCollector;
   private String host = "test-host";
@@ -457,7 +459,7 @@ public class NewRelicDataCollectorTest extends WingsBaseTest {
         .newRelicConfig(config)
         .hostsToGroupNameMap(Collections.singletonMap(host, "default"))
         .hosts(new HashSet<>(Arrays.asList(host)))
-        .newRelicAppId(new Random().nextLong())
+        .newRelicAppId(random.nextLong())
         .build();
   }
 }

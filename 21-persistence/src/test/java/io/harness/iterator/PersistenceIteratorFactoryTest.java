@@ -22,8 +22,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+import java.security.SecureRandom;
 import java.time.Duration;
-import java.util.Random;
 
 public class PersistenceIteratorFactoryTest extends PersistenceTest {
   @Mock WorkersConfiguration workersConfiguration;
@@ -77,10 +77,11 @@ public class PersistenceIteratorFactoryTest extends PersistenceTest {
     // TODO: check if we can verify scheduleAtFixedRate is called
   }
   private static class DummyClass implements PersistentIterable {
-    private Random rand = new Random();
+    private static final SecureRandom random = new SecureRandom();
+
     @Override
     public Long obtainNextIteration(String fieldName) {
-      return rand.nextLong();
+      return random.nextLong();
     }
     @Override
     public String getUuid() {

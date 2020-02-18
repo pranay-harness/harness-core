@@ -90,6 +90,7 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -97,7 +98,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -109,6 +109,8 @@ import javax.ws.rs.core.GenericType;
  */
 @Slf4j
 public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
+  private static final SecureRandom random = new SecureRandom();
+
   public static String NEW_RELIC_CONNECTOR_NAME = "NewRelic";
 
   private Set<String> hosts = new HashSet<>();
@@ -294,8 +296,6 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     final String applicationId = UUID.randomUUID().toString();
     final String delegateTaskId = UUID.randomUUID().toString();
 
-    Random r = new Random();
-
     for (int batchNum = 0; batchNum < numOfBatches; batchNum++) {
       List<NewRelicMetricDataRecord> metricDataRecords = new ArrayList<>();
 
@@ -314,10 +314,10 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
             record.setDataCollectionMinute(collectionMin);
 
             record.setValues(new HashMap<>());
-            record.getValues().put(THROUGHPUT, r.nextDouble());
-            record.getValues().put(AVERAGE_RESPONSE_TIME, r.nextDouble());
-            record.getValues().put(ERROR, r.nextDouble());
-            record.getValues().put(APDEX_SCORE, r.nextDouble());
+            record.getValues().put(THROUGHPUT, random.nextDouble());
+            record.getValues().put(AVERAGE_RESPONSE_TIME, random.nextDouble());
+            record.getValues().put(ERROR, random.nextDouble());
+            record.getValues().put(APDEX_SCORE, random.nextDouble());
 
             metricDataRecords.add(record);
           }

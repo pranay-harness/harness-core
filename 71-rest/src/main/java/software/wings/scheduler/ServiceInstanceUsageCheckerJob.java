@@ -19,14 +19,15 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessHandler;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Objects;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @DisallowConcurrentExecution
 public class ServiceInstanceUsageCheckerJob implements Job {
+  private static final SecureRandom random = new SecureRandom();
   public static final String GROUP = "SERVICE_INSTANCE_USAGE_CHECKER_CRON_GROUP";
 
   private static final int SYNC_INTERVAL_IN_HOURS = 24;
@@ -39,7 +40,7 @@ public class ServiceInstanceUsageCheckerJob implements Job {
 
   public static void addWithDelay(PersistentScheduler jobScheduler, String accountId) {
     // Add some randomness in the trigger start time to avoid overloading quartz by firing jobs at the same time.
-    long startTime = System.currentTimeMillis() + new Random().nextInt((int) TimeUnit.MINUTES.toMillis(30));
+    long startTime = System.currentTimeMillis() + random.nextInt((int) TimeUnit.MINUTES.toMillis(30));
     addInternal(jobScheduler, accountId, new Date(startTime));
   }
 

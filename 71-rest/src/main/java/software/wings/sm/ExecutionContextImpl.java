@@ -106,6 +106,7 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContextImpl.ServiceVariables.ServiceVariablesBuilder;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -113,13 +114,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class ExecutionContextImpl implements DeploymentExecutionContext {
+  private static final SecureRandom random = new SecureRandom();
+
   public static final String PHASE_PARAM = "PHASE_PARAM";
 
   private static final Pattern wildCharPattern = Pattern.compile("[-+*/\\\\ &$\"'.|]");
@@ -570,9 +572,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         }
       }
 
-      String varId = varPrefix + new Random().nextInt(10000);
+      String varId = varPrefix + random.nextInt(10000);
       while (normalizedExpressionMap.containsKey(varId)) {
-        varId = varPrefix + new Random().nextInt(10000);
+        varId = varPrefix + random.nextInt(10000);
       }
       normalizedExpressionMap.put(varId, variable);
       matcher.appendReplacement(sb, varId);

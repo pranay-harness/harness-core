@@ -13,11 +13,11 @@ import io.harness.threading.Morpheus;
 import lombok.Builder;
 import lombok.Value;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 /*
  * Distributed constrain is designed to limit the access to arbitrary resource. It allows for configurable number of
@@ -44,7 +44,7 @@ import java.util.Random;
 public class Constraint {
   private static final int DELAY_FOR_OPTIMISTIC_RETRIES = 10;
 
-  private static final Random random = new Random();
+  private static final SecureRandom random = new SecureRandom();
 
   private ConstraintId id;
 

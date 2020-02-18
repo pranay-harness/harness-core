@@ -1745,7 +1745,6 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     createLogsCVConfig(true);
     String cvConfigId = wingsPersistence.save(logsCVConfiguration);
 
-    Random r = new Random();
     int numOfHosts = 1 + r.nextInt(10);
     int numOfL0Records = 1 + r.nextInt(10);
     int numOfMinutes = 1 + r.nextInt(5);
@@ -1833,7 +1832,6 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     createLogsCVConfig(true);
     String cvConfigId = wingsPersistence.save(logsCVConfiguration);
 
-    Random r = new Random();
     int numOfHosts = 1 + r.nextInt(10);
     int numOfL1Records = 1 + r.nextInt(10);
     int numOfMinutes = 1 + r.nextInt(5);

@@ -47,12 +47,14 @@ import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
+  private static final SecureRandom random = new SecureRandom();
+
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private AppService appService;
   @Inject protected MetricDataAnalysisService metricAnalysisService;
@@ -412,7 +414,6 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
                                      .getStateExecutionData()
                                      .getCorrelationId();
 
-    Random random = new Random();
     ExecutionStatus executionStatus = random.nextBoolean() ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     continuousVerificationService.notifyWorkflowVerificationState(appId, stateExecutionId, executionStatus);
     final NotifyResponse notifyResponse = wingsPersistence.get(NotifyResponse.class, correlationId);
