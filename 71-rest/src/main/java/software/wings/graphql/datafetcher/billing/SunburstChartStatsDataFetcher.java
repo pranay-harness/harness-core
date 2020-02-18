@@ -341,9 +341,9 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
       String uniqueId = parentId + ":" + id;
       dataPointBuilder.id(uniqueId);
       dataPointBuilder.metadata(sunburstGridDataPointMap.get(uniqueId));
-      double value = billingDataHelper.getRoundedDoubleValue(
-          resultSet.getBigDecimal(BillingDataQueryMetadata.BillingDataMetaDataFields.SUM.getFieldName()));
-      dataPointBuilder.value(value);
+      double value =
+          resultSet.getBigDecimal(BillingDataQueryMetadata.BillingDataMetaDataFields.SUM.getFieldName()).doubleValue();
+      dataPointBuilder.value(billingDataHelper.getRoundedDoubleValue(value));
       childIdCostMap.put(parentId, childIdCostMap.getOrDefault(parentId, 0.0) + value);
       sunburstChartDataPoints.add(dataPointBuilder.build());
     }
