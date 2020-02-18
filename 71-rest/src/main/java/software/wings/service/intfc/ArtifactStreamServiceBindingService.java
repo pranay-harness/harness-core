@@ -7,11 +7,10 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
-import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 
 import java.util.List;
 
-public interface ArtifactStreamServiceBindingService extends OwnedByArtifactStream {
+public interface ArtifactStreamServiceBindingService {
   ArtifactStreamBinding create(
       @NotEmpty String appId, @NotEmpty String serviceId, ArtifactStreamBinding artifactStreamBinding);
 
@@ -135,4 +134,6 @@ public interface ArtifactStreamServiceBindingService extends OwnedByArtifactStre
   void processServiceVariables(List<ServiceVariable> serviceVariables);
 
   void processVariables(List<Variable> variables);
+
+  void deleteByArtifactStream(String artifactStreamId);
 }

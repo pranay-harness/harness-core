@@ -871,8 +871,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       ensureArtifactStreamSafeToDelete(GLOBAL_APP_ID, artifactStreamId, accountId);
     }
 
+    boolean retVal = pruneArtifactStream(artifactStream.fetchAppId(), artifactStreamId);
     yamlPushService.pushYamlChangeSet(accountId, artifactStream, null, Type.DELETE, syncFromGit, false);
-    return pruneArtifactStream(artifactStream.fetchAppId(), artifactStreamId);
+    return retVal;
   }
 
   private boolean delete(String appId, String artifactStreamId, boolean forceDelete, boolean syncFromGit) {
@@ -903,14 +904,18 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       ensureArtifactStreamSafeToDelete(appId, artifactStreamId, accountId);
     }
 
+    boolean retVal = pruneArtifactStream(appId, artifactStreamId);
     yamlPushService.pushYamlChangeSet(accountId, artifactStream, null, Type.DELETE, syncFromGit, false);
-    return pruneArtifactStream(appId, artifactStreamId);
+    return retVal;
   }
 
   @Override
   public boolean pruneArtifactStream(String appId, String artifactStreamId) {
+    alertService.deleteByArtifactStream(appId, artifactStreamId);
     pruneQueue.send(new PruneEvent(ArtifactStream.class, appId, artifactStreamId));
-    return wingsPersistence.delete(ArtifactStream.class, appId, artifactStreamId);
+    boolean retVal = wingsPersistence.delete(ArtifactStream.class, appId, artifactStreamId);
+    artifactStreamServiceBindingService.deleteByArtifactStream(artifactStreamId);
+    return retVal;
   }
 
   @Override
@@ -1238,16 +1243,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     // in parallel
     artifactStream.setService(serviceResourceService.getWithDetails(appId, serviceId));
 
-    // NOTE: artifactStream and binding must be deleted atomically
-    boolean retVal = delete(appId, artifactStream, forceDelete, syncFromGit);
-    try {
-      artifactStreamServiceBindingService.deleteOld(appId, serviceId, artifactStreamId);
-    } catch (Exception e) {
-      create(artifactStream, false);
-      throw e;
-    }
-
-    return retVal;
+    // NOTE: Binding is deleted internally by this method.
+    return delete(appId, artifactStream, forceDelete, syncFromGit);
   }
 
   @Override

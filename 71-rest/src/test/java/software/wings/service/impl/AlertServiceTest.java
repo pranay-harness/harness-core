@@ -275,7 +275,7 @@ public class AlertServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void shouldPruneByArtifactStream() {
+  public void shouldDeleteByArtifactStream() {
     AlertData alertData = ArtifactCollectionFailedAlert.builder()
                               .appId(APP_ID)
                               .serviceId(SERVICE_ID)
@@ -289,7 +289,7 @@ public class AlertServiceTest extends WingsBaseTest {
         alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
     assertThat(alerts).hasSize(1);
 
-    alertService.pruneByArtifactStream(APP_ID, ARTIFACT_STREAM_ID);
+    alertService.deleteByArtifactStream(APP_ID, ARTIFACT_STREAM_ID);
 
     alerts = alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
     assertThat(alerts).hasSize(0);
@@ -298,7 +298,7 @@ public class AlertServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void shouldPruneByArtifactStreamAtConnectorLevel() {
+  public void shouldDeleteByArtifactStreamAtConnectorLevel() {
     AlertData alertData = ArtifactCollectionFailedAlert.builder().artifactStreamId(ARTIFACT_STREAM_ID).build();
 
     alertService.openAlert(ACCOUNT_ID, null, ARTIFACT_COLLECTION_FAILED, alertData);
@@ -311,7 +311,7 @@ public class AlertServiceTest extends WingsBaseTest {
         alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
     assertThat(alerts).hasSize(1);
 
-    alertService.pruneByArtifactStream(GLOBAL_APP_ID, ARTIFACT_STREAM_ID);
+    alertService.deleteByArtifactStream(GLOBAL_APP_ID, ARTIFACT_STREAM_ID);
 
     alerts = alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
     assertThat(alerts).hasSize(0);

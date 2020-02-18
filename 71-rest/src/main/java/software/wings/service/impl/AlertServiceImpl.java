@@ -362,7 +362,7 @@ public class AlertServiceImpl implements AlertService {
   }
 
   @Override
-  public void pruneByArtifactStream(String appId, String artifactStreamId) {
+  public void deleteByArtifactStream(String appId, String artifactStreamId) {
     // NOTE: this pruning is done only for ArtifactCollectionFailedAlert
     String accountId;
     if (GLOBAL_APP_ID.equals(appId)) {

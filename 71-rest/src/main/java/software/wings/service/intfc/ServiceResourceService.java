@@ -88,7 +88,9 @@ public interface ServiceResourceService extends OwnedByApplication {
    */
   @ValidationGroups(Update.class) Service update(@Valid Service service, boolean fromYaml);
 
-  Service updateArtifactStreamIds(Service service, List<String> artifactStreamIds);
+  Service addArtifactStreamId(Service service, String artifactStreamId);
+
+  Service removeArtifactStreamId(Service service, String artifactStreamId);
 
   /**
    * Gets the.

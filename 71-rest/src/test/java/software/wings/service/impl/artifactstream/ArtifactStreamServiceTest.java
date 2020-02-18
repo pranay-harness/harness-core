@@ -96,6 +96,7 @@ import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
 import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -142,6 +143,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private AzureResourceService azureResourceService;
   @Mock private TemplateService templateService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private AlertService alertService;
 
   @Before
   public void setUp() {
@@ -2931,6 +2933,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedScript.getScriptString()).isEqualTo("Welcome to harness");
 
     artifactStreamService.delete(APP_ID, updatedArtifactStream.getUuid());
+    verify(alertService).deleteByArtifactStream(any(), eq(updatedArtifactStream.getUuid()));
+    verify(artifactStreamServiceBindingService).deleteByArtifactStream(eq(updatedArtifactStream.getUuid()));
 
     assertThat(artifactStreamService.get(updatedArtifactStream.getUuid())).isNull();
 

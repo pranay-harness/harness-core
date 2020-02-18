@@ -288,17 +288,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
       throw new InvalidRequestException("Artifact stream does not exist", USER);
     }
 
-    List<String> artifactStreamIds = service.getArtifactStreamIds();
-    if (artifactStreamIds == null) {
-      artifactStreamIds = new ArrayList<>();
-      artifactStreamIds.add(artifactStreamId);
-    } else if (!artifactStreamIds.contains(artifactStreamId)) {
-      artifactStreamIds.add(artifactStreamId);
-    } else {
-      return artifactStream;
-    }
-
-    serviceResourceService.updateArtifactStreamIds(service, artifactStreamIds);
+    serviceResourceService.addArtifactStreamId(service, artifactStreamId);
     return artifactStream;
   }
 
@@ -547,8 +537,10 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   }
 
   @Override
-  public void pruneByArtifactStream(String appId, String artifactStreamId) {
-    List<Service> services = listServices(artifactStreamId);
+  public void deleteByArtifactStream(String artifactStreamId) {
+    // Only applicable for feature flag off as after the refactor artifact streams are unrelated to services.
+    // We can't fetch the artifact stream here as it is most likely already deleted from the DB.
+    List<Service> services = serviceResourceService.listByArtifactStreamId(artifactStreamId);
     if (isEmpty(services)) {
       return;
     }
@@ -557,12 +549,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   }
 
   private boolean deleteOld(Service service, String artifactStreamId) {
-    List<String> artifactStreamIds = service.getArtifactStreamIds();
-    if (artifactStreamIds == null || !artifactStreamIds.remove(artifactStreamId)) {
-      return false;
-    }
-
-    serviceResourceService.updateArtifactStreamIds(service, artifactStreamIds);
+    serviceResourceService.removeArtifactStreamId(service, artifactStreamId);
     return true;
   }
 

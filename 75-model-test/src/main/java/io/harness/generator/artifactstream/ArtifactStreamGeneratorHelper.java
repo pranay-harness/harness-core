@@ -14,9 +14,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceResourceService;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Singleton
 public class ArtifactStreamGeneratorHelper {
   @Inject WingsPersistence wingsPersistence;
@@ -48,15 +45,8 @@ public class ArtifactStreamGeneratorHelper {
 
       // TODO: ASR: update this method after refactor
 
-      List<String> artifactStreamIds = service.getArtifactStreamIds();
-      if (artifactStreamIds == null) {
-        artifactStreamIds = new ArrayList<>();
-      }
-      if (!artifactStreamIds.contains(savedArtifactStream.getUuid())) {
-        artifactStreamIds.add(savedArtifactStream.getUuid());
-        Service updatedService = serviceResourceService.updateArtifactStreamIds(service, artifactStreamIds);
-        owners.obtainService().setArtifactStreamIds(updatedService.getArtifactStreamIds());
-      }
+      Service updatedService = serviceResourceService.addArtifactStreamId(service, savedArtifactStream.getUuid());
+      owners.obtainService().setArtifactStreamIds(updatedService.getArtifactStreamIds());
     }
     return savedArtifactStream;
   }
