@@ -13,4 +13,5 @@ public class QLSSHCredentialInput implements QLObject {
   QLSSHAuthenticationScheme authenticationScheme;
   QLSSHAuthenticationInput sshAuthentication;
   QLKerberosAuthenticationInput kerberosAuthentication;
+  private QLUsageScope usageScope;
 }

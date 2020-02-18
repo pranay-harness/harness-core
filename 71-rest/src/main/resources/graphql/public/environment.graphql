@@ -48,3 +48,13 @@ enum EnvironmentType {
   PROD
   NON_PROD
 }
+
+input EnvFilterInput {
+  filterTypes: EnvFilterType
+  envIds: String
+}
+
+type EnvFilter {
+  filterTypes: [EnvFilterType]
+  envIds: [String]
+}

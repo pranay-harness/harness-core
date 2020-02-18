@@ -9,4 +9,5 @@ public interface QLSecret extends QLObject {
   String getId();
   QLSecretType getSecretType();
   String getName();
+  QLUsageScope getUsageScope();
 }

@@ -2,16 +2,19 @@ input EncryptedTextInput {
   secretManagerId: String
   name: String!
   value: String!
-}
-
-type EncryptedText implements Secret {
-  secretManagerId: String
-  name: String
-  type: SecretType
-  id: String
+  usageScope: UsageScopeInput
 }
 
 input UpdateEncryptedText {
   name: String
   value: String
+  usageScope: UsageScopeInput
+}
+
+type EncryptedText implements Secret {
+  secretManagerId: String
+  name: String
+  secretType: SecretType
+  id: String
+  usageScope: UsageScope
 }

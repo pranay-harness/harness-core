@@ -106,7 +106,7 @@ public class PipelineTest extends GraphQLTest {
   }
 }*/);
 
-    final ExecutionResult result = qlResult(query, "accountId");
+    final ExecutionResult result = qlResult(query, getAccountId());
     assertThat(result.getErrors().size()).isEqualTo(1);
 
     assertThat(result.getErrors().get(0).getMessage())

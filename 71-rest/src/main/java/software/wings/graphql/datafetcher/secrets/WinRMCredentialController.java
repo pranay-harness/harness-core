@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.secrets;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme.NTLM;
+import static software.wings.settings.SettingValue.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -14,11 +15,11 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.graphql.schema.type.secrets.QLAuthScheme;
 import software.wings.graphql.schema.type.secrets.QLSecretType;
+import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.graphql.schema.type.secrets.QLWinRMCredential;
 import software.wings.graphql.schema.type.secrets.QLWinRMCredentialInput;
 import software.wings.graphql.schema.type.secrets.QLWinRMCredentialUpdate;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue;
 
 import javax.validation.constraints.NotNull;
 
@@ -26,6 +27,7 @@ import javax.validation.constraints.NotNull;
 @Singleton
 public class WinRMCredentialController {
   @Inject SettingsService settingService;
+  @Inject UsageScopeController usageScopeController;
   public QLWinRMCredential populateWinRMCredential(@NotNull SettingAttribute settingAttribute) {
     QLAuthScheme authScheme = QLAuthScheme.NTLM;
     WinRmConnectionAttributes winRmConnectionAttributes = (WinRmConnectionAttributes) settingAttribute.getValue();
@@ -39,6 +41,7 @@ public class WinRMCredentialController {
         .useSSL(winRmConnectionAttributes.isUseSSL())
         .skipCertCheck(winRmConnectionAttributes.isSkipCertChecks())
         .port(winRmConnectionAttributes.getPort())
+        .usageScope(usageScopeController.populateUsageScope(settingAttribute.getUsageRestrictions()))
         .build();
   }
 
@@ -60,40 +63,47 @@ public class WinRMCredentialController {
       @NotNull QLWinRMCredentialInput winRMCredentialInput, String accountId) {
     validateSettingAttribute(winRMCredentialInput);
     WinRmConnectionAttributes.AuthenticationScheme authenticationScheme = NTLM;
-    boolean skipCertChecks = false;
-    boolean useSSL = false;
-    if (winRMCredentialInput.getSkipCertCheck().booleanValue()) {
+    boolean skipCertChecks = true;
+    boolean useSSL = true;
+    if (winRMCredentialInput.getSkipCertCheck() != null && winRMCredentialInput.getSkipCertCheck().booleanValue()) {
       skipCertChecks = winRMCredentialInput.getSkipCertCheck().booleanValue();
     }
-    if (winRMCredentialInput.getUseSSL().booleanValue()) {
+    if (winRMCredentialInput.getUseSSL() != null && winRMCredentialInput.getUseSSL().booleanValue()) {
       useSSL = winRMCredentialInput.getUseSSL().booleanValue();
     }
     String domain = "";
     if (winRMCredentialInput.getDomain() != null) {
       domain = winRMCredentialInput.getDomain();
     }
+    int port = 5986;
+    if (winRMCredentialInput.getPort() != null) {
+      port = winRMCredentialInput.getPort();
+    }
     WinRmConnectionAttributes settingValue = WinRmConnectionAttributes.builder()
                                                  .username(winRMCredentialInput.getUserName())
                                                  .password(winRMCredentialInput.getPassword().toCharArray())
                                                  .authenticationScheme(authenticationScheme)
-                                                 .port(winRMCredentialInput.getPort())
+                                                 .port(port)
                                                  .skipCertChecks(skipCertChecks)
                                                  .accountId(accountId)
                                                  .useSSL(useSSL)
                                                  .domain(domain)
                                                  .build();
-    settingValue.setSettingType(SettingValue.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES);
+    settingValue.setSettingType(WINRM_CONNECTION_ATTRIBUTES);
     return SettingAttribute.Builder.aSettingAttribute()
         .withCategory(SettingAttribute.SettingCategory.SETTING)
         .withValue(settingValue)
         .withAccountId(accountId)
         .withName(winRMCredentialInput.getName())
+        .withUsageRestrictions(
+            usageScopeController.populateUsageRestrictions(winRMCredentialInput.getUsageScope(), accountId))
         .build();
   }
 
   public SettingAttribute updateWinRMCredential(QLWinRMCredentialUpdate updateInput, String id, String accountId) {
     SettingAttribute existingWinRMCredential = settingService.get(id);
-    if (existingWinRMCredential == null) {
+    if (existingWinRMCredential == null
+        || existingWinRMCredential.getValue().getSettingType() != WINRM_CONNECTION_ATTRIBUTES) {
       throw new InvalidRequestException(String.format("No winRM credential exists with the id %s", id));
     }
     if (updateInput.getName().hasBeenSet()) {
@@ -128,18 +138,24 @@ public class WinRMCredentialController {
     }
 
     if (updateInput.getUseSSL().hasBeenSet()) {
-      boolean useSSL = updateInput.getUseSSL().getValue().orElse(false);
+      boolean useSSL = updateInput.getUseSSL().getValue().orElse(true);
       settingValue.setUseSSL(useSSL);
     }
 
     if (updateInput.getSkipCertCheck().hasBeenSet()) {
-      boolean skipCertCheck = updateInput.getSkipCertCheck().getValue().orElse(false);
+      boolean skipCertCheck = updateInput.getSkipCertCheck().getValue().orElse(true);
       settingValue.setSkipCertChecks(skipCertCheck);
     }
 
     if (updateInput.getPort().hasBeenSet()) {
-      Integer port = updateInput.getPort().getValue().orElse(22);
+      Integer port = updateInput.getPort().getValue().orElse(5986);
       settingValue.setPort(port.intValue());
+    }
+
+    if (updateInput.getUsageScope().hasBeenSet()) {
+      QLUsageScope usageScope = updateInput.getUsageScope().getValue().orElse(null);
+      existingWinRMCredential.setUsageRestrictions(
+          usageScopeController.populateUsageRestrictions(usageScope, accountId));
     }
 
     existingWinRMCredential.setValue(settingValue);

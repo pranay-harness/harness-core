@@ -1,9 +1,5 @@
 package software.wings.graphql.datafetcher.userGroup;
 
-import static software.wings.graphql.datafetcher.userGroup.UserGroupPermissionsController.populateUserGroupAccountPermissionEntity;
-import static software.wings.graphql.datafetcher.userGroup.UserGroupPermissionsController.populateUserGroupAppPermissionEntity;
-import static software.wings.graphql.datafetcher.userGroup.UserGroupPermissionsController.populateUserGroupPermissions;
-
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -27,6 +23,7 @@ public class UpdateUserGroupPermissionsDataFetcher
     extends BaseMutatorDataFetcher<QLUpdateUserGroupPermissionsInput, QLUpdateUserGroupPermissionsPayload> {
   @Inject private UserGroupService userGroupService;
   @Inject private UserGroupPermissionValidator userGroupPermissionValidator;
+  @Inject private UserGroupPermissionsController userGroupPermissionsController;
 
   @Inject
   public UpdateUserGroupPermissionsDataFetcher() {
@@ -35,8 +32,10 @@ public class UpdateUserGroupPermissionsDataFetcher
 
   private UserGroup updateUserGroupPermissions(QLUpdateUserGroupPermissionsInput parameters, String accountId) {
     userGroupPermissionValidator.validatePermission(parameters.getPermissions(), accountId);
-    AccountPermissions accountPermissions = populateUserGroupAccountPermissionEntity(parameters.getPermissions());
-    Set<AppPermission> appPermissions = populateUserGroupAppPermissionEntity(parameters.getPermissions());
+    AccountPermissions accountPermissions =
+        userGroupPermissionsController.populateUserGroupAccountPermissionEntity(parameters.getPermissions());
+    Set<AppPermission> appPermissions =
+        userGroupPermissionsController.populateUserGroupAppPermissionEntity(parameters.getPermissions());
     return userGroupService.setUserGroupPermissions(
         accountId, parameters.getUserGroupId(), accountPermissions, appPermissions);
   }
@@ -49,7 +48,7 @@ public class UpdateUserGroupPermissionsDataFetcher
       throw new InvalidRequestException("No userGroup Exists with id " + parameters.getUserGroupId());
     }
     final UserGroup userGroup = updateUserGroupPermissions(parameters, mutationContext.getAccountId());
-    QLGroupPermissions permissions = populateUserGroupPermissions(userGroup);
+    QLGroupPermissions permissions = userGroupPermissionsController.populateUserGroupPermissions(userGroup);
     return QLUpdateUserGroupPermissionsPayload.builder()
         .clientMutationId(parameters.getClientMutationId())
         .permissions(permissions)

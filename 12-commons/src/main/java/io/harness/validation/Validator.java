@@ -23,6 +23,12 @@ public class Validator {
     }
   }
 
+  public static void notBlankCheck(String message, String value) {
+    if (StringUtils.isBlank(value)) {
+      throw new InvalidRequestException(message);
+    }
+  }
+
   public static void notNullCheck(String message, Object value, EnumSet<ReportTarget> reportTargets) {
     if (value == null) {
       throw new GeneralException(message, reportTargets);

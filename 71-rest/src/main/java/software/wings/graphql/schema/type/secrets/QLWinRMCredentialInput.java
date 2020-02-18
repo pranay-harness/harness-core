@@ -17,4 +17,5 @@ public class QLWinRMCredentialInput {
   private Boolean skipCertCheck;
   private Integer port;
   private String clientMutationId;
+  private QLUsageScope usageScope;
 }

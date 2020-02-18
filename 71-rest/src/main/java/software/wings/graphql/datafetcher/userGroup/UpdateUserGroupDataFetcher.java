@@ -31,6 +31,7 @@ public class UpdateUserGroupDataFetcher
   @Inject UserGroupPermissionValidator userGroupPermissionValidator;
   @Inject UserGroupController userGroupController;
   @Inject SSOSettingService ssoSettingService;
+  @Inject UserGroupPermissionsController userGroupPermissionsController;
 
   @Inject
   public UpdateUserGroupDataFetcher(UserGroupService userGroupService,
@@ -86,9 +87,9 @@ public class UpdateUserGroupDataFetcher
     if (userGroupInput.getPermissions().hasBeenSet()) {
       userGroupPermissionValidator.validatePermission(
           userGroupInput.getPermissions().getValue().orElse(null), mutationContext.getAccountId());
-      existingUserGroup.setAccountPermissions(UserGroupPermissionsController.populateUserGroupAccountPermissionEntity(
+      existingUserGroup.setAccountPermissions(userGroupPermissionsController.populateUserGroupAccountPermissionEntity(
           userGroupInput.getPermissions().getValue().orElse(null)));
-      existingUserGroup.setAppPermissions(UserGroupPermissionsController.populateUserGroupAppPermissionEntity(
+      existingUserGroup.setAppPermissions(userGroupPermissionsController.populateUserGroupAppPermissionEntity(
           userGroupInput.getPermissions().getValue().orElse(null)));
       userGroupService.updatePermissions(existingUserGroup);
     }

@@ -16,4 +16,5 @@ public class QLSSHCredentialUpdate {
   QLSSHAuthenticationScheme authenticationScheme;
   RequestField<QLSSHAuthenticationInput> sshAuthentication;
   RequestField<QLKerberosAuthenticationInput> kerberosAuthentication;
+  RequestField<QLUsageScope> usageScope;
 }

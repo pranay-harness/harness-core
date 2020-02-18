@@ -8,6 +8,7 @@ import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
 import static software.wings.graphql.schema.type.secrets.QLTGTGenerationUsing.KEY_TAB_FILE;
 import static software.wings.graphql.schema.type.secrets.QLTGTGenerationUsing.PASSWORD;
+import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -16,6 +17,7 @@ import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KerberosConfig;
@@ -39,8 +41,8 @@ import software.wings.graphql.schema.type.secrets.QLSSHPassword;
 import software.wings.graphql.schema.type.secrets.QLSecretType;
 import software.wings.graphql.schema.type.secrets.QLTGTGenerationMethod;
 import software.wings.graphql.schema.type.secrets.QLTGTGenerationUsing;
+import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue;
 
 import javax.validation.constraints.NotNull;
 
@@ -48,6 +50,8 @@ import javax.validation.constraints.NotNull;
 @Singleton
 public class SSHCredentialController {
   @Inject SettingsService settingsService;
+  @Inject UsageScopeController usageScopeController;
+
   public QLSSHCredential populateSSHCredential(@NotNull SettingAttribute settingAttribute) {
     QLSSHAuthenticationType sshAuthenticationType = null;
     HostConnectionAttributes sshCreds = (HostConnectionAttributes) settingAttribute.getValue();
@@ -67,6 +71,7 @@ public class SSHCredentialController {
         .name(settingAttribute.getName())
         .secretType(QLSecretType.SSH_CREDENTIAL)
         .authenticationType(sshAuthenticationType)
+        .usageScope(usageScopeController.populateUsageScope(settingAttribute.getUsageRestrictions()))
         .build();
   }
 
@@ -97,7 +102,9 @@ public class SSHCredentialController {
     if (inlineSSHKey == null || isBlank(inlineSSHKey.getSshKey())) {
       throw new InvalidRequestException("No inline SSH key provided for the SSH credential type SSH_KEY");
     }
-    String key = inlineSSHKey.getSshKey();
+    String base64Key = inlineSSHKey.getSshKey();
+    byte[] valueDecoded = Base64.decodeBase64(base64Key);
+    String key = new String(valueDecoded);
     passphrase = inlineSSHKey.getPassphrase();
     return SSHSetting.builder()
         .accessType(KEY)
@@ -280,7 +287,7 @@ public class SSHCredentialController {
             .withPassphrase(passphrase == null ? null : passphrase.toCharArray())
             .withAuthenticationScheme(authScheme)
             .build();
-    settingValue.setSettingType(SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES);
+    settingValue.setSettingType(HOST_CONNECTION_ATTRIBUTES);
     return settingValue;
   }
 
@@ -292,12 +299,15 @@ public class SSHCredentialController {
         .withValue(settingValue)
         .withAccountId(accountId)
         .withCategory(SettingAttribute.SettingCategory.SETTING)
+        .withUsageRestrictions(
+            usageScopeController.populateUsageRestrictions(sshCredentialInput.getUsageScope(), accountId))
         .build();
   }
 
   public SettingAttribute updateSSHCredential(QLSSHCredentialUpdate updateInput, String sshCredId, String accountId) {
     SettingAttribute existingSettingAttribute = settingsService.get(sshCredId);
-    if (existingSettingAttribute == null) {
+    if (existingSettingAttribute == null
+        || existingSettingAttribute.getValue().getSettingType() != HOST_CONNECTION_ATTRIBUTES) {
       throw new InvalidRequestException(String.format("No ssh credential exists with the id %s", sshCredId));
     }
     if (updateInput.getName().hasBeenSet()) {
@@ -325,6 +335,11 @@ public class SSHCredentialController {
       HostConnectionAttributes sshSettings =
           createHostConnectionAttribute(updateInput.getAuthenticationScheme(), sshCredInput, kerberosInput);
       existingSettingAttribute.setValue(sshSettings);
+    }
+    if (updateInput.getUsageScope().hasBeenSet()) {
+      QLUsageScope usageScope = updateInput.getUsageScope().getValue().orElse(null);
+      existingSettingAttribute.setUsageRestrictions(
+          usageScopeController.populateUsageRestrictions(usageScope, accountId));
     }
     return settingsService.updateWithSettingFields(
         existingSettingAttribute, existingSettingAttribute.getUuid(), GLOBAL_APP_ID);

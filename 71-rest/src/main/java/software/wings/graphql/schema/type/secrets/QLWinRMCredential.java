@@ -17,4 +17,5 @@ public class QLWinRMCredential implements QLSecret {
   private String domain;
   private Boolean skipCertCheck;
   private Integer port;
+  private QLUsageScope usageScope;
 }

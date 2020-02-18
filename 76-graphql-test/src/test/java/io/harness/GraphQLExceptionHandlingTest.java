@@ -35,7 +35,7 @@ public class GraphQLExceptionHandlingTest extends GraphQLTest {
   }
 }*/ INCORRECT_ENVIRONMENT_ID);
 
-    final ExecutionResult result = qlResult(query, "dummy_account");
+    final ExecutionResult result = qlResult(query, getAccountId());
     Map<String, Object> spec = result.toSpecification();
     List error = (List) spec.get("errors");
     if (EmptyPredicate.isNotEmpty(error)) {

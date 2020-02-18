@@ -12,4 +12,5 @@ public class QLEncryptedText implements QLSecret {
   private String name;
   private QLSecretType secretType;
   private String id;
+  private QLUsageScope usageScope;
 }

@@ -13,6 +13,7 @@ import graphql.ExecutionResult;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
+import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.EnvironmentGenerator.Environments;
@@ -45,6 +46,8 @@ public class EnvironmentTest extends GraphQLTest {
 
   @Inject ApplicationGenerator applicationGenerator;
   @Inject EnvironmentGenerator environmentGenerator;
+  @Inject AccountGenerator accountGenerator;
+  private String accountId;
 
   @Test
   @Owner(developers = GEORGE)
@@ -112,7 +115,7 @@ public class EnvironmentTest extends GraphQLTest {
   }
 }*/);
 
-    final ExecutionResult result = qlResult(query, "accountId");
+    final ExecutionResult result = qlResult(query, getAccountId());
     assertThat(result.getErrors().size()).isEqualTo(1);
 
     assertThat(result.getErrors().get(0).getMessage())

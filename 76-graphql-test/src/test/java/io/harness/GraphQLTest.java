@@ -5,24 +5,38 @@ import static org.mockito.Mockito.mock;
 import static software.wings.graphql.utils.GraphQLConstants.GRAPHQL_QUERY_STRING;
 import static software.wings.graphql.utils.GraphQLConstants.HTTP_SERVLET_REQUEST;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
+import static software.wings.security.EnvFilter.FilterType.NON_PROD;
+import static software.wings.security.EnvFilter.FilterType.PROD;
+import static software.wings.security.GenericEntityFilter.FilterType.ALL;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import graphql.ExecutionInput;
 import graphql.GraphQL;
 import graphql.GraphQLContext;
+import io.harness.generator.AccountGenerator;
+import io.harness.generator.OwnerManager;
+import io.harness.generator.Randomizer;
 import io.harness.multiline.MultilineStringMixin;
 import io.harness.rule.GraphQLRule;
 import io.harness.rule.LifecycleRule;
 import io.harness.testframework.graphql.GraphQLTestMixin;
 import org.dataloader.DataLoaderRegistry;
+import org.junit.Before;
 import org.junit.Rule;
+import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
+import software.wings.security.EnvFilter;
+import software.wings.security.GenericEntityFilter;
 import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserRestrictionInfo;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.AuthService;
+import software.wings.settings.UsageRestrictions;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,15 +47,44 @@ public abstract class GraphQLTest extends CategoryTest implements GraphQLTestMix
   @Rule public GraphQLRule graphQLRule = new GraphQLRule(lifecycleRule.getClosingFactory());
   @Inject DataLoaderRegistryHelper dataLoaderRegistryHelper;
   @Inject AuthHandler authHandler;
+  @Inject AuthService authService;
+  private String accountId;
+  @Inject private OwnerManager ownerManager;
+  @Inject private AccountGenerator accountGenerator;
 
   @Override
   public GraphQL getGraphQL() {
     return graphQLRule.getGraphQL();
   }
 
+  public String getAccountId() {
+    return accountId;
+  }
+
+  @Before
+  public void setup() {
+    final Randomizer.Seed seed = new Randomizer.Seed(0);
+    final OwnerManager.Owners owners = ownerManager.create();
+    Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
+    accountId = account.getUuid();
+  }
+
   @Override
   public DataLoaderRegistry getDataLoaderRegistry() {
     return dataLoaderRegistryHelper.getDataLoaderRegistry();
+  }
+
+  private UsageRestrictions getAllAppAllEnvRestriction() {
+    GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(ALL).build();
+    EnvFilter envFilter = EnvFilter.builder().filterTypes(ImmutableSet.of(PROD)).build();
+    EnvFilter envFilterNonPROD = EnvFilter.builder().filterTypes(ImmutableSet.of(NON_PROD)).build();
+    UsageRestrictions.AppEnvRestriction appEnvRestrictionPROD =
+        UsageRestrictions.AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+    UsageRestrictions.AppEnvRestriction appEnvRestrictionNONPROD =
+        UsageRestrictions.AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilterNonPROD).build();
+    return UsageRestrictions.builder()
+        .appEnvRestrictions(ImmutableSet.of(appEnvRestrictionPROD, appEnvRestrictionNONPROD))
+        .build();
   }
 
   @Override
@@ -50,11 +93,16 @@ public abstract class GraphQLTest extends CategoryTest implements GraphQLTestMix
     UserGroup userGroup = authHandler.buildDefaultAdminUserGroup(accountId, user);
     UserPermissionInfo userPermissionInfo =
         authHandler.evaluateUserPermissionInfo(accountId, Arrays.asList(userGroup), user);
+    UserRestrictionInfo userRestrictionInfo =
+        authService.getUserRestrictionInfo(accountId, user, userPermissionInfo, false);
+    userRestrictionInfo.setUsageRestrictionsForUpdateAction(getAllAppAllEnvRestriction());
+    userRestrictionInfo.setUsageRestrictionsForReadAction(getAllAppAllEnvRestriction());
     return ExecutionInput.newExecutionInput()
         .query(query)
         .dataLoaderRegistry(getDataLoaderRegistry())
         .context(GraphQLContext.newContext().of("accountId", accountId, "permissions", userPermissionInfo,
-            HTTP_SERVLET_REQUEST, getHttpServletRequest(accountId), GRAPHQL_QUERY_STRING, query))
+            "restrictions", userRestrictionInfo, HTTP_SERVLET_REQUEST, getHttpServletRequest(accountId),
+            GRAPHQL_QUERY_STRING, query))
         .build();
   }
 
