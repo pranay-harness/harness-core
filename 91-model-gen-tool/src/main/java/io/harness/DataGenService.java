@@ -52,6 +52,7 @@ import io.harness.generator.SettingGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.generator.WorkflowGenerator.Workflows;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
+import io.harness.manage.GlobalContextManager;
 import io.harness.mongo.IndexManager;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -494,8 +495,12 @@ public class DataGenService {
    * Please do not remove the main class as UI test needs datagen as Jar
    * @param args
    */
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) {
     logger.info("Running tests!");
-    new DataGenService().populateData();
+
+    try (GlobalContextManager.GlobalContextGuard globalContextGuard =
+             GlobalContextManager.initGlobalContextGuard(null)) {
+      new DataGenService().populateData();
+    }
   }
 }

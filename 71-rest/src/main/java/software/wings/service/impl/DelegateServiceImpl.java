@@ -22,6 +22,7 @@ import static io.harness.obfuscate.Obfuscator.obfuscate;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.lang.String.join;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingInt;
@@ -511,7 +512,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                 .filter(DelegateKeys.accountId, delegate.getAccountId())
                                 .filter(DelegateKeys.uuid, delegate.getUuid()),
         wingsPersistence.createUpdateOperations(Delegate.class)
-            .set(DelegateKeys.lastHeartBeat, System.currentTimeMillis())
+            .set(DelegateKeys.lastHeartBeat, currentTimeMillis())
             .set(DelegateKeys.connected, true));
     touchExecutingTasks(delegate);
 
@@ -537,7 +538,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return updateAllDelegatesIfECSType(delegate, updateOperations, "TAGS");
     } else {
       Delegate updatedDelegate = updateDelegate(delegate, updateOperations);
-      if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
+      if (currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
         alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
       }
 
@@ -562,7 +563,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return updateAllDelegatesIfECSType(delegate, updateOperations, "SCOPES");
     } else {
       Delegate updatedDelegate = updateDelegate(delegate, updateOperations);
-      if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
+      if (currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
         alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
       }
       return updatedDelegate;
@@ -614,7 +615,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                   .filter(DelegateTaskKeys.delegateId, delegate.getUuid())
                                                   .filter(DelegateTaskKeys.status, DelegateTask.Status.STARTED)
                                                   .field(DelegateTaskKeys.lastUpdatedAt)
-                                                  .lessThan(System.currentTimeMillis())
+                                                  .lessThan(currentTimeMillis())
                                                   .field(ID_KEY)
                                                   .in(delegate.getCurrentlyExecutingDelegateTasks());
       wingsPersistence.update(delegateTaskQuery, wingsPersistence.createUpdateOperations(DelegateTask.class));
@@ -1471,7 +1472,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                         .filter(DelegateConnectionKeys.accountId, accountId)
                                                         .filter(ID_KEY, heartbeat.getDelegateConnectionId()),
         wingsPersistence.createUpdateOperations(DelegateConnection.class)
-            .set(DelegateConnectionKeys.lastHeartbeat, System.currentTimeMillis())
+            .set(DelegateConnectionKeys.lastHeartbeat, currentTimeMillis())
             .set(DelegateConnectionKeys.validUntil,
                 Date.from(OffsetDateTime.now().plusMinutes(defaultExpiryTimeInMinutes).toInstant())));
 
@@ -1482,7 +1483,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .accountId(accountId)
               .delegateId(delegateId)
               .version(heartbeat.getVersion())
-              .lastHeartbeat(System.currentTimeMillis())
+              .lastHeartbeat(currentTimeMillis())
               .validUntil(Date.from(OffsetDateTime.now().plusMinutes(defaultExpiryTimeInMinutes).toInstant()))
               .build();
       connection.setUuid(heartbeat.getDelegateConnectionId());
@@ -1568,6 +1569,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     task.setVersion(getVersion());
     task.setLastBroadcastAt(clock.millis());
     task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
+
+    // For backward compatibility we base the queue task expiry on the execution timeout
+    if (task.getExpiry() == 0) {
+      task.setExpiry(currentTimeMillis() + task.getData().getTimeout());
+    }
 
     generateCapabilitiesForTaskIfFeatureEnabled(task);
 
@@ -1681,8 +1687,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
              TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
       logger.info("Delegate completed validating {} task", delegateTask.isAsync() ? ASYNC : SYNC);
 
-      UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
-                                                            .addToSet("validationCompleteDelegateIds", delegateId);
+      UpdateOperations<DelegateTask> updateOperations =
+          wingsPersistence.createUpdateOperations(DelegateTask.class)
+              .addToSet(DelegateTaskKeys.validationCompleteDelegateIds, delegateId);
       Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                             .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                             .filter(DelegateTaskKeys.status, QUEUED)
@@ -2535,7 +2542,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       Optional<DelegateSequenceConfig> optionalConfig =
           existingDelegateSequenceConfigs.stream()
               .filter(sequenceConfig
-                  -> sequenceConfig.getLastUpdatedAt() < System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(100))
+                  -> sequenceConfig.getLastUpdatedAt() < currentTimeMillis() - TimeUnit.SECONDS.toMillis(100))
               .findFirst();
 
       if (optionalConfig.isPresent()) {
@@ -2634,7 +2641,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         if (updatedDelegate.getUuid().equals(delegate.getUuid())) {
           retVal.add(updatedDelegate);
         }
-        if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
+        if (currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
           alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
         }
       }
