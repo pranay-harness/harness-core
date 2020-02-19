@@ -39,7 +39,6 @@ import java.util.List;
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-@Builder
 @EqualsAndHashCode(callSuper = true)
 public class KubernetesClusterConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private boolean useKubernetesDelegate;
@@ -62,6 +61,21 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   @JsonView(JsonViews.Internal.class) private String encryptedClientKeyPassphrase;
   @JsonView(JsonViews.Internal.class) private String encryptedServiceAccountToken;
 
+  @JsonInclude(Include.NON_NULL) private KubernetesClusterAuthType authType;
+
+  // -- OIDC AUTH fields.
+  private String oidcIdentityProviderUrl;
+  private String oidcUsername;
+  private OidcGrantType oidcGrantType;
+  private String oidcScopes;
+  @Encrypted private char[] oidcClientId;
+  @Encrypted private char[] oidcSecret;
+  @Encrypted private char[] oidcPassword;
+  @JsonView(JsonViews.Internal.class) private String encryptedOidcSecret;
+  @JsonView(JsonViews.Internal.class) private String encryptedOidcPassword;
+  @JsonView(JsonViews.Internal.class) private String encryptedOidcClientId;
+  // -- END OIDC AUTH fields.
+
   @NotEmpty private String accountId;
 
   @JsonInclude(Include.NON_NULL) @SchemaIgnore private CCMConfig ccmConfig;
@@ -72,12 +86,16 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     super(SettingVariableTypes.KUBERNETES_CLUSTER.name());
   }
 
+  @Builder
   public KubernetesClusterConfig(boolean useKubernetesDelegate, String delegateName, String masterUrl, String username,
       char[] password, char[] caCert, char[] clientCert, char[] clientKey, char[] clientKeyPassphrase,
       char[] serviceAccountToken, String clientKeyAlgo, boolean skipValidation, String encryptedPassword,
       String encryptedCaCert, String encryptedClientCert, String encryptedClientKey,
       String encryptedClientKeyPassphrase, String encryptedServiceAccountToken, String accountId, CCMConfig ccmConfig,
-      boolean decrypted) {
+      boolean decrypted, KubernetesClusterAuthType authType, char[] oidcClientId, char[] oidcSecret,
+      String oidcIdentityProviderUrl, String oidcUsername, char[] oidcPassword, String oidcScopes,
+      String encryptedOidcSecret, String encryptedOidcPassword, String encryptedOidcClientId,
+      OidcGrantType oidcGrantType) {
     this();
     this.useKubernetesDelegate = useKubernetesDelegate;
     this.delegateName = delegateName;
@@ -100,6 +118,17 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     this.accountId = accountId;
     this.ccmConfig = ccmConfig;
     this.decrypted = decrypted;
+    this.authType = authType;
+    this.oidcClientId = oidcClientId == null ? null : oidcClientId.clone();
+    this.oidcSecret = oidcSecret == null ? null : oidcSecret.clone();
+    this.oidcIdentityProviderUrl = oidcIdentityProviderUrl;
+    this.oidcUsername = oidcUsername;
+    this.oidcPassword = oidcPassword == null ? null : oidcPassword.clone();
+    this.oidcScopes = oidcScopes;
+    this.encryptedOidcClientId = encryptedOidcClientId;
+    this.encryptedOidcPassword = encryptedOidcPassword;
+    this.encryptedOidcSecret = encryptedOidcSecret;
+    this.oidcGrantType = oidcGrantType;
   }
 
   @Override
