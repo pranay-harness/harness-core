@@ -3,8 +3,10 @@ package software.wings.service.impl.analysis;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
@@ -23,6 +25,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.time.Timestamp;
@@ -68,6 +71,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.StateType;
+import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
 import software.wings.sm.states.APMVerificationState.ResponseMapping;
 import software.wings.sm.states.CustomLogVerificationState;
@@ -100,6 +104,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   @Mock private CVActivityLogService cvActivityLogService;
   @InjectMocks ContinuousVerificationServiceImpl service;
   @Inject WingsPersistence wingsPersistence;
+  @Inject private APMDelegateService apmDelegateService;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -242,13 +247,23 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     APMFetchConfig fetchConfig = APMFetchConfig.builder().url("testFetchURL.com").build();
     APMSetupTestNodeData nodeData =
-        APMSetupTestNodeData.builder().fetchConfig(fetchConfig).apmMetricCollectionInfo(null).build();
+        APMSetupTestNodeData.builder()
+            .fetchConfig(fetchConfig)
+            .apmMetricCollectionInfo(
+                MetricCollectionInfo.builder().responseMapping(ResponseMapping.builder().build()).build())
+            .build();
+    nodeData.setGuid(generateUuid());
 
     // setup
+    ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder().build();
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
     when(mockDelegateProxyFactory.get(any(), any())).thenReturn(mockAPMDelegateService);
     when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
-        .thenReturn(dummyResponseString);
+        .thenAnswer(invocation -> {
+          Object[] args = invocation.getArguments();
+          apiCallLog.setStateExecutionId(((ThirdPartyApiCallLog) args[1]).getStateExecutionId());
+          return dummyResponseString;
+        });
 
     // execute
     VerificationNodeDataSetupResponse response =
@@ -258,6 +273,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     assertThat(response).isNotNull();
     assertThat(response.isConfigurationCorrect()).isFalse();
     assertThat(response.getLoadResponse()).isNull();
+    assertThat(apiCallLog.getStateExecutionId()).isEqualTo(nodeData.getGuid());
   }
 
   @Test(expected = WingsException.class)
@@ -640,5 +656,35 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     // verify
     assertThat(response).isNotNull();
     assertThat(response.getLoadResponse().isLoadPresent()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void test_getDataForNode_unresolvedVariable() {
+    APMVerificationConfig config = new APMVerificationConfig();
+    config.setValidationUrl("this is a testurl");
+    config.setUrl("https://google.com");
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(config);
+
+    APMFetchConfig fetchConfig = APMFetchConfig.builder().url("testFetchURL.com").body("${host}").build();
+    APMSetupTestNodeData nodeData =
+        APMSetupTestNodeData.builder()
+            .fetchConfig(fetchConfig)
+            .apmMetricCollectionInfo(MetricCollectionInfo.builder().method(APMVerificationState.Method.POST).build())
+            .build();
+
+    // setup
+    ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder().build();
+    when(mockSettingsService.get(anyString())).thenReturn(attribute);
+    when(mockDelegateProxyFactory.get(any(), any())).thenReturn(apmDelegateService);
+
+    try {
+      service.getDataForNode("accountId", "serverConfigId", nodeData, StateType.APM_VERIFICATION);
+      fail("should throw an exception");
+    } catch (VerificationOperationException e) {
+      assertThat(e.getParams().get("reason")).isEqualTo("Could not resolve \"$ {host}\" provided in input");
+    }
   }
 }

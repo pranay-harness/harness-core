@@ -672,7 +672,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertThat("hostregex").isEqualTo(responseMapping.getHostRegex());
     assertThat("sometxnname").isEqualTo(responseMapping.getTxnNameRegex());
     assertThat("somemetricjsonpath").isEqualTo(responseMapping.getMetricValueJsonPath());
-    assertThat("formattimestamp").isEqualTo(responseMapping.getTimestampFormat());
+    assertThat("formattimestamp").isEqualTo(responseMapping.getTimeStampFormat());
     assertThat("somejsonpath").isEqualTo(responseMapping.getTxnNameJsonPath());
   }
 

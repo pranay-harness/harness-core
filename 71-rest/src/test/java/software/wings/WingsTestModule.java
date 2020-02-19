@@ -61,6 +61,8 @@ import software.wings.service.impl.DockerBuildServiceImpl;
 import software.wings.service.impl.EcrBuildServiceImpl;
 import software.wings.service.impl.GitServiceImpl;
 import software.wings.service.impl.NexusBuildServiceImpl;
+import software.wings.service.impl.analysis.APMDelegateService;
+import software.wings.service.impl.analysis.APMDelegateServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
 import software.wings.service.impl.aws.delegate.AwsAppAutoScalingHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsAsgHelperServiceDelegateImpl;
@@ -126,6 +128,7 @@ public class WingsTestModule extends AbstractModule {
     bind(AppdynamicsDelegateService.class).to(AppdynamicsDelegateServiceImpl.class);
     bind(DynaTraceDelegateService.class).to(DynaTraceDelegateServiceImpl.class);
     bind(PrometheusDelegateService.class).to(PrometheusDelegateServiceImpl.class);
+    bind(APMDelegateService.class).to(APMDelegateServiceImpl.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
     bind(ElkDelegateService.class).to(ElkDelegateServiceImpl.class);

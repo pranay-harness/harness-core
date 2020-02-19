@@ -26,10 +26,15 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Singleton
 public class RequestExecutor {
+  private static final String DATADOG_API_MASK = "api_key=([^&]*)";
+  private static final String DATADOG_APP_MASK = "application_key=([^&]*)";
+
   @Inject private DelegateLogService delegateLogService;
   private static final int MAX_RETRIES = 2;
   public <U> U executeRequest(Call<U> request) {
@@ -89,6 +94,24 @@ public class RequestExecutor {
     if (isNotEmpty(patternsToMask)) {
       for (Map.Entry<String, String> entry : patternsToMask.entrySet()) {
         field = field.replace(entry.getKey(), entry.getValue());
+      }
+    }
+
+    if (field.contains("api_key")) {
+      Pattern batchPattern = Pattern.compile(DATADOG_API_MASK);
+      Matcher matcher = batchPattern.matcher(field);
+      while (matcher.find()) {
+        final String apiKey = matcher.group(1);
+        field = field.replace(apiKey, "<apiKey>");
+      }
+    }
+
+    if (field.contains("application_key")) {
+      Pattern batchPattern = Pattern.compile(DATADOG_APP_MASK);
+      Matcher matcher = batchPattern.matcher(field);
+      while (matcher.find()) {
+        final String appKey = matcher.group(1);
+        field = field.replace(appKey, "<appKey>");
       }
     }
     return field;
