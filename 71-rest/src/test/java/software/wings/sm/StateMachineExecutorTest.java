@@ -24,7 +24,6 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
@@ -37,6 +36,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -45,6 +45,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CanaryOrchestrationWorkflow;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Workflow;
@@ -54,6 +55,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -73,8 +76,9 @@ import java.util.Map;
 @Listeners(OrchestrationNotifyEventListener.class)
 @Slf4j
 public class StateMachineExecutorTest extends WingsBaseTest {
+  private final String APP_ID = generateUuid();
   @Inject WingsPersistence wingsPersistence;
-  @Inject StateMachineExecutor stateMachineExecutor;
+  @InjectMocks @Inject StateMachineExecutor stateMachineExecutor;
 
   @Inject private WorkflowService workflowService;
 
@@ -85,9 +89,17 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private NotificationMessageResolver notificationMessageResolver;
   @Mock private WorkflowNotificationHelper workflowNotificationHelper;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private AppService appService;
   @InjectMocks private StateMachineExecutor injectStateMachineExecutor;
 
   @Captor private ArgumentCaptor<List<NotificationRule>> notificationRuleArgumentCaptor;
+
+  @Before
+  public void setUp() throws Exception {
+    when(appService.getAccountIdByAppId(any())).thenReturn(APP_ID);
+    when(featureFlagService.isEnabled(eq(FeatureName.OVERRIDE_TIMEOUTS), any())).thenReturn(false);
+  }
 
   /**
    * Should trigger.
@@ -99,7 +111,6 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTrigger() throws InterruptedException {
     String appId = generateUuid();
-
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
     State stateA = new StateSync("stateA" + StaticMap.getUnique());

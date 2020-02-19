@@ -404,3 +404,10 @@ publishers:
   active:
     io.harness: true
     software.wings: true
+
+#Timeout in ms
+pipelineConfig:
+  enabled: true
+  envStateTimeout: -1
+  approvalStateTimeout: -1
+

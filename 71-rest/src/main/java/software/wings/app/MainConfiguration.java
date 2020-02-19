@@ -22,6 +22,7 @@ import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.config.DatadogConfig;
+import io.harness.config.PipelineConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.event.handler.marketo.MarketoConfig;
@@ -129,6 +130,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("workers") private WorkersConfiguration workers;
   @JsonProperty("publishers") private PublisherConfiguration publisherConfiguration;
+  @JsonProperty("pipelineConfig") private PipelineConfig pipelineConfig = new PipelineConfig();
 
   private DelegateConfigParams delegateConfigParams;
 

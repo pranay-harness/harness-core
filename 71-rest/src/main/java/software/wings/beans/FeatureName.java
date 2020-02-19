@@ -77,7 +77,8 @@ public enum FeatureName {
   CV_INSTANA_24X7,
   CUSTOM_APM_CV_TASK,
   CUSTOM_APM_24_X_7_CV_TASK,
-  LOGZ_ENABLE_UI;
+  LOGZ_ENABLE_UI,
+  OVERRIDE_TIMEOUTS;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

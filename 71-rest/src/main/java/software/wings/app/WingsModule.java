@@ -21,6 +21,7 @@ import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.ccm.health.HealthStatusServiceImpl;
+import io.harness.config.PipelineConfig;
 import io.harness.dashboard.DashboardSettingsService;
 import io.harness.dashboard.DashboardSettingsServiceImpl;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
@@ -602,6 +603,7 @@ public class WingsModule extends DependencyModule {
     bind(SchedulerConfig.class)
         .annotatedWith(Names.named("BackgroundSchedule"))
         .toInstance(configuration.getBackgroundSchedulerConfig());
+    bind(PipelineConfig.class).toInstance(configuration.getPipelineConfig());
     bind(QueueController.class).to(ConfigurationController.class);
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
