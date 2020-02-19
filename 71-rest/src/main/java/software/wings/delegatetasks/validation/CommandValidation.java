@@ -96,8 +96,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(getCriteria(context));
     try {
       SshSessionConfig hostConnectionTest = createSshSessionConfig("HOST_CONNECTION_TEST", context);
-      int timeout =
-          context.isShortValidationTimeout() ? (int) ofSeconds(5L).toMillis() : (int) ofSeconds(15L).toMillis();
+      int timeout = (int) ofSeconds(15L).toMillis();
       hostConnectionTest.setSocketConnectTimeout(timeout);
       hostConnectionTest.setSshConnectionTimeout(timeout);
       hostConnectionTest.setSshSessionTimeout(timeout);

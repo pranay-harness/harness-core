@@ -377,9 +377,7 @@ public class CommandState extends State {
               .withServiceTemplateId(serviceTemplateId)
               .withAppContainer(service.getAppContainer())
               .withAccountId(accountId)
-              .withTimeout(getTimeoutMillis())
-              .withShortValidationTimeout(
-                  featureFlagService.isEnabled(FeatureName.SSH_SHORT_VALIDATION_TIMEOUT, accountId));
+              .withTimeout(getTimeoutMillis());
 
       getHostConnectionDetails(context, host, commandExecutionContextBuilder);
 

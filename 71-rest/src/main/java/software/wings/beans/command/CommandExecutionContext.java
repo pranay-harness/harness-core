@@ -78,7 +78,6 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
   private boolean inlineSshCommand;
   private boolean executeOnDelegate;
-  private boolean shortValidationTimeout;
 
   // new fields for multi artifact
   private Map<String, Artifact> multiArtifactMap;
@@ -130,7 +129,6 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     this.artifactServerEncryptedDataDetails = other.artifactServerEncryptedDataDetails;
     this.inlineSshCommand = other.inlineSshCommand;
     this.executeOnDelegate = other.executeOnDelegate;
-    this.shortValidationTimeout = other.shortValidationTimeout;
     this.artifactStreamAttributesMap = other.artifactStreamAttributesMap;
     this.multiArtifactMap = other.multiArtifactMap;
     this.multiArtifact = other.multiArtifact;
@@ -258,7 +256,6 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
     private boolean inlineSshCommand;
     private boolean executeOnDelegate;
-    private boolean shortValidationTimeout;
 
     // new fields for multi artifact
     private Map<String, Artifact> multiArtifactMap;
@@ -455,11 +452,6 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       return this;
     }
 
-    public Builder withShortValidationTimeout(boolean shortValidationTimeout) {
-      this.shortValidationTimeout = shortValidationTimeout;
-      return this;
-    }
-
     public Builder withArtifactStreamAttributesMap(Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap) {
       this.artifactStreamAttributesMap = artifactStreamAttributesMap;
       return this;
@@ -524,7 +516,6 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
           .withArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails)
           .withInlineSshCommand(inlineSshCommand)
           .withExecuteOnDelegate(executeOnDelegate)
-          .withShortValidationTimeout(shortValidationTimeout)
           .withArtifactStreamAttributesMap(artifactStreamAttributesMap)
           .withMultiArtifactMap(multiArtifactMap)
           .withMultiArtifact(multiArtifact)
@@ -570,7 +561,6 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       commandExecutionContext.setArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails);
       commandExecutionContext.setInlineSshCommand(inlineSshCommand);
       commandExecutionContext.setExecuteOnDelegate(executeOnDelegate);
-      commandExecutionContext.setShortValidationTimeout(shortValidationTimeout);
       commandExecutionContext.setArtifactStreamAttributesMap(artifactStreamAttributesMap);
       commandExecutionContext.setMultiArtifactMap(multiArtifactMap);
       commandExecutionContext.setMultiArtifact(multiArtifact);
