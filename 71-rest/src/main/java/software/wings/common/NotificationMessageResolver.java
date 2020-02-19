@@ -40,7 +40,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -329,9 +328,7 @@ public class NotificationMessageResolver {
     }
   }
 
-  public static String buildAbsoluteUrl(
-      MainConfiguration configuration, String fragment, Optional<String> subdomainUrl) {
-    String baseUrl = subdomainUrl.isPresent() ? subdomainUrl.get() : configuration.getPortal().getUrl().trim();
+  public static String buildAbsoluteUrl(MainConfiguration configuration, String fragment, String baseUrl) {
     if (!baseUrl.endsWith("/")) {
       baseUrl += "/";
     }
@@ -346,14 +343,13 @@ public class NotificationMessageResolver {
   }
 
   private String generateUrl(Application app, ExecutionContext context, AlertType alertType) {
-    Optional<String> subdomainUrl =
-        subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(context.getAccountId()));
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(context.getAccountId());
     if (alertType == AlertType.ApprovalNeeded) {
       if (context.getWorkflowType() == WorkflowType.PIPELINE) {
         return buildAbsoluteUrl(configuration,
             format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details", app.getAccountId(),
                 app.getUuid(), context.getWorkflowExecutionId()),
-            subdomainUrl);
+            baseUrl);
       } else if (context.getWorkflowType() == WorkflowType.ORCHESTRATION) {
         WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
         String pipelineExecutionId = null;
@@ -370,13 +366,13 @@ public class NotificationMessageResolver {
           return buildAbsoluteUrl(configuration,
               format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(), app.getUuid(), envId,
                   context.getWorkflowExecutionId()),
-              subdomainUrl);
+              baseUrl);
         } else {
           // WF in a Pipeline execution
           return buildAbsoluteUrl(configuration,
               format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/%s/details", app.getAccountId(),
                   app.getUuid(), pipelineExecutionId, context.getWorkflowExecutionId()),
-              subdomainUrl);
+              baseUrl);
         }
       } else {
         logger.error("Unhandled Approval case. No URL can be generated for alertType ", alertType.name());
@@ -391,7 +387,7 @@ public class NotificationMessageResolver {
       return buildAbsoluteUrl(configuration,
           format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(), app.getUuid(), envId,
               context.getWorkflowExecutionId()),
-          subdomainUrl);
+          baseUrl);
     } else {
       logger.warn("Unhandled case. No URL can be generated for alertType ", alertType.name());
       return "";

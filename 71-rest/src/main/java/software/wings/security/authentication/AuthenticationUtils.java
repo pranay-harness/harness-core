@@ -27,7 +27,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
 import java.util.Map;
-import java.util.Optional;
 
 @Singleton
 @Slf4j
@@ -101,11 +100,10 @@ public class AuthenticationUtils {
   }
 
   public String getBaseUrl() {
-    return subdomainUrlHelper.getAPIUrl();
+    return subdomainUrlHelper.getApiBaseUrl(null);
   }
 
   public String getBaseUrl(String accountId) {
-    Optional<String> subdomainUrl = subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(accountId));
-    return subdomainUrlHelper.getApiBaseUrl(subdomainUrl);
+    return subdomainUrlHelper.getApiBaseUrl(accountId);
   }
 }

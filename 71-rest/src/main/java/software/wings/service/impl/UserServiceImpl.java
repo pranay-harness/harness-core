@@ -611,8 +611,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private String buildAbsoluteUrl(String fragment, String accountId) throws URISyntaxException {
-    Optional<String> subdomainUrl = subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(accountId));
-    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(subdomainUrl);
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();
@@ -920,8 +919,7 @@ public class UserServiceImpl implements UserService {
       String email, String url, Map<String, String> params, String accountId) {
     Map<String, String> model = new HashMap<>();
     model.put("name", email);
-    Optional<String> subdomainUrl = subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(accountId));
-    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(subdomainUrl);
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
     // This uses the setPath. The method above uses setFragment() which adds a # to the url.
     model.put("url", authenticationUtils.buildAbsoluteUrl(baseUrl, url, params).toString());
     return model;

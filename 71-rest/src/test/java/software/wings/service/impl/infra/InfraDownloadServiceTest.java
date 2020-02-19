@@ -77,7 +77,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testInfraDownloadFailForEnvWhenNoServiceAccDefined() {
-    String url = infraDownloadService.getDownloadUrlForDelegate("4333");
+    String url = infraDownloadService.getDownloadUrlForDelegate("4333", null);
     assertThat(url).isEqualTo(InfraDownloadServiceImpl.DEFAULT_ERROR_STRING);
   }
 
@@ -85,7 +85,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void testInfraDownloadFailForWatcherEnvWhenNoServiceAccDefined() {
-    String url = infraDownloadService.getDownloadUrlForWatcher("4333");
+    String url = infraDownloadService.getDownloadUrlForWatcher("4333", null);
     assertThat(url).isEqualTo(InfraDownloadServiceImpl.DEFAULT_ERROR_STRING);
   }
 
@@ -99,8 +99,8 @@ public class InfraDownloadServiceTest extends CategoryTest {
       FileUtils.writeStringToFile(serviceAccFile, prodTestKey, StandardCharsets.UTF_8);
       when(sysenv.get("SERVICE_ACC")).thenReturn(path);
       ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-      when(gcsUtils.getSignedUrlForServiceAccount(captor.capture(), any(), anyLong())).thenReturn("abc");
-      String url = infraDownloadService.getDownloadUrlForDelegate("123");
+      when(gcsUtils.getSignedUrlForServiceAccount(captor.capture(), any(), anyLong(), any())).thenReturn("abc");
+      String url = infraDownloadService.getDownloadUrlForDelegate("123", null);
       assertThat(url).isEqualTo("abc");
       assertThat(captor.getValue()).isEqualTo("/harness-ci-delegates/builds/123/delegate.jar");
     } finally {

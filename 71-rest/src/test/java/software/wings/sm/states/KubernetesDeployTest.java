@@ -121,7 +121,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Created by brett on 3/10/17
@@ -273,8 +272,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
         .thenAnswer(i -> i.getArguments()[0]);
     when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
     doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
-    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
   }
 
   @Test

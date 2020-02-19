@@ -594,7 +594,8 @@ public class WingsModule extends DependencyModule {
 
   @Provides
   public UrlConfiguration urlConfiguration() {
-    return new UrlConfiguration(configuration.getPortal().getUrl(), configuration.getApiUrl());
+    return new UrlConfiguration(configuration.getPortal().getUrl(), configuration.getApiUrl(),
+        configuration.getDelegateMetadataUrl(), configuration.getWatcherMetadataUrl());
   }
 
   @Override

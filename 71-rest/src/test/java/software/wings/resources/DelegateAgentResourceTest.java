@@ -28,11 +28,11 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.ArgumentCaptor;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
@@ -49,10 +49,10 @@ public class DelegateAgentResourceTest {
 
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
-  private static MainConfiguration mainConfiguration = mock(MainConfiguration.class);
   private static AccountService accountService = mock(AccountService.class);
   private static WingsPersistence wingsPersistence = mock(WingsPersistence.class);
   private static DelegateRequestRateLimiter delegateRequestRateLimiter = mock(DelegateRequestRateLimiter.class);
+  private static SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
 
   @Parameter public String apiUrl;
 
@@ -65,7 +65,7 @@ public class DelegateAgentResourceTest {
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
           .addResource(new DelegateAgentResource(
-              delegateService, mainConfiguration, accountService, wingsPersistence, delegateRequestRateLimiter))
+              delegateService, accountService, wingsPersistence, delegateRequestRateLimiter, subdomainUrlHelper))
           .addResource(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -78,7 +78,6 @@ public class DelegateAgentResourceTest {
   @Before
   public void setUp() {
     initMocks(this);
-    when(mainConfiguration.getApiUrl()).thenReturn(apiUrl);
   }
 
   @Test

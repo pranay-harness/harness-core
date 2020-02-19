@@ -65,7 +65,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.WorkflowStandardParams.Builder;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class ArtifactCollectionStateTest extends CategoryTest {
@@ -133,8 +132,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
     when(delayEventHelper.delay(anyInt(), any())).thenReturn("anyGUID");
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
-    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
   }
 
   @Test

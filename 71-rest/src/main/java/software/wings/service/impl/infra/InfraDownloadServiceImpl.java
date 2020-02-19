@@ -82,7 +82,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
           });
 
   @Override
-  public String getDownloadUrlForDelegate(String version, String envString) {
+  public String getDownloadUrlForDelegate(String version, String envString, String accountId) {
     if (isEmpty(envString)) {
       envString = getEnv();
     }
@@ -91,7 +91,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
       try {
         return getGcsUtil().getSignedUrlForServiceAccount(
             "/harness-" + envString + "-delegates" + BUILDS_PATH + version + "/" + DELEGATE_JAR, serviceAccountJson,
-            3600L);
+            3600L, accountId);
       } catch (Exception e) {
         logger.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + envString, e);
       }
@@ -100,7 +100,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
   }
 
   @Override
-  public String getDownloadUrlForWatcher(String version, String envString) {
+  public String getDownloadUrlForWatcher(String version, String envString, String accountId) {
     if (isEmpty(envString)) {
       envString = getEnv();
     }
@@ -109,7 +109,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
       try {
         return getGcsUtil().getSignedUrlForServiceAccount(
             "/harness-" + envString + "-watchers" + BUILDS_PATH + version + "/" + WATCHER_JAR, serviceAccountJson,
-            3600L);
+            3600L, accountId);
 
       } catch (Exception e) {
         logger.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + envString, e);
@@ -119,15 +119,15 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
   }
 
   @Override
-  public String getDownloadUrlForWatcher(String version) {
+  public String getDownloadUrlForWatcher(String version, String accountId) {
     String env = getEnv();
-    return getDownloadUrlForWatcher(version, env);
+    return getDownloadUrlForWatcher(version, env, accountId);
   }
 
   @Override
-  public String getDownloadUrlForDelegate(String version) {
+  public String getDownloadUrlForDelegate(String version, String accountId) {
     String env = getEnv();
-    return getDownloadUrlForDelegate(version, env);
+    return getDownloadUrlForDelegate(version, env, accountId);
   }
 
   @Override

@@ -49,7 +49,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * The Class WorkflowStandardParams.
@@ -175,8 +174,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   }
 
   private String buildAbsoluteUrl(String fragment, String accountId) {
-    Optional<String> subdomainUrl = subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(accountId));
-    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(subdomainUrl);
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
     try {
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
       uriBuilder.setFragment(fragment);

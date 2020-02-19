@@ -159,6 +159,7 @@ import software.wings.expression.SecretFunctor;
 import software.wings.expression.SecretManagerFunctor;
 import software.wings.features.DelegatesFeature;
 import software.wings.features.api.UsageLimitedFeature;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.licensing.LicenseService;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
@@ -272,6 +273,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
 
@@ -667,7 +669,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   private String fetchDelegateMetadataFromStorage() {
-    String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
+    String delegateMetadataUrl = subdomainUrlHelper.getDelegateMetadataUrl(null);
     try {
       logger.info("Fetching delegate metadata from storage: {}", delegateMetadataUrl);
       String result = Http.getResponseStringFromUrl(delegateMetadataUrl, 10, 10).trim();
@@ -701,7 +703,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     String delegateDockerImage = "harness/delegate:latest";
 
     try {
-      String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
+      String delegateMetadataUrl = subdomainUrlHelper.getDelegateMetadataUrl(inquiry.getAccountId());
       delegateStorageUrl = delegateMetadataUrl.substring(0, delegateMetadataUrl.lastIndexOf('/'));
       delegateCheckLocation = delegateMetadataUrl.substring(delegateMetadataUrl.lastIndexOf('/') + 1);
 
@@ -709,7 +711,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         logger.info("Multi-Version is enabled");
         latestVersion = inquiry.getVersion();
         String minorVersion = Optional.ofNullable(getMinorVersion(inquiry.getVersion())).orElse(0).toString();
-        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(minorVersion);
+        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(minorVersion, inquiry.getAccountId());
         versionChanged = true;
       } else {
         logger.info("Delegate metadata URL is " + delegateMetadataUrl);
@@ -738,7 +740,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     logger.info("Found delegate latest version: [{}] url: [{}]", latestVersion, delegateJarDownloadUrl);
     if (versionChanged && jarFileExists) {
-      String watcherMetadataUrl = mainConfiguration.getWatcherMetadataUrl().trim();
+      String watcherMetadataUrl = subdomainUrlHelper.getWatcherMetadataUrl(inquiry.getAccountId());
       String watcherStorageUrl = watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/'));
       String watcherCheckLocation = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
 

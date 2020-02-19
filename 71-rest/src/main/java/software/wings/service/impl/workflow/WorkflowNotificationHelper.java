@@ -403,11 +403,11 @@ public class WorkflowNotificationHelper {
 
   public String calculateWorkflowUrl(String workflowExecutionId, OrchestrationWorkflowType type, String accountId,
       String appId, String environmentId) {
-    Optional<String> subdomainUrl = subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(accountId));
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
     return NotificationMessageResolver.buildAbsoluteUrl(configuration,
         format("/account/%s/app/%s/env/%s/executions/%s/details", accountId, appId,
             BUILD == type ? "build" : environmentId, workflowExecutionId),
-        subdomainUrl);
+        baseUrl);
   }
 
   public String calculatePipelineMessage(
@@ -416,12 +416,11 @@ public class WorkflowNotificationHelper {
     if (workflowExecution.getPipelineExecutionId() != null) {
       String pipelineName = workflowExecution.getPipelineSummary().getPipelineName();
       if (isNotBlank(pipelineName)) {
-        Optional<String> subdomainUrl =
-            subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(context.getAccountId()));
+        String baseUrl = subdomainUrlHelper.getPortalBaseUrl(context.getAccountId());
         String pipelineUrl = NotificationMessageResolver.buildAbsoluteUrl(configuration,
             format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/%s/details", app.getAccountId(),
                 app.getUuid(), workflowExecution.getPipelineExecutionId(), context.getWorkflowExecutionId()),
-            subdomainUrl);
+            baseUrl);
         pipelineMsg = format(" in pipeline <<<%s|-|%s>>>", pipelineUrl, pipelineName);
       }
     }
@@ -460,17 +459,17 @@ public class WorkflowNotificationHelper {
   }
 
   public String calculateServiceUrl(String accountId, String appId, String serviceId) {
-    Optional<String> subdomainUrl = subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(accountId));
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
     return NotificationMessageResolver.buildAbsoluteUrl(
-        configuration, format("/account/%s/app/%s/services/%s/details", accountId, appId, serviceId), subdomainUrl);
+        configuration, format("/account/%s/app/%s/services/%s/details", accountId, appId, serviceId), baseUrl);
   }
 
   public String calculateEnvironmentUrl(String accountId, String appId, Environment env) {
     String envMsg = "";
     if (env != null) {
-      Optional<String> subdomainUrl = subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(accountId));
+      String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
       String envURL = NotificationMessageResolver.buildAbsoluteUrl(configuration,
-          format("/account/%s/app/%s/environments/%s/details", accountId, appId, env.getUuid()), subdomainUrl);
+          format("/account/%s/app/%s/environments/%s/details", accountId, appId, env.getUuid()), baseUrl);
 
       envMsg = format("*Environment:* <<<%s|-|%s>>>", envURL, env.getName());
     }
@@ -481,24 +480,23 @@ public class WorkflowNotificationHelper {
   public String calculateApplicationURL(String accountId, String appId, Application app) {
     String appMsg = "";
 
-    Optional<String> subdomainUrl = subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(accountId));
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
     if (isNotEmpty(appId) && (app != null)) {
       String appURL = NotificationMessageResolver.buildAbsoluteUrl(
-          configuration, format("/account/%s/app/%s/details", accountId, appId), subdomainUrl);
+          configuration, format("/account/%s/app/%s/details", accountId, appId), baseUrl);
       appMsg = format("*Application:* <<<%s|-|%s>>>", appURL, app.getName());
     }
     return appMsg;
   }
 
   public String calculateTriggerURL(String accountId, String appId, WorkflowExecution workflowExecution) {
-    Optional<String> subdomainUrl = subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(accountId));
-
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
     String triggeredBy = workflowExecution.getTriggeredBy().getName();
 
     String triggerMsg = "";
     if (triggeredBy.contains("Deployment Trigger")) {
       String triggerURL = NotificationMessageResolver.buildAbsoluteUrl(
-          configuration, format("/account/%s/app/%s/triggers", accountId, appId), subdomainUrl);
+          configuration, format("/account/%s/app/%s/triggers", accountId, appId), baseUrl);
       triggerMsg = format("*TriggeredBy:* <<<%s|-|%s>>>", triggerURL, triggeredBy);
     } else {
       triggerMsg = format("*TriggeredBy:* %s", triggeredBy);

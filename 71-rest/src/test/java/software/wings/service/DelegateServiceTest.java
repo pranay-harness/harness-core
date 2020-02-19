@@ -114,6 +114,7 @@ import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.api.UsageLimitedFeature;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.licensing.LicenseService;
 import software.wings.rules.Cache;
 import software.wings.security.encryption.EncryptedData;
@@ -172,6 +173,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private FileService fileService;
   @Mock private AlertService alertService;
   @Mock private VersionInfoManager versionInfoManager;
+  @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
@@ -185,18 +187,18 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    when(mainConfiguration.getDelegateMetadataUrl()).thenReturn("http://localhost:8888/delegateci.txt");
+    when(subdomainUrlHelper.getDelegateMetadataUrl(any())).thenReturn("http://localhost:8888/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
     when(mainConfiguration.getKubectlVersion()).thenReturn("v1.12.2");
     when(mainConfiguration.getOcVersion()).thenReturn("v4.2.16");
-    when(mainConfiguration.getWatcherMetadataUrl()).thenReturn("http://localhost:8888/watcherci.txt");
+    when(subdomainUrlHelper.getWatcherMetadataUrl(any())).thenReturn("http://localhost:8888/watcherci.txt");
     FileUploadLimit fileUploadLimit = new FileUploadLimit();
     fileUploadLimit.setProfileResultLimit(1000000000L);
     when(mainConfiguration.getFileUploadLimits()).thenReturn(fileUploadLimit);
     when(accountService.getDelegateConfiguration(anyString()))
         .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList("0.0.0")).build());
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
-    when(infraDownloadService.getDownloadUrlForDelegate(anyString()))
+    when(infraDownloadService.getDownloadUrlForDelegate(anyString(), any()))
         .thenReturn("http://localhost:8888/builds/9/delegate.jar");
     wireMockRule.stubFor(get(urlEqualTo("/delegateci.txt"))
                              .willReturn(aResponse()

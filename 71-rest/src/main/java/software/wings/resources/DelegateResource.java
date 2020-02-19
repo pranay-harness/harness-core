@@ -32,9 +32,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegatePackage;
@@ -43,6 +41,7 @@ import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
@@ -98,22 +97,22 @@ public class DelegateResource {
   private DelegateService delegateService;
   private DelegateScopeService delegateScopeService;
   private DownloadTokenService downloadTokenService;
-  private MainConfiguration mainConfiguration;
   private AccountService accountService;
   private WingsPersistence wingsPersistence;
   private DelegateRequestRateLimiter delegateRequestRateLimiter;
+  private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   @Inject
   public DelegateResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
-      DownloadTokenService downloadTokenService, MainConfiguration mainConfiguration, AccountService accountService,
-      WingsPersistence wingsPersistence, DelegateRequestRateLimiter delegateRequestRateLimiter) {
+      DownloadTokenService downloadTokenService, AccountService accountService, WingsPersistence wingsPersistence,
+      DelegateRequestRateLimiter delegateRequestRateLimiter, SubdomainUrlHelperIntfc subdomainUrlHelper) {
     this.delegateService = delegateService;
     this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
-    this.mainConfiguration = mainConfiguration;
     this.accountService = accountService;
     this.wingsPersistence = wingsPersistence;
     this.delegateRequestRateLimiter = delegateRequestRateLimiter;
+    this.subdomainUrlHelper = subdomainUrlHelper;
   }
 
   @GET
@@ -426,7 +425,7 @@ public class DelegateResource {
   public RestResponse<Map<String, String>> downloadUrl(
       @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      String url = getManagerUrl(request);
+      String url = subdomainUrlHelper.getManagerUrl(request, accountId);
 
       return new RestResponse<>(ImmutableMap.of(DOWNLOAD_URL,
           url + request.getRequestURI().replace(DOWNLOAD_URL, "download") + ACCOUNT_ID + accountId + TOKEN
@@ -453,8 +452,8 @@ public class DelegateResource {
       throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
-      File delegateFile =
-          delegateService.downloadScripts(getManagerUrl(request), getVerificationUrl(request), accountId);
+      File delegateFile = delegateService.downloadScripts(
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), accountId);
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type(APPLICATION_ZIP_CHARSET_BINARY)
@@ -473,8 +472,8 @@ public class DelegateResource {
       throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
-      File delegateFile =
-          delegateService.downloadDocker(getManagerUrl(request), getVerificationUrl(request), accountId);
+      File delegateFile = delegateService.downloadDocker(
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), accountId);
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type(APPLICATION_ZIP_CHARSET_BINARY)
@@ -494,8 +493,8 @@ public class DelegateResource {
       throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
-      File delegateFile = delegateService.downloadKubernetes(
-          getManagerUrl(request), getVerificationUrl(request), accountId, delegateName, delegateProfileId);
+      File delegateFile = delegateService.downloadKubernetes(subdomainUrlHelper.getManagerUrl(request, accountId),
+          getVerificationUrl(request), accountId, delegateName, delegateProfileId);
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type(APPLICATION_ZIP_CHARSET_BINARY)
@@ -515,8 +514,8 @@ public class DelegateResource {
       @QueryParam("token") @NotEmpty String token) throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
-      File delegateFile = delegateService.downloadECSDelegate(getManagerUrl(request), getVerificationUrl(request),
-          accountId, awsVpcMode, hostname, delegateGroupName, delegateProfileId);
+      File delegateFile = delegateService.downloadECSDelegate(subdomainUrlHelper.getManagerUrl(request, accountId),
+          getVerificationUrl(request), accountId, awsVpcMode, hostname, delegateGroupName, delegateProfileId);
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type(APPLICATION_ZIP_CHARSET_BINARY)
@@ -536,21 +535,15 @@ public class DelegateResource {
       throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
-      File delegateFile = delegateService.downloadDelegateValuesYamlFile(
-          getManagerUrl(request), getVerificationUrl(request), accountId, delegateName, delegateProfileId);
+      File delegateFile =
+          delegateService.downloadDelegateValuesYamlFile(subdomainUrlHelper.getManagerUrl(request, accountId),
+              getVerificationUrl(request), accountId, delegateName, delegateProfileId);
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type("text/plain; charset=UTF-8")
           .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + HARNESS_DELEGATE_VALUES_YAML + ".yaml")
           .build();
     }
-  }
-
-  private String getManagerUrl(HttpServletRequest request) {
-    String apiUrl = mainConfiguration.getApiUrl();
-    return !StringUtils.isEmpty(apiUrl)
-        ? apiUrl
-        : request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
   }
 
   private String getVerificationUrl(HttpServletRequest request) {
@@ -650,8 +643,8 @@ public class DelegateResource {
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(
-          delegateService.getDelegateScripts(accountId, version, getManagerUrl(request), getVerificationUrl(request)));
+      return new RestResponse<>(delegateService.getDelegateScripts(
+          accountId, version, subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
     }
   }
 
@@ -665,8 +658,8 @@ public class DelegateResource {
       @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("delegateVersion") @NotEmpty String delegateVersion) throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.getDelegateScripts(
-          accountId, delegateVersion, getManagerUrl(request), getVerificationUrl(request)));
+      return new RestResponse<>(delegateService.getDelegateScripts(accountId, delegateVersion,
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
     }
   }
 

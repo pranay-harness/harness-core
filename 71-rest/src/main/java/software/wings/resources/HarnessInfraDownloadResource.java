@@ -31,15 +31,16 @@ public class HarnessInfraDownloadResource {
   @Produces(MediaType.APPLICATION_JSON)
   @DelegateAuth
   public RestResponse<String> getWatcherDownloadUrlFromDelegate(@PathParam("version") String version) {
-    return new RestResponse<>(infraDownloadService.getDownloadUrlForWatcher(version));
+    return new RestResponse<>(infraDownloadService.getDownloadUrlForWatcher(version, null));
   }
 
   @GET
   @Path("delegate-auth/delegate/{version}")
   @Produces(MediaType.APPLICATION_JSON)
   @DelegateAuth
-  public RestResponse<String> getDelegateDownloadUrlFromDelegate(@PathParam("version") String version) {
-    return new RestResponse<>(infraDownloadService.getDownloadUrlForDelegate(version));
+  public RestResponse<String> getDelegateDownloadUrlFromDelegate(
+      @PathParam("version") String version, @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(infraDownloadService.getDownloadUrlForDelegate(version, accountId));
   }
 
   @GET
@@ -48,7 +49,7 @@ public class HarnessInfraDownloadResource {
   public RestResponse<String> getWatcherDownloadUrlFromDefaultAuth(@PathParam("version") String version,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("env") @DefaultValue("") String env) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(infraDownloadService.getDownloadUrlForWatcher(version, env));
+      return new RestResponse<>(infraDownloadService.getDownloadUrlForWatcher(version, env, accountId));
     }
   }
 
@@ -58,7 +59,7 @@ public class HarnessInfraDownloadResource {
   public RestResponse<String> getDelegateDownloadUrlFromDefaultAuth(@PathParam("version") String version,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("env") @DefaultValue("") String env) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(infraDownloadService.getDownloadUrlForDelegate(version, env));
+      return new RestResponse<>(infraDownloadService.getDownloadUrlForDelegate(version, env, accountId));
     }
   }
 

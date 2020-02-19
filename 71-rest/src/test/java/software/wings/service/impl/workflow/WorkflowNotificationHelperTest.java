@@ -67,6 +67,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -103,6 +104,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private MainConfiguration configuration;
   @Mock private WingsPersistence wingsPersistence;
+  @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Inject @InjectMocks private WorkflowNotificationHelper workflowNotificationHelper;
 
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private ExecutionContextImpl executionContext;
@@ -169,6 +171,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(stateExecutionInstanceQuery.get()).thenReturn(aStateExecutionInstance().startTs(1234L).endTs(2345L).build());
     when(wingsPersistence.createQuery(WorkflowExecution.class)).thenReturn(workflowExecutionQuery);
     when(workflowExecutionQuery.filter(any(), any())).thenReturn(workflowExecutionQuery);
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(BASE_URL);
   }
 
   @Test

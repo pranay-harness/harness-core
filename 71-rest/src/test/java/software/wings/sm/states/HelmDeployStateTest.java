@@ -144,7 +144,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class HelmDeployStateTest extends WingsBaseTest {
   private static final String HELM_CONTROLLER_NAME = "helm-controller-name";
@@ -304,8 +303,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     on(context).set("sweepingOutputService", sweepingOutputService);
     on(workflowStandardParams).set("subdomainUrlHelper", subdomainUrlHelper);
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
-    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
   }
 
   @Test

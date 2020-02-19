@@ -79,7 +79,8 @@ public enum FeatureName {
   CUSTOM_APM_24_X_7_CV_TASK,
   SERVICE_GUARD_ACTIVITY_LOGS,
   LOGZ_ENABLE_UI,
-  OVERRIDE_TIMEOUTS;
+  OVERRIDE_TIMEOUTS,
+  VANITY_URL;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

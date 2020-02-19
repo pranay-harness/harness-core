@@ -132,7 +132,6 @@ import software.wings.sm.WorkflowStandardParams;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class KubernetesSetupTest extends WingsBaseTest {
   private static final String KUBERNETES_CONTROLLER_NAME = "kubernetes-rc-name.1";
@@ -325,8 +324,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
     doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
-    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
   }
 
   @Test
