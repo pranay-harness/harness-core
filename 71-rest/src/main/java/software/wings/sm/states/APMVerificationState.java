@@ -14,6 +14,7 @@ import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
@@ -612,7 +613,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
           ResponseMapper.builder()
               .fieldName("timestamp")
               .jsonPath(responseMapping.getTimestampJsonPath())
-              .timestampFormat(responseMapping.getTimestampFormat())
+              .timestampFormat(responseMapping.getTimeStampFormat())
               .build());
     }
 
@@ -663,6 +664,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class ResponseMapping {
     private String txnNameFieldValue;
     private String txnNameJsonPath;
@@ -671,7 +673,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     private String hostJsonPath;
     private String hostRegex;
     private String timestampJsonPath;
-    private String timestampFormat;
+    private String timeStampFormat;
   }
 
   public enum ResponseType { JSON }

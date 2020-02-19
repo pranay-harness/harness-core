@@ -1,8 +1,6 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.common.VerificationConstants.URL_STRING;
-import static software.wings.service.impl.ThirdPartyApiCallLog.PAYLOAD;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -16,8 +14,6 @@ import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -25,29 +21,25 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.cv.DataCollectionException;
+import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
-import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.APMVerificationState.Method;
 
 import java.io.IOException;
-import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Singleton
 @Slf4j
 public class APMDelegateServiceImpl implements APMDelegateService {
-  private static final String DATADOG_API_MASK = "api_key=([^&]*)";
-  private static final String DATADOG_APP_MASK = "application_key=([^&]*)";
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
+  @Inject private RequestExecutor requestExecutor;
 
   private Map<String, String> decryptedFields = new HashMap<>();
 
@@ -91,7 +83,7 @@ public class APMDelegateServiceImpl implements APMDelegateService {
       String fieldName = input.substring(startIndex + 2, endIndex);
       String headerBeforeIndex = input.substring(0, startIndex);
       if (!decryptedFields.containsKey(fieldName)) {
-        throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, "Invalid secret provided in input");
+        throw new DataCollectionException("Could not resolve \"${" + fieldName + "}\" provided in input");
       }
       input = headerBeforeIndex + decryptedFields.get(fieldName) + input.substring(endIndex + 1);
     }
@@ -148,17 +140,13 @@ public class APMDelegateServiceImpl implements APMDelegateService {
       }
     }
     apiCallLog.setTitle("Fetching data from " + config.getUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
 
     Call<Object> request;
     if (config.getCollectionMethod() != null && config.getCollectionMethod() == Method.POST) {
       Map<String, Object> body = new HashMap<>();
       if (isNotEmpty(config.getBody())) {
-        String bodyToLog = config.getBody();
         config.setBody(resolveDollarReferences(config.getBody()));
         body = new JSONObject(config.getBody()).toMap();
-        apiCallLog.addFieldToRequest(
-            ThirdPartyApiCallField.builder().name(PAYLOAD).value(bodyToLog).type(FieldType.JSON).build());
       }
       request = getAPMRestClient(config).postCollect(resolveDollarReferences(config.getUrl()),
           resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()), body);
@@ -166,49 +154,8 @@ public class APMDelegateServiceImpl implements APMDelegateService {
       request = getAPMRestClient(config).collect(resolveDollarReferences(config.getUrl()),
           resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()));
     }
-    String urlToLog = request.request().url().toString();
-    if (urlToLog.contains("api_key")) {
-      Pattern batchPattern = Pattern.compile(DATADOG_API_MASK);
-      Matcher matcher = batchPattern.matcher(urlToLog);
-      while (matcher.find()) {
-        final String apiKey = matcher.group(1);
-        urlToLog = urlToLog.replace(apiKey, "<apiKey>");
-      }
-    }
 
-    if (urlToLog.contains("application_key")) {
-      Pattern batchPattern = Pattern.compile(DATADOG_APP_MASK);
-      Matcher matcher = batchPattern.matcher(urlToLog);
-      while (matcher.find()) {
-        final String appKey = matcher.group(1);
-        urlToLog = urlToLog.replace(appKey, "<appKey>");
-      }
-    }
-
-    apiCallLog.addFieldToRequest(
-        ThirdPartyApiCallField.builder().name(URL_STRING).value(urlToLog).type(FieldType.URL).build());
-
-    final Response<Object> response;
-    try {
-      response = request.execute();
-      if (response.isSuccessful()) {
-        apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-        delegateLogService.save(apiCallLog.getAccountId(), apiCallLog);
-        return JsonUtils.asJson(response.body());
-      } else {
-        apiCallLog.addFieldToResponse(response.code(), response.errorBody(), FieldType.TEXT);
-        delegateLogService.save(apiCallLog.getAccountId(), apiCallLog);
-        logger.error("Request not successful. Reason: {}", response);
-        throw new WingsException(response.errorBody().string());
-      }
-    } catch (Exception e) {
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-      delegateLogService.save(apiCallLog.getAccountId(), apiCallLog);
-      logger.info("Error while getting response from metric provider", e);
-      throw new WingsException("Unsuccessful response while fetching data from APM provider. Error message: "
-          + e.getMessage() + " Request: " + request.request().url());
-    }
+    return JsonUtils.asJson(requestExecutor.executeRequest(apiCallLog, request));
   }
 
   private APMRestClient getAPMRestClient(final APMValidateCollectorConfig config) {

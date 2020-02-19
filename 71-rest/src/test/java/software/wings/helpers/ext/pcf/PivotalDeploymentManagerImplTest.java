@@ -284,7 +284,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ADWAIT)
+  @Owner(developers = ADWAIT, intermittent = true)
   @Category(UnitTests.class)
   public void testdestroyProcess() throws Exception {
     StartedProcess startedProcess = mock(StartedProcess.class);

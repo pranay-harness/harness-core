@@ -1495,49 +1495,42 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .options(apmVerificationConfig.collectionParams())
             .url(apmFetchConfig.getUrl())
             .body(apmFetchConfig.getBody())
+            .collectionMethod(config.getApmMetricCollectionInfo().getMethod())
             .encryptedDataDetails(apmVerificationConfig.encryptedDataDetails(secretManager))
             .build();
     VerificationNodeDataSetupResponse response =
         VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
 
-    try {
-      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                            .accountId(accountId)
-                                            .appId(GLOBAL_APP_ID)
-                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                            .build();
-      String apmResponse = delegateProxyFactory.get(APMDelegateService.class, syncTaskContext)
-                               .fetch(apmValidateCollectorConfig,
-                                   ThirdPartyApiCallLog.createApiCallLog(accountId, apmFetchConfig.getGuid()));
-      if (isNotEmpty(apmResponse)) {
-        response.setProviderReachable(true);
-      }
-
-      Map<String, List<APMMetricInfo>> metricInfoMap =
-          buildMetricInfoMap(Arrays.asList(config.getApmMetricCollectionInfo()), null);
-
-      Preconditions.checkState(metricInfoMap.size() == 1);
-      List<APMMetricInfo> metricInfoList = metricInfoMap.values().iterator().next();
-      Preconditions.checkState(metricInfoList.size() == 1);
-
-      APMResponseParser.APMResponseData responseData =
-          new APMResponseParser.APMResponseData(null, DEFAULT_GROUP_NAME, apmResponse, metricInfoList);
-
-      Collection<NewRelicMetricDataRecord> metricDataRecords = APMResponseParser.extract(Arrays.asList(responseData));
-      if (isNotEmpty(metricDataRecords)) {
-        response.setProviderReachable(true);
-        response.setLoadResponse(
-            VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(apmResponse).build());
-        response.setConfigurationCorrect(true);
-        response.setDataForNode(apmFetchConfig);
-      }
-      return response;
-    } catch (Exception ex) {
-      logger.error("Exception while parsing the APM Response.");
-      response.setConfigurationCorrect(false);
-      return response;
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    String apmResponse =
+        delegateProxyFactory.get(APMDelegateService.class, syncTaskContext)
+            .fetch(apmValidateCollectorConfig, ThirdPartyApiCallLog.createApiCallLog(accountId, config.getGuid()));
+    if (isNotEmpty(apmResponse)) {
+      response.setProviderReachable(true);
     }
+
+    Map<String, List<APMMetricInfo>> metricInfoMap =
+        buildMetricInfoMap(Arrays.asList(config.getApmMetricCollectionInfo()), null);
+
+    Preconditions.checkState(metricInfoMap.size() == 1);
+    List<APMMetricInfo> metricInfoList = metricInfoMap.values().iterator().next();
+    Preconditions.checkState(metricInfoList.size() == 1);
+
+    APMResponseParser.APMResponseData responseData =
+        new APMResponseParser.APMResponseData(null, DEFAULT_GROUP_NAME, apmResponse, metricInfoList);
+
+    Collection<NewRelicMetricDataRecord> metricDataRecords = APMResponseParser.extract(Arrays.asList(responseData));
+    if (isNotEmpty(metricDataRecords)) {
+      response.setProviderReachable(true);
+      response.setLoadResponse(
+          VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(apmResponse).build());
+      response.setConfigurationCorrect(true);
+      response.setDataForNode(apmFetchConfig);
+    }
+    return response;
   }
+
   private VerificationNodeDataSetupResponse getMetricsNodeDataForDatadog(
       String accountId, DataDogSetupTestNodeData config) {
     SettingAttribute settingAttribute = settingsService.get(config.getSettingId());
