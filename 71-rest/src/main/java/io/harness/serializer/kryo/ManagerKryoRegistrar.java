@@ -185,6 +185,7 @@ import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.KerberosConfig;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.KubernetesClusterAuthType;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.LambdaTestEvent;
@@ -193,6 +194,7 @@ import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.NotificationChannelType;
+import software.wings.beans.OidcGrantType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.Permission;
 import software.wings.beans.PhaseStepType;
@@ -1493,5 +1495,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InstanaTagFilter.Operator.class, 7314);
     kryo.register(InstanaAnalyzeMetrics.class, 7315);
     kryo.register(InstanaAnalyzeMetrics.Item.class, 7316);
+    kryo.register(KubernetesClusterAuthType.class, 7317);
+    kryo.register(OidcGrantType.class, 7318);
   }
 }
