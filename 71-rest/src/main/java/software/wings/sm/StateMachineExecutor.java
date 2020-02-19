@@ -53,6 +53,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
+import io.harness.config.PipelineConfig;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
@@ -81,6 +82,7 @@ import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Workflow;
@@ -153,6 +155,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
   @Inject private WorkflowService workflowService;
   @Inject private SweepingOutputService sweepingOutputService;
+  @Inject private PipelineConfig pipelineConfig;
 
   /**
    * Execute.
@@ -299,9 +302,24 @@ public class StateMachineExecutor implements StateInspectionListener {
       throw new InvalidRequestException("StateExecutionInstance was already created");
     }
 
+    stateExecutionInstance.setExpiryTs(evaluateExpiryTs(stateExecutionInstance.getAppId(), state));
+    wingsPersistence.save(stateExecutionInstance);
+    return stateExecutionInstance;
+  }
+
+  private Long evaluateExpiryTs(String appId, State state) {
+    boolean overrideTimeout =
+        featureFlagService.isEnabled(FeatureName.OVERRIDE_TIMEOUTS, appService.getAccountIdByAppId(appId));
     Integer timeout = state.getTimeoutMillis();
+    if (pipelineConfig != null && pipelineConfig.isEnabled() && overrideTimeout) {
+      if (StateType.ENV_STATE.name().equals(state.getStateType())) {
+        timeout = pipelineConfig.getEnvStateTimeout();
+      } else if (StateType.APPROVAL.name().equals(state.getStateType())) {
+        timeout = pipelineConfig.getApprovalStateTimeout();
+      }
+    }
     if (State.INFINITE_TIMEOUT.equals(timeout)) {
-      stateExecutionInstance.setExpiryTs(Long.MAX_VALUE);
+      return Long.MAX_VALUE;
     } else {
       if (timeout == null) {
         timeout = DEFAULT_STATE_TIMEOUT_MILLIS;
@@ -309,10 +327,8 @@ public class StateMachineExecutor implements StateInspectionListener {
       if (state.getWaitInterval() != null) {
         timeout += state.getWaitInterval() * 1000;
       }
-      stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + timeout);
+      return System.currentTimeMillis() + timeout;
     }
-    wingsPersistence.save(stateExecutionInstance);
-    return stateExecutionInstance;
   }
 
   /**
