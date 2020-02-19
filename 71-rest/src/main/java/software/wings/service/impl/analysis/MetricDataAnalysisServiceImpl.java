@@ -685,6 +685,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                            .riskLevel(getRiskLevel(mlHostSummaryEntry.getValue().getRisk()))
                                            .testStartIndex(-1)
                                            .anomalies(mlHostSummaryEntry.getValue().getAnomalies())
+                                           .lowerThresholds(mlHostSummaryEntry.getValue().getLowerThreshold())
+                                           .upperThresholds(mlHostSummaryEntry.getValue().getUpperThreshold())
                                            .build());
               }
             }
