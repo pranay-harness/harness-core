@@ -99,7 +99,9 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFindByCVConfigIdToReturnEmptyIfNoLogs() {
     String cvConfigId = generateUuid();
-    assertThat(cvActivityLogService.findByCVConfigId(cvConfigId, 0, System.currentTimeMillis())).isEmpty();
+    assertThat(cvActivityLogService.findByCVConfigId(
+                   cvConfigId, 0, TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis())))
+        .isEmpty();
   }
 
   @Test
@@ -112,10 +114,9 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
     long nowMinute = TimeUnit.MILLISECONDS.toMinutes(nowMilli);
     createLog(cvConfigId, nowMinute, logLine);
     createLog(cvConfigId, nowMinute + 1, "log line");
-    assertThat(cvActivityLogService.findByCVConfigId(
-                   cvConfigId, TimeUnit.MINUTES.toMillis(nowMinute), TimeUnit.MINUTES.toMillis(nowMinute - 1)))
+    assertThat(cvActivityLogService.findByCVConfigId(cvConfigId, nowMinute, nowMinute - 1))
         .isEqualTo(Collections.emptyList());
-    List<CVActivityLog> activityLogs = cvActivityLogService.findByCVConfigId(cvConfigId, nowMilli, nowMilli);
+    List<CVActivityLog> activityLogs = cvActivityLogService.findByCVConfigId(cvConfigId, nowMinute, nowMinute);
     assertThat(activityLogs).hasSize(1);
     assertThat(activityLogs.get(0).getCvConfigId()).isEqualTo(cvConfigId);
     assertThat(activityLogs.get(0).getStateExecutionId()).isNull();
@@ -153,8 +154,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
     createLog(cvConfigId, nowMinute, logLine1);
     createLog(cvConfigId, nowMinute + 1, logLine2);
 
-    List<CVActivityLog> activityLogs = cvActivityLogService.findByCVConfigId(
-        cvConfigId, TimeUnit.MINUTES.toMillis(nowMinute), TimeUnit.MINUTES.toMillis(nowMinute + 1));
+    List<CVActivityLog> activityLogs = cvActivityLogService.findByCVConfigId(cvConfigId, nowMinute, nowMinute + 1);
     assertThat(activityLogs).hasSize(2);
     assertThat(activityLogs.get(0).getCvConfigId()).isEqualTo(cvConfigId);
     assertThat(activityLogs.get(0).getDataCollectionMinute()).isEqualTo(nowMinute);
@@ -237,10 +237,9 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
     long nowMinute = TimeUnit.MILLISECONDS.toMinutes(nowMilli);
     createLog(cvConfigId, nowMinute, logLine);
     createLog(cvConfigId, nowMinute + 1, "log line");
-    assertThat(cvActivityLogService.findByCVConfigId(
-                   cvConfigId, TimeUnit.MINUTES.toMillis(nowMinute), TimeUnit.MINUTES.toMillis(nowMinute - 1)))
+    assertThat(cvActivityLogService.findByCVConfigId(cvConfigId, nowMinute, nowMinute - 1))
         .isEqualTo(Collections.emptyList());
-    List<CVActivityLog> activityLogs = cvActivityLogService.getActivityLogs(null, cvConfigId, nowMilli, nowMilli);
+    List<CVActivityLog> activityLogs = cvActivityLogService.getActivityLogs(null, cvConfigId, nowMinute, nowMinute);
     assertThat(activityLogs).hasSize(1);
     assertThat(activityLogs.get(0).getCvConfigId()).isEqualTo(cvConfigId);
     assertThat(activityLogs.get(0).getStateExecutionId()).isNull();

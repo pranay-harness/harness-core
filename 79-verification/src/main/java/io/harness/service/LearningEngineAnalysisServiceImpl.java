@@ -247,7 +247,8 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
         if (task.is24x7Task()) {
           cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
               .info("Time series analysis started for time range %t to %t",
-                  TimeUnit.MINUTES.toMillis(task.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES),
+                  TimeUnit.MINUTES.toMillis(task.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES
+                      + 1), // both startTime and endTime are inclusive
                   TimeUnit.MINUTES.toMillis(task.getAnalysis_minute()));
         } else {
           cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
@@ -351,7 +352,8 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
         // for workflow we do analysis for 1 min
         if (is247Task) {
           activityLogger.info(prefix + "analysis completed for time range %t to %t.",
-              TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES),
+              TimeUnit.MINUTES.toMillis(
+                  analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES + 1), // both startTime and endTime are inclusive
               TimeUnit.MINUTES.toMillis(analysisMinute));
         } else {
           activityLogger.info(prefix + "analysis completed for time range %t to %t.",

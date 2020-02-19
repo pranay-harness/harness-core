@@ -192,6 +192,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private AppService appService;
   @Mock private CVActivityLogService cvActivityLogService;
+  @Mock private Logger activityLogger;
   private SumoConfig sumoConfig;
   private DatadogConfig datadogConfig;
 
@@ -291,7 +292,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     writeField(alertService, "injector", injector, true);
     writeField(managerVerificationService, "alertService", alertService, true);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
-    when(cvActivityLogService.getLoggerByCVConfigId(anyString(), anyLong())).thenReturn(mock(Logger.class));
+    when(cvActivityLogService.getLoggerByCVConfigId(anyString(), anyLong())).thenReturn(activityLogger);
     when(verificationManagerClient.triggerCVDataCollection(anyString(), anyObject(), anyLong(), anyLong()))
         .then(invocation -> {
           Object[] args = invocation.getArguments();
@@ -586,6 +587,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(savedTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
     DataCollectionInfoV2 savedDataCollectionInfo = savedTask.getDataCollectionInfo();
     assertThat(savedDataCollectionInfo.getCvConfigId()).isEqualTo(cvConfigId);
+    verify(activityLogger)
+        .info(eq("Enqueued service guard task for data collection for time range %t to %t"), anyLong(), anyLong());
   }
 
   @Test

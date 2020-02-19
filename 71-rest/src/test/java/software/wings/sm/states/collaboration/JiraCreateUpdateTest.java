@@ -117,7 +117,7 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = POOJA)
+  @Owner(developers = POOJA, intermittent = true)
   @Category(UnitTests.class)
   public void testParseDateValue() {
     String fieldValue = "1234567891011";
