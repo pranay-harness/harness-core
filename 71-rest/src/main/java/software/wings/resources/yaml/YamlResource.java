@@ -57,6 +57,8 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.clone.YamlCloneService;
 import software.wings.service.intfc.yaml.sync.YamlService;
+import software.wings.yaml.BaseYaml;
+import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.errorhandling.GitSyncError;
@@ -1039,6 +1041,7 @@ public class YamlResource {
   @Path("git-sync-errors")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<List<GitSyncError>> listGitSyncErrors(@QueryParam("accountId") String accountId) {
     return yamlGitService.listGitSyncErrors(accountId);
   }
@@ -1047,6 +1050,7 @@ public class YamlResource {
   @Path("git-sync-errors/count")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<Long> gitSyncErrorCount(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(yamlGitService.getGitSyncErrorCount(accountId));
   }
@@ -1169,5 +1173,24 @@ public class YamlResource {
     }
     yamlService.syncYamlTemplate(accountId);
     return new RestResponse<>("Triggered async template git sync");
+  }
+
+  @GET
+  @Path("/yaml-content")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  public RestResponse<YamlPayload> getYamlForFilePath(@QueryParam("accountId") String accountId,
+      @QueryParam("yamlFilePath") String yamlFilePath, @QueryParam("yamlSubType") String yamlSubType,
+      @QueryParam("applicationId") String applicationId) {
+    BaseYaml yamlForFilePath = yamlService.getYamlForFilePath(accountId, yamlFilePath, yamlSubType, applicationId);
+    if (yamlForFilePath != null) {
+      return YamlHelper.getYamlRestResponse(
+          yamlService.getYamlForFilePath(accountId, yamlFilePath, yamlSubType, applicationId), "");
+    } else {
+      YamlPayload yamlPayload = new YamlPayload();
+      yamlPayload.setYamlPayload("");
+      return new RestResponse<>(yamlPayload);
+    }
   }
 }

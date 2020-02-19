@@ -86,6 +86,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HarnessException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 import io.harness.logging.ExceptionLogger;
@@ -96,6 +97,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.Base;
 import software.wings.beans.FeatureName;
 import software.wings.beans.yaml.Change;
@@ -846,5 +848,28 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
     // We just load the yaml to see if its well formed.
     yamlObj.load(yamlString);
+  }
+
+  /**
+   * Get yaml representation for a given file path
+   * @param yamlFilePath
+   * @param accountId
+   * @param yamlSubType
+   * @return
+   */
+  public BaseYaml getYamlForFilePath(
+      final String accountId, final String yamlFilePath, final String yamlSubType, final String applicationId) {
+    if (EmptyPredicate.isEmpty(yamlFilePath)) {
+      throw new InvalidArgumentsException(Pair.of("yaml file path", "cannot be empty"));
+    }
+    BaseYaml yamlForFilePath = null;
+    try {
+      YamlType yamlType = findYamlType(yamlFilePath, accountId);
+      final BaseYamlHandler yamlHandler = yamlHandlerFactory.getYamlHandler(yamlType, yamlSubType);
+      yamlForFilePath = yamlHandler.toYaml(yamlHandler.get(accountId, yamlFilePath), applicationId);
+    } catch (Exception e) {
+      logger.error(String.format("Error while fetching yaml content for file path %s", yamlFilePath));
+    }
+    return yamlForFilePath;
   }
 }
