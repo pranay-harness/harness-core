@@ -126,6 +126,7 @@ public class VerificationConstants {
   public static final int DELAY_MINUTES = 2;
 
   public static final int CRON_POLL_INTERVAL_IN_MINUTES = 15;
+  public static final int CV_DATA_COLLECTION_INTERVAL_IN_MINUTE = CRON_POLL_INTERVAL_IN_MINUTES / 3;
   public static final int PREDECTIVE_HISTORY_MINUTES = 120;
   public static final long CRON_POLL_INTERVAL = TimeUnit.MINUTES.toSeconds(CRON_POLL_INTERVAL_IN_MINUTES); // in seconds
   public static final int CV_TASK_CRON_POLL_INTERVAL_SEC = 20;

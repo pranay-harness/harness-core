@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -171,7 +170,7 @@ public class StackDriverLogDataCollectionTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetLogs_withParsingCorrectMessageAndHost() throws Exception {
     when(stackDriverDelegateService.fetchLogs(
-             anyString(), any(), anyLong(), anyLong(), any(), any(), any(), any(), anyBoolean(), anyBoolean()))
+             any(StackDriverLogDataCollectionInfo.class), anyLong(), anyLong(), anyBoolean(), anyBoolean()))
         .thenReturn(getResponse().getEntries());
     DataCollectionTaskResult taskResult = dataCollectionTask.initDataCollection(dataCollectionInfo);
     when(logAnalysisStoreService.save(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))

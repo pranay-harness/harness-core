@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+import static software.wings.common.VerificationConstants.CV_DATA_COLLECTION_INTERVAL_IN_MINUTE;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
@@ -428,8 +429,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(sumoDataCollectionInfo.getStartTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
     assertThat(sumoDataCollectionInfo.getEndTime())
-        .isEqualTo(
-            TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES / 3)
+        .isEqualTo(TimeUnit.MINUTES.toMillis(
+                       logsCVConfiguration.getBaselineStartMinute() + CV_DATA_COLLECTION_INTERVAL_IN_MINUTE)
             - 1);
 
     assertThat(sumoDataCollectionInfo.getSumoConfig()).isEqualTo(sumoConfig);
@@ -456,8 +457,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(customLogDataCollectionInfo.getStartTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
     assertThat(customLogDataCollectionInfo.getEndTime())
-        .isEqualTo(
-            TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES / 3)
+        .isEqualTo(TimeUnit.MINUTES.toMillis(
+                       logsCVConfiguration.getBaselineStartMinute() + CV_DATA_COLLECTION_INTERVAL_IN_MINUTE)
             - 1);
 
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
@@ -527,8 +528,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(sumoDataCollectionInfo.getStartTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
     assertThat(sumoDataCollectionInfo.getEndTime())
-        .isEqualTo(
-            TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES / 3)
+        .isEqualTo(TimeUnit.MINUTES.toMillis(
+                       logsCVConfiguration.getBaselineStartMinute() + CV_DATA_COLLECTION_INTERVAL_IN_MINUTE)
             - 1);
 
     // save some log and trigger again
@@ -562,7 +563,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved + 1));
     assertThat(sumoDataCollectionInfo.getEndTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()
-                       + CRON_POLL_INTERVAL_IN_MINUTES / 3 + numOfMinutesSaved + 1)
+                       + CV_DATA_COLLECTION_INTERVAL_IN_MINUTE + numOfMinutesSaved + 1)
             - 1);
   }
 
@@ -615,8 +616,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(customLogDataCollectionInfo.getStartTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
     assertThat(customLogDataCollectionInfo.getEndTime())
-        .isEqualTo(
-            TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES / 3)
+        .isEqualTo(TimeUnit.MINUTES.toMillis(
+                       logsCVConfiguration.getBaselineStartMinute() + CV_DATA_COLLECTION_INTERVAL_IN_MINUTE)
             - 1);
 
     // save some log and trigger again
@@ -649,7 +650,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved + 1));
     assertThat(customLogDataCollectionInfo.getEndTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()
-                       + CRON_POLL_INTERVAL_IN_MINUTES / 3 + numOfMinutesSaved + 1)
+                       + CV_DATA_COLLECTION_INTERVAL_IN_MINUTE + numOfMinutesSaved + 1)
             - 1);
   }
 
@@ -677,8 +678,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(customLogDataCollectionInfo.getStartTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
     assertThat(customLogDataCollectionInfo.getEndTime())
-        .isEqualTo(
-            TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES / 3)
+        .isEqualTo(TimeUnit.MINUTES.toMillis(
+                       logsCVConfiguration.getBaselineStartMinute() + CV_DATA_COLLECTION_INTERVAL_IN_MINUTE)
             - 1);
 
     // save some log and trigger again
@@ -1730,7 +1731,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     // here it brings it closer to the actual 15min boundary
     sumoConfig.setBaselineStartMinute(expectedStart);
     long expectedEnd =
-        TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES / 3) - 1;
+        TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute() + CV_DATA_COLLECTION_INTERVAL_IN_MINUTE) - 1;
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     continuousVerificationService.triggerLogDataCollection(accountId);
@@ -1806,7 +1807,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(dataRecord);
     long expectedStart = currentTime - TimeUnit.MINUTES.toMillis(60) + TimeUnit.MINUTES.toMillis(1);
 
-    long expectedEnd = expectedStart + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES / 3) - 1;
+    long expectedEnd = expectedStart + TimeUnit.MINUTES.toMillis(CV_DATA_COLLECTION_INTERVAL_IN_MINUTE) - 1;
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     continuousVerificationService.triggerLogDataCollection(accountId);
@@ -1864,7 +1865,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     // here it brings it closer to the actual 15min boundary
     sumoConfig.setBaselineStartMinute(expectedStart);
     long expectedEnd =
-        TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES / 3) - 1;
+        TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute() + CV_DATA_COLLECTION_INTERVAL_IN_MINUTE) - 1;
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     continuousVerificationService.triggerLogDataCollection(accountId);

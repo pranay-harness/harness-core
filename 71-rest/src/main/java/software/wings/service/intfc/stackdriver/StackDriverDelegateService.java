@@ -8,13 +8,13 @@ import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
+import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverNameSpace;
 import software.wings.service.impl.stackdriver.StackDriverSetupTestNodeData;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -41,9 +41,8 @@ public interface StackDriverDelegateService {
 
   String getDateFormatTime(long time);
 
-  List<LogEntry> fetchLogs(String stateExecutionId, String query, long startTime, long endTime, Set<String> hosts,
-      String hostnameField, GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, boolean is24X7Task,
-      boolean fetchNextPage);
+  List<LogEntry> fetchLogs(StackDriverLogDataCollectionInfo dataCollectionInfo, long collectionStartTime,
+      long collectionEndTime, boolean is24x7Task, boolean fetchNextPage);
 
   @DelegateTaskType(TaskType.STACKDRIVER_LOG_DATA_FOR_NODE)
   VerificationNodeDataSetupResponse getLogWithDataForNode(String stateExecutionId, GcpConfig gcpConfig,
