@@ -324,6 +324,49 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testAnalysisNodeDataCustomThresholdBands() throws IOException {
+    final Gson gson = new Gson();
+    File file =
+        new File(getClass().getClassLoader().getResource("./timeseries_analysis_custom_failfast.json").getFile());
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<TimeSeriesMLAnalysisRecord>() {}.getType();
+      timeSeriesMLAnalysisRecord = gson.fromJson(br, type);
+
+      timeSeriesMLAnalysisRecord.setStateExecutionId(stateExecutionId);
+      timeSeriesMLAnalysisRecord.setAppId(appId);
+      timeSeriesMLAnalysisRecord.setUuid(null);
+      timeSeriesMLAnalysisRecord.compressTransactions();
+      wingsPersistence.save(timeSeriesMLAnalysisRecord);
+    }
+
+    wingsPersistence.save(AnalysisContext.builder().stateExecutionId(stateExecutionId).timeDuration(10).build());
+
+    DeploymentTimeSeriesAnalysis metricsAnalysis =
+        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.empty(), false);
+    assertThat(metricsAnalysis).isNotNull();
+    assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
+    assertThat(metricsAnalysis.getMetricAnalyses()
+                   .get(0)
+                   .getMetricValues()
+                   .get(0)
+                   .getHostAnalysisValues()
+                   .get(0)
+                   .getUpperThresholds())
+        .isNotEmpty();
+    assertThat(metricsAnalysis.getMetricAnalyses()
+                   .get(0)
+                   .getMetricValues()
+                   .get(0)
+                   .getHostAnalysisValues()
+                   .get(0)
+                   .getLowerThresholds())
+        .isNotEmpty();
+  }
+
+  @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAnalysisDemoFailure() throws IOException {
