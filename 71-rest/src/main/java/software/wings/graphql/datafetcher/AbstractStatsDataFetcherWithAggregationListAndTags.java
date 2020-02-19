@@ -448,6 +448,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       dataPoint.setId(label);
       dataPoint.setName(label);
       dataPoint.setType(TYPE_LABEL);
+      dataPoint.setLabel(label);
       dataPoint.setCostTrend(
           billingDataHelper.getRoundedDoubleValue(dataPoint.getPrevBillingAmount() * dataPoint.getCostTrend()));
       aggregatedPrevBillingAmount.put(label, dataPoint.getPrevBillingAmount());
