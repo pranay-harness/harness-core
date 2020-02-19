@@ -26,7 +26,6 @@ import static software.wings.api.DeploymentType.PCF;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.FeatureName.ADD_WORKFLOW_FORMIK;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PCF_PCF;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
@@ -1975,7 +1974,6 @@ public class WorkflowServiceHelper {
       boolean infraChanged) {
     String accountId = appService.getAccountIdByAppId(appId);
     boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
-    boolean formikWorkflowEnabled = featureFlagService.isEnabled(ADD_WORKFLOW_FORMIK, appId);
     TemplateExpression envExpression =
         WorkflowServiceTemplateHelper.getTemplateExpression(templateExpressions, "envId");
     if (envExpression != null) {
@@ -1984,15 +1982,12 @@ public class WorkflowServiceHelper {
     if (canaryOrchestrationWorkflow.getWorkflowPhases() != null) {
       for (WorkflowPhase phase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
         WorkflowServiceTemplateHelper.setTemplateExpresssionsToPhase(templateExpressions, phase);
-        validateServiceCompatibility(appId, serviceId, phase.getServiceId());
+        if (!phase.checkServiceTemplatized()) {
+          validateServiceCompatibility(appId, serviceId, phase.getServiceId());
+        }
         if (serviceId != null) {
           phase.setServiceId(serviceId);
         }
-
-        if (formikWorkflowEnabled && serviceId == null && phase.checkServiceTemplatized()) {
-          phase.setServiceId(serviceId);
-        }
-
         if (infraRefactor) {
           setInfraDefinitionDetails(appId, infraId, phase, envChanged, infraChanged);
         } else {
