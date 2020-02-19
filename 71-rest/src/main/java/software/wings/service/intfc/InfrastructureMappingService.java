@@ -196,9 +196,9 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   void saveInfrastructureMappingToSweepingOutput(
       String appId, String workflowExecutionId, PhaseElement phaseElement, String infraStructureMappingId);
 
-  List<String> getVPCIdStrList(String appId, String computeProviderId, String region);
+  List<String> getVPCIds(String appId, String computeProviderId, String region);
 
-  List<String> getSGIdStrList(String appId, String computeProviderId, String region, List<String> vpcIds);
+  List<String> getSGIds(String appId, String computeProviderId, String region, List<String> vpcIds);
 
-  List<String> getSubnetIdStrList(String appId, String computeProviderId, String region, List<String> vpcIds);
+  List<String> getSubnetIds(String appId, String computeProviderId, String region, List<String> vpcIds);
 }

@@ -1591,7 +1591,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @VisibleForTesting
-  public List<String> getVPCIdStrList(String appId, String computeProviderId, String region) {
+  public List<String> getVPCIds(String appId, String computeProviderId, String region) {
     return CollectionUtils.emptyIfNull(listVPC(appId, computeProviderId, region))
         .stream()
         .map(vpc -> vpc.getId())
@@ -1665,7 +1665,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         domain, path, tcpRoute, useRandomPort, portNum);
   }
 
-  public List<String> getSGIdStrList(String appId, String computeProviderId, String region, List<String> vpcIds) {
+  public List<String> getSGIds(String appId, String computeProviderId, String region, List<String> vpcIds) {
     return CollectionUtils.emptyIfNull(listSecurityGroups(appId, computeProviderId, region, vpcIds))
         .stream()
         .map(sg -> sg.getId())
@@ -1692,7 +1692,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @VisibleForTesting
-  public List<String> getSubnetIdStrList(String appId, String computeProviderId, String region, List<String> vpcIds) {
+  public List<String> getSubnetIds(String appId, String computeProviderId, String region, List<String> vpcIds) {
     return CollectionUtils.emptyIfNull(listSubnets(appId, computeProviderId, region, vpcIds))
         .stream()
         .map(subnet -> subnet.getId())

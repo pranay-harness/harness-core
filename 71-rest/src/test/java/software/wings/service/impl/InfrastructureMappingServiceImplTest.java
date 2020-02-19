@@ -268,7 +268,7 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
         .when(spyInfrastructureMappingService)
         .listVPC(appId, computeProviderId, region);
 
-    List<String> vpcList = spyInfrastructureMappingService.getVPCIdStrList(appId, computeProviderId, region);
+    List<String> vpcList = spyInfrastructureMappingService.getVPCIds(appId, computeProviderId, region);
 
     assertThat(vpcList.size()).isEqualTo(1);
     assertThat(vpcList.get(0)).isEqualTo(vpcId);
@@ -293,8 +293,7 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
         .when(spyInfrastructureMappingService)
         .listSubnets(appId, computeProviderId, region, vpcList);
 
-    List<String> subnetList =
-        spyInfrastructureMappingService.getSubnetIdStrList(appId, computeProviderId, region, vpcList);
+    List<String> subnetList = spyInfrastructureMappingService.getSubnetIds(appId, computeProviderId, region, vpcList);
 
     assertThat(subnetList.size()).isEqualTo(1);
     assertThat(subnetList.get(0)).isEqualTo(subnetId);
@@ -319,7 +318,7 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
         .when(spyInfrastructureMappingService)
         .listSecurityGroups(appId, computeProviderId, region, vpcList);
 
-    List<String> sgList = spyInfrastructureMappingService.getSGIdStrList(appId, computeProviderId, region, vpcList);
+    List<String> sgList = spyInfrastructureMappingService.getSGIds(appId, computeProviderId, region, vpcList);
 
     assertThat(sgList.size()).isEqualTo(1);
     assertThat(sgList.get(0)).isEqualTo(sgId);
