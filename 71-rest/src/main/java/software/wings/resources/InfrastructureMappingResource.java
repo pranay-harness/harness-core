@@ -249,7 +249,7 @@ public class InfrastructureMappingResource {
   @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> listVpcs(@QueryParam("appId") String appId, @QueryParam("region") String region,
       @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(infrastructureMappingService.listVPC(appId, computeProviderId, region));
+    return new RestResponse<>(infrastructureMappingService.getVPCIdStrList(appId, computeProviderId, region));
   }
 
   @GET
@@ -260,8 +260,7 @@ public class InfrastructureMappingResource {
   public RestResponse<List<String>> listSecurityGroups(@QueryParam("appId") String appId,
       @QueryParam("region") String region, @QueryParam("vpcIds") @NotNull List<String> vpcIds,
       @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(
-        infrastructureMappingService.listSecurityGroups(appId, computeProviderId, region, vpcIds));
+    return new RestResponse<>(infrastructureMappingService.getSGIdStrList(appId, computeProviderId, region, vpcIds));
   }
 
   @GET
@@ -271,7 +270,8 @@ public class InfrastructureMappingResource {
   @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> listSubnets(@QueryParam("appId") String appId, @QueryParam("region") String region,
       @QueryParam("vpcIds") @NotNull List<String> vpcIds, @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(infrastructureMappingService.listSubnets(appId, computeProviderId, region, vpcIds));
+    return new RestResponse<>(
+        infrastructureMappingService.getSubnetIdStrList(appId, computeProviderId, region, vpcIds));
   }
 
   @GET

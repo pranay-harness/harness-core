@@ -18,6 +18,9 @@ import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
+import software.wings.service.impl.aws.model.AwsSecurityGroup;
+import software.wings.service.impl.aws.model.AwsSubnet;
+import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureProvisioner;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -91,12 +94,12 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
 
   Map<String, String> listAllRoles(String appId, String computeProviderId);
 
-  List<String> listVPC(@NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region);
+  List<AwsVPC> listVPC(@NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region);
 
-  List<String> listSecurityGroups(@NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region,
-      @NotNull List<String> vpcIds);
+  List<AwsSecurityGroup> listSecurityGroups(@NotEmpty String appId, @NotEmpty String computeProviderId,
+      @NotEmpty String region, @NotNull List<String> vpcIds);
 
-  List<String> listSubnets(@NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region,
+  List<AwsSubnet> listSubnets(@NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region,
       @NotNull List<String> vpcIds);
 
   Map<String, String> listLoadBalancers(String appId, String deploymentType, String computeProviderId);
@@ -192,4 +195,10 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
 
   void saveInfrastructureMappingToSweepingOutput(
       String appId, String workflowExecutionId, PhaseElement phaseElement, String infraStructureMappingId);
+
+  List<String> getVPCIdStrList(String appId, String computeProviderId, String region);
+
+  List<String> getSGIdStrList(String appId, String computeProviderId, String region, List<String> vpcIds);
+
+  List<String> getSubnetIdStrList(String appId, String computeProviderId, String region, List<String> vpcIds);
 }

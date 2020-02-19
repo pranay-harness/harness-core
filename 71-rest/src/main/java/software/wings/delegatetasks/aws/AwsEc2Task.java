@@ -27,6 +27,9 @@ import software.wings.service.impl.aws.model.AwsEc2Request;
 import software.wings.service.impl.aws.model.AwsEc2Request.AwsEc2RequestType;
 import software.wings.service.impl.aws.model.AwsEc2ValidateCredentialsResponse;
 import software.wings.service.impl.aws.model.AwsResponse;
+import software.wings.service.impl.aws.model.AwsSecurityGroup;
+import software.wings.service.impl.aws.model.AwsSubnet;
+import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 
 import java.util.List;
@@ -63,17 +66,18 @@ public class AwsEc2Task extends AbstractDelegateRunnableTask {
           return AwsEc2ListRegionsResponse.builder().regions(regions).executionStatus(SUCCESS).build();
         }
         case LIST_VPCS: {
-          List<String> vpcs = ec2ServiceDelegate.listVPCs(
+          List<AwsVPC> vpcs = ec2ServiceDelegate.listVPCs(
               request.getAwsConfig(), request.getEncryptionDetails(), ((AwsEc2ListVpcsRequest) request).getRegion());
           return AwsEc2ListVpcsResponse.builder().vpcs(vpcs).executionStatus(SUCCESS).build();
         }
         case LIST_SUBNETS: {
-          List<String> subnets = ec2ServiceDelegate.listSubnets(request.getAwsConfig(), request.getEncryptionDetails(),
-              ((AwsEc2ListSubnetsRequest) request).getRegion(), ((AwsEc2ListSubnetsRequest) request).getVpcIds());
+          List<AwsSubnet> subnets =
+              ec2ServiceDelegate.listSubnets(request.getAwsConfig(), request.getEncryptionDetails(),
+                  ((AwsEc2ListSubnetsRequest) request).getRegion(), ((AwsEc2ListSubnetsRequest) request).getVpcIds());
           return AwsEc2ListSubnetsResponse.builder().subnets(subnets).executionStatus(SUCCESS).build();
         }
         case LIST_SGS: {
-          List<String> securityGroups =
+          List<AwsSecurityGroup> securityGroups =
               ec2ServiceDelegate.listSGs(request.getAwsConfig(), request.getEncryptionDetails(),
                   ((AwsEc2ListSGsRequest) request).getRegion(), ((AwsEc2ListSGsRequest) request).getVpcIds());
           return AwsEc2ListSGsResponse.builder().securityGroups(securityGroups).executionStatus(SUCCESS).build();

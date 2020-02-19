@@ -154,6 +154,9 @@ import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.PcfHelperService;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
+import software.wings.service.impl.aws.model.AwsSecurityGroup;
+import software.wings.service.impl.aws.model.AwsSubnet;
+import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.impl.spotinst.SpotinstHelperServiceManager;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -1661,6 +1664,22 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
     return pcfHelperService.listRoutes((PcfConfig) computeProviderSetting.getValue(),
         pcfInfraStructure.getOrganization(), pcfInfraStructure.getSpace());
+  }
+
+  @Override
+  public List<AwsVPC> listVPC(String appId, String computeProviderId, String region) {
+    return infrastructureMappingService.listVPC(appId, computeProviderId, region);
+  }
+
+  @Override
+  public List<AwsSecurityGroup> listSecurityGroups(
+      String appId, String computeProviderId, String region, List<String> vpcIds) {
+    return infrastructureMappingService.listSecurityGroups(appId, computeProviderId, region, vpcIds);
+  }
+
+  @Override
+  public List<AwsSubnet> listSubnets(String appId, String computeProviderId, String region, List<String> vpcIds) {
+    return infrastructureMappingService.listSubnets(appId, computeProviderId, region, vpcIds);
   }
 
   @VisibleForTesting

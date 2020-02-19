@@ -13,5 +13,5 @@ public class AwsEc2ListSGsResponse implements AwsResponse {
   private DelegateMetaInfo delegateMetaInfo;
   private ExecutionStatus executionStatus;
   private String errorMessage;
-  private List<String> securityGroups;
+  private List<AwsSecurityGroup> securityGroups;
 }

@@ -134,6 +134,9 @@ import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
+import software.wings.service.impl.aws.model.AwsSecurityGroup;
+import software.wings.service.impl.aws.model.AwsSubnet;
+import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
@@ -1587,8 +1590,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return Collections.emptyMap();
   }
 
+  @VisibleForTesting
+  public List<String> getVPCIdStrList(String appId, String computeProviderId, String region) {
+    return CollectionUtils.emptyIfNull(listVPC(appId, computeProviderId, region))
+        .stream()
+        .map(vpc -> vpc.getId())
+        .collect(Collectors.toList());
+  }
+
   @Override
-  public List<String> listVPC(String appId, String computeProviderId, String region) {
+  public List<AwsVPC> listVPC(String appId, String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     notNullCheck("Compute Provider", computeProviderSetting);
 
@@ -1654,8 +1665,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         domain, path, tcpRoute, useRandomPort, portNum);
   }
 
+  public List<String> getSGIdStrList(String appId, String computeProviderId, String region, List<String> vpcIds) {
+    return CollectionUtils.emptyIfNull(listSecurityGroups(appId, computeProviderId, region, vpcIds))
+        .stream()
+        .map(sg -> sg.getId())
+        .collect(Collectors.toList());
+  }
+
   @Override
-  public List<String> listSecurityGroups(String appId, String computeProviderId, String region, List<String> vpcIds) {
+  public List<AwsSecurityGroup> listSecurityGroups(
+      String appId, String computeProviderId, String region, List<String> vpcIds) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     notNullCheck("Compute Provider", computeProviderSetting);
 
@@ -1672,8 +1691,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return emptyList();
   }
 
+  @VisibleForTesting
+  public List<String> getSubnetIdStrList(String appId, String computeProviderId, String region, List<String> vpcIds) {
+    return CollectionUtils.emptyIfNull(listSubnets(appId, computeProviderId, region, vpcIds))
+        .stream()
+        .map(subnet -> subnet.getId())
+        .collect(Collectors.toList());
+  }
+
   @Override
-  public List<String> listSubnets(String appId, String computeProviderId, String region, List<String> vpcIds) {
+  public List<AwsSubnet> listSubnets(String appId, String computeProviderId, String region, List<String> vpcIds) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     notNullCheck("Compute Provider", computeProviderSetting);
 

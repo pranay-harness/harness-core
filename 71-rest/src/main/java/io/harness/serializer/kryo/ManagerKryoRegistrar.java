@@ -606,6 +606,9 @@ import software.wings.service.impl.aws.model.AwsS3ListBucketNamesRequest;
 import software.wings.service.impl.aws.model.AwsS3ListBucketNamesResponse;
 import software.wings.service.impl.aws.model.AwsS3Request;
 import software.wings.service.impl.aws.model.AwsS3Request.AwsS3RequestType;
+import software.wings.service.impl.aws.model.AwsSecurityGroup;
+import software.wings.service.impl.aws.model.AwsSubnet;
+import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
 import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
 import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
@@ -1486,16 +1489,23 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CustomAPMDataCollectionInfo.class, 7305);
     kryo.register(APMVerificationConfig.class, 7306);
     kryo.register(APMVerificationConfig.KeyValues.class, 7307);
+
     kryo.register(HttpException.class, 7308);
     kryo.register(SumoException.class, 7309);
     kryo.register(SumoClientException.class, 7310);
+
     kryo.register(InstanaAnalyzeMetricRequest.class, 7311);
     kryo.register(InstanaAnalyzeMetricRequest.Group.class, 7312);
     kryo.register(InstanaAnalyzeMetricRequest.Metric.class, 7313);
     kryo.register(InstanaTagFilter.Operator.class, 7314);
     kryo.register(InstanaAnalyzeMetrics.class, 7315);
     kryo.register(InstanaAnalyzeMetrics.Item.class, 7316);
+
     kryo.register(KubernetesClusterAuthType.class, 7317);
     kryo.register(OidcGrantType.class, 7318);
+
+    kryo.register(AwsVPC.class, 7319);
+    kryo.register(AwsSubnet.class, 7320);
+    kryo.register(AwsSecurityGroup.class, 7321);
   }
 }
