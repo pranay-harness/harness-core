@@ -87,7 +87,7 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
   private VMComputePricingInfo getCustomVMPricing(
       InstanceData instanceData, Instant startTime, CloudProvider cloudProvider) {
     VMComputePricingInfo vmComputePricingInfo = null;
-    if (cloudProvider == CloudProvider.AWS) {
+    if (cloudProvider == CloudProvider.UNKNOWN) {
       vmComputePricingInfo = awsCustomPricingService.getComputeVMPricingInfo(instanceData, startTime);
     }
     return vmComputePricingInfo;
