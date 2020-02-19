@@ -10,6 +10,8 @@ import static io.harness.delegate.configuration.InstallUtils.installHelm;
 import static io.harness.delegate.configuration.InstallUtils.installKubectl;
 import static io.harness.delegate.configuration.InstallUtils.installOc;
 import static io.harness.delegate.configuration.InstallUtils.installTerraformConfigInspect;
+import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
+import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_HEARTBEAT;
@@ -27,8 +29,6 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_NEED
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_PENDING;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_VERSION;
-import static io.harness.delegate.message.MessageConstants.MIGRATE;
-import static io.harness.delegate.message.MessageConstants.SELF_DESTRUCT;
 import static io.harness.delegate.message.MessageConstants.UPGRADING_DELEGATE;
 import static io.harness.delegate.message.MessageConstants.WATCHER_DATA;
 import static io.harness.delegate.message.MessageConstants.WATCHER_HEARTBEAT;

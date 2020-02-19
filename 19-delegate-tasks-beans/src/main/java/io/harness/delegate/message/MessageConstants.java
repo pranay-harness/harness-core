@@ -43,8 +43,4 @@ public interface MessageConstants {
   // Messages received by watcher from delegate processes
   String NEW_DELEGATE = "new-delegate";
   String DELEGATE_STARTED = "delegate-started";
-
-  // Messages sent from manager to delegate
-  String SELF_DESTRUCT = "[SELF_DESTRUCT]";
-  String MIGRATE = "[MIGRATE]";
 }
