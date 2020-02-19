@@ -11,6 +11,7 @@ import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
@@ -56,6 +57,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.config.LogzConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.ElkConnector;
@@ -166,6 +168,9 @@ public class SettingValidationServiceTest extends WingsBaseTest {
                                           .password(generateUuid().toCharArray())
                                           .build();
     splunkConfig.setDecrypted(true);
+    com.splunk.Service splunkService = Mockito.mock(com.splunk.Service.class);
+    doThrow(new DataCollectionException("HttpException: HTTP 404")).when(splunkService).getJobs();
+    doReturn(splunkService).when(spySplunkDelegateService).initSplunkService(any(SplunkConfig.class), anyList());
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(splunkConfig).build());
     assertThat(validationResult.isValid()).isFalse();
@@ -316,6 +321,11 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     final LogzConfig logzConfig =
         LogzConfig.builder().logzUrl("https://api.logz.io").token(generateUuid().toCharArray()).build();
     logzConfig.setDecrypted(true);
+    doThrow(
+        new DataCollectionException(
+            "Response code: 401, Message: Unauthorized, Error: {\"code\":401,\"message\":\"HTTP 401 Unauthorized\""))
+        .when(spyRequestExecutor)
+        .executeRequest(any(Call.class));
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(logzConfig).build());
     assertThat(validationResult.isValid()).isFalse();
@@ -427,6 +437,10 @@ public class SettingValidationServiceTest extends WingsBaseTest {
                                             .apiToken(generateUuid().toCharArray())
                                             .build();
     instanaConfig.setDecrypted(true);
+    doThrow(new DataCollectionException(
+                "Response code: 401, Message: Unauthorized, Error: {\"errors\":[\"Unauthorized request\"]}"))
+        .when(spyRequestExecutor)
+        .executeRequest(any(Call.class));
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(instanaConfig).build());
     assertThat(validationResult.isValid()).isFalse();
@@ -487,6 +501,11 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     final NewRelicConfig newRelicConfig =
         NewRelicConfig.builder().newRelicUrl("https://api.newrelic.com").apiKey(generateUuid().toCharArray()).build();
     newRelicConfig.setDecrypted(true);
+    doThrow(
+        new DataCollectionException(
+            "Response code: 401, Message: Unauthorized, Error: {\"error\":{\"title\":\"The API key provided is invalid\"}}"))
+        .when(spyRequestExecutor)
+        .executeRequest(any(Call.class));
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(newRelicConfig).build());
     assertThat(validationResult.isValid()).isFalse();
@@ -554,6 +573,9 @@ public class SettingValidationServiceTest extends WingsBaseTest {
             .password(generateUuid().toCharArray())
             .build();
     appDynamicsConfig.setDecrypted(true);
+    doThrow(new DataCollectionException("Response code: 401, Message: Unauthorized, Error: "))
+        .when(spyRequestExecutor)
+        .executeRequest(any(Call.class));
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(appDynamicsConfig).build());
     assertThat(validationResult.isValid()).isFalse();
@@ -618,6 +640,11 @@ public class SettingValidationServiceTest extends WingsBaseTest {
                                                 .apiToken(generateUuid().toCharArray())
                                                 .build();
     dynaTraceConfig.setDecrypted(true);
+    doThrow(
+        new DataCollectionException(
+            "Response code: 401, Message: Unauthorized, Error: {\"error\":{\"code\":401,\"message\":\"Token Authentication failed\"}}"))
+        .when(spyRequestExecutor)
+        .executeRequest(any(Call.class));
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(dynaTraceConfig).build());
     assertThat(validationResult.isValid()).isFalse();
