@@ -156,7 +156,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 public class PcfSetupStateTest extends WingsBaseTest {
@@ -342,8 +341,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
             PcfServiceSpecification.builder().manifestYaml(MANIFEST_YAML_CONTENT).serviceId(service.getUuid()).build());
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
-    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
   }
 
   @Test

@@ -159,7 +159,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import javax.cache.Cache;
 
 /**
@@ -360,9 +359,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(accountService.save(any(Account.class), eq(false))).thenReturn(account);
     when(wingsPersistence.query(eq(User.class), any(PageRequest.class))).thenReturn(aPageResponse().build());
     when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean())).thenReturn(aPageResponse().build());
-    when(subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(account.getUuid())))
-        .thenReturn(Optional.ofNullable(null));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable(null))).thenReturn(PORTAL_URL + "/");
+    when(subdomainUrlHelper.getPortalBaseUrl(account.getUuid())).thenReturn(PORTAL_URL + "/");
 
     userService.register(userBuilder.build());
 
@@ -386,9 +383,7 @@ public class UserServiceTest extends WingsBaseTest {
   public void shouldIncludeEnvPathInTrialSignupEmailUrl() {
     when(configuration.isTrialRegistrationAllowed()).thenReturn(true);
     when(configuration.getPortal().getUrl()).thenReturn("https://qa.harness.io");
-    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("https://subdomainUrl.com"));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("https://subdomainUrl.com")))
-        .thenReturn("https://qa.harness.io/");
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("https://qa.harness.io/");
 
     String inviteId = UUIDGenerator.generateUuid();
     when(wingsPersistence.save(any(UserInvite.class))).thenReturn(inviteId);
@@ -440,9 +435,7 @@ public class UserServiceTest extends WingsBaseTest {
                                 .withEmail(email)
                                 .withName(userName)
                                 .build();
-    when(subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(userInvite.getAccountId())))
-        .thenReturn(Optional.ofNullable(null));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable(null))).thenReturn(PORTAL_URL);
+    when(subdomainUrlHelper.getPortalBaseUrl(userInvite.getAccountId())).thenReturn(PORTAL_URL);
     userInvite.setPassword("password".toCharArray());
     UtmInfo utmInfo = UtmInfo.builder().utmCampaign("campaign").utmContent("content").utmSource("source").build();
     userInvite.setUtmInfo(utmInfo);
@@ -499,9 +492,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
         .thenReturn(anEmailVerificationToken().withToken("token123").build());
     when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean())).thenReturn(aPageResponse().build());
-    when(subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(account.getUuid())))
-        .thenReturn(Optional.ofNullable(null));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable(null))).thenReturn(PORTAL_URL);
+    when(subdomainUrlHelper.getPortalBaseUrl(account.getUuid())).thenReturn(PORTAL_URL);
 
     userService.register(userBuilder.build());
 
@@ -756,9 +747,7 @@ public class UserServiceTest extends WingsBaseTest {
                           .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
                           .build();
 
-    when(subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(account.getUuid())))
-        .thenReturn(Optional.ofNullable(null));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable(null))).thenReturn(PORTAL_URL);
+    when(subdomainUrlHelper.getPortalBaseUrl(account.getUuid())).thenReturn(PORTAL_URL);
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
@@ -813,9 +802,7 @@ public class UserServiceTest extends WingsBaseTest {
                         .build());
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(userBuilder.uuid(USER_ID).build());
-    when(subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(userInvite.getAccountId())))
-        .thenReturn(Optional.ofNullable(null));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable(null))).thenReturn(PORTAL_URL);
+    when(subdomainUrlHelper.getPortalBaseUrl(userInvite.getAccountId())).thenReturn(PORTAL_URL);
     userService.inviteUsers(userInvite);
 
     verify(wingsPersistence).saveAndGet(eq(User.class), userArgumentCaptor.capture());
@@ -1018,9 +1005,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(query.get()).thenReturn(userBuilder.uuid(USER_ID).accounts(accounts).build());
     when(configuration.getPortal().getJwtPasswordSecret()).thenReturn("SECRET");
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
-    when(subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(anyString())))
-        .thenReturn(Optional.ofNullable(null));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable(null))).thenReturn(PORTAL_URL + "/");
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL + "/");
     userService.resetPassword(USER_EMAIL);
 
     verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());

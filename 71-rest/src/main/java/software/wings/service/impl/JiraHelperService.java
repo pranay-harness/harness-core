@@ -175,14 +175,6 @@ public class JiraHelperService {
     return jiraExecutionData.getStatuses();
   }
 
-  private String getBaseUrl() {
-    String baseUrl = mainConfiguration.getPortal().getUrl().trim();
-    if (!baseUrl.endsWith("/")) {
-      baseUrl += "/";
-    }
-    return baseUrl;
-  }
-
   private JiraExecutionData runTask(
       String accountId, String appId, String connectorId, JiraTaskParameters jiraTaskParameters) {
     JiraConfig jiraConfig = (JiraConfig) settingService.get(connectorId).getValue();

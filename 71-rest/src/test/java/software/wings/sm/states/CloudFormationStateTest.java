@@ -130,7 +130,6 @@ import software.wings.sm.states.provision.CloudFormationState.CloudFormationStat
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 public class CloudFormationStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
@@ -335,8 +334,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
     when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(false);
-    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
   }
 
   @Test

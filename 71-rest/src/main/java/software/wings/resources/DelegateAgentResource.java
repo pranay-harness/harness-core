@@ -18,9 +18,7 @@ import io.harness.persistence.AccountLogContext;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegatePackage;
@@ -28,6 +26,7 @@ import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
@@ -59,20 +58,20 @@ import javax.ws.rs.core.Context;
 @Slf4j
 public class DelegateAgentResource {
   private DelegateService delegateService;
-  private MainConfiguration mainConfiguration;
   private AccountService accountService;
   private WingsPersistence wingsPersistence;
   private DelegateRequestRateLimiter delegateRequestRateLimiter;
+  private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   @Inject
-  public DelegateAgentResource(DelegateService delegateService, MainConfiguration mainConfiguration,
-      AccountService accountService, WingsPersistence wingsPersistence,
-      DelegateRequestRateLimiter delegateRequestRateLimiter) {
+  public DelegateAgentResource(DelegateService delegateService, AccountService accountService,
+      WingsPersistence wingsPersistence, DelegateRequestRateLimiter delegateRequestRateLimiter,
+      SubdomainUrlHelperIntfc subdomainUrlHelper) {
     this.delegateService = delegateService;
-    this.mainConfiguration = mainConfiguration;
     this.accountService = accountService;
     this.wingsPersistence = wingsPersistence;
     this.delegateRequestRateLimiter = delegateRequestRateLimiter;
+    this.subdomainUrlHelper = subdomainUrlHelper;
   }
 
   @DelegateAuth
@@ -226,8 +225,8 @@ public class DelegateAgentResource {
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(
-          delegateService.getDelegateScripts(accountId, version, getManagerUrl(request), getVerificationUrl(request)));
+      return new RestResponse<>(delegateService.getDelegateScripts(
+          accountId, version, subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
     }
   }
 
@@ -240,8 +239,8 @@ public class DelegateAgentResource {
       @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("delegateVersion") @NotEmpty String delegateVersion) throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.getDelegateScripts(
-          accountId, delegateVersion, getManagerUrl(request), getVerificationUrl(request)));
+      return new RestResponse<>(delegateService.getDelegateScripts(accountId, delegateVersion,
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
     }
   }
 
@@ -288,13 +287,6 @@ public class DelegateAgentResource {
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       wingsPersistence.save(logs);
     }
-  }
-
-  private String getManagerUrl(HttpServletRequest request) {
-    String apiUrl = mainConfiguration.getApiUrl();
-    return !StringUtils.isEmpty(apiUrl)
-        ? apiUrl
-        : request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
   }
 
   private String getVerificationUrl(HttpServletRequest request) {

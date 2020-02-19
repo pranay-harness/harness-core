@@ -41,7 +41,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -81,9 +80,7 @@ public class SignupServiceImpl implements SignupService {
   }
 
   private String buildAbsoluteUrl(String fragment, UserInvite userInvite) throws URISyntaxException {
-    Optional<String> subdomainUrl =
-        subdomainUrlHelper.getCustomSubDomainUrl(Optional.ofNullable(userInvite.getAccountId()));
-    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(subdomainUrl);
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(userInvite.getAccountId());
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();

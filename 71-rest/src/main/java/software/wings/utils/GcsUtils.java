@@ -14,6 +14,7 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 
 import java.net.URLEncoder;
 import java.security.KeyFactory;
@@ -24,30 +25,31 @@ import java.security.spec.PKCS8EncodedKeySpec;
 @Singleton
 public class GcsUtils {
   @Inject private MainConfiguration configuration;
+  @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
   private static final Logger log = LoggerFactory.getLogger(GcsUtils.class);
   private static final String downloadPathPattern = "/storage/harness-download";
 
   private String getSignedUrlUsingPrivateKey(
-      String objectPath, String account, String privateKey, long durationInSeconds) throws Exception {
+      String objectPath, String account, String privateKey, long durationInSeconds, String accountId) throws Exception {
     String expiryTime = getExpiryTimeInEpoch(durationInSeconds);
     String signInput = getSignInput(expiryTime, objectPath);
     PrivateKey pk = getPrivateKey(privateKey);
     String signedString = getSignedString(signInput, pk);
     // URL encode the signed string so that we can add this URL
     signedString = URLEncoder.encode(signedString, "UTF-8");
-    return constructSignedUrl(
-        configuration.getPortal().getUrl() + downloadPathPattern + objectPath, account, expiryTime, signedString);
+    String portalUrl = subdomainUrlHelper.getPortalBaseUrlFromFeatureFlag(accountId);
+    return constructSignedUrl(portalUrl + downloadPathPattern + objectPath, account, expiryTime, signedString);
   }
 
-  public String getSignedUrlForServiceAccount(String objectPath, String serviceAccountJsonFile, long durationInSeconds)
-      throws Exception {
+  public String getSignedUrlForServiceAccount(
+      String objectPath, String serviceAccountJsonFile, long durationInSeconds, String accountId) throws Exception {
     if (isEmpty(serviceAccountJsonFile)) {
       log.warn(
           "ServiceAccount json file not found,cannot generate signedUrl for {}, returning empty string", objectPath);
       throw new WingsException(ErrorCode.INVALID_INFRA_CONFIGURATION);
     }
     return getSignedUrlUsingPrivateKey(objectPath, getAccountNameFromJsonFile(serviceAccountJsonFile),
-        getPkFromJsonFile(serviceAccountJsonFile), durationInSeconds);
+        getPkFromJsonFile(serviceAccountJsonFile), durationInSeconds, accountId);
   }
 
   // Set an expiry date for the signed url. Sets it at one minute ahead of

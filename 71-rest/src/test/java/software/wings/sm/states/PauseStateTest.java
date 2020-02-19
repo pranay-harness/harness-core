@@ -41,7 +41,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.io.IOException;
-import java.util.Optional;
 
 /**
  * Created by peeyushaggarwal on 6/7/16.
@@ -93,8 +92,7 @@ public class PauseStateTest extends WingsBaseTest {
     PortalConfig portalConfig = new PortalConfig();
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
-    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
   }
 
   /**

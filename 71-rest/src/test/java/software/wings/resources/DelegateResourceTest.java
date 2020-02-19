@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,11 +41,14 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.ArgumentCaptor;
-import software.wings.app.MainConfiguration;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateStatus;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.intfc.AccountService;
@@ -76,10 +80,10 @@ public class DelegateResourceTest extends CategoryTest {
 
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
-  private static MainConfiguration mainConfiguration = mock(MainConfiguration.class);
   private static AccountService accountService = mock(AccountService.class);
   private static WingsPersistence wingsPersistence = mock(WingsPersistence.class);
   private static DelegateRequestRateLimiter delegateRequestRateLimiter = mock(DelegateRequestRateLimiter.class);
+  private static SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
 
   @Parameter public String apiUrl;
 
@@ -92,7 +96,7 @@ public class DelegateResourceTest extends CategoryTest {
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
           .addResource(new DelegateResource(DELEGATE_SERVICE, DELEGATE_SCOPE_SERVICE, DOWNLOAD_TOKEN_SERVICE,
-              mainConfiguration, accountService, wingsPersistence, delegateRequestRateLimiter))
+              accountService, wingsPersistence, delegateRequestRateLimiter, subdomainUrlHelper))
           .addResource(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -105,7 +109,18 @@ public class DelegateResourceTest extends CategoryTest {
   @Before
   public void setUp() {
     initMocks(this);
-    when(mainConfiguration.getApiUrl()).thenReturn(apiUrl);
+    doAnswer(new Answer<String>() {
+      @Override
+      public String answer(InvocationOnMock invocation) {
+        if (apiUrl == null) {
+          return apiUrl + "://" + apiUrl + ":0";
+        } else {
+          return apiUrl;
+        }
+      }
+    })
+        .when(subdomainUrlHelper)
+        .getManagerUrl(any(), any());
   }
 
   @Test
@@ -265,6 +280,7 @@ public class DelegateResourceTest extends CategoryTest {
     when(httpServletRequest.getRequestURI()).thenReturn("/delegates/downloadUrl");
     String accountId = generateUuid();
     String tokenId = generateUuid();
+    when(accountService.get(accountId)).thenReturn(Account.Builder.anAccount().withUuid(accountId).build());
     when(DOWNLOAD_TOKEN_SERVICE.createDownloadToken("delegate." + accountId)).thenReturn(tokenId);
     RestResponse<Map<String, String>> restResponse = RESOURCES.client()
                                                          .target("/delegates/downloadUrl?accountId=" + accountId)

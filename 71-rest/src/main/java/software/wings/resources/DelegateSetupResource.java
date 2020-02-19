@@ -29,11 +29,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateStatus;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
@@ -83,15 +82,15 @@ public class DelegateSetupResource {
   private DelegateService delegateService;
   private DelegateScopeService delegateScopeService;
   private DownloadTokenService downloadTokenService;
-  private MainConfiguration mainConfiguration;
+  private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   @Inject
   public DelegateSetupResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
-      DownloadTokenService downloadTokenService, MainConfiguration mainConfiguration) {
+      DownloadTokenService downloadTokenService, SubdomainUrlHelperIntfc subdomainUrlHelper) {
     this.delegateService = delegateService;
     this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
-    this.mainConfiguration = mainConfiguration;
+    this.subdomainUrlHelper = subdomainUrlHelper;
   }
 
   @GET
@@ -333,7 +332,7 @@ public class DelegateSetupResource {
   public RestResponse<Map<String, String>> downloadUrl(
       @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      String url = getManagerUrl(request);
+      String url = subdomainUrlHelper.getManagerUrl(request, accountId);
 
       return new RestResponse<>(ImmutableMap.of(DOWNLOAD_URL,
           url + request.getRequestURI().replace(DOWNLOAD_URL, "download") + ACCOUNT_ID + accountId + TOKEN
@@ -360,8 +359,8 @@ public class DelegateSetupResource {
       throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
-      File delegateFile =
-          delegateService.downloadScripts(getManagerUrl(request), getVerificationUrl(request), accountId);
+      File delegateFile = delegateService.downloadScripts(
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), accountId);
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type(APPLICATION_ZIP_CHARSET_BINARY)
@@ -380,8 +379,8 @@ public class DelegateSetupResource {
       throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
-      File delegateFile =
-          delegateService.downloadDocker(getManagerUrl(request), getVerificationUrl(request), accountId);
+      File delegateFile = delegateService.downloadDocker(
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), accountId);
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type(APPLICATION_ZIP_CHARSET_BINARY)
@@ -401,8 +400,8 @@ public class DelegateSetupResource {
       throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
-      File delegateFile = delegateService.downloadKubernetes(
-          getManagerUrl(request), getVerificationUrl(request), accountId, delegateName, delegateProfileId);
+      File delegateFile = delegateService.downloadKubernetes(subdomainUrlHelper.getManagerUrl(request, accountId),
+          getVerificationUrl(request), accountId, delegateName, delegateProfileId);
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type(APPLICATION_ZIP_CHARSET_BINARY)
@@ -422,8 +421,8 @@ public class DelegateSetupResource {
       @QueryParam("token") @NotEmpty String token) throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
-      File delegateFile = delegateService.downloadECSDelegate(getManagerUrl(request), getVerificationUrl(request),
-          accountId, awsVpcMode, hostname, delegateGroupName, delegateProfileId);
+      File delegateFile = delegateService.downloadECSDelegate(subdomainUrlHelper.getManagerUrl(request, accountId),
+          getVerificationUrl(request), accountId, awsVpcMode, hostname, delegateGroupName, delegateProfileId);
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type(APPLICATION_ZIP_CHARSET_BINARY)
@@ -443,21 +442,15 @@ public class DelegateSetupResource {
       throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
-      File delegateFile = delegateService.downloadDelegateValuesYamlFile(
-          getManagerUrl(request), getVerificationUrl(request), accountId, delegateName, delegateProfileId);
+      File delegateFile =
+          delegateService.downloadDelegateValuesYamlFile(subdomainUrlHelper.getManagerUrl(request, accountId),
+              getVerificationUrl(request), accountId, delegateName, delegateProfileId);
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type("text/plain; charset=UTF-8")
           .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + HARNESS_DELEGATE_VALUES_YAML + ".yaml")
           .build();
     }
-  }
-
-  private String getManagerUrl(HttpServletRequest request) {
-    String apiUrl = mainConfiguration.getApiUrl();
-    return !StringUtils.isEmpty(apiUrl)
-        ? apiUrl
-        : request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
   }
 
   private String getVerificationUrl(HttpServletRequest request) {

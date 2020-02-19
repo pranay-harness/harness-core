@@ -35,10 +35,10 @@ import org.junit.experimental.categories.Category;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.ArgumentCaptor;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateStatus;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.resources.DelegateSetupResource.DelegateScopes;
 import software.wings.resources.DelegateSetupResource.DelegateTags;
 import software.wings.service.impl.DelegateServiceImpl;
@@ -63,9 +63,9 @@ import javax.ws.rs.core.Response;
 public class DelegateSetupResourceTest {
   private static DelegateService delegateService = mock(DelegateService.class);
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
-  private static MainConfiguration mainConfiguration = mock(MainConfiguration.class);
   private static DelegateScopeService delegateScopeService = mock(DelegateScopeService.class);
   private static DownloadTokenService downloadTokenService = mock(DownloadTokenService.class);
+  private static SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
 
   @Parameter public String apiUrl;
 
@@ -78,8 +78,8 @@ public class DelegateSetupResourceTest {
   public static final ResourceTestRule RESOURCES =
 
       ResourceTestRule.builder()
-          .addResource(
-              new DelegateSetupResource(delegateService, delegateScopeService, downloadTokenService, mainConfiguration))
+          .addResource(new DelegateSetupResource(
+              delegateService, delegateScopeService, downloadTokenService, subdomainUrlHelper))
           .addResource(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -316,6 +316,7 @@ public class DelegateSetupResourceTest {
     String accountId = generateUuid();
     String tokenId = generateUuid();
     when(downloadTokenService.createDownloadToken("delegate." + accountId)).thenReturn(tokenId);
+    when(subdomainUrlHelper.getManagerUrl(any(), any())).thenReturn(apiUrl + "://" + apiUrl + ":0");
     RestResponse<Map<String, String>> restResponse = RESOURCES.client()
                                                          .target("/setup/delegates/downloadUrl?accountId=" + accountId)
                                                          .request()

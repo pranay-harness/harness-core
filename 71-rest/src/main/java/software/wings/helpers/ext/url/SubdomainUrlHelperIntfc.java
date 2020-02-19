@@ -1,13 +1,17 @@
 package software.wings.helpers.ext.url;
 
-import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
 
 public interface SubdomainUrlHelperIntfc {
-  String getPortalBaseUrl(Optional<String> subdomainUrl);
+  String getPortalBaseUrl(String accountId);
 
-  String getApiBaseUrl(Optional<String> subdomainUrl);
+  String getApiBaseUrl(String accountId);
 
-  Optional<String> getCustomSubDomainUrl(Optional<String> accountId);
+  String getManagerUrl(HttpServletRequest request, String accountId);
 
-  String getAPIUrl();
+  String getDelegateMetadataUrl(String accountId);
+
+  String getWatcherMetadataUrl(String accountId);
+
+  String getPortalBaseUrlFromFeatureFlag(String accountId);
 }

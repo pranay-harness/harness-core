@@ -45,8 +45,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
-import java.util.Optional;
-
 /**
  * The Class EmailStateTest.
  *
@@ -107,8 +105,7 @@ public class EmailStateTest extends WingsBaseTest {
     PortalConfig portalConfig = new PortalConfig();
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
-    when(subdomainUrlHelper.getCustomSubDomainUrl(any())).thenReturn(Optional.ofNullable("subdomainUrl"));
-    when(subdomainUrlHelper.getPortalBaseUrl(Optional.ofNullable("subdomainUrl"))).thenReturn("baseUrl");
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
   }
 
   /**
