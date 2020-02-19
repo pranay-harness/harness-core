@@ -1,7 +1,5 @@
 package software.wings.service.impl.verification;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.common.base.Preconditions;
@@ -9,10 +7,9 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.PageRequest;
-import io.harness.beans.SearchFilter.Operator;
-import io.harness.beans.SortOrder.OrderType;
+import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Sort;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
@@ -25,7 +22,6 @@ import software.wings.verification.CVActivityLog.LogLevel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,17 +31,18 @@ public class CVActivityLogServiceImpl implements CVActivityLogService {
   @Inject(optional = true) private WorkflowService workflowService; // Only available in manager
 
   @Override
-  public List<CVActivityLog> findByCVConfigId(String cvConfigId, long startTimeMilli, long endTimeMilli) {
-    PageRequest<CVActivityLog> pageRequest = aPageRequest()
-                                                 .withLimit(UNLIMITED)
-                                                 .addFilter(CVActivityLogKeys.cvConfigId, Operator.EQ, cvConfigId)
-                                                 .addFilter(CVActivityLogKeys.dataCollectionMinute, Operator.GE,
-                                                     TimeUnit.MILLISECONDS.toMinutes(startTimeMilli))
-                                                 .addFilter(CVActivityLogKeys.dataCollectionMinute, Operator.LT_EQ,
-                                                     TimeUnit.MILLISECONDS.toMinutes(endTimeMilli))
-                                                 .addOrder(CVActivityLogKeys.createdAt, OrderType.ASC)
-                                                 .build();
-    return wingsPersistence.query(CVActivityLog.class, pageRequest, excludeAuthority).getResponse();
+  public List<CVActivityLog> findByCVConfigId(String cvConfigId, long startTimeEpochMinute, long endTimeEpochMinute) {
+    List<CVActivityLog> cvActivityLogs = new ArrayList<>();
+    try (HIterator<CVActivityLog> cvActivityLogHIterator =
+             new HIterator<>(wingsPersistence.createQuery(CVActivityLog.class, excludeAuthority)
+                                 .filter(CVActivityLogKeys.cvConfigId, cvConfigId)
+                                 .filter(CVActivityLogKeys.dataCollectionMinute + " >=", startTimeEpochMinute)
+                                 .filter(CVActivityLogKeys.dataCollectionMinute + " <=", endTimeEpochMinute)
+                                 .order(Sort.ascending(CVActivityLogKeys.createdAt))
+                                 .fetch())) {
+      cvActivityLogHIterator.forEach(cvActivityLog -> cvActivityLogs.add(cvActivityLog));
+    }
+    return cvActivityLogs;
   }
 
   @Override
@@ -66,13 +63,15 @@ public class CVActivityLogServiceImpl implements CVActivityLogService {
 
   @Override
   public List<CVActivityLog> findByStateExecutionId(String stateExecutionId) {
-    PageRequest<CVActivityLog> pageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter(CVActivityLogKeys.stateExecutionId, Operator.EQ, stateExecutionId)
-            .addOrder(CVActivityLogKeys.createdAt, OrderType.ASC)
-            .build();
-    return wingsPersistence.query(CVActivityLog.class, pageRequest, excludeAuthority).getResponse();
+    List<CVActivityLog> cvActivityLogs = new ArrayList<>();
+    try (HIterator<CVActivityLog> cvActivityLogHIterator =
+             new HIterator<>(wingsPersistence.createQuery(CVActivityLog.class, excludeAuthority)
+                                 .filter(CVActivityLogKeys.stateExecutionId, stateExecutionId)
+                                 .order(Sort.ascending(CVActivityLogKeys.createdAt))
+                                 .fetch())) {
+      cvActivityLogHIterator.forEach(cvActivityLog -> cvActivityLogs.add(cvActivityLog));
+    }
+    return cvActivityLogs;
   }
 
   @Override
@@ -82,7 +81,7 @@ public class CVActivityLogServiceImpl implements CVActivityLogService {
 
   @Override
   public List<CVActivityLog> getActivityLogs(
-      String stateExecutionId, String cvConfigId, long startTimeMs, long endTimeMs) {
+      String stateExecutionId, String cvConfigId, long startTimeEpochMinute, long endTimeEpochMinute) {
     List<CVActivityLog> cvActivityLogs;
     if (stateExecutionId != null) {
       AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
@@ -104,7 +103,7 @@ public class CVActivityLogServiceImpl implements CVActivityLogService {
         cvActivityLogs.add(placeholderActivityLog);
       }
     } else {
-      cvActivityLogs = findByCVConfigId(cvConfigId, startTimeMs, endTimeMs);
+      cvActivityLogs = findByCVConfigId(cvConfigId, startTimeEpochMinute, endTimeEpochMinute);
     }
     return cvActivityLogs;
   }

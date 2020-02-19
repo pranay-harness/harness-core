@@ -6,13 +6,14 @@ import software.wings.verification.CVActivityLog.LogLevel;
 import java.util.List;
 
 public interface CVActivityLogService {
-  List<CVActivityLog> findByCVConfigId(String cvConfigId, long startTimeMilli, long endTimeMilli);
+  List<CVActivityLog> findByCVConfigId(String cvConfigId, long startTimeEpochMinute, long endTimeEpochMinute);
   Logger getLogger(String cvConfigId, long dataCollectionMinute, String stateExecutionId);
   Logger getLoggerByCVConfigId(String cvConfigId, long dataCollectionMinute);
   Logger getLoggerByStateExecutionId(String stateExecutionId);
   List<CVActivityLog> findByStateExecutionId(String stateExecutionId);
   void saveActivityLogs(List<CVActivityLog> cvActivityLogs);
-  List<CVActivityLog> getActivityLogs(String stateExecutionId, String cvConfigId, long startTimeMs, long endTimeMs);
+  List<CVActivityLog> getActivityLogs(
+      String stateExecutionId, String cvConfigId, long startTimeEpochMinute, long endTimeEpochMinute);
 
   interface Logger {
     default void info(String log, long... timestampParams) {

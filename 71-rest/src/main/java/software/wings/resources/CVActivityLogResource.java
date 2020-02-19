@@ -15,6 +15,7 @@ import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.verification.CVActivityLog;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import javax.validation.Valid;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -37,6 +38,9 @@ public class CVActivityLogResource {
       @QueryParam("stateExecutionId") final String stateExecutionId,
       @QueryParam("cvConfigId") @Valid final String cvConfigId, @QueryParam("startTime") long startTime,
       @QueryParam("endTime") long endTime) {
-    return new RestResponse<>(cvActivityLogService.getActivityLogs(stateExecutionId, cvConfigId, startTime, endTime));
+    // keeping external API same as other apis but we need to fix this. API has to add one minute to startTime to get
+    // the data for the heatmap.
+    return new RestResponse<>(cvActivityLogService.getActivityLogs(stateExecutionId, cvConfigId,
+        TimeUnit.MILLISECONDS.toMinutes(startTime), TimeUnit.MILLISECONDS.toMinutes(endTime)));
   }
 }
