@@ -982,11 +982,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow, boolean migration) {
     if (featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(workflow.getAppId()))) {
-      workflowServiceHelper.validateServiceAndInfraDefinition(
-          workflow.getAppId(), workflow.getServiceId(), workflow.getInfraDefinitionId());
+      if (!workflow.checkServiceTemplatized() && !workflow.checkInfraDefinitionTemplatized()) {
+        workflowServiceHelper.validateServiceAndInfraDefinition(
+            workflow.getAppId(), workflow.getServiceId(), workflow.getInfraDefinitionId());
+      }
     } else {
-      workflowServiceHelper.validateServiceAndInfraMapping(
-          workflow.getAppId(), workflow.getServiceId(), workflow.getInfraMappingId());
+      if (!workflow.checkServiceTemplatized() && !workflow.checkInfraTemplatized()) {
+        workflowServiceHelper.validateServiceAndInfraMapping(
+            workflow.getAppId(), workflow.getServiceId(), workflow.getInfraMappingId());
+      }
     }
 
     if (!migration) {
@@ -1646,7 +1650,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
     if (BUILD != orchestrationWorkflow.getOrchestrationWorkflowType()) {
-      workflowServiceHelper.validateServiceCompatibility(appId, serviceId, oldServiceId);
+      if (!workflowPhase.checkServiceTemplatized()) {
+        workflowServiceHelper.validateServiceCompatibility(appId, serviceId, oldServiceId);
+      }
       if (infraRefactor) {
         if (!workflowPhase.checkInfraDefinitionTemplatized()) {
           if (!infraDefinitionId.equals(oldInfraDefinitionId)) {

@@ -312,6 +312,23 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
         .findFirst()
         .orElse(null);
   }
+  public boolean checkServiceTemplatized() {
+    return checkFieldTemplatized(WorkflowKeys.serviceId);
+  }
+
+  public boolean checkInfraTemplatized() {
+    return checkFieldTemplatized(WorkflowKeys.infraMappingId);
+  }
+
+  public boolean checkInfraDefinitionTemplatized() {
+    return checkFieldTemplatized(WorkflowKeys.infraDefinitionId);
+  }
+
+  private boolean checkFieldTemplatized(String fieldName) {
+    return templateExpressions != null
+        && templateExpressions.stream().anyMatch(
+               templateExpression -> templateExpression.getFieldName().equals(fieldName));
+  }
 
   public boolean envValid() {
     return isNotBlank(envId) || checkEnvironmentTemplatized();

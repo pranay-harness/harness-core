@@ -2509,6 +2509,33 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
+  public void shouldNotValidateServiceCompatibilityForTemplatized() {
+    Workflow workflow1 = createBasicWorkflow();
+    String name2 = "Name2";
+
+    final String serviceId = generateUuid();
+    Workflow workflow2 =
+        aWorkflow().appId(APP_ID).envId(ENV_ID).serviceId(serviceId).uuid(workflow1.getUuid()).name(name2).build();
+
+    workflow2.setTemplateExpressions(
+        asList(getEnvTemplateExpression(), getInfraTemplateExpression(), getServiceTemplateExpression()));
+
+    try {
+      when(serviceResourceService.get(serviceId)).thenReturn(service);
+      workflowService.updateWorkflow(workflow2, null, false);
+
+    } catch (Exception ex) {
+      fail("Should not call Service Compatiblity for the templated workflow");
+    }
+
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+
+    assertTemplatizedWorkflow(workflow3);
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
   public void shouldTemplatizeMultiServiceEnvThenTemplatizeInfra() {
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.SSH);
     Workflow workflow1 = constructMulitServiceTemplateWorkflow();

@@ -813,8 +813,6 @@ public class WorkflowServiceTestHelper {
         .contains("envId");
     OrchestrationWorkflow orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
     List<WorkflowPhase> workflowPhases = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
-    assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().contains(SERVICE_ID);
-    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
     assertThat(orchestrationWorkflow).extracting("userVariables").isNotNull();
     assertThat(
         orchestrationWorkflow.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
