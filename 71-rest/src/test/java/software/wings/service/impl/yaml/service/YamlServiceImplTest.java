@@ -2,15 +2,28 @@ package software.wings.service.impl.yaml.service;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static software.wings.beans.yaml.Change.Builder.aFileChange;
+import static software.wings.beans.yaml.Change.ChangeType.DELETE;
+import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
+import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
+import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
+import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
+import static software.wings.utils.Utils.generatePath;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
@@ -34,6 +47,7 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class YamlServiceImplTest extends WingsBaseTest {
@@ -115,5 +129,39 @@ public class YamlServiceImplTest extends WingsBaseTest {
           break;
       }
     }
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_computeProcessingOrder() {
+    final Change change1 = aFileChange()
+                               .withAccountId(ACCOUNT_ID)
+                               .withFilePath(generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER,
+                                   "app123", SERVICES_FOLDER, "service1", MANIFEST_FOLDER, INDEX_YAML))
+                               .withChangeType(MODIFY)
+                               .build();
+    final Change change2 = aFileChange()
+                               .withAccountId(ACCOUNT_ID)
+                               .withFilePath(generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER,
+                                   "app123", SERVICES_FOLDER, "service1", MANIFEST_FOLDER, INDEX_YAML))
+                               .withChangeType(DELETE)
+                               .build();
+    final Change change3 = aFileChange()
+                               .withAccountId(ACCOUNT_ID)
+                               .withFilePath(generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER,
+                                   "app123", SERVICES_FOLDER, "service1", INDEX_YAML))
+                               .withChangeType(MODIFY)
+                               .build();
+    final Change change4 =
+        aFileChange()
+            .withAccountId(ACCOUNT_ID)
+            .withFilePath(generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, "app123",
+                SERVICES_FOLDER, "service1", MANIFEST_FOLDER, MANIFEST_FILE_FOLDER, "vars.yaml"))
+            .withChangeType(DELETE)
+            .build();
+    final ArrayList<Change> changeList = Lists.newArrayList(change1, change2, change3, change4);
+    yamlService.computeProcessingOrder(changeList);
+    assertThat(changeList).isEqualTo(Arrays.asList(change4, change2, change3, change1));
   }
 }

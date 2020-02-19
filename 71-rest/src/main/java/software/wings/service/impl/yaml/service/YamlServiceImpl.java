@@ -403,7 +403,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
    *
    * @param changeList
    */
-  private void computeProcessingOrder(List<Change> changeList) {
+  @VisibleForTesting
+  void computeProcessingOrder(List<Change> changeList) {
     changeList.sort(new FilePathComparator());
   }
 

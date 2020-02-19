@@ -1,7 +1,9 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -22,6 +24,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -46,6 +49,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.yaml.gitSync.GitWebhookRequestAttributes;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -186,5 +190,37 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
 
     File file = new File(classLoader.getResource(filePath).getFile());
     return FileUtils.readFileToString(file, Charset.defaultCharset());
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_handleGitChangeSet() {
+    final GitWebhookRequestAttributes gitWebhookRequestAttributes = GitWebhookRequestAttributes.builder()
+                                                                        .gitConnectorId(SETTING_ID)
+                                                                        .branchName("branchName")
+                                                                        .headCommitId("commitId")
+                                                                        .build();
+    final YamlChangeSet yamlChangeSet =
+        YamlChangeSet.builder().gitWebhookRequestAttributes(gitWebhookRequestAttributes).build();
+    yamlChangeSet.setUuid("changesetId");
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withAccountId(ACCOUNT_ID)
+            .withUuid(SETTING_ID)
+            .withName("gitconnectorid")
+            .withValue(GitConfig.builder().accountId(ACCOUNT_ID).webhookToken(WEBHOOK_TOKEN).build())
+            .build();
+
+    YamlGitConfig yamlGitConfig =
+        YamlGitConfig.builder().accountId(ACCOUNT_ID).gitConnectorId(SETTING_ID).branchName("branchName").build();
+    wingsPersistence.save(settingAttribute);
+    wingsPersistence.save(yamlGitConfig);
+    yamlGitService.handleGitChangeSet(yamlChangeSet, ACCOUNT_ID);
+    verify(delegateService, times(1)).queueTask(any(DelegateTask.class));
+    verify(waitNotifyEngine, times(1)).waitForAllOn(eq(GENERAL), any(GitCommandCallback.class), anyString());
+    verify(yamlChangeSetService, times(0))
+        .updateStatus(eq(ACCOUNT_ID), eq("changesetId"), any(YamlChangeSet.Status.class));
   }
 }
