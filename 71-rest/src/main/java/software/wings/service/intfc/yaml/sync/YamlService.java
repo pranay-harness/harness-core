@@ -34,4 +34,6 @@ public interface YamlService<Y extends BaseYaml, B extends Base> {
   RestResponse processYamlFilesAsZip(String accountId, InputStream fileInputStream, String yamlPath) throws IOException;
 
   void syncYamlTemplate(String accountId);
+
+  BaseYaml getYamlForFilePath(String accountId, String yamlFilePath, String yamlSubType, String applicationId);
 }
