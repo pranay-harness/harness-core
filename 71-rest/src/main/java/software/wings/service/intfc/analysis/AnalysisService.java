@@ -87,4 +87,5 @@ public interface AnalysisService {
       CVCollaborationProviderParameters cvJiraParameters);
   void updateClustersWithFeedback(Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap,
       CLUSTER_TYPE type, List<LogMLClusterSummary> clusterList);
+  void updateClustersFrequencyMapV2(List<LogMLClusterSummary> clusterList);
 }

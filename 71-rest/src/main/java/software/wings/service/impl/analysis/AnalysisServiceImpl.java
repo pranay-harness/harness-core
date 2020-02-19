@@ -126,6 +126,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -1189,6 +1190,25 @@ public class AnalysisServiceImpl implements AnalysisService {
       count = frequency.getCount();
       frequencyMap.put(count, frequencyMap.getOrDefault(count, 0) + 1);
     }
+    return frequencyMap;
+  }
+
+  public void updateClustersFrequencyMapV2(List<LogMLClusterSummary> clusterList) {
+    clusterList.forEach(logMLClusterSummary -> {
+      logMLClusterSummary.getHostSummary().forEach((host, logMlHostSummary) -> {
+        List<Integer> frequency = logMlHostSummary.getFrequencies();
+        logMlHostSummary.setFrequencyMap(getFrequencyMapV2(frequency));
+      });
+    });
+  }
+
+  private Map<Integer, Integer> getFrequencyMapV2(List<Integer> frequencies) {
+    Map<Integer, Integer> frequencyMap = new HashMap<>();
+    if (isEmpty(frequencies)) {
+      return frequencyMap;
+    }
+    AtomicInteger counter = new AtomicInteger(0);
+    frequencies.forEach(frequency -> frequencyMap.put(counter.incrementAndGet(), frequency));
     return frequencyMap;
   }
 

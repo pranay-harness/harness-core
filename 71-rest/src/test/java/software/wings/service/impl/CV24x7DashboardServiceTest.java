@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,6 +40,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogMLFeedbackSummary;
+import software.wings.service.impl.analysis.LogMLHostSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
@@ -524,5 +526,37 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
 
     assertThat(heatMaps).isNotEmpty();
     assertThat(heatMaps.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testUpdateClustersFrequencyMapV2_checkIfClustersHostFrequencyMapRepresentsFrequencyForLogsV2() {
+    String cvConfigId = generateUuid();
+
+    LogsCVConfiguration cvConfiguration = createAndSaveSumoConfig(cvConfigId, true);
+
+    cvConfiguration.set247LogsV2(true);
+
+    wingsPersistence.save(cvConfiguration);
+
+    long endTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(10);
+    long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(25);
+
+    int analysisRecMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime) + 5;
+
+    wingsPersistence.save(
+        buildAnalysisRecord(analysisRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId, Optional.empty()));
+
+    LogMLAnalysisSummary summary = cv24x7DashboardService.getAnalysisSummary(cvConfigId, startTime, endTime, appId);
+
+    List<LogMLClusterSummary> summaryUnknownClusters = summary.getUnknownClusters();
+    for (LogMLClusterSummary unknownCluster : summaryUnknownClusters) {
+      for (Map.Entry<String, LogMLHostSummary> hostEntry : unknownCluster.getHostSummary().entrySet()) {
+        List<Integer> frequencies = hostEntry.getValue().getFrequencies();
+        List<Integer> frequencyMapValues = new ArrayList(hostEntry.getValue().getFrequencyMap().values());
+        assertThat(frequencies).isEqualTo(frequencyMapValues);
+      }
+    }
   }
 }

@@ -288,6 +288,10 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
       totalScore += record.getScore();
     }
 
+    if (cvConfiguration.is247LogsV2()) {
+      analysisService.updateClustersFrequencyMapV2(analysisSummary.getUnknownClusters());
+    }
+
     // if empty response and is not baseline then send baseline data
     if (analysisSummary.isEmptyResult()
         && TimeUnit.MILLISECONDS.toMinutes(endTime) > cvConfiguration.getBaselineEndMinute()) {
