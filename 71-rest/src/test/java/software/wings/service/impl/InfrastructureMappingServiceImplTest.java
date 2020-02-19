@@ -31,7 +31,11 @@ import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMappingWinRm;
 import software.wings.beans.SyncTaskContext;
 import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
+import software.wings.service.impl.aws.model.AwsSecurityGroup;
+import software.wings.service.impl.aws.model.AwsSubnet;
+import software.wings.service.impl.aws.model.AwsVPC;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
@@ -247,5 +251,77 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
     spyInfrastructureMappingService.setDefaults(gcpKubernetesInfraMapping);
 
     assertThat(gcpKubernetesInfraMapping.getNamespace()).isEqualTo(USER_INPUT_NAMESPACE);
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void getVPCIdStrListTest() {
+    String appId = "app123";
+    String computeProviderId = "cpId";
+    String region = "region1";
+    String vpcId = "vpcId1";
+
+    doReturn(new ArrayList<AwsVPC>() {
+      { add(AwsVPC.builder().id(vpcId).build()); }
+    })
+        .when(spyInfrastructureMappingService)
+        .listVPC(appId, computeProviderId, region);
+
+    List<String> vpcList = spyInfrastructureMappingService.getVPCIdStrList(appId, computeProviderId, region);
+
+    assertThat(vpcList.size()).isEqualTo(1);
+    assertThat(vpcList.get(0)).isEqualTo(vpcId);
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void getSubnetIdStrList() {
+    String appId = "app123";
+    String computeProviderId = "cpId";
+    String region = "region1";
+    String vpcId = "vpcId123";
+    String subnetId = "subnetId123";
+    List<String> vpcList = new ArrayList<String>() {
+      { add(vpcId); }
+    };
+
+    doReturn(new ArrayList<AwsSubnet>() {
+      { add(AwsSubnet.builder().id(subnetId).build()); }
+    })
+        .when(spyInfrastructureMappingService)
+        .listSubnets(appId, computeProviderId, region, vpcList);
+
+    List<String> subnetList =
+        spyInfrastructureMappingService.getSubnetIdStrList(appId, computeProviderId, region, vpcList);
+
+    assertThat(subnetList.size()).isEqualTo(1);
+    assertThat(subnetList.get(0)).isEqualTo(subnetId);
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void getSGIdStrList() {
+    String appId = "app123";
+    String computeProviderId = "cpId";
+    String region = "region1";
+    String vpcId = "vpcId123";
+    String sgId = "sgId123";
+    List<String> vpcList = new ArrayList<String>() {
+      { add(vpcId); }
+    };
+
+    doReturn(new ArrayList<AwsSecurityGroup>() {
+      { add(AwsSecurityGroup.builder().id(sgId).build()); }
+    })
+        .when(spyInfrastructureMappingService)
+        .listSecurityGroups(appId, computeProviderId, region, vpcList);
+
+    List<String> sgList = spyInfrastructureMappingService.getSGIdStrList(appId, computeProviderId, region, vpcList);
+
+    assertThat(sgList.size()).isEqualTo(1);
+    assertThat(sgList.get(0)).isEqualTo(sgId);
   }
 }

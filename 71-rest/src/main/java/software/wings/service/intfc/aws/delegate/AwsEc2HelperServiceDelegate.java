@@ -7,6 +7,9 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.LaunchTemplateVersion;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
+import software.wings.service.impl.aws.model.AwsSecurityGroup;
+import software.wings.service.impl.aws.model.AwsSubnet;
+import software.wings.service.impl.aws.model.AwsVPC;
 
 import java.util.List;
 import java.util.Set;
@@ -14,10 +17,10 @@ import java.util.Set;
 public interface AwsEc2HelperServiceDelegate {
   boolean validateAwsAccountCredential(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);
   List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);
-  List<String> listVPCs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
-  List<String> listSubnets(
+  List<AwsVPC> listVPCs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
+  List<AwsSubnet> listSubnets(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> vpcIds);
-  List<String> listSGs(
+  List<AwsSecurityGroup> listSGs(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> vpcIds);
   Set<String> listTags(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String resourceType);

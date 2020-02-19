@@ -26,11 +26,15 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
+import software.wings.service.impl.aws.model.AwsSecurityGroup;
+import software.wings.service.impl.aws.model.AwsSubnet;
+import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -315,5 +319,38 @@ public class InfrastructureDefinitionResource {
   public RestResponse<List<String>> getRoutesForPcf(
       @QueryParam("appId") String appId, @PathParam("infraDefinitionId") String infraDefinitionId) {
     return new RestResponse<>(infrastructureDefinitionService.listRoutesForPcf(appId, infraDefinitionId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/vpcs")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<AwsVPC>> listVpcs(@QueryParam("appId") String appId, @QueryParam("region") String region,
+      @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureDefinitionService.listVPC(appId, computeProviderId, region));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/security-groups")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<AwsSecurityGroup>> listSecurityGroups(@QueryParam("appId") String appId,
+      @QueryParam("region") String region, @QueryParam("vpcIds") @NotNull List<String> vpcIds,
+      @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(
+        infrastructureDefinitionService.listSecurityGroups(appId, computeProviderId, region, vpcIds));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/subnets")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<AwsSubnet>> listSubnets(@QueryParam("appId") String appId,
+      @QueryParam("region") String region, @QueryParam("vpcIds") @NotNull List<String> vpcIds,
+      @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureDefinitionService.listSubnets(appId, computeProviderId, region, vpcIds));
   }
 }

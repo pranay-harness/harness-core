@@ -13,5 +13,5 @@ public class AwsEc2ListSubnetsResponse implements AwsResponse {
   private DelegateMetaInfo delegateMetaInfo;
   private ExecutionStatus executionStatus;
   private String errorMessage;
-  private List<String> subnets;
+  private List<AwsSubnet> subnets;
 }

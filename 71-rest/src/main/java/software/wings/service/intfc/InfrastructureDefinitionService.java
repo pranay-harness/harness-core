@@ -14,6 +14,9 @@ import software.wings.infra.InfraDefinitionDetail;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
+import software.wings.service.impl.aws.model.AwsSecurityGroup;
+import software.wings.service.impl.aws.model.AwsSubnet;
+import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
@@ -116,4 +119,10 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
       String appId, String infraDefinitionId, String serviceId);
 
   List<String> listRoutesForPcf(String appId, String infraDefinitionId);
+
+  List<AwsVPC> listVPC(String appId, String computeProviderId, String region);
+
+  List<AwsSecurityGroup> listSecurityGroups(String appId, String computeProviderId, String region, List<String> vpcIds);
+
+  List<AwsSubnet> listSubnets(String appId, String computeProviderId, String region, List<String> vpcIds);
 }

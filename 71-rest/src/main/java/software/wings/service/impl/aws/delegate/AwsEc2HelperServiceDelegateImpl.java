@@ -38,11 +38,14 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.LaunchTemplateVersion;
 import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ec2.model.SecurityGroup;
-import com.amazonaws.services.ec2.model.Subnet;
+import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.ec2.model.TagDescription;
-import com.amazonaws.services.ec2.model.Vpc;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
+import software.wings.service.impl.aws.model.AwsSecurityGroup;
+import software.wings.service.impl.aws.model.AwsSubnet;
+import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 
 import java.util.ArrayList;
@@ -54,6 +57,8 @@ import java.util.Set;
 @Singleton
 public class AwsEc2HelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsEc2HelperServiceDelegate {
+  private static final String NAME = "Name";
+
   @VisibleForTesting
   AmazonEC2Client getAmazonEc2Client(String region, AwsConfig awsConfig) {
     AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(region);
@@ -94,7 +99,7 @@ public class AwsEc2HelperServiceDelegateImpl
   }
 
   @Override
-  public List<String> listVPCs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+  public List<AwsVPC> listVPCs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
@@ -103,7 +108,16 @@ public class AwsEc2HelperServiceDelegateImpl
           .describeVpcs(new DescribeVpcsRequest().withFilters(new Filter("state").withValues("available")))
           .getVpcs()
           .stream()
-          .map(Vpc::getVpcId)
+          .map(vpc
+              -> AwsVPC.builder()
+                     .id(vpc.getVpcId())
+                     .name(CollectionUtils.emptyIfNull(vpc.getTags())
+                               .stream()
+                               .filter(tag -> NAME.equals(tag.getKey()))
+                               .findFirst()
+                               .orElse(new Tag(NAME, ""))
+                               .getValue())
+                     .build())
           .collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -114,7 +128,7 @@ public class AwsEc2HelperServiceDelegateImpl
   }
 
   @Override
-  public List<String> listSubnets(
+  public List<AwsSubnet> listSubnets(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> vpcIds) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
@@ -128,7 +142,16 @@ public class AwsEc2HelperServiceDelegateImpl
       return amazonEC2Client.describeSubnets(new DescribeSubnetsRequest().withFilters(filters))
           .getSubnets()
           .stream()
-          .map(Subnet::getSubnetId)
+          .map(subnet
+              -> AwsSubnet.builder()
+                     .id(subnet.getSubnetId())
+                     .name(CollectionUtils.emptyIfNull(subnet.getTags())
+                               .stream()
+                               .filter(tag -> NAME.equals(tag.getKey()))
+                               .findFirst()
+                               .orElse(new Tag(NAME, ""))
+                               .getValue())
+                     .build())
           .collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -139,9 +162,9 @@ public class AwsEc2HelperServiceDelegateImpl
   }
 
   @Override
-  public List<String> listSGs(
+  public List<AwsSecurityGroup> listSGs(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> vpcIds) {
-    List<String> result = new ArrayList<>();
+    List<AwsSecurityGroup> result = new ArrayList<>();
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       String nextToken = null;
@@ -155,7 +178,13 @@ public class AwsEc2HelperServiceDelegateImpl
         DescribeSecurityGroupsResult describeSecurityGroupsResult = amazonEC2Client.describeSecurityGroups(
             new DescribeSecurityGroupsRequest().withNextToken(nextToken).withFilters(filters));
         List<SecurityGroup> securityGroups = describeSecurityGroupsResult.getSecurityGroups();
-        result.addAll(securityGroups.stream().map(SecurityGroup::getGroupId).collect(toList()));
+        result.addAll(securityGroups.stream()
+                          .map(securityGroup
+                              -> AwsSecurityGroup.builder()
+                                     .id(securityGroup.getGroupId())
+                                     .name(securityGroup.getGroupName())
+                                     .build())
+                          .collect(toList()));
         nextToken = describeSecurityGroupsResult.getNextToken();
       } while (nextToken != null);
     } catch (AmazonServiceException amazonServiceException) {

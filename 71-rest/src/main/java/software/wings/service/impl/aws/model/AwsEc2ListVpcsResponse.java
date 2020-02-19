@@ -13,5 +13,5 @@ public class AwsEc2ListVpcsResponse implements AwsResponse {
   private DelegateMetaInfo delegateMetaInfo;
   private ExecutionStatus executionStatus;
   private String errorMessage;
-  private List<String> vpcs;
+  private List<AwsVPC> vpcs;
 }

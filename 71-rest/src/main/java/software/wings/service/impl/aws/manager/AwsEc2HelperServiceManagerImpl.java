@@ -37,6 +37,9 @@ import software.wings.service.impl.aws.model.AwsEc2Request;
 import software.wings.service.impl.aws.model.AwsEc2ValidateCredentialsRequest;
 import software.wings.service.impl.aws.model.AwsEc2ValidateCredentialsResponse;
 import software.wings.service.impl.aws.model.AwsResponse;
+import software.wings.service.impl.aws.model.AwsSecurityGroup;
+import software.wings.service.impl.aws.model.AwsSubnet;
+import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 
@@ -68,7 +71,7 @@ public class AwsEc2HelperServiceManagerImpl implements AwsEc2HelperServiceManage
   }
 
   @Override
-  public List<String> listVPCs(
+  public List<AwsVPC> listVPCs(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsEc2ListVpcsRequest.builder()
@@ -81,7 +84,7 @@ public class AwsEc2HelperServiceManagerImpl implements AwsEc2HelperServiceManage
   }
 
   @Override
-  public List<String> listSubnets(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+  public List<AwsSubnet> listSubnets(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       List<String> vpcIds, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsEc2ListSubnetsRequest.builder()
@@ -95,7 +98,7 @@ public class AwsEc2HelperServiceManagerImpl implements AwsEc2HelperServiceManage
   }
 
   @Override
-  public List<String> listSGs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+  public List<AwsSecurityGroup> listSGs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       List<String> vpcIds, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsEc2ListSGsRequest.builder()
