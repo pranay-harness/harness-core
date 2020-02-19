@@ -11,6 +11,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+import static software.wings.common.VerificationConstants.CV_DATA_COLLECTION_INTERVAL_IN_MINUTE;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.GET_LOG_FEEDBACKS;
@@ -136,7 +137,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .forEach(cvConfiguration -> {
           long startTime = getDataCollectionStartMinForAPM(cvConfiguration, endMinute);
           long endTime = TimeUnit.MINUTES.toMillis(endMinute);
-          if (endTime - startTime >= TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES / 3)) {
+          if (endTime - startTime >= TimeUnit.MINUTES.toMillis(CV_DATA_COLLECTION_INTERVAL_IN_MINUTE)) {
             logger.info("triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
                 cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
             if (isCVTaskBasedCollectionEnabled(cvConfiguration)) {
@@ -668,7 +669,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
             long startTime =
                 TimeUnit.MINUTES.toMillis(getCollectionStartTimeForLogs(logsCVConfiguration, maxCVCollectionMinute));
-            long endTime = startTime + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES / 3) - 1;
+            long endTime = startTime + TimeUnit.MINUTES.toMillis(CV_DATA_COLLECTION_INTERVAL_IN_MINUTE) - 1;
 
             if (PREDICTIVE == cvConfiguration.getComparisonStrategy()
                 && maxCVCollectionMinute >= logsCVConfiguration.getBaselineEndMinute()) {

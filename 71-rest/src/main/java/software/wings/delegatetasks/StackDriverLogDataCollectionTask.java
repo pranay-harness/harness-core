@@ -19,6 +19,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import software.wings.beans.TaskType;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.GcpHelperService;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -117,10 +118,9 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
           }
 
           try {
-            List<LogEntry> entries = stackDriverDelegateService.fetchLogs(dataCollectionInfo.getStateExecutionId(),
-                dataCollectionInfo.getQuery(), collectionStartTime, collectionEndTime, dataCollectionInfo.getHosts(),
-                dataCollectionInfo.getHostnameField(), dataCollectionInfo.getGcpConfig(),
-                dataCollectionInfo.getEncryptedDataDetails(), is24X7Task(), true);
+            List<LogEntry> entries = stackDriverDelegateService.fetchLogs(
+                dataCollectionInfo, collectionStartTime, collectionEndTime, is24X7Task(), true);
+
             int clusterLabel = 0;
 
             logger.info("Total no. of log records found : {}", entries.size());
@@ -154,11 +154,17 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
               }
             }
 
+          } catch (DataCollectionException e) {
+            taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+            taskResult.setErrorMessage(e.getMessage());
+            completed.set(true);
+            break;
           } catch (Exception e) {
             logger.info("Search job was cancelled. Retrying ...", e);
             if (++retry == RETRIES) {
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-              taskResult.setErrorMessage("Stackdriver cancelled search job " + RETRIES + " times");
+              taskResult.setErrorMessage(
+                  "Stackdriver search job failed " + RETRIES + " times. Error: " + ExceptionUtils.getMessage(e));
               completed.set(true);
               break;
             }

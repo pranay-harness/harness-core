@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
+import static software.wings.common.VerificationConstants.CV_DATA_COLLECTION_INTERVAL_IN_MINUTE;
 import static software.wings.common.VerificationConstants.RATE_LIMIT_STATUS;
 import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_HOST_NAME_FIELD;
 import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
@@ -39,7 +40,9 @@ import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.http.HttpStatus;
 import org.joda.time.DateTime;
 import software.wings.beans.GcpConfig;
+import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.GcpHelperService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
@@ -58,7 +61,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -70,12 +72,14 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class StackDriverDelegateServiceImpl implements StackDriverDelegateService {
+  static final int MAX_LOGS_PER_MINUTE = 10000;
   private static final FastDateFormat rfc3339 =
       FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC"));
 
   @Inject private EncryptionService encryptionService;
   @Inject private GcpHelperService gcpHelperService;
   @Inject private DelegateLogService delegateLogService;
+  @Inject private DelegateCVActivityLogService delegateCVActivityLogService;
 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(GcpConfig gcpConfig,
@@ -261,10 +265,17 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     List<LogEntry> serviceLevelLoad;
     final long startTime = TimeUnit.SECONDS.toMillis(setupTestNodeData.getFromTime());
     final long endTime = TimeUnit.SECONDS.toMillis(setupTestNodeData.getToTime());
+    final StackDriverLogDataCollectionInfo dataCollectionInfo = StackDriverLogDataCollectionInfo.builder()
+                                                                    .stateExecutionId(stateExecutionId)
+                                                                    .query(setupTestNodeData.getQuery())
+                                                                    .hosts(Collections.emptySet())
+                                                                    .hostnameField(setupTestNodeData.getHostnameField())
+                                                                    .gcpConfig(gcpConfig)
+                                                                    .encryptedDataDetails(encryptionDetails)
+                                                                    .build();
     try {
       // get data without host
-      serviceLevelLoad = fetchLogs(stateExecutionId, setupTestNodeData.getQuery(), startTime, endTime,
-          Collections.emptySet(), setupTestNodeData.getHostnameField(), gcpConfig, encryptionDetails, true, false);
+      serviceLevelLoad = fetchLogs(dataCollectionInfo, startTime, endTime, true, false);
 
       if (setupTestNodeData.isServiceLevel()) {
         return VerificationNodeDataSetupResponse.builder()
@@ -277,8 +288,8 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       }
 
       // get data with host
-      entries = fetchLogs(stateExecutionId, setupTestNodeData.getQuery(), startTime, endTime, Sets.newHashSet(hostName),
-          setupTestNodeData.getHostnameField(), gcpConfig, encryptionDetails, false, false);
+      dataCollectionInfo.setHosts(Sets.newHashSet(hostName));
+      entries = fetchLogs(dataCollectionInfo, startTime, endTime, false, false);
 
     } catch (Exception e) {
       logger.error("error fetching logs", e);
@@ -332,22 +343,25 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
   }
 
   @Override
-  public List<LogEntry> fetchLogs(String stateExecutionId, String query, long startTime, long endTime,
-      Set<String> hosts, String hostnameField, GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      boolean is24X7Task, boolean fetchNextPage) {
+  public List<LogEntry> fetchLogs(StackDriverLogDataCollectionInfo dataCollectionInfo, long startTime, long endTime,
+      boolean is24x7Task, boolean fetchNextPage) {
+    final GcpConfig gcpConfig = dataCollectionInfo.getGcpConfig();
+    final List<EncryptedDataDetail> encryptionDetails = dataCollectionInfo.getEncryptedDataDetails();
     encryptionService.decrypt(gcpConfig, encryptionDetails);
     String projectId = getProjectId(gcpConfig);
     Logging logging = gcpHelperService.getLoggingResource(gcpConfig, encryptionDetails, projectId);
 
-    String queryField = getQueryField(hostnameField, new ArrayList<>(hosts), query, startTime, endTime, is24X7Task);
+    String queryField = getQueryField(dataCollectionInfo.getHostnameField(),
+        new ArrayList<>(dataCollectionInfo.getHosts()), dataCollectionInfo.getQuery(), startTime, endTime, is24x7Task);
 
     List<LogEntry> logEntries = new ArrayList<>();
     ListLogEntriesResponse response = null;
     String nextPageToken = null;
-    boolean hasReachedRateLimit = false;
+    boolean hasReachedRateLimit;
     do {
       ListLogEntriesRequest request = new ListLogEntriesRequest();
-      ThirdPartyApiCallLog apiCallLog = createApiCallLog(gcpConfig.getAccountId(), stateExecutionId);
+      ThirdPartyApiCallLog apiCallLog =
+          createApiCallLog(gcpConfig.getAccountId(), dataCollectionInfo.getStateExecutionId());
       apiCallLog.setTitle("Fetching log data from project " + projectId + " from " + getDateFormatTime(startTime)
           + " to " + getDateFormatTime(endTime));
       apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
@@ -411,9 +425,29 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       if (isNotEmpty(response.getEntries())) {
         logEntries.addAll(response.getEntries());
       }
+
+      if (maxAllowedLogsReached(logEntries.size(), is24x7Task)) {
+        if (is24x7Task) {
+          delegateCVActivityLogService
+              .getLogger(dataCollectionInfo.getAccountId(), dataCollectionInfo.getCvConfigId(),
+                  TimeUnit.MILLISECONDS.toMinutes(endTime), dataCollectionInfo.getStateExecutionId(),
+                  "[Time range: %t-%t]", startTime, endTime)
+              .warn("Limit of " + MAX_LOGS_PER_MINUTE
+                  + " logs per minute reached. Log messages will be dropped. Please refine your query.");
+        } else {
+          throw new DataCollectionException(
+              "Limit of " + MAX_LOGS_PER_MINUTE + " logs per minute reached. Please refine your query.");
+        }
+        break;
+      }
     } while (hasReachedRateLimit || (fetchNextPage && isNotEmpty(response) && isNotEmpty(response.getNextPageToken())));
 
     return logEntries;
+  }
+
+  private boolean maxAllowedLogsReached(int currentLogsSize, boolean is24x7Task) {
+    return is24x7Task ? currentLogsSize >= MAX_LOGS_PER_MINUTE * CV_DATA_COLLECTION_INTERVAL_IN_MINUTE
+                      : currentLogsSize >= MAX_LOGS_PER_MINUTE;
   }
 
   private String getQueryField(
@@ -449,8 +483,14 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
   @Override
   public Object getLogSample(String guid, GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
       String query, long startTime, long endTime) {
-    final List<LogEntry> logEntries = fetchLogs(
-        guid, query, startTime, endTime, Collections.emptySet(), null, gcpConfig, encryptionDetails, true, false);
+    final List<LogEntry> logEntries = fetchLogs(StackDriverLogDataCollectionInfo.builder()
+                                                    .stateExecutionId(guid)
+                                                    .query(query)
+                                                    .hosts(Collections.emptySet())
+                                                    .gcpConfig(gcpConfig)
+                                                    .encryptedDataDetails(encryptionDetails)
+                                                    .build(),
+        startTime, endTime, true, false);
     if (isEmpty(logEntries)) {
       return null;
     }
