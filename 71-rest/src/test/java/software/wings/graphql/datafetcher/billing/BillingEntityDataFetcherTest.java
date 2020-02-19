@@ -509,6 +509,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getName()).isEqualTo(LABEL);
     assertThat(data.getData().get(0).getId()).isEqualTo(LABEL);
+    assertThat(data.getData().get(0).getLabel()).isEqualTo(LABEL);
     assertThat(data.getData().get(0).getType()).isEqualTo("K8sLabel");
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(60.0);
   }

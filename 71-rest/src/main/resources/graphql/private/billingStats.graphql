@@ -129,6 +129,7 @@ type BillingEntityDataPoint {
   namespace: String
   clusterType: String
   clusterId: String
+  label: String
   totalNamespaces: Number
   totalWorkloads: Number
   maxCpuUtilization: Number
