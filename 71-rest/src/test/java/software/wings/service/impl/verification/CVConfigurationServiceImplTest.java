@@ -11,9 +11,6 @@ import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.sm.StateType.APM_VERIFICATION;
@@ -40,7 +37,6 @@ import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
@@ -111,7 +107,6 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     appId =
         wingsPersistence.save(Application.Builder.anApplication().name(generateUuid()).accountId(accountId).build());
     MockitoAnnotations.initMocks(this);
-    when(featureFlagService.isEnabled(FeatureName.CUSTOM_LOGS_SERVICEGUARD, accountId)).thenReturn(true);
     FieldUtils.writeField(cvConfigurationService, "featureFlagService", featureFlagService, true);
   }
 
@@ -530,14 +525,6 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     assertThat(updatedConfig.getQuery()).isNotNull();
     assertThat(updatedConfig.getLogCollectionInfo().getCollectionUrl())
         .isEqualTo("updated url ${start_time} ${end_time}");
-  }
-
-  @Test(expected = UnsupportedOperationException.class)
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testCustomLogsFeatureFlagOff() throws Exception {
-    when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
-    testCreateCustomLogsConfig();
   }
 
   @Test
