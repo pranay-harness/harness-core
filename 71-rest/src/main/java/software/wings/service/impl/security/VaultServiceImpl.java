@@ -224,9 +224,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           try {
             VaultAppRoleLoginResult loginResult = appRoleLogin(decryptedVaultConfig);
             if (loginResult != null) {
-              vaultConfig.setRenewedAt(System.currentTimeMillis());
-              vaultConfig.setAuthToken(loginResult.getClientToken());
-              saveVaultConfig(accountId, vaultConfig);
+              decryptedVaultConfig.setRenewedAt(System.currentTimeMillis());
+              decryptedVaultConfig.setAuthToken(loginResult.getClientToken());
+              saveVaultConfig(accountId, decryptedVaultConfig);
             }
           } catch (Exception e) {
             logger.info("Error while renewing client token for Vault AppRole  " + vaultConfig.getAppRoleId()
