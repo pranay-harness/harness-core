@@ -18,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -138,5 +139,51 @@ public class AmiArtifactStreamYamlHandlerTest extends BaseYamlHandlerTest {
   @Category(UnitTests.class)
   public void testGetYamlClass() {
     assertThat(yamlHandler.getYamlClass()).isEqualTo(AmiArtifactStream.Yaml.class);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void upsertFromYamlWithoutRegion() {
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(settingsService.getByName(ACCOUNT_ID, APP_ID, "test server")).thenReturn(settingAttribute);
+    List<NameValuePair.Yaml> amiTags =
+        asList(NameValuePair.Yaml.builder().name("image_version").value("1.0.0").build());
+    List<NameValuePair.Yaml> amiFilter =
+        asList(NameValuePair.Yaml.builder().name("ami-image-id").value("ami-023385617116e27c0").build());
+    AmiArtifactStream.Yaml baseYaml = AmiArtifactStream.Yaml.builder()
+                                          .amiTags(amiTags)
+                                          .amiFilters(amiFilter)
+                                          .harnessApiVersion("1.0")
+                                          .serverName("test server")
+                                          .build();
+    ChangeContext changeContext = ChangeContext.Builder.aChangeContext()
+                                      .withYamlType(YamlType.ARTIFACT_STREAM)
+                                      .withYaml(baseYaml)
+                                      .withChange(GitFileChange.Builder.aGitFileChange()
+                                                      .withFilePath("Setup/Applications/a1/Services/s1/as1/test.yaml")
+                                                      .withFileContent("harnessApiVersion: '1.0'\n"
+                                                          + "type: AMI\n"
+                                                          + "amiFilters:\n"
+                                                          + "- name: ami-image-id\n"
+                                                          + "  value: ami-023385617116e27c0\n"
+                                                          + "amiTags:\n"
+                                                          + "- name: image_version\n"
+                                                          + "  value: 1.0.0\n"
+                                                          + "region: \n"
+                                                          + "serverName: test server")
+                                                      .withAccountId(ACCOUNT_ID)
+                                                      .withChangeType(MODIFY)
+                                                      .build())
+                                      .build();
+    Application application = Application.Builder.anApplication().name("a1").uuid(APP_ID).accountId(ACCOUNT_ID).build();
+    when(appService.getAppByName(ACCOUNT_ID, "a1")).thenReturn(application);
+    when(appService.get(APP_ID)).thenReturn(application);
+    when(yamlHelper.getAppId(
+             changeContext.getChange().getAccountId(), "Setup/Applications/a1/Services/s1/as1/test.yaml"))
+        .thenReturn(APP_ID);
+    when(yamlHelper.getServiceId(APP_ID, "Setup/Applications/a1/Services/s1/as1/test.yaml")).thenReturn(SERVICE_ID);
+    yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
   }
 }
