@@ -82,7 +82,6 @@ public class CVConfiguration extends Base implements NameAccess {
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public abstract static class CVConfigurationYaml extends BaseEntityYaml {
-    private String name;
     private String connectorName;
     private String serviceName;
     private AnalysisTolerance analysisTolerance;

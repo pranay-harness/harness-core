@@ -384,7 +384,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             .toYaml(cvConfiguration, appId);
 
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, cvConfiguration.getUuid(), accountId, cvConfigurationYaml,
-        cvConfigurationYaml.getName() + YAML_EXTENSION);
+        cvConfiguration.getName() + YAML_EXTENSION);
   }
 
   /**
