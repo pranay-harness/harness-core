@@ -9,6 +9,7 @@ import software.wings.search.framework.EntityInfo;
 import software.wings.search.framework.SearchEntityUtils;
 import software.wings.search.framework.SearchResult;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +33,16 @@ public class ApplicationSearchResult extends SearchResult {
   private Integer auditsCount = 0;
   private static final int MAX_ENTRIES = 3;
   private static final int DAYS_TO_RETAIN = 7;
+
+  public void setAudits(List<RelatedAuditView> audits) {
+    if (EmptyPredicate.isNotEmpty(audits)) {
+      this.audits = audits;
+      this.auditsCount = audits.size();
+    } else {
+      this.audits = new ArrayList<>();
+      this.auditsCount = 0;
+    }
+  }
 
   private void setAudits(ApplicationView applicationView) {
     long startTimestampToRetainFrom = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);

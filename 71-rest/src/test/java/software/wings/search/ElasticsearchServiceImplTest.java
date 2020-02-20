@@ -62,12 +62,12 @@ public class ElasticsearchServiceImplTest extends WingsBaseTest {
     when(elasticsearchRequestHandler.translateHitsToSearchResults(searchResponse.getHits(), accountId))
         .thenReturn(searchResultList);
     when(elasticsearchRequestHandler.processSearchResults(searchResultList)).thenReturn(searchResultList);
+    when(elasticsearchRequestHandler.filterSearchResults(searchResultList)).thenReturn(searchResultList);
 
     SearchEntity searchEntity = mock(SearchEntity.class);
     searchEntities.add(searchEntity);
     when(searchEntity.getElasticsearchRequestHandler()).thenReturn(elasticsearchRequestHandler);
     when(searchEntity.getType()).thenReturn(ApplicationSearchEntity.TYPE);
-
     SearchResults searchResults = elasticsearchService.getSearchResults(searchString, accountId);
     assertThat(searchResults).isNotNull();
     assertThat(searchResults.getSearchResults().get(ApplicationSearchEntity.TYPE).size()).isEqualTo(1);

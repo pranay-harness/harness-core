@@ -10,6 +10,7 @@ import software.wings.search.framework.EntityInfo;
 import software.wings.search.framework.SearchEntityUtils;
 import software.wings.search.framework.SearchResult;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -42,11 +43,31 @@ public class WorkflowSearchResult extends SearchResult {
     }
   }
 
+  public void setAudits(List<RelatedAuditView> audits) {
+    if (EmptyPredicate.isNotEmpty(audits)) {
+      this.audits = audits;
+      this.auditsCount = audits.size();
+    } else {
+      this.audits = new ArrayList<>();
+      this.auditsCount = 0;
+    }
+  }
+
   private void setAudits(WorkflowView workflowView) {
     if (EmptyPredicate.isNotEmpty(workflowView.getAudits())) {
       this.auditsCount =
           SearchEntityUtils.truncateList(workflowView.getAuditTimestamps(), startTimestampToRetainFrom).size();
       removeStaleAuditEntries(workflowView);
+    }
+  }
+
+  public void setDeployments(List<RelatedDeploymentView> deployments) {
+    if (EmptyPredicate.isNotEmpty(deployments)) {
+      this.deployments = deployments;
+      this.deploymentsCount = deployments.size();
+    } else {
+      this.deployments = new ArrayList<>();
+      this.deploymentsCount = 0;
     }
   }
 

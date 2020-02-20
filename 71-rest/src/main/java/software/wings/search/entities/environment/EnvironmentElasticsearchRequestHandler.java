@@ -8,9 +8,12 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import software.wings.features.AuditTrailFeature;
 import software.wings.features.api.PremiumFeature;
+import software.wings.search.SearchPermissionUtils;
 import software.wings.search.framework.AbstractElasticsearchRequestHandler;
 import software.wings.search.framework.ElasticsearchRequestHandler;
 import software.wings.search.framework.SearchResult;
+import software.wings.security.AppPermissionSummary;
+import software.wings.security.UserPermissionInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,5 +36,36 @@ public class EnvironmentElasticsearchRequestHandler
       searchResults.add(environmentSearchResult);
     }
     return searchResults;
+  }
+
+  public List<SearchResult> filterSearchResults(List<SearchResult> searchResults) {
+    List<SearchResult> newSearchResults = new ArrayList<>();
+    UserPermissionInfo userPermissionInfo = SearchPermissionUtils.getUserPermission();
+    for (SearchResult searchResult : searchResults) {
+      EnvironmentSearchResult envSearchResult = (EnvironmentSearchResult) searchResult;
+      AppPermissionSummary appPermission =
+          userPermissionInfo.getAppPermissionMapInternal().get(envSearchResult.getAppId());
+      if (!checkPermission(appPermission, envSearchResult)) {
+        continue;
+      }
+
+      envSearchResult.setWorkflows(SearchPermissionUtils.getAllowedEntities(
+          envSearchResult.getWorkflows(), SearchPermissionUtils.getAllowedWorkflowIds(appPermission)));
+      envSearchResult.setPipelines(SearchPermissionUtils.getAllowedEntities(
+          envSearchResult.getPipelines(), SearchPermissionUtils.getAllowedPiplineIds(appPermission)));
+      if (!SearchPermissionUtils.hasAuditPermissions(userPermissionInfo)) {
+        envSearchResult.setAudits(new ArrayList<>());
+      }
+      envSearchResult.setDeployments(SearchPermissionUtils.getAllowedDeployments(
+          envSearchResult.getDeployments(), SearchPermissionUtils.getAllowedDeploymentIds(appPermission)));
+
+      newSearchResults.add(envSearchResult);
+    }
+    return newSearchResults;
+  }
+
+  private boolean checkPermission(AppPermissionSummary appPermission, EnvironmentSearchResult envSearchResult) {
+    return appPermission != null
+        && SearchPermissionUtils.getAllowedEnvironmentIds(appPermission).contains(envSearchResult.getId());
   }
 }
