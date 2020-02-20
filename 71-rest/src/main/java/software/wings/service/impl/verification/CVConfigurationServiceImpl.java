@@ -244,11 +244,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
 
       case LOG_VERIFICATION:
-        if (!featureFlagService.isEnabled(FeatureName.CUSTOM_LOGS_SERVICEGUARD, accountId)) {
-          logger.info("Custom Logs service guard 24/7 is not enabled for account {}", accountId);
-          throw new UnsupportedOperationException(
-              "Custom Logs service guard 24/7 is not enabled for account " + accountId);
-        }
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), CustomLogCVServiceConfiguration.class);
         CustomLogCVServiceConfiguration customLogCVServiceConfiguration =
             (CustomLogCVServiceConfiguration) cvConfiguration;
@@ -800,12 +795,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         }
         break;
       case LOG_VERIFICATION:
-        if (!featureFlagService.isEnabled(FeatureName.CUSTOM_LOGS_SERVICEGUARD, savedConfiguration.getAccountId())) {
-          logger.info(
-              "Custom Logs service guard 24/7 is not enabled for account {}", savedConfiguration.getAccountId());
-          throw new UnsupportedOperationException(
-              "Custom Logs service guard 24/7 is not enabled for account " + savedConfiguration.getAccountId());
-        }
         if (((CustomLogCVServiceConfiguration) cvConfiguration).getLogCollectionInfo() != null) {
           updateOperations.set(
               "logCollectionInfo", ((CustomLogCVServiceConfiguration) cvConfiguration).getLogCollectionInfo());
