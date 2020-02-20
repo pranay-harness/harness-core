@@ -1410,12 +1410,13 @@ public class DelegateServiceImpl implements DelegateService {
             executorService.submit(() -> delegateValidateTask.validationResults());
         currentlyValidatingFutures.put(delegateTask.getUuid(), future);
 
-        DelegateValidateTask delegateAlternativeValidateTask =
-            getAlternativeDelegateValidateTask(delegateTaskEvent, delegateTask);
+        DelegateValidateTask delegateAlternativeValidateTask = getAlternativeDelegateValidateTask(delegateTask);
         injector.injectMembers(delegateAlternativeValidateTask);
 
         if (delegateAlternativeValidateTask != null) {
           executorService.submit(() -> {
+            logger.info("Executing comparison for task type {}", delegateTask.getData().getTaskType());
+
             try {
               List<DelegateConnectionResult> alternativeResults = delegateAlternativeValidateTask.validationResults();
               if (alternativeResults == null) {
@@ -1460,8 +1461,7 @@ public class DelegateServiceImpl implements DelegateService {
             delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask.getUuid()));
   }
 
-  private DelegateValidateTask getAlternativeDelegateValidateTask(
-      DelegateTaskEvent delegateTaskEvent, DelegateTask delegateTask) {
+  private DelegateValidateTask getAlternativeDelegateValidateTask(DelegateTask delegateTask) {
     if (isNotEmpty(delegateTask.getExecutionCapabilities())) {
       return TaskType.valueOf(delegateTask.getData().getTaskType())
           .getDelegateValidateTaskVersionForCapabilityFramework(delegateId, delegateTask, null);
