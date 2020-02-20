@@ -16,6 +16,10 @@ public class LoadBalancerDetailsForBGDeployment {
   private String stageTargetGroupName;
   private String stageTargetGroupArn;
 
+  private boolean useSpecificRules;
+  private String prodRuleArn;
+  private String stageRuleArn;
+
   public static Builder builder() {
     return new Builder();
   }
@@ -31,6 +35,10 @@ public class LoadBalancerDetailsForBGDeployment {
     private String prodTargetGroupArn;
     private String stageTargetGroupName;
     private String stageTargetGroupArn;
+
+    private boolean useSpecificRules;
+    private String prodRuleArn;
+    private String stageRuleArn;
 
     public Builder loadBalancerName(String loadBalancerName) {
       this.loadBalancerName = loadBalancerName;
@@ -82,6 +90,21 @@ public class LoadBalancerDetailsForBGDeployment {
       return this;
     }
 
+    public Builder useSpecificRules(boolean useSpecificRules) {
+      this.useSpecificRules = useSpecificRules;
+      return this;
+    }
+
+    public Builder prodRuleArn(String prodRuleArn) {
+      this.prodRuleArn = prodRuleArn;
+      return this;
+    }
+
+    public Builder stageRuleArn(String stageRuleArn) {
+      this.stageRuleArn = stageRuleArn;
+      return this;
+    }
+
     public LoadBalancerDetailsForBGDeployment build() {
       LoadBalancerDetailsForBGDeployment lbDetail = new LoadBalancerDetailsForBGDeployment();
       lbDetail.setLoadBalancerName(loadBalancerName);
@@ -94,6 +117,9 @@ public class LoadBalancerDetailsForBGDeployment {
       lbDetail.setProdTargetGroupArn(prodTargetGroupArn);
       lbDetail.setStageTargetGroupName(stageTargetGroupName);
       lbDetail.setStageTargetGroupArn(stageTargetGroupArn);
+      lbDetail.setUseSpecificRules(useSpecificRules);
+      lbDetail.setProdRuleArn(prodRuleArn);
+      lbDetail.setStageRuleArn(stageRuleArn);
       return lbDetail;
     }
   }

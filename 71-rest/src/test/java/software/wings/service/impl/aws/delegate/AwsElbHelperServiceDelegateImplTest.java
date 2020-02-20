@@ -17,17 +17,24 @@ import com.amazonaws.services.elasticloadbalancing.model.DescribeInstanceHealthR
 import com.amazonaws.services.elasticloadbalancing.model.InstanceState;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
+import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.CreateTargetGroupResult;
+import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeLoadBalancersResult;
+import com.amazonaws.services.elasticloadbalancingv2.model.DescribeRulesResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthResult;
+import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
+import com.amazonaws.services.elasticloadbalancingv2.model.Rule;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetDescription;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealth;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealthDescription;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsElbListenerRuleData;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -289,5 +296,43 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
     awsElbHelperServiceDelegate.cloneTargetGroup(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "arn", "stageTargetGroup");
     verify(mockV2Client).createTargetGroup(any());
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testGetElbListenersForLoadBalaner() {
+    AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
+    doReturn(mockV2Client).when(awsElbHelperServiceDelegate).getAmazonElasticLoadBalancingClientV2(any(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(new DescribeLoadBalancersResult().withLoadBalancers(new LoadBalancer().withLoadBalancerArn("lbArn")))
+        .when(mockV2Client)
+        .describeLoadBalancers(any());
+    doReturn(new DescribeListenersResult().withListeners(
+                 new Listener().withListenerArn("listArn").withPort(8080).withProtocol("HTTP")))
+        .when(mockV2Client)
+        .describeListeners(any());
+    doReturn(new DescribeRulesResult().withRules(new Rule()
+                                                     .withRuleArn("ruleArn")
+                                                     .withPriority("rulePriority")
+                                                     .withActions(new Action().withTargetGroupArn("targetArn"))))
+        .when(mockV2Client)
+        .describeRules(any());
+    List<AwsElbListener> listeners = awsElbHelperServiceDelegate.getElbListenersForLoadBalaner(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "lbName");
+    assertThat(listeners).isNotNull();
+    assertThat(listeners.size()).isEqualTo(1);
+    AwsElbListener listener = listeners.get(0);
+    assertThat(listener.getListenerArn()).isEqualTo("listArn");
+    assertThat(listener.getLoadBalancerArn()).isEqualTo("lbArn");
+    assertThat(listener.getPort()).isEqualTo(8080);
+    assertThat(listener.getProtocol()).isEqualTo("HTTP");
+    List<AwsElbListenerRuleData> rules = listener.getRules();
+    assertThat(rules).isNotNull();
+    assertThat(rules.size()).isEqualTo(1);
+    AwsElbListenerRuleData rule = rules.get(0);
+    assertThat(rule.getRuleArn()).isEqualTo("ruleArn");
+    assertThat(rule.getRulePriority()).isEqualTo("rulePriority");
+    assertThat(rule.getRuleTargetGroupArn()).isEqualTo("targetArn");
   }
 }
