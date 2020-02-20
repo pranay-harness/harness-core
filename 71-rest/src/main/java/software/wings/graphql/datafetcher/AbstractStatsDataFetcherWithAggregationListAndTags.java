@@ -101,7 +101,8 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       List<QLCCMAggregationFunction> billingDataAggregations, LA groupByLabelLevel1) {
     billingDataAggregations.forEach(aggregateFunction -> {
       List<QLBillingStackedTimeSeriesDataPoint> billingStackedTimeSeriesDataPoints = new ArrayList<>();
-      if (aggregateFunction.getColumnName().equalsIgnoreCase(BillingDataTableKeys.billingAmount)) {
+      if (aggregateFunction.getColumnName().equalsIgnoreCase(BillingDataTableKeys.billingAmount)
+          || aggregateFunction.getColumnName().equalsIgnoreCase(BillingDataTableKeys.idleCost)) {
         billingStackedTimeSeriesDataPoints = billingStackedTimeSeriesData.getData();
       } else if (aggregateFunction.getColumnName().equalsIgnoreCase(BillingDataTableKeys.cpuIdleCost)) {
         billingStackedTimeSeriesDataPoints = billingStackedTimeSeriesData.getCpuIdleCost();
