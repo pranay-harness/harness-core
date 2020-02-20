@@ -131,6 +131,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.notification.EmailNotificationListener;
 import software.wings.prune.PruneEntityListener;
 import software.wings.resources.AppResource;
+import software.wings.scheduler.AdministrativeJob;
 import software.wings.scheduler.InstancesPurgeJob;
 import software.wings.scheduler.UsageMetricsHandler;
 import software.wings.scheduler.YamlChangeSetPruneJob;
@@ -688,6 +689,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
     injector.getInstance(DisconnectedDelegateHandler.class).registerIterators();
     injector.getInstance(BudgetHandler.class).registerIterators();
+    injector.getInstance(AdministrativeJob.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {
