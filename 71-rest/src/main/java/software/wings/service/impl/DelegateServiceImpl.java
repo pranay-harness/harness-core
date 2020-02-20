@@ -1590,21 +1590,29 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   // TODO: Required right now, as at delegateSide based on capabilities are present or not,
   // TODO: either new CapabilityCheckController or existing ValidationClass is used.
   private void generateCapabilitiesForTaskIfFeatureEnabled(DelegateTask task) {
-    if (!CapabilityUtils.isTaskTypeMigratedToCapabilityFramework(task.getData().getTaskType())
-        || !featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK, task.getAccountId())) {
+    if (!featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK, task.getAccountId())) {
       return;
     }
 
-    addMergedParamsForCapabilityCheck(task);
+    if (!CapabilityUtils.isTaskTypeMigratedToCapabilityFramework(task.getData().getTaskType())) {
+      logger.error("The capabilities are not enabled for task type {}", task.getData().getTaskType());
+      return;
+    }
 
-    DelegatePackage delegatePackage = getDelegatePackageWithEncryptionConfig(task);
-    CapabilityHelper.embedCapabilitiesInDelegateTask(task,
-        delegatePackage == null || isEmpty(delegatePackage.getEncryptionConfigs())
-            ? Collections.emptyList()
-            : delegatePackage.getEncryptionConfigs().values());
+    try {
+      addMergedParamsForCapabilityCheck(task);
 
-    if (isNotEmpty(task.getExecutionCapabilities())) {
-      logger.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(task));
+      DelegatePackage delegatePackage = getDelegatePackageWithEncryptionConfig(task);
+      CapabilityHelper.embedCapabilitiesInDelegateTask(task,
+          delegatePackage == null || isEmpty(delegatePackage.getEncryptionConfigs())
+              ? Collections.emptyList()
+              : delegatePackage.getEncryptionConfigs().values());
+
+      if (isNotEmpty(task.getExecutionCapabilities())) {
+        logger.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(task));
+      }
+    } catch (RuntimeException exception) {
+      logger.error("Exception while preparing the task capabilities", exception);
     }
   }
 
