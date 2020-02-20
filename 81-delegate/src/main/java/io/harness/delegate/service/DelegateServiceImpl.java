@@ -1411,9 +1411,9 @@ public class DelegateServiceImpl implements DelegateService {
         currentlyValidatingFutures.put(delegateTask.getUuid(), future);
 
         DelegateValidateTask delegateAlternativeValidateTask = getAlternativeDelegateValidateTask(delegateTask);
-        injector.injectMembers(delegateAlternativeValidateTask);
-
         if (delegateAlternativeValidateTask != null) {
+          injector.injectMembers(delegateAlternativeValidateTask);
+
           executorService.submit(() -> {
             logger.info("Executing comparison for task type {}", delegateTask.getData().getTaskType());
 
