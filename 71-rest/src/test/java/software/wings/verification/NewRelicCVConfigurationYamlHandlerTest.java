@@ -102,7 +102,6 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
 
   private NewRelicCVConfigurationYaml buildYaml() {
     NewRelicCVConfigurationYaml yaml = NewRelicCVConfigurationYaml.builder().newRelicApplicationName(appName).build();
-    yaml.setName("TestAppDConfig");
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     return yaml;
@@ -119,7 +118,6 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
 
     NewRelicCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
-    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getNewRelicApplicationName()).isEqualTo(appName);
   }

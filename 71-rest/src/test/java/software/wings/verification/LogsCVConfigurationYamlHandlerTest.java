@@ -92,7 +92,6 @@ public class LogsCVConfigurationYamlHandlerTest extends CategoryTest {
   private LogsCVConfigurationYaml buildYaml() {
     LogsCVConfigurationYaml yaml = new LogsCVConfigurationYaml();
     yaml.setType(StateType.SUMO.name());
-    yaml.setName("TestAppDConfig");
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     yaml.setQuery("query");
@@ -114,7 +113,6 @@ public class LogsCVConfigurationYamlHandlerTest extends CategoryTest {
 
     LogsCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
-    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getQuery()).isEqualTo(cvServiceConfiguration.getQuery());
     assertThat(yaml.getBaselineStartMinute()).isEqualTo(cvServiceConfiguration.getBaselineStartMinute());

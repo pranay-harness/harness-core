@@ -35,7 +35,6 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
   public void toYaml(CVConfigurationYaml yaml, CVConfiguration bean) {
     yaml.setAnalysisTolerance(bean.getAnalysisTolerance());
     yaml.setConnectorName(settingsService.get(bean.getConnectorId()).getName());
-    yaml.setName(bean.getName());
     yaml.setEnabled24x7(bean.isEnabled24x7());
 
     Application application = appService.get(bean.getAppId());

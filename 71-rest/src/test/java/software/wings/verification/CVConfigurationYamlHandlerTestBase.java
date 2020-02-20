@@ -84,7 +84,6 @@ public class CVConfigurationYamlHandlerTestBase extends WingsBaseTest {
   }
 
   void buildYaml(CVConfigurationYaml yaml) {
-    yaml.setName("TestStackdriverConfig");
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
   }
