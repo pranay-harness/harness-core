@@ -46,12 +46,14 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
+import io.harness.observer.Subject;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
 import io.harness.validation.Create;
 import io.harness.validation.PersistenceValidator;
 import io.harness.validation.Update;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
@@ -104,6 +106,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.artifact.ArtifactStreamServiceObserver;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
@@ -161,6 +164,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private DeploymentTriggerService deploymentTriggerService;
+  @Inject @Getter private Subject<ArtifactStreamServiceObserver> subject = new Subject<>();
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -916,6 +920,19 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     boolean retVal = wingsPersistence.delete(ArtifactStream.class, appId, artifactStreamId);
     artifactStreamServiceBindingService.deleteByArtifactStream(artifactStreamId);
     return retVal;
+  }
+
+  @Override
+  public boolean attachPerpetualTaskId(ArtifactStream artifactStream, String watcherTaskId) {
+    Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
+                                      .filter(ArtifactStreamKeys.accountId, artifactStream.getAccountId())
+                                      .filter(ArtifactStreamKeys.uuid, artifactStream.getUuid());
+    UpdateOperations<ArtifactStream> updateOperations =
+        wingsPersistence.createUpdateOperations(ArtifactStream.class)
+            .addToSet(ArtifactStreamKeys.perpetualTaskIds, watcherTaskId);
+    UpdateResults updateResults = wingsPersistence.update(query, updateOperations);
+
+    return updateResults.getUpdatedCount() == 1;
   }
 
   @Override

@@ -3520,4 +3520,24 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .extracting(ArtifactStream::getName)
         .containsSequence("test-3", "test-2", "test-1");
   }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldAttachASWithPerpetualTaskId() {
+    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .imageName("wingsplugins/todolist")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .build();
+    validateDockerArtifactStream(dockerArtifactStream, APP_ID);
+
+    ArtifactStream savedArtifactStream = artifactStreamService.get(dockerArtifactStream.getUuid());
+    assertThat(artifactStreamService.attachPerpetualTaskId(savedArtifactStream, "PERPETUAL_TASK_ID")).isTrue();
+    assertThat(artifactStreamService.get(dockerArtifactStream.getUuid()).getPerpetualTaskIds())
+        .contains("PERPETUAL_TASK_ID");
+  }
 }

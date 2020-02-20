@@ -89,6 +89,7 @@ public abstract class ArtifactStream
   @Transient private long artifactCount;
   @Transient private List<ArtifactSummary> artifacts;
   private boolean sample;
+  String[] perpetualTaskIds; // reference to the perpertual tasks
 
   // Collection status denotes whether the first-time collection of the artifact stream is completed. If it's completed
   // we mark the status as STABLE, otherwise it is by default UNSTABLE when the stream is created or the artifact source
