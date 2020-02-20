@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toList;
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
 
+import io.harness.exception.InvalidRequestException;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream.FilterClass;
@@ -39,6 +40,9 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
   protected void toBean(AmiArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();
+    if (isEmpty(yaml.getRegion())) {
+      throw new InvalidRequestException("Region cannot be null or empty");
+    }
     bean.setRegion(yaml.getRegion());
     bean.setPlatform(yaml.getPlatform());
     bean.setTags(getTags(yaml.getAmiTags()));
