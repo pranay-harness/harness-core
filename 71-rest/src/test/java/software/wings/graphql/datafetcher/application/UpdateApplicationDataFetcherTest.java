@@ -57,8 +57,8 @@ public class UpdateApplicationDataFetcherTest extends CategoryTest {
         QLUpdateApplicationInput.builder()
             .clientMutationId("req1")
             .applicationId("appid")
-            .name(RequestField.setToNullable("   new app name   "))
-            .description(RequestField.setToNullable("new app description"))
+            .name(RequestField.ofNullable("   new app name   "))
+            .description(RequestField.ofNullable("new app description"))
             .build();
     final MutationContext mutationContext = MutationContext.builder()
                                                 .accountId("accountid")
@@ -105,8 +105,8 @@ public class UpdateApplicationDataFetcherTest extends CategoryTest {
     final QLUpdateApplicationPayload qlUpdateApplicationPayload =
         updateApplicationDataFetcher.mutateAndFetch(QLUpdateApplicationInput.builder()
                                                         .applicationId("appid")
-                                                        .name(RequestField.setToNull())
-                                                        .description(RequestField.notSet())
+                                                        .name(RequestField.ofNull())
+                                                        .description(RequestField.absent())
                                                         .build(),
             mutationContext);
   }

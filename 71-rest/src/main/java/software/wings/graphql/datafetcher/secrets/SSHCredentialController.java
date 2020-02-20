@@ -310,7 +310,7 @@ public class SSHCredentialController {
         || existingSettingAttribute.getValue().getSettingType() != HOST_CONNECTION_ATTRIBUTES) {
       throw new InvalidRequestException(String.format("No ssh credential exists with the id %s", sshCredId));
     }
-    if (updateInput.getName().hasBeenSet()) {
+    if (updateInput.getName().isPresent()) {
       String name = updateInput.getName().getValue().map(StringUtils::strip).orElse(null);
       if (isBlank(name)) {
         throw new InvalidRequestException("Cannot set the ssh credential name as null");
@@ -320,11 +320,11 @@ public class SSHCredentialController {
     boolean needToUpdateCred = false;
     QLSSHAuthenticationInput sshCredInput = null;
     QLKerberosAuthenticationInput kerberosInput = null;
-    if (updateInput.getSshAuthentication().hasBeenSet()) {
+    if (updateInput.getSshAuthentication().isPresent()) {
       sshCredInput = updateInput.getSshAuthentication().getValue().orElse(null);
       needToUpdateCred = true;
     }
-    if (updateInput.getKerberosAuthentication().hasBeenSet()) {
+    if (updateInput.getKerberosAuthentication().isPresent()) {
       kerberosInput = updateInput.getKerberosAuthentication().getValue().orElse(null);
       needToUpdateCred = true;
     }
@@ -336,7 +336,7 @@ public class SSHCredentialController {
           createHostConnectionAttribute(updateInput.getAuthenticationScheme(), sshCredInput, kerberosInput);
       existingSettingAttribute.setValue(sshSettings);
     }
-    if (updateInput.getUsageScope().hasBeenSet()) {
+    if (updateInput.getUsageScope().isPresent()) {
       QLUsageScope usageScope = updateInput.getUsageScope().getValue().orElse(null);
       existingSettingAttribute.setUsageRestrictions(
           usageScopeController.populateUsageRestrictions(usageScope, accountId));

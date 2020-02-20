@@ -40,7 +40,7 @@ public class RequestFieldDeserializerTest extends CategoryTest implements Multil
     testRequiredFiled(input.field1, true, "field1_value");
     testRequiredFiled(input.field2, true, null);
     testRequiredFiled(input.field3, true, null);
-    assertThat(input.field4.hasBeenSet()).isTrue();
+    assertThat(input.field4.isPresent()).isTrue();
     final Inner inner = input.field4.getValue().get();
     testRequiredFiled(inner.inner1, true, "inner1_value");
     testRequiredFiled(inner.inner2, true, null);
@@ -48,7 +48,7 @@ public class RequestFieldDeserializerTest extends CategoryTest implements Multil
   }
 
   private <T> void testRequiredFiled(RequestField<T> requestField, boolean expectedHasBeenSet, T expectedValue) {
-    assertThat(requestField.hasBeenSet()).isEqualTo(expectedHasBeenSet);
+    assertThat(requestField.isPresent()).isEqualTo(expectedHasBeenSet);
     assertThat(requestField.getValue().orElse(null)).isEqualTo(expectedValue);
   }
 
@@ -64,7 +64,7 @@ public class RequestFieldDeserializerTest extends CategoryTest implements Multil
     testRequiredFiled(newInput.field1, true, "field1_value");
     testRequiredFiled(newInput.field2, true, null);
     assertThat(newInput.field3).isNull();
-    assertThat(newInput.field4.hasBeenSet()).isTrue();
+    assertThat(newInput.field4.isPresent()).isTrue();
     final NewInner newInner = newInput.field4.getValue().get();
     testRequiredFiled(newInner.inner1, true, "inner1_value");
     testRequiredFiled(newInner.inner2, true, null);

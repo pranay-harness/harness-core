@@ -106,7 +106,7 @@ public class WinRMCredentialController {
         || existingWinRMCredential.getValue().getSettingType() != WINRM_CONNECTION_ATTRIBUTES) {
       throw new InvalidRequestException(String.format("No winRM credential exists with the id %s", id));
     }
-    if (updateInput.getName().hasBeenSet()) {
+    if (updateInput.getName().isPresent()) {
       String name = updateInput.getName().getValue().map(StringUtils::strip).orElse(null);
       if (isBlank(name)) {
         throw new InvalidRequestException("Cannot set the winRM credential name as null");
@@ -116,12 +116,12 @@ public class WinRMCredentialController {
 
     WinRmConnectionAttributes settingValue = (WinRmConnectionAttributes) existingWinRMCredential.getValue();
 
-    if (updateInput.getDomain().hasBeenSet()) {
+    if (updateInput.getDomain().isPresent()) {
       String domain = updateInput.getDomain().getValue().map(StringUtils::strip).orElse(null);
       settingValue.setDomain(domain);
     }
 
-    if (updateInput.getUserName().hasBeenSet()) {
+    if (updateInput.getUserName().isPresent()) {
       String userName = updateInput.getUserName().getValue().map(StringUtils::strip).orElse(null);
       if (isBlank(userName)) {
         throw new InvalidRequestException("Cannot set the username in wirRM Credential as null");
@@ -129,7 +129,7 @@ public class WinRMCredentialController {
       settingValue.setUsername(userName);
     }
 
-    if (updateInput.getPassword().hasBeenSet()) {
+    if (updateInput.getPassword().isPresent()) {
       String password = updateInput.getPassword().getValue().map(StringUtils::strip).orElse(null);
       if (isBlank(password)) {
         throw new InvalidRequestException("Cannot set the password in wirRM Credential as null");
@@ -137,22 +137,22 @@ public class WinRMCredentialController {
       settingValue.setPassword(password.toCharArray());
     }
 
-    if (updateInput.getUseSSL().hasBeenSet()) {
+    if (updateInput.getUseSSL().isPresent()) {
       boolean useSSL = updateInput.getUseSSL().getValue().orElse(true);
       settingValue.setUseSSL(useSSL);
     }
 
-    if (updateInput.getSkipCertCheck().hasBeenSet()) {
+    if (updateInput.getSkipCertCheck().isPresent()) {
       boolean skipCertCheck = updateInput.getSkipCertCheck().getValue().orElse(true);
       settingValue.setSkipCertChecks(skipCertCheck);
     }
 
-    if (updateInput.getPort().hasBeenSet()) {
+    if (updateInput.getPort().isPresent()) {
       Integer port = updateInput.getPort().getValue().orElse(5986);
       settingValue.setPort(port.intValue());
     }
 
-    if (updateInput.getUsageScope().hasBeenSet()) {
+    if (updateInput.getUsageScope().isPresent()) {
       QLUsageScope usageScope = updateInput.getUsageScope().getValue().orElse(null);
       existingWinRMCredential.setUsageRestrictions(
           usageScopeController.populateUsageRestrictions(usageScope, accountId));

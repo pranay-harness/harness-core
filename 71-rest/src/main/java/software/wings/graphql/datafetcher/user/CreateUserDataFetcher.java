@@ -56,7 +56,7 @@ public class CreateUserDataFetcher extends BaseMutatorDataFetcher<QLCreateUserIn
     inviteUser(qlCreateUserInput, accountId);
     List<String> userGroupIds = new LinkedList<>();
     final RequestField<List<String>> userGroupIdsFromInput = qlCreateUserInput.getUserGroupIds();
-    if (userGroupIdsFromInput != null && userGroupIdsFromInput.hasBeenSet()) {
+    if (userGroupIdsFromInput != null && userGroupIdsFromInput.isPresent()) {
       userGroupIds = getValue(qlCreateUserInput.getUserGroupIds()).orElse(Collections.emptyList());
     }
     final User savedUser = userService.getUserByEmail(qlCreateUserInput.getEmail(), accountId);
@@ -93,7 +93,7 @@ public class CreateUserDataFetcher extends BaseMutatorDataFetcher<QLCreateUserIn
   }
 
   private boolean isInitialized(RequestField<?> field) {
-    return field != null && field.hasBeenSet();
+    return field != null && field.isPresent();
   }
 
   private <T> Optional<T> getValue(RequestField<T> obj) {

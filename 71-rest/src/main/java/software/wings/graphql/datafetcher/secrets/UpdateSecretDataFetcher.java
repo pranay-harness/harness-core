@@ -30,7 +30,7 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
   }
 
   private SettingAttribute updateSSHCredentials(QLUpdateSecretInput updateSecretInput, String accountId) {
-    if (!updateSecretInput.getSshCredential().hasBeenSet()) {
+    if (!updateSecretInput.getSshCredential().isPresent()) {
       throw new InvalidRequestException(String.format(
           "No SSH credential input provided with the request with secretType %s", updateSecretInput.getSecretType()));
     }
@@ -43,7 +43,7 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
   }
 
   private SettingAttribute updateWinRMCredential(QLUpdateSecretInput updateSecretInput, String accountId) {
-    if (!updateSecretInput.getWinRMCredential().hasBeenSet()) {
+    if (!updateSecretInput.getWinRMCredential().isPresent()) {
       throw new InvalidRequestException(String.format(
           "No winRM credential input provided with the request with secretType %s", updateSecretInput.getSecretType()));
     }
@@ -56,7 +56,7 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
   }
 
   private EncryptedData updateEncryptedText(QLUpdateSecretInput updateSecretInput, String accountId) {
-    if (!updateSecretInput.getEncryptedText().hasBeenSet()) {
+    if (!updateSecretInput.getEncryptedText().isPresent()) {
       throw new InvalidRequestException(String.format(
           "No encrypted text input provided with the request with secretType %s", updateSecretInput.getSecretType()));
     }

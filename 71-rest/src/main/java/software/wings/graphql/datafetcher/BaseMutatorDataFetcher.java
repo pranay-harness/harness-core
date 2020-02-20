@@ -150,7 +150,7 @@ public abstract class BaseMutatorDataFetcher<P, R> extends BaseDataFetcher {
 
   /**
    *  Assuming jackson deserialized objects are trees and not graphs (not even DAGs)
-   *  This function marks absent the RequestField type fields as {@link RequestField#notSet()}
+   *  This function marks absent the RequestField type fields as {@link RequestField#absent()}
    *
    */
   @VisibleForTesting
@@ -160,7 +160,7 @@ public abstract class BaseMutatorDataFetcher<P, R> extends BaseDataFetcher {
     }
     if (deserObject instanceof RequestField) {
       final RequestField<?> requestField = (RequestField<?>) deserObject;
-      if (!requestField.hasBeenSet()) {
+      if (!requestField.isPresent()) {
         return;
       }
       if (requestField.getValue().isPresent()) {
@@ -179,7 +179,7 @@ public abstract class BaseMutatorDataFetcher<P, R> extends BaseDataFetcher {
             // only absent fields of type RequestField are available here. We need to mark all such fields as
             // RequestField.notInitialized()
             final String fieldName = entry.getKey();
-            deserObjectReflect.set(fieldName, RequestField.notSet());
+            deserObjectReflect.set(fieldName, RequestField.absent());
           });
 
       deserObjectFieldMap.entrySet()

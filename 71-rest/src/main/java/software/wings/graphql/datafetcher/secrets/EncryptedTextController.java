@@ -68,7 +68,7 @@ public class EncryptedTextController {
       throw new InvalidRequestException(String.format("No encrypted text exists with the id %s", encryptedTextId));
     }
     String name = exitingEncryptedData.getName();
-    if (encryptedTextUpdate.getName().hasBeenSet()) {
+    if (encryptedTextUpdate.getName().isPresent()) {
       name = encryptedTextUpdate.getName().getValue().map(StringUtils::strip).orElse(null);
       if (isBlank(name)) {
         throw new InvalidRequestException("Cannot set the value of encrypted text name as blank");
@@ -80,7 +80,7 @@ public class EncryptedTextController {
       }
     }
     String value = SECRET_MASK;
-    if (encryptedTextUpdate.getValue().hasBeenSet()) {
+    if (encryptedTextUpdate.getValue().isPresent()) {
       value = encryptedTextUpdate.getValue().getValue().orElse(null);
       if (isBlank(value)) {
         throw new InvalidRequestException("Cannot set the value of encrypted text value as blank");
@@ -92,7 +92,7 @@ public class EncryptedTextController {
     }
 
     UsageRestrictions usageRestrictions = null;
-    if (encryptedTextUpdate.getUsageScope().hasBeenSet()) {
+    if (encryptedTextUpdate.getUsageScope().isPresent()) {
       QLUsageScope usageScopeUpdate = encryptedTextUpdate.getUsageScope().getValue().orElse(null);
       usageRestrictions = usageScopeController.populateUsageRestrictions(usageScopeUpdate, accountId);
     }
