@@ -65,6 +65,7 @@ public class EventsStatsDataFetcher
   private QLEventData generateEventsData(CEEventsQueryMetaData queryData, ResultSet resultSet) throws SQLException {
     List<QLEventsDataPoint> dataPointList = new ArrayList<>();
     Map<Long, Integer> chartData = new HashMap<>();
+    Map<Long, Long> truncatedToFirstTimestampOfTheDayMap = new HashMap<>();
     while (null != resultSet && resultSet.next()) {
       QLEventsDataPointBuilder eventDataBuilder = QLEventsDataPoint.builder();
       for (CEEventsQueryMetaData.CEEventsMetaDataFields field : queryData.getFieldNames()) {
@@ -73,7 +74,9 @@ public class EventsStatsDataFetcher
             long timeStamp = resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime();
             long truncatedTimestamp = timeStamp - (timeStamp % TimeUnit.DAYS.toMillis(1));
             eventDataBuilder.time(timeStamp);
-            chartData.put(truncatedTimestamp, chartData.getOrDefault(truncatedTimestamp, 0) + 1);
+            truncatedToFirstTimestampOfTheDayMap.putIfAbsent(truncatedTimestamp, timeStamp);
+            chartData.put(truncatedToFirstTimestampOfTheDayMap.get(truncatedTimestamp),
+                chartData.getOrDefault(truncatedToFirstTimestampOfTheDayMap.get(truncatedTimestamp), 0) + 1);
             break;
           case EVENTDESCRIPTION:
             eventDataBuilder.details(resultSet.getString(field.getFieldName()));

@@ -241,6 +241,7 @@ public class BillingStatsEntityDataFetcher
           .namespace(namespace)
           .clusterType(clusterType)
           .clusterId(clusterId)
+          .label(BillingStatsDefaultKeys.LABEL)
           .totalNamespaces(totalNamespaces)
           .totalWorkloads(totalWorkloads)
           .maxCpuUtilization(maxCpuUtilization)
