@@ -111,7 +111,8 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
           continue;
         }
       }
-      if (groupByPoint.getEntityGroupBy() != QLCCMEntityGroupBy.ClusterType) {
+      if (groupByPoint.getEntityGroupBy() != QLCCMEntityGroupBy.ClusterType
+          && groupByPoint.getEntityGroupBy() != QLCCMEntityGroupBy.InstanceType) {
         modifiedGroupBy.add(groupByPoint);
         sunburstGridDataPointList.addAll(getSunburstGridData(
             accountId, aggregateFunction, new ArrayList<>(filters), modifiedGroupBy, sort, isClusterGroupBy));
@@ -322,12 +323,14 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
     Set<Pair<String, String>> pairOfNonLeafEntities = new HashSet<>();
     Set<Pair<String, String>> parentIdAndClusterTypeSet = new HashSet<>();
     Map<String, Double> childIdCostMap = new HashMap<>();
+    Map<String, String> instanceTypeMap = new HashMap<>();
 
     while (resultSet != null && resultSet.next()) {
       QLSunburstChartDataPointBuilder dataPointBuilder = QLSunburstChartDataPoint.builder();
       String parentFieldName = resultSet.getString(parentField.getFieldName());
       String chileFieldName = resultSet.getString(childField.getFieldName());
       // Add Inner two fields data into a Set for adding Data Points
+      String instanceType = getInstanceType(resultSet);
       pairOfNonLeafEntities.add(Pair.of(parentFieldName, chileFieldName));
       String clusterType = checkAndSetClusterType(resultSet, parentField);
       parentIdAndClusterTypeSet.add(Pair.of(parentFieldName, clusterType));
@@ -340,11 +343,13 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
       dataPointBuilder.parent(parentFieldName + ":" + chileFieldName);
       String uniqueId = parentId + ":" + id;
       dataPointBuilder.id(uniqueId);
+      dataPointBuilder.instanceType(instanceType);
       dataPointBuilder.metadata(sunburstGridDataPointMap.get(uniqueId));
       double value =
           resultSet.getBigDecimal(BillingDataQueryMetadata.BillingDataMetaDataFields.SUM.getFieldName()).doubleValue();
       dataPointBuilder.value(billingDataHelper.getRoundedDoubleValue(value));
       childIdCostMap.put(parentId, childIdCostMap.getOrDefault(parentId, 0.0) + value);
+      instanceTypeMap.putIfAbsent(parentId, instanceType);
       sunburstChartDataPoints.add(dataPointBuilder.build());
     }
 
@@ -360,6 +365,7 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
       dataPointBuilder.metadata(sunburstGridDataPointMap.get(id));
       dataPointBuilder.value(
           childIdCostMap.get(id) != null ? billingDataHelper.getRoundedDoubleValue(childIdCostMap.get(id)) : null);
+      dataPointBuilder.instanceType(instanceTypeMap.get(id));
       dataPointBuilder.parent(parentId);
       sunburstChartDataPoints.add(dataPointBuilder.build());
     }
@@ -379,6 +385,10 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
     }
 
     return sunburstChartDataPoints;
+  }
+
+  private String getInstanceType(ResultSet resultSet) throws SQLException {
+    return resultSet.getString(BillingDataQueryMetadata.BillingDataMetaDataFields.INSTANCETYPE.getFieldName());
   }
 
   private String checkAndSetClusterType(

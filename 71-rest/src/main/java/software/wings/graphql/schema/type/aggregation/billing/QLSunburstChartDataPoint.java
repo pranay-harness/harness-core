@@ -16,5 +16,6 @@ public class QLSunburstChartDataPoint {
   String type;
   Number value;
   String clusterType;
+  String instanceType;
   QLSunburstGridDataPoint metadata;
 }

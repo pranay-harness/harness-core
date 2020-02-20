@@ -73,6 +73,7 @@ enum CCMEntityGroupBy {
   Region
   CloudServiceName
   TaskId
+  InstanceType
   LaunchType
   WorkloadName
   WorkloadType
@@ -151,6 +152,7 @@ type SunburstChartDataPoint {
   type: String
   value: Number
   clusterType: String
+  instanceType: String
   metadata: SunburstGridDataPoint
 }
 

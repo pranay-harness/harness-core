@@ -283,6 +283,7 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getString("APPID")).thenAnswer((Answer<String>) invocation -> APP1_ID_ACCOUNT1);
     when(resultSet.getString("ENVID")).thenAnswer((Answer<String>) invocation -> ENV1_ID_APP1_ACCOUNT1);
     when(resultSet.getString("SERVICEID")).thenAnswer((Answer<String>) invocation -> SERVICE1_ID_APP1_ACCOUNT1);
+    when(resultSet.getString("INSTANCETYPE")).thenAnswer((Answer<String>) invocation -> INSTANCE_TYPE1);
     when(resultSet.next()).thenReturn(true);
 
     returnResultSet(1);
