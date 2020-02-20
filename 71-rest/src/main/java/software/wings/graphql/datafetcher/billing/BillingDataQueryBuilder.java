@@ -473,6 +473,9 @@ public class BillingDataQueryBuilder {
       case Environment:
         groupBy = schema.getEnvId();
         break;
+      case InstanceType:
+        groupBy = schema.getInstanceType();
+        break;
       case CloudServiceName:
         groupBy = schema.getCloudServiceName();
         break;
@@ -516,7 +519,7 @@ public class BillingDataQueryBuilder {
   }
 
   private boolean isValidGroupBy(List<QLCCMEntityGroupBy> groupBy) {
-    return EmptyPredicate.isNotEmpty(groupBy) && groupBy.size() <= 4;
+    return EmptyPredicate.isNotEmpty(groupBy) && groupBy.size() <= 5;
   }
 
   private List<QLBillingSortCriteria> validateAndAddSortCriteria(
