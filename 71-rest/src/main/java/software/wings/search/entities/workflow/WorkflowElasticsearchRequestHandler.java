@@ -8,9 +8,12 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import software.wings.features.AuditTrailFeature;
 import software.wings.features.api.PremiumFeature;
+import software.wings.search.SearchPermissionUtils;
 import software.wings.search.framework.AbstractElasticsearchRequestHandler;
 import software.wings.search.framework.ElasticsearchRequestHandler;
 import software.wings.search.framework.SearchResult;
+import software.wings.security.AppPermissionSummary;
+import software.wings.security.UserPermissionInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,5 +35,39 @@ public class WorkflowElasticsearchRequestHandler
       searchResults.add(workflowSearchResult);
     }
     return searchResults;
+  }
+
+  @Override
+  public List<SearchResult> filterSearchResults(List<SearchResult> searchResults) {
+    List<SearchResult> newSearchResults = new ArrayList<>();
+    UserPermissionInfo userPermissionInfo = SearchPermissionUtils.getUserPermission();
+    for (SearchResult searchResult : searchResults) {
+      WorkflowSearchResult workflowSearchResult = (WorkflowSearchResult) searchResult;
+      AppPermissionSummary appPermission =
+          userPermissionInfo.getAppPermissionMapInternal().get(workflowSearchResult.getAppId());
+      if (!checkPermission(appPermission, workflowSearchResult)) {
+        continue;
+      }
+
+      workflowSearchResult.setPipelines(SearchPermissionUtils.getAllowedEntities(
+          workflowSearchResult.getPipelines(), SearchPermissionUtils.getAllowedPiplineIds(appPermission)));
+      workflowSearchResult.setServices(SearchPermissionUtils.getAllowedEntities(
+          workflowSearchResult.getServices(), SearchPermissionUtils.getAllowedServiceIds(appPermission)));
+      if (!SearchPermissionUtils.hasAuditPermissions(userPermissionInfo)) {
+        workflowSearchResult.setAudits(new ArrayList<>());
+      }
+      if (!SearchPermissionUtils.hasDeploymentPermissions(
+              SearchPermissionUtils.getAllowedDeploymentIds(appPermission), workflowSearchResult.getId())) {
+        workflowSearchResult.setDeployments(new ArrayList<>());
+      }
+
+      newSearchResults.add(workflowSearchResult);
+    }
+    return newSearchResults;
+  }
+
+  private boolean checkPermission(AppPermissionSummary appPermission, WorkflowSearchResult workflowSearchResult) {
+    return appPermission != null
+        && SearchPermissionUtils.getAllowedWorkflowIds(appPermission).contains(workflowSearchResult.getId());
   }
 }

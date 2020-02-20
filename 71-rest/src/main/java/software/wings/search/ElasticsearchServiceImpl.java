@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -23,6 +24,7 @@ import software.wings.search.framework.SearchResults;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -39,6 +41,13 @@ public class ElasticsearchServiceImpl implements SearchService {
   private static final int GLOBAL_MAX_RESULTS_TO_RETURN_PER_ENTITY = 40;
   private static final int DEFAULT_RESULTS_TO_RETURN_PER_ENTITY = 20;
   private static final int MAX_RESULT_WINDOW = 10000;
+  public static final int MAX_NO_OF_ATTEMPTS = 20;
+
+  @Builder
+  private static class SearchInternalResponse {
+    private List<SearchResult> searchResults;
+    private boolean areResultsExhausted;
+  }
 
   @Override
   public SearchResults getSearchResults(@NotBlank String searchString, @NotBlank String accountId) {
@@ -93,21 +102,48 @@ public class ElasticsearchServiceImpl implements SearchService {
   }
 
   private int getNumberOfResultstoReturn(int offset, int numResults) {
-    return Math.min(Math.min(MAX_RESULT_WINDOW - offset, GLOBAL_MAX_RESULTS_TO_RETURN_PER_ENTITY), numResults);
+    return Math.max(
+        Math.min(Math.min(MAX_RESULT_WINDOW - offset, GLOBAL_MAX_RESULTS_TO_RETURN_PER_ENTITY), numResults), 0);
   }
 
   private List<SearchResult> fetchSearchResults(
-      SearchEntity<?> searchEntity, String searchString, String accountId, int numResults, int offset) {
-    SearchRequest searchRequest = getSearchRequest(searchEntity, searchString, accountId, numResults, offset);
+      SearchEntity<?> searchEntity, String searchString, String accountId, int numResultsToReturn, int offset) {
+    List<SearchResult> searchResults = new ArrayList<>();
+    int attempts = 0;
+    boolean areResultsExhausted = false;
+    while (attempts < MAX_NO_OF_ATTEMPTS && searchResults.size() < numResultsToReturn && !areResultsExhausted) {
+      int pageOffsetForFetch = offset + attempts * GLOBAL_MAX_RESULTS_TO_RETURN_PER_ENTITY;
+      int numberOfResultsToFetch =
+          getNumberOfResultstoReturn(pageOffsetForFetch, GLOBAL_MAX_RESULTS_TO_RETURN_PER_ENTITY);
+      if (numberOfResultsToFetch != 0) {
+        SearchInternalResponse response = fetchSearchResultsInternal(
+            searchEntity, searchString, accountId, numberOfResultsToFetch, pageOffsetForFetch);
+        areResultsExhausted = response.areResultsExhausted;
+        searchResults.addAll(response.searchResults);
+      } else {
+        areResultsExhausted = true;
+      }
+      attempts++;
+    }
+    ElasticsearchRequestHandler elasticsearchRequestHandler = searchEntity.getElasticsearchRequestHandler();
+    elasticsearchRequestHandler.processSearchResults(searchResults);
+    return searchResults;
+  }
+
+  private SearchInternalResponse fetchSearchResultsInternal(
+      SearchEntity<?> searchEntity, String searchString, String accountId, int numResultsToReturn, int offset) {
+    SearchRequest searchRequest = getSearchRequest(searchEntity, searchString, accountId, numResultsToReturn, offset);
     try {
       SearchResponse searchResponse = elasticsearchClient.search(searchRequest);
       if (searchResponse.getHits() == null) {
-        return new ArrayList<>();
+        return new SearchInternalResponse(Collections.emptyList(), true);
       }
       ElasticsearchRequestHandler elasticsearchRequestHandler = searchEntity.getElasticsearchRequestHandler();
       List<SearchResult> searchResults =
           elasticsearchRequestHandler.translateHitsToSearchResults(searchResponse.getHits(), accountId);
-      return elasticsearchRequestHandler.processSearchResults(searchResults);
+      boolean areSearchResultsExhausted = searchResults.size() < numResultsToReturn;
+      return new SearchInternalResponse(
+          elasticsearchRequestHandler.filterSearchResults(searchResults), areSearchResultsExhausted);
     } catch (IOException e) {
       throw new GeneralException("Search request failed. Could not connect to elasticsearch", e, USER);
     }

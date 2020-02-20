@@ -32,4 +32,8 @@ public abstract class AbstractElasticsearchRequestHandler implements Elasticsear
   public List<SearchResult> processSearchResults(List<SearchResult> searchResults) {
     return searchResults;
   }
+
+  public List<SearchResult> filterSearchResults(List<SearchResult> searchResults) {
+    return searchResults;
+  }
 }
