@@ -26,6 +26,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsElbListenerRuleData;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.aws.LoadBalancerType;
@@ -101,5 +102,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(ArtifactServerException.class, 7244);
     kryo.register(PcfManifestsPackage.class, 19033);
     kryo.register(ArtifactFileMetadata.class, 19034);
+    kryo.register(AwsElbListenerRuleData.class, 19035);
   }
 }

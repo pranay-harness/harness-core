@@ -2,6 +2,7 @@ package software.wings.service.impl.aws.delegate;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.task.aws.AwsElbListenerRuleData.AwsElbListenerRuleDataBuilder;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
@@ -43,6 +44,8 @@ import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersRequ
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeLoadBalancersRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeLoadBalancersResult;
+import com.amazonaws.services.elasticloadbalancingv2.model.DescribeRulesRequest;
+import com.amazonaws.services.elasticloadbalancingv2.model.DescribeRulesResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthRequest;
@@ -50,11 +53,14 @@ import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthR
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
 import com.amazonaws.services.elasticloadbalancingv2.model.ModifyListenerRequest;
+import com.amazonaws.services.elasticloadbalancingv2.model.Rule;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroupNotFoundException;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealthDescription;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsElbListener.AwsElbListenerBuilder;
+import io.harness.delegate.task.aws.AwsElbListenerRuleData;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.eraro.ErrorCode;
@@ -542,27 +548,59 @@ public class AwsElbHelperServiceDelegateImpl
     }
 
     String elbArn = result.getLoadBalancers().get(0).getLoadBalancerArn();
-
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
 
-    tracker.trackELBCall("Describe Listeners");
-    DescribeListenersResult listenerResult =
-        client.describeListeners(new DescribeListenersRequest().withLoadBalancerArn(elbArn));
-
-    if (EmptyPredicate.isEmpty(listenerResult.getListeners())) {
+    List<Listener> listeners = new ArrayList<>();
+    DescribeListenersRequest describeListenersRequest = new DescribeListenersRequest().withLoadBalancerArn(elbArn);
+    String nextMarker = null;
+    do {
+      describeListenersRequest.setMarker(nextMarker);
+      tracker.trackELBCall("Describe Listeners");
+      DescribeListenersResult describeListenersResult = client.describeListeners(describeListenersRequest);
+      if (EmptyPredicate.isNotEmpty(describeListenersResult.getListeners())) {
+        listeners.addAll(describeListenersResult.getListeners());
+      }
+      nextMarker = describeListenersResult.getNextMarker();
+    } while (nextMarker != null);
+    if (EmptyPredicate.isEmpty(listeners)) {
       return Collections.emptyList();
     }
 
-    return listenerResult.getListeners()
-        .stream()
-        .map(listener
-            -> AwsElbListener.builder()
-                   .listenerArn(listener.getListenerArn())
-                   .loadBalancerArn(elbArn)
-                   .protocol(listener.getProtocol())
-                   .port(listener.getPort())
-                   .build())
-        .collect(toList());
+    DescribeRulesRequest describeRulesRequest = new DescribeRulesRequest();
+    List<AwsElbListener> listenerDetails = new ArrayList<>();
+    for (Listener listener : listeners) {
+      AwsElbListenerBuilder builder = AwsElbListener.builder();
+      builder.listenerArn(listener.getListenerArn());
+      builder.loadBalancerArn(elbArn);
+      builder.protocol(listener.getProtocol());
+      builder.port(listener.getPort());
+      List<AwsElbListenerRuleData> rules = new ArrayList<>();
+
+      describeRulesRequest.setListenerArn(listener.getListenerArn());
+      nextMarker = null;
+      do {
+        describeRulesRequest.setMarker(nextMarker);
+        tracker.trackELBCall("Describe Rules");
+        DescribeRulesResult describeRulesResult = client.describeRules(describeRulesRequest);
+        List<Rule> currentRules = describeRulesResult.getRules();
+        if (EmptyPredicate.isNotEmpty(currentRules)) {
+          currentRules.forEach(currentRule -> {
+            AwsElbListenerRuleDataBuilder ruleDataBuilder = AwsElbListenerRuleData.builder();
+            ruleDataBuilder.ruleArn(currentRule.getRuleArn());
+            ruleDataBuilder.rulePriority(currentRule.getPriority());
+            List<Action> currentRuleActions = currentRule.getActions();
+            if (EmptyPredicate.isNotEmpty(currentRuleActions)) {
+              ruleDataBuilder.ruleTargetGroupArn(currentRuleActions.get(0).getTargetGroupArn());
+            }
+            rules.add(ruleDataBuilder.build());
+          });
+        }
+        nextMarker = describeRulesResult.getNextMarker();
+      } while (nextMarker != null);
+      builder.rules(rules);
+      listenerDetails.add(builder.build());
+    }
+    return listenerDetails;
   }
 
   @Override
