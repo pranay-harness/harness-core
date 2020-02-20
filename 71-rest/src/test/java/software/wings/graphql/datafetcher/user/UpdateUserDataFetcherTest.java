@@ -48,7 +48,7 @@ public class UpdateUserDataFetcherTest extends CategoryTest {
     final QLUpdateUserInput updateUserInput = QLUpdateUserInput.builder()
                                                   .clientMutationId("clientMutationId1")
                                                   .id("userId")
-                                                  .name(RequestField.setToNullable("newUserName"))
+                                                  .name(RequestField.ofNullable("newUserName"))
                                                   .build();
     final MutationContext mutationContext = MutationContext.builder()
                                                 .accountId("accountId")

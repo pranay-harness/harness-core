@@ -62,7 +62,7 @@ public class RequestFieldDeserializer extends StdDeserializer<RequestField<?>> i
 
   @Override
   public RequestField<?> getNullValue(DeserializationContext ctxt) {
-    return RequestField.setToNull();
+    return RequestField.ofNull();
   }
 
   @Override
@@ -70,7 +70,7 @@ public class RequestFieldDeserializer extends StdDeserializer<RequestField<?>> i
     Object refd = (valueTypeDeserializer == null)
         ? valueDeserializer.deserialize(p, ctxt)
         : valueDeserializer.deserializeWithType(p, ctxt, valueTypeDeserializer);
-    return RequestField.setToNullable(refd);
+    return RequestField.ofNullable(refd);
   }
 
   @Override

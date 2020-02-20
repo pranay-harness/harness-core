@@ -56,7 +56,7 @@ public class UpdateUserGroupDataFetcher
     QLUpdateUserGroupInput userGroupInput = parameter;
     boolean overViewUpdated = false;
     // Update name
-    if (userGroupInput.getName().hasBeenSet()) {
+    if (userGroupInput.getName().isPresent()) {
       String name = userGroupInput.getName().getValue().map(StringUtils::strip).orElse(null);
       if (isBlank(name)) {
         throw new InvalidRequestException("The name supplied in the update user group request is blank");
@@ -74,7 +74,7 @@ public class UpdateUserGroupDataFetcher
       overViewUpdated = true;
     }
     // Update Description
-    if (userGroupInput.getDescription().hasBeenSet()) {
+    if (userGroupInput.getDescription().isPresent()) {
       existingUserGroup.setDescription(userGroupInput.getDescription().getValue().orElse(null));
       overViewUpdated = true;
     }
@@ -84,7 +84,7 @@ public class UpdateUserGroupDataFetcher
     }
 
     // Update Permissions
-    if (userGroupInput.getPermissions().hasBeenSet()) {
+    if (userGroupInput.getPermissions().isPresent()) {
       userGroupPermissionValidator.validatePermission(
           userGroupInput.getPermissions().getValue().orElse(null), mutationContext.getAccountId());
       existingUserGroup.setAccountPermissions(userGroupPermissionsController.populateUserGroupAccountPermissionEntity(
@@ -95,7 +95,7 @@ public class UpdateUserGroupDataFetcher
     }
 
     // Update the Users
-    if (userGroupInput.getUserIds().hasBeenSet()) {
+    if (userGroupInput.getUserIds().isPresent()) {
       List<String> userIds = userGroupInput.getUserIds().getValue().orElse(null);
       userGroupController.validateTheUserIds(userIds, mutationContext.getAccountId());
       existingUserGroup.setMemberIds(userIds);
@@ -108,7 +108,7 @@ public class UpdateUserGroupDataFetcher
     }
 
     // Update SSOSettings
-    if (userGroupInput.getSsoSetting().hasBeenSet()) {
+    if (userGroupInput.getSsoSetting().isPresent()) {
       QLSSOSettingInput ssoProvider = userGroupInput.getSsoSetting().getValue().orElse(null);
       UserGroupSSOSettings ssoSettings = userGroupController.populateUserGroupSSOSettings(ssoProvider);
       if (ssoProvider.getLdapSettings() == null && ssoProvider.getSamlSettings() == null) {
@@ -120,7 +120,7 @@ public class UpdateUserGroupDataFetcher
     }
 
     // Update NotificationSettings
-    if (userGroupInput.getNotificationSettings().hasBeenSet()) {
+    if (userGroupInput.getNotificationSettings().isPresent()) {
       existingUserGroup.setNotificationSettings(userGroupController.populateNotificationSettingsEntity(
           userGroupInput.getNotificationSettings().getValue().orElse(null)));
       userGroupService.updateNotificationSettings(

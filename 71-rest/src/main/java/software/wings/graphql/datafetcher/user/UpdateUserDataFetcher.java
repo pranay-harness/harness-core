@@ -85,7 +85,7 @@ public class UpdateUserDataFetcher extends BaseMutatorDataFetcher<QLUpdateUserIn
   }
 
   private boolean isInitialized(RequestField<?> field) {
-    return field != null && field.hasBeenSet();
+    return field != null && field.isPresent();
   }
 
   private <T> Optional<T> getValue(RequestField<T> obj) {

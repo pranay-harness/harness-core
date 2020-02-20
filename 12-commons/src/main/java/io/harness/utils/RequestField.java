@@ -5,45 +5,45 @@ import io.harness.exception.UndefinedValueException;
 import java.util.Optional;
 
 public class RequestField<T> {
-  private static final RequestField<?> NOT_SET = new RequestField<>(null, false);
-  private static final RequestField<?> SET_TO_NULL = new RequestField<>(null, true);
+  private static final RequestField<?> ABSENT = new RequestField<>(null, false);
+  private static final RequestField<?> EMPTY = new RequestField<>(null, true);
 
   private final Optional<T> value;
-  private final boolean hasBeenSet;
+  private final boolean isPresent;
 
-  public static <T> RequestField<T> setToNullable(T value) {
+  public static <T> RequestField<T> ofNullable(T value) {
     return new RequestField<>(value, true);
   }
 
-  public static <T> RequestField<T> notSet() {
-    @SuppressWarnings("unchecked") RequestField<T> i = (RequestField<T>) NOT_SET;
+  public static <T> RequestField<T> absent() {
+    @SuppressWarnings("unchecked") RequestField<T> i = (RequestField<T>) ABSENT;
     return i;
   }
 
-  public static <T> RequestField<T> setToNull() {
-    @SuppressWarnings("unchecked") RequestField<T> i = (RequestField<T>) SET_TO_NULL;
+  public static <T> RequestField<T> ofNull() {
+    @SuppressWarnings("unchecked") RequestField<T> i = (RequestField<T>) EMPTY;
     return i;
   }
 
-  private RequestField(T value, boolean hasBeenSet) {
+  private RequestField(T value, boolean isPresent) {
     this.value = Optional.ofNullable(value);
-    this.hasBeenSet = hasBeenSet;
+    this.isPresent = isPresent;
   }
 
-  public boolean hasBeenSet() {
-    return hasBeenSet;
+  public boolean isPresent() {
+    return isPresent;
   }
 
   public Optional<T> getValue() {
-    if (hasBeenSet) {
+    if (isPresent) {
       return value;
     }
-    throw new UndefinedValueException("the input value has not been defined");
+    throw new UndefinedValueException("cannot get value of absent field");
   }
 
   @Override
   public String toString() {
     return "RequestField{"
-        + "value=" + value + ", hasBeenSet=" + hasBeenSet + '}';
+        + "value=" + value + ", isPresent=" + isPresent + '}';
   }
 }

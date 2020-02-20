@@ -44,10 +44,10 @@ public class UpdateApplicationDataFetcher
             .yamlGitConfig(existingApplication.getYamlGitConfig()); // yaml config because the way update is written, it
                                                                     // assumes this would be coming
 
-    if (qlUpdateApplicationInput.getName().hasBeenSet()) {
+    if (qlUpdateApplicationInput.getName().isPresent()) {
       applicationBuilder.name(qlUpdateApplicationInput.getName().getValue().map(StringUtils::strip).orElse(null));
     }
-    if (qlUpdateApplicationInput.getDescription().hasBeenSet()) {
+    if (qlUpdateApplicationInput.getDescription().isPresent()) {
       applicationBuilder.description(qlUpdateApplicationInput.getDescription().getValue().orElse(null));
     }
 
@@ -73,7 +73,7 @@ public class UpdateApplicationDataFetcher
 
   private void validate(QLUpdateApplicationInput parameter) {
     final RequestField<String> nameRF = parameter.getName();
-    if (nameRF.hasBeenSet()) {
+    if (nameRF.isPresent()) {
       ensureNonEmptyStringField(nameRF.getValue().orElse(null), QLUpdateApplicationInputKeys.name);
     }
   }
