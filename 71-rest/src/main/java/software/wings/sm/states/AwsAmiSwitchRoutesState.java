@@ -98,8 +98,14 @@ public class AwsAmiSwitchRoutesState extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   protected ExecutionResponse executeInternal(ExecutionContext context, boolean rollback) throws InterruptedException {
-    Activity activity = createActivity(context);
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
+    if (serviceSetupElement == null) {
+      return ExecutionResponse.builder()
+          .errorMessage("Did not find Setup context element. Skipping rollback")
+          .executionStatus(ExecutionStatus.SUCCESS)
+          .build();
+    }
+    Activity activity = createActivity(context);
     AwsAmiInfrastructureMapping infrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMappingService.get(
         activity.getAppId(), context.fetchInfraMappingId());
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
@@ -174,8 +180,8 @@ public class AwsAmiSwitchRoutesState extends State {
   }
 
   protected Activity createActivity(ExecutionContext executionContext) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
-    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    Application app = ((ExecutionContextImpl) executionContext).fetchRequiredApp();
+    Environment env = ((ExecutionContextImpl) executionContext).fetchRequiredEnvironment();
 
     ActivityBuilder activityBuilder = Activity.builder()
                                           .applicationName(app.getName())

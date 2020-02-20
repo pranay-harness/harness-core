@@ -66,9 +66,9 @@ public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
     state.setDownsizeOldAsg(true);
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
     Application application = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
-    doReturn(application).when(mockContext).getApp();
+    doReturn(application).when(mockContext).fetchRequiredApp();
     Environment environment = anEnvironment().uuid(ENV_ID).name(ENV_NAME).build();
-    doReturn(environment).when(mockContext).getEnv();
+    doReturn(environment).when(mockContext).fetchRequiredEnvironment();
     Activity activity = Activity.builder().uuid(ACTIVITY_ID).appId(APP_ID).build();
     doReturn(activity).when(mockActivityService).save(any());
     AmiServiceSetupElement serviceSetupElement = AmiServiceSetupElement.builder()
