@@ -148,6 +148,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -680,6 +681,13 @@ public class SettingsServiceImpl implements SettingsService {
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, varId);
     setInternal(settingAttribute);
     return settingAttribute;
+  }
+
+  @Override
+  @Nullable
+  public SettingAttribute getByAccount(String accountId, String varId) {
+    SettingAttribute settingAttribute = get(varId);
+    return settingAttribute.getAccountId().equals(accountId) ? settingAttribute : null;
   }
 
   private void setInternal(SettingAttribute settingAttribute) {

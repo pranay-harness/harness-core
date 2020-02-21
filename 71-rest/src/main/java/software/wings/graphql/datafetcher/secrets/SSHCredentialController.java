@@ -305,7 +305,7 @@ public class SSHCredentialController {
   }
 
   public SettingAttribute updateSSHCredential(QLSSHCredentialUpdate updateInput, String sshCredId, String accountId) {
-    SettingAttribute existingSettingAttribute = settingsService.get(sshCredId);
+    SettingAttribute existingSettingAttribute = settingsService.getByAccount(accountId, sshCredId);
     if (existingSettingAttribute == null
         || existingSettingAttribute.getValue().getSettingType() != HOST_CONNECTION_ATTRIBUTES) {
       throw new InvalidRequestException(String.format("No ssh credential exists with the id %s", sshCredId));

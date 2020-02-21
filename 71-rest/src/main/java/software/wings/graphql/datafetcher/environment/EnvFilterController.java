@@ -5,6 +5,7 @@ import static com.google.common.collect.Sets.difference;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static org.apache.commons.collections4.SetUtils.emptyIfNull;
@@ -50,11 +51,14 @@ public class EnvFilterController {
       throw new InvalidRequestException("The app filter cannot be null");
     }
     if (isEmpty(envFilter.getEnvId()) && envFilter.getFilterType() == null) {
-      throw new InvalidRequestException("No envIds or filterTypes provided in the  env filter");
+      throw new InvalidRequestException("No envId or filterType provided in the env filter");
+    }
+    if (isNotEmpty(envFilter.getEnvId()) && envFilter.getFilterType() != null) {
+      throw new InvalidRequestException("Cannot set both envId and filterType in the env filter");
     }
     if (envFilter.getEnvId() != null) {
       Environment env = environmentService.get(appId, envFilter.getEnvId());
-      if (env == null) {
+      if (env == null || !env.getAccountId().equals(accountId)) {
         throw new InvalidRequestException(String.format(
             String.format("No env exists with id %s in application with id %s", appId, envFilter.getEnvId())));
       }
