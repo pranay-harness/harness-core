@@ -1,13 +1,15 @@
 input EncryptedTextInput {
   secretManagerId: String
   name: String!
-  value: String!
+  value: String
+  secretReference: String
   usageScope: UsageScopeInput
 }
 
 input UpdateEncryptedText {
   name: String
   value: String
+  secretReference: String
   usageScope: UsageScopeInput
 }
 

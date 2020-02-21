@@ -55,7 +55,7 @@ public class WinRMCredentialController {
     }
 
     if (isBlank(winRMCredentialInput.getName())) {
-      throw new InvalidRequestException("The name of the winrm credential cannot be blank");
+      throw new InvalidRequestException("The name of the winRM credential cannot be blank");
     }
   }
 

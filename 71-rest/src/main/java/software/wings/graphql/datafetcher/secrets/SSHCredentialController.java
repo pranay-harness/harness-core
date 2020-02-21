@@ -151,6 +151,9 @@ public class SSHCredentialController {
           "No ssh authentication input provided for the SSH credential with auth scheme SSH");
     }
     String userName = sshCredential.getUserName();
+    if (isBlank(userName)) {
+      throw new InvalidRequestException("The user name provided with the request cannot be blank");
+    }
     int port = sshCredential.getPort();
     QLSSHAuthenticationMethod sshauthenticationMethod = sshCredential.getSshAuthenticationMethod();
     QLSSHCredentialType credType = sshauthenticationMethod.getSshCredentialType();

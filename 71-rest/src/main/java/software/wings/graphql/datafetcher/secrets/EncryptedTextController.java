@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.secrets;
 
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,6 +27,7 @@ import javax.validation.constraints.NotNull;
 public class EncryptedTextController {
   @Inject SecretManager secretManager;
   @Inject UsageScopeController usageScopeController;
+
   public QLEncryptedText populateEncryptedText(@NotNull EncryptedData encryptedText) {
     return QLEncryptedText.builder()
         .id(encryptedText.getUuid())
@@ -42,18 +44,23 @@ public class EncryptedTextController {
       throw new InvalidRequestException("No encrypted text input provided in the request");
     }
 
+    String secretMangerId = encryptedText.getSecretManagerId();
     String secretName = encryptedText.getName();
     if (isBlank(secretName)) {
       throw new InvalidRequestException("The name of the secret can not be blank");
     }
 
     String secretValue = encryptedText.getValue();
-    if (isBlank(secretValue)) {
-      throw new InvalidRequestException("The value of the secret cannot be blank");
+    String path = encryptedText.getSecretReference();
+    if (isNotBlank(secretValue) && isNotBlank(path)) {
+      throw new InvalidRequestException("Cannot set both value and secret reference for the encrypted text secret");
     }
 
-    return secretManager.saveSecret(accountId, encryptedText.getSecretManagerId(), encryptedText.getName(),
-        encryptedText.getValue(), null,
+    if (isBlank(path) && isBlank(secretValue)) {
+      throw new InvalidRequestException("Supply either the secret path or the secret value");
+    }
+
+    return secretManager.saveSecret(accountId, secretMangerId, secretName, secretValue, path,
         usageScopeController.populateUsageRestrictions(encryptedText.getUsageScope(), accountId));
   }
 
@@ -73,29 +80,41 @@ public class EncryptedTextController {
       if (isBlank(name)) {
         throw new InvalidRequestException("Cannot set the value of encrypted text name as blank");
       }
-
-      EncryptedData encryptedData = secretManager.getSecretByName(accountId, name);
-      if (encryptedData != null && !encryptedData.getUuid().equals(encryptedTextId)) {
-        throw new InvalidRequestException(String.format("A secret already exists with the name %s", name));
-      }
     }
-    String value = SECRET_MASK;
+
+    // Updating the secret value
+    if (encryptedTextUpdate.getValue().isPresent() && encryptedTextUpdate.getSecretReference().isPresent()) {
+      throw new InvalidRequestException("Cannot update both value and secret reference for the encrypted text secret");
+    }
+
+    String secretReference = exitingEncryptedData.getPath();
+    // If we do not want to change the value variable, then its value will be SECRET_MASK if value is already set
+    String value = secretReference == null ? SECRET_MASK : null;
+
+    // Updating the value
     if (encryptedTextUpdate.getValue().isPresent()) {
       value = encryptedTextUpdate.getValue().getValue().orElse(null);
+      secretReference = null;
       if (isBlank(value)) {
         throw new InvalidRequestException("Cannot set the value of encrypted text value as blank");
       }
-      EncryptedData existingEncryptedText = secretManager.getSecretById(accountId, encryptedTextId);
-      if (existingEncryptedText == null) {
-        throw new InvalidRequestException(String.format("No encrypted text exists with the id %s", encryptedTextId));
+    }
+
+    // Updating the path
+    if (encryptedTextUpdate.getSecretReference().isPresent()) {
+      secretReference = encryptedTextUpdate.getSecretReference().getValue().orElse(null);
+      value = null;
+      if (isBlank(secretReference)) {
+        throw new InvalidRequestException("Cannot set the value of encrypted text reference as blank");
       }
     }
 
+    // Updating the usage Restrictions
     UsageRestrictions usageRestrictions = null;
     if (encryptedTextUpdate.getUsageScope().isPresent()) {
       QLUsageScope usageScopeUpdate = encryptedTextUpdate.getUsageScope().getValue().orElse(null);
       usageRestrictions = usageScopeController.populateUsageRestrictions(usageScopeUpdate, accountId);
     }
-    secretManager.updateSecret(accountId, encryptedTextId, name, value, null, usageRestrictions);
+    secretManager.updateSecret(accountId, encryptedTextId, name, value, secretReference, usageRestrictions);
   }
 }

@@ -59,6 +59,11 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public void validateThatSecretManagerSupportsText(String accountId, String secretManagerId) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public PageResponse<SecretUsageLog> getUsageLogs(PageRequest<SecretUsageLog> pageRequest, String accountId,
       String entityId, SettingVariableTypes variableType) throws IllegalAccessException {
     throw new UnsupportedOperationException();

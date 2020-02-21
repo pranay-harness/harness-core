@@ -11,8 +11,6 @@ import static software.wings.service.intfc.security.SecretManager.IS_DEFAULT_KEY
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -186,8 +184,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
   public EncryptionType getEncryptionBySecretManagerId(String kmsId, String accountId) {
     SecretManagerConfig secretManager = wingsPersistence.get(SecretManagerConfig.class, kmsId);
     if (secretManager == null) {
-      throw new SecretManagementException(
-          ErrorCode.INVALID_ARGUMENT, "The kms Id supplied is wrong", WingsException.USER);
+      throw new SecretManagementException("The secret manager Id supplied is wrong");
     }
     return secretManager.getEncryptionType();
   }
