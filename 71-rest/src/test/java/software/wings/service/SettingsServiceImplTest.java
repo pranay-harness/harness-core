@@ -4,6 +4,7 @@ import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
@@ -242,6 +243,35 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   public void shouldGetById() {
     settingsService.get(SETTING_ID);
     verify(mockWingsPersistence).get(eq(SettingAttribute.class), eq(SETTING_ID));
+  }
+
+  /**
+   * Should get by id and validate accountId.
+   */
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void shouldGetByIdAndAccount() {
+    SettingAttribute settingAttribute =
+        aSettingAttribute().withAccountId(ACCOUNT_ID).withAppId("APP_ID").withName("SETTING_NAME").build();
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    SettingAttribute savedSettingAttribute = settingsService.getByAccount(ACCOUNT_ID, SETTING_ID);
+    assertThat(savedSettingAttribute).isNotNull();
+    assertThat(savedSettingAttribute.getAccountId()).isEqualTo(ACCOUNT_ID);
+  }
+
+  /**
+   * Should return null if the accountId is different
+   */
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void shouldReturnNullIfAccountIsDifferent() {
+    SettingAttribute settingAttribute =
+        aSettingAttribute().withAppId("APP_ID").withAccountId("RANDOM_ID").withName("SETTING_NAME").build();
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    SettingAttribute savedSettingAttribute = settingsService.getByAccount(ACCOUNT_ID, SETTING_ID);
+    assertThat(savedSettingAttribute).isNull();
   }
 
   /**

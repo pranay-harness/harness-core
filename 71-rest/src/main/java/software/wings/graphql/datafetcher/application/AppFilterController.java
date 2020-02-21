@@ -51,12 +51,15 @@ public class AppFilterController {
     if (appFilter == null) {
       throw new InvalidRequestException("The app filter cannot be null");
     }
-    if (appFilter.getAppId() == null && appFilter.getFilterType() == null) {
-      throw new InvalidRequestException("No appIds or filterType provided for in the app filter");
+    if (isEmpty(appFilter.getAppId()) && appFilter.getFilterType() == null) {
+      throw new InvalidRequestException("No appId or filterType provided in the app filter");
+    }
+    if (isNotEmpty(appFilter.getAppId()) && appFilter.getFilterType() != null) {
+      throw new InvalidRequestException("Cannot set both appId and filterType in the app filter");
     }
     if (!isBlank(appFilter.getAppId())) {
       Application app = appService.get(appFilter.getAppId());
-      if (app == null) {
+      if (app == null || !app.getAccountId().equals(accountId)) {
         throw new InvalidRequestException(format("No application exists with the id %s", appFilter.getAppId()));
       }
     }

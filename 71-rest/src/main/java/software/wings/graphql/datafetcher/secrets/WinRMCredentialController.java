@@ -65,10 +65,10 @@ public class WinRMCredentialController {
     WinRmConnectionAttributes.AuthenticationScheme authenticationScheme = NTLM;
     boolean skipCertChecks = true;
     boolean useSSL = true;
-    if (winRMCredentialInput.getSkipCertCheck() != null && winRMCredentialInput.getSkipCertCheck().booleanValue()) {
+    if (winRMCredentialInput.getSkipCertCheck() != null) {
       skipCertChecks = winRMCredentialInput.getSkipCertCheck().booleanValue();
     }
-    if (winRMCredentialInput.getUseSSL() != null && winRMCredentialInput.getUseSSL().booleanValue()) {
+    if (winRMCredentialInput.getUseSSL() != null) {
       useSSL = winRMCredentialInput.getUseSSL().booleanValue();
     }
     String domain = "";
@@ -101,7 +101,7 @@ public class WinRMCredentialController {
   }
 
   public SettingAttribute updateWinRMCredential(QLWinRMCredentialUpdate updateInput, String id, String accountId) {
-    SettingAttribute existingWinRMCredential = settingService.get(id);
+    SettingAttribute existingWinRMCredential = settingService.getByAccount(accountId, id);
     if (existingWinRMCredential == null
         || existingWinRMCredential.getValue().getSettingType() != WINRM_CONNECTION_ATTRIBUTES) {
       throw new InvalidRequestException(String.format("No winRM credential exists with the id %s", id));
