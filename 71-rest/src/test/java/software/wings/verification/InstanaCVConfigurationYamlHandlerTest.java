@@ -95,6 +95,7 @@ public class InstanaCVConfigurationYamlHandlerTest extends CategoryTest {
 
   private InstanaCVConfigurationYaml buildYaml() {
     InstanaCVConfigurationYaml yaml = InstanaCVConfigurationYaml.builder().build();
+    yaml.setName("testInstanaConfig");
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     return yaml;
@@ -110,6 +111,7 @@ public class InstanaCVConfigurationYamlHandlerTest extends CategoryTest {
 
     InstanaCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
+    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
   }
 

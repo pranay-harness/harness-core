@@ -141,6 +141,7 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
             .ec2Metrics(ec2Metrics)
             .region(region)
             .build();
+    yaml.setName("TestCloudWatchConfig");
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     return yaml;
@@ -164,6 +165,7 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
     CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml yaml =
         yamlHandler.toYaml(cvServiceConfiguration, appId);
 
+    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getLoadBalancerMetrics()).isEqualTo(loadBalancerMetrics);
     assertThat(yaml.getEcsMetrics()).isEqualTo(ecsMetrics);
@@ -188,7 +190,7 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
     changeContext.setYaml(yaml);
     CloudWatchCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
 
-    assertThat(bean.getName()).isEqualTo("TestCloudWatchConfig");
+    assertThat(bean.getName()).isEqualTo(yaml.getName());
     assertThat(bean.getAccountId()).isEqualTo(accountId);
     assertThat(bean.getServiceId()).isEqualTo(serviceId);
     assertThat(bean.getEnvId()).isEqualTo(envId);
