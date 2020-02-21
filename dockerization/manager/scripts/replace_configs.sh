@@ -458,10 +458,6 @@ if [[ "" != "$DISTRIBUTED_LOCK_IMPLEMENTATION" ]]; then
   yq write -i $CONFIG_FILE distributedLockImplementation "$DISTRIBUTED_LOCK_IMPLEMENTATION"
 fi
 
-if [[ "$REDIS_ENABLED" == "true" ]]; then
-  yq write -i $CONFIG_FILE redisConfig.enabled true
-fi
-
 if [[ "$REDIS_SENTINEL" == "true" ]]; then
   yq write -i $CONFIG_FILE redisConfig.sentinel true
 fi
@@ -481,4 +477,8 @@ if [[ "" != "$REDIS_SENTINELS" ]]; then
     yq write -i $CONFIG_FILE redisConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
     INDEX=$(expr $INDEX + 1)
   done
+fi
+
+if [[ "" != "$REDIS_ENV_NAMESPACE" ]]; then
+    yq write -i $CONFIG_FILE redisConfig.envNamespace "$REDIS_ENV_NAMESPACE"
 fi

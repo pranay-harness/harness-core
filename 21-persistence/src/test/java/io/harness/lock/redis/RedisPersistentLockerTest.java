@@ -9,14 +9,21 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.lock.AcquiredLock;
+import io.harness.redis.RedisConfig;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 
@@ -26,14 +33,20 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author rktummala on 01/07/2020
  */
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(Redisson.class)
 public class RedisPersistentLockerTest extends PersistenceTest {
   private RedisPersistentLocker redisPersistentLocker;
   private RedissonClient client;
 
   @Before
   public void setup() {
+    initMocks(this);
+    PowerMockito.mockStatic(Redisson.class);
+    RedisConfig config = mock(RedisConfig.class);
     client = mock(RedissonClient.class);
-    redisPersistentLocker = new RedisPersistentLocker(client);
+    when(Redisson.create(any())).thenReturn(client);
+    redisPersistentLocker = new RedisPersistentLocker(config);
   }
 
   @Test
@@ -62,7 +75,8 @@ public class RedisPersistentLockerTest extends PersistenceTest {
     try (AcquiredLock lock = redisPersistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
       body = true;
     } catch (RuntimeException ex) {
-      assertThat(ex.getMessage()).isEqualTo("Failed to acquire distributed lock for io.harness.lock.AcquiredLock-cba");
+      assertThat(ex.getMessage())
+          .isEqualTo("Failed to acquire distributed lock for locks:io.harness.lock.AcquiredLock-cba");
     }
 
     assertThat(body).isFalse();

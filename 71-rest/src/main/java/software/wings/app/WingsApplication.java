@@ -84,7 +84,6 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.redis.RedisConfig;
-import io.harness.redis.RedisModule;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.state.inspection.StateInspectionService;
@@ -281,7 +280,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     });
 
     modules.addAll(new MongoModule().cumulativeDependencies());
-    modules.add(new RedisModule());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()

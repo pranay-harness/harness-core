@@ -85,7 +85,6 @@ datadogConfig:
 distributedLockImplementation: MONGO
 
 redisConfig:
-  enabled: false
   sentinel: false
   masterName: "test"
   redisUrl: "redis://localhost:6379"
@@ -93,6 +92,7 @@ redisConfig:
     - "redis://redis1:26379"
     - "redis://redis2:26379"
     - "redis://redis3:26379"
+  envNamespace: ""
 
 githubConfig:
   clientId: githubClientId

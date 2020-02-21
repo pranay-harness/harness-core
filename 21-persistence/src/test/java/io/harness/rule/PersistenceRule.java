@@ -152,6 +152,10 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
 
   @Override
   public void destroy(Injector injector, List<Module> modules) throws Exception {
-    injector.getInstance(MongoPersistentLocker.class).stop();
+    try {
+      injector.getInstance(MongoPersistentLocker.class).stop();
+    } catch (Exception e) {
+      logger.info("MongoPersistentLocker was not initialized");
+    }
   }
 }
