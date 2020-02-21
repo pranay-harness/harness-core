@@ -967,7 +967,7 @@ mutation {
     assertThat(result.getErrors().size()).isEqualTo(1);
 
     assertThat(result.getErrors().get(0).getMessage())
-        .isEqualTo(GenericErrorString + "Invalid filter given in ENV permissionType");
+        .isEqualTo(GenericErrorString + "No ENV filter provided with the permission with type ENV");
   }
 
   private String createDeploymentWithWrongActionsGQL(String userGroupId) {

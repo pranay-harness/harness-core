@@ -44,6 +44,9 @@ public class AppFilterController {
     if (isEmpty(appFilter.getAppIds()) && appFilter.getFilterType() == null) {
       throw new InvalidRequestException("No appIds or filterType provided in app filter");
     }
+    if (isNotEmpty(appFilter.getAppIds()) && appFilter.getFilterType() != null) {
+      throw new InvalidRequestException("Cannot set both appIds and filterType in app filter");
+    }
     checkApplicationsExists(appFilter.getAppIds(), accountId);
   }
 

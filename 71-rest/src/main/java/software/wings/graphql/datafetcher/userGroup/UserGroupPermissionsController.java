@@ -152,14 +152,19 @@ public class UserGroupPermissionsController {
 
   private EnvFilter createEnvFilter(QLEnvPermissions envPermissions) {
     Set<String> filterTypes = new HashSet<>();
+    if (isNotEmpty(envPermissions.getEnvIds()) && isNotEmpty(envPermissions.getFilterTypes())) {
+      throw new InvalidRequestException("Cannot set both envIds and filterTypes in environment filter");
+    }
     if (isNotEmpty(envPermissions.getEnvIds())) {
       filterTypes.add(SELECTED);
     } else {
-      if (envPermissions.getFilterTypes().contains(QLEnvFilterType.PRODUCTION_ENVIRONMENTS)) {
-        filterTypes.add(PROD);
-      }
-      if (envPermissions.getFilterTypes().contains(QLEnvFilterType.NON_PRODUCTION_ENVIRONMENTS)) {
-        filterTypes.add(NON_PROD);
+      if (envPermissions.getFilterTypes() != null) {
+        if (envPermissions.getFilterTypes().contains(QLEnvFilterType.PRODUCTION_ENVIRONMENTS)) {
+          filterTypes.add(PROD);
+        }
+        if (envPermissions.getFilterTypes().contains(QLEnvFilterType.NON_PRODUCTION_ENVIRONMENTS)) {
+          filterTypes.add(NON_PROD);
+        }
       }
     }
 
@@ -167,48 +172,63 @@ public class UserGroupPermissionsController {
   }
 
   private WorkflowFilter createWorkflowFilter(QLWorkflowPermissions workflowPermissions) {
+    if (isNotEmpty(workflowPermissions.getEnvIds()) && isNotEmpty(workflowPermissions.getFilterTypes())) {
+      throw new InvalidRequestException("Cannot set both envIds and filterTypes in workflow filter");
+    }
     Set<String> filterTypes = new HashSet<>();
     if (isNotEmpty(workflowPermissions.getEnvIds())) {
       filterTypes.add(SELECTED);
     } else {
-      if (workflowPermissions.getFilterTypes().contains(QLWorkflowFilterType.PRODUCTION_WORKFLOWS)) {
-        filterTypes.add(PROD);
-      }
-      if (workflowPermissions.getFilterTypes().contains(QLWorkflowFilterType.NON_PRODUCTION_WORKFLOWS)) {
-        filterTypes.add(NON_PROD);
-      }
-      if (workflowPermissions.getFilterTypes().contains(QLWorkflowFilterType.WORKFLOW_TEMPLATES)) {
-        filterTypes.add(TEMPLATES);
+      if (workflowPermissions.getFilterTypes() != null) {
+        if (workflowPermissions.getFilterTypes().contains(QLWorkflowFilterType.PRODUCTION_WORKFLOWS)) {
+          filterTypes.add(PROD);
+        }
+        if (workflowPermissions.getFilterTypes().contains(QLWorkflowFilterType.NON_PRODUCTION_WORKFLOWS)) {
+          filterTypes.add(NON_PROD);
+        }
+        if (workflowPermissions.getFilterTypes().contains(QLWorkflowFilterType.WORKFLOW_TEMPLATES)) {
+          filterTypes.add(TEMPLATES);
+        }
       }
     }
     return new WorkflowFilter(workflowPermissions.getEnvIds(), filterTypes);
   }
 
   private Filter createDeploymentFilter(QLDeploymentPermissions deploymentPermissions) {
+    if (isNotEmpty(deploymentPermissions.getEnvIds()) && isNotEmpty(deploymentPermissions.getFilterTypes())) {
+      throw new InvalidRequestException("Cannot set both envIds and filterTypes in deployment filter");
+    }
     Set<String> filterTypes = new HashSet<>();
     if (isNotEmpty(deploymentPermissions.getEnvIds())) {
       filterTypes.add(SELECTED);
     } else {
-      if (deploymentPermissions.getFilterTypes().contains(QLDeploymentFilterType.PRODUCTION_ENVIRONMENTS)) {
-        filterTypes.add(PROD);
-      }
-      if (deploymentPermissions.getFilterTypes().contains(QLDeploymentFilterType.NON_PRODUCTION_ENVIRONMENTS)) {
-        filterTypes.add(NON_PROD);
+      if (deploymentPermissions.getFilterTypes() != null) {
+        if (deploymentPermissions.getFilterTypes().contains(QLDeploymentFilterType.PRODUCTION_ENVIRONMENTS)) {
+          filterTypes.add(PROD);
+        }
+        if (deploymentPermissions.getFilterTypes().contains(QLDeploymentFilterType.NON_PRODUCTION_ENVIRONMENTS)) {
+          filterTypes.add(NON_PROD);
+        }
       }
     }
     return WorkflowFilter.builder().ids(deploymentPermissions.getEnvIds()).filterTypes(filterTypes).build();
   }
 
   private Filter createPipelineFilter(QLPipelinePermissions pipelinePermissions) {
+    if (isNotEmpty(pipelinePermissions.getEnvIds()) && isNotEmpty(pipelinePermissions.getFilterTypes())) {
+      throw new InvalidRequestException("Cannot set both envIds and filterTypes in environment filter");
+    }
     Set<String> filterTypes = new HashSet<>();
     if (isNotEmpty(pipelinePermissions.getEnvIds())) {
       filterTypes.add(SELECTED);
     } else {
-      if (pipelinePermissions.getFilterTypes().contains(QLPipelineFilterType.PRODUCTION_PIPELINES)) {
-        filterTypes.add(PROD);
-      }
-      if (pipelinePermissions.getFilterTypes().contains(QLPipelineFilterType.NON_PRODUCTION_PIPELINES)) {
-        filterTypes.add(NON_PROD);
+      if (pipelinePermissions.getFilterTypes() != null) {
+        if (pipelinePermissions.getFilterTypes().contains(QLPipelineFilterType.PRODUCTION_PIPELINES)) {
+          filterTypes.add(PROD);
+        }
+        if (pipelinePermissions.getFilterTypes().contains(QLPipelineFilterType.NON_PRODUCTION_PIPELINES)) {
+          filterTypes.add(NON_PROD);
+        }
       }
     }
     return WorkflowFilter.builder().ids(pipelinePermissions.getEnvIds()).filterTypes(filterTypes).build();
