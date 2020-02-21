@@ -48,10 +48,10 @@ public class CommandHelper {
                 -> CommandUnit.builder().name(serviceCommand.getName()).type(CommandUnitType.COMMAND).build())
             .collect(toList());
 
-    return getCommandCategories(commands);
+    return prepareCommandCategoriesFromCommands(commands);
   }
 
-  public static List<CommandCategory> getCommandCategories(List<CommandUnit> commands) {
+  public static List<CommandCategory> prepareCommandCategoriesFromCommands(List<CommandUnit> commands) {
     List<CommandCategory> categories = new ArrayList<>();
     List<CommandUnit> scripts = new ArrayList<>();
     List<CommandUnit> copyUnits = new ArrayList<>();
