@@ -104,7 +104,7 @@ public abstract class AbstractTemplateProcessor {
             templateService.fetchTemplateIdFromUri(GLOBAL_ACCOUNT_ID, referencedTemplateUri));
         if (!LATEST_TAG.equals(referencedTemplateVersion)) {
           if (referencedTemplateVersion != null) {
-            template.setReferencedTemplateVersion(Long.parseLong(referencedTemplateVersion));
+            template.setReferencedTemplateVersion(Long.valueOf(referencedTemplateVersion));
           }
         }
       }

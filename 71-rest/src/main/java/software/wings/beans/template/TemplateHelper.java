@@ -287,7 +287,7 @@ public class TemplateHelper {
                                                                 .build())
                                                      .collect(toList());
 
-    return CommandHelper.getCommandCategories(commands);
+    return CommandHelper.prepareCommandCategoriesFromCommands(commands);
   }
 
   public static Set<String> addUserKeyWords(Set<String> keywords, Set<String> generatedKeywords) {

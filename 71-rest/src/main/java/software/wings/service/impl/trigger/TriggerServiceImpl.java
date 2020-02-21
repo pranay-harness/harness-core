@@ -964,7 +964,9 @@ public class TriggerServiceImpl implements TriggerService {
     if (isEmpty(artifactNeededServiceIds) && isNotEmpty(collectedArtifactServiceIds)) {
       WorkflowType workflowType = trigger.getWorkflowType() == null ? PIPELINE : trigger.getWorkflowType();
       StringBuilder msg = new StringBuilder(128);
-      msg.append("Trigger [" + trigger.getName() + "] rejected. Reason: ")
+      msg.append("Trigger [")
+          .append(trigger.getName())
+          .append("] rejected. Reason: ")
           .append(PIPELINE == workflowType ? "Pipeline" : "Workflow")
           .append(" [")
           .append(trigger.fetchWorkflowOrPipelineName())
