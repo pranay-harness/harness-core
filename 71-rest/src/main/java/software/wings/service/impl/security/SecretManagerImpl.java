@@ -1421,9 +1421,6 @@ public class SecretManagerImpl implements SecretManager {
         encryptionType = getEncryptionBySecretManagerId(kmsId, accountId);
       }
       validateSecretPath(encryptionType, path);
-      if (value != null) {
-        validateThatSecretManagerSupportsText(accountId, kmsId);
-      }
       EncryptedData encrypted = EncryptedData.builder()
                                     .name(name)
                                     .path(path)
@@ -1458,9 +1455,6 @@ public class SecretManagerImpl implements SecretManager {
       // Not switching to the current default secret manager.
       encryptionType = savedData.getEncryptionType();
       validateSecretPath(encryptionType, path);
-      if (value != null) {
-        validateThatSecretManagerSupportsText(accountId, kmsId);
-      }
 
       // savedData will be updated and saved again as a part of update, so need this oldEntity
       EncryptedData oldEntity = KryoUtils.clone(savedData);
