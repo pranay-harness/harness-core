@@ -94,6 +94,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
 
   private DynaTraceCVConfigurationYaml buildYaml() {
     DynaTraceCVConfigurationYaml yaml = DynaTraceCVConfigurationYaml.builder().build();
+    yaml.setName("TestDynaTraceConfig");
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     return yaml;
@@ -109,6 +110,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
 
     DynaTraceCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
+    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
   }
 
@@ -121,6 +123,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
 
     DynaTraceCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
+    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
   }
 

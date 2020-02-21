@@ -94,6 +94,7 @@ public class SplunkCVConfigurationYamlHandlerTest extends CategoryTest {
   private SplunkCVConfigurationYaml buildYaml() {
     SplunkCVConfigurationYaml yaml = new SplunkCVConfigurationYaml();
     yaml.setType(StateType.SPLUNKV2.name());
+    yaml.setName("TestAppDConfig");
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     yaml.setQuery("query1");
@@ -119,6 +120,7 @@ public class SplunkCVConfigurationYamlHandlerTest extends CategoryTest {
 
     SplunkCVConfigurationYaml yaml = (SplunkCVConfigurationYaml) yamlHandler.toYaml(cvServiceConfiguration, appId);
 
+    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getQuery()).isEqualTo(cvServiceConfiguration.getQuery());
     assertThat(yaml.getBaselineStartMinute()).isEqualTo(cvServiceConfiguration.getBaselineStartMinute());

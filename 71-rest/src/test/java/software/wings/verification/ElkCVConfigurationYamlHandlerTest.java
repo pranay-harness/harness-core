@@ -99,6 +99,7 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
   private ElkCVConfigurationYaml buildYaml() {
     ElkCVConfigurationYaml yaml = new ElkCVConfigurationYaml();
     yaml.setType(StateType.ELK.name());
+    yaml.setName("TestAppDConfig");
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     yaml.setQuery("query1");
@@ -132,6 +133,7 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
 
     ElkCVConfigurationYaml yaml = (ElkCVConfigurationYaml) yamlHandler.toYaml(cvServiceConfiguration, appId);
 
+    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getQuery()).isEqualTo(cvServiceConfiguration.getQuery());
     assertThat(yaml.getBaselineStartMinute()).isEqualTo(cvServiceConfiguration.getBaselineStartMinute());

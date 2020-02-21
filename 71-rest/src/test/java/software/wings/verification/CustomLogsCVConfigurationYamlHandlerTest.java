@@ -60,6 +60,7 @@ public class CustomLogsCVConfigurationYamlHandlerTest extends CVConfigurationYam
     cvServiceConfiguration.setBaselineEndMinute(30);
     CustomLogsCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
+    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getQuery()).isEqualTo(cvServiceConfiguration.getQuery());
     assertThat(yaml.getBaselineStartMinute()).isEqualTo(cvServiceConfiguration.getBaselineStartMinute());

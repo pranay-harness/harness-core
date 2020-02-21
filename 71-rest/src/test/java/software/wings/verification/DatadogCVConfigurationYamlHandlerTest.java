@@ -64,6 +64,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
 
     DatadogCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
+    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getDockerMetrics().keySet().iterator().next())
         .isEqualTo(cvServiceConfiguration.getDockerMetrics().keySet().iterator().next());
