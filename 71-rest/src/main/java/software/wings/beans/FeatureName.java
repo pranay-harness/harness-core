@@ -77,7 +77,8 @@ public enum FeatureName {
   CUSTOM_APM_24_X_7_CV_TASK,
   SERVICE_GUARD_ACTIVITY_LOGS,
   OVERRIDE_TIMEOUTS,
-  VANITY_URL;
+  VANITY_URL,
+  GIT_SYNC_REFACTOR;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
