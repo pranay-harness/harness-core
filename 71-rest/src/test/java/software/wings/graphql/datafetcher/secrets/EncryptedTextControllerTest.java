@@ -1,0 +1,96 @@
+package software.wings.graphql.datafetcher.secrets;
+
+import static io.harness.rule.OwnerRule.DEEPAK;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.doNothing;
+
+import com.google.inject.Inject;
+
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+import io.harness.utils.RequestField;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import software.wings.WingsBaseTest;
+import software.wings.graphql.schema.mutation.secrets.input.QLCreateSecretInput;
+import software.wings.graphql.schema.type.secrets.QLEncryptedTextInput;
+import software.wings.graphql.schema.type.secrets.QLEncryptedTextUpdate;
+import software.wings.graphql.schema.type.secrets.QLSecretType;
+import software.wings.security.encryption.EncryptedData;
+import software.wings.service.intfc.security.SecretManager;
+
+/*
+ *  This test only checks the creation/updation of the secret reference part
+ *  we have checked the CRUD of value part in graphql tests.
+ */
+public class EncryptedTextControllerTest extends WingsBaseTest {
+  @Inject @InjectMocks EncryptedTextController encryptedTextController;
+  @Mock SecretManager secretManager;
+  private String accountId = "accountId";
+  private String secretManagerId = "secretId";
+  private String secretReference = "secretReference";
+  private String secretName = "testSecret";
+  private String secretId = "secretId";
+  private String newSecretReference = "newSecretReference";
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testCreatingEncryptedTextWithReference() {
+    doNothing().when(secretManager).validateThatSecretManagerSupportsText(accountId, secretManagerId);
+    QLEncryptedTextInput encryptedText = QLEncryptedTextInput.builder()
+                                             .name(secretName)
+                                             .secretManagerId(secretManagerId)
+                                             .secretReference(secretReference)
+                                             .build();
+    QLCreateSecretInput createSecretInput =
+        QLCreateSecretInput.builder().secretType(QLSecretType.ENCRYPTED_TEXT).encryptedText(encryptedText).build();
+    encryptedTextController.createEncryptedText(createSecretInput, accountId);
+    verify(secretManager, times(1))
+        .saveSecret(eq(accountId), eq(secretManagerId), eq(secretName), eq(null), eq(secretReference), eq(null));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testUpdatingEncryptedTextWithReference() {
+    // Case when we had value earlier
+    EncryptedData existingSecretValue =
+        EncryptedData.builder().encryptedValue("value".toCharArray()).name(secretName).build();
+    doNothing().when(secretManager).validateThatSecretManagerSupportsText(accountId, secretManagerId);
+    when(secretManager.getSecretById(accountId, secretId)).thenReturn(existingSecretValue);
+    QLEncryptedTextUpdate createSecretInput = QLEncryptedTextUpdate.builder()
+                                                  .name(RequestField.absent())
+                                                  .value(RequestField.absent())
+                                                  .usageScope(RequestField.absent())
+                                                  .secretReference(RequestField.ofNullable(secretReference))
+                                                  .build();
+    encryptedTextController.updateEncryptedText(createSecretInput, secretId, accountId);
+    verify(secretManager, times(1))
+        .updateSecret(eq(accountId), eq(secretManagerId), eq(secretName), eq(null), eq(secretReference), eq(null));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testUpdatingReferenceWithReference() {
+    // Case when we had reference earlier
+    EncryptedData existingSecretValue = EncryptedData.builder().path(secretReference).name(secretName).build();
+    doNothing().when(secretManager).validateThatSecretManagerSupportsText(accountId, secretManagerId);
+    when(secretManager.getSecretById(accountId, secretId)).thenReturn(existingSecretValue);
+    QLEncryptedTextUpdate createSecretInput = QLEncryptedTextUpdate.builder()
+                                                  .name(RequestField.absent())
+                                                  .value(RequestField.absent())
+                                                  .usageScope(RequestField.absent())
+                                                  .secretReference(RequestField.ofNullable(newSecretReference))
+                                                  .build();
+    encryptedTextController.updateEncryptedText(createSecretInput, secretId, accountId);
+    verify(secretManager, times(1))
+        .updateSecret(eq(accountId), eq(secretManagerId), eq(secretName), eq(null), eq(newSecretReference), eq(null));
+  }
+}

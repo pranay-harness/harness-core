@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -31,20 +32,24 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.QueryImpl;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.CyberArkConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
@@ -94,6 +99,8 @@ public class SecretManagerTest extends CategoryTest {
   @Mock private GlobalEncryptDecryptClient globalEncryptDecryptClient;
   @Inject @InjectMocks private SecretManagerImpl secretManager;
 
+  @Rule public ExpectedException expectedEx = ExpectedException.none();
+
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
@@ -126,6 +133,18 @@ public class SecretManagerTest extends CategoryTest {
                                     .build();
     secretManager.resetUnchangedEncryptedFields(awsConfig, maskedAwsConfig);
     assertThat(maskedAwsConfig.getSecretKey()).isEqualTo(SECRET_KEY);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testValidateThatSecretManagerSupportsText() {
+    expectedEx.expect(InvalidRequestException.class);
+    expectedEx.expectMessage(
+        "Secret values is not supported for the secretManager with id secretManagerId, type CYBERARK");
+    CyberArkConfig cyberArkSecret = CyberArkConfig.builder().name("cyberArk").build();
+    when(secretManagerConfigService.getSecretManager("accountId", "secretManagerId")).thenReturn(cyberArkSecret);
+    secretManager.validateThatSecretManagerSupportsText("accountId", "secretManagerId");
   }
 
   @Test

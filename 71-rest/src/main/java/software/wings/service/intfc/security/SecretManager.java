@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by rsingh on 10/30/17.
@@ -97,6 +98,8 @@ public interface SecretManager extends OwnedByAccount {
   List<String> importSecrets(String accountId, List<SecretText> secretTexts);
 
   List<String> importSecretsViaFile(String accountId, InputStream uploadStream);
+
+  void validateThatSecretManagerSupportsText(String accountId, @NotNull String secretManagerId);
 
   boolean updateSecret(
       String accountId, String uuId, String name, String value, String path, UsageRestrictions usageRestrictions);
