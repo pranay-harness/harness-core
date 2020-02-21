@@ -105,6 +105,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CopyConfigCommandUnit;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
@@ -696,7 +697,7 @@ public class CommandStateTest extends WingsBaseTest {
       CommandState commandState, CommandStateExecutionData commandStateExecutionData, Command command) {
     Artifact artifact = null;
     commandState.renderCommandString(command, context, commandStateExecutionData, artifact);
-    verify(context, times(1))
+    verify(context, times(2))
         .renderExpression(
             "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
     verify(context, times(1))
@@ -748,9 +749,13 @@ public class CommandStateTest extends WingsBaseTest {
 
   @NotNull
   private Command createCommand() {
+    CopyConfigCommandUnit copyConfigCommandUnit = new CopyConfigCommandUnit();
+    copyConfigCommandUnit.setDestinationParentPath("${var1}");
+
     return aCommand()
         .addCommandUnits(anExecCommandUnit().withCommandString("${var1}").build())
         .addCommandUnits(aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
+        .addCommandUnits(copyConfigCommandUnit)
         .build();
   }
 
@@ -758,6 +763,9 @@ public class CommandStateTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldRenderReferencedCommandStringWithVariables() {
+    CopyConfigCommandUnit copyConfigCommandUnit = new CopyConfigCommandUnit();
+    copyConfigCommandUnit.setDestinationParentPath("${var1}");
+
     CommandState commandState = new CommandState("test");
     on(commandState).set("templateUtils", templateUtils);
     Map<String, Object> stateVariables = new HashMap<>();
@@ -774,7 +782,31 @@ public class CommandStateTest extends WingsBaseTest {
                                  .withReferenceId("Start")
                                  .addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build())
                                  .build())
+            .addCommandUnits(copyConfigCommandUnit)
             .build();
     testRenderCommandString(commandState, commandStateExecutionData, command);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldRenderCommandStringWithoutArtifact() {
+    CommandState commandState = new CommandState("test");
+    on(commandState).set("templateUtils", templateUtils);
+    CommandStateExecutionData commandStateExecutionData =
+        CommandStateExecutionData.Builder.aCommandStateExecutionData().build();
+    final Command command = createCommand();
+    testRenderCommandStringWithoutArtifact(commandState, commandStateExecutionData, command);
+  }
+
+  private void testRenderCommandStringWithoutArtifact(
+      CommandState commandState, CommandStateExecutionData commandStateExecutionData, Command command) {
+    commandState.renderCommandString(command, context, commandStateExecutionData);
+    verify(context, times(2))
+        .renderExpression(
+            "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+    verify(context, times(1))
+        .renderExpression(
+            "${var2}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
   }
 }

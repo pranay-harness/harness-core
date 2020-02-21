@@ -69,6 +69,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
+import software.wings.beans.command.CopyConfigCommandUnit;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitPowerShellCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
@@ -1017,6 +1018,18 @@ public class CommandState extends State {
         }
       }
 
+      if (commandUnit instanceof CopyConfigCommandUnit) {
+        CopyConfigCommandUnit copyConfigCommandUnit = (CopyConfigCommandUnit) commandUnit;
+        if (isNotEmpty(copyConfigCommandUnit.getDestinationParentPath())) {
+          copyConfigCommandUnit.setDestinationParentPath(
+              context.renderExpression(copyConfigCommandUnit.getDestinationParentPath(),
+                  StateExecutionContext.builder()
+                      .stateExecutionData(commandStateExecutionData)
+                      .artifact(artifact)
+                      .build()));
+        }
+      }
+
       if (!(commandUnit instanceof ExecCommandUnit)) {
         continue;
       }
@@ -1067,6 +1080,19 @@ public class CommandState extends State {
           }
           scpCommandUnit.setDestinationDirectoryPath(context.renderExpression(
               scpCommandUnit.getDestinationDirectoryPath(), stateExecutionContextBuilder.build()));
+        }
+      }
+
+      if (commandUnit instanceof CopyConfigCommandUnit) {
+        CopyConfigCommandUnit copyConfigCommandUnit = (CopyConfigCommandUnit) commandUnit;
+        if (isNotEmpty(copyConfigCommandUnit.getDestinationParentPath())) {
+          StateExecutionContextBuilder stateExecutionContextBuilder =
+              StateExecutionContext.builder().stateExecutionData(commandStateExecutionData);
+          if (artifactFileName != null) {
+            stateExecutionContextBuilder.artifactFileName(artifactFileName);
+          }
+          copyConfigCommandUnit.setDestinationParentPath(context.renderExpression(
+              copyConfigCommandUnit.getDestinationParentPath(), stateExecutionContextBuilder.build()));
         }
       }
 
