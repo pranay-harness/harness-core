@@ -60,6 +60,10 @@ public class EncryptedTextController {
       throw new InvalidRequestException("Supply either the secret path or the secret value");
     }
 
+    if (secretValue != null) {
+      secretManager.validateThatSecretManagerSupportsText(accountId, secretMangerId);
+    }
+
     return secretManager.saveSecret(accountId, secretMangerId, secretName, secretValue, path,
         usageScopeController.populateUsageRestrictions(encryptedText.getUsageScope(), accountId));
   }
@@ -93,6 +97,7 @@ public class EncryptedTextController {
 
     // Updating the value
     if (encryptedTextUpdate.getValue().isPresent()) {
+      secretManager.validateThatSecretManagerSupportsText(accountId, exitingEncryptedData.getKmsId());
       value = encryptedTextUpdate.getValue().getValue().orElse(null);
       secretReference = null;
       if (isBlank(value)) {
