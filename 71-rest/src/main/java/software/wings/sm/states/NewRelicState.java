@@ -281,7 +281,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     }
 
     return NewRelicDataCollectionInfoV2.builder()
-        .connectorId(analysisServerConfigId)
+        .connectorId(finalServerConfigId)
         .workflowExecutionId(context.getWorkflowExecutionId())
         .stateExecutionId(context.getStateExecutionInstanceId())
         .workflowId(context.getWorkflowId())
@@ -320,15 +320,12 @@ public class NewRelicState extends AbstractMetricAnalysisState {
 
   public static Double getNormalizedErrorMetric(String metricName, NewRelicMetricDataRecord metricDataRecord) {
     if (metricDataRecord != null) {
+      Map<String, Double> values = metricDataRecord.getValues();
       if (metricName.equals(NewRelicMetricValueDefinition.ERROR)
-          && metricDataRecord.getValues().containsKey(NewRelicMetricValueDefinition.ERROR)
-          && metricDataRecord.getValues().containsKey(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE)) {
-        double errorCount = metricDataRecord.getValues() != null
-            ? metricDataRecord.getValues().get(NewRelicMetricValueDefinition.ERROR)
-            : 0;
-        double callsCount = metricDataRecord.getValues() != null
-            ? metricDataRecord.getValues().get(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE)
-            : 0;
+          && values.containsKey(NewRelicMetricValueDefinition.ERROR)
+          && values.containsKey(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE)) {
+        double errorCount = values.get(NewRelicMetricValueDefinition.ERROR);
+        double callsCount = values.get(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE);
 
         if (callsCount != 0.0) {
           DecimalFormat twoDForm = new DecimalFormat("#.00");
@@ -337,7 +334,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
           return 0.0;
         }
       }
-      return metricDataRecord.getValues().get(metricName);
+      return values.get(metricName);
     }
     return null;
   }

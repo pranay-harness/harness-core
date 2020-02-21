@@ -73,7 +73,7 @@ import java.util.UUID;
 /**
  * Created by rsingh on 10/9/17.
  */
-public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
+public class ElkAnalysisStateTest extends APMStateVerificationTestBase {
   @Mock private ElkAnalysisService elkAnalysisService;
   private ElkAnalysisState elkAnalysisState;
   @Mock private Logger activityLogger;
