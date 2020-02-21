@@ -38,7 +38,7 @@ enum FilterType {
 
 input AppFilterInput {
   filterType: FilterType
-  appIds: [String]
+  appIds: [String!]
 }
 
 type AppFilter {
@@ -48,7 +48,7 @@ type AppFilter {
 
 input ServicePermissionFilterInput {
   filterType: FilterType
-  serviceIds: [String]
+  serviceIds: [String!]
 }
 
 type ServicePermissionFilter {
@@ -68,7 +68,7 @@ type EnvPermissionFilter {
 
 input EnvPermissionFilterInput {
   filterTypes: [EnvFilterType]
-  envIds: [String]
+  envIds: [String!]
 }
 
 enum WorkflowPermissionFilterType {
@@ -84,7 +84,7 @@ type WorkflowPermissionFilter {
 
 input WorkflowPermissionFilterInput {
   filterTypes: [WorkflowPermissionFilterType]
-  envIds: [String]
+  envIds: [String!]
 }
 
 enum DeploymentPermissionFilterType {
@@ -94,7 +94,7 @@ enum DeploymentPermissionFilterType {
 
 input DeploymentPermissionFilterInput {
   filterTypes: [DeploymentPermissionFilterType]
-  envIds: [String]
+  envIds: [String!]
 }
 
 type DeploymentPermissionFilter {
@@ -109,7 +109,7 @@ enum PipelinePermissionFilterType {
 
 input PipelinePermissionFilterInput {
   filterTypes: [PipelinePermissionFilterType]
-  envIds: [String]
+  envIds: [String!]
 }
 
 type PipelinePermissionFilter {
@@ -119,7 +119,7 @@ type PipelinePermissionFilter {
 
 input ProvisionerPermissionFilterInput {
   filterType: FilterType
-  provisionerIds: [String]
+  provisionerIds: [String!]
 }
 
 type ProvisionerPermissionFilter {

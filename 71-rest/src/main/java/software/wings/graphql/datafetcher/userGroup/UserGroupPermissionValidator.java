@@ -146,7 +146,7 @@ public class UserGroupPermissionValidator {
         return;
       case SERVICE:
         if (appPermission.getServices() != null) {
-          if (appPermission.getServices().getServiceIds() != null
+          if (isNotEmpty(appPermission.getServices().getServiceIds())
               || appPermission.getServices().getFilterType() != null) {
             return;
           }
@@ -154,39 +154,39 @@ public class UserGroupPermissionValidator {
         break;
       case ENV:
         if (appPermission.getEnvironments() != null) {
-          if (appPermission.getEnvironments().getEnvIds() != null
-              || appPermission.getEnvironments().getFilterTypes() != null) {
+          if (isNotEmpty(appPermission.getEnvironments().getEnvIds())
+              || isNotEmpty(appPermission.getEnvironments().getFilterTypes())) {
             return;
           }
         }
         break;
       case WORKFLOW:
         if (appPermission.getWorkflows() != null) {
-          if (appPermission.getWorkflows().getEnvIds() != null
-              || appPermission.getWorkflows().getFilterTypes() != null) {
+          if (isNotEmpty(appPermission.getWorkflows().getEnvIds())
+              || isNotEmpty(appPermission.getWorkflows().getFilterTypes())) {
             return;
           }
         }
         break;
       case PIPELINE:
         if (appPermission.getPipelines() != null) {
-          if (appPermission.getPipelines().getEnvIds() != null
-              || appPermission.getPipelines().getFilterTypes() != null) {
+          if (isNotEmpty(appPermission.getPipelines().getEnvIds())
+              || isNotEmpty(appPermission.getPipelines().getFilterTypes())) {
             return;
           }
         }
         break;
       case DEPLOYMENT:
         if (appPermission.getDeployments() != null) {
-          if (appPermission.getDeployments().getEnvIds() != null
-              || appPermission.getDeployments().getFilterTypes() != null) {
+          if (isNotEmpty(appPermission.getDeployments().getEnvIds())
+              || isNotEmpty(appPermission.getDeployments().getFilterTypes())) {
             return;
           }
         }
         break;
       case PROVISIONER:
         if (appPermission.getProvisioners() != null) {
-          if (appPermission.getProvisioners().getProvisionerIds() != null
+          if (isNotEmpty(appPermission.getProvisioners().getProvisionerIds())
               || appPermission.getProvisioners().getFilterType() != null) {
             return;
           }
@@ -195,8 +195,8 @@ public class UserGroupPermissionValidator {
       default:
         throw new InvalidRequestException("Invalid PermissionType Given by the user");
     }
-    throw new InvalidRequestException(
-        String.format("Invalid filter given in %s permissionType", appPermission.getPermissionType().getStringValue()));
+    throw new InvalidRequestException(String.format("No %s filter provided with the permission with type %s",
+        appPermission.getPermissionType(), appPermission.getPermissionType().getStringValue()));
   }
 
   private void checkWhetherPermissionIsValid(QLAppPermissions appPermission, String accountId) {
