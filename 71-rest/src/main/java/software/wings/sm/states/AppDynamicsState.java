@@ -460,12 +460,11 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
   public static Double getNormalizedValue(String metricName, NewRelicMetricDataRecord metricDataRecord) {
     if (metricDataRecord != null) {
-      if (metricDataRecord.getValues().containsKey(AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName())
-          && AppdynamicsTimeSeries.getErrorMetrics().contains(metricName)) {
-        double errorCount = metricDataRecord.getValues() != null ? metricDataRecord.getValues().get(metricName) : 0;
-        double callsCount = metricDataRecord.getValues() != null
-            ? metricDataRecord.getValues().get(AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName())
-            : 0;
+      Map<String, Double> values = metricDataRecord.getValues();
+      if (values.containsKey(AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName())
+          && AppdynamicsTimeSeries.getErrorMetrics().contains(metricName) && values.containsKey(metricName)) {
+        double errorCount = values.get(metricName);
+        double callsCount = values.get(AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName());
 
         if (callsCount != 0.0) {
           DecimalFormat twoDForm = new DecimalFormat("#.00");
