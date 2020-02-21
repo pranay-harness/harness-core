@@ -18,12 +18,14 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
+import software.wings.service.intfc.SettingsService;
 
 @Singleton
 @Slf4j
 public class QLBillingStatsHelper {
   @Inject WingsPersistence wingsPersistence;
   @Inject ClusterRecordService clusterRecordService;
+  @Inject SettingsService settingsService;
 
   public String getEntityName(BillingDataMetaDataFields field, String entityId) {
     switch (field) {
@@ -99,7 +101,12 @@ public class QLBillingStatsHelper {
           return ecsCluster.getClusterName();
         } else if (cluster.getClusterType().equals(DIRECT_KUBERNETES)) {
           DirectKubernetesCluster kubernetesCluster = (DirectKubernetesCluster) cluster;
-          return kubernetesCluster.getClusterName();
+          String clusterName = kubernetesCluster.getClusterName();
+          if (null == clusterName || clusterName.equals("")) {
+            SettingAttribute settingAttribute = settingsService.get(kubernetesCluster.getCloudProviderId());
+            clusterName = settingAttribute.getName();
+          }
+          return clusterName;
         } else {
           return entityId;
         }
