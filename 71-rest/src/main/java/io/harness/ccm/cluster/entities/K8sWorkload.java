@@ -19,8 +19,13 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.PostLoad;
+import org.mongodb.morphia.annotations.PrePersist;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -47,4 +52,32 @@ public class K8sWorkload implements PersistentEntity, UuidAware, CreatedAtAware,
   @NotEmpty String uid;
   @NotEmpty String kind;
   Map<String, String> labels;
+
+  // Mongo has problems for values having dot/period ('.') character. We replace dot with tilde
+  // which is not an allowed k8s label character.
+  @PrePersist
+  void prePersist() {
+    this.labels = Optional.ofNullable(labels)
+                      .orElse(Collections.emptyMap())
+                      .entrySet()
+                      .stream()
+                      .collect(Collectors.toMap(e -> encode(e.getKey()), e -> encode(e.getValue())));
+  }
+
+  @PostLoad
+  void postLoad() {
+    this.labels = Optional.ofNullable(labels)
+                      .orElse(Collections.emptyMap())
+                      .entrySet()
+                      .stream()
+                      .collect(Collectors.toMap(e -> decode(e.getKey()), e -> decode(e.getValue())));
+  }
+
+  private String encode(String decoded) {
+    return decoded.replace('.', '~');
+  }
+
+  private String decode(String encoded) {
+    return encoded.replace('~', '.');
+  }
 }
