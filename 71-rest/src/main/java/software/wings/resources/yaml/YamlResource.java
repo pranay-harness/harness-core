@@ -1041,7 +1041,6 @@ public class YamlResource {
   @Path("git-sync-errors")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<List<GitSyncError>> listGitSyncErrors(@QueryParam("accountId") String accountId) {
     return yamlGitService.listGitSyncErrors(accountId);
   }
@@ -1050,7 +1049,6 @@ public class YamlResource {
   @Path("git-sync-errors/count")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<Long> gitSyncErrorCount(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(yamlGitService.getGitSyncErrorCount(accountId));
   }
