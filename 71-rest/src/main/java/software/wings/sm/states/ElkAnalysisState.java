@@ -1,36 +1,25 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.beans.DelegateTask;
-import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
-import software.wings.beans.ElkConfig;
-import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
-import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
-import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
@@ -42,12 +31,9 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -219,100 +205,8 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts) {
-    final String timestampField = getTimestampField();
-    final String accountId = appService.get(context.getAppId()).getAccountId();
-    String envId = getEnvId(context);
-
-    SettingAttribute settingAttribute = null;
-    String finalAnalysisServerConfigId = analysisServerConfigId;
-    String finalIndices = indices;
-
-    if (!isEmpty(getTemplateExpressions())) {
-      TemplateExpression configIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
-      if (configIdExpression != null) {
-        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
-        finalAnalysisServerConfigId = settingAttribute.getUuid();
-      }
-      TemplateExpression indicesExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "indices");
-      if (indicesExpression != null) {
-        finalIndices = templateExpressionProcessor.resolveTemplateExpression(context, indicesExpression);
-      }
-    }
-    if (settingAttribute == null) {
-      settingAttribute = settingsService.get(finalAnalysisServerConfigId);
-    }
-    if (settingAttribute == null) {
-      throw new IllegalStateException("No elk setting with id: " + finalAnalysisServerConfigId + " found");
-    }
-
-    final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
-
-    final String timestampFieldFormat = getTimestampFormat();
-    final long logCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
-
-    List<Set<String>> batchedHosts = batchHosts(hosts);
-    String[] waitIds = new String[batchedHosts.size()];
-    List<DelegateTask> delegateTasks = new ArrayList<>();
-    int i = 0;
-    for (Set<String> hostBatch : batchedHosts) {
-      final ElkDataCollectionInfo dataCollectionInfo =
-          ElkDataCollectionInfo.builder()
-              .elkConfig(elkConfig)
-              .accountId(accountId)
-              .applicationId(context.getAppId())
-              .stateExecutionId(context.getStateExecutionInstanceId())
-              .workflowId(getWorkflowId(context))
-              .workflowExecutionId(context.getWorkflowExecutionId())
-              .serviceId(getPhaseServiceId(context))
-              .query(getRenderedQuery())
-              .indices(finalIndices)
-              .hostnameField(context.renderExpression(hostnameField))
-              .messageField(context.renderExpression(messageField))
-              .timestampField(timestampField)
-              .timestampFieldFormat(timestampFieldFormat)
-              .queryType(getQueryType())
-              .startTime(logCollectionStartTimeStamp)
-              .startMinute((int) (logCollectionStartTimeStamp / TimeUnit.MINUTES.toMillis(1)))
-              .collectionTime(Integer.parseInt(getTimeDuration()))
-              .hosts(hostBatch)
-              .initialDelayMinutes(DELAY_MINUTES)
-              .encryptedDataDetails(
-                  secretManager.getEncryptionDetails(elkConfig, context.getAppId(), context.getWorkflowExecutionId()))
-              .build();
-
-      String waitId = generateUuid();
-      delegateTasks.add(DelegateTask.builder()
-                            .async(true)
-                            .accountId(accountId)
-                            .appId(context.getAppId())
-                            .waitId(waitId)
-                            .data(TaskData.builder()
-                                      .taskType(TaskType.ELK_COLLECT_LOG_DATA.name())
-                                      .parameters(new Object[] {dataCollectionInfo})
-                                      .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
-                                      .build())
-                            .envId(envId)
-                            .build());
-      waitIds[i++] = waitId;
-    }
-
-    waitNotifyEngine.waitForAllOn(ORCHESTRATION,
-        DataCollectionCallback.builder()
-            .appId(context.getAppId())
-            .stateExecutionId(context.getStateExecutionInstanceId())
-            .dataCollectionStartTime(logCollectionStartTimeStamp)
-            .dataCollectionEndTime(
-                logCollectionStartTimeStamp + TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration())))
-            .executionData(executionData)
-            .build(),
-        waitIds);
-    List<String> delegateTaskIds = new ArrayList<>();
-    for (DelegateTask task : delegateTasks) {
-      delegateTaskIds.add(delegateService.queueTask(task));
-    }
-    return StringUtils.join(delegateTaskIds, ",");
+    throw new UnsupportedOperationException(
+        "This should not get called. ELK is now using new data collection framework");
   }
 
   @Override
@@ -413,7 +307,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   }
 
   @Override
-  protected Optional<FeatureName> getCVTaskFeatureName() {
-    return Optional.of(FeatureName.ELK_CV_TASK);
+  protected boolean isCVTaskEnqueuingEnabled(String accountId) {
+    return true;
   }
 }
