@@ -317,7 +317,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     }
     return parentTemplateFields;
   }
-
+  @SuppressWarnings("PMD") // pmd complains about the values.get being null even after contains check.
   public static Double getNormalizedErrorMetric(String metricName, NewRelicMetricDataRecord metricDataRecord) {
     if (metricDataRecord != null) {
       Map<String, Double> values = metricDataRecord.getValues();

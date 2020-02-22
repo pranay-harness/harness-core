@@ -80,7 +80,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DynaTraceConfig;
-import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.NewRelicConfig;
@@ -122,7 +121,6 @@ import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
-import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.log.CustomLogSetupTestNodeData;
 import software.wings.service.impl.log.LogResponseParser;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
@@ -184,7 +182,6 @@ import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.CustomLogCVServiceConfiguration;
-import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.StackdriverCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
@@ -1790,10 +1787,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
         task = createDataCollectionDelegateTask(logsCVConfiguration, waitId, startTime, endTime);
         break;
-      case ELK:
-        ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) cvConfiguration;
-        task = createElkDelegateTask(elkCVConfiguration, waitId, startTime, endTime);
-        break;
       case BUG_SNAG:
         BugsnagCVConfiguration bugsnagCVConfiguration = (BugsnagCVConfiguration) cvConfiguration;
         task = createBugSnagDelegateTask(bugsnagCVConfiguration, waitId, startTime, endTime);
@@ -2142,40 +2135,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .build();
     return createDelegateTask(TaskType.CLOUD_WATCH_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
         waitId, new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
-        dataCollectionInfo.getStateExecutionId(), config.getStateType());
-  }
-
-  private DelegateTask createElkDelegateTask(ElkCVConfiguration config, String waitId, long startTime, long endTime) {
-    ElkDataCollectionInfo dataCollectionInfo;
-    if (config.isWorkflowConfig()) {
-      // Extract data collection info from Analysis Context
-      dataCollectionInfo = (ElkDataCollectionInfo) wingsPersistence.get(AnalysisContext.class, config.getContextId())
-                               .getDataCollectionInfo();
-    } else {
-      ElkConfig elkConfig = (ElkConfig) settingsService.get(config.getConnectorId()).getValue();
-      dataCollectionInfo =
-          ElkDataCollectionInfo.builder()
-              .elkConfig(elkConfig)
-              .accountId(elkConfig.getAccountId())
-              .applicationId(config.getAppId())
-              .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
-              .serviceId(config.getServiceId())
-              .query(config.getQuery())
-              .indices(config.getIndex())
-              .hostnameField(config.getHostnameField())
-              .messageField(config.getMessageField())
-              .timestampField(config.getTimestampField())
-              .timestampFieldFormat(config.getTimestampFormat())
-              .queryType(config.getQueryType())
-              .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
-              .encryptedDataDetails(secretManager.getEncryptionDetails(elkConfig, config.getAppId(), null))
-              .build();
-    }
-    dataCollectionInfo.setCvConfigId(config.getUuid());
-    dataCollectionInfo.setStartTime(startTime);
-    dataCollectionInfo.setEndTime(endTime);
-    return createDelegateTask(TaskType.ELK_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(), waitId,
-        new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
         dataCollectionInfo.getStateExecutionId(), config.getStateType());
   }
 

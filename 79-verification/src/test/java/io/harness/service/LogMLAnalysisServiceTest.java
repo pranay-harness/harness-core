@@ -1689,7 +1689,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testGetEndTimeForLogAnalysisForSplunk() throws IOException {
+  public void testGetEndTimeForLogAnalysisForSplunk() {
     long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     AnalysisContext analysisContext = AnalysisContext.builder()
                                           .timeDuration(10)
@@ -1697,13 +1697,24 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                                           .stateType(SPLUNKV2)
                                           .accountId(accountId)
                                           .build();
-    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
-
-    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     int endTime = analysisService.getEndTimeForLogAnalysis(analysisContext);
     assertThat(minute + 10 - 1).isEqualTo(endTime);
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetEndTimeForLogAnalysis_forELK() {
+    long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
+    AnalysisContext analysisContext = AnalysisContext.builder()
+                                          .timeDuration(10)
+                                          .startDataCollectionMinute(minute)
+                                          .stateType(ELK)
+                                          .accountId(accountId)
+                                          .build();
+    int endTime = analysisService.getEndTimeForLogAnalysis(analysisContext);
+    assertThat(minute + 10 - 1).isEqualTo(endTime);
+  }
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)

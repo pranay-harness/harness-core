@@ -47,14 +47,12 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.api.InstanceElement;
 import software.wings.beans.ElementExecutionSummary;
-import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
@@ -1035,13 +1033,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   // TODO: remove this once everything is moved to cvTask
 
   private boolean isCVTaskPerMinuteTaskEnabled(StateType stateType, String stateExecutionId) {
-    if (StateType.SPLUNKV2 == stateType) {
+    if (StateType.SPLUNKV2 == stateType || StateType.ELK == stateType) {
       return true;
-    } else if (StateType.ELK == stateType) {
-      AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
-                                            .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
-                                            .get();
-      return analysisContext.isFeatureFlagEnabled(FeatureName.ELK_CV_TASK);
     }
     return false;
   }

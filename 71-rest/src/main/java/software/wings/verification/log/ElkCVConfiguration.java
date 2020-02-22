@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkQueryType;
@@ -39,13 +38,8 @@ public class ElkCVConfiguration extends LogsCVConfiguration {
   private String timestampFormat;
 
   @Override
-  public boolean isCVTaskBasedCollectionFeatureFlagged() {
+  public boolean isCVTaskBasedCollectionEnabled() {
     return true;
-  }
-
-  @Override
-  public FeatureName getCVTaskBasedCollectionFeatureFlag() {
-    return FeatureName.ELK_24_7_CV_TASK;
   }
 
   @Override
