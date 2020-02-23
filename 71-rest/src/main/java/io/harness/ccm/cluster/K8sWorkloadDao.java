@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class K8sWorkloadDao {
@@ -28,6 +29,11 @@ public class K8sWorkloadDao {
 
   // to get the workloads with at least one of the label(key:value) present
   public List<K8sWorkload> list(String accountId, Map<String, List<String>> labels) {
+    if (labels == null) {
+      return new ArrayList<>();
+    }
+    labels = labels.entrySet().stream().collect(Collectors.toMap(e -> encode(e.getKey()), Map.Entry::getValue));
+
     Query<K8sWorkload> query =
         persistence.createQuery(K8sWorkload.class, excludeValidate).field(K8sWorkloadKeys.accountId).equal(accountId);
     List<Criteria> criteriaList = new ArrayList<>();
@@ -41,6 +47,7 @@ public class K8sWorkloadDao {
 
   // to get the list of workloads having workload names in the given set and one of the label key equal to label name
   public List<K8sWorkload> list(String accountId, Set<String> workloadNames, String labelName) {
+    labelName = encode(labelName);
     Query<K8sWorkload> query = persistence.createQuery(K8sWorkload.class, excludeValidate)
                                    .field(K8sWorkloadKeys.accountId)
                                    .equal(accountId)
@@ -52,5 +59,9 @@ public class K8sWorkloadDao {
 
   public List<K8sWorkload> list(Query<K8sWorkload> query) {
     return query.asList(new FindOptions());
+  }
+
+  private String encode(String decoded) {
+    return decoded.replace('.', '~');
   }
 }

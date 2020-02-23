@@ -17,7 +17,14 @@ public class K8sLabelHelper {
 
   public Set<String> getWorkloadNamesFromLabels(String accountId, QLBillingDataLabelFilter labelFilter) {
     Map<String, List<String>> labels = new HashMap<>();
-    labelFilter.getLabels().forEach(label -> labels.put(label.getName(), label.getValues()));
+    labelFilter.getLabels().forEach(label -> {
+      String labelName = label.getName();
+      if (labels.containsKey(labelName)) {
+        label.getValues().forEach(value -> labels.get(labelName).add(value));
+      } else {
+        labels.put(labelName, label.getValues());
+      }
+    });
     List<K8sWorkload> workloads = k8sWorkloadDao.list(accountId, labels);
     Set<String> workloadNames = new HashSet<>();
     workloads.forEach(workload -> workloadNames.add(workload.getName()));
