@@ -8,15 +8,14 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import migrations.Migration;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.AdministrativeJob;
 
 public class DeleteCVCronMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public void migrate() {
-    deleteCron("quartz_jobs", AdministrativeJob.ADMINISTRATIVE_CRON_GROUP);
-    deleteCron("quartz_triggers", AdministrativeJob.ADMINISTRATIVE_CRON_GROUP);
+    deleteCron("quartz_jobs", "ADMINISTRATIVE_CRON_GROUP");
+    deleteCron("quartz_triggers", "ADMINISTRATIVE_CRON_GROUP");
 
     deleteCron("quartz_jobs", "EXECUTION_LOGS_PRUNE_CRON_GROUP");
     deleteCron("quartz_triggers", "EXECUTION_LOGS_PRUNE_CRON_GROUP");

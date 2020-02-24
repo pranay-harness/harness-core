@@ -19,7 +19,6 @@ import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
-import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
@@ -60,17 +59,12 @@ import java.util.concurrent.TimeoutException;
  */
 @DisallowConcurrentExecution
 @Slf4j
-public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisContext> {
+public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private LearningEngineService learningEngineService;
 
   @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private VerificationManagerClientHelper managerClientHelper;
-
-  @Override
-  public void execute(JobExecutionContext jobExecutionContext) {
-    // to be deleted once iterator is operationalized
-  }
 
   @Override
   public void handle(AnalysisContext analysisContext) {

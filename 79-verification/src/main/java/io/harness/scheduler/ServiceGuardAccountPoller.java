@@ -19,8 +19,6 @@ import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_Q
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_COUNT;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.scheduler.AdministrativeJob.ADMINISTRATIVE_CRON_GROUP;
-import static software.wings.scheduler.AdministrativeJob.ADMINISTRATIVE_CRON_NAME;
 import static software.wings.service.impl.analysis.MLAnalysisType.LOG_CLUSTER;
 import static software.wings.service.impl.analysis.MLAnalysisType.LOG_ML;
 import static software.wings.service.impl.analysis.MLAnalysisType.TIME_SERIES;
@@ -58,7 +56,6 @@ import java.util.concurrent.TimeUnit;
 public class ServiceGuardAccountPoller {
   private static final int POLL_INTIAL_DELAY_SEOONDS = 60;
   @Inject @Named("verificationServiceExecutor") protected ScheduledExecutorService executorService;
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private VerificationManagerClientHelper verificationManagerClientHelper;
@@ -266,12 +263,5 @@ public class ServiceGuardAccountPoller {
 
     metricRegistry.recordGaugeValue(getMetricName(env, LEARNING_ENGINE_WORKFLOW_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS),
         null, clusteringTaskQueuedTimeInSeconds);
-  }
-
-  public void deleteServiceGuardCrons() {
-    logger.info("Delete administrative job");
-    if (jobScheduler.checkExists(ADMINISTRATIVE_CRON_NAME, ADMINISTRATIVE_CRON_GROUP)) {
-      jobScheduler.deleteJob(ADMINISTRATIVE_CRON_NAME, ADMINISTRATIVE_CRON_GROUP);
-    }
   }
 }

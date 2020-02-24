@@ -17,7 +17,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.DisallowConcurrentExecution;
-import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -33,7 +32,7 @@ import java.util.concurrent.Callable;
 
 @DisallowConcurrentExecution
 @Slf4j
-public class WorkflowLogAnalysisJob implements Job, Handler<AnalysisContext> {
+public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
   @Transient @Inject private LogAnalysisService analysisService;
 
   @Transient @Inject private LearningEngineService learningEngineService;
@@ -43,11 +42,6 @@ public class WorkflowLogAnalysisJob implements Job, Handler<AnalysisContext> {
   @Transient @Inject private VerificationManagerClient managerClient;
 
   @Inject private DataStoreService dataStoreService;
-
-  @Override
-  public void execute(JobExecutionContext jobExecutionContext) {
-    // to be deleted once iterator is operationalized
-  }
 
   @Override
   public void handle(AnalysisContext analysisContext) {

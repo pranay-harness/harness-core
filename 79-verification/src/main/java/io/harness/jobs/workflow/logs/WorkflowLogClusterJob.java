@@ -16,7 +16,6 @@ import io.harness.service.intfc.LogAnalysisService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
-import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -33,7 +32,7 @@ import java.util.Set;
 
 @DisallowConcurrentExecution
 @Slf4j
-public class WorkflowLogClusterJob implements Job, MongoPersistenceIterator.Handler<AnalysisContext> {
+public class WorkflowLogClusterJob implements MongoPersistenceIterator.Handler<AnalysisContext> {
   @Inject private VerificationManagerClientHelper managerClientHelper;
   @Inject private VerificationManagerClient managerClient;
 
@@ -42,11 +41,6 @@ public class WorkflowLogClusterJob implements Job, MongoPersistenceIterator.Hand
   @Inject private LearningEngineService learningEngineService;
 
   @Inject private DataStoreService dataStoreService;
-
-  @Override
-  public void execute(JobExecutionContext jobExecutionContext) {
-    // to be deleted once iterator is operationalized
-  }
 
   @Override
   public void handle(AnalysisContext analysisContext) {
