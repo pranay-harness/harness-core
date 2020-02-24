@@ -389,7 +389,7 @@ public class KubernetesHelperService {
     return null;
   }
 
-  private String encode(char[] value) {
+  public static String encode(char[] value) {
     String encodedValue = new String(value).trim();
     if (isNotBlank(encodedValue) && encodedValue.startsWith("-----BEGIN ")) {
       encodedValue = encodeBase64(encodedValue);
@@ -430,9 +430,8 @@ public class KubernetesHelperService {
     MixedOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,
         Resource<HorizontalPodAutoscaler, DoneableHorizontalPodAutoscaler>> mixedOperation =
         new HorizontalPodAutoscalerOperationsImpl(kubernetesClient.getHttpClient(), kubernetesClient.getConfiguration(),
-            apiName, kubernetesClient.getNamespace(), null, true, null, null, false, -1, new TreeMap<String, String>(),
-            new TreeMap<String, String>(), new TreeMap<String, String[]>(), new TreeMap<String, String[]>(),
-            new TreeMap<String, String>());
+            apiName, kubernetesClient.getNamespace(), null, true, null, null, false, -1, new TreeMap<>(),
+            new TreeMap<>(), new TreeMap<>(), new TreeMap<>(), new TreeMap<>());
 
     return mixedOperation.inNamespace(kubernetesConfig.getNamespace());
   }

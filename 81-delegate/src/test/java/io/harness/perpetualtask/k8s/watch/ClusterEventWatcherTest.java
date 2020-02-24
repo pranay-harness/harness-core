@@ -7,9 +7,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.gson.Gson;
-import com.google.protobuf.ByteString;
-
 import io.fabric8.kubernetes.api.model.EventBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -21,7 +18,6 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
-import io.harness.perpetualtask.k8s.watch.K8sClusterEvent.InvolvedObject;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -101,22 +97,13 @@ public class ClusterEventWatcherTest extends CategoryTest {
                                 .setSourceComponent("deployment-controller")
                                 .setReason("ScalingReplicaSet")
                                 .setMessage("Scaled up replica set learning-engine-66f497cf87 to 3")
-                                .setInvolvedObject(InvolvedObject.newBuilder()
+                                .setInvolvedObject(K8sObjectReference.newBuilder()
                                                        .setKind("Deployment")
                                                        .setName("learning-engine")
                                                        .setNamespace("harness")
                                                        .setUid("7b9cd6f4-495e-11e9-a04a-4201ac10040a")
                                                        .setResourceVersion("160985299")
                                                        .build())
-                                .setInvolvedObjectDetails(ByteString.copyFromUtf8(
-                                    new Gson().toJson(new DeploymentBuilder()
-                                                          .withNewMetadata()
-                                                          .withUid("7b9cd6f4-495e-11e9-a04a-4201ac10040a")
-                                                          .withName("learning-engine")
-                                                          .withNamespace("harness")
-                                                          .withResourceVersion("160985299")
-                                                          .endMetadata()
-                                                          .build())))
                                 .build()),
             eq(HTimestamps.parse("2020-01-22T09:29:51Z")));
   }
@@ -147,7 +134,7 @@ public class ClusterEventWatcherTest extends CategoryTest {
                                 .setSourceComponent("deployment-controller")
                                 .setReason("ScalingReplicaSet")
                                 .setMessage("Scaled up replica set learning-engine-66f497cf87 to 3")
-                                .setInvolvedObject(InvolvedObject.newBuilder()
+                                .setInvolvedObject(K8sObjectReference.newBuilder()
                                                        .setKind("Deployment")
                                                        .setName("learning-engine")
                                                        .setNamespace("harness")
@@ -184,7 +171,7 @@ public class ClusterEventWatcherTest extends CategoryTest {
                                 .setSourceComponent("horizontal-pod-autoscaler")
                                 .setReason("SuccessfulRescale")
                                 .setMessage("New size: 2; reason: All metrics below target")
-                                .setInvolvedObject(InvolvedObject.newBuilder()
+                                .setInvolvedObject(K8sObjectReference.newBuilder()
                                                        .setKind("HorizontalPodAutoscaler")
                                                        .setName("le-analysis-service-guard")
                                                        .setNamespace("harness")

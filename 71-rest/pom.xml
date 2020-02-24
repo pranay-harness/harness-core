@@ -396,6 +396,10 @@
             <artifactId>kubernetes-model</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.gsonfire</groupId>
+            <artifactId>gson-fire</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
         </dependency>

@@ -92,6 +92,16 @@ message K8SClusterSyncEvent {
   google.protobuf.Timestamp last_processed_timestamp = 6;
 }
 
+// uniquely identify a k8s resource within a cluster
+message K8sObjectReference {
+  string kind = 1;
+  string name = 2;
+  string namespace = 3;
+  string uid = 4;
+  // optional
+  string resource_version = 5;
+}
+
 // Cluster events
 message K8sClusterEvent {
   // cluster details
@@ -102,13 +112,35 @@ message K8sClusterEvent {
   string reason = 4;
   string message = 5;
   string source_component = 6;
-  message InvolvedObject {
-    string kind = 1;
-    string name = 2;
-    string namespace = 3;
-    string uid = 4;
-    string resource_version = 5;
+  K8sObjectReference involved_object = 7;
+}
+
+message K8sWatchEvent {
+  // cluster details
+  string cluster_id = 1;
+  string cluster_name = 2;
+  string cloud_provider_id = 3;
+  // type of watch event
+  enum Type {
+    TYPE_INVALID = 0;
+    TYPE_ADDED = 1;
+    TYPE_UPDATED = 2;
+    TYPE_DELETED = 3;
   }
-  InvolvedObject involved_object = 7;
-  bytes involved_object_details = 8;
+  Type type = 4;
+  // reference to the resource
+  K8sObjectReference resource_ref = 5;
+
+  // old resource version and yaml
+  // only present for UPDATED & DELETED
+  string old_resource_version = 6;
+  string old_resource_yaml = 7;
+
+  // old resource version and yaml
+  // only present for UPDATED & ADDED
+  string new_resource_version = 8;
+  string new_resource_yaml = 9;
+
+  // description of the change
+  string description = 10;
 }

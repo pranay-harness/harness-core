@@ -46,6 +46,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+import software.wings.delegatetasks.k8s.apiclient.KubernetesApiClientFactoryModule;
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactoryModule;
 
 import java.io.File;
@@ -146,6 +147,7 @@ public class DelegateApplication {
       modules.add(new PerpetualTaskWorkerModule());
     }
     modules.add(new KubernetesClientFactoryModule());
+    modules.add(new KubernetesApiClientFactoryModule());
     modules.add(new AppenderModule(Config.builder().queueFilePath(configuration.getQueueFilePath()).build(),
         () -> getDelegateId().orElse("UNREGISTERED")));
     modules.addAll(new DelegateModule().cumulativeDependencies());
