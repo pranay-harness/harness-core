@@ -71,6 +71,7 @@ import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.ContainerMetadata;
@@ -1135,5 +1136,31 @@ public abstract class AbstractAnalysisState extends State {
 
   protected boolean isHistoricalAnalysis(String accountId) {
     return false;
+  }
+
+  protected String getResolvedConnectorId(ExecutionContext context, String fieldName, String fieldValue) {
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression configIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), fieldName);
+      if (configIdExpression != null) {
+        SettingAttribute settingAttribute =
+            templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
+        return settingAttribute.getUuid();
+      }
+    }
+
+    if (isExpression(fieldName, fieldValue, getTemplateExpressions())) {
+      String analysisServerConfigName = context.renderExpression(fieldValue);
+      final SettingAttribute settingAttribute =
+          settingsService.getSettingAttributeByName(context.getAccountId(), analysisServerConfigName);
+      if (settingAttribute == null) {
+        throw new DataCollectionException("Expression " + fieldValue + " resolved to " + analysisServerConfigName
+            + ". There was no connector found with this name.");
+      }
+
+      return settingAttribute.getUuid();
+    }
+
+    return fieldValue;
   }
 }
