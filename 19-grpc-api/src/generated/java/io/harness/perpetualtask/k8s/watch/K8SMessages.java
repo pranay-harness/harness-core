@@ -72,13 +72,17 @@ public final class K8SMessages {
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_perpetualtask_k8s_watch_K8SClusterSyncEvent_fieldAccessorTable;
   static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_perpetualtask_k8s_watch_K8sObjectReference_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_perpetualtask_k8s_watch_K8sObjectReference_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
       .Descriptor internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_fieldAccessorTable;
   static final com.google.protobuf.Descriptors
-      .Descriptor internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_InvolvedObject_descriptor;
-  static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_InvolvedObject_fieldAccessorTable;
+      .Descriptor internal_static_io_harness_perpetualtask_k8s_watch_K8sWatchEvent_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_perpetualtask_k8s_watch_K8sWatchEvent_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -151,17 +155,27 @@ public final class K8SMessages {
         + "\n\021cloud_provider_id\030\003 \001(\t\022\027\n\017active_pod_"
         + "uids\030\004 \003(\t\022\030\n\020active_node_uids\030\005 \003(\t\022<\n\030"
         + "last_processed_timestamp\030\006 \001(\0132\032.google."
-        + "protobuf.Timestamp\"\367\002\n\017K8sClusterEvent\022\022"
-        + "\n\ncluster_id\030\001 \001(\t\022\024\n\014cluster_name\030\002 \001(\t"
-        + "\022\031\n\021cloud_provider_id\030\003 \001(\t\022\016\n\006reason\030\004 "
-        + "\001(\t\022\017\n\007message\030\005 \001(\t\022\030\n\020source_component"
-        + "\030\006 \001(\t\022[\n\017involved_object\030\007 \001(\0132B.io.har"
-        + "ness.perpetualtask.k8s.watch.K8sClusterE"
-        + "vent.InvolvedObject\022\037\n\027involved_object_d"
-        + "etails\030\010 \001(\014\032f\n\016InvolvedObject\022\014\n\004kind\030\001"
-        + " \001(\t\022\014\n\004name\030\002 \001(\t\022\021\n\tnamespace\030\003 \001(\t\022\013\n"
-        + "\003uid\030\004 \001(\t\022\030\n\020resource_version\030\005 \001(\tB\002P\001"
-        + "b\006proto3"};
+        + "protobuf.Timestamp\"j\n\022K8sObjectReference"
+        + "\022\014\n\004kind\030\001 \001(\t\022\014\n\004name\030\002 \001(\t\022\021\n\tnamespac"
+        + "e\030\003 \001(\t\022\013\n\003uid\030\004 \001(\t\022\030\n\020resource_version"
+        + "\030\005 \001(\t\"\342\001\n\017K8sClusterEvent\022\022\n\ncluster_id"
+        + "\030\001 \001(\t\022\024\n\014cluster_name\030\002 \001(\t\022\031\n\021cloud_pr"
+        + "ovider_id\030\003 \001(\t\022\016\n\006reason\030\004 \001(\t\022\017\n\007messa"
+        + "ge\030\005 \001(\t\022\030\n\020source_component\030\006 \001(\t\022O\n\017in"
+        + "volved_object\030\007 \001(\01326.io.harness.perpetu"
+        + "altask.k8s.watch.K8sObjectReference\"\275\003\n\r"
+        + "K8sWatchEvent\022\022\n\ncluster_id\030\001 \001(\t\022\024\n\014clu"
+        + "ster_name\030\002 \001(\t\022\031\n\021cloud_provider_id\030\003 \001"
+        + "(\t\022D\n\004type\030\004 \001(\01626.io.harness.perpetualt"
+        + "ask.k8s.watch.K8sWatchEvent.Type\022L\n\014reso"
+        + "urce_ref\030\005 \001(\01326.io.harness.perpetualtas"
+        + "k.k8s.watch.K8sObjectReference\022\034\n\024old_re"
+        + "source_version\030\006 \001(\t\022\031\n\021old_resource_yam"
+        + "l\030\007 \001(\t\022\034\n\024new_resource_version\030\010 \001(\t\022\031\n"
+        + "\021new_resource_yaml\030\t \001(\t\022\023\n\013description\030"
+        + "\n \001(\t\"L\n\004Type\022\020\n\014TYPE_INVALID\020\000\022\016\n\nTYPE_"
+        + "ADDED\020\001\022\020\n\014TYPE_UPDATED\020\002\022\020\n\014TYPE_DELETE"
+        + "D\020\003B\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -334,8 +348,20 @@ public final class K8SMessages {
                 "ActiveNodeUids",
                 "LastProcessedTimestamp",
             });
-    internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_descriptor =
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sObjectReference_descriptor =
         getDescriptor().getMessageTypes().get(8);
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sObjectReference_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_perpetualtask_k8s_watch_K8sObjectReference_descriptor,
+            new java.lang.String[] {
+                "Kind",
+                "Name",
+                "Namespace",
+                "Uid",
+                "ResourceVersion",
+            });
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_descriptor =
+        getDescriptor().getMessageTypes().get(9);
     internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_descriptor,
@@ -347,19 +373,23 @@ public final class K8SMessages {
                 "Message",
                 "SourceComponent",
                 "InvolvedObject",
-                "InvolvedObjectDetails",
             });
-    internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_InvolvedObject_descriptor =
-        internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_descriptor.getNestedTypes().get(0);
-    internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_InvolvedObject_fieldAccessorTable =
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sWatchEvent_descriptor =
+        getDescriptor().getMessageTypes().get(10);
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sWatchEvent_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_io_harness_perpetualtask_k8s_watch_K8sClusterEvent_InvolvedObject_descriptor,
+            internal_static_io_harness_perpetualtask_k8s_watch_K8sWatchEvent_descriptor,
             new java.lang.String[] {
-                "Kind",
-                "Name",
-                "Namespace",
-                "Uid",
-                "ResourceVersion",
+                "ClusterId",
+                "ClusterName",
+                "CloudProviderId",
+                "Type",
+                "ResourceRef",
+                "OldResourceVersion",
+                "OldResourceYaml",
+                "NewResourceVersion",
+                "NewResourceYaml",
+                "Description",
             });
     com.google.protobuf.TimestampProto.getDescriptor();
   }

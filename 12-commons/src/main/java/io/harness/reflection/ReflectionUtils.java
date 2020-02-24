@@ -3,6 +3,7 @@ package io.harness.reflection;
 import static java.lang.String.format;
 
 import io.harness.exception.WingsException;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
@@ -147,5 +148,9 @@ public class ReflectionUtils {
       }
     }
     return fieldNameValueMap;
+  }
+
+  public static Object getFieldValue(@NonNull Object obj, @NonNull String fieldName) {
+    return getFieldValues(obj, Collections.singleton(fieldName)).get(fieldName);
   }
 }

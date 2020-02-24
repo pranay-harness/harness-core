@@ -3,13 +3,10 @@ package io.harness.perpetualtask.k8s.watch;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import com.google.protobuf.ByteString;
 
 import io.fabric8.kubernetes.api.model.Event;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
@@ -29,7 +26,6 @@ import java.util.function.Predicate;
  */
 @Slf4j
 public class ClusterEventWatcher implements Watcher<Event> {
-  private static final Gson gson = new Gson();
   private static final List<Predicate<Event>> whitelistedSourceReasons = Arrays.asList(
       // workload-related
       SourceReasonPredicate.builder().sourceComponent("deployment-controller").reason("ScalingReplicaSet").build(),
@@ -101,24 +97,13 @@ public class ClusterEventWatcher implements Watcher<Event> {
   }
 
   private void addInvolvedObjectInfo(Event event, K8sClusterEvent.Builder builder) {
-    builder.setInvolvedObject(K8sClusterEvent.InvolvedObject.newBuilder()
+    builder.setInvolvedObject(K8sObjectReference.newBuilder()
                                   .setKind(event.getInvolvedObject().getKind())
                                   .setName(event.getInvolvedObject().getName())
                                   .setNamespace(defaultIfNull(event.getInvolvedObject().getNamespace(), ""))
                                   .setUid(event.getInvolvedObject().getUid())
                                   .setResourceVersion(event.getInvolvedObject().getResourceVersion())
                                   .build());
-    final HasMetadata workload = K8sWorkloadUtils.getWorkload(client, event.getInvolvedObject().getNamespace(),
-        event.getInvolvedObject().getKind(), event.getInvolvedObject().getName());
-    if (workload != null) {
-      if (workload.getMetadata().getResourceVersion().equals(event.getInvolvedObject().getResourceVersion())) {
-        builder.setInvolvedObjectDetails(ByteString.copyFromUtf8(gson.toJson(workload)));
-      } else {
-        logger.warn("Non-matching resourceVersion ({} != {}) for fetched resource and that in event for {}",
-            workload.getMetadata().getResourceVersion(), event.getInvolvedObject().getResourceVersion(),
-            event.getInvolvedObject());
-      }
-    }
   }
 
   @Override

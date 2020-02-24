@@ -78,20 +78,15 @@ public interface K8sClusterEventOrBuilder extends
   com.google.protobuf.ByteString getSourceComponentBytes();
 
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sClusterEvent.InvolvedObject involved_object = 7;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
    */
   boolean hasInvolvedObject();
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sClusterEvent.InvolvedObject involved_object = 7;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
    */
-  io.harness.perpetualtask.k8s.watch.K8sClusterEvent.InvolvedObject getInvolvedObject();
+  io.harness.perpetualtask.k8s.watch.K8sObjectReference getInvolvedObject();
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sClusterEvent.InvolvedObject involved_object = 7;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
    */
-  io.harness.perpetualtask.k8s.watch.K8sClusterEvent.InvolvedObjectOrBuilder getInvolvedObjectOrBuilder();
-
-  /**
-   * <code>bytes involved_object_details = 8;</code>
-   */
-  com.google.protobuf.ByteString getInvolvedObjectDetails();
+  io.harness.perpetualtask.k8s.watch.K8sObjectReferenceOrBuilder getInvolvedObjectOrBuilder();
 }

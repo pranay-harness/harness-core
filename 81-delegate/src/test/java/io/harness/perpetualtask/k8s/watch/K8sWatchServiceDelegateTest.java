@@ -14,12 +14,15 @@ import com.google.protobuf.ByteString;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoUtils;
+import io.kubernetes.client.informer.SharedInformerFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.delegatetasks.k8s.apiclient.ApiClientFactory;
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactory;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
@@ -38,13 +41,18 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
   public void setUp() throws Exception {
     KubernetesClientFactory kubernetesClientFactory = mock(KubernetesClientFactory.class);
     watcherFactory = mock(WatcherFactory.class);
-    this.k8sWatchServiceDelegate = new K8sWatchServiceDelegate(watcherFactory, kubernetesClientFactory);
+    SharedInformerFactoryFactory sharedInformerFactoryFactory = mock(SharedInformerFactoryFactory.class);
+    ApiClientFactory apiClientFactory = mock(ApiClientFactory.class);
+    this.k8sWatchServiceDelegate = new K8sWatchServiceDelegate(
+        watcherFactory, kubernetesClientFactory, sharedInformerFactoryFactory, apiClientFactory);
     podWatcher = mock(PodWatcher.class);
     nodeWatcher = mock(NodeWatcher.class);
     clusterEventWatcher = mock(ClusterEventWatcher.class);
     when(watcherFactory.createPodWatcher(any(), any())).thenReturn(podWatcher);
     when(watcherFactory.createNodeWatcher(any(), any())).thenReturn(nodeWatcher);
     when(watcherFactory.createClusterEventWatcher(any(), any())).thenReturn(clusterEventWatcher);
+    SharedInformerFactory sharedInformerFactory = mock(SharedInformerFactory.class);
+    when(sharedInformerFactoryFactory.createSharedInformerFactory(any(), any())).thenReturn(sharedInformerFactory);
   }
 
   @Test
