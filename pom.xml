@@ -18,6 +18,7 @@
         <module>31-orchestration</module>
         <module>51-migrator</module>
         <module>64-events-framework</module>
+        <module>65-delegate-beans</module>
         <module>71-rest</module>
         <module>72-event-server</module>
         <module>75-model-test</module>
