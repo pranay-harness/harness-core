@@ -17,6 +17,8 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.utils.IndexType;
+import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.utils.ArtifactType;
@@ -25,13 +27,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Created by anubhaw on 4/4/16.
- */
 @Entity(value = "serviceTemplates", noClassnameStored = true)
-@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
-    fields = { @Field("appId")
-               , @Field("envId"), @Field("name") }))
+@Indexes({
+  @Index(options = @IndexOptions(name = "yaml", unique = true),
+      fields = { @Field("appId")
+                 , @Field("envId"), @Field("name") })
+  ,
+      @Index(options = @IndexOptions(name = "app_env_createdAt"), fields = {
+        @Field(ServiceTemplateKeys.appId)
+        , @Field(ServiceTemplateKeys.envId), @Field(value = ServiceTemplateKeys.createdAt, type = IndexType.DESC)
+      })
+})
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ServiceTemplateKeys")
 public class ServiceTemplate extends Base {
@@ -636,5 +642,6 @@ public class ServiceTemplate extends Base {
     public static final String appId = "appId";
     public static final String envId = "envId";
     public static final String serviceId = "serviceId";
+    public static final String createdAt = "createdAt";
   }
 }
