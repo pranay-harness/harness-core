@@ -679,6 +679,11 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>65-delegate-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>xml-apis</groupId>
             <artifactId>xml-apis</artifactId>
         </dependency>
