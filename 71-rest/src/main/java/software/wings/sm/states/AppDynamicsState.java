@@ -192,15 +192,10 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.APP_DYNAMICS,
         context.getStateExecutionInstanceId(), null, APP_DYNAMICS_VALUES_TO_ANALYZE);
 
-    SettingAttribute settingAttribute = null;
+    analysisServerConfigId =
+        getResolvedConnectorId(context, AppDynamicsStateKeys.analysisServerConfigId, analysisServerConfigId);
     if (!isEmpty(getTemplateExpressions())) {
       boolean isTriggerBased = workflowExecutionService.isTriggerBasedDeployment(context);
-      TemplateExpression configIdExpression = templateExpressionProcessor.getTemplateExpression(
-          getTemplateExpressions(), AppDynamicsStateKeys.analysisServerConfigId);
-      if (configIdExpression != null) {
-        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
-        analysisServerConfigId = settingAttribute.getUuid();
-      }
       TemplateExpression appIdExpression = templateExpressionProcessor.getTemplateExpression(
           getTemplateExpressions(), AppDynamicsStateKeys.applicationId);
       if (appIdExpression != null) {
@@ -234,12 +229,11 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
       }
     }
 
+    SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
-      settingAttribute = settingsService.get(analysisServerConfigId);
-      if (settingAttribute == null) {
-        throw new WingsException("No appdynamics setting with id: " + analysisServerConfigId + " found");
-      }
+      throw new WingsException("No appdynamics setting with id: " + analysisServerConfigId + " found");
     }
+
     if (!validateFields().isEmpty()) {
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
           .addParam("reason",

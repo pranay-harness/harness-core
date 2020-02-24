@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
@@ -49,6 +50,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.WorkflowExecution;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
@@ -63,6 +65,7 @@ import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
+import software.wings.sm.states.AppDynamicsState.AppDynamicsStateKeys;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -657,5 +660,103 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
     assertThat(executionResponse.getErrorMessage()).isEqualTo("No app found");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetResolvedConnectorId_whenNoTemplatizationOrExpression() {
+    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
+    appDynamicsState.setAnalysisServerConfigId(generateUuid());
+    appDynamicsState.setApplicationId("123");
+    appDynamicsState.setTierId("456");
+    final String resolvedConnectorId = appDynamicsState.getResolvedConnectorId(
+        executionContext, AppDynamicsStateKeys.analysisServerConfigId, appDynamicsState.getAnalysisServerConfigId());
+
+    assertThat(resolvedConnectorId).isEqualTo(appDynamicsState.getAnalysisServerConfigId());
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetResolvedConnectorId_whenTemplatizedWithInValidValue() {
+    appDynamicsState.setTemplateExpressions(asList(TemplateExpression.builder()
+                                                       .fieldName(AppDynamicsStateKeys.analysisServerConfigId)
+                                                       .expression("${AppDynamics_Server}")
+                                                       .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_CONFIGID"))
+                                                       .build()));
+
+    assertThatThrownBy(
+        ()
+            -> appDynamicsState.getResolvedConnectorId(executionContext, AppDynamicsStateKeys.analysisServerConfigId,
+                appDynamicsState.getAnalysisServerConfigId()))
+        .isInstanceOf(WingsException.class)
+        .hasMessage("No value provided for template expression  [${AppDynamics_Server}]");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetResolvedConnectorId_whenTemplatizedWithValidValue() {
+    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                              .accountId(accountId)
+                                              .controllerUrl("appd-url")
+                                              .username("appd-user")
+                                              .password("appd-pwd".toCharArray())
+                                              .build();
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withName("appd-config")
+                                            .withValue(appDynamicsConfig)
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+    appDynamicsState.setTemplateExpressions(asList(TemplateExpression.builder()
+                                                       .fieldName(AppDynamicsStateKeys.analysisServerConfigId)
+                                                       .expression("${AppDynamics_Server}")
+                                                       .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_CONFIGID"))
+                                                       .build()));
+    when(executionContext.renderExpression("${workflow.variables.AppDynamics_Server}"))
+        .thenReturn(settingAttribute.getUuid());
+    final String resolvedConnectorId =
+        appDynamicsState.getResolvedConnectorId(executionContext, AppDynamicsStateKeys.analysisServerConfigId, null);
+    assertThat(resolvedConnectorId).isEqualTo(settingAttribute.getUuid());
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetResolvedConnectorId_whenExpressionInvalidValue() {
+    appDynamicsState.setAnalysisServerConfigId("${connector.name}");
+    assertThatThrownBy(
+        ()
+            -> appDynamicsState.getResolvedConnectorId(executionContext, AppDynamicsStateKeys.analysisServerConfigId,
+                appDynamicsState.getAnalysisServerConfigId()))
+        .isInstanceOf(DataCollectionException.class)
+        .hasMessage("Expression " + appDynamicsState.getAnalysisServerConfigId() + " resolved to "
+            + appDynamicsState.getAnalysisServerConfigId() + ". There was no connector found with this name.");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetResolvedConnectorId_whenExpressionValidValue() {
+    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                              .accountId(accountId)
+                                              .controllerUrl("appd-url")
+                                              .username("appd-user")
+                                              .password("appd-pwd".toCharArray())
+                                              .build();
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withName("appd-config")
+                                            .withValue(appDynamicsConfig)
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+    appDynamicsState.setAnalysisServerConfigId("${connector.name}");
+    when(executionContext.renderExpression("${connector.name}")).thenReturn(settingAttribute.getName());
+    when(executionContext.getAccountId()).thenReturn(accountId);
+    final String resolvedConnectorId = appDynamicsState.getResolvedConnectorId(
+        executionContext, AppDynamicsStateKeys.analysisServerConfigId, appDynamicsState.getAnalysisServerConfigId());
+    assertThat(resolvedConnectorId).isEqualTo(settingAttribute.getUuid());
   }
 }
