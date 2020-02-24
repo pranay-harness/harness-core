@@ -420,6 +420,5 @@ public class VerificationServiceApplication extends Application<VerificationServ
   private void initializeServiceTaskPoll(Injector injector) {
     injector.getInstance(WorkflowVerificationTaskPoller.class).scheduleTaskPoll();
     injector.getInstance(ServiceGuardAccountPoller.class).scheduleAdministrativeTasks();
-    injector.getInstance(ServiceGuardAccountPoller.class).deleteServiceGuardCrons();
   }
 }

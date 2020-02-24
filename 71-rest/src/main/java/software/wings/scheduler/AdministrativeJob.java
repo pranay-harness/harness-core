@@ -15,9 +15,6 @@ import software.wings.service.intfc.security.VaultService;
 
 @Slf4j
 public class AdministrativeJob implements Handler<Account> {
-  public static final String ADMINISTRATIVE_CRON_NAME = "ADMINISTRATIVE_CRON_NAME";
-  public static final String ADMINISTRATIVE_CRON_GROUP = "ADMINISTRATIVE_CRON_GROUP";
-
   @Inject private VaultService vaultService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
 
