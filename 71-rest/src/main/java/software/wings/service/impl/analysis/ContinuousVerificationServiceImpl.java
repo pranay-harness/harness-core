@@ -2577,9 +2577,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         "The details for the state are not in the stateExecutionMap for " + stateExecutionId);
     final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
         (VerificationStateAnalysisExecutionData) stateExecutionMap.get(stateExecutionInstance.getDisplayName());
-    if (!ExecutionStatus.isBrokeStatus(stateAnalysisExecutionData.getStatus())) {
-      stateAnalysisExecutionData.setErrorMsg(null);
-    }
     if (ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus())) {
       stateAnalysisExecutionData.setProgressPercentage(100);
       stateAnalysisExecutionData.setRemainingMinutes(0);
