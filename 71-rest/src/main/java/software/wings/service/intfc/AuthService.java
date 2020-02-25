@@ -11,7 +11,6 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserRestrictionInfo;
-import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.List;
 import java.util.Set;
@@ -20,7 +19,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by peeyushaggarwal on 8/18/16.
  */
-public interface AuthService extends OwnedByAccount {
+public interface AuthService {
   /**
    * Validate token auth token.
    *

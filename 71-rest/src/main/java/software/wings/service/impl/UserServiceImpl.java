@@ -1853,6 +1853,10 @@ public class UserServiceImpl implements UserService {
    */
   @Override
   public void delete(String accountId, String userId) {
+    deleteInternal(accountId, userId, true);
+  }
+
+  private void deleteInternal(String accountId, String userId, boolean updateUsergroup) {
     User user = get(userId);
     if (user.getAccounts() == null) {
       return;
@@ -1884,20 +1888,23 @@ public class UserServiceImpl implements UserService {
         }
       }
 
-      PageResponse<UserGroup> pageResponse =
-          userGroupService.list(accountId, aPageRequest().addFilter("memberIds", HAS, user.getUuid()).build(), true);
-      List<UserGroup> userGroupList = pageResponse.getResponse();
-      userGroupList.forEach(userGroup -> {
-        List<User> members = userGroup.getMembers();
-        if (isNotEmpty(members)) {
-          // Find the user to be removed, then remove from the member list and update the user group.
-          Optional<User> userOptional = members.stream().filter(member -> member.getUuid().equals(userId)).findFirst();
-          if (userOptional.isPresent()) {
-            members.remove(userOptional.get());
-            userGroupService.updateMembers(userGroup, false);
+      if (updateUsergroup) {
+        PageResponse<UserGroup> pageResponse =
+            userGroupService.list(accountId, aPageRequest().addFilter("memberIds", HAS, user.getUuid()).build(), true);
+        List<UserGroup> userGroupList = pageResponse.getResponse();
+        userGroupList.forEach(userGroup -> {
+          List<User> members = userGroup.getMembers();
+          if (isNotEmpty(members)) {
+            // Find the user to be removed, then remove from the member list and update the user group.
+            Optional<User> userOptional =
+                members.stream().filter(member -> member.getUuid().equals(userId)).findFirst();
+            if (userOptional.isPresent()) {
+              members.remove(userOptional.get());
+              userGroupService.updateMembers(userGroup, false);
+            }
           }
-        }
-      });
+        });
+      }
 
       UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class)
                                             .set("roles", user.getRoles())
@@ -2357,7 +2364,7 @@ public class UserServiceImpl implements UserService {
   public void deleteByAccountId(String accountId) {
     List<User> users = wingsPersistence.createQuery(User.class).filter(UserKeys.accounts, accountId).asList();
     for (User user : users) {
-      delete(accountId, user.getUuid());
+      deleteInternal(accountId, user.getUuid(), false);
     }
   }
 

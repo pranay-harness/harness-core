@@ -391,8 +391,9 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(SSOSettings.class).filter(SSOSettings.ACCOUNT_ID_KEY, accountId));
+    wingsPersistence.delete(wingsPersistence.createQuery(SSOSettings.class)
+                                .disableValidation()
+                                .filter(SSOSettings.ACCOUNT_ID_KEY, accountId));
   }
 
   @Override
