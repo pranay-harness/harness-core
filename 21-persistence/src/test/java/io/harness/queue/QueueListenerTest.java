@@ -82,10 +82,10 @@ public class QueueListenerTest extends PersistenceTest {
     }
   }
 
-  @Test(timeout = 1000)
+  @Test(timeout = 5000)
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void shouldStopOnInterruptedException() throws Exception {
+  public void shouldStopOnInterruptedException() {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
       listener.setRunOnce(false);
 
