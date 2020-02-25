@@ -117,7 +117,6 @@ public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
   private AppDynamicsCVConfigurationYaml buildYaml() {
     AppDynamicsCVConfigurationYaml yaml =
         AppDynamicsCVConfigurationYaml.builder().appDynamicsApplicationName(appName).tierName(tierName).build();
-    yaml.setName("TestAppDConfig");
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     return yaml;
@@ -134,7 +133,6 @@ public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
 
     AppDynamicsCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
-    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getTierName()).isEqualTo(tierName);
   }

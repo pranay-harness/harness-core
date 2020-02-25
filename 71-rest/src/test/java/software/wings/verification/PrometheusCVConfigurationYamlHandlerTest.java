@@ -100,7 +100,6 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
   private PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml buildYaml(List<TimeSeries> timeSeriesList) {
     PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml yaml =
         PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml.builder().timeSeriesList(timeSeriesList).build();
-    yaml.setName("TestPrometheusConfig");
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     return yaml;
@@ -129,7 +128,6 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
     PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml yaml =
         yamlHandler.toYaml(cvServiceConfiguration, appId);
 
-    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getTimeSeriesList()).isEqualTo(timeSeriesList);
   }

@@ -102,7 +102,6 @@ public class APMCVConfigurationYamlHandlerTest extends CategoryTest {
     metrics.add(getMetricCollectionInfo());
 
     APMCVConfigurationYaml yaml = APMCVConfigurationYaml.builder().metricCollectionInfos(metrics).build();
-    yaml.setName("TestAPMConfig");
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     return yaml;
@@ -135,7 +134,6 @@ public class APMCVConfigurationYamlHandlerTest extends CategoryTest {
 
     APMCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
-    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getMetricCollectionInfos()).isEqualTo(cvServiceConfiguration.getMetricCollectionInfos());
   }
