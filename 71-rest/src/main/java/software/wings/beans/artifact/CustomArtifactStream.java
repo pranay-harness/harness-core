@@ -64,7 +64,10 @@ public class CustomArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return ArtifactStreamAttributes.builder().artifactStreamType(getArtifactStreamType()).build();
+    return ArtifactStreamAttributes.builder()
+        .artifactStreamType(getArtifactStreamType())
+        .accountId(getAccountId())
+        .build();
   }
 
   @Override
