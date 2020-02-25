@@ -43,7 +43,7 @@ public interface VaultService {
 
   void renewTokens(String accountId);
 
-  void appRoleLogin(String accountId);
+  void renewAppRoleClientToken(String accountId);
 
   EncryptedData encryptFile(
       String accountId, VaultConfig vaultConfig, String name, byte[] inputBytes, EncryptedData savedEncryptedData);

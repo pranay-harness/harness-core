@@ -152,7 +152,7 @@ public class KmsAlertTest extends WingsBaseTest {
     kmsService.saveKmsConfig(accountId, kmsConfig);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
     vaultService.renewTokens(accountId);
-    vaultService.appRoleLogin(accountId);
+    vaultService.renewAppRoleClientToken(accountId);
     PageResponse<Alert> alerts = listOpenAlerts(accountId);
     assertThat(alerts).hasSize(0);
   }

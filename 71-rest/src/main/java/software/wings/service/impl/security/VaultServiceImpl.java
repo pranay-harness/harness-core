@@ -208,7 +208,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   @Override
-  public void appRoleLogin(String accountId) {
+  public void renewAppRoleClientToken(String accountId) {
     logger.info("Renewing Vault AppRole client token for {}", accountId);
     try (HIterator<SecretManagerConfig> query = new HIterator<>(
              wingsPersistence.createQuery(SecretManagerConfig.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
@@ -217,20 +217,21 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           continue;
         }
 
-        VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
-        if (isNotEmpty(vaultConfig.getAppRoleId())) {
-          VaultConfig decryptedVaultConfig = getVaultConfig(accountId, vaultConfig.getUuid());
-
+        VaultConfig encryptedVaultConfig = (VaultConfig) secretManagerConfig;
+        if (isNotEmpty(encryptedVaultConfig.getAppRoleId())) {
+          VaultConfig decryptedVaultConfig = getVaultConfig(accountId, encryptedVaultConfig.getUuid());
           try {
             VaultAppRoleLoginResult loginResult = appRoleLogin(decryptedVaultConfig);
-            if (loginResult != null) {
-              decryptedVaultConfig.setRenewedAt(System.currentTimeMillis());
-              decryptedVaultConfig.setAuthToken(loginResult.getClientToken());
-              saveVaultConfig(accountId, decryptedVaultConfig);
+            if (loginResult != null && isNotEmpty(loginResult.getClientToken())) {
+              logger.info("Login result is {} {}", loginResult.getLeaseDuration(), loginResult.getPolicies());
+              encryptedVaultConfig.setRenewedAt(System.currentTimeMillis());
+              saveSecretField(encryptedVaultConfig, encryptedVaultConfig, encryptedVaultConfig.getUuid(),
+                  loginResult.getClientToken(), TOKEN_SECRET_NAME_SUFFIX);
+              wingsPersistence.save(encryptedVaultConfig);
             }
           } catch (Exception e) {
-            logger.info("Error while renewing client token for Vault AppRole  " + vaultConfig.getAppRoleId()
-                    + " in secret manager " + vaultConfig.getName(),
+            logger.info("Error while renewing client token for Vault AppRole  " + encryptedVaultConfig.getAppRoleId()
+                    + " in secret manager " + encryptedVaultConfig.getName(),
                 e);
           }
         }
