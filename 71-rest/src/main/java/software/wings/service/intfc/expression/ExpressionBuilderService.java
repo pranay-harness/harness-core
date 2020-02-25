@@ -16,7 +16,7 @@ public interface ExpressionBuilderService {
       String appId, String entityId, EntityType entityType, String serviceId, StateType stateType);
 
   Set<String> listExpressions(String appId, String entityId, EntityType entityType, String serviceId,
-      StateType stateType, SubEntityType subEntityType);
+      StateType stateType, SubEntityType subEntityType, boolean forTags);
 
   Set<String> listExpressionsFromValuesForService(String appId, String serviceId);
 }

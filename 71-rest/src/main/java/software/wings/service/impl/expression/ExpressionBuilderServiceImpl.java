@@ -5,6 +5,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.PIPELINE;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 
@@ -38,6 +39,7 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
   @Inject private WorkflowExpressionBuilder workflowExpressionBuilder;
   @Inject private ApplicationExpressionBuilder applicationExpressionBuilder;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
+  @Inject private PipelineExpressionBuilder pipelineExpressionBuilder;
 
   @Override
   public Set<String> listExpressions(String appId, String entityId, EntityType entityType) {
@@ -52,12 +54,12 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
   @Override
   public Set<String> listExpressions(
       String appId, String entityId, EntityType entityType, String serviceId, StateType stateType) {
-    return listExpressions(appId, entityId, entityType, serviceId, stateType, null);
+    return listExpressions(appId, entityId, entityType, serviceId, stateType, null, false);
   }
 
   @Override
   public Set<String> listExpressions(String appId, String entityId, EntityType entityType, String serviceId,
-      StateType stateType, SubEntityType subEntityType) {
+      StateType stateType, SubEntityType subEntityType, boolean forTags) {
     Set<String> expressions = new TreeSet<>();
     Application application = appService.getApplicationWithDefaults(appId);
     notNullCheck("Application does not exist. May be deleted", application, USER);
@@ -78,7 +80,7 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
       expressions.addAll(envExpressionBuilder.getExpressions(appId, entityId, serviceId));
     } else if (entityType == WORKFLOW) {
       expressions.addAll(
-          workflowExpressionBuilder.getExpressions(appId, entityId, serviceId, stateType, subEntityType));
+          workflowExpressionBuilder.getExpressions(appId, entityId, serviceId, stateType, subEntityType, forTags));
       if (SubEntityType.NOTIFICATION_GROUP == subEntityType) {
         // Filter account and app defaults
         final Set<String> filteredExpressions =
@@ -89,6 +91,8 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
       }
     } else if (entityType == APPLICATION) {
       expressions.addAll(applicationExpressionBuilder.getExpressions(appId, entityId));
+    } else if (entityType == PIPELINE && forTags) {
+      expressions.addAll(pipelineExpressionBuilder.getExpressions(appId, entityId));
     }
     return expressions;
   }

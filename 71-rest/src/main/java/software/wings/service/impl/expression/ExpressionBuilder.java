@@ -176,8 +176,8 @@ public abstract class ExpressionBuilder {
     return getExpressions(appId, entityId);
   }
 
-  public Set<String> getExpressions(
-      String appId, String entityId, String serviceId, StateType stateType, SubEntityType subEntityType) {
+  public Set<String> getExpressions(String appId, String entityId, String serviceId, StateType stateType,
+      SubEntityType subEntityType, boolean forTags) {
     return getExpressions(appId, entityId, serviceId, stateType);
   }
 
