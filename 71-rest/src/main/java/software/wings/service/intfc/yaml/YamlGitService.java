@@ -184,8 +184,6 @@ public interface YamlGitService {
 
   RestResponse discardGitSyncErrorForFullSync(String accountId, String appId);
 
-  RestResponse discardGitSyncErrorsForGivenIds(String accountId, List<String> errorIds);
-
   RestResponse discardAllGitSyncError(String accountId);
 
   SettingAttribute getAndDecryptSettingAttribute(String sshSettingId);

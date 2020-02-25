@@ -4,6 +4,8 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.yaml.errorhandling.GitSyncError;
 
+import java.util.List;
+
 public interface GitSyncService {
   /**
    *
@@ -11,4 +13,11 @@ public interface GitSyncService {
    * @return
    */
   PageResponse<GitSyncError> list(PageRequest<GitSyncError> req);
+
+  /**
+   *
+   * @param accountId
+   * @param errors
+   */
+  void discardGitSyncErrorsForGivenIds(String accountId, List<GitSyncError> errors);
 }

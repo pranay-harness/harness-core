@@ -14,12 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.yaml.GitSyncService;
-import software.wings.service.intfc.AccountService;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitSyncError.GitSyncErrorKeys;
 
+import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -36,7 +37,7 @@ public class GitSyncResource {
   private GitSyncService gitSyncService;
 
   @Inject
-  public GitSyncResource(GitSyncService gitSyncService, AccountService accountService) {
+  public GitSyncResource(GitSyncService gitSyncService) {
     this.gitSyncService = gitSyncService;
   }
 
@@ -54,5 +55,18 @@ public class GitSyncResource {
     pageRequest.addFilter(GitSyncErrorKeys.accountId, SearchFilter.Operator.HAS, accountId);
     PageResponse<GitSyncError> pageResponse = gitSyncService.list(pageRequest);
     return new RestResponse<>(pageResponse);
+  }
+
+  /**
+   *
+   * @param accountId
+   * @param errors
+   * @return
+   */
+  @POST
+  @Path("discard")
+  public RestResponse discardGitSyncError(@QueryParam("accountId") String accountId, List<GitSyncError> errors) {
+    gitSyncService.discardGitSyncErrorsForGivenIds(accountId, errors);
+    return RestResponse.Builder.aRestResponse().build();
   }
 }

@@ -996,16 +996,6 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
-  public RestResponse discardGitSyncErrorsForGivenIds(String accountId, List<String> errorIds) {
-    Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
-    query.filter("accountId", accountId);
-    query.field("_id").in(errorIds);
-    wingsPersistence.delete(query);
-    closeAlertIfApplicable(accountId, false);
-    return RestResponse.Builder.aRestResponse().build();
-  }
-
-  @Override
   public RestResponse discardAllGitSyncError(String accountId) {
     Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
     query.filter("accountId", accountId);
