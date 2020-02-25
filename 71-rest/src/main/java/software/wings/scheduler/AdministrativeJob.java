@@ -2,6 +2,7 @@ package software.wings.scheduler;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
 
@@ -23,14 +24,14 @@ public class AdministrativeJob implements Handler<Account> {
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("AdministrativeJob")
             .poolSize(1)
-            .interval(ofMinutes(10))
+            .interval(ofSeconds(10))
             .build(),
         Account.class,
         MongoPersistenceIterator.<Account>builder()
             .clazz(Account.class)
             .fieldName(AccountKeys.secretManagerValidationIterator)
             .targetInterval(ofMinutes(10))
-            .acceptableNoAlertDelay(ofMinutes(1))
+            .acceptableNoAlertDelay(ofMinutes(20))
             .handler(this)
             .schedulingType(REGULAR)
             .redistribute(true));
@@ -41,7 +42,7 @@ public class AdministrativeJob implements Handler<Account> {
     logger.info("renewing tokens for {}", account.getUuid());
     try {
       vaultService.renewTokens(account.getUuid());
-      vaultService.appRoleLogin(account.getUuid());
+      vaultService.renewAppRoleClientToken(account.getUuid());
     } catch (Exception e) {
       logger.info("Failed to renew vault token for account id {}", account.getUuid(), e);
     }
