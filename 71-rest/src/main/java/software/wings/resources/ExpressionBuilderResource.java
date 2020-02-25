@@ -18,6 +18,7 @@ import software.wings.sm.StateType;
 
 import java.util.Set;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -37,7 +38,8 @@ public class ExpressionBuilderResource {
   public RestResponse<Set<String>> listExpressions(@QueryParam("appId") String appId,
       @QueryParam("entityId") String entityId, @QueryParam("entityType") EntityType entityType,
       @QueryParam("serviceId") String serviceId, @QueryParam("stateType") String strStateType,
-      @QueryParam("subEntityType") String strSubEntityType) {
+      @QueryParam("subEntityType") String strSubEntityType,
+      @QueryParam("forTags") @DefaultValue("false") boolean forTags) {
     StateType stateType = null;
     if (isNotBlank(strStateType)) {
       try {
@@ -58,8 +60,8 @@ public class ExpressionBuilderResource {
         throw new InvalidRequestException("Invalid state type " + strStateType);
       }
     }
-    return new RestResponse(
-        expressionBuilderService.listExpressions(appId, entityId, entityType, serviceId, stateType, subEntityType));
+    return new RestResponse(expressionBuilderService.listExpressions(
+        appId, entityId, entityType, serviceId, stateType, subEntityType, forTags));
   }
 
   @GET

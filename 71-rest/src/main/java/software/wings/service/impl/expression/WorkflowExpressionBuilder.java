@@ -37,12 +37,12 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
 
   @Override
   public Set<String> getExpressions(String appId, String entityId, String serviceId, StateType stateType) {
-    return getExpressions(appId, entityId, serviceId, stateType, null);
+    return getExpressions(appId, entityId, serviceId, stateType, null, false);
   }
 
   @Override
-  public Set<String> getExpressions(
-      String appId, String entityId, String serviceId, StateType stateType, SubEntityType subEntityType) {
+  public Set<String> getExpressions(String appId, String entityId, String serviceId, StateType stateType,
+      SubEntityType subEntityType, boolean forTags) {
     SortedSet<String> expressions = new TreeSet<>();
     Workflow workflow = workflowService.readWorkflow(appId, entityId);
     if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
@@ -52,15 +52,17 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
         OrchestrationWorkflowType.BUILD == workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType();
     if (subEntityType == null) {
       expressions = new TreeSet<>(getWorkflowVariableExpressions(workflow));
-      if (isNotBlank(serviceId) && !serviceId.equalsIgnoreCase("All")) {
-        expressions.addAll(getExpressions(appId, entityId, serviceId));
-      } else {
-        expressions.addAll(getExpressions(appId, entityId));
-        if ("All".equalsIgnoreCase(serviceId)) {
-          expressions.addAll(serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, "All", SERVICE));
-          if (workflow.getEnvId() != null) {
-            expressions.addAll(
-                environmentExpressionBuilder.getServiceTemplateVariableExpressions(appId, workflow.getEnvId()));
+      if (!forTags) {
+        if (isNotBlank(serviceId) && !serviceId.equalsIgnoreCase("All")) {
+          expressions.addAll(getExpressions(appId, entityId, serviceId));
+        } else {
+          expressions.addAll(getExpressions(appId, entityId));
+          if ("All".equalsIgnoreCase(serviceId)) {
+            expressions.addAll(serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, "All", SERVICE));
+            if (workflow.getEnvId() != null) {
+              expressions.addAll(
+                  environmentExpressionBuilder.getServiceTemplateVariableExpressions(appId, workflow.getEnvId()));
+            }
           }
         }
       }

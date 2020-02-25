@@ -6,6 +6,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
@@ -19,6 +20,7 @@ import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuild
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.PIPELINE;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.EntityType.WORKFLOW;
@@ -38,15 +40,21 @@ import static software.wings.service.intfc.ServiceVariableService.EncryptedField
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.COMMAND;
+import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.HTTP;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_KEY;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
+import static software.wings.utils.WingsTestConstants.ENTITY_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.VARIABLE_VALUE;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -65,34 +73,48 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
+import software.wings.beans.Account;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.EntityType;
+import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SubEntityType;
 import software.wings.beans.Variable;
+import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private WorkflowService workflowService;
+  @Mock private PipelineService pipelineService;
   @Mock private ServiceVariableService serviceVariableService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private AccountService accountService;
 
   @Inject @InjectMocks private ExpressionBuilderService builderService;
   @Inject @InjectMocks private ServiceExpressionBuilder serviceExpressionBuilder;
   @Inject @InjectMocks private EnvironmentExpressionBuilder environmentExpressionBuilder;
   @Inject @InjectMocks private WorkflowExpressionBuilder workflowExpressionBuilder;
+  @Inject @InjectMocks private PipelineExpressionBuilder pipelineExpressionBuilder;
 
   PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
                                                                 .withLimit(UNLIMITED)
@@ -442,7 +464,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
 
     Set<String> expressions = builderService.listExpressions(
-        APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID, null, SubEntityType.NOTIFICATION_GROUP);
+        APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID, null, SubEntityType.NOTIFICATION_GROUP, false);
     assertThat(expressions).isNotNull();
     assertThat(expressions).doesNotContain("env.name");
     assertThat(expressions).doesNotContain("app.defaults.Param1");
@@ -564,6 +586,112 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     assertThat(expressions).doesNotContain(INFRA_NAME);
     assertThat(expressions).contains("workflow.variables.name1");
     assertThat(expressions).contains(WINGS_STAGING_PATH);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetWorkflowVariablesExpressionsForTags() {
+    List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());
+    Workflow workflow = buildCanaryWorkflow(userVariables);
+
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+
+    Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, null, null, null, true);
+    assertThat(expressions).isNotNull();
+    assertThat(expressions.size()).isEqualTo(2);
+    assertThat(expressions).contains("app.defaults.Param1");
+    assertThat(expressions.contains("workflow.variables.name1")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetBuildWorkflowExpressionsForTags() {
+    List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());
+    Workflow workflow = aWorkflow()
+                            .name(WORKFLOW_NAME)
+                            .appId(APP_ID)
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aBuildOrchestrationWorkflow()
+                                                       .withUserVariables(userVariables)
+                                                       .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                                       .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                                       .build())
+                            .build();
+
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+
+    when(accountService.getAccountWithDefaults(ACCOUNT_ID))
+        .thenReturn(Account.Builder.anAccount()
+                        .withAccountKey(ACCOUNT_KEY)
+                        .withCompanyName(COMPANY_NAME)
+                        .withUuid(ACCOUNT_ID)
+                        .withDefaults(ImmutableMap.of("MyActDefaultVar", "MyDefaultValue"))
+                        .build());
+    Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, null, null, null, true);
+    assertThat(expressions).isNotNull();
+    assertThat(expressions.size()).isEqualTo(3);
+    assertThat(expressions).contains("workflow.variables.name1");
+    assertThat(expressions).contains("app.defaults.Param1");
+    assertThat(expressions).contains("account.defaults.MyActDefaultVar");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotGetPipelineExpressions() {
+    Set<String> expressions = builderService.listExpressions(APP_ID, PIPELINE_ID, PIPELINE, null, null, null, false);
+    assertThat(expressions).isNotNull();
+    assertThat(expressions.size()).isEqualTo(1);
+    assertThat(expressions).contains("app.defaults.Param1");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetPipelineExpressions() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("envId", ENV_ID);
+    properties.put("workflowId", "BUILD_WORKFLOW_ID");
+    PipelineStage pipelineStage1 =
+        PipelineStage.builder()
+            .pipelineStageElements(asList(PipelineStageElement.builder()
+                                              .workflowVariables(ImmutableMap.of("MyVar", ""))
+                                              .name("STAGE1")
+                                              .type(ENV_STATE.name())
+                                              .properties(properties)
+                                              .build()))
+            .build();
+
+    Pipeline pipeline2 = Pipeline.builder()
+                             .name("pipeline2")
+                             .appId(APP_ID)
+                             .uuid(PIPELINE_ID)
+                             .pipelineStages(asList(pipelineStage1,
+                                 PipelineStage.builder()
+                                     .pipelineStageElements(asList(PipelineStageElement.builder()
+                                                                       .name("STAGE2")
+                                                                       .type(ENV_STATE.name())
+                                                                       .properties(properties)
+                                                                       .build()))
+                                     .build()))
+                             .build();
+    List<Variable> userVariables = new ArrayList<>();
+    userVariables.add(ArtifactVariable.builder()
+                          .entityId(ENTITY_ID)
+                          .name("MyVar")
+                          .value(VARIABLE_VALUE)
+                          .type(VariableType.TEXT)
+                          .build());
+
+    pipeline2.setPipelineVariables(userVariables);
+    when(pipelineService.readPipelineWithVariables(APP_ID, PIPELINE_ID)).thenReturn(pipeline2);
+    Set<String> expressions = builderService.listExpressions(APP_ID, PIPELINE_ID, PIPELINE, null, null, null, true);
+    assertThat(expressions).isNotNull();
+    assertThat(expressions.size()).isEqualTo(2);
+    assertThat(expressions).contains("app.defaults.Param1");
+    assertThat(expressions).contains("workflow.variables.MyVar");
   }
 
   private Workflow buildCanaryWorkflow(List<Variable> userVariables) {
