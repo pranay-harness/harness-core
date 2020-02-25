@@ -210,4 +210,6 @@ public interface YamlGitService {
 
   boolean retainYamlGitConfigsOfSelectedGitConnectorsAndDeleteRest(
       String accountId, List<String> gitConnectorsToRetain);
+
+  RestResponse discardGitSyncErrorsForGivenIds(String accountId, List<String> errorIds);
 }
