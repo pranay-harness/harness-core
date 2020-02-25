@@ -168,6 +168,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
             .correlationId(generateUuid())
             .analysisMinute(5)
             .build();
+    verificationStateAnalysisExecutionData.setErrorMsg(generateUuid());
     stateExecutionMap.put(displayName, verificationStateAnalysisExecutionData);
 
     wingsPersistence.updateField(StateExecutionInstance.class, stateExecutionId,
@@ -195,6 +196,8 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
     assertThat(verificationStateExecutionData.getProgressPercentage()).isEqualTo(0);
     assertThat(verificationStateExecutionData.getRemainingMinutes())
         .isEqualTo(analysisContext.getTimeDuration() + DELAY_MINUTES + 1);
+    assertThat(verificationStateExecutionData.getErrorMsg())
+        .isEqualTo(verificationStateAnalysisExecutionData.getErrorMsg());
 
     // test one record
     NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord1 = new NewRelicMetricAnalysisRecord();
