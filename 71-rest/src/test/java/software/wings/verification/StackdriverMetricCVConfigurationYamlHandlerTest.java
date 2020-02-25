@@ -57,7 +57,6 @@ public class StackdriverMetricCVConfigurationYamlHandlerTest extends CVConfigura
 
     StackDriverMetricCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
-    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getMetricDefinitions()).isEqualTo(getMetricDefinitions());
   }
