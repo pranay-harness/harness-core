@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * For logging state transitions of a guava {@link Service}
  *
- * Add in service constructor as addListener(this, MoreExecutors.directExecutor());
+ * Add in service constructor as addListener(new LoggingListener(this), MoreExecutors.directExecutor());
  */
 @Slf4j
 public class LoggingListener extends Service.Listener {
@@ -43,6 +43,6 @@ public class LoggingListener extends Service.Listener {
   @Override
   public void failed(Service.State from, Throwable failure) {
     super.failed(from, failure);
-    logger.info("Service {} failed from {} with error {}", service, from, failure);
+    logger.error("Service {} failed from {} with error {}", service, from, failure);
   }
 }
