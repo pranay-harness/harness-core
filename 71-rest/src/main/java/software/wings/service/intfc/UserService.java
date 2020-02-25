@@ -24,6 +24,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.security.SecretManager;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthUserInfo;
 import software.wings.service.intfc.ownership.OwnedByAccount;
@@ -402,6 +403,8 @@ public interface UserService extends OwnedByAccount {
    * @return the boolean
    */
   boolean updatePassword(String resetPasswordToken, char[] password);
+
+  LogoutResponse logout(String accountId, String userId);
 
   void logout(User user);
 

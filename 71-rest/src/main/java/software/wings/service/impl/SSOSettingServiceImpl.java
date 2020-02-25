@@ -117,6 +117,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       queriedSettings.setDisplayName(settings.getDisplayName());
       queriedSettings.setOrigin(settings.getOrigin());
       queriedSettings.setGroupMembershipAttr(settings.getGroupMembershipAttr());
+      queriedSettings.setLogoutUrl(settings.getLogoutUrl());
       String ssoSettingUuid = wingsPersistence.save(queriedSettings);
       savedSettings = wingsPersistence.get(SamlSettings.class, ssoSettingUuid);
     } else {
@@ -126,6 +127,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     }
     auditServiceHelper.reportForAuditingUsingAccountId(settings.getAccountId(), null, settings, Event.Type.CREATE);
     logger.info("Auditing creation of SAML Settings for account={}", settings.getAccountId());
+
     return savedSettings;
   }
 

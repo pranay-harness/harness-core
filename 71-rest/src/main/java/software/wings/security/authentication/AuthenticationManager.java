@@ -40,7 +40,6 @@ import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountC
 import software.wings.security.authentication.recaptcha.MaxLoginAttemptExceededException;
 import software.wings.security.saml.SSORequest;
 import software.wings.security.saml.SamlClientService;
-import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -60,7 +59,6 @@ import javax.ws.rs.core.Response;
 @Singleton
 @Slf4j
 public class AuthenticationManager {
-  public static final String EMAIL = "email";
   @Inject private PasswordBasedAuthHandler passwordBasedAuthHandler;
   @Inject private SamlBasedAuthHandler samlBasedAuthHandler;
   @Inject private LdapBasedAuthHandler ldapBasedAuthHandler;
@@ -77,10 +75,11 @@ public class AuthenticationManager {
   @Inject private LicenseService licenseService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private FailedLoginAttemptCountChecker failedLoginAttemptCountChecker;
-  @Inject private AuditServiceHelper auditServiceHelper;
 
   private static final String LOGIN_ERROR_CODE_INVALIDSSO = "#/login?errorCode=invalidsso";
   private static final String LOGIN_ERROR_CODE_SAMLTESTSUCCESS = "#/login?errorCode=samltestsuccess";
+  private static final String EMAIL = "email";
+  private static final String ACCOUNT_ID = "accountId";
 
   private static final List<ErrorCode> NON_INVALID_CREDENTIALS_ERROR_CODES =
       Arrays.asList(USER_LOCKED, PASSWORD_EXPIRED, MAX_FAILED_ATTEMPT_COUNT_EXCEEDED);
@@ -398,6 +397,8 @@ public class AuthenticationManager {
       HashMap<String, String> claimMap = new HashMap<>();
       claimMap.put(EMAIL, user.getEmail());
       claimMap.put("subDomainUrl", accountService.get(user.getDefaultAccountId()).getSubdomainUrl());
+      claimMap.put(ACCOUNT_ID, user.getDefaultAccountId());
+
       String jwtToken = userService.generateJWTToken(claimMap, JWT_CATEGORY.SSO_REDIRECT);
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 

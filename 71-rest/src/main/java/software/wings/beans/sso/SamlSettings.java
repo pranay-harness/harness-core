@@ -16,16 +16,18 @@ public class SamlSettings extends SSOSettings {
   @JsonIgnore @NotNull private String metaDataFile;
   @NotNull private String accountId;
   @NotNull private String origin;
+  private String logoutUrl;
   private String groupMembershipAttr;
 
   @Builder
   public SamlSettings(SSOType ssoType, String displayName, String url, String metaDataFile, String accountId,
-      String origin, String groupMembershipAttr) {
+      String origin, String groupMembershipAttr, String logoutUrl) {
     super(SSOType.SAML, displayName, url);
     this.metaDataFile = metaDataFile;
     this.accountId = accountId;
     this.origin = origin;
     this.groupMembershipAttr = groupMembershipAttr;
+    this.logoutUrl = logoutUrl;
   }
 
   @Override
