@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -20,6 +21,7 @@ import software.wings.service.impl.yaml.GitSyncErrorStatus;
                            , @Field("yamlFilePath") },
     options = @IndexOptions(unique = true, name = "uniqueIdx")))
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "GitSyncErrorKeys")
 @Entity(value = "gitSyncError")
