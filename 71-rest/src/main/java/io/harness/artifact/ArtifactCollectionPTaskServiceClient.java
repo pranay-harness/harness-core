@@ -10,6 +10,7 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +19,7 @@ public class ArtifactCollectionPTaskServiceClient
     implements PerpetualTaskServiceClient<ArtifactCollectionPTaskClientParams> {
   private static final String ARTIFACT_STREAM_ID = "artifactStreamId";
   @Inject private PerpetualTaskService perpetualTaskService;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
   @Override
   public String create(String accountId, ArtifactCollectionPTaskClientParams clientParams) {
@@ -53,7 +55,7 @@ public class ArtifactCollectionPTaskServiceClient
 
   @Override
   public DelegateTask getValidationTask(PerpetualTaskClientContext clientContext, String accountId) {
-    // no op for now
-    return null;
+    Map<String, String> clientParams = clientContext.getClientParams();
+    return artifactCollectionUtils.prepareValidateTask(clientParams.get(ARTIFACT_STREAM_ID));
   }
 }

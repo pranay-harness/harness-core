@@ -74,6 +74,7 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.ImageDetails.ImageDetailsBuilder;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping;
+import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceParametersBuilder;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType;
@@ -105,6 +106,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -125,6 +127,7 @@ public class ArtifactCollectionUtils {
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ArtifactService artifactService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private AwsCommandHelper awsCommandHelper;
 
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
@@ -613,15 +616,10 @@ public class ArtifactCollectionUtils {
         secretManager.getEncryptionDetails((EncryptableSetting) settingValue, null, null);
 
     String appId = artifactStream.fetchAppId();
-    boolean multiArtifact =
-        featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, settingAttribute.getAccountId());
+    boolean multiArtifact = multiArtifactEnabled(settingAttribute.getAccountId());
     ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, multiArtifact);
-    BuildSourceRequestType requestType;
-    if (multiArtifact) {
-      requestType = getRequestType(artifactStream);
-    } else {
-      requestType = getRequestType(artifactStream, artifactStreamAttributes.getArtifactType());
-    }
+    BuildSourceRequestType requestType =
+        getBuildSourceRequestType(artifactStream, multiArtifact, artifactStreamAttributes);
 
     BuildSourceParametersBuilder buildSourceParametersBuilder =
         BuildSourceParameters.builder()
@@ -638,6 +636,82 @@ public class ArtifactCollectionUtils {
       buildSourceParametersBuilder.savedBuildDetailsKeys(getArtifactsKeys(artifactStream, artifactStreamAttributes));
     }
     return buildSourceParametersBuilder.build();
+  }
+
+  private boolean multiArtifactEnabled(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId);
+  }
+
+  private BuildSourceRequestType getBuildSourceRequestType(
+      ArtifactStream artifactStream, boolean multiArtifact, ArtifactStreamAttributes artifactStreamAttributes) {
+    BuildSourceRequestType requestType;
+    if (multiArtifact) {
+      requestType = getRequestType(artifactStream);
+    } else {
+      requestType = getRequestType(artifactStream, artifactStreamAttributes.getArtifactType());
+    }
+    return requestType;
+  }
+
+  public DelegateTask prepareValidateTask(String artifactStreamId) {
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    if (artifactStream == null) {
+      throw new InvalidRequestException("Artifact stream does not exist");
+    }
+    String accountId = artifactStream.getAccountId();
+    BuildSourceParametersBuilder parametersBuilder = BuildSourceParameters.builder()
+                                                         .appId(artifactStream.getAppId())
+                                                         .artifactStreamType(artifactStream.getArtifactStreamType());
+    SettingValue settingValue;
+    List<String> tags;
+    if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+      parametersBuilder.accountId(artifactStream.getAccountId())
+          .buildSourceRequestType(BuildSourceRequestType.GET_BUILDS)
+          .artifactStreamAttributes(artifactStream.fetchArtifactStreamAttributes());
+      tags = ((CustomArtifactStream) artifactStream).getTags();
+      if (isNotEmpty(tags)) {
+        // To remove if any empty tags in case saved for custom artifact stream
+        tags = tags.stream().filter(EmptyPredicate::isNotEmpty).distinct().collect(toList());
+      }
+
+    } else {
+      SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+      if (settingAttribute == null) {
+        throw new InvalidRequestException("Connector / Cloud Provider associated to Artifact Stream was deleted");
+      }
+      settingValue = settingAttribute.getValue();
+      List<EncryptedDataDetail> encryptedDataDetails =
+          secretManager.getEncryptionDetails((EncryptableSetting) settingValue, null, null);
+      tags = awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute);
+      accountId = settingAttribute.getAccountId();
+      boolean multiArtifactEnabled = multiArtifactEnabled(accountId);
+
+      ArtifactStreamAttributes artifactStreamAttributes =
+          getArtifactStreamAttributes(artifactStream, multiArtifactEnabled);
+
+      BuildSourceRequestType requestType =
+          getBuildSourceRequestType(artifactStream, multiArtifactEnabled, artifactStreamAttributes);
+
+      parametersBuilder = BuildSourceParameters.builder()
+                              .accountId(settingAttribute.getAccountId())
+                              .appId(artifactStream.getAppId())
+                              .artifactStreamAttributes(artifactStreamAttributes)
+                              .artifactStreamType(artifactStream.getArtifactStreamType())
+                              .settingValue(settingValue)
+                              .encryptedDataDetails(encryptedDataDetails)
+                              .buildSourceRequestType(requestType);
+    }
+
+    return DelegateTask.builder()
+        .async(false)
+        .accountId(accountId)
+        .data(TaskData.builder()
+                  .taskType(TaskType.BUILD_SOURCE_TASK.name())
+                  .parameters(new Object[] {parametersBuilder.build()})
+                  .timeout(TimeUnit.MINUTES.toMillis(1))
+                  .build())
+        .tags(tags)
+        .build();
   }
 
   /**

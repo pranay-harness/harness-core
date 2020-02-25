@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
+import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
@@ -25,6 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +40,8 @@ public class ArtifactCollectionPTaskServiceClientTest extends CategoryTest {
   private static final String ARTIFACT_STREAM_ID = "artifactStreamId";
 
   @Mock private PerpetualTaskService perpetualTaskService;
+  @Mock private ArtifactCollectionUtils artifactCollectionUtils;
+
   @Inject @InjectMocks private ArtifactCollectionPTaskServiceClient artifactCollectionPTaskServiceClient;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -89,5 +93,17 @@ public class ArtifactCollectionPTaskServiceClientTest extends CategoryTest {
   public void shouldReset() {
     when(perpetualTaskService.resetTask(accountId, taskId)).thenReturn(true);
     assertThat(artifactCollectionPTaskServiceClient.reset(accountId, taskId)).isTrue();
+    verify(perpetualTaskService).resetTask(accountId, taskId);
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldGetValidationTask() {
+    PerpetualTaskClientContext perpetualTaskClientContext = new PerpetualTaskClientContext(clientParamsMap);
+    when(artifactCollectionUtils.prepareValidateTask(artifactStreamId)).thenReturn(DelegateTask.builder().build());
+    assertThat(artifactCollectionPTaskServiceClient.getValidationTask(perpetualTaskClientContext, accountId))
+        .isNotNull();
+    verify(artifactCollectionUtils).prepareValidateTask(artifactStreamId);
   }
 }
