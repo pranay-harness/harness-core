@@ -754,7 +754,7 @@ public class AccountExportImportResource {
     return harnessEntity != null && harnessEntity.exportable();
   }
 
-  private Map<String, Boolean> getToBeExported(ExportMode exportType, List<String> entityTypes) {
+  public Map<String, Boolean> getToBeExported(ExportMode exportType, List<String> entityTypes) {
     Map<String, Boolean> toBeExported = new HashMap<>();
     switch (exportType) {
       case ALL:

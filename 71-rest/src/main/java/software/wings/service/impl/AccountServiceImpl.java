@@ -37,6 +37,7 @@ import com.google.inject.name.Named;
 
 import io.harness.account.ProvisionStep;
 import io.harness.account.ProvisionStep.ProvisionStepKeys;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
@@ -57,15 +58,18 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.PersistentEntity;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -77,6 +81,7 @@ import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
+import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
@@ -84,10 +89,12 @@ import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
+import software.wings.beans.Schema;
 import software.wings.beans.Service;
 import software.wings.beans.SubdomainUrl;
 import software.wings.beans.SystemCatalog;
@@ -108,6 +115,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.features.GovernanceFeature;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.licensing.LicenseService;
+import software.wings.resources.AccountExportImportResource;
 import software.wings.resources.UserResource;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
@@ -120,6 +128,7 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.authentication.AccountSettingsResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.OauthProviderType;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.event.AccountEntityEvent;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -191,6 +200,14 @@ public class AccountServiceImpl implements AccountService {
   private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
   private static final String SAMPLE_DELEGATE_STATUS_ENDPOINT_FORMAT_STRING = "http://%s/account-%s.txt";
   private static final String DELIMITER = "####";
+  private static final String ACCOUNT_ID = "accountId";
+
+  private static Set<Class<? extends PersistentEntity>> seperateDeletionEntities =
+      new HashSet<>(Arrays.asList(Account.class, User.class));
+
+  private static Set<Class<? extends PersistentEntity>> includedMongoCollections =
+      new HashSet<>(Arrays.asList(Application.class, Schema.class, EncryptedData.class, KmsConfig.class));
+
   @Inject protected AuthService authService;
   @Inject protected CacheManager cacheManager;
   @Inject private WingsPersistence wingsPersistence;
@@ -226,7 +243,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private EventPublisher eventPublisher;
   @Inject private SegmentGroupEventJobService segmentGroupEventJobService;
   @Inject private UserResource userResource;
-  @Inject private AccountService accountService;
+  @Inject private AccountExportImportResource accountExportImportResource;
+  @Inject private Morphia morphia;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -443,6 +461,59 @@ public class AccountServiceImpl implements AccountService {
     services.forEach(service -> service.deleteByAccountId(accountId));
     logger.info("Successfully deleted account {}", accountId);
     return wingsPersistence.delete(account);
+  }
+
+  private boolean isAnnotatedExportable(Class<? extends PersistentEntity> clazz) {
+    HarnessEntity harnessEntity = clazz.getAnnotation(HarnessEntity.class);
+    return harnessEntity != null && harnessEntity.exportable();
+  }
+
+  private Set<Class<? extends PersistentEntity>> findExportableEntityTypes() {
+    Set<Class<? extends PersistentEntity>> toBeExported = new HashSet<>();
+
+    morphia.getMapper().getMappedClasses().forEach(mc -> {
+      Class<? extends PersistentEntity> clazz = (Class<? extends PersistentEntity>) mc.getClazz();
+      if (mc.getEntityAnnotation() != null && isAnnotatedExportable(clazz) && !seperateDeletionEntities.contains(clazz)
+          && !includedMongoCollections.contains(clazz)) {
+        // Find out non-abstract classes with both 'Entity' and 'HarnessEntity' annotation.
+        logger.info("Collection '{}' is exportable", clazz.getName());
+        toBeExported.add(clazz);
+      }
+    });
+    return toBeExported;
+  }
+
+  @Override
+  public boolean deleteExportableAccountData(String accountId) {
+    logger.info("Deleting exportable data for account {}", accountId);
+    if (get(accountId) == null) {
+      throw new InvalidRequestException("The account to be deleted doesn't exist");
+    }
+    Set<Class<? extends PersistentEntity>> toBeExported = findExportableEntityTypes();
+    logger.info("The exportable entities are {}", toBeExported);
+    toBeExported.forEach(entry -> {
+      try {
+        logger.info("Deleting from collection {} and count of records deleted are {}", entry.getName(),
+            wingsPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId).count());
+        wingsPersistence.delete(wingsPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId));
+      } catch (ValidationException ve) {
+        logger.error("Issue while deleting this collection {}", entry.getName());
+      }
+    });
+    includedMongoCollections.forEach(entry -> {
+      try {
+        logger.info("Deleting from mongo collection {} and count of records deleted are {}", entry.getName(),
+            wingsPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId).count());
+        wingsPersistence.delete(wingsPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId));
+      } catch (ValidationException ve) {
+        logger.error("Issue while deleting this mongo collection {}", entry.getName());
+      }
+    });
+    List<User> users = userService.getUsersOfAccount(accountId);
+    if (!users.isEmpty()) {
+      users.forEach(user -> userService.delete(accountId, user.getUuid()));
+    }
+    return wingsPersistence.delete(Account.class, accountId);
   }
 
   @Override

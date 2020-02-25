@@ -46,6 +46,8 @@ public interface AccountService {
 
   boolean delete(String accountId);
 
+  boolean deleteExportableAccountData(String accountId);
+
   boolean getTwoFactorEnforceInfo(String accountId);
 
   void updateTwoFactorEnforceInfo(String accountId, boolean enabled);
