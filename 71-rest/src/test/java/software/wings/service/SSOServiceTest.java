@@ -1,7 +1,7 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.RUSHABH;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
@@ -31,6 +31,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.AccountType;
 import software.wings.beans.sso.LdapConnectionSettings;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapGroupSettings;
@@ -38,9 +39,9 @@ import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.LdapTestResponse.Status;
 import software.wings.beans.sso.LdapUserSettings;
+import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
@@ -62,7 +63,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class SSOServiceTest extends WingsBaseTest {
-  @Mock private WingsPersistence WINGS_PERSISTENCE;
   @Mock private AccountService ACCOUNT_SERVICE;
   @Mock private SSOSettingService SSO_SETTING_SERVICE;
   @Mock private SamlClientService SAML_CLIENT_SERVICE;
@@ -71,8 +71,9 @@ public class SSOServiceTest extends WingsBaseTest {
   @Mock private SecretManager SECRET_MANAGER;
 
   private LdapSettings ldapSettings;
+  @Inject @InjectMocks private SSOService ssoService;
 
-  @Inject @InjectMocks SSOService ssoService;
+  public static final String logoutUrl = "logout_url";
 
   @Before
   public void setup() {
@@ -103,13 +104,18 @@ public class SSOServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void uploadSamlConfiguration() throws IOException, SamlException {
     Account account = new Account();
+    account.setAccountName("account_name");
+    account.setCompanyName("company_name");
+    account.setUuid("accountId");
+
+    account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
     String xml = IOUtils.toString(getClass().getResourceAsStream("/okta-IDP-metadata.xml"), Charset.defaultCharset());
     when(ACCOUNT_SERVICE.get(anyString())).thenReturn(account);
     when(ACCOUNT_SERVICE.update(account)).thenReturn(account);
     when(SAML_CLIENT_SERVICE.getSamlClient(anyString())).thenCallRealMethod();
 
     SamlSettings mockSamlSettings = SamlSettings.builder().build();
-    mockSamlSettings.setAccountId("TestAccountID");
+    mockSamlSettings.setAccountId(account.getUuid());
     mockSamlSettings.setUrl(
         "https://dev-274703.oktapreview.com/app/harnessiodev274703_testapp_1/exkefa5xlgHhrU1Mc0h7/sso/saml");
     mockSamlSettings.setMetaDataFile(xml);
@@ -117,7 +123,7 @@ public class SSOServiceTest extends WingsBaseTest {
     when(SSO_SETTING_SERVICE.getSamlSettingsByAccountId(anyString())).thenReturn(mockSamlSettings);
 
     SSOConfig settings = ssoService.uploadSamlConfiguration(
-        "testAccountID", getClass().getResourceAsStream("/okta-IDP-metadata.xml"), "Okta", "group", true);
+        account.getUuid(), getClass().getResourceAsStream("/okta-IDP-metadata.xml"), "Okta", "group", true, logoutUrl);
     String idpRedirectUrl = ((SamlSettings) settings.getSsoSettings().get(0)).getUrl();
     assertThat(idpRedirectUrl)
         .isEqualTo("https://dev-274703.oktapreview.com/app/harnessiodev274703_testapp_1/exkefa5xlgHhrU1Mc0h7/sso/saml");
@@ -125,11 +131,37 @@ public class SSOServiceTest extends WingsBaseTest {
 
     try {
       ssoService.uploadSamlConfiguration(
-          "testAccountID", getClass().getResourceAsStream("/SamlResponse.txt"), "Okta", "group", true);
+          account.getUuid(), getClass().getResourceAsStream("/SamlResponse.txt"), "Okta", "group", true, logoutUrl);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_SAML_CONFIGURATION.name());
     }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testUpdateLogoutUrlSamlSettings() {
+    Account account = getAccount(AccountType.PAID);
+    account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
+
+    String logoutUrl = "logout_url";
+    String updatedLogoutUrl = "updated_logout_url";
+
+    SamlSettings samlSettings =
+        SamlSettings.builder().accountId(account.getUuid()).ssoType(SSOType.SAML).logoutUrl(logoutUrl).build();
+
+    when(SSO_SETTING_SERVICE.getSamlSettingsByAccountId(account.getUuid())).thenReturn(samlSettings);
+    when(ACCOUNT_SERVICE.get(account.getUuid())).thenReturn(account);
+    SSOConfig ssoConfig = ssoService.updateLogoutUrlSamlSettings(account.getUuid(), updatedLogoutUrl);
+
+    assertThat(SSO_SETTING_SERVICE.getSamlSettingsByAccountId(account.getUuid()).getLogoutUrl()).isNotNull();
+    assertThat(SSO_SETTING_SERVICE.getSamlSettingsByAccountId(account.getUuid()).getLogoutUrl())
+        .isEqualTo(updatedLogoutUrl);
+    assertThat(ssoConfig.getSsoSettings().get(0).getType()).isEqualTo(SSOType.SAML);
+
+    assertThat(((SamlSettings) ssoConfig.getSsoSettings().get(0)).getLogoutUrl()).isNotNull();
+    assertThat(((SamlSettings) ssoConfig.getSsoSettings().get(0)).getLogoutUrl()).isEqualTo(updatedLogoutUrl);
   }
 
   @Test
@@ -150,7 +182,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void validateLdapConnectionSettings() {
     when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
@@ -161,7 +193,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void validateLdapUserSettings() {
     when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
@@ -172,7 +204,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void validateLdapGroupSettings() {
     when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
@@ -183,7 +215,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void validateLdapAuthentication() {
     when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
@@ -202,7 +234,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void searchGroupsByName() {
     EncryptedDataDetail encryptedDataDetail = mock(EncryptedDataDetail.class);

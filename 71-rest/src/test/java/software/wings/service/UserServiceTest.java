@@ -143,6 +143,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.signup.SignupException;
@@ -211,6 +212,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private EventPublishHelper eventPublishHelper;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private SSOSettingService ssoSettingService;
   @Spy @InjectMocks private SignupServiceImpl signupService;
 
   /**
@@ -251,6 +253,24 @@ public class UserServiceTest extends WingsBaseTest {
         .thenReturn(WingsTestConstants.mockChecker());
 
     when(configuration.isBlacklistedEmailDomainsAllowed()).thenReturn(true);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC0_testLogout() {
+    String token = "token";
+    User user = anUser()
+                    .appId(generateUuid())
+                    .defaultAccountId(generateUuid())
+                    .token(token)
+                    .email("email")
+                    .name("user_name")
+                    .build();
+
+    userService.logout(user);
+    verify(cache).remove(user.getUuid());
+    verify(authService, times(1)).invalidateToken(user.getToken());
   }
 
   @Test

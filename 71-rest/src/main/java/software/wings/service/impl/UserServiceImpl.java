@@ -127,6 +127,7 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
+import software.wings.beans.sso.SamlSettings;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
@@ -143,6 +144,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationUtils;
+import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
@@ -1505,6 +1507,25 @@ public class UserServiceImpl implements UserService {
   public void logout(User user) {
     authService.invalidateToken(user.getToken());
     evictUserFromCache(user.getUuid());
+  }
+
+  @Override
+  public LogoutResponse logout(String accountId, String userId) {
+    LogoutResponse logoutResponse = new LogoutResponse();
+    logger.info("Sending logout response from manager for user {} in account {}", userId, accountId);
+    SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
+    logger.info("CITI Testing: Samlsettings from accountId is {}", samlSettings);
+    if (samlSettings != null && samlSettings.getLogoutUrl() != null) {
+      logoutResponse.setLogoutUrl(samlSettings.getLogoutUrl());
+      logger.info("CITI Testing: Logout URL from accountId is {}", samlSettings.getLogoutUrl());
+    }
+    User user = get(accountId, userId);
+    if (user != null) {
+      logger.info("Invalidating token for {}", user);
+      logout(user);
+    }
+    logger.info("CITI Testing: Logout Response from manager {}", logoutResponse);
+    return logoutResponse;
   }
 
   private void resetUserPassword(String email, char[] password, long tokenIssuedAt) {

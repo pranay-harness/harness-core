@@ -20,10 +20,12 @@ public interface SSOService {
   SSOConfig uploadOauthConfiguration(String accountId, String filter, Set<OauthProviderType> allowedProviders);
 
   SSOConfig uploadSamlConfiguration(@NotNull String accountId, @NotNull InputStream inputStream,
-      @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled);
+      @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl);
 
   SSOConfig updateSamlConfiguration(@NotNull String accountId, InputStream inputStream, String displayName,
-      String groupMembershipAttr, @NotNull Boolean authorizationEnabled);
+      String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl);
+
+  SSOConfig updateLogoutUrlSamlSettings(@NotNull String accountId, @NotNull String logoutUrl);
 
   SSOConfig deleteSamlConfiguration(@NotNull String accountId);
 

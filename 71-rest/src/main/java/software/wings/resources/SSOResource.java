@@ -74,9 +74,10 @@ public class SSOResource {
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @FormDataParam("displayName") String displayName,
       @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
-      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled) {
+      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled,
+      @FormDataParam("logoutUrl") String logoutUrl) {
     return new RestResponse<>(ssoService.uploadSamlConfiguration(
-        accountId, uploadedInputStream, displayName, groupMembershipAttr, authorizationEnabled));
+        accountId, uploadedInputStream, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl));
   }
 
   @POST
@@ -119,9 +120,19 @@ public class SSOResource {
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @FormDataParam("displayName") String displayName,
       @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
-      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled) {
+      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled,
+      @FormDataParam("logoutUrl") String logoutUrl) {
     return new RestResponse<>(ssoService.updateSamlConfiguration(
-        accountId, uploadedInputStream, displayName, groupMembershipAttr, authorizationEnabled));
+        accountId, uploadedInputStream, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl));
+  }
+
+  @PUT
+  @Path("saml-logout-url-upload")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SSOConfig> updateLogoutUrlSamlSettings(
+      @QueryParam("accountId") String accountId, @QueryParam("logoutUrl") String logoutUrl) {
+    return new RestResponse<>(ssoService.updateLogoutUrlSamlSettings(accountId, logoutUrl));
   }
 
   @DELETE

@@ -81,11 +81,11 @@ public class SSOServiceImpl implements SSOService {
 
   @Override
   public SSOConfig uploadSamlConfiguration(String accountId, InputStream inputStream, String displayName,
-      String groupMembershipAttr, Boolean authorizationEnabled) {
+      String groupMembershipAttr, Boolean authorizationEnabled, String logoutUrl) {
     try {
       String fileAsString = IOUtils.toString(inputStream, Charset.defaultCharset());
       groupMembershipAttr = authorizationEnabled ? groupMembershipAttr : null;
-      buildAndUploadSamlSettings(accountId, fileAsString, displayName, groupMembershipAttr);
+      buildAndUploadSamlSettings(accountId, fileAsString, displayName, groupMembershipAttr, logoutUrl);
       return getAccountAccessManagementSettings(accountId);
     } catch (SamlException | IOException | URISyntaxException e) {
       throw new WingsException(ErrorCode.INVALID_SAML_CONFIGURATION, e);
@@ -107,7 +107,7 @@ public class SSOServiceImpl implements SSOService {
 
   @Override
   public SSOConfig updateSamlConfiguration(String accountId, InputStream inputStream, String displayName,
-      String groupMembershipAttr, Boolean authorizationEnabled) {
+      String groupMembershipAttr, Boolean authorizationEnabled, String logoutUrl) {
     try {
       SamlSettings settings = ssoSettingService.getSamlSettingsByAccountId(accountId);
       String fileAsString;
@@ -124,11 +124,24 @@ public class SSOServiceImpl implements SSOService {
         displayName = settings.getDisplayName();
       }
 
-      buildAndUploadSamlSettings(accountId, fileAsString, displayName, groupMembershipAttr);
+      buildAndUploadSamlSettings(accountId, fileAsString, displayName, groupMembershipAttr, logoutUrl);
       return getAccountAccessManagementSettings(accountId);
     } catch (SamlException | IOException | URISyntaxException e) {
       throw new WingsException(ErrorCode.INVALID_SAML_CONFIGURATION, e);
     }
+  }
+
+  @Override
+  public SSOConfig updateLogoutUrlSamlSettings(String accountId, String logoutUrl) {
+    logger.info("Logout url being set from API is {}", logoutUrl);
+    SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
+    if (samlSettings != null) {
+      samlSettings.setLogoutUrl(logoutUrl);
+      ssoSettingService.saveSamlSettings(samlSettings);
+    } else {
+      throw new InvalidRequestException("Cannot update Logout URL as no SAML Config exists for your account");
+    }
+    return getAccountAccessManagementSettings(accountId);
   }
 
   @Override
@@ -223,7 +236,7 @@ public class SSOServiceImpl implements SSOService {
   }
 
   private SamlSettings buildAndUploadSamlSettings(String accountId, String fileAsString, String displayName,
-      String groupMembershipAttr) throws SamlException, URISyntaxException {
+      String groupMembershipAttr, String logoutUrl) throws SamlException, URISyntaxException {
     SamlClient samlClient = samlClientService.getSamlClient(fileAsString);
     SamlSettings samlSettings = SamlSettings.builder()
                                     .metaDataFile(fileAsString)
@@ -233,6 +246,9 @@ public class SSOServiceImpl implements SSOService {
                                     .origin(new URI(samlClient.getIdentityProviderUrl()).getHost())
                                     .groupMembershipAttr(groupMembershipAttr)
                                     .build();
+    if (logoutUrl != null) {
+      samlSettings.setLogoutUrl(logoutUrl);
+    }
     return ssoSettingService.saveSamlSettings(samlSettings);
   }
 

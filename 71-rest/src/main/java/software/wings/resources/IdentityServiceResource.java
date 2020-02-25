@@ -15,6 +15,7 @@ import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
@@ -22,6 +23,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.authentication.AccountSettingsResponse;
 import software.wings.security.authentication.AuthenticationManager;
+import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.oauth.OauthUserInfo;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
@@ -132,5 +134,14 @@ public class IdentityServiceResource {
       @NotNull OauthUserInfo oauthUserInfo, @QueryParam("provider") String oauthProviderName) {
     User user = userService.signUpUserUsingOauth(oauthUserInfo, oauthProviderName);
     return new RestResponse<>(user.getPublicUser());
+  }
+
+  @GET
+  @Path("/user/logout")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<LogoutResponse> logout(
+      @QueryParam("accountId") @NotBlank String accountId, @QueryParam("userId") @NotBlank String userId) {
+    return new RestResponse(userService.logout(accountId, userId));
   }
 }
