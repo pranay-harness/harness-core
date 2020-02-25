@@ -2,6 +2,7 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
@@ -291,7 +292,7 @@ public class PcfPluginState extends State {
     if (pcfPluginStateExecutionData != null && pcfPluginStateExecutionData.getTimeoutIntervalInMinutes() != null) {
       return pcfPluginStateExecutionData.getTimeoutIntervalInMinutes();
     }
-    return 5;
+    return DEFAULT_PCF_TASK_TIMEOUT_MIN;
   }
 
   private String resolveRenderedScript(

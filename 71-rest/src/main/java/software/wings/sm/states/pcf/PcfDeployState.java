@@ -2,6 +2,7 @@ package software.wings.sm.states.pcf;
 
 import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 
@@ -173,7 +174,9 @@ public class PcfDeployState extends State {
                                            .envId(env.getUuid())
                                            .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
                                            .parameters(new Object[] {commandRequest, encryptedDataDetails})
-                                           .timeout(5)
+                                           .timeout(setupSweepingOutputPcf.getTimeoutIntervalInMinutes() == null
+                                                   ? DEFAULT_PCF_TASK_TIMEOUT_MIN
+                                                   : setupSweepingOutputPcf.getTimeoutIntervalInMinutes())
                                            .build());
 
     delegateService.queueTask(task);

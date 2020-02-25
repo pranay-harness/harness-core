@@ -3,6 +3,7 @@ package software.wings.sm.states.pcf;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
 import static io.harness.validation.Validator.notNullCheck;
@@ -317,17 +318,17 @@ public class PcfSetupState extends State {
 
     String waitId = generateUuid();
 
-    DelegateTask delegateTask =
-        pcfStateHelper.getDelegateTask(PcfDelegateTaskCreationData.builder()
-                                           .accountId(app.getAccountId())
-                                           .appId(app.getUuid())
-                                           .waitId(waitId)
-                                           .taskType(TaskType.PCF_COMMAND_TASK)
-                                           .envId(env.getUuid())
-                                           .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
-                                           .parameters(new Object[] {commandRequest, encryptedDataDetails})
-                                           .timeout(5)
-                                           .build());
+    DelegateTask delegateTask = pcfStateHelper.getDelegateTask(
+        PcfDelegateTaskCreationData.builder()
+            .accountId(app.getAccountId())
+            .appId(app.getUuid())
+            .waitId(waitId)
+            .taskType(TaskType.PCF_COMMAND_TASK)
+            .envId(env.getUuid())
+            .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
+            .parameters(new Object[] {commandRequest, encryptedDataDetails})
+            .timeout(timeoutIntervalInMinutes == null ? DEFAULT_PCF_TASK_TIMEOUT_MIN : timeoutIntervalInMinutes)
+            .build());
 
     delegateService.queueTask(delegateTask);
 

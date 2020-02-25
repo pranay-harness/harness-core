@@ -8,6 +8,7 @@ import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
 import static io.harness.pcf.model.ManifestType.AUTOSCALAR_MANIFEST;
 import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.pcf.model.PcfConstants.INSTANCE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.INSTANCE_PLACEHOLDER_TOKEN_DEPRECATED;
 import static io.harness.pcf.model.PcfConstants.NAME_MANIFEST_YML_ELEMENT;
@@ -194,7 +195,7 @@ public class PcfStateHelper {
   public ExecutionResponse queueDelegateTaskForRouteUpdate(
       PcfRouteUpdateQueueRequestData queueRequestData, SetupSweepingOutputPcf setupSweepingOutputPcf) {
     Integer timeoutIntervalInMinutes = queueRequestData.getTimeoutIntervalInMinutes() == null
-        ? Integer.valueOf(5)
+        ? Integer.valueOf(DEFAULT_PCF_TASK_TIMEOUT_MIN)
         : queueRequestData.getTimeoutIntervalInMinutes();
     Application app = queueRequestData.getApp();
     PcfInfrastructureMapping pcfInfrastructureMapping = queueRequestData.getPcfInfrastructureMapping();
@@ -229,7 +230,7 @@ public class PcfStateHelper {
                             .taskType(TaskType.PCF_COMMAND_TASK)
                             .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
                             .parameters(new Object[] {pcfCommandRequest, queueRequestData.getEncryptedDataDetails()})
-                            .timeout(10)
+                            .timeout(timeoutIntervalInMinutes)
                             .build());
 
     delegateService.queueTask(delegateTask);
