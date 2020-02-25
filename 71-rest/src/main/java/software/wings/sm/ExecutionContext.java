@@ -33,6 +33,10 @@ public interface ExecutionContext {
 
   StateExecutionData getStateExecutionData();
 
+  boolean isRetry();
+
+  int retryCount();
+
   Map<String, Object> asMap();
 
   String renderExpression(String expression);

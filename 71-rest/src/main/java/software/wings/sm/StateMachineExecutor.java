@@ -1458,6 +1458,8 @@ public class StateMachineExecutor implements StateInspectionListener {
       ops.unset("endTs");
     }
     ops.set(StateExecutionInstanceKeys.status, NEW);
+    ops.set(StateExecutionInstanceKeys.retry, Boolean.TRUE);
+    ops.set(StateExecutionInstanceKeys.retryCount, stateExecutionInstance.getRetryCount() + 1);
 
     Query<StateExecutionInstance> query =
         wingsPersistence.createQuery(StateExecutionInstance.class)
