@@ -29,7 +29,7 @@ public class ChronicleEventTailer extends AbstractScheduledService {
   private static final String READ_TAILER = "read-tailer";
   private static final int MAX_COUNT = 5000;
   private static final int MAX_BYTES = 1024 * 1024; // 1MiB
-  private static final Duration MIN_DELAY = Duration.ofMillis(200);
+  private static final Duration MIN_DELAY = Duration.ofSeconds(1);
   private static final Duration MAX_DELAY = Duration.ofMinutes(5);
 
   private final EventPublisherBlockingStub blockingStub;
