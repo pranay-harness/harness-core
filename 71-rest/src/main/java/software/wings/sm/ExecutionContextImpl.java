@@ -246,6 +246,16 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   @Override
+  public boolean isRetry() {
+    return stateExecutionInstance.isRetry();
+  }
+
+  @Override
+  public int retryCount() {
+    return stateExecutionInstance.getRetryCount();
+  }
+
+  @Override
   public <T extends ContextElement> T getContextElement() {
     return (T) stateExecutionInstance.getContextElement();
   }

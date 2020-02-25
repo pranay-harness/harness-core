@@ -112,6 +112,9 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
   private Long endTs;
   private Long expiryTs;
 
+  private boolean retry;
+  private int retryCount;
+
   private boolean hasInspection;
 
   @Transient private String workflowId;
