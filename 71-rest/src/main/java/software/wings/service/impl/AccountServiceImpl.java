@@ -439,10 +439,8 @@ public class AccountServiceImpl implements AccountService {
 
     dbCache.invalidate(Account.class, accountId);
     deleteQuartzJobs(accountId);
-    executorService.submit(() -> {
-      List<OwnedByAccount> services = descendingServices(OwnedByAccount.class);
-      services.forEach(service -> service.deleteByAccountId(accountId));
-    });
+    List<OwnedByAccount> services = descendingServices(OwnedByAccount.class);
+    services.forEach(service -> service.deleteByAccountId(accountId));
     logger.info("Successfully deleted account {}", accountId);
     return wingsPersistence.delete(account);
   }
