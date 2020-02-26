@@ -1554,10 +1554,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       responseData = completedTask.getNotifyResponse();
       if (responseData == null || !TASK_COMPLETED_STATUSES.contains(completedTask.getStatus())) {
-        final String delegateName =
-            Optional.ofNullable(get(completedTask.getAccountId(), completedTask.getDelegateId(), false))
-                .map(Delegate::getHostName)
-                .orElse(completedTask.getDelegateId());
+        final String delegateName = completedTask.getDelegateId() == null
+            ? ""
+            : Optional.ofNullable(get(completedTask.getAccountId(), completedTask.getDelegateId(), false))
+                  .map(Delegate::getHostName)
+                  .orElse(completedTask.getDelegateId());
         throw new TimeoutException("Harness delegate", "Delegate (" + delegateName + ")", USER_ADMIN);
       }
       logger.info("Returning response to calling function for delegate task");
