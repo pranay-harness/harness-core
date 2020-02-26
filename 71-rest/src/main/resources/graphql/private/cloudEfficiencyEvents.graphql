@@ -30,6 +30,7 @@ input EventsFilter {
   namespace: IdFilter
   workloadName: IdFilter
   startTime: TimeFilter
+  endTime: TimeFilter
 }
 
 input EventsSortCriteria {

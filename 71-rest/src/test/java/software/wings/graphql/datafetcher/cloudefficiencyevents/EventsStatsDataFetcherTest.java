@@ -127,6 +127,7 @@ public class EventsStatsDataFetcherTest extends AbstractDataFetcherTest {
     List<QLEventsDataFilter> filters = new ArrayList<>();
     filters.add(makeClusterFilter(clusterValues));
     filters.add(makeTimeFilter(0L));
+    filters.add(makeEndTimeFilter(currentTime + 3600000 * 30));
     List<QLEventsSortCriteria> sortCriteria = Arrays.asList(makeAscByTimeSortingCriteria());
 
     QLEventData data =
@@ -142,6 +143,11 @@ public class EventsStatsDataFetcherTest extends AbstractDataFetcherTest {
   private QLEventsDataFilter makeTimeFilter(Long filterTime) {
     QLTimeFilter timeFilter = QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build();
     return QLEventsDataFilter.builder().startTime(timeFilter).build();
+  }
+
+  private QLEventsDataFilter makeEndTimeFilter(Long filterTime) {
+    QLTimeFilter timeFilter = QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(filterTime).build();
+    return QLEventsDataFilter.builder().endTime(timeFilter).build();
   }
 
   private QLEventsSortCriteria makeAscByTimeSortingCriteria() {

@@ -5,6 +5,7 @@ import software.wings.graphql.datafetcher.cloudefficiencyevents.CEEventsQueryMet
 public enum QLEventsDataFilterType {
   Application(CEEventsMetaDataFields.APPID),
   StartTime(CEEventsMetaDataFields.STARTTIME),
+  EndTime(CEEventsMetaDataFields.STARTTIME),
   Service(CEEventsMetaDataFields.SERVICEID),
   Environment(CEEventsMetaDataFields.ENVID),
   Cluster(CEEventsMetaDataFields.CLUSTERID),

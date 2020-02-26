@@ -174,6 +174,7 @@ public class EventsDataQueryBuilder {
 
   private DbColumn getFilterKey(QLEventsDataFilterType type) {
     switch (type) {
+      case EndTime:
       case StartTime:
         return schema.getStartTime();
       case Application:

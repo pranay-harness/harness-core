@@ -24,6 +24,7 @@ public class QLEventsDataFilter {
   private QLIdFilter namespace;
   private QLIdFilter workloadName;
   private QLTimeFilter startTime;
+  private QLTimeFilter endTime;
 
   public static Set<QLEventsDataFilterType> getFilterTypes(QLEventsDataFilter filter) {
     EnumSet<QLEventsDataFilterType> filterTypes = EnumSet.noneOf(QLEventsDataFilterType.class);
@@ -32,6 +33,9 @@ public class QLEventsDataFilter {
     }
     if (filter.getStartTime() != null) {
       filterTypes.add(QLEventsDataFilterType.StartTime);
+    }
+    if (filter.getEndTime() != null) {
+      filterTypes.add(QLEventsDataFilterType.EndTime);
     }
     if (filter.getCluster() != null) {
       filterTypes.add(QLEventsDataFilterType.Cluster);
@@ -67,6 +71,8 @@ public class QLEventsDataFilter {
         return filter.getService();
       case Cluster:
         return filter.getCluster();
+      case EndTime:
+        return filter.getEndTime();
       case StartTime:
         return filter.getStartTime();
       case CloudServiceName:
