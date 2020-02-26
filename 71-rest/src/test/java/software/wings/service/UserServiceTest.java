@@ -75,6 +75,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import freemarker.template.TemplateException;
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -113,6 +114,7 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
+import software.wings.beans.AccountType;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Event.Type;
@@ -124,6 +126,9 @@ import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.marketplace.MarketPlaceType;
+import software.wings.beans.security.UserGroup;
+import software.wings.beans.sso.SSOType;
+import software.wings.beans.sso.SamlSettings;
 import software.wings.beans.utm.UtmInfo;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
@@ -134,6 +139,7 @@ import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.LogoutResponse;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AwsMarketPlaceApiHandlerImpl;
 import software.wings.service.impl.UserServiceImpl;
@@ -1208,5 +1214,53 @@ public class UserServiceTest extends WingsBaseTest {
 
     account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
     assertThat(userService.isUserVerified(user)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC1_testLogout() {
+    String token = "token";
+    String logoutUrl = "logout_url";
+    String userName = "user_name";
+
+    Account account = getAccount(AccountType.PAID);
+    account.setUuid("accountId");
+
+    User user = anUser()
+                    .name(userName)
+                    .appId(generateUuid())
+                    .defaultAccountId(account.getUuid())
+                    .token(token)
+                    .email("emailId")
+                    .emailVerified(true)
+                    .uuid("userId")
+                    .build();
+
+    SamlSettings samlSettings = SamlSettings.builder()
+                                    .accountId(account.getUuid())
+                                    .logoutUrl(logoutUrl)
+                                    .ssoType(SSOType.SAML)
+                                    .displayName("display_name")
+                                    .build();
+    wingsPersistence.save(user);
+
+    UserGroup userGroup = new UserGroup();
+    userGroup.setAccountId(account.getUuid());
+    userGroup.setMemberIds(Arrays.asList(user.getUuid()));
+
+    PageResponse<UserGroup> val = new PageResponse<>();
+
+    when(ssoSettingService.getSamlSettingsByAccountId(account.getUuid())).thenReturn(samlSettings);
+    when(wingsPersistence.get(User.class, user.getUuid())).thenReturn(user);
+    when(userGroupService.list(anyString(), any(), anyBoolean())).thenReturn(val);
+
+    LogoutResponse logoutResponse = userService.logout(account.getUuid(), user.getUuid());
+    assertThat(logoutResponse.getLogoutUrl()).isNotNull();
+    assertThat(logoutResponse.getLogoutUrl()).isEqualTo(logoutUrl);
+    verify(cache).remove(user.getUuid());
+    verify(authService, times(1)).invalidateToken(user.getToken());
+
+    wingsPersistence.delete(user);
   }
 }

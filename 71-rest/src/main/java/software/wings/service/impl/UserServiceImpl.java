@@ -1514,17 +1514,17 @@ public class UserServiceImpl implements UserService {
     LogoutResponse logoutResponse = new LogoutResponse();
     logger.info("Sending logout response from manager for user {} in account {}", userId, accountId);
     SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
-    logger.info("CITI Testing: Samlsettings from accountId is {}", samlSettings);
+    logger.info("Samlsettings from accountId is {}", samlSettings);
     if (samlSettings != null && samlSettings.getLogoutUrl() != null) {
       logoutResponse.setLogoutUrl(samlSettings.getLogoutUrl());
-      logger.info("CITI Testing: Logout URL from accountId is {}", samlSettings.getLogoutUrl());
+      logger.info("Logout URL from accountId is {}", samlSettings.getLogoutUrl());
     }
     User user = get(accountId, userId);
     if (user != null) {
       logger.info("Invalidating token for {}", user);
       logout(user);
     }
-    logger.info("CITI Testing: Logout Response from manager {}", logoutResponse);
+    logger.info("Logout Response from manager {}", logoutResponse);
     return logoutResponse;
   }
 
