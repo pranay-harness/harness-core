@@ -78,6 +78,13 @@ public class CVConfiguration extends Base implements NameAccess {
     return comparisonStrategy == null ? AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS : comparisonStrategy;
   }
 
+  public void setAlertThreshold(double threshold) {
+    // Validations for yaml
+    Preconditions.checkArgument(
+        threshold >= 0.0 && threshold <= 1.0, "Provided alert threshold is not between 0 and 1");
+    this.alertThreshold = threshold;
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

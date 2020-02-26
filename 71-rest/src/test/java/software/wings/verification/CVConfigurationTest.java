@@ -58,4 +58,36 @@ public class CVConfigurationTest extends WingsBaseTest {
     CVConfiguration config = new CVConfiguration();
     assertThatThrownBy(config::deepCopy).isInstanceOf(UnsupportedOperationException.class);
   }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSetAlertThreshold_validThresholdValue() {
+    CVConfiguration cvConfiguration = new CVConfiguration();
+
+    cvConfiguration.setAlertThreshold(0);
+    assertThat(cvConfiguration.getAlertThreshold()).isEqualTo(0);
+
+    cvConfiguration.setAlertThreshold(0.1);
+    assertThat(cvConfiguration.getAlertThreshold()).isEqualTo(0.1);
+
+    cvConfiguration.setAlertThreshold(0.5);
+    assertThat(cvConfiguration.getAlertThreshold()).isEqualTo(0.5);
+
+    cvConfiguration.setAlertThreshold(0.99);
+    assertThat(cvConfiguration.getAlertThreshold()).isEqualTo(0.99);
+
+    cvConfiguration.setAlertThreshold(1);
+    assertThat(cvConfiguration.getAlertThreshold()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSetAlertThreshold_invalidThresholdValue() {
+    CVConfiguration cvConfiguration = new CVConfiguration();
+
+    assertThatThrownBy(() -> cvConfiguration.setAlertThreshold(-0.01)).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> cvConfiguration.setAlertThreshold(1.01)).isInstanceOf(IllegalArgumentException.class);
+  }
 }
