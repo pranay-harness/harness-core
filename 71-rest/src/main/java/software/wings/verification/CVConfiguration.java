@@ -89,12 +89,21 @@ public class CVConfiguration extends Base implements NameAccess {
     private double alertThreshold;
     private Date snoozeStartTime;
     private Date snoozeEndTime;
+    private boolean alertEnabled;
 
+    // TODO: Remove the below setters when DX-574 is fixed.
     public void setEnabled24x7(Object value) {
       String enabled24x7 = String.valueOf(value).toLowerCase();
       Preconditions.checkArgument(YamlConstants.ALLOWED_BOOLEAN_VALUES.contains(enabled24x7),
           "Allowed values for enabled24x7 are: " + YamlConstants.ALLOWED_BOOLEAN_VALUES);
       this.enabled24x7 = parseBoolean(enabled24x7);
+    }
+
+    public void setAlertEnabled(Object value) {
+      String alertEnabledStringValue = String.valueOf(value).toLowerCase();
+      Preconditions.checkArgument(YamlConstants.ALLOWED_BOOLEAN_VALUES.contains(alertEnabledStringValue),
+          "Allowed values for enabled24x7 are: " + YamlConstants.ALLOWED_BOOLEAN_VALUES);
+      this.alertEnabled = parseBoolean(alertEnabledStringValue);
     }
   }
 

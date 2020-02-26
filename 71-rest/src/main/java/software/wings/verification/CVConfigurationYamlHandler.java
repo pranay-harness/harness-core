@@ -36,6 +36,7 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
     yaml.setAnalysisTolerance(bean.getAnalysisTolerance());
     yaml.setConnectorName(settingsService.get(bean.getConnectorId()).getName());
     yaml.setEnabled24x7(bean.isEnabled24x7());
+    yaml.setAlertEnabled(bean.isAlertEnabled());
 
     Application application = appService.get(bean.getAppId());
     Service service = serviceResourceService.getWithDetails(application.getUuid(), bean.getServiceId());
@@ -81,6 +82,7 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
     bean.setServiceId(service.getUuid());
     bean.setAlertThreshold(yaml.getAlertThreshold());
     bean.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+    bean.setAlertEnabled(yaml.isAlertEnabled());
     if (yaml.getSnoozeStartTime() != null) {
       bean.setSnoozeStartTime(yaml.getSnoozeStartTime().getTime());
     }
