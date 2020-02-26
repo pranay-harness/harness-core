@@ -48,6 +48,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Raghvendra Singh <raghu@harness.io>$" |\
     grep -iv "^Rama Tummala <rama@harness.io>$" |\
     grep -iv "^Rathnakara Malatesha <rathna@harness.io>$" |\
+    grep -iv "^Raunak Agrawal <raunak.agrawal@harness.io>$" |\
     grep -iv "^Rishi Singh <rishi@harness.io>$" |\
     grep -iv "^Rohit Kumar <rohit.kumar@harness.io>$"|\
     grep -iv "^Rohit Karelia <rohit.karelia@harness.io>$"|\

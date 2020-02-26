@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.RAUNAK;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -64,6 +65,7 @@ import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterKeys;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsAmiInfrastructure.AwsAmiInfrastructureKeys;
@@ -73,6 +75,7 @@ import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure.AwsInstanceInfrastructureKeys;
 import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure.AwsLambdaInfrastructureKeys;
+import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.GoogleKubernetesEngine.GoogleKubernetesEngineKeys;
@@ -92,6 +95,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ExecutionContext;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -883,5 +887,54 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
 
     assertThat(((DirectKubernetesInfrastructure) (directKubernetesInfraDef.getInfrastructure())).getNamespace())
         .isEqualTo(USER_INPUT_NAMESPACE);
+  }
+
+  @Test
+  @Owner(developers = RAUNAK)
+  @Category(UnitTests.class)
+  public void testAzureHostNames() {
+    InfrastructureDefinitionServiceImpl spyInfrastructureDefinitionService =
+        spy(InfrastructureDefinitionServiceImpl.class);
+
+    final InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .uuid("infraid")
+            .name("infra_name")
+            .infrastructure(AzureInstanceInfrastructure.builder().build())
+            .build();
+
+    Host hostWithFQDN =
+        Host.Builder.aHost().withHostName("winRM-1").withPublicDns("winRM-1.westus.cloudapp.azure.com").build();
+    Host hostWithoutFQDN = Host.Builder.aHost().withHostName("winRM-2").build();
+
+    doReturn(Arrays.asList(hostWithFQDN, hostWithoutFQDN))
+        .when(spyInfrastructureDefinitionService)
+        .listHosts(infrastructureDefinition);
+
+    List<String> hostNames = spyInfrastructureDefinitionService.getInfrastructureDefinitionHostDisplayNames(
+        infrastructureDefinition, "appId", "workflowId");
+
+    assertThat(hostNames.size()).isEqualTo(2);
+    assertThat(hostNames.get(0)).isEqualTo("winRM-1.westus.cloudapp.azure.com");
+    assertThat(hostNames.get(1)).isEqualTo("winRM-2");
+  }
+
+  @Test
+  @Owner(developers = RAUNAK)
+  @Category(UnitTests.class)
+  public void testAzureHostNamesWithNoNode() {
+    InfrastructureDefinitionServiceImpl spyInfrastructureDefinitionService =
+        spy(InfrastructureDefinitionServiceImpl.class);
+    final InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .uuid("infraid")
+            .name("infra_name")
+            .infrastructure(AzureInstanceInfrastructure.builder().build())
+            .build();
+    doReturn(null).when(spyInfrastructureDefinitionService).listHosts(infrastructureDefinition);
+    List<String> hostNames = spyInfrastructureDefinitionService.getInfrastructureDefinitionHostDisplayNames(
+        infrastructureDefinition, "appId", "workflowId");
+
+    assertThat(hostNames).isEmpty();
   }
 }

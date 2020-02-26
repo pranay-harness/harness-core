@@ -54,8 +54,6 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.ecs.model.LaunchType;
-import com.microsoft.azure.management.compute.VirtualMachine;
-import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import com.mongodb.DuplicateKeyException;
 import io.fabric8.utils.CountingMap;
 import io.harness.beans.PageRequest;
@@ -1109,7 +1107,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         appId, infrastructureMapping.getUuid(), serviceNameExpression);
   }
 
-  private List<Host> listHosts(InfrastructureDefinition infrastructureDefinition) {
+  List<Host> listHosts(InfrastructureDefinition infrastructureDefinition) {
     InfraMappingInfrastructureProvider provider = infrastructureDefinition.getInfrastructure();
     if (provider instanceof PhysicalInfra) {
       PhysicalInfra physicalInfra = (PhysicalInfra) provider;
@@ -1183,7 +1181,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return (AwsConfig) computeProviderSetting.getValue();
   }
 
-  private List<String> getInfrastructureDefinitionHostDisplayNames(
+  List<String> getInfrastructureDefinitionHostDisplayNames(
       InfrastructureDefinition infrastructureDefinition, String appId, String workflowExecutionId) {
     if (infrastructureDefinition.getProvisionerId() != null) {
       return emptyList();
@@ -1221,16 +1219,13 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       }
       return hostDisplayNames;
     } else if (infrastructureDefinition.getInfrastructure() instanceof AzureInstanceInfrastructure) {
-      AzureInstanceInfrastructure azureInstanceInfrastructure =
-          (AzureInstanceInfrastructure) infrastructureDefinition.getInfrastructure();
-      SettingAttribute computeProviderSetting = settingsService.get(azureInstanceInfrastructure.getCloudProviderId());
-      notNullCheck("Compute Provider", computeProviderSetting, USER);
-
-      // Get VMs
-      List<VirtualMachine> vms = azureHelperService.listVms(azureInstanceInfrastructure, computeProviderSetting,
-          secretManager.getEncryptionDetails((EncryptableSetting) computeProviderSetting.getValue(), null, null),
-          infrastructureDefinition.getDeploymentType());
-      hostDisplayNames = vms.stream().map(HasName::name).collect(Collectors.toList());
+      List<Host> hosts = listHosts(infrastructureDefinition);
+      if (isNotEmpty(hosts)) {
+        hosts.forEach(host -> {
+          String hostname = isEmpty(host.getPublicDns()) ? host.getHostName() : host.getPublicDns();
+          hostDisplayNames.add(hostname);
+        });
+      }
       return hostDisplayNames;
     }
     return emptyList();
