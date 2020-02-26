@@ -45,6 +45,7 @@ import javax.net.ssl.X509TrustManager;
 public class Http {
   private static UrlValidator urlValidator =
       new UrlValidator(new String[] {"http", "https"}, UrlValidator.ALLOW_LOCAL_URLS);
+  private static ConnectionPool connectionPool = new ConnectionPool(0, 5, TimeUnit.MINUTES);
 
   private static TrustManager[] trustAllCerts = getTrustManagers();
   private static final SSLContext sc = createSslContext();
@@ -345,7 +346,7 @@ public class Http {
   }
 
   public static OkHttpClient.Builder getOkHttpClientBuilder() {
-    return getOkHttpClientWithProxyAuthSetup().connectionPool(new ConnectionPool(0, 5, TimeUnit.MINUTES));
+    return getOkHttpClientWithProxyAuthSetup().connectionPool(connectionPool);
   }
 
   public static OkHttpClient.Builder getOkHttpClientBuilderWithReadtimeOut(int timeout, TimeUnit timeUnit) {
