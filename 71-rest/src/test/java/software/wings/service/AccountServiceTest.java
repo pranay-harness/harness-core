@@ -54,6 +54,7 @@ import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mongodb.morphia.Morphia;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -126,6 +127,8 @@ public class AccountServiceTest extends WingsBaseTest {
   @Mock private EmailNotificationService emailNotificationService;
   @Mock private HarnessUserGroupService harnessUserGroupService;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
+  @Inject private Morphia morphia;
+
   @InjectMocks @Inject private LicenseService licenseService;
   @InjectMocks @Inject private AccountService accountService;
   @InjectMocks @Inject private UserResource userResource;
@@ -922,5 +925,31 @@ public class AccountServiceTest extends WingsBaseTest {
     Boolean result1 = accountService.addSubdomainUrl(user2.getUuid(), account2.getUuid(), validUrl);
     assertThat(wingsPersistence.get(Account.class, account2.getUuid()).getSubdomainUrl()).isEqualTo(validUrl.getUrl());
     assertThat(result1).isTrue();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testDeleteExportableAccountData() {
+    Account account = anAccount()
+                          .withCompanyName("CompanyName 1")
+                          .withAccountName("Account Name 1")
+                          .withLicenseInfo(getLicenseInfo())
+                          .withUuid(accountId)
+                          .build();
+
+    User user = User.Builder.anUser()
+                    .uuid("userId1")
+                    .name("name1")
+                    .email("user1@harness.io")
+                    .accounts(Arrays.asList(account))
+                    .build();
+
+    wingsPersistence.save(account);
+
+    when(userService.getUsersOfAccount(accountId)).thenReturn(Arrays.asList(user));
+    boolean deleted = accountService.deleteExportableAccountData(accountId);
+    assertThat(deleted).isTrue();
+    wingsPersistence.delete(account);
   }
 }
