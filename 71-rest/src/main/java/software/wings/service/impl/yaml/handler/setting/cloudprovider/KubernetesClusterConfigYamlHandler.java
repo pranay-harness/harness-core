@@ -120,7 +120,7 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
         cloneFileChangeContext(changeContext, changeContext.getYaml().getContinuousEfficiencyConfig());
     ChangeContext clonedContext = clonedContextBuilder.build();
 
-    if (ccmSettingService.isCloudCostEnabled(previous.getAccountId())) {
+    if (optionalPrevious.isPresent() && ccmSettingService.isCloudCostEnabled(previous.getAccountId())) {
       CCMConfig ccmConfig = ccmConfigYamlHandler.upsertFromYaml(clonedContext, changeSetContext);
       kubernetesClusterConfig.setCcmConfig(ccmConfig);
     }
