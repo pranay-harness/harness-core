@@ -41,4 +41,37 @@ public class CVConfigurationYamlTest extends WingsBaseTest {
     CVConfigurationYaml yaml = new PrometheusCVConfigurationYaml(new ArrayList<>());
     assertThatThrownBy(() -> yaml.setEnabled24x7("Random")).isInstanceOf(IllegalArgumentException.class);
   }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSetAlertEnabled_whenSet() {
+    CVConfigurationYaml yaml = new PrometheusCVConfigurationYaml(new ArrayList<>());
+    yaml.setAlertEnabled(true);
+    assertThat(yaml.isAlertEnabled()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSetAlertEnabled_whenNotSet() {
+    CVConfigurationYaml yaml = new PrometheusCVConfigurationYaml(new ArrayList<>());
+    assertThat(yaml.isAlertEnabled()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSetAlertEnabled_withInteger() {
+    CVConfigurationYaml yaml = new PrometheusCVConfigurationYaml(new ArrayList<>());
+    assertThatThrownBy(() -> yaml.setAlertEnabled(12)).isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSetAlertEnabled_withRandomString() {
+    CVConfigurationYaml yaml = new PrometheusCVConfigurationYaml(new ArrayList<>());
+    assertThatThrownBy(() -> yaml.setAlertEnabled("Random")).isInstanceOf(IllegalArgumentException.class);
+  }
 }
