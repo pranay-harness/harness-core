@@ -355,7 +355,7 @@ public class SpotInstDeployState extends State {
 
   protected Integer getUpsizeUpdateCount(SpotInstSetupContextElement setupContextElement) {
     Integer count = getTargetInstanceCountToBeUsed(setupContextElement);
-    return getInstanceCountToUpdate(count, instanceCount, instanceUnitType, true);
+    return getInstanceCountToUpdate(count, instanceCount, instanceUnitType);
   }
 
   private Integer getTargetInstanceCountToBeUsed(SpotInstSetupContextElement setupContextElement) {
@@ -382,24 +382,15 @@ public class SpotInstDeployState extends State {
   }
 
   private Integer getInstanceCountToUpdate(
-      Integer maxInstanceCount, Integer instanceCountVal, InstanceUnitType unitType, boolean upsize) {
-    Integer updateCount;
+      Integer maxInstanceCount, Integer instanceCountVal, InstanceUnitType unitType) {
+    int updateCount;
     if (PERCENTAGE == unitType) {
       int percent = Math.min(instanceCountVal, 100);
       int count = (int) Math.round((percent * maxInstanceCount) / 100.0);
-      if (upsize) {
-        // if use inputs 30%, means count after this phase deployment should be 30% of maxInstances
-        updateCount = Math.max(count, 1);
-      } else {
-        updateCount = Math.max(count, 0);
-        updateCount = maxInstanceCount - updateCount;
-      }
+      // if use inputs 30%, means count after this phase deployment should be 30% of maxInstances
+      updateCount = Math.max(count, 1);
     } else {
-      if (upsize) {
-        updateCount = instanceCountVal;
-      } else {
-        updateCount = maxInstanceCount - instanceCountVal;
-      }
+      updateCount = Math.min(instanceCountVal, maxInstanceCount);
     }
     return updateCount;
   }
