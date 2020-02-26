@@ -1512,6 +1512,111 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
   }
 
+  private LearningEngineAnalysisTask getLogMLAnalysisTask(
+      LogsCVConfiguration logsCVConfiguration, long analysisEndMin, int nextBackoffCount) {
+    String stateExecutionIdForLETask = "LOG_24X7_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + analysisEndMin;
+    String taskId = generateUuid();
+    String controlInputUrl = null;
+    String testInputUrl = null;
+    boolean isBaselineRun = false;
+    long startMinute = analysisEndMin - CRON_POLL_INTERVAL_IN_MINUTES + 1;
+    // this is the baseline prep case
+    if (startMinute < logsCVConfiguration.getBaselineStartMinute()
+        || (startMinute >= logsCVConfiguration.getBaselineStartMinute()
+               && startMinute < logsCVConfiguration.getBaselineEndMinute())) {
+      URIBuilder controlInputBuilder = new URIBuilder();
+      controlInputBuilder.setPath(
+          "/verification/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL);
+      controlInputBuilder.addParameter("cvConfigId", logsCVConfiguration.getUuid());
+      controlInputBuilder.addParameter("appId", logsCVConfiguration.getAppId());
+      controlInputBuilder.addParameter("startMinute", String.valueOf(startMinute));
+      controlInputBuilder.addParameter("endMinute", String.valueOf(analysisEndMin));
+      controlInputBuilder.addParameter("clusterLevel", ClusterLevel.L2.name());
+
+      controlInputUrl = getUriString(controlInputBuilder);
+      isBaselineRun = true;
+    } else {
+      URIBuilder testInputBuilder = new URIBuilder();
+      testInputBuilder.setPath(
+          "/verification/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL);
+      testInputBuilder.addParameter("cvConfigId", logsCVConfiguration.getUuid());
+      testInputBuilder.addParameter("appId", logsCVConfiguration.getAppId());
+      testInputBuilder.addParameter("startMinute", String.valueOf(startMinute));
+      testInputBuilder.addParameter("endMinute", String.valueOf(analysisEndMin));
+      testInputBuilder.addParameter("clusterLevel", ClusterLevel.L2.name());
+
+      testInputUrl = getUriString(testInputBuilder);
+    }
+    URIBuilder saveUrlBuilder = new URIBuilder();
+    saveUrlBuilder.setPath("/verification/" + LogAnalysisResource.LOG_ANALYSIS
+        + LogAnalysisResource.ANALYSIS_SAVE_24X7_ANALYSIS_RECORDS_URL);
+    saveUrlBuilder.addParameter("cvConfigId", logsCVConfiguration.getUuid());
+    saveUrlBuilder.addParameter("appId", logsCVConfiguration.getAppId());
+    saveUrlBuilder.addParameter("analysisMinute", String.valueOf(analysisEndMin));
+    saveUrlBuilder.addParameter("taskId", taskId);
+    saveUrlBuilder.addParameter("comparisonStrategy", logsCVConfiguration.getComparisonStrategy().name());
+
+    String logAnalysisSaveUrl = getUriString(saveUrlBuilder);
+
+    URIBuilder getUrlBuilder = new URIBuilder();
+    getUrlBuilder.setPath("/verification/" + LogAnalysisResource.LOG_ANALYSIS
+        + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL);
+    getUrlBuilder.addParameter("cvConfigId", logsCVConfiguration.getUuid());
+    getUrlBuilder.addParameter("appId", logsCVConfiguration.getAppId());
+    getUrlBuilder.addParameter("analysisMinute", String.valueOf(logsCVConfiguration.getBaselineEndMinute()));
+    getUrlBuilder.addParameter("compressed",
+        verificationManagerClientHelper
+            .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
+                FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, logsCVConfiguration.getAccountId()))
+            .getResource()
+            .toString());
+
+    final String logAnalysisGetUrl = getUriString(getUrlBuilder);
+
+    URIBuilder failUrlBuilder = new URIBuilder();
+    failUrlBuilder.setPath(
+        "/verification/" + LearningEngineService.RESOURCE_URL + VerificationConstants.NOTIFY_LEARNING_FAILURE);
+    failUrlBuilder.addParameter("taskId", taskId);
+    String failureUrl = getUriString(failUrlBuilder);
+
+    LearningEngineAnalysisTask analysisTask =
+        LearningEngineAnalysisTask.builder()
+            .state_execution_id(stateExecutionIdForLETask)
+            .service_id(logsCVConfiguration.getServiceId())
+            .query(Lists.newArrayList(logsCVConfiguration.getQuery()))
+            .sim_threshold(0.9)
+            .analysis_minute(analysisEndMin)
+            .analysis_save_url(logAnalysisSaveUrl)
+            .log_analysis_get_url(logAnalysisGetUrl)
+            .analysis_failure_url(failureUrl)
+            .service_guard_backoff_count(nextBackoffCount)
+            .ml_analysis_type(MLAnalysisType.LOG_ML)
+            .test_input_url(testInputUrl)
+            .control_input_url(controlInputUrl)
+            .test_nodes(Sets.newHashSet(DUMMY_HOST_NAME))
+            .feature_name("NEURAL_NET")
+            .is24x7Task(true)
+            .stateType(logsCVConfiguration.getStateType())
+            .cvConfigId(logsCVConfiguration.getUuid())
+            .analysis_comparison_strategy(logsCVConfiguration.getComparisonStrategy())
+            .alertThreshold(getAlertThreshold(logsCVConfiguration, analysisEndMin))
+            .build();
+
+    analysisTask.setAppId(logsCVConfiguration.getAppId());
+    analysisTask.setUuid(taskId);
+    if (isBaselineRun) {
+      analysisTask.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(6).toInstant()));
+    }
+    if (logsCVConfiguration.getComparisonStrategy() == PREDICTIVE) {
+      final String lastLogAnalysisGetUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
+          + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL + "?appId=" + logsCVConfiguration.getAppId()
+          + "&cvConfigId=" + logsCVConfiguration.getUuid() + "&analysisMinute=" + analysisEndMin;
+      analysisTask.setPrevious_test_analysis_url(lastLogAnalysisGetUrl);
+    }
+
+    return analysisTask;
+  }
+
   @Override
   @Counted
   @Timed
@@ -1605,131 +1710,33 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
               logger.info("for {} for minute from {} to {} everything is in place, proceeding for analysis",
                   logsCVConfiguration.getUuid(), startMinute, analysisEndMin);
-
-              String taskId = generateUuid();
-
-              String controlInputUrl = null;
-              String testInputUrl = null;
-              boolean isBaselineRun = false;
-              // this is the baseline prep case
-              if (startMinute < logsCVConfiguration.getBaselineStartMinute()
-                  || (startMinute >= logsCVConfiguration.getBaselineStartMinute()
-                         && startMinute < logsCVConfiguration.getBaselineEndMinute())) {
-                controlInputUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
-                    + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId="
-                    + logsCVConfiguration.getUuid() + "&appId=" + logsCVConfiguration.getAppId() + "&clusterLevel="
-                    + ClusterLevel.L2 + "&startMinute=" + startMinute + "&endMinute=" + analysisEndMin;
-                isBaselineRun = true;
-              } else {
-                testInputUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
-                    + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId="
-                    + logsCVConfiguration.getUuid() + "&appId=" + logsCVConfiguration.getAppId() + "&clusterLevel="
-                    + ClusterLevel.L2 + "&startMinute=" + startMinute + "&endMinute=" + analysisEndMin;
-              }
-
-              String logAnalysisSaveUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
-                  + LogAnalysisResource.ANALYSIS_SAVE_24X7_ANALYSIS_RECORDS_URL
-                  + "?cvConfigId=" + logsCVConfiguration.getUuid() + "&appId=" + logsCVConfiguration.getAppId()
-                  + "&analysisMinute=" + analysisEndMin + "&taskId=" + taskId
-                  + "&comparisonStrategy=" + logsCVConfiguration.getComparisonStrategy();
-
-              final String logAnalysisGetUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
-                  + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL
-                  + "?appId=" + logsCVConfiguration.getAppId() + "&cvConfigId=" + logsCVConfiguration.getUuid()
-                  + "&analysisMinute=" + ((LogsCVConfiguration) cvConfiguration).getBaselineEndMinute() + "&compressed="
-                  + verificationManagerClientHelper
-                        .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
-                            FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
-                        .getResource();
-              String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
-                  + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?taskId=" + taskId;
-
               String stateExecutionIdForLETask =
                   "LOG_24X7_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + analysisEndMin;
               learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) analysisEndMin);
+              int nextBackoffCount = learningEngineService.getNextServiceGuardBackoffCount(
+                  stateExecutionIdForLETask, cvConfiguration.getUuid(), analysisEndMin, MLAnalysisType.LOG_ML);
 
-              if (learningEngineService.isEligibleToCreateTask(
-                      stateExecutionIdForLETask, cvConfiguration.getUuid(), analysisEndMin, MLAnalysisType.LOG_ML)) {
-                int nextBackoffCount = learningEngineService.getNextServiceGuardBackoffCount(
-                    stateExecutionIdForLETask, cvConfiguration.getUuid(), analysisEndMin, MLAnalysisType.LOG_ML);
-                LearningEngineAnalysisTask analysisTask =
-                    LearningEngineAnalysisTask.builder()
-                        .state_execution_id(stateExecutionIdForLETask)
-                        .service_id(logsCVConfiguration.getServiceId())
-                        .query(Lists.newArrayList(logsCVConfiguration.getQuery()))
-                        .sim_threshold(0.9)
-                        .analysis_minute(analysisEndMin)
-                        .analysis_save_url(logAnalysisSaveUrl)
-                        .log_analysis_get_url(logAnalysisGetUrl)
-                        .analysis_failure_url(failureUrl)
-                        .service_guard_backoff_count(nextBackoffCount)
-                        .ml_analysis_type(MLAnalysisType.LOG_ML)
-                        .test_input_url(testInputUrl)
-                        .control_input_url(controlInputUrl)
-                        .test_nodes(Sets.newHashSet(DUMMY_HOST_NAME))
-                        .feature_name("NEURAL_NET")
-                        .is24x7Task(true)
-                        .stateType(logsCVConfiguration.getStateType())
-                        .cvConfigId(logsCVConfiguration.getUuid())
-                        .analysis_comparison_strategy(logsCVConfiguration.getComparisonStrategy())
-                        .alertThreshold(getAlertThreshold(cvConfiguration, analysisEndMin))
-                        .build();
+              learningEngineService.addLearningEngineAnalysisTask(
+                  getLogMLAnalysisTask(logsCVConfiguration, analysisEndMin, nextBackoffCount));
 
-                analysisTask.setAppId(logsCVConfiguration.getAppId());
-                analysisTask.setUuid(taskId);
-                if (isBaselineRun) {
-                  analysisTask.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(6).toInstant()));
-                }
-                if (logsCVConfiguration.getComparisonStrategy() == PREDICTIVE) {
-                  final String lastLogAnalysisGetUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
-                      + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL
-                      + "?appId=" + logsCVConfiguration.getAppId() + "&cvConfigId=" + logsCVConfiguration.getUuid()
-                      + "&analysisMinute=" + analysisEndMin;
-                  analysisTask.setPrevious_test_analysis_url(lastLogAnalysisGetUrl);
-                }
-                learningEngineService.addLearningEngineAnalysisTask(analysisTask);
-
-                if (lastCVAnalysisMinute <= 0) {
-                  logger.info(
-                      "For account {} and CV config {} name {} type {} no analysis has been done yet. This is going to be first analysis",
-                      logsCVConfiguration.getAccountId(), logsCVConfiguration.getUuid(), logsCVConfiguration.getName(),
-                      logsCVConfiguration.getStateType());
-                }
-
-                logger.info("Queuing analysis task for state {} config {} with analysisMin {}",
-                    logsCVConfiguration.getStateType(), logsCVConfiguration.getUuid(), analysisEndMin);
-
-                List<MLExperiments> experiments = get24x7Experiments(MLAnalysisType.LOG_ML.name());
-                for (MLExperiments experiment : experiments) {
-                  LearningEngineExperimentalAnalysisTask expTask =
-                      LearningEngineExperimentalAnalysisTask.builder()
-                          .state_execution_id("LOG_24X7_ANALYSIS_" + logsCVConfiguration.getUuid() + "_"
-                              + analysisEndMin + generateUuid())
-                          .service_id(logsCVConfiguration.getServiceId())
-                          .query(Lists.newArrayList(logsCVConfiguration.getQuery()))
-                          .sim_threshold(0.9)
-                          .analysis_minute(analysisEndMin)
-                          .analysis_save_url(getSaveUrlForExperimentalTask(taskId))
-                          .log_analysis_get_url(logAnalysisGetUrl)
-                          .ml_analysis_type(MLAnalysisType.LOG_ML)
-                          .test_input_url(isEmpty(testInputUrl) ? null : testInputUrl + "&" + IS_EXPERIMENTAL + "=true")
-                          .control_input_url(
-                              isEmpty(controlInputUrl) ? null : controlInputUrl + "&" + IS_EXPERIMENTAL + "=true")
-                          .test_nodes(Sets.newHashSet(DUMMY_HOST_NAME))
-                          .feature_name("NEURAL_NET")
-                          .is24x7Task(true)
-                          .stateType(logsCVConfiguration.getStateType())
-                          .tolerance(cvConfiguration.getAnalysisTolerance().tolerance())
-                          .cvConfigId(logsCVConfiguration.getUuid())
-                          .analysis_comparison_strategy(logsCVConfiguration.getComparisonStrategy())
-                          .experiment_name(experiment.getExperimentName())
-                          .alertThreshold(getAlertThreshold(cvConfiguration, analysisEndMin))
-                          .build();
-                  expTask.setAppId(cvConfiguration.getAppId());
-                  expTask.setUuid(taskId);
-                  learningEngineService.addLearningEngineExperimentalAnalysisTask(expTask);
-                }
+              if (lastCVAnalysisMinute <= 0) {
+                logger.info(
+                    "For account {} and CV config {} name {} type {} no analysis has been done yet. This is going to be first analysis",
+                    logsCVConfiguration.getAccountId(), logsCVConfiguration.getUuid(), logsCVConfiguration.getName(),
+                    logsCVConfiguration.getStateType());
               }
+
+              logger.info("Queuing analysis task for state {} config {} with analysisMin {}",
+                  logsCVConfiguration.getStateType(), logsCVConfiguration.getUuid(), analysisEndMin);
+
+              List<MLExperiments> experiments = get24x7Experiments(MLAnalysisType.LOG_ML.name());
+              for (MLExperiments experiment : experiments) {
+                LearningEngineExperimentalAnalysisTask expTask = getExperimentalLogTask(logsCVConfiguration,
+                    "LOG_24X7_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + analysisEndMin + generateUuid(),
+                    analysisEndMin, experiment);
+                learningEngineService.addLearningEngineExperimentalAnalysisTask(expTask);
+              }
+
             } catch (Exception ex) {
               try {
                 if (cvConfiguration.isWorkflowConfig()) {
@@ -1754,6 +1761,80 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         });
   }
 
+  private LearningEngineExperimentalAnalysisTask getExperimentalLogTask(
+      LogsCVConfiguration logsCVConfiguration, String stateExecutionId, long analysisEndMin, MLExperiments experiment) {
+    String taskId = generateUuid();
+    String controlInputUrl = null;
+    String testInputUrl = null;
+    long startMinute = analysisEndMin - CRON_POLL_INTERVAL_IN_MINUTES + 1;
+    // this is the baseline prep case
+    if (startMinute < logsCVConfiguration.getBaselineStartMinute()
+        || (startMinute >= logsCVConfiguration.getBaselineStartMinute()
+               && startMinute < logsCVConfiguration.getBaselineEndMinute())) {
+      URIBuilder controlInputBuilder = new URIBuilder();
+      controlInputBuilder.setPath(
+          "/verification/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL);
+      controlInputBuilder.addParameter("cvConfigId", logsCVConfiguration.getUuid());
+      controlInputBuilder.addParameter("appId", logsCVConfiguration.getAppId());
+      controlInputBuilder.addParameter("startMinute", String.valueOf(startMinute));
+      controlInputBuilder.addParameter("endMinute", String.valueOf(analysisEndMin));
+      controlInputBuilder.addParameter("clusterLevel", ClusterLevel.L2.name());
+
+      controlInputUrl = getUriString(controlInputBuilder);
+
+    } else {
+      URIBuilder testInputBuilder = new URIBuilder();
+      testInputBuilder.setPath(
+          "/verification/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL);
+      testInputBuilder.addParameter("cvConfigId", logsCVConfiguration.getUuid());
+      testInputBuilder.addParameter("appId", logsCVConfiguration.getAppId());
+      testInputBuilder.addParameter("startMinute", String.valueOf(startMinute));
+      testInputBuilder.addParameter("endMinute", String.valueOf(analysisEndMin));
+      testInputBuilder.addParameter("clusterLevel", ClusterLevel.L2.name());
+
+      testInputUrl = getUriString(testInputBuilder);
+    }
+
+    URIBuilder getUrlBuilder = new URIBuilder();
+    getUrlBuilder.setPath("/verification/" + LogAnalysisResource.LOG_ANALYSIS
+        + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL);
+    getUrlBuilder.addParameter("cvConfigId", logsCVConfiguration.getUuid());
+    getUrlBuilder.addParameter("appId", logsCVConfiguration.getAppId());
+    getUrlBuilder.addParameter("analysisMinute", String.valueOf(logsCVConfiguration.getBaselineEndMinute()));
+    getUrlBuilder.addParameter("compressed",
+        verificationManagerClientHelper
+            .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
+                FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, logsCVConfiguration.getAccountId()))
+            .getResource()
+            .toString());
+    final String logAnalysisGetUrl = getUriString(getUrlBuilder);
+
+    LearningEngineExperimentalAnalysisTask expTask =
+        LearningEngineExperimentalAnalysisTask.builder()
+            .state_execution_id(stateExecutionId)
+            .service_id(logsCVConfiguration.getServiceId())
+            .query(Lists.newArrayList(logsCVConfiguration.getQuery()))
+            .sim_threshold(0.9)
+            .analysis_minute(analysisEndMin)
+            .analysis_save_url(getSaveUrlForExperimentalTask(taskId))
+            .log_analysis_get_url(logAnalysisGetUrl)
+            .ml_analysis_type(MLAnalysisType.LOG_ML)
+            .test_input_url(isEmpty(testInputUrl) ? null : testInputUrl + "&" + IS_EXPERIMENTAL + "=true")
+            .control_input_url(isEmpty(controlInputUrl) ? null : controlInputUrl + "&" + IS_EXPERIMENTAL + "=true")
+            .test_nodes(Sets.newHashSet(DUMMY_HOST_NAME))
+            .feature_name("NEURAL_NET")
+            .is24x7Task(true)
+            .stateType(logsCVConfiguration.getStateType())
+            .tolerance(logsCVConfiguration.getAnalysisTolerance().tolerance())
+            .cvConfigId(logsCVConfiguration.getUuid())
+            .analysis_comparison_strategy(logsCVConfiguration.getComparisonStrategy())
+            .experiment_name(experiment.getExperimentName())
+            .alertThreshold(getAlertThreshold(logsCVConfiguration, analysisEndMin))
+            .build();
+    expTask.setAppId(logsCVConfiguration.getAppId());
+    expTask.setUuid(taskId);
+    return expTask;
+  }
   @Override
   public void cleanupStuckLocks() {
     DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "quartz_verification_locks");
