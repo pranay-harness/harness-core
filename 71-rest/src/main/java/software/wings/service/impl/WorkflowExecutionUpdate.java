@@ -45,12 +45,10 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ResourceConstraintService;
-import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateMachineExecutionCallback;
@@ -84,8 +82,6 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ResourceConstraintService resourceConstraintService;
   @Inject private BarrierService barrierService;
-  @Inject private StateExecutionService stateExecutionService;
-  @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private AccountService accountService;
@@ -388,12 +384,12 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       // Do not block the execution for possible exception in the barrier update
       logger.error("Something wrong with resource constraints update", exception);
     }
-
     try {
       WorkflowExecution workflowExecution =
           workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, true);
-
-      if (context.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+      logger.info("Breakdown refresh happened for workflow execution {}", workflowExecution.getUuid());
+      if (context.getWorkflowType() == WorkflowType.ORCHESTRATION
+          && featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, workflowExecution.getAccountId())) {
         executionEventQueue.send(ExecutionEvent.builder()
                                      .appId(appId)
                                      .workflowId(workflowExecution.getWorkflowId())
