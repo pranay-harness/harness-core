@@ -1,8 +1,10 @@
 package software.wings.verification;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -104,6 +106,7 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
     NewRelicCVConfigurationYaml yaml = NewRelicCVConfigurationYaml.builder().newRelicApplicationName(appName).build();
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
+    yaml.setAlertThreshold(0.5);
     return yaml;
   }
 
@@ -179,5 +182,29 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
 
     assertThat(bean.getName()).isEqualTo("TestAppDConfig");
     assertThat(bean.getUuid()).isEqualTo(cvConfig.getUuid());
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testUpsertFromYaml_incorrectThresholdValues() throws Exception {
+    when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
+    when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
+    when(yamlHelper.getNameFromYamlFilePath("TestAppDConfig.yaml")).thenReturn("TestAppDConfig");
+
+    NewRelicCVServiceConfiguration cvConfig = NewRelicCVServiceConfiguration.builder().build();
+    cvConfig.setUuid("testUUID");
+    when(cvConfigurationService.getConfiguration("TestAppDConfig", appId, envId)).thenReturn(cvConfig);
+    ChangeContext<NewRelicCVConfigurationYaml> changeContext = new ChangeContext<>();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestAppDConfig.yaml").build();
+    changeContext.setChange(c);
+    changeContext.setYaml(buildYaml());
+    changeContext.getYaml().setAlertThreshold(1.1);
+    assertThatThrownBy(() -> yamlHandler.upsertFromYaml(changeContext, null))
+        .isInstanceOf(IllegalArgumentException.class);
+
+    changeContext.getYaml().setAlertThreshold(-0.1);
+    assertThatThrownBy(() -> yamlHandler.upsertFromYaml(changeContext, null))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 }
