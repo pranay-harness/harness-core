@@ -152,6 +152,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
         .templateExpressions(templateExpressions)
         .daemonSet(yaml.isDaemonSet())
         .statefulSet(yaml.isStatefulSet())
+        .variableOverrides(yaml.getServiceVariableOverrides())
         .build();
     return phase.build();
   }
@@ -243,6 +244,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
         .type(deploymentType)
         .daemonSet(bean.isDaemonSet())
         .statefulSet(bean.isStatefulSet())
+        .serviceVariableOverrides(bean.getVariableOverrides())
         .build();
   }
 

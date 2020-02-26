@@ -416,6 +416,7 @@ public class WorkflowPhase implements UuidAccess {
     private boolean statefulSet;
     private List<PhaseStep> phaseSteps = new ArrayList<>();
     private List<TemplateExpression> templateExpressions;
+    private List<NameValuePair> variableOverrides = new ArrayList<>();
 
     private WorkflowPhaseBuilder() {}
 
@@ -508,6 +509,11 @@ public class WorkflowPhase implements UuidAccess {
       return this;
     }
 
+    public WorkflowPhaseBuilder variableOverrides(List<NameValuePair> variableOverrides) {
+      this.variableOverrides = variableOverrides;
+      return this;
+    }
+
     public WorkflowPhase build() {
       WorkflowPhase workflowPhase = new WorkflowPhase();
       workflowPhase.setUuid(uuid);
@@ -527,6 +533,7 @@ public class WorkflowPhase implements UuidAccess {
       workflowPhase.setTemplateExpressions(templateExpressions);
       workflowPhase.setDaemonSet(daemonSet);
       workflowPhase.setStatefulSet(statefulSet);
+      workflowPhase.setVariableOverrides(variableOverrides);
       return workflowPhase;
     }
   }
@@ -546,13 +553,14 @@ public class WorkflowPhase implements UuidAccess {
     private String phaseNameForRollback;
     private List<TemplateExpression.Yaml> templateExpressions;
     private List<PhaseStep.Yaml> phaseSteps = new ArrayList<>();
+    private List<NameValuePair> serviceVariableOverrides = new ArrayList<>();
     //  private DeploymentType deploymentType;
 
     @lombok.Builder
     public Yaml(String type, String name, String infraMappingName, String infraDefinitionName, String serviceName,
         String computeProviderName, boolean provisionNodes, String phaseNameForRollback,
         List<TemplateExpression.Yaml> templateExpressions, List<PhaseStep.Yaml> phaseSteps, boolean daemonSet,
-        boolean statefulSet) {
+        boolean statefulSet, List<NameValuePair> serviceVariableOverrides) {
       super(type);
       this.name = name;
       this.infraMappingName = infraMappingName;
@@ -565,6 +573,7 @@ public class WorkflowPhase implements UuidAccess {
       this.phaseSteps = phaseSteps;
       this.daemonSet = daemonSet;
       this.statefulSet = statefulSet;
+      this.serviceVariableOverrides = serviceVariableOverrides;
     }
   }
 }
