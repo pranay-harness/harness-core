@@ -118,14 +118,18 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
 
   private void auditPasswordStrengthPolicy(String accountId, LoginSettings loginSettings) {
     LoginSettings auditLoginSettings = loginSettings;
+    PasswordExpirationPolicy passwordExpirationPolicy = loginSettings.getPasswordExpirationPolicy();
     auditLoginSettings.setPasswordExpirationPolicy(null);
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, auditLoginSettings, Event.Type.UPDATE);
+    loginSettings.setPasswordExpirationPolicy(passwordExpirationPolicy);
   }
 
   private void auditPasswordExpirationPolicy(String accountId, LoginSettings loginSettings) {
     LoginSettings auditLoginSettings = loginSettings;
+    PasswordStrengthPolicy passwordStrengthPolicy = loginSettings.getPasswordStrengthPolicy();
     auditLoginSettings.setPasswordStrengthPolicy(null);
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, auditLoginSettings, Event.Type.UPDATE);
+    loginSettings.setPasswordStrengthPolicy(passwordStrengthPolicy);
   }
 
   @Override
