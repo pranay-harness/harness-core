@@ -23,11 +23,13 @@ import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionReflectionUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -49,6 +51,7 @@ import software.wings.beans.VariableType;
 import software.wings.beans.template.TemplateUtils;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.ActivityHelperService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -58,6 +61,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionContext;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
@@ -101,6 +105,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   @Inject private transient TemplateUtils templateUtils;
   @Inject protected transient ManagerDecryptionService managerDecryptionService;
   @Inject protected transient SecretManager secretManager;
+  @Inject protected transient DelegateService delegateService;
 
   public HttpState() {}
 
@@ -507,6 +512,22 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     } catch (UnsupportedEncodingException ex) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Couldn't url-encode " + queryString);
     }
+  }
+
+  private void renderTaskParameters(ExecutionContext context, StateExecutionData stateExecutionData,
+      TaskParameters parameters, int expressionFunctorToken) {
+    ExpressionReflectionUtils.applyExpression(parameters,
+        value
+        -> context.renderExpression(value,
+            StateExecutionContext.builder()
+                .stateExecutionData(stateExecutionData)
+                .adoptDelegateDecryption(true)
+                .expressionFunctorToken(expressionFunctorToken)
+                .build()));
+  }
+
+  private String scheduleDelegateTask(DelegateTask task) {
+    return delegateService.queueTask(task);
   }
 
   /**
