@@ -1,6 +1,7 @@
 package io.harness.batch.processing.writer.constants;
 
 public class K8sCCMConstants {
+  public static final String AWS_LIFECYCLE_KEY = "lifecycle";
   public static final String RELEASE_NAME = "harness.io/release-name";
   public static final String OPERATING_SYSTEM = "beta.kubernetes.io/os";
   public static final String PREEMPTIBLE_KEY = "preemptible";

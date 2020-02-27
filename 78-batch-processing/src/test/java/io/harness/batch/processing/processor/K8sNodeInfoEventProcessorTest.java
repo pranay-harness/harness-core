@@ -10,6 +10,7 @@ import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
 
 import io.harness.CategoryTest;
+import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceType;
@@ -111,7 +112,38 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
     assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
     assertThat(metaData.get(InstanceMetaDataConstants.REGION)).isEqualTo(InstanceMetaDataConstants.REGION);
+    assertThat(metaData.get(InstanceMetaDataConstants.INSTANCE_CATEGORY)).isEqualTo(InstanceCategory.ON_DEMAND.name());
     assertThat(metaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER)).isEqualTo(CloudProvider.GCP.name());
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void shouldCreateInstanceNodeInfoForAwsSpot() throws Exception {
+    when(cloudProviderService.getK8SCloudProvider(any(), any())).thenReturn(CloudProvider.AWS);
+    Map<String, String> label = new HashMap<>();
+    label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
+    label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
+    label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
+    label.put(K8sCCMConstants.AWS_LIFECYCLE_KEY, "Ec2Spot");
+    Map<String, Quantity> requestQuantity = new HashMap<>();
+    requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "n"));
+    requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, ""));
+    PublishedMessage k8sNodeEventMessage = getK8sNodeInfoMessage(NODE_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
+        CLUSTER_NAME, CLUSTER_ID, label, requestQuantity, START_TIMESTAMP);
+    InstanceInfo instanceInfo = k8sNodeInfoProcessor.process(k8sNodeEventMessage);
+    io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
+    Map<String, String> metaData = instanceInfo.getMetaData();
+    assertThat(instanceInfo).isNotNull();
+    assertThat(instanceInfo.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(instanceInfo.getInstanceType()).isEqualTo(InstanceType.K8S_NODE);
+    assertThat(instanceInfo.getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(instanceInfo.getClusterName()).isEqualTo(CLUSTER_NAME);
+    assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
+    assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
+    assertThat(metaData.get(InstanceMetaDataConstants.INSTANCE_CATEGORY)).isEqualTo(InstanceCategory.SPOT.name());
+    assertThat(metaData.get(InstanceMetaDataConstants.REGION)).isEqualTo(InstanceMetaDataConstants.REGION);
+    assertThat(metaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER)).isEqualTo(CloudProvider.AWS.name());
   }
 
   private Quantity getQuantity(long amount, String unit) {
