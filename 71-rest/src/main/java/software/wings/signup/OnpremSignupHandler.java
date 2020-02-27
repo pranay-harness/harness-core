@@ -39,10 +39,8 @@ public class OnpremSignupHandler implements SignupHandler {
   }
 
   private void validate(UserInvite userInvite) {
-    if (!mainConfiguration.isTrialRegistrationAllowedForHackathon()) {
-      validateDeployMode();
-      validateCountOfAccount();
-    }
+    validateDeployMode();
+    validateCountOfAccount();
     signupService.validateEmail(userInvite.getEmail());
     signupService.validatePassword(userInvite.getPassword());
   }
