@@ -32,6 +32,7 @@ import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.pcf.model.PcfConstants;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Getter;
 import lombok.Setter;
@@ -361,8 +362,11 @@ public class PcfSetupState extends State {
   @VisibleForTesting
   Integer fetchMaxCount(boolean manifestRefactorFlagEnabled, PcfManifestsPackage pcfManifestsPackage) {
     Integer maxCount;
-    maxInstances = maxInstances == null || maxInstances.intValue() < 0 ? Integer.valueOf(2) : maxInstances;
-    maxCount = manifestRefactorFlagEnabled ? pcfStateHelper.fetchMaxCountFromManifest(pcfManifestsPackage, maxInstances)
+    maxInstances = maxInstances == null || maxInstances < 0
+        ? Integer.valueOf(PcfConstants.MANIFEST_INSTANCE_COUNT_DEFAULT)
+        : maxInstances;
+    maxCount = manifestRefactorFlagEnabled ? pcfStateHelper.fetchMaxCountFromManifest(pcfManifestsPackage,
+                                                 Integer.valueOf(PcfConstants.MANIFEST_INSTANCE_COUNT_DEFAULT))
                                            : maxInstances;
 
     return maxCount;
