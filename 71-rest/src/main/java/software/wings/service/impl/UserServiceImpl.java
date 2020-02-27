@@ -1519,10 +1519,14 @@ public class UserServiceImpl implements UserService {
       logoutResponse.setLogoutUrl(samlSettings.getLogoutUrl());
       logger.info("Logout URL from accountId is {}", samlSettings.getLogoutUrl());
     }
-    User user = get(accountId, userId);
-    if (user != null) {
+    try {
+      User user = get(accountId, userId);
       logger.info("Invalidating token for {}", user);
-      logout(user);
+      if (user != null) {
+        logout(user);
+      }
+    } catch (Exception e) {
+      logger.error("Invalidation of token and cache clear wasn't done", e);
     }
     logger.info("Logout Response from manager {}", logoutResponse);
     return logoutResponse;
