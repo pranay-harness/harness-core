@@ -441,10 +441,9 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
     String suffix = getSweepingOutputNameSuffix(phaseElement);
     ServiceInstanceIdsParam serviceInstanceIdsParam =
-        (ServiceInstanceIdsParam) sweepingOutputService.findSweepingOutput(
-            context.prepareSweepingOutputInquiryBuilder()
-                .name(ServiceInstanceIdsParam.SERVICE_INSTANCE_IDS_PARAMS + suffix)
-                .build());
+        sweepingOutputService.findSweepingOutput(context.prepareSweepingOutputInquiryBuilder()
+                                                     .name(ServiceInstanceIdsParam.SERVICE_INSTANCE_IDS_PARAMS + suffix)
+                                                     .build());
     if (serviceInstanceIdsParam == null) {
       return getServiceInstanceIdsParamFromContextElement();
     } else {

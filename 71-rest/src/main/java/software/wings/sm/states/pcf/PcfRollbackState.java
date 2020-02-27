@@ -47,10 +47,9 @@ public class PcfRollbackState extends PcfDeployState {
       Integer downsizeUpdateCount, PcfDeployStateExecutionData stateExecutionData,
       PcfInfrastructureMapping infrastructureMapping) {
     DeploySweepingOutputPcf deploySweepingOutputPcf =
-        (DeploySweepingOutputPcf) sweepingOutputService.findSweepingOutput(
-            context.prepareSweepingOutputInquiryBuilder()
-                .name(pcfStateHelper.obtainDeploySweepingOutputName(context, true))
-                .build());
+        sweepingOutputService.findSweepingOutput(context.prepareSweepingOutputInquiryBuilder()
+                                                     .name(pcfStateHelper.obtainDeploySweepingOutputName(context, true))
+                                                     .build());
 
     // Just revert previousCount and desiredCount values for Rollback
     // Deploy sends emptyInstanceData and PcfCommandTask figured out which apps to be resized,

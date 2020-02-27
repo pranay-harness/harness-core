@@ -77,12 +77,12 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
   }
 
   @Override
-  public SweepingOutput findSweepingOutput(SweepingOutputInquiry inquiry) {
+  public <T extends SweepingOutput> T findSweepingOutput(SweepingOutputInquiry inquiry) {
     SweepingOutputInstance sweepingOutputInstance = find(inquiry);
     if (sweepingOutputInstance == null) {
       return null;
     }
-    return sweepingOutputInstance.getValue();
+    return (T) sweepingOutputInstance.getValue();
   }
 
   @Override
