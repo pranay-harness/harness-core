@@ -16,7 +16,6 @@ import static io.harness.event.model.EventConstants.ENVIRONMENT_NAME;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -155,8 +154,6 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
   private Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
-  private static int MAX_TIMEOUT_MINUTES = 30000;
-  private static int MAX_TIMEOUT_MILLIS = MAX_TIMEOUT_MINUTES * 60 * 1000;
   private String SCRIPT_APPROVAL_COMMAND = "Execute Approval Script";
   private String SCRIPT_APPROVAL_JOB_GROUP = "SHELL_SCRIPT_APPROVAL_JOB";
   public static final String APPROVAL_STATE_TYPE_VARIABLE = "approvalStateType";
@@ -957,17 +954,6 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       return DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
     }
     return super.getTimeoutMillis();
-  }
-
-  /*
-  To validate property map before state Object is constructed. This can prevent
-  stateTransformationErrors.
-   */
-  public static void preValidatePropertyMap(Map<String, Object> propertyMap) {
-    final double timeoutMillis = Double.valueOf(propertyMap.getOrDefault(StateKeys.timeoutMillis, 0).toString());
-    if (timeoutMillis > MAX_TIMEOUT_MILLIS) {
-      throw new InvalidRequestException(format("Timeout value cannot be greater than %s minutes", MAX_TIMEOUT_MINUTES));
-    }
   }
 
   public static String fetchAndTrimSweepingOutputName(Map<String, Object> propertyMap) {
