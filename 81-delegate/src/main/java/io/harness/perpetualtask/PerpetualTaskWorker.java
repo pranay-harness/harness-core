@@ -1,6 +1,7 @@
 package io.harness.perpetualtask;
 
 import static io.harness.delegate.service.DelegateServiceImpl.getDelegateId;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.AbstractScheduledService;
@@ -11,6 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.util.Durations;
 
+import io.harness.logging.AutoLogContext;
 import io.harness.logging.LoggingListener;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
 import lombok.Getter;
@@ -68,22 +70,24 @@ public class PerpetualTaskWorker extends AbstractScheduledService {
 
   @VisibleForTesting
   void startTask(PerpetualTaskId taskId) {
-    try {
-      logger.info("Starting perpetual task with id: {}.", taskId);
-      PerpetualTaskContext context = perpetualTaskServiceGrpcClient.getTaskContext(taskId);
-      PerpetualTaskSchedule schedule = context.getTaskSchedule();
-      long intervalSeconds = Durations.toSeconds(schedule.getInterval());
+    try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
+      try {
+        logger.info("Starting perpetual task with id: {}.", taskId.getId());
+        PerpetualTaskContext context = perpetualTaskServiceGrpcClient.getTaskContext(taskId);
+        PerpetualTaskSchedule schedule = context.getTaskSchedule();
+        long intervalSeconds = Durations.toSeconds(schedule.getInterval());
 
-      PerpetualTaskLifecycleManager perpetualTaskLifecycleManager =
-          new PerpetualTaskLifecycleManager(taskId, context, factoryMap, perpetualTaskServiceGrpcClient, timeLimiter);
-      ScheduledFuture<?> taskHandle = scheduledService.scheduleWithFixedDelay(
-          perpetualTaskLifecycleManager::startTask, 0, intervalSeconds, TimeUnit.SECONDS);
+        PerpetualTaskLifecycleManager perpetualTaskLifecycleManager =
+            new PerpetualTaskLifecycleManager(taskId, context, factoryMap, perpetualTaskServiceGrpcClient, timeLimiter);
+        ScheduledFuture<?> taskHandle = scheduledService.scheduleWithFixedDelay(
+            perpetualTaskLifecycleManager::startTask, 0, intervalSeconds, TimeUnit.SECONDS);
 
-      PerpetualTaskHandle perpetualTaskHandle = new PerpetualTaskHandle(taskHandle, perpetualTaskLifecycleManager);
+        PerpetualTaskHandle perpetualTaskHandle = new PerpetualTaskHandle(taskHandle, perpetualTaskLifecycleManager);
 
-      runningTaskMap.put(taskId, perpetualTaskHandle);
-    } catch (Exception ex) {
-      logger.error("Exception in starting perpetual task ", ex);
+        runningTaskMap.put(taskId, perpetualTaskHandle);
+      } catch (Exception ex) {
+        logger.error("Exception in starting perpetual task ", ex);
+      }
     }
   }
 
@@ -102,15 +106,17 @@ public class PerpetualTaskWorker extends AbstractScheduledService {
 
   @VisibleForTesting
   void stopTask(PerpetualTaskId taskId) {
-    PerpetualTaskHandle perpetualTaskHandle = runningTaskMap.get(taskId);
-    if (perpetualTaskHandle == null) {
-      logger.error(
-          "The request to delete a task with id={} cannot be fulfilled since such task does not exist.", taskId);
-      return;
+    try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
+      PerpetualTaskHandle perpetualTaskHandle = runningTaskMap.get(taskId);
+      if (perpetualTaskHandle == null) {
+        logger.error(
+            "The request to delete a task with id={} cannot be fulfilled since such task does not exist.", taskId);
+        return;
+      }
+      perpetualTaskHandle.getTaskLifecycleManager().stopTask();
+      perpetualTaskHandle.getTaskHandle().cancel(true);
+      runningTaskMap.remove(taskId);
     }
-    perpetualTaskHandle.getTaskLifecycleManager().stopTask();
-    perpetualTaskHandle.getTaskHandle().cancel(true);
-    runningTaskMap.remove(taskId);
   }
 
   private void stopCancelledTasks() {

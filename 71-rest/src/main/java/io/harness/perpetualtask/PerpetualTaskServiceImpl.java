@@ -1,5 +1,7 @@
 package io.harness.perpetualtask;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.Any;
@@ -9,8 +11,10 @@ import com.google.protobuf.util.Durations;
 import io.grpc.Context;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.logging.AutoLogContext;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
+import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -32,41 +36,51 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   @Override
   public String createTask(PerpetualTaskType perpetualTaskType, String accountId,
       PerpetualTaskClientContext clientContext, PerpetualTaskSchedule schedule, boolean allowDuplicate) {
-    if (!allowDuplicate) {
-      Optional<PerpetualTaskRecord> perpetualTaskMaybe =
-          perpetualTaskRecordDao.getExistingPerpetualTask(accountId, perpetualTaskType, clientContext);
-      if (perpetualTaskMaybe.isPresent()) {
-        PerpetualTaskRecord perpetualTaskRecord = perpetualTaskMaybe.get();
-        logger.info("Perpetual task exist {} ", perpetualTaskRecord.getUuid());
-        return perpetualTaskRecord.getUuid();
+    try (AutoLogContext ignore0 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      if (!allowDuplicate) {
+        Optional<PerpetualTaskRecord> perpetualTaskMaybe =
+            perpetualTaskRecordDao.getExistingPerpetualTask(accountId, perpetualTaskType, clientContext);
+        if (perpetualTaskMaybe.isPresent()) {
+          PerpetualTaskRecord perpetualTaskRecord = perpetualTaskMaybe.get();
+          logger.info("Perpetual task with id={} exists.", perpetualTaskRecord.getUuid());
+          return perpetualTaskRecord.getUuid();
+        }
       }
-    }
 
-    PerpetualTaskRecord record = PerpetualTaskRecord.builder()
-                                     .accountId(accountId)
-                                     .perpetualTaskType(perpetualTaskType)
-                                     .clientContext(clientContext)
-                                     .timeoutMillis(Durations.toMillis(schedule.getTimeout()))
-                                     .intervalSeconds(schedule.getInterval().getSeconds())
-                                     .delegateId("")
-                                     .build();
-    String taskId = perpetualTaskRecordDao.save(record);
-    logger.info("Created a perpetual task with id={}.", taskId);
-    return taskId;
+      PerpetualTaskRecord record = PerpetualTaskRecord.builder()
+                                       .accountId(accountId)
+                                       .perpetualTaskType(perpetualTaskType)
+                                       .clientContext(clientContext)
+                                       .timeoutMillis(Durations.toMillis(schedule.getTimeout()))
+                                       .intervalSeconds(schedule.getInterval().getSeconds())
+                                       .delegateId("")
+                                       .build();
+      String taskId = perpetualTaskRecordDao.save(record);
+      try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
+        logger.info("Created a perpetual task with id={}.", taskId);
+      }
+      return taskId;
+    }
   }
 
   @Override
   public boolean resetTask(String accountId, String taskId) {
-    return perpetualTaskRecordDao.resetDelegateId(accountId, taskId);
+    try (AutoLogContext ignore0 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
+      return perpetualTaskRecordDao.resetDelegateId(accountId, taskId);
+    }
   }
 
   @Override
   public boolean deleteTask(String accountId, String taskId) {
-    boolean hasDeleted = perpetualTaskRecordDao.remove(accountId, taskId);
-    if (hasDeleted) {
-      logger.info("Deleted the perpetual task with id={}", taskId);
+    try (AutoLogContext ignore0 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
+      boolean hasDeleted = perpetualTaskRecordDao.remove(accountId, taskId);
+      if (hasDeleted) {
+        logger.info("Deleted the perpetual task with id={}.", taskId);
+      }
+      return hasDeleted;
     }
-    return hasDeleted;
   }
 
   @Override
