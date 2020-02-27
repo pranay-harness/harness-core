@@ -72,7 +72,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.cache.Cache;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by rsingh on 8/28/17.
@@ -451,8 +450,7 @@ public class NewRelicServiceImpl implements NewRelicService {
   }
 
   @Override
-  public NewRelicApplication resolveApplicationName(
-      @NotNull String settingId, @NotNull String newRelicApplicationName) {
+  public NewRelicApplication resolveApplicationName(String settingId, String newRelicApplicationName) {
     ErrorCode errorCode = null;
     try {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
@@ -468,15 +466,13 @@ public class NewRelicServiceImpl implements NewRelicService {
           .resolveNewRelicApplicationName(
               (NewRelicConfig) settingAttribute.getValue(), encryptionDetails, newRelicApplicationName, null);
     } catch (Exception e) {
-      throw new WingsException(errorCode, USER)
-          .addParam("message",
-              "Error in resolving newrelic application " + newRelicApplicationName + " . "
-                  + ExceptionUtils.getMessage(e));
+      throw new VerificationOperationException(errorCode,
+          "Error in resolving newrelic application " + newRelicApplicationName + " . " + ExceptionUtils.getMessage(e));
     }
   }
 
   @Override
-  public NewRelicApplication resolveApplicationId(@NotNull String settingId, @NotNull String newRelicApplicationId) {
+  public NewRelicApplication resolveApplicationId(String settingId, String newRelicApplicationId) {
     ErrorCode errorCode = null;
     try {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
@@ -492,10 +488,9 @@ public class NewRelicServiceImpl implements NewRelicService {
           .resolveNewRelicApplicationId(
               (NewRelicConfig) settingAttribute.getValue(), encryptionDetails, newRelicApplicationId, null);
     } catch (Exception e) {
-      throw new WingsException(errorCode, USER)
-          .addParam("message",
-              "Error in resolving newrelic application with ID: " + newRelicApplicationId + " . "
-                  + ExceptionUtils.getMessage(e));
+      throw new VerificationOperationException(errorCode,
+          "Error in resolving newrelic application with ID: " + newRelicApplicationId + " . "
+              + ExceptionUtils.getMessage(e));
     }
   }
 }
