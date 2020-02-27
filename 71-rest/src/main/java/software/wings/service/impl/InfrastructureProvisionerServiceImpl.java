@@ -31,6 +31,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
@@ -614,24 +615,33 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureProvisioner.getAccountId());
 
     if (featureFlagEnabled) {
-      String infraMappingId = getInfraMappingId(context);
-      String infraDefinitionId = getInfraDefinitionId(context);
-      if (isEmpty(infraMappingId) && isNotEmpty(infraDefinitionId)) {
-        // Inside deployment phase, but mapping not yet generated
-        InfrastructureDefinition infrastructureDefinition =
-            infrastructureDefinitionService.get(appId, infraDefinitionId);
-        Map<String, Object> resolvedExpressions =
-            resolveExpressions(infrastructureDefinition, contextMap, infrastructureProvisioner);
-        ((ProvisionerAware) infrastructureDefinition.getInfrastructure())
-            .applyExpressions(resolvedExpressions, appId, infrastructureDefinition.getEnvId(), infraDefinitionId);
-        InfrastructureMapping infrastructureMapping =
-            infrastructureDefinitionService.getInfrastructureMapping(getServiceId(context), infrastructureDefinition);
-        PhaseElement phaseElement =
-            context.getContextElement(ContextElementType.PARAM, ExecutionContextImpl.PHASE_PARAM);
-        infrastructureMappingService.saveInfrastructureMappingToSweepingOutput(
-            appId, context.getWorkflowExecutionId(), phaseElement, infrastructureMapping.getUuid());
-        workflowExecutionService.appendInfraMappingId(
-            appId, context.getWorkflowExecutionId(), infrastructureMapping.getUuid());
+      try {
+        String infraMappingId = getInfraMappingId(context);
+        String infraDefinitionId = getInfraDefinitionId(context);
+        if (isEmpty(infraMappingId) && isNotEmpty(infraDefinitionId)) {
+          // Inside deployment phase, but mapping not yet generated
+          InfrastructureDefinition infrastructureDefinition =
+              infrastructureDefinitionService.get(appId, infraDefinitionId);
+          addToExecutionLog(executionLogCallbackOptional,
+              format("Mapping provisioner outputs to Infra Definition: [%s]", infrastructureDefinition.getName()));
+          Map<String, Object> resolvedExpressions =
+              resolveExpressions(infrastructureDefinition, contextMap, infrastructureProvisioner);
+          ((ProvisionerAware) infrastructureDefinition.getInfrastructure())
+              .applyExpressions(resolvedExpressions, appId, infrastructureDefinition.getEnvId(), infraDefinitionId);
+          InfrastructureMapping infrastructureMapping =
+              infrastructureDefinitionService.getInfrastructureMapping(getServiceId(context), infrastructureDefinition);
+          PhaseElement phaseElement =
+              context.getContextElement(ContextElementType.PARAM, ExecutionContextImpl.PHASE_PARAM);
+          infrastructureMappingService.saveInfrastructureMappingToSweepingOutput(
+              appId, context.getWorkflowExecutionId(), phaseElement, infrastructureMapping.getUuid());
+          workflowExecutionService.appendInfraMappingId(
+              appId, context.getWorkflowExecutionId(), infrastructureMapping.getUuid());
+          addToExecutionLog(executionLogCallbackOptional, "Mapping completed successfully");
+        }
+      } catch (WingsException ex) {
+        throw ex;
+      } catch (Exception ex) {
+        throw new UnexpectedException("Failed while mapping provisioner outputs to Infra Definition", ex);
       }
     } else {
       try (HIterator<InfrastructureMapping> infrastructureMappings = new HIterator<>(
