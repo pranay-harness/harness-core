@@ -39,6 +39,17 @@ public class SmbHelperService {
   @Inject private EncryptionService encryptionService;
   private String buildNo = "";
 
+  public void checkConnection(software.wings.beans.SmbConfig smbConfig, List<EncryptedDataDetail> encryptionDataDetails)
+      throws IOException {
+    try (SMBClient client = new SMBClient(getSMBConnectionConfig());
+         Connection connection = client.connect(getSMBConnectionHost(smbConfig.getSmbUrl()))) {
+      AuthenticationContext ac =
+          new AuthenticationContext(smbConfig.getUsername(), smbConfig.getPassword(), smbConfig.getDomain());
+      Session session = connection.authenticate(ac);
+      session.close();
+    }
+  }
+
   public List<String> getSmbPaths(software.wings.beans.SmbConfig smbConfig, List<EncryptedDataDetail> encryptionDetails)
       throws IOException {
     encryptionService.decrypt(smbConfig, encryptionDetails);

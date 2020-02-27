@@ -7,12 +7,14 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.hierynomus.mssmb2.SMBApiException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SmbConfig;
+import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.SmbHelperService;
 
@@ -38,6 +40,13 @@ public class SmbServiceImpl implements SmbService {
 
   @Override
   public boolean isRunning(SmbConfig smbConfig, List<EncryptedDataDetail> encryptionDetails) {
+    try {
+      smbHelperService.checkConnection(smbConfig, encryptionDetails);
+    } catch (SMBApiException SMBe) {
+      throw new InvalidArtifactServerException("Invalid Samba Server credentials", SMBe);
+    } catch (Exception e) {
+      throw new InvalidArtifactServerException(e.getMessage(), e);
+    }
     return true;
   }
 
