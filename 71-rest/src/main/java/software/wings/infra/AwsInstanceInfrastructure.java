@@ -140,7 +140,7 @@ public class AwsInstanceInfrastructure
       Map<?, ?> map = (Map) input;
       return map.entrySet()
           .stream()
-          .map(item -> Tag.builder().key((String) item.getKey()).value((String) item.getValue()).build())
+          .map(item -> Tag.builder().key((String) item.getKey()).value(item.getValue().toString()).build())
           .collect(toList());
     } else if (input instanceof String) {
       List<Tag> tags = new ArrayList<>();
