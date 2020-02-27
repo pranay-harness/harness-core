@@ -15,7 +15,6 @@ import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.common.Constants.ASG_COMMAND_NAME;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.inject.Inject;
@@ -101,6 +100,8 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class AwsAmiServiceDeployState extends State {
+  public static final String ASG_COMMAND_NAME = "Resize AutoScaling Group";
+
   @Attributes(title = "Desired Instances (cumulative)") private String instanceCount;
 
   @Attributes(title = "Instance Unit Type (Count/Percent)")

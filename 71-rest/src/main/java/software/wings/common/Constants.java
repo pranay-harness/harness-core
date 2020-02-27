@@ -11,24 +11,9 @@ import java.util.regex.Pattern;
 @Deprecated
 public interface Constants {
   /**
-   * The constant COLLECT_ARTIFACT.
-   */
-  String COLLECT_ARTIFACT = "Collect Artifact";
-
-  /**
-   * The constant COLLECT_ARTIFACT.
-   */
-  String ARTIFACT_COLLECTION = "Artifact Collection";
-
-  /**
    * The constant AMI setup commands
    */
   String AMI_SETUP_COMMAND_NAME = "AMI Service Setup";
-
-  /**
-   * The constant KUBERNETES_STEADY_STATE_CHECK.
-   */
-  String KUBERNETES_STEADY_STATE_CHECK = "Steady State Check";
 
   String ECS_STEADY_STATE_CHECK = "Ecs Steady State Check";
   /**
@@ -84,11 +69,6 @@ public interface Constants {
   String WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE =
       "Some phases %s Service Infrastructure are found to be invalid/incomplete.";
 
-  /**
-   * The constant DEFAULT_STATE_TIMEOUT_MILLIS.
-   */
-  long DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS = 5L * 60L * 1000L; // 5 minutes
-
   String PROVISION_CLOUD_FORMATION = "CloudFormation Create Stack";
   String DE_PROVISION_CLOUD_FORMATION = "CloudFormation Delete Stack";
   String ROLLBACK_CLOUD_FORMATION = "CloudFormation Rollback Stack";
@@ -101,49 +81,21 @@ public interface Constants {
   int DEFAULT_STEADY_STATE_TIMEOUT = 10;
 
   /**
-   * The constant LAST_UPDATED_AT.
-   */
-  String LAST_UPDATED_AT = "lastUpdatedAt";
-
-  /**
-   * Constants for expression
-   */
-  String ARTIFACT_S3_BUCKET_EXPRESSION = "${artifact.bucketName}";
-  /**
-   * The constant ARTIFACT__S3_KEY_EXPRESSION.
-   */
-  String ARTIFACT__S3_KEY_EXPRESSION = "${artifact.key}";
-
-  /**
    * The constant EXECUTE_WITH_PREVIOUS_STEPS.
    */
   String EXECUTE_WITH_PREVIOUS_STEPS = "executeWithPreviousSteps";
-
-  /**
-   * The constant ASG_COMMAND_NAME.
-   */
-  String ASG_COMMAND_NAME = "Resize AutoScaling Group";
 
   /**
    * The constant HARNESS_NAME.
    */
   String HARNESS_NAME = "Harness";
 
-  String ALWAYS_TRUE_CRITERIA = "ALWAYS_TRUE_CRITERIA";
-
   /**
    * The cloudwatch metric url.
    */
   String HARNESS_KUBE_CONFIG_PATH = "HARNESS_KUBE_CONFIG_PATH";
 
-  String PCF_OLD_APP_NAME = "pcfOldAppName";
-  String TOKEN_FIELD = "Bearer Token(HTTP Header)";
-
   String WINDOWS_HOME_DIR = "%USERPROFILE%";
-
-  String ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM = "ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM";
-
-  String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";
 
   /**
    * Quartz job detail key names

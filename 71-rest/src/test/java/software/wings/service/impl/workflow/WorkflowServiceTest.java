@@ -76,8 +76,6 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.common.Constants.ARTIFACT_S3_BUCKET_EXPRESSION;
-import static software.wings.common.Constants.ARTIFACT__S3_KEY_EXPRESSION;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.Constants.PHASE_STEP_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.STEP_VALIDATION_MESSAGE;
@@ -187,6 +185,8 @@ import static software.wings.sm.StepType.NEW_RELIC_DEPLOYMENT_MARKER;
 import static software.wings.sm.StepType.RESOURCE_CONSTRAINT;
 import static software.wings.sm.StepType.SERVICENOW_CREATE_UPDATE;
 import static software.wings.sm.StepType.TERRAFORM_APPLY;
+import static software.wings.sm.states.AwsCodeDeployState.ARTIFACT_S3_BUCKET_EXPRESSION;
+import static software.wings.sm.states.AwsCodeDeployState.ARTIFACT_S3_KEY_EXPRESSION;
 import static software.wings.stencils.WorkflowStepType.APM;
 import static software.wings.stencils.WorkflowStepType.ARTIFACT;
 import static software.wings.stencils.WorkflowStepType.AWS_AMI;
@@ -3031,7 +3031,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Map<String, String> defaults = workflowService.getStateDefaults(APP_ID, SERVICE_ID, AWS_CODEDEPLOY_STATE);
     assertThat(defaults).isNotEmpty();
     assertThat(defaults).containsKeys("bucket", "key", "bundleType");
-    assertThat(defaults).containsValues(ARTIFACT_S3_BUCKET_EXPRESSION, ARTIFACT__S3_KEY_EXPRESSION, "zip");
+    assertThat(defaults).containsValues(ARTIFACT_S3_BUCKET_EXPRESSION, ARTIFACT_S3_KEY_EXPRESSION, "zip");
   }
 
   @Test

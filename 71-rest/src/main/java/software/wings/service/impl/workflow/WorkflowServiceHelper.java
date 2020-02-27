@@ -120,7 +120,6 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.EcsServiceSpecification;
-import software.wings.common.Constants;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.CloudProviderInfrastructure;
@@ -275,6 +274,7 @@ public class WorkflowServiceHelper {
   public static final String NEW_RELIC_DEPLOYMENT_MARKER = "New Relic Deployment Marker";
   public static final String COMMAND_NAME = "Command";
 
+  private static final String COLLECT_ARTIFACT_PHASE_STEP_NAME = "Collect Artifact";
   private static final String SETUP_AUTOSCALING_GROUP = "Setup AutoScaling Group";
   private static final String PROVISION_INFRASTRUCTURE = "Provision Infrastructure";
   private static final String MIN_REPLICAS = "\\$\\{MIN_REPLICAS}";
@@ -2515,11 +2515,11 @@ public class WorkflowServiceHelper {
 
     phaseSteps.add(aPhaseStep(PhaseStepType.PREPARE_STEPS, WorkflowServiceHelper.PREPARE_STEPS).build());
 
-    phaseSteps.add(aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
+    phaseSteps.add(aPhaseStep(COLLECT_ARTIFACT, COLLECT_ARTIFACT_PHASE_STEP_NAME)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(ARTIFACT_COLLECTION.name())
-                                    .name(Constants.ARTIFACT_COLLECTION)
+                                    .name(ARTIFACT_COLLECTION_STEP)
                                     .build())
                        .build());
     phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WorkflowServiceHelper.WRAP_UP).build());

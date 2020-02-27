@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
-import static software.wings.common.Constants.DEPLOYMENT_TRIGGERED_BY;
 
 import com.google.inject.Inject;
 
@@ -57,6 +56,7 @@ import java.util.Map;
  */
 public class WorkflowStandardParams implements ExecutionContextAware, ContextElement {
   private static final String STANDARD_PARAMS = "STANDARD_PARAMS";
+  public static final String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";
 
   @Inject private transient AppService appService;
   @Inject private transient AccountService accountService;

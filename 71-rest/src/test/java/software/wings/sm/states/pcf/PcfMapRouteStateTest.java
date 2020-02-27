@@ -28,7 +28,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.common.Constants.PCF_OLD_APP_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.INFRA_ROUTE_PCF;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.MASKED;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
@@ -128,6 +127,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class PcfMapRouteStateTest extends WingsBaseTest {
+  public static final String PCF_OLD_APP_NAME = "pcfOldAppName";
   private static final String BASE_URL = "https://env.harness.io/";
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";

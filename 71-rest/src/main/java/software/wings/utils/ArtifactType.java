@@ -21,9 +21,9 @@ import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
 import static software.wings.beans.command.DownloadArtifactCommandUnit.Builder.aDownloadArtifactCommandUnit;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.common.Constants.AMI_SETUP_COMMAND_NAME;
-import static software.wings.common.Constants.ASG_COMMAND_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_RESIZE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_SETUP;
+import static software.wings.sm.states.AwsAmiServiceDeployState.ASG_COMMAND_NAME;
 import static software.wings.sm.states.AwsLambdaState.AWS_LAMBDA_COMMAND_NAME;
 import static software.wings.utils.PowerShellScriptsLoader.psScriptMap;
 

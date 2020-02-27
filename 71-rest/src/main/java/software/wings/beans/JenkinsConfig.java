@@ -1,6 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.common.Constants.TOKEN_FIELD;
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -22,6 +21,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.jersey.JsonViews;
+import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.ArtifactServerYaml;
@@ -39,7 +39,8 @@ public class JenkinsConfig extends SettingValue
   public static final String USERNAME_DEFAULT_TEXT = "UserName/Password";
 
   @Attributes(title = "Jenkins URL", required = true) @NotEmpty private String jenkinsUrl;
-  @Attributes(title = "Authentication Mechanism", required = true, enums = {USERNAME_DEFAULT_TEXT, TOKEN_FIELD})
+  @Attributes(
+      title = "Authentication Mechanism", required = true, enums = {USERNAME_DEFAULT_TEXT, JenkinsUtils.TOKEN_FIELD})
   @NotEmpty
   private String authMechanism;
 

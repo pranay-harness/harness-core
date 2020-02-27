@@ -3,7 +3,6 @@ package software.wings.api;
 import io.harness.context.ContextElementType;
 import lombok.Builder;
 import lombok.Value;
-import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
@@ -12,6 +11,8 @@ import java.util.Map;
 @Value
 @Builder
 public class RouteUpdateRollbackElement implements ContextElement {
+  private static final String ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM = "ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM";
+
   @Override
   public ContextElementType getElementType() {
     return ContextElementType.PARAM;
@@ -24,7 +25,7 @@ public class RouteUpdateRollbackElement implements ContextElement {
 
   @Override
   public String getName() {
-    return Constants.ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM;
+    return ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM;
   }
 
   @Override
