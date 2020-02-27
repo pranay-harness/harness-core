@@ -16,8 +16,8 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.Variable.VariableBuilder;
-import software.wings.beans.Variable.Yaml;
 import software.wings.beans.VariableType;
+import software.wings.beans.VariableYaml;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.ArtifactVariableYamlHelper;
@@ -36,15 +36,15 @@ import java.util.List;
  */
 @Singleton
 @Slf4j
-public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable> {
+public class VariableYamlHandler extends BaseYamlHandler<VariableYaml, Variable> {
   @Inject FeatureFlagService featureFlagService;
   @Inject SettingsService settingsService;
   @Inject ArtifactStreamService artifactStreamService;
   @Inject AppService appService;
   @Inject ArtifactVariableYamlHelper artifactVariableYamlHelper;
 
-  private Variable toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
-    Yaml yaml = changeContext.getYaml();
+  private Variable toBean(ChangeContext<VariableYaml> changeContext) throws HarnessException {
+    VariableYaml yaml = changeContext.getYaml();
     VariableType variableType = Utils.getEnumFromString(VariableType.class, yaml.getType());
     String accountId = changeContext.getChange().getAccountId();
     if (variableType != null && variableType == VariableType.ARTIFACT) {
@@ -78,7 +78,7 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
   }
 
   @Override
-  public Yaml toYaml(Variable bean, String appId) {
+  public VariableYaml toYaml(Variable bean, String appId) {
     VariableType type = bean.getType();
     String accountId = appService.getAccountIdByAppId(appId);
     if (type != null && type == VariableType.ARTIFACT) {
@@ -99,7 +99,7 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
               logger.warn("Artifact Stream with id {} not found, not converting it to yaml", id);
             }
           }
-          return Yaml.builder()
+          return VariableYaml.builder()
               .description(bean.getDescription())
               .fixed(bean.isFixed())
               .mandatory(bean.isMandatory())
@@ -115,7 +115,7 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
             WingsException.USER);
       }
     }
-    return Yaml.builder()
+    return VariableYaml.builder()
         .description(bean.getDescription())
         .fixed(bean.isFixed())
         .mandatory(bean.isMandatory())
@@ -127,14 +127,14 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
   }
 
   @Override
-  public Variable upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+  public Variable upsertFromYaml(ChangeContext<VariableYaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     return toBean(changeContext);
   }
 
   @Override
   public Class getYamlClass() {
-    return Variable.Yaml.class;
+    return VariableYaml.class;
   }
 
   @Override
@@ -143,7 +143,7 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<VariableYaml> changeContext) throws HarnessException {
     // Do nothing
   }
 }

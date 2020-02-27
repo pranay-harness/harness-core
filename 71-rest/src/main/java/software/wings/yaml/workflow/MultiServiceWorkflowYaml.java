@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.TemplateExpression.Yaml;
-import software.wings.beans.Variable;
+import software.wings.beans.VariableYaml;
 import software.wings.beans.WorkflowPhase;
 
 import java.util.List;
@@ -26,7 +26,7 @@ public class MultiServiceWorkflowYaml extends WorkflowYaml {
       List<Yaml> templateExpressions, String envName, boolean templatized, List<StepYaml> preDeploymentSteps,
       List<WorkflowPhase.Yaml> phases, List<WorkflowPhase.Yaml> rollbackPhases, List<StepYaml> postDeploymentSteps,
       List<NotificationRule.Yaml> notificationRules, List<FailureStrategy.Yaml> failureStrategies,
-      List<Variable.Yaml> userVariables, String concurrencyStrategy) {
+      List<VariableYaml> userVariables, String concurrencyStrategy) {
     super(type, harnessApiVersion, description, templateExpressions, envName, templatized, preDeploymentSteps, phases,
         rollbackPhases, postDeploymentSteps, notificationRules, failureStrategies, userVariables, concurrencyStrategy,
         null, null);
