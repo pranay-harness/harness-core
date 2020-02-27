@@ -38,6 +38,7 @@ import static software.wings.common.Constants.PROVISION_CLOUD_FORMATION;
 import static software.wings.common.Constants.PROVISION_SHELL_SCRIPT;
 import static software.wings.common.Constants.ROLLBACK_CLOUD_FORMATION;
 import static software.wings.common.Constants.ROLLBACK_TERRAFORM_NAME;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.ARTIFACT_COLLECTION_STEP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_CODE_DEPLOY;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_LAMBDA;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_ROUTE53_DNS_WEIGHTS;
@@ -398,8 +399,8 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Artifact Collection state type.
    */
-  ARTIFACT_COLLECTION(ArtifactCollectionState.class, COLLECTIONS, Constants.ARTIFACT_COLLECTION, emptyList(),
-      emptyList(), ORCHESTRATION_STENCILS, COMMON),
+  ARTIFACT_COLLECTION(ArtifactCollectionState.class, COLLECTIONS, ARTIFACT_COLLECTION_STEP, emptyList(), emptyList(),
+      ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Artifact Collection state type.
@@ -537,7 +538,8 @@ public enum StateType implements StateTypeDescriptor {
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
-  KUBERNETES_STEADY_STATE_CHECK(KubernetesSteadyStateCheck.class, COMMANDS, Constants.KUBERNETES_STEADY_STATE_CHECK,
+  KUBERNETES_STEADY_STATE_CHECK(KubernetesSteadyStateCheck.class, COMMANDS,
+      KubernetesSteadyStateCheck.KUBERNETES_STEADY_STATE_CHECK,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES,
           InfrastructureMappingType.GCP_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),

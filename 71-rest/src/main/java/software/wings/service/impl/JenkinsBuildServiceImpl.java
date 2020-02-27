@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -177,7 +176,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   public boolean validateArtifactServer(JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     encryptionService.decrypt(jenkinsConfig, encryptedDataDetails);
 
-    if (Constants.TOKEN_FIELD.equals(jenkinsConfig.getAuthMechanism())) {
+    if (JenkinsUtils.TOKEN_FIELD.equals(jenkinsConfig.getAuthMechanism())) {
       if (isEmpty(new String(jenkinsConfig.getToken()))) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Token should be not empty");
       }

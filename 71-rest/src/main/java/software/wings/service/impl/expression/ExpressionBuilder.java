@@ -25,7 +25,6 @@ import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_REGISTRY_URL_KEY;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_USER_NAME_KEY;
-import static software.wings.common.Constants.DEPLOYMENT_TRIGGERED_BY;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static software.wings.common.PathConstants.WINGS_BACKUP_PATH;
 import static software.wings.common.PathConstants.WINGS_RUNTIME_PATH;
@@ -50,6 +49,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -213,7 +213,7 @@ public abstract class ExpressionBuilder {
 
     expressions.addAll(asList(INFRA_KUBERNETES_NAMESPACE, INFRA_KUBERNETES_INFRAID));
     expressions.addAll(asList(INFRA_ROUTE_PCF, INFRA_TEMP_ROUTE_PCF));
-    expressions.add(DEPLOYMENT_TRIGGERED_BY);
+    expressions.add(WorkflowStandardParams.DEPLOYMENT_TRIGGERED_BY);
 
     return expressions;
   }

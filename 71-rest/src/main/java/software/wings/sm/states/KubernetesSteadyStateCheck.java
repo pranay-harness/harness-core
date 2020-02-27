@@ -59,6 +59,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class KubernetesSteadyStateCheck extends State {
+  public static final String KUBERNETES_STEADY_STATE_CHECK = "Steady State Check";
   public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
 
   @Inject private transient AppService appService;
@@ -198,8 +199,7 @@ public class KubernetesSteadyStateCheck extends State {
   }
 
   protected Activity createActivity(ExecutionContext executionContext) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
-    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    Application app = ((ExecutionContextImpl) executionContext).fetchRequiredApp();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
     ActivityBuilder activityBuilder = Activity.builder()
                                           .applicationName(app.getName())
@@ -220,6 +220,7 @@ public class KubernetesSteadyStateCheck extends State {
         && executionContext.getOrchestrationWorkflowType() == BUILD) {
       activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
     } else {
+      Environment env = ((ExecutionContextImpl) executionContext).fetchRequiredEnvironment();
       activityBuilder.environmentId(env.getUuid())
           .environmentName(env.getName())
           .environmentType(env.getEnvironmentType());

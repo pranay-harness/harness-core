@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
-import static software.wings.common.Constants.LAST_UPDATED_AT;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.api.services.storage.Storage;
@@ -45,6 +44,7 @@ public class GcsServiceImpl implements GcsService {
   private static int MAX_GCS_ARTIFACT_PATH_LIMIT = 1000;
   private static int MAX_GCS_BUILD_DETAILS_LIMIT = 100;
   private final SimpleDateFormat GCS_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+  private static final String LAST_UPDATED_AT = "lastUpdatedAt";
 
   private PriorityQueue<GCSPair> gcsBuildDetailsQueue = new PriorityQueue<>(MAX_GCS_BUILD_DETAILS_LIMIT,
       (a, b) -> (int) (Long.parseLong(b.getUpdatedTime()) - Long.parseLong(a.getUpdatedTime())));

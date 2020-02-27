@@ -24,7 +24,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.common.Constants;
+import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.yaml.handler.connectors.configyamlhandlers.BaseSettingValueConfigYamlHandlerTest;
 import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueYamlConfig;
 
@@ -94,7 +94,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
     }
 
     changeContext = aChangeContext()
-                        .withYaml(VerificationYaml.builder().authMechanism(Constants.TOKEN_FIELD).build())
+                        .withYaml(VerificationYaml.builder().authMechanism(JenkinsUtils.TOKEN_FIELD).build())
                         .withChange(Change.Builder.aFileChange().withAccountId("ACCOUNT_ID").build())
                         .build();
     try {

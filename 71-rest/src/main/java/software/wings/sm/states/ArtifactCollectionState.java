@@ -7,7 +7,6 @@ import static java.lang.String.valueOf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 
 import com.google.inject.Inject;
@@ -60,6 +59,7 @@ public class ArtifactCollectionState extends State {
   @Inject private transient FeatureFlagService featureFlagService;
 
   private static int DELAY_TIME_IN_SEC = 60;
+  public static final long DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS = 5L * 60L * 1000L; // 5 minutes
 
   public ArtifactCollectionState(String name) {
     super(name, ARTIFACT_COLLECTION.name());

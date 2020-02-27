@@ -6,8 +6,6 @@ import static software.wings.api.CommandStateExecutionData.Builder.aCommandState
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
-import static software.wings.common.Constants.ARTIFACT_S3_BUCKET_EXPRESSION;
-import static software.wings.common.Constants.ARTIFACT__S3_KEY_EXPRESSION;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.common.collect.ImmutableMap;
@@ -79,6 +77,9 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class AwsCodeDeployState extends State {
+  public static final String ARTIFACT_S3_BUCKET_EXPRESSION = "${artifact.bucketName}";
+  public static final String ARTIFACT_S3_KEY_EXPRESSION = "${artifact.key}";
+
   @Attributes(title = "Bucket", required = true) private String bucket;
   @Attributes(title = "Key", required = true) private String key;
   @Attributes(title = "Steady State Timeout") @DefaultValue("10") private int steadyStateTimeout = 10;
@@ -129,8 +130,8 @@ public class AwsCodeDeployState extends State {
     String serviceId = phaseElement.getServiceElement().getUuid();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    Application app = workflowStandardParams.getApp();
-    Environment env = workflowStandardParams.getEnv();
+    Application app = workflowStandardParams.fetchRequiredApp();
+    Environment env = workflowStandardParams.fetchRequiredEnv();
 
     String envId = env.getUuid();
     Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
@@ -288,8 +289,8 @@ public class AwsCodeDeployState extends State {
     String serviceId = phaseElement.getServiceElement().getUuid();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    Application app = workflowStandardParams.getApp();
-    Environment env = workflowStandardParams.getEnv();
+    Application app = workflowStandardParams.fetchRequiredApp();
+    Environment env = workflowStandardParams.fetchRequiredEnv();
     Key<ServiceTemplate> serviceTemplateKey =
         serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), serviceId, env.getUuid()).get(0);
 
@@ -469,7 +470,7 @@ public class AwsCodeDeployState extends State {
   public static Map<String, String> loadDefaults() {
     Map<String, String> stateDefaults = new HashMap<>();
     stateDefaults.put("bucket", ARTIFACT_S3_BUCKET_EXPRESSION);
-    stateDefaults.put("key", ARTIFACT__S3_KEY_EXPRESSION);
+    stateDefaults.put("key", ARTIFACT_S3_KEY_EXPRESSION);
     stateDefaults.put("bundleType", "zip");
     return stateDefaults;
   }
