@@ -9,6 +9,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -144,7 +145,8 @@ public class NewRelicResource {
   @Timed
   @ExceptionMetered
   public RestResponse<NewRelicApplication> resolveNewRelicAppName(@QueryParam("accountId") String accountId,
-      @QueryParam("settingId") final String settingId, @QueryParam("newRelicApplicationName") String newRelicAppName) {
+      @QueryParam("settingId") @NotEmpty final String settingId,
+      @QueryParam("newRelicApplicationName") @NotEmpty String newRelicAppName) {
     return new RestResponse<>(newRelicService.resolveApplicationName(settingId, newRelicAppName));
   }
 
@@ -153,7 +155,8 @@ public class NewRelicResource {
   @Timed
   @ExceptionMetered
   public RestResponse<NewRelicApplication> resolveNewRelicAppId(@QueryParam("accountId") String accountId,
-      @QueryParam("settingId") final String settingId, @QueryParam("newRelicApplicationId") String newRelicAppId) {
+      @QueryParam("settingId") @NotEmpty final String settingId,
+      @QueryParam("newRelicApplicationId") @NotEmpty String newRelicAppId) {
     return new RestResponse<>(newRelicService.resolveApplicationId(settingId, newRelicAppId));
   }
 }
