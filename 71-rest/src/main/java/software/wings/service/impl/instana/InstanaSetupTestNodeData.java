@@ -17,20 +17,19 @@ import java.util.List;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class InstanaSetupTestNodeData extends SetupTestNodeData {
-  private List<String> metrics;
-  private String query;
+  private InstanaInfraParams infraParams;
+  private InstanaApplicationParams applicationParams;
   private List<InstanaTagFilter> tagFilters;
-  private String hostTagFilter;
   @Builder
   private InstanaSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
-      String guid, List<String> metrics, String query, List<InstanaTagFilter> tagFilters, String hostTagFilter) {
+      String guid, InstanaInfraParams infraParams, InstanaApplicationParams applicationParams,
+      List<InstanaTagFilter> tagFilters) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
         StateType.INSTANA, fromTime, toTime);
-    this.metrics = metrics;
-    this.query = query;
+    this.infraParams = infraParams;
+    this.applicationParams = applicationParams;
     this.tagFilters = tagFilters;
-    this.hostTagFilter = hostTagFilter;
   }
 
   public List<InstanaTagFilter> getTagFilters() {

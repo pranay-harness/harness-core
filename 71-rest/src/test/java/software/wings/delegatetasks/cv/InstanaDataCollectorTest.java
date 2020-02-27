@@ -463,6 +463,7 @@ public class InstanaDataCollectorTest extends WingsBaseTest {
         .startTime(Instant.now())
         .endTime(Instant.now().plus(1, ChronoUnit.MINUTES))
         .instanaConfig(config)
+        .hostTagFilter("kubernetes.pod.name")
         .hostsToGroupNameMap(Collections.emptyMap())
         .hosts(Collections.emptySet())
         .build();

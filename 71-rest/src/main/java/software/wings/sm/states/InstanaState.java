@@ -1,8 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDERV2;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,8 +13,9 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
+import software.wings.service.impl.instana.InstanaApplicationParams;
 import software.wings.service.impl.instana.InstanaDataCollectionInfo;
-import software.wings.service.impl.instana.InstanaTagFilter;
+import software.wings.service.impl.instana.InstanaInfraParams;
 import software.wings.service.impl.instana.InstanaUtils;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -24,23 +23,19 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Slf4j
 @FieldNameConstants(innerTypeName = "InstanaStateKeys")
 public class InstanaState extends AbstractMetricAnalysisState {
-  public static final String LATENCY = "latency";
-  public static final String ERRORS = "errors";
-  public static final String TRACES = "traces";
+  private static final String LATENCY = "latency";
+  private static final String ERRORS = "errors";
+  private static final String TRACES = "traces";
   private String analysisServerConfigId;
-  private List<String> metrics;
-  private String query;
-  private String hostTagFilter;
-  private List<InstanaTagFilter> tagFilters;
+  private InstanaInfraParams infraParams;
+  private InstanaApplicationParams applicationParams;
 
   public InstanaState(String name) {
     super(name, StateType.INSTANA);
@@ -55,31 +50,16 @@ public class InstanaState extends AbstractMetricAnalysisState {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> errors = new HashMap<>();
-    if (isEmpty(metrics)) {
-      errors.put(InstanaStateKeys.metrics, "select at least one metric value.");
+    if (infraParams == null && applicationParams == null) {
+      errors.put("infraParams", "At least one metrics configuration should be defined");
+      errors.put("applicationParams", "At least one metrics configuration should be defined");
     }
-    if (isEmpty(query)) {
-      errors.put(InstanaStateKeys.query, "query is a required field.");
+    if (infraParams != null) {
+      infraParams.validateFields(errors);
     }
-    if (query != null && !query.contains(VERIFICATION_HOST_PLACEHOLDERV2)) {
-      errors.put(InstanaStateKeys.query, "query should contain " + VERIFICATION_HOST_PLACEHOLDERV2);
+    if (applicationParams != null) {
+      applicationParams.validateFields(errors);
     }
-
-    if (isEmpty(hostTagFilter)) {
-      errors.put(InstanaStateKeys.hostTagFilter, "hostTagFilter is a required field.");
-    }
-    getTagFilters().forEach(tagFilter -> {
-      if (isEmpty(tagFilter.getName())) {
-        errors.put("tagFilter.name", "tagFilter.name is a required field.");
-      }
-      if (isEmpty(tagFilter.getValue())) {
-        errors.put("tagFilter.value", "tagFilter.value is a required field.");
-      }
-      if (tagFilter.getOperator() == null) {
-        errors.put("tagFilter.operator", "tagFilter.operator is a required field.");
-      }
-    });
-
     return errors;
   }
 
@@ -112,30 +92,29 @@ public class InstanaState extends AbstractMetricAnalysisState {
   protected DataCollectionInfoV2 createDataCollectionInfo(
       ExecutionContext context, Map<String, String> hostsToCollect) {
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.INSTANA,
-        context.getStateExecutionInstanceId(), null, InstanaUtils.createMetricTemplates(metrics));
-    return InstanaDataCollectionInfo.builder()
-        .connectorId(analysisServerConfigId)
-        .workflowExecutionId(context.getWorkflowExecutionId())
-        .stateExecutionId(context.getStateExecutionInstanceId())
-        .workflowId(context.getWorkflowId())
-        .accountId(appService.get(context.getAppId()).getAccountId())
-        .envId(getEnvId(context))
-        .applicationId(context.getAppId())
-        .hosts(hostsToCollect.keySet())
-        .hostsToGroupNameMap(hostsToCollect)
-        .serviceId(getPhaseServiceId(context))
-        .metrics(metrics)
-        .query(query)
-        .tagFilters(getTagFilters())
-        .hostTagFilter(hostTagFilter)
-        .build();
-  }
-
-  public List<InstanaTagFilter> getTagFilters() {
-    if (tagFilters == null) {
-      return Collections.emptyList();
+        context.getStateExecutionInstanceId(), null, InstanaUtils.createMetricTemplates(infraParams));
+    InstanaDataCollectionInfo instanaDataCollectionInfo =
+        InstanaDataCollectionInfo.builder()
+            .connectorId(analysisServerConfigId)
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .stateExecutionId(context.getStateExecutionInstanceId())
+            .workflowId(context.getWorkflowId())
+            .accountId(appService.get(context.getAppId()).getAccountId())
+            .envId(getEnvId(context))
+            .applicationId(context.getAppId())
+            .hosts(hostsToCollect.keySet())
+            .hostsToGroupNameMap(hostsToCollect)
+            .serviceId(getPhaseServiceId(context))
+            .build();
+    if (infraParams != null) {
+      instanaDataCollectionInfo.setQuery(infraParams.getQuery());
+      instanaDataCollectionInfo.setMetrics(infraParams.getMetrics());
     }
-    return tagFilters;
+    if (applicationParams != null) {
+      instanaDataCollectionInfo.setTagFilters(applicationParams.getTagFilters());
+      instanaDataCollectionInfo.setHostTagFilter(applicationParams.getHostTagFilter());
+    }
+    return instanaDataCollectionInfo;
   }
 
   @Override

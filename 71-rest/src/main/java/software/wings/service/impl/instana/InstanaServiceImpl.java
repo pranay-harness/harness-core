@@ -63,14 +63,15 @@ public class InstanaServiceImpl implements InstanaService {
                                      .to(Timestamp.currentMinuteBoundary())
                                      .build();
     boolean isLoadPresent = false;
-    if (isNotEmpty(setupTestNodeData.getQuery())) {
+
+    if (setupTestNodeData.getInfraParams() != null) {
       InstanaInfraMetricRequest infraMetricRequest =
           InstanaInfraMetricRequest.builder()
               .timeframe(timeFrame)
-              .metrics(setupTestNodeData.getMetrics())
+              .metrics(setupTestNodeData.getInfraParams().getMetrics())
               .plugin(INSTANA_DOCKER_PLUGIN)
               .rollup(60)
-              .query(setupTestNodeData.getQuery().replace(
+              .query(setupTestNodeData.getInfraParams().getQuery().replace(
                   VERIFICATION_HOST_PLACEHOLDERV2, "\"" + setupTestNodeData.getInstanceName() + "\""))
               .build();
 
@@ -81,9 +82,10 @@ public class InstanaServiceImpl implements InstanaService {
             instanaDelegateService.getInfraMetrics(instanaConfig, encryptionDetails, infraMetricRequest, apiCallLog);
         if (infraMetrics.getItems().size() > 1) {
           throw new VerificationOperationException(ErrorCode.INSTANA_CONFIGURATION_ERROR,
-              "Multiple time series values are returned for query '" + setupTestNodeData.getQuery()
+              "Multiple time series values are returned for query '" + setupTestNodeData.getInfraParams().getQuery()
                   + "'. Please add more filters to your query to return only one time series.");
         }
+        verificationNodeDataSetupResponse.setProviderReachable(true);
         if (infraMetrics.getItems().size() == 1) {
           isLoadPresent = true;
         }
@@ -92,42 +94,50 @@ public class InstanaServiceImpl implements InstanaService {
         verificationNodeDataSetupResponse.setProviderReachable(false);
       }
     }
-    List<InstanaTagFilter> tagFilters = new ArrayList<>(setupTestNodeData.getTagFilters());
-    if (isNotEmpty(setupTestNodeData.getHostTagFilter())) {
-      tagFilters.add(InstanaTagFilter.builder()
-                         .name(setupTestNodeData.getHostTagFilter())
-                         .value(setupTestNodeData.getInstanceElement().getHostName())
-                         .operator(InstanaTagFilter.Operator.EQUALS)
-                         .build());
-    }
-    List<InstanaAnalyzeMetricRequest.Metric> metrics = new ArrayList<>();
-    InstanaUtils.getApplicationMetricTemplateMap().forEach(
-        (metricName, instanaMetricTemplate)
-            -> metrics.add(InstanaAnalyzeMetricRequest.Metric.builder()
-                               .metric(instanaMetricTemplate.getMetricName())
-                               .aggregation(instanaMetricTemplate.getAggregation())
-                               .granularity(60)
-                               .build()));
-    InstanaAnalyzeMetricRequest.Group group =
-        InstanaAnalyzeMetricRequest.Group.builder().groupByTag(INSTANA_GROUPBY_TAG_TRACE_NAME).build();
-    InstanaAnalyzeMetricRequest instanaAnalyzeMetricRequest = InstanaAnalyzeMetricRequest.builder()
-                                                                  .timeFrame(timeFrame)
-                                                                  .tagFilters(tagFilters)
-                                                                  .group(group)
-                                                                  .metrics(metrics)
-                                                                  .build();
-
-    try {
-      ThirdPartyApiCallLog apiCallLog = createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid());
-      InstanaAnalyzeMetrics instanaAnalyzeMetrics = instanaDelegateService.getInstanaTraceMetrics(
-          instanaConfig, encryptionDetails, instanaAnalyzeMetricRequest, apiCallLog);
-      if (instanaAnalyzeMetrics.getItems().size() > 0) {
-        isLoadPresent = true;
+    if (setupTestNodeData.getApplicationParams() != null || isNotEmpty(setupTestNodeData.getTagFilters())) {
+      List<InstanaTagFilter> tagFilters;
+      if (isNotEmpty(setupTestNodeData.getTagFilters())) {
+        tagFilters = new ArrayList<>(setupTestNodeData.getTagFilters());
+      } else {
+        tagFilters = new ArrayList<>(setupTestNodeData.getApplicationParams().getTagFilters());
       }
-      verificationNodeDataSetupResponse.setProviderReachable(true);
-      load.add(instanaAnalyzeMetrics);
-    } catch (DataCollectionException e) {
-      verificationNodeDataSetupResponse.setProviderReachable(false);
+      if (setupTestNodeData.getApplicationParams() != null) {
+        tagFilters.add(InstanaTagFilter.builder()
+                           .name(setupTestNodeData.getApplicationParams().getHostTagFilter())
+                           .value(setupTestNodeData.getInstanceElement().getHostName())
+                           .operator(InstanaTagFilter.Operator.EQUALS)
+                           .build());
+      }
+      List<InstanaAnalyzeMetricRequest.Metric> metrics = new ArrayList<>();
+      InstanaUtils.getApplicationMetricTemplateMap().forEach(
+          (metricName, instanaMetricTemplate)
+              -> metrics.add(InstanaAnalyzeMetricRequest.Metric.builder()
+                                 .metric(instanaMetricTemplate.getMetricName())
+                                 .aggregation(instanaMetricTemplate.getAggregation())
+                                 .granularity(60)
+                                 .build()));
+      InstanaAnalyzeMetricRequest.Group group =
+          InstanaAnalyzeMetricRequest.Group.builder().groupByTag(INSTANA_GROUPBY_TAG_TRACE_NAME).build();
+      InstanaAnalyzeMetricRequest instanaAnalyzeMetricRequest = InstanaAnalyzeMetricRequest.builder()
+                                                                    .timeFrame(timeFrame)
+                                                                    .tagFilters(tagFilters)
+                                                                    .group(group)
+                                                                    .metrics(metrics)
+                                                                    .build();
+
+      try {
+        ThirdPartyApiCallLog apiCallLog =
+            createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid());
+        InstanaAnalyzeMetrics instanaAnalyzeMetrics = instanaDelegateService.getInstanaTraceMetrics(
+            instanaConfig, encryptionDetails, instanaAnalyzeMetricRequest, apiCallLog);
+        if (instanaAnalyzeMetrics.getItems().size() > 0) {
+          isLoadPresent = true;
+        }
+        verificationNodeDataSetupResponse.setProviderReachable(true);
+        load.add(instanaAnalyzeMetrics);
+      } catch (DataCollectionException e) {
+        verificationNodeDataSetupResponse.setProviderReachable(false);
+      }
     }
     if (isNotEmpty(load) && isLoadPresent) {
       verificationNodeDataSetupResponse.setDataForNode(load);
