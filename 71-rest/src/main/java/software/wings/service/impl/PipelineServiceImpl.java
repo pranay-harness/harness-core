@@ -106,7 +106,6 @@ import software.wings.service.intfc.ownership.OwnedByPipeline;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachine;
-import software.wings.sm.states.ApprovalState;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1440,9 +1439,6 @@ public class PipelineServiceImpl implements PipelineService {
         for (PipelineStageElement stageElement : pipelineStage.getPipelineStageElements()) {
           if (!isValidPipelineStageName(stageElement.getName())) {
             throw new InvalidArgumentsException("Pipeline step name can only have a-z, A-Z, 0-9, -, (, ) and _", USER);
-          }
-          if (APPROVAL.name().equals(stageElement.getType())) {
-            ApprovalState.preValidatePropertyMap(stageElement.getProperties());
           }
           if (!isValidSkipCondition(stageElement)) {
             throw new InvalidArgumentsException("Not a valid skip condition for " + stageElement.getName(), USER);

@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -35,7 +34,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -286,34 +284,6 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     pipelineServiceImpl.populateParentFields(
         newRelicMarkerPipelineVar, NEWRELIC_MARKER_APPID, null, "NewRelicMarkerAppId", pseWorkflowVariables);
     assertThat(newRelicMarkerPipelineVar.getMetadata().get(Variable.PARENT_FIELDS)).isNotNull();
-  }
-
-  @Test
-  @Owner(developers = YOGESH)
-  @Category(UnitTests.class)
-  public void testValidatePipelineApprovalState() throws Exception {
-    Pipeline pipeline =
-        Pipeline.builder()
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .name("test")
-            .pipelineStages(asList(
-                PipelineStage.builder()
-                    .pipelineStageElements(asList(PipelineStageElement.builder()
-                                                      .name("approval_state")
-                                                      .type(StateType.APPROVAL.name())
-                                                      .properties(ImmutableMap.<String, Object>of("timeoutMillis", 000))
-                                                      .build()))
-                    .build()))
-            .build();
-
-    setupQueryMocks();
-    pipelineServiceImpl.save(pipeline);
-
-    pipeline.getPipelineStages().get(0).getPipelineStageElements().get(0).setProperties(
-        ImmutableMap.<String, Object>of("timeoutMillis", (double) Integer.MAX_VALUE + 1));
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> pipelineServiceImpl.save(pipeline));
   }
 
   @Test

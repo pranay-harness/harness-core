@@ -36,7 +36,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -45,7 +44,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CanaryOrchestrationWorkflow;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Workflow;
@@ -94,12 +92,6 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @InjectMocks private StateMachineExecutor injectStateMachineExecutor;
 
   @Captor private ArgumentCaptor<List<NotificationRule>> notificationRuleArgumentCaptor;
-
-  @Before
-  public void setUp() throws Exception {
-    when(appService.getAccountIdByAppId(any())).thenReturn(APP_ID);
-    when(featureFlagService.isEnabled(eq(FeatureName.OVERRIDE_TIMEOUTS), any())).thenReturn(false);
-  }
 
   /**
    * Should trigger.
@@ -889,6 +881,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
                                                         .displayName("state1")
                                                         .stateExecutionMap(stateExecutionMap)
                                                         .prevInstanceId(prevStateExecutionInstanceId)
+                                                        .stateTimeout(60000L)
                                                         .status(FAILED)
                                                         .build();
 

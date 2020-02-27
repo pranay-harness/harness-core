@@ -82,7 +82,6 @@ import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Workflow;
@@ -280,6 +279,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     notNullCheck("state", state);
     stateExecutionInstance.setRollback(state.isRollback());
     stateExecutionInstance.setStateType(state.getStateType());
+    stateExecutionInstance.setStateTimeout(Long.valueOf(getDefaultTimeout(state)));
 
     if (state instanceof EnvState) {
       EnvState envState = (EnvState) state;
@@ -302,20 +302,25 @@ public class StateMachineExecutor implements StateInspectionListener {
       throw new InvalidRequestException("StateExecutionInstance was already created");
     }
 
-    stateExecutionInstance.setExpiryTs(evaluateExpiryTs(stateExecutionInstance.getAppId(), state));
+    stateExecutionInstance.setExpiryTs(Long.MAX_VALUE);
     wingsPersistence.save(stateExecutionInstance);
     return stateExecutionInstance;
   }
 
-  private Long evaluateExpiryTs(String appId, State state) {
-    boolean overrideTimeout =
-        featureFlagService.isEnabled(FeatureName.OVERRIDE_TIMEOUTS, appService.getAccountIdByAppId(appId));
+  @NotNull
+  private Integer getDefaultTimeout(State state) {
     Integer timeout = state.getTimeoutMillis();
-    if (pipelineConfig != null && pipelineConfig.isEnabled() && overrideTimeout) {
+    if (timeout != null) {
+      return timeout;
+    }
+    return DEFAULT_STATE_TIMEOUT_MILLIS;
+  }
+
+  private Long evaluateExpiryTs(State state) {
+    Integer timeout = getDefaultTimeout(state);
+    if (pipelineConfig != null && pipelineConfig.isEnabled()) {
       if (StateType.ENV_STATE.name().equals(state.getStateType())) {
         timeout = pipelineConfig.getEnvStateTimeout();
-      } else if (StateType.APPROVAL.name().equals(state.getStateType())) {
-        timeout = pipelineConfig.getApprovalStateTimeout();
       }
     }
     if (State.INFINITE_TIMEOUT.equals(timeout)) {
@@ -411,7 +416,7 @@ public class StateMachineExecutor implements StateInspectionListener {
               .filter(ei -> ei != null && ei.getExecutionInterruptType() == PAUSE_ALL)
               .findFirst();
       if (pauseAll.isPresent()) {
-        updateStatus(stateExecutionInstance, PAUSED, Lists.newArrayList(NEW, QUEUED), pauseAll.get());
+        updateStatusPauseAndWaiting(stateExecutionInstance, PAUSED, Lists.newArrayList(NEW, QUEUED), pauseAll.get());
         waitNotifyEngine.waitForAllOn(ORCHESTRATION,
             new ExecutionResumeAllCallback(stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(),
                 stateExecutionInstance.getUuid()),
@@ -446,7 +451,8 @@ public class StateMachineExecutor implements StateInspectionListener {
               .withWaitInterval(currentState.getWaitInterval())
               .withErrorMsg("Waiting " + currentState.getWaitInterval() + " seconds before execution")
               .build();
-      updated = updateStateExecutionData(stateExecutionInstance, stateExecutionData, RUNNING, null, null, null);
+      updated = updateStateExecutionData(stateExecutionInstance, stateExecutionData, RUNNING, null, null, null, null,
+          null, evaluateExpiryTs(currentState));
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
@@ -547,7 +553,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     StateMachine sm = context.getStateMachine();
     State currentState =
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
-
+    Long expiryTs = stateExecutionInstance.getExpiryTs();
     ExecutionStatus status = executionResponse.getExecutionStatus();
     if (executionResponse.isAsync()) {
       if (isEmpty(executionResponse.getCorrelationIds())) {
@@ -557,6 +563,9 @@ public class StateMachineExecutor implements StateInspectionListener {
       } else {
         if (status != PAUSED) {
           status = RUNNING;
+          expiryTs = evaluateExpiryTs(currentState);
+        } else if (StateType.APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
+          expiryTs = evaluateExpiryTs(currentState);
         }
         NotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getAppId(),
             stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
@@ -566,7 +575,7 @@ public class StateMachineExecutor implements StateInspectionListener {
 
       boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
           status, executionResponse.getErrorMessage(), executionResponse.getContextElements(),
-          executionResponse.getNotifyElements(), executionResponse.getDelegateTaskId());
+          executionResponse.getNotifyElements(), executionResponse.getDelegateTaskId(), expiryTs);
       if (!updated) {
         // Currently, it is by design that handle execute response can be in race with some other ways to update the
         // state. Say it can be aborted.
@@ -590,7 +599,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     } else {
       boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
           status, executionResponse.getErrorMessage(), executionResponse.getContextElements(),
-          executionResponse.getNotifyElements());
+          executionResponse.getNotifyElements(), RUNNING == status ? evaluateExpiryTs(currentState) : expiryTs);
       if (!updated) {
         return reloadStateExecutionInstanceAndCheckStatus(stateExecutionInstance);
       }
@@ -650,7 +659,11 @@ public class StateMachineExecutor implements StateInspectionListener {
         break;
       }
       case PAUSE: {
+        logger.info(
+            "[Update Expiry]: Updating expiryTs to Long.MAX_VALUE on PAUSE Advice for stateExecutionInstance id: {}, name: {}",
+            stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
         updateStatus(stateExecutionInstance, WAITING, brokeStatuses(), null, ops -> {
+          ops.set(StateExecutionInstanceKeys.expiryTs, Long.MAX_VALUE);
           if (executionEventAdvice.getStateParams() != null) {
             ops.set("stateParams", executionEventAdvice.getStateParams());
           }
@@ -820,7 +833,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
 
     if (stateExecutionInstance != null) {
-      updateStateExecutionData(stateExecutionInstance, null, FAILED, ExceptionUtils.getMessage(exception), null, null);
+      updateStateExecutionData(stateExecutionInstance, null, FAILED, ExceptionUtils.getMessage(exception), null, null,
+          stateExecutionInstance.getExpiryTs());
     }
 
     try {
@@ -884,7 +898,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       } else if (errorStrategy == ErrorStrategy.PAUSE) {
         logger.info("Pausing execution  - currentState : {}, stateExecutionInstanceId: {}",
             stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
-        updateStatus(stateExecutionInstance, WAITING, Lists.newArrayList(FAILED), null);
+        updateStatusPauseAndWaiting(stateExecutionInstance, WAITING, Lists.newArrayList(FAILED), null);
       } else {
         // TODO: handle more strategy
         logger.info("Unhandled error strategy for the state: {}, stateExecutionInstanceId: {}, errorStrategy: {}",
@@ -1057,6 +1071,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     cloned.setCreatedAt(0);
     cloned.setLastUpdatedAt(0);
     cloned.setHasInspection(false);
+    cloned.setExpiryTs(Long.MAX_VALUE);
     return cloned;
   }
 
@@ -1077,6 +1092,15 @@ public class StateMachineExecutor implements StateInspectionListener {
   private boolean updateStatus(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
       Collection<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason) {
     return updateStatus(stateExecutionInstance, status, existingExecutionStatus, reason, null);
+  }
+
+  private boolean updateStatusPauseAndWaiting(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
+      Collection<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason) {
+    logger.info(
+        "[Update Expiry]: Updating expiryTs to Long.MAX_VALUE on PAUSE_ALL interrupt or pause error strategy on failure for stateExecutionInstance id: {}, name: {}",
+        stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
+    return updateStatus(stateExecutionInstance, status, existingExecutionStatus, reason,
+        ops -> ops.set(StateExecutionInstanceKeys.expiryTs, Long.MAX_VALUE));
   }
 
   private boolean updateStatus(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
@@ -1139,16 +1163,35 @@ public class StateMachineExecutor implements StateInspectionListener {
 
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg, List<ContextElement> elements,
-      List<ContextElement> notifyElements) {
+      List<ContextElement> notifyElements, @NotNull Long expiryTs) {
+    logger.info(
+        "[Update Expiry]: Updating expiryTs to: {} on {} status set for stateExecutionInstance id: {}, name: {}",
+        expiryTs, status, stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
+    stateExecutionInstance.setExpiryTs(expiryTs);
     return updateStateExecutionData(
         stateExecutionInstance, stateExecutionData, status, errorMsg, null, elements, notifyElements, null);
   }
 
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg, List<ContextElement> elements,
-      List<ContextElement> notifyElements, String delegateTaskId) {
+      List<ContextElement> notifyElements, String delegateTaskId, @NotNull Long expiryTs) {
+    logger.info(
+        "[Update Expiry]: Updating expiryTs to: {} on {} status set for stateExecutionInstance id: {}, name: {}",
+        expiryTs, status, stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
+    stateExecutionInstance.setExpiryTs(expiryTs);
     return updateStateExecutionData(
         stateExecutionInstance, stateExecutionData, status, errorMsg, null, elements, notifyElements, delegateTaskId);
+  }
+
+  private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
+      StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg,
+      Collection<ExecutionStatus> runningStatusLists, List<ContextElement> contextElements,
+      List<ContextElement> notifyElements, String delegateTaskId, @NotNull Long expiryTs) {
+    logger.info("[Update Expiry]: Updating expiryTs to {} on {} status set for stateExecutionInstance id: {}, name: {}",
+        expiryTs, status, stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
+    stateExecutionInstance.setExpiryTs(expiryTs);
+    return updateStateExecutionData(stateExecutionInstance, stateExecutionData, status, errorMsg, runningStatusLists,
+        contextElements, notifyElements, delegateTaskId);
   }
 
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
@@ -1217,6 +1260,7 @@ public class StateMachineExecutor implements StateInspectionListener {
             .in(runningStatusLists);
 
     ops.set("stateExecutionMap", stateExecutionInstance.getStateExecutionMap());
+    ops.set("expiryTs", stateExecutionInstance.getExpiryTs());
 
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
@@ -1457,6 +1501,10 @@ public class StateMachineExecutor implements StateInspectionListener {
       stateExecutionInstance.setEndTs(null);
       ops.unset("endTs");
     }
+    Long expiryTs = stateExecutionInstance.getStateTimeout() != null
+        ? System.currentTimeMillis() + stateExecutionInstance.getStateTimeout()
+        : Long.MAX_VALUE;
+    ops.set(StateExecutionInstanceKeys.expiryTs, expiryTs);
     ops.set(StateExecutionInstanceKeys.status, NEW);
     ops.set(StateExecutionInstanceKeys.retry, Boolean.TRUE);
     ops.set(StateExecutionInstanceKeys.retryCount, stateExecutionInstance.getRetryCount() + 1);

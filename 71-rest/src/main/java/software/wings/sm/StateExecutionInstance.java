@@ -111,6 +111,7 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
   private Long startTs;
   private Long endTs;
   private Long expiryTs;
+  private Long stateTimeout;
 
   private boolean retry;
   private int retryCount;
@@ -185,6 +186,7 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private Long stateTimeout;
 
     private Builder() {}
 
@@ -299,6 +301,11 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
 
     public Builder prevInstanceId(String prevInstanceId) {
       this.prevInstanceId = prevInstanceId;
+      return this;
+    }
+
+    public Builder stateTimeout(Long stateTimeout) {
+      this.stateTimeout = stateTimeout;
       return this;
     }
 
@@ -424,6 +431,7 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
       stateExecutionInstance.setAppId(appId);
       stateExecutionInstance.setCreatedAt(createdAt);
       stateExecutionInstance.setLastUpdatedAt(lastUpdatedAt);
+      stateExecutionInstance.setStateTimeout(stateTimeout);
       return stateExecutionInstance;
     }
   }
