@@ -30,6 +30,7 @@ import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
+import software.wings.beans.VariableYaml;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowPhase;
@@ -376,7 +377,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     // user variables
     List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
     VariableYamlHandler variableYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE);
-    List<Variable.Yaml> variableYamlList =
+    List<VariableYaml> variableYamlList =
         userVariables.stream().map(userVariable -> variableYamlHandler.toYaml(userVariable, appId)).collect(toList());
 
     // template expressions

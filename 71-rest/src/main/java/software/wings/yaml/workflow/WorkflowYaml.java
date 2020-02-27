@@ -12,7 +12,7 @@ import software.wings.beans.FailureStrategy;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.TemplateExpression.Yaml;
-import software.wings.beans.Variable;
+import software.wings.beans.VariableYaml;
 import software.wings.beans.WorkflowPhase;
 import software.wings.yaml.BaseEntityYaml;
 
@@ -46,7 +46,7 @@ public abstract class WorkflowYaml extends BaseEntityYaml {
   private List<StepYaml> postDeploymentSteps = new ArrayList<>();
   private List<NotificationRule.Yaml> notificationRules = new ArrayList<>();
   private List<FailureStrategy.Yaml> failureStrategies = new ArrayList<>();
-  private List<Variable.Yaml> userVariables = new ArrayList<>();
+  private List<VariableYaml> userVariables = new ArrayList<>();
   private String concurrencyStrategy;
 
   private List<FailureStrategy.Yaml> preDeploymentFailureStrategy = new ArrayList<>();
@@ -56,7 +56,7 @@ public abstract class WorkflowYaml extends BaseEntityYaml {
       String envName, boolean templatized, List<StepYaml> preDeploymentSteps, List<WorkflowPhase.Yaml> phases,
       List<WorkflowPhase.Yaml> rollbackPhases, List<StepYaml> postDeploymentSteps,
       List<NotificationRule.Yaml> notificationRules, List<FailureStrategy.Yaml> failureStrategies,
-      List<Variable.Yaml> userVariables, String concurrencyStrategy,
+      List<VariableYaml> userVariables, String concurrencyStrategy,
       List<FailureStrategy.Yaml> preDeploymentFailureStrategy,
       List<FailureStrategy.Yaml> postDeploymentFailureStrategy) {
     super(type, harnessApiVersion);
