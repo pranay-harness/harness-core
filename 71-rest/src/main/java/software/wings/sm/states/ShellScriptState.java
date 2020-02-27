@@ -24,10 +24,12 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Getter;
 import lombok.Setter;
@@ -60,6 +62,7 @@ import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -93,6 +96,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Inject @Transient private TemplateUtils templateUtils;
   @Inject @Transient private ServiceTemplateService serviceTemplateService;
   @Inject @Transient private ServiceTemplateHelper serviceTemplateHelper;
+  @Inject @Transient private DelegateService delegateService;
 
   @Getter @Setter @Attributes(title = "Execute on Delegate") private boolean executeOnDelegate;
 
@@ -425,6 +429,16 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     return activityHelperService
         .createAndSaveActivity(executionContext, Type.Verification, getName(), getStateType(), commandUnits)
         .getUuid();
+  }
+
+  protected String renderAndScheduleDelegateTask(
+      ExecutionContext context, DelegateTask task, StateExecutionContext stateExecutionContext) {
+    if (task.getData().getParameters().length == 1 && task.getData().getParameters()[0] instanceof TaskParameters) {
+      task.setWorkflowExecutionId(context.getWorkflowExecutionId());
+      ExpressionReflectionUtils.applyExpression(
+          task.getData().getParameters()[0], value -> context.renderExpression(value, stateExecutionContext));
+    }
+    return delegateService.queueTask(task);
   }
 
   @Override

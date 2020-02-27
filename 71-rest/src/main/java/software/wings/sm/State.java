@@ -1,21 +1,14 @@
 package software.wings.sm;
 
-import com.google.inject.Inject;
-
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.task.TaskParameters;
-import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.serializer.MapperUtils;
 import lombok.experimental.FieldNameConstants;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.EntityType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
-import software.wings.service.intfc.DelegateService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,8 +59,6 @@ public abstract class State {
   public void setTemplateUuid(String templateUuid) {
     this.templateUuid = templateUuid;
   }
-
-  @Inject @Transient private DelegateService delegateService;
 
   public State() {}
   /**
@@ -313,32 +304,6 @@ public abstract class State {
 
   public void setTemplateVariables(List<Variable> templateVariables) {
     this.templateVariables = templateVariables;
-  }
-
-  protected void renderTaskParameters(ExecutionContext context, StateExecutionData stateExecutionData,
-      TaskParameters parameters, int expressionFunctorToken) {
-    ExpressionReflectionUtils.applyExpression(parameters,
-        value
-        -> context.renderExpression(value,
-            StateExecutionContext.builder()
-                .stateExecutionData(stateExecutionData)
-                .adoptDelegateDecryption(true)
-                .expressionFunctorToken(expressionFunctorToken)
-                .build()));
-  }
-
-  protected String scheduleDelegateTask(DelegateTask task) {
-    return delegateService.queueTask(task);
-  }
-
-  protected String renderAndScheduleDelegateTask(
-      ExecutionContext context, DelegateTask task, StateExecutionContext stateExecutionContext) {
-    if (task.getData().getParameters().length == 1 && task.getData().getParameters()[0] instanceof TaskParameters) {
-      task.setWorkflowExecutionId(context.getWorkflowExecutionId());
-      ExpressionReflectionUtils.applyExpression(
-          task.getData().getParameters()[0], value -> context.renderExpression(value, stateExecutionContext));
-    }
-    return delegateService.queueTask(task);
   }
 
   public void parseProperties(Map<String, Object> properties) {
