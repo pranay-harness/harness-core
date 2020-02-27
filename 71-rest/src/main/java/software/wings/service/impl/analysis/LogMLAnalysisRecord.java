@@ -367,14 +367,15 @@ public class LogMLAnalysisRecord extends Base {
                 .setLabel(frequencyPattern.getLabel())
                 .setText(frequencyPattern.getText());
 
-        LogMLAnalysisRecordProto.Pattern.Builder logPatternBuilder = LogMLAnalysisRecordProto.Pattern.newBuilder();
-
         frequencyPattern.getPatterns().forEach(pattern -> {
-          logPatternBuilder.addAllSequence(pattern.getSequence());
-          logPatternBuilder.addAllTimestamps(pattern.getTimestamps());
-        });
+          LogMLAnalysisRecordProto.Pattern.Builder logPatternBuilder = LogMLAnalysisRecordProto.Pattern.newBuilder()
+                                                                           .addAllTimestamps(pattern.getTimestamps())
+                                                                           .addAllSequence(pattern.getSequence());
 
-        frequencyPatternBuilder.addPatterns(logPatternBuilder.build());
+          frequencyPatternBuilder.addRepeatedField(
+              LogMLAnalysisRecordProto.FrequencyPattern.getDescriptor().findFieldByName("patterns"),
+              logPatternBuilder.build());
+        });
 
         detailsBuilder.putFrequencyPatterns(key, frequencyPatternBuilder.build());
       });
