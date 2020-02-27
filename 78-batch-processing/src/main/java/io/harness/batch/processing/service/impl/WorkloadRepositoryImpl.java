@@ -1,5 +1,6 @@
 package io.harness.batch.processing.service.impl;
 
+import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -52,7 +53,7 @@ public class WorkloadRepositoryImpl implements WorkloadRepository {
                      .set(K8sWorkloadKeys.namespace, podInfo.getNamespace())
                      .set(K8sWorkloadKeys.uid, topLevelOwner.getUid())
                      .set(K8sWorkloadKeys.kind, topLevelOwner.getKind())
-                     .set(K8sWorkloadKeys.labels, topLevelOwner.getLabelsMap()),
+                     .set(K8sWorkloadKeys.labels, encodeDotsInKey(topLevelOwner.getLabelsMap())),
                  HPersistence.upsertReturnNewOptions))
               != null);
     }

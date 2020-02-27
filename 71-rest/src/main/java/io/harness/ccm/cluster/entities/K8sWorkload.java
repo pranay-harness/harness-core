@@ -10,6 +10,7 @@ import io.harness.persistence.UuidAware;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -22,7 +23,6 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PostLoad;
 import org.mongodb.morphia.annotations.PrePersist;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -57,27 +57,19 @@ public class K8sWorkload implements PersistentEntity, UuidAware, CreatedAtAware,
   // which is not an allowed k8s label character.
   @PrePersist
   void prePersist() {
-    this.labels = Optional.ofNullable(labels)
-                      .orElse(Collections.emptyMap())
-                      .entrySet()
-                      .stream()
-                      .collect(Collectors.toMap(e -> encode(e.getKey()), e -> encode(e.getValue())));
+    this.labels = Optional.ofNullable(labels).map(K8sWorkload::encodeDotsInKey).orElse(null);
   }
 
   @PostLoad
   void postLoad() {
-    this.labels = Optional.ofNullable(labels)
-                      .orElse(Collections.emptyMap())
-                      .entrySet()
-                      .stream()
-                      .collect(Collectors.toMap(e -> decode(e.getKey()), e -> decode(e.getValue())));
+    this.labels = Optional.ofNullable(labels).map(K8sWorkload::decodeDotsInKey).orElse(null);
   }
 
-  private String encode(String decoded) {
-    return decoded.replace('.', '~');
+  public static Map<String, String> encodeDotsInKey(@NonNull Map<String, String> labels) {
+    return labels.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().replace('.', '~'), Map.Entry::getValue));
   }
 
-  private String decode(String encoded) {
-    return encoded.replace('~', '.');
+  public static Map<String, String> decodeDotsInKey(@NonNull Map<String, String> labels) {
+    return labels.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().replace('~', '.'), Map.Entry::getValue));
   }
 }
