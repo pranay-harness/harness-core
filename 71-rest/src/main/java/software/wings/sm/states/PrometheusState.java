@@ -11,10 +11,10 @@ import com.google.common.base.Preconditions;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -35,7 +35,6 @@ import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -51,6 +50,7 @@ import java.util.concurrent.TimeUnit;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Slf4j
+@FieldNameConstants(innerTypeName = "PrometheusStateKeys")
 public class PrometheusState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore public static final String TEST_HOST_NAME = "testNode";
   @Transient @SchemaIgnore public static final String CONTROL_HOST_NAME = "controlNode";
@@ -104,10 +104,12 @@ public class PrometheusState extends AbstractMetricAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
-    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
-    Preconditions.checkNotNull(settingAttribute, "No prometheus setting with id: " + analysisServerConfigId + " found");
+    String envId = getEnvId(context);
+    String resolvedAnalysisServerConfigId =
+        getResolvedConnectorId(context, PrometheusStateKeys.analysisServerConfigId, analysisServerConfigId);
+    final SettingAttribute settingAttribute = settingsService.get(resolvedAnalysisServerConfigId);
+    Preconditions.checkNotNull(
+        settingAttribute, "No prometheus setting with id: " + resolvedAnalysisServerConfigId + " found");
     TimeSeriesMlAnalysisType analyzedTierAnalysisType = getComparisonStrategy() == AnalysisComparisonStrategy.PREDICTIVE
         ? PREDICTIVE
         : TimeSeriesMlAnalysisType.COMPARATIVE;
