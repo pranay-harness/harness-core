@@ -23,6 +23,8 @@ import java.util.Map;
 public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, InstanceInfo> {
   @Autowired private CloudProviderService cloudProviderService;
 
+  private static final String AWS_SPOT_INSTANCE = "Ec2Spot";
+
   @Override
   public InstanceInfo process(PublishedMessage publishedMessage) {
     NodeInfo nodeInfo = (NodeInfo) publishedMessage.getMessage();
@@ -58,9 +60,16 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
 
   private InstanceCategory getInstanceCategory(CloudProvider k8SCloudProvider, Map<String, String> labelsMap) {
     InstanceCategory instanceCategory = InstanceCategory.ON_DEMAND;
-    boolean preemptible = labelsMap.keySet().stream().anyMatch(key -> key.contains(K8sCCMConstants.PREEMPTIBLE_KEY));
-    if (k8SCloudProvider == CloudProvider.GCP && preemptible) {
-      return InstanceCategory.SPOT;
+    if (k8SCloudProvider == CloudProvider.GCP) {
+      boolean preemptible = labelsMap.keySet().stream().anyMatch(key -> key.contains(K8sCCMConstants.PREEMPTIBLE_KEY));
+      if (preemptible) {
+        return InstanceCategory.SPOT;
+      }
+    } else if (k8SCloudProvider == CloudProvider.AWS) {
+      String lifecycle = labelsMap.get(K8sCCMConstants.AWS_LIFECYCLE_KEY);
+      if (AWS_SPOT_INSTANCE.equals(lifecycle)) {
+        return InstanceCategory.SPOT;
+      }
     }
     // TODO(Hitesh) Check for Azure and AWS
     return instanceCategory;
