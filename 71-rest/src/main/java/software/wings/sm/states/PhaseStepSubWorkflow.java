@@ -208,7 +208,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       PhaseStepType phaseStepType, PhaseElement phaseElement, ExecutionContext contextIntf) {
     ExecutionContextImpl context = (ExecutionContextImpl) contextIntf;
 
-    PhaseExecutionData stateExecutionData = (PhaseExecutionData) sweepingOutputService.findSweepingOutput(
+    PhaseExecutionData stateExecutionData = sweepingOutputService.findSweepingOutput(
         context.prepareSweepingOutputInquiryBuilder()
             .name(PhaseExecutionData.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback().trim())
             .build());
@@ -216,7 +216,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     if (stateExecutionData == null) {
       return null;
     }
-    PhaseExecutionSummary phaseExecutionSummary = (PhaseExecutionSummary) sweepingOutputService.findSweepingOutput(
+    PhaseExecutionSummary phaseExecutionSummary = sweepingOutputService.findSweepingOutput(
         context.prepareSweepingOutputInquiryBuilder()
             .name(PhaseExecutionSummary.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback().trim())
             .build());

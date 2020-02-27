@@ -657,8 +657,7 @@ public class PcfStateHelper {
   }
 
   private SetupSweepingOutputPcf findSetupSweepingOutput(SweepingOutputInquiry sweepingOutputInquiry) {
-    SetupSweepingOutputPcf setupSweepingOutputPcf =
-        (SetupSweepingOutputPcf) sweepingOutputService.findSweepingOutput(sweepingOutputInquiry);
+    SetupSweepingOutputPcf setupSweepingOutputPcf = sweepingOutputService.findSweepingOutput(sweepingOutputInquiry);
     if (setupSweepingOutputPcf == null) {
       StateExecutionInstance previousPhaseStateExecutionInstance =
           stateExecutionService.fetchPreviousPhaseStateExecutionInstance(sweepingOutputInquiry.getAppId(),
@@ -702,7 +701,7 @@ public class PcfStateHelper {
   }
 
   void populatePcfVariables(ExecutionContext context, SetupSweepingOutputPcf setupSweepingOutputPcf) {
-    InfoVariables infoVariables = (InfoVariables) sweepingOutputService.findSweepingOutput(
+    InfoVariables infoVariables = sweepingOutputService.findSweepingOutput(
         context.prepareSweepingOutputInquiryBuilder().name(InfoVariables.SWEEPING_OUTPUT_NAME).build());
     if (infoVariables == null) {
       Scope outputScope = workflowExecutionService.isMultiService(context.getAppId(), context.getWorkflowExecutionId())

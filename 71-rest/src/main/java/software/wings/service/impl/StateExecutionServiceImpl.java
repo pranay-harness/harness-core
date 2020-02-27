@@ -265,16 +265,14 @@ public class StateExecutionServiceImpl implements StateExecutionService {
 
   @VisibleForTesting
   PhaseExecutionSummary getPhaseExecutionSummarySweepingOutput(@NotNull StateExecutionInstance stateExecutionInstance) {
-    return (PhaseExecutionSummary) sweepingOutputService.findSweepingOutput(
-        SweepingOutputInquiryController.obtainFromStateExecutionInstance(
-            stateExecutionInstance, PhaseExecutionSummary.SWEEPING_OUTPUT_NAME));
+    return sweepingOutputService.findSweepingOutput(SweepingOutputInquiryController.obtainFromStateExecutionInstance(
+        stateExecutionInstance, PhaseExecutionSummary.SWEEPING_OUTPUT_NAME));
   }
 
   @VisibleForTesting
   PhaseExecutionData getPhaseExecutionDataSweepingOutput(@NotNull StateExecutionInstance stateExecutionInstance) {
-    return (PhaseExecutionData) sweepingOutputService.findSweepingOutput(
-        SweepingOutputInquiryController.obtainFromStateExecutionInstance(
-            stateExecutionInstance, PhaseExecutionData.SWEEPING_OUTPUT_NAME));
+    return sweepingOutputService.findSweepingOutput(SweepingOutputInquiryController.obtainFromStateExecutionInstance(
+        stateExecutionInstance, PhaseExecutionData.SWEEPING_OUTPUT_NAME));
   }
 
   @Nullable

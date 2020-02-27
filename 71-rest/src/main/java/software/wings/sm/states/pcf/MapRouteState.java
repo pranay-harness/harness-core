@@ -131,11 +131,10 @@ public class MapRouteState extends State {
 
     PcfRouteUpdateRequestConfigData requestConfigData = null;
     if (isRollback()) {
-      SwapRouteRollbackSweepingOutputPcf swapRouteRollbackSweepingOutputPcf =
-          (SwapRouteRollbackSweepingOutputPcf) sweepingOutputService.findSweepingOutput(
-              context.prepareSweepingOutputInquiryBuilder()
-                  .name(pcfStateHelper.obtainSwapRouteSweepingOutputName(context, true))
-                  .build());
+      SwapRouteRollbackSweepingOutputPcf swapRouteRollbackSweepingOutputPcf = sweepingOutputService.findSweepingOutput(
+          context.prepareSweepingOutputInquiryBuilder()
+              .name(pcfStateHelper.obtainSwapRouteSweepingOutputName(context, true))
+              .build());
       requestConfigData = swapRouteRollbackSweepingOutputPcf.getPcfRouteUpdateRequestConfigData();
       requestConfigData.setRollback(true);
       requestConfigData.setMapRoutesOperation(!requestConfigData.isMapRoutesOperation());

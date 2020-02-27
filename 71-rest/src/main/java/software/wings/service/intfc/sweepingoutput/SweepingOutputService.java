@@ -14,7 +14,7 @@ public interface SweepingOutputService {
 
   SweepingOutputInstance find(SweepingOutputInquiry inquiry);
 
-  SweepingOutput findSweepingOutput(SweepingOutputInquiry inquiry);
+  <T extends SweepingOutput> T findSweepingOutput(SweepingOutputInquiry inquiry);
 
   void copyOutputsForAnotherWorkflowExecution(
       String appId, String fromWorkflowExecutionId, String toWorkflowExecutionId);
