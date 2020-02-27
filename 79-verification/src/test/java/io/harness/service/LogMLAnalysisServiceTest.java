@@ -14,7 +14,13 @@ import static io.harness.rule.OwnerRule.SRIRAM;
 import static io.harness.service.LearningEngineAnalysisServiceImpl.BACKOFF_LIMIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -40,6 +46,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.serializer.JsonUtils;
+import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.extern.slf4j.Slf4j;
@@ -144,6 +151,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private HarnessMetricRegistry metricRegistry;
+  @Mock ContinuousVerificationService continuousVerificationService;
   @Inject private LogAnalysisService analysisService;
   @Inject private LearningEngineService learningEngineService;
   @Inject private WingsPersistence wingsPersistence;
@@ -199,6 +207,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     FieldUtils.writeField(managerAnalysisService, "appService", appService, true);
     FieldUtils.writeField(managerAnalysisService, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(analysisService, "dataStoreService", dataStoreService, true);
+    FieldUtils.writeField(analysisService, "continuousVerificationService", continuousVerificationService, true);
 
     FieldUtils.writeField(managerAnalysisService, "wingsPersistence", wingsPersistence, true);
     FieldUtils.writeField(managerAnalysisService, "workflowExecutionService", workflowExecutionService, true);
@@ -1570,6 +1579,11 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testSaveDuplicate() throws IOException {
+    Call<RestResponse<Boolean>> managerCallFeedbacks = mock(Call.class);
+    when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
+    setInternalState(analysisService, "managerClient", verificationManagerClient);
+
     File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
 
     final Gson gson = new Gson();
@@ -1593,6 +1607,64 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         logMLAnalysisRecord.getLogCollectionMinute(), null, logMLAnalysisRecord, Optional.empty(), Optional.empty());
 
     assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testLogAnalysisAlert_featureFlagDisabled() throws Exception {
+    Call<RestResponse<Boolean>> managerCallFeedbacks = mock(Call.class);
+    when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
+    setInternalState(analysisService, "managerClient", verificationManagerClient);
+    doNothing().when(continuousVerificationService).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
+
+    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+
+    final Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
+    logsCVConfiguration.setUuid(logMLAnalysisRecord.getCvConfigId());
+    wingsPersistence.save(logsCVConfiguration);
+
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).isEmpty();
+    analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
+        logMLAnalysisRecord.getLogCollectionMinute(), null, logMLAnalysisRecord, Optional.empty(), Optional.empty());
+    verify(continuousVerificationService, times(1)).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testLogAnalysisAlert_featureFlagEnabled() throws Exception {
+    Call<RestResponse<Boolean>> managerCallFeedbacks = mock(Call.class);
+    when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
+    setInternalState(analysisService, "managerClient", verificationManagerClient);
+    doNothing().when(continuousVerificationService).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
+
+    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+
+    final Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
+    logsCVConfiguration.setUuid(logMLAnalysisRecord.getCvConfigId());
+    wingsPersistence.save(logsCVConfiguration);
+
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).isEmpty();
+    analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
+        logMLAnalysisRecord.getLogCollectionMinute(), null, logMLAnalysisRecord, Optional.empty(), Optional.empty());
+    verify(continuousVerificationService, never()).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
   }
 
   @Test

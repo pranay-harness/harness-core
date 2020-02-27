@@ -10,6 +10,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
+import static software.wings.beans.FeatureName.DISABLE_SERVICEGUARD_LOG_ALERTS;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
@@ -661,7 +662,13 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       wingsPersistence.save(mlAnalysisResponse);
       mlAnalysisResponse.setUnknown_clusters(unknownClusters);
       mlAnalysisResponse.setLog_analysis_result(logAnalysisResultMap);
-      continuousVerificationService.triggerLogAnalysisAlertIfNecessary(cvConfigId, mlAnalysisResponse, analysisMinute);
+      if (!managerClientHelper
+               .callManagerWithRetry(
+                   managerClient.isFeatureEnabled(DISABLE_SERVICEGUARD_LOG_ALERTS, logsCVConfiguration.getAccountId()))
+               .getResource()) {
+        continuousVerificationService.triggerLogAnalysisAlertIfNecessary(
+            cvConfigId, mlAnalysisResponse, analysisMinute);
+      }
     }
 
     wingsPersistence.update(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
