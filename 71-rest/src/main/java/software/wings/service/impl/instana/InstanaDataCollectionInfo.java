@@ -62,14 +62,14 @@ public class InstanaDataCollectionInfo extends MetricsDataCollectionInfo {
     if (tagFilters == null) {
       return Collections.emptyList();
     }
-    return Collections.unmodifiableList(tagFilters);
+    return new ArrayList<>(tagFilters);
   }
 
   public List<String> getMetrics() {
     if (metrics == null) {
       return Collections.emptyList();
     }
-    return metrics;
+    return new ArrayList<>(metrics);
   }
   @Override
   public TaskType getTaskType() {
@@ -104,7 +104,7 @@ public class InstanaDataCollectionInfo extends MetricsDataCollectionInfo {
   @Override
   public DataCollectionInfoV2 deepCopy() {
     InstanaDataCollectionInfo instanaDataCollectionInfo = InstanaDataCollectionInfo.builder()
-                                                              .metrics(new ArrayList<>(this.metrics))
+                                                              .metrics(new ArrayList<>(getMetrics()))
                                                               .query(this.query)
                                                               .instanaConfig(instanaConfig)
                                                               .hostTagFilter(hostTagFilter)
@@ -122,13 +122,6 @@ public class InstanaDataCollectionInfo extends MetricsDataCollectionInfo {
   @Override
   protected void validateParams() {
     Preconditions.checkNotNull(instanaConfig, InstanaDataCollectionInfoKeys.instanaConfig);
-    if (!this.getHosts().isEmpty()) {
-      Preconditions.checkNotNull(query, InstanaDataCollectionInfoKeys.query);
-      Preconditions.checkNotNull(metrics, InstanaDataCollectionInfoKeys.metrics);
-      Preconditions.checkNotNull(hostTagFilter, InstanaDataCollectionInfoKeys.hostTagFilter);
-      Preconditions.checkArgument(
-          !metrics.isEmpty(), InstanaDataCollectionInfoKeys.metrics + " metrics list can not be empty");
-    }
   }
 
   @Override

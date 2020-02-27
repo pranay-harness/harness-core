@@ -47,53 +47,66 @@ public class InstanaDataCollector implements MetricsDataCollector<InstanaDataCol
   public int getHostBatchSize() {
     return 1;
   }
+  private boolean hasInfraParamsDefined() {
+    return dataCollectionInfo.getQuery() != null;
+  }
+
+  private boolean isApplicationParamsDefined() {
+    return dataCollectionInfo.getHostTagFilter() != null;
+  }
+
   @Override
   public List<MetricElement> fetchMetrics(List<String> hostBatch) throws DataCollectionException {
-    Preconditions.checkArgument(hostBatch.size() == 1);
-    Preconditions.checkArgument(dataCollectionInfo.getQuery().contains(VERIFICATION_HOST_PLACEHOLDERV2),
-        "Query should contain %s", VERIFICATION_HOST_PLACEHOLDERV2);
     Preconditions.checkArgument(hostBatch.size() == 1, "size can not be greater than 1");
-    InstanaInfraMetricRequest instanaInfraMetricRequest =
-        InstanaInfraMetricRequest.builder()
-            .metrics(dataCollectionInfo.getMetrics())
-            .plugin(INSTANA_DOCKER_PLUGIN)
-            .query(
-                dataCollectionInfo.getQuery().replace(VERIFICATION_HOST_PLACEHOLDERV2, "\"" + hostBatch.get(0)) + "\"")
-            .rollup(60)
-            .timeframe(getTimeframeForInfraMetric())
-            .build();
-    InstanaInfraMetrics instanaInfraMetrics = instanaDelegateService.getInfraMetrics(
-        dataCollectionInfo.getInstanaConfig(), dataCollectionInfo.getEncryptedDataDetails(), instanaInfraMetricRequest,
-        dataCollectionExecutionContext.createApiCallLog());
-    List<InstanaAnalyzeMetricRequest.Metric> metrics = new ArrayList<>();
-    InstanaUtils.getApplicationMetricTemplateMap().forEach(
-        (metricName, instanaMetricTemplate)
-            -> metrics.add(InstanaAnalyzeMetricRequest.Metric.builder()
-                               .metric(instanaMetricTemplate.getMetricName())
-                               .aggregation(instanaMetricTemplate.getAggregation())
-                               .granularity(60)
-                               .build()));
-    InstanaAnalyzeMetricRequest.Group group =
-        InstanaAnalyzeMetricRequest.Group.builder().groupByTag(INSTANA_GROUPBY_TAG_TRACE_NAME).build();
-    List<InstanaTagFilter> tagFilters = new ArrayList<>(dataCollectionInfo.getTagFilters());
-    tagFilters.add(InstanaTagFilter.builder()
-                       .name(dataCollectionInfo.getHostTagFilter())
-                       .value(hostBatch.get(0))
-                       .operator(InstanaTagFilter.Operator.EQUALS)
-                       .build());
-    InstanaAnalyzeMetricRequest instanaAnalyzeMetricRequest = InstanaAnalyzeMetricRequest.builder()
-                                                                  .metrics(metrics)
-                                                                  .group(group)
-                                                                  .tagFilters(tagFilters)
-                                                                  .timeFrame(getTimeframeForTraceMetric())
-                                                                  .build();
-
-    InstanaAnalyzeMetrics instanaAnalyzeMetrics = instanaDelegateService.getInstanaTraceMetrics(
-        dataCollectionInfo.getInstanaConfig(), dataCollectionInfo.getEncryptedDataDetails(),
-        instanaAnalyzeMetricRequest, dataCollectionExecutionContext.createApiCallLog());
     List<MetricElement> metricElements = new ArrayList<>();
-    metricElements.addAll(getMetricElements(instanaInfraMetrics, hostBatch.get(0)));
-    metricElements.addAll(getMetricElements(instanaAnalyzeMetrics, hostBatch.get(0)));
+    if (hasInfraParamsDefined()) {
+      Preconditions.checkArgument(dataCollectionInfo.getQuery().contains(VERIFICATION_HOST_PLACEHOLDERV2),
+          "Query should contain %s", VERIFICATION_HOST_PLACEHOLDERV2);
+      InstanaInfraMetricRequest instanaInfraMetricRequest =
+          InstanaInfraMetricRequest.builder()
+              .metrics(dataCollectionInfo.getMetrics())
+              .plugin(INSTANA_DOCKER_PLUGIN)
+              .query(dataCollectionInfo.getQuery().replace(VERIFICATION_HOST_PLACEHOLDERV2, "\"" + hostBatch.get(0))
+                  + "\"")
+              .rollup(60)
+              .timeframe(getTimeframeForInfraMetric())
+              .build();
+      InstanaInfraMetrics instanaInfraMetrics = instanaDelegateService.getInfraMetrics(
+          dataCollectionInfo.getInstanaConfig(), dataCollectionInfo.getEncryptedDataDetails(),
+          instanaInfraMetricRequest, dataCollectionExecutionContext.createApiCallLog());
+      metricElements.addAll(getMetricElements(instanaInfraMetrics, hostBatch.get(0)));
+    }
+    if (isApplicationParamsDefined()) {
+      List<InstanaAnalyzeMetricRequest.Metric> metrics = new ArrayList<>();
+
+      InstanaUtils.getApplicationMetricTemplateMap().forEach(
+          (metricName, instanaMetricTemplate)
+              -> metrics.add(InstanaAnalyzeMetricRequest.Metric.builder()
+                                 .metric(instanaMetricTemplate.getMetricName())
+                                 .aggregation(instanaMetricTemplate.getAggregation())
+                                 .granularity(60)
+                                 .build()));
+
+      InstanaAnalyzeMetricRequest.Group group =
+          InstanaAnalyzeMetricRequest.Group.builder().groupByTag(INSTANA_GROUPBY_TAG_TRACE_NAME).build();
+      List<InstanaTagFilter> tagFilters = new ArrayList<>(dataCollectionInfo.getTagFilters());
+      tagFilters.add(InstanaTagFilter.builder()
+                         .name(dataCollectionInfo.getHostTagFilter())
+                         .value(hostBatch.get(0))
+                         .operator(InstanaTagFilter.Operator.EQUALS)
+                         .build());
+      InstanaAnalyzeMetricRequest instanaAnalyzeMetricRequest = InstanaAnalyzeMetricRequest.builder()
+                                                                    .metrics(metrics)
+                                                                    .group(group)
+                                                                    .tagFilters(tagFilters)
+                                                                    .timeFrame(getTimeframeForTraceMetric())
+                                                                    .build();
+
+      InstanaAnalyzeMetrics instanaAnalyzeMetrics = instanaDelegateService.getInstanaTraceMetrics(
+          dataCollectionInfo.getInstanaConfig(), dataCollectionInfo.getEncryptedDataDetails(),
+          instanaAnalyzeMetricRequest, dataCollectionExecutionContext.createApiCallLog());
+      metricElements.addAll(getMetricElements(instanaAnalyzeMetrics, hostBatch.get(0)));
+    }
     return metricElements;
   }
 

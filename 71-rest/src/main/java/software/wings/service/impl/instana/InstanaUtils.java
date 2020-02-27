@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 public class InstanaUtils {
   private static final String INSTANA_METRICS_YAML_PATH = "/apm/instana_metrics.yml";
@@ -53,18 +54,21 @@ public class InstanaUtils {
     return INSTANA_METRIC_TEMPLATE_MAP_APPLICATION;
   }
 
-  public static Map<String, TimeSeriesMetricDefinition> createMetricTemplates(List<String> infraMetricNames) {
+  public static Map<String, TimeSeriesMetricDefinition> createMetricTemplates(
+      @Nullable InstanaInfraParams infraParams) {
     Map<String, TimeSeriesMetricDefinition> metricDefinitionMap = new HashMap<>();
     Map<String, InstanaMetricTemplate> infraMetricTemplateMap = getInfraMetricTemplateMap();
-    infraMetricNames.forEach(metric -> {
-      InstanaMetricTemplate instanaMetricTemplate = infraMetricTemplateMap.get(metric);
-      Preconditions.checkNotNull(instanaMetricTemplate, "instanaMetricTemplate can not be null");
-      metricDefinitionMap.put(instanaMetricTemplate.getDisplayName(),
-          TimeSeriesMetricDefinition.builder()
-              .metricName(instanaMetricTemplate.getDisplayName())
-              .metricType(instanaMetricTemplate.getMetricType())
-              .build());
-    });
+    if (infraParams != null) {
+      infraParams.getMetrics().forEach(metric -> {
+        InstanaMetricTemplate instanaMetricTemplate = infraMetricTemplateMap.get(metric);
+        Preconditions.checkNotNull(instanaMetricTemplate, "instanaMetricTemplate can not be null");
+        metricDefinitionMap.put(instanaMetricTemplate.getDisplayName(),
+            TimeSeriesMetricDefinition.builder()
+                .metricName(instanaMetricTemplate.getDisplayName())
+                .metricType(instanaMetricTemplate.getMetricType())
+                .build());
+      });
+    }
 
     metricDefinitionMap.putAll(createApplicationMetricsTemplate());
     return metricDefinitionMap;

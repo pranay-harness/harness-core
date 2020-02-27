@@ -14,6 +14,7 @@ import software.wings.service.impl.instana.InstanaDataCollectionInfo;
 import software.wings.service.impl.instana.InstanaTagFilter;
 import software.wings.verification.CVConfiguration;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +33,7 @@ public class InstanaCVConfiguration extends CVConfiguration {
     if (tagFilters == null) {
       return Collections.emptyList();
     }
-    return Collections.unmodifiableList(tagFilters);
+    return new ArrayList<>(tagFilters);
   }
   @Override
   public CVConfiguration deepCopy() {

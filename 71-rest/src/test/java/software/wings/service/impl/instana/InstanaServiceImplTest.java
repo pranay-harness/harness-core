@@ -29,6 +29,7 @@ import software.wings.service.intfc.instana.InstanaService;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -71,11 +72,10 @@ public class InstanaServiceImplTest extends WingsBaseTest {
     InstanaInfraMetrics instanaInfraMetrics = InstanaInfraMetrics.builder().items(Collections.emptyList()).build();
     when(instanaDelegateService.getInfraMetrics(any(), any(), any(), any())).thenReturn(instanaInfraMetrics);
     List<String> metrics = Lists.newArrayList("cpu.total_usage", "memory.usage");
-    InstanaSetupTestNodeData instanaSetupTestNodeData = InstanaSetupTestNodeData.builder()
-                                                            .settingId(settingAttribute.getUuid())
-                                                            .query("entity.kubernetes.pod.name:${host.hostName}")
-                                                            .metrics(metrics)
-                                                            .build();
+    InstanaInfraParams infraParams =
+        InstanaInfraParams.builder().query("entity.kubernetes.pod.name:${host.hostName}").metrics(metrics).build();
+    InstanaSetupTestNodeData instanaSetupTestNodeData =
+        InstanaSetupTestNodeData.builder().settingId(settingAttribute.getUuid()).infraParams(infraParams).build();
     InstanaAnalyzeMetrics instanaAnalyzeMetrics = InstanaAnalyzeMetrics.builder().build();
     instanaAnalyzeMetrics.setItems(Collections.emptyList());
     when(instanaDelegateService.getInstanaTraceMetrics(any(), any(), any(), any())).thenReturn(instanaAnalyzeMetrics);
@@ -92,11 +92,10 @@ public class InstanaServiceImplTest extends WingsBaseTest {
     when(instanaDelegateService.getInfraMetrics(any(), any(), any(), any()))
         .thenThrow(new DataCollectionException("failed to connect"));
     List<String> metrics = Lists.newArrayList("cpu.total_usage", "memory.usage");
-    InstanaSetupTestNodeData instanaSetupTestNodeData = InstanaSetupTestNodeData.builder()
-                                                            .settingId(settingAttribute.getUuid())
-                                                            .query("entity.kubernetes.pod.name:${host.hostName}")
-                                                            .metrics(metrics)
-                                                            .build();
+    InstanaInfraParams infraParams =
+        InstanaInfraParams.builder().query("entity.kubernetes.pod.name:${host.hostName}").metrics(metrics).build();
+    InstanaSetupTestNodeData instanaSetupTestNodeData =
+        InstanaSetupTestNodeData.builder().settingId(settingAttribute.getUuid()).infraParams(infraParams).build();
 
     when(instanaDelegateService.getInstanaTraceMetrics(any(), any(), any(), any()))
         .thenThrow(new DataCollectionException("failed to connect"));
@@ -132,11 +131,14 @@ public class InstanaServiceImplTest extends WingsBaseTest {
     when(instanaDelegateService.getInstanaTraceMetrics(any(), any(), any(), any())).thenReturn(instanaAnalyzeMetrics);
 
     List<String> metrics = Lists.newArrayList("cpu.total_usage", "memory.usage");
-    InstanaSetupTestNodeData instanaSetupTestNodeData = InstanaSetupTestNodeData.builder()
-                                                            .settingId(settingAttribute.getUuid())
-                                                            .query("entity.kubernetes.pod.name:${host.hostName}")
-                                                            .metrics(metrics)
-                                                            .build();
+    InstanaInfraParams infraParams =
+        InstanaInfraParams.builder().query("entity.kubernetes.pod.name:${host.hostName}").metrics(metrics).build();
+    InstanaSetupTestNodeData instanaSetupTestNodeData =
+        InstanaSetupTestNodeData.builder()
+            .settingId(settingAttribute.getUuid())
+            .infraParams(infraParams)
+            .tagFilters(Arrays.asList(InstanaTagFilter.builder().build()))
+            .build();
     VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =
         instanaService.getMetricsWithDataForNode(instanaSetupTestNodeData);
     assertThat(verificationNodeDataSetupResponse.isProviderReachable()).isTrue();
