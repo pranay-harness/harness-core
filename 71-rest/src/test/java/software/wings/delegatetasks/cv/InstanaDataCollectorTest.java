@@ -86,7 +86,7 @@ public class InstanaDataCollectorTest extends WingsBaseTest {
     instanaDataCollector.init(dataCollectionExecutionContext, instanaDataCollectionInfo);
     assertThatThrownBy(() -> instanaDataCollector.fetchMetrics(Lists.newArrayList(host)))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Query should contain ${host.hostName}");
+        .hasMessage("Query should contain ${host}");
   }
   @Test
   @Owner(developers = KAMAL)
@@ -458,7 +458,7 @@ public class InstanaDataCollectorTest extends WingsBaseTest {
   private InstanaDataCollectionInfo createDataCollectionInfoWithoutHost() {
     List<String> metrics = Lists.newArrayList("cpu.total_usage", "memory.usage");
     return InstanaDataCollectionInfo.builder()
-        .query("entity.kubernetes.pod.name:${host.hostName}")
+        .query("entity.kubernetes.pod.name:${host}")
         .metrics(metrics)
         .startTime(Instant.now())
         .endTime(Instant.now().plus(1, ChronoUnit.MINUTES))

@@ -16,6 +16,7 @@ import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.instana.InstanaApplicationParams;
 import software.wings.service.impl.instana.InstanaDataCollectionInfo;
 import software.wings.service.impl.instana.InstanaInfraParams;
+import software.wings.service.impl.instana.InstanaTagFilter;
 import software.wings.service.impl.instana.InstanaUtils;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -24,7 +25,10 @@ import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Slf4j
@@ -95,7 +99,8 @@ public class InstanaState extends AbstractMetricAnalysisState {
         context.getStateExecutionInstanceId(), null, InstanaUtils.createMetricTemplates(infraParams));
     InstanaDataCollectionInfo instanaDataCollectionInfo =
         InstanaDataCollectionInfo.builder()
-            .connectorId(analysisServerConfigId)
+            .connectorId(
+                getResolvedConnectorId(context, InstanaStateKeys.analysisServerConfigId, analysisServerConfigId))
             .workflowExecutionId(context.getWorkflowExecutionId())
             .stateExecutionId(context.getStateExecutionInstanceId())
             .workflowId(context.getWorkflowId())
@@ -107,14 +112,25 @@ public class InstanaState extends AbstractMetricAnalysisState {
             .serviceId(getPhaseServiceId(context))
             .build();
     if (infraParams != null) {
-      instanaDataCollectionInfo.setQuery(infraParams.getQuery());
+      instanaDataCollectionInfo.setQuery(context.renderExpression(infraParams.getQuery()));
       instanaDataCollectionInfo.setMetrics(infraParams.getMetrics());
     }
     if (applicationParams != null) {
-      instanaDataCollectionInfo.setTagFilters(applicationParams.getTagFilters());
+      instanaDataCollectionInfo.setTagFilters(renderExpressions(context, applicationParams.getTagFilters()));
       instanaDataCollectionInfo.setHostTagFilter(applicationParams.getHostTagFilter());
     }
     return instanaDataCollectionInfo;
+  }
+
+  private List<InstanaTagFilter> renderExpressions(ExecutionContext context, List<InstanaTagFilter> instanaTagFilters) {
+    return instanaTagFilters.stream()
+        .map(instanaTagFilter
+            -> InstanaTagFilter.builder()
+                   .value(context.renderExpression(instanaTagFilter.getValue()))
+                   .operator(instanaTagFilter.getOperator())
+                   .name(instanaTagFilter.getName())
+                   .build())
+        .collect(Collectors.toList());
   }
 
   @Override

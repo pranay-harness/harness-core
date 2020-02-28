@@ -3,7 +3,7 @@ package software.wings.delegatetasks.cv;
 import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 import static software.wings.common.VerificationConstants.INSTANA_DOCKER_PLUGIN;
 import static software.wings.common.VerificationConstants.INSTANA_GROUPBY_TAG_TRACE_NAME;
-import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDERV2;
+import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -60,14 +60,14 @@ public class InstanaDataCollector implements MetricsDataCollector<InstanaDataCol
     Preconditions.checkArgument(hostBatch.size() == 1, "size can not be greater than 1");
     List<MetricElement> metricElements = new ArrayList<>();
     if (hasInfraParamsDefined()) {
-      Preconditions.checkArgument(dataCollectionInfo.getQuery().contains(VERIFICATION_HOST_PLACEHOLDERV2),
-          "Query should contain %s", VERIFICATION_HOST_PLACEHOLDERV2);
+      Preconditions.checkArgument(dataCollectionInfo.getQuery().contains(VERIFICATION_HOST_PLACEHOLDER),
+          "Query should contain %s", VERIFICATION_HOST_PLACEHOLDER);
       InstanaInfraMetricRequest instanaInfraMetricRequest =
           InstanaInfraMetricRequest.builder()
               .metrics(dataCollectionInfo.getMetrics())
               .plugin(INSTANA_DOCKER_PLUGIN)
-              .query(dataCollectionInfo.getQuery().replace(VERIFICATION_HOST_PLACEHOLDERV2, "\"" + hostBatch.get(0))
-                  + "\"")
+              .query(
+                  dataCollectionInfo.getQuery().replace(VERIFICATION_HOST_PLACEHOLDER, "\"" + hostBatch.get(0)) + "\"")
               .rollup(60)
               .timeframe(getTimeframeForInfraMetric())
               .build();

@@ -1,7 +1,7 @@
 package software.wings.service.impl.instana;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDERV2;
+import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,8 +28,8 @@ public class InstanaInfraParams {
     if (isEmpty(query)) {
       errors.put("infraParams." + InfraParamsKeys.query, "query is a required field.");
     }
-    if (query != null && !query.contains(VERIFICATION_HOST_PLACEHOLDERV2)) {
-      errors.put("infraParams." + InfraParamsKeys.query, "query should contain " + VERIFICATION_HOST_PLACEHOLDERV2);
+    if (query != null && !query.contains(VERIFICATION_HOST_PLACEHOLDER)) {
+      errors.put("infraParams." + InfraParamsKeys.query, "query should contain " + VERIFICATION_HOST_PLACEHOLDER);
     }
   }
 }
