@@ -26,14 +26,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
+import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -126,8 +129,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
     assertThat(data.getTaskType()).isEqualTo(TaskType.BUILD_SOURCE_TASK.name());
     assertThat(data.getTimeout()).isEqualTo(TimeUnit.MINUTES.toMillis(1));
     BuildSourceParameters parameters = (BuildSourceParameters) data.getParameters()[0];
-    assertThat(parameters.getBuildSourceRequestType())
-        .isEqualTo(BuildSourceParameters.BuildSourceRequestType.GET_BUILDS);
+    assertThat(parameters.getBuildSourceRequestType()).isEqualTo(BuildSourceRequestType.GET_BUILDS);
   }
 
   @Test
@@ -168,8 +170,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
     assertThat(data.getTaskType()).isEqualTo(TaskType.BUILD_SOURCE_TASK.name());
     assertThat(data.getTimeout()).isEqualTo(TimeUnit.MINUTES.toMillis(1));
     BuildSourceParameters parameters = (BuildSourceParameters) data.getParameters()[0];
-    assertThat(parameters.getBuildSourceRequestType())
-        .isEqualTo(BuildSourceParameters.BuildSourceRequestType.GET_BUILDS);
+    assertThat(parameters.getBuildSourceRequestType()).isEqualTo(BuildSourceRequestType.GET_BUILDS);
     assertThat(parameters.getSettingValue()).isNotNull();
     assertThat(parameters.getEncryptedDataDetails()).isNotNull();
   }
@@ -198,5 +199,74 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
 
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(amazonS3ArtifactStream);
     artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category({UnitTests.class})
+  public void shouldPrepareCustomBuildSourceParameters() {
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID))
+        .thenReturn(CustomArtifactStream.builder()
+                        .accountId(ACCOUNT_ID)
+                        .appId(APP_ID)
+                        .uuid(ARTIFACT_STREAM_ID)
+                        .serviceId(SERVICE_ID)
+                        .name("Custom Artifact Stream" + System.currentTimeMillis())
+                        .scripts(asList(CustomArtifactStream.Script.builder()
+                                            .action(CustomArtifactStream.Action.FETCH_VERSIONS)
+                                            .scriptString(SCRIPT_STRING)
+                                            .build()))
+                        .tags(asList("Delegate Tag"))
+                        .build());
+
+    BuildSourceParameters buildSourceParameters =
+        artifactCollectionUtils.prepareBuildSourceParameters(ARTIFACT_STREAM_ID);
+    assertThat(buildSourceParameters).isNotNull();
+    assertThat(buildSourceParameters.isCollection()).isTrue();
+    assertThat(buildSourceParameters.getBuildSourceRequestType()).isEqualTo(BuildSourceRequestType.GET_BUILDS);
+    assertThat(buildSourceParameters.getArtifactStreamAttributes().getCustomArtifactStreamScript())
+        .isEqualTo(SCRIPT_STRING);
+    assertThat(buildSourceParameters.getArtifactStreamAttributes().getArtifactStreamType())
+        .isEqualTo(ArtifactStreamType.CUSTOM.name());
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category({UnitTests.class})
+  public void shouldPrepareDockerBuildSourceParameters() {
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID))
+        .thenReturn(DockerArtifactStream.builder()
+                        .appId(APP_ID)
+                        .uuid(ARTIFACT_STREAM_ID)
+                        .accountId(ACCOUNT_ID)
+                        .appId(APP_ID)
+                        .settingId(SETTING_ID)
+                        .imageName("wingsplugins/todolist")
+                        .autoPopulate(true)
+                        .serviceId(SERVICE_ID)
+                        .build());
+
+    when(settingsService.get(SETTING_ID))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withAccountId(ACCOUNT_ID)
+                        .withValue(DockerConfig.builder().dockerRegistryUrl("https://harness.dockerhub.com").build())
+                        .build());
+
+    when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID, true))
+        .thenReturn(Service.builder()
+                        .uuid(SERVICE_ID)
+                        .appId(APP_ID)
+                        .name("SERVICE_NAME")
+                        .description("SERVICE_DESC")
+                        .artifactType(JAR)
+                        .build());
+
+    BuildSourceParameters buildSourceParameters =
+        artifactCollectionUtils.prepareBuildSourceParameters(ARTIFACT_STREAM_ID);
+    assertThat(buildSourceParameters).isNotNull();
+    assertThat(buildSourceParameters.getAccountId()).isNotNull();
+    assertThat(buildSourceParameters.getBuildSourceRequestType()).isEqualTo(BuildSourceRequestType.GET_BUILDS);
+    assertThat(buildSourceParameters.getArtifactStreamAttributes().getArtifactStreamType())
+        .isEqualTo(ArtifactStreamType.DOCKER.name());
   }
 }
