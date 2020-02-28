@@ -539,8 +539,6 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           throw new SecretManagementException(VAULT_OPERATION_ERROR, message, USER);
         } else {
           vaultConfig.setAuthToken(loginResult.getClientToken());
-          logger.info("Got client token {} from vault AppRole {} and secret Id {}", loginResult.getClientToken(),
-              vaultConfig.getAppRoleId(), vaultConfig.getSecretId());
         }
       }
     } catch (WingsException e) {
