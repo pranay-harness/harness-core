@@ -853,4 +853,45 @@ public class ArtifactCollectionUtils {
     }
     return false;
   }
+
+  public BuildSourceParameters prepareBuildSourceParameters(String artifactStreamId) {
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    if (artifactStream == null) {
+      throw new InvalidRequestException("Artifact stream was deleted");
+    }
+    return prepareBuildSourceParameters(artifactStream);
+  }
+
+  private BuildSourceParameters prepareBuildSourceParameters(ArtifactStream artifactStream) {
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+    if (CUSTOM.name().equals(artifactStreamType)) {
+      return prepareCustomBuildSourceParameters(artifactStream);
+    } else {
+      SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+      if (settingAttribute == null) {
+        throw new InvalidRequestException("Connector / Cloud Provider associated to Artifact Stream was deleted");
+      }
+      return getBuildSourceParameters(artifactStream, settingAttribute, true, true);
+    }
+  }
+
+  private BuildSourceParameters prepareCustomBuildSourceParameters(ArtifactStream artifactStream) {
+    ArtifactStreamAttributes artifactStreamAttributes =
+        renderCustomArtifactScriptString((CustomArtifactStream) artifactStream);
+    BuildSourceRequestType requestType = BuildSourceRequestType.GET_BUILDS;
+
+    BuildSourceParametersBuilder buildSourceParametersBuilder =
+        BuildSourceParameters.builder()
+            .accountId(artifactStreamAttributes.getAccountId())
+            .appId(artifactStream.fetchAppId())
+            .artifactStreamAttributes(artifactStreamAttributes)
+            .artifactStreamType(artifactStream.getArtifactStreamType())
+            .buildSourceRequestType(requestType)
+            .limit(ArtifactCollectionUtils.getLimit(artifactStream.getArtifactStreamType(), requestType))
+            .isCollection(true);
+
+    buildSourceParametersBuilder.savedBuildDetailsKeys(getArtifactsKeys(artifactStream, artifactStreamAttributes));
+
+    return buildSourceParametersBuilder.build();
+  }
 }
