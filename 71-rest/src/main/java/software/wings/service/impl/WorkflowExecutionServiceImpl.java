@@ -141,7 +141,6 @@ import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AwsLambdaExecutionSummary;
 import software.wings.beans.Base;
 import software.wings.beans.BuildExecutionSummary;
-import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.CountsByStatuses;
@@ -1322,16 +1321,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private boolean shouldNotQueueWorkflow(WorkflowExecution workflowExecution, Workflow workflow) {
-    if (workflowExecution.getWorkflowType() != ORCHESTRATION || BUILD == workflowExecution.getOrchestrationType()) {
-      return true;
-    } else if (featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId())) {
-      CanaryOrchestrationWorkflow orchestrationWorkflow =
-          (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-      return orchestrationWorkflow.getConcurrencyStrategy() != null
-          && orchestrationWorkflow.getConcurrencyStrategy().isEnabled();
-    } else {
-      return false;
-    }
+    return workflowExecution.getWorkflowType() != ORCHESTRATION || BUILD == workflowExecution.getOrchestrationType()
+        || featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId());
   }
 
   private void savePipelineSweepingOutPut(
