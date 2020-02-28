@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.common.TemplateExpressionProcessor.checkFieldTemplatized;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -9,16 +9,10 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.exception.ExceptionUtils;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.TemplateExpression;
-import software.wings.common.TemplateExpressionProcessor;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
-import software.wings.service.impl.analysis.AnalysisTolerance;
-import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
@@ -41,6 +35,7 @@ import java.util.concurrent.TimeUnit;
  * Created by raghu on 8/4/17.
  */
 @Slf4j
+@FieldNameConstants(innerTypeName = "ElkAnalysisStateKeys")
 public class ElkAnalysisState extends AbstractLogAnalysisState {
   @SchemaIgnore @Transient public static final String DEFAULT_TIME_FIELD = "@timestamp";
 
@@ -123,38 +118,6 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
   public void setMessageField(String messageField) {
     this.messageField = messageField;
-  }
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
-  @Attributes(required = true, title = "Baseline for Risk Analysis")
-  @DefaultValue("COMPARE_WITH_PREVIOUS")
-  public AnalysisComparisonStrategy getComparisonStrategy() {
-    if (isBlank(comparisonStrategy)) {
-      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
-    }
-    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
-  }
-
-  @Override
-  @Attributes(title = "Analysis Time duration (in minutes)")
-  @DefaultValue("15")
-  public String getTimeDuration() {
-    if (isBlank(timeDuration)) {
-      return String.valueOf(15);
-    }
-    return timeDuration;
-  }
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
-  @Attributes(required = true, title = "Algorithm Sensitivity")
-  @DefaultValue("MEDIUM")
-  public AnalysisTolerance getAnalysisTolerance() {
-    if (isBlank(tolerance)) {
-      return AnalysisTolerance.LOW;
-    }
-    return AnalysisTolerance.valueOf(tolerance);
   }
 
   @EnumData(enumDataProvider = ElkQueryTypeProvider.class)
@@ -254,51 +217,29 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @Override
   public Map<String, String> parentTemplateFields(String fieldName) {
     Map<String, String> parentTemplateFields = new LinkedHashMap<>();
-    if (fieldName.equals("indices")) {
-      if (!configIdTemplatized()) {
-        parentTemplateFields.put("analysisServerConfigId", analysisServerConfigId);
+    if (fieldName.equals(ElkAnalysisStateKeys.indices)) {
+      if (!checkFieldTemplatized(ElkAnalysisStateKeys.analysisServerConfigId, getTemplateExpressions())) {
+        parentTemplateFields.put(ElkAnalysisStateKeys.analysisServerConfigId, analysisServerConfigId);
       }
     }
     return parentTemplateFields;
   }
 
-  private boolean configIdTemplatized() {
-    return TemplateExpressionProcessor.checkFieldTemplatized("analysisServerConfigId", getTemplateExpressions());
-  }
-
   @Override
   public DataCollectionInfoV2 createDataCollectionInfo(ExecutionContext context, Set<String> hosts) {
-    String envId = getEnvId(context);
-    String finalAnalysisServerConfigId = analysisServerConfigId;
-    String finalIndices = indices;
-
-    if (!isEmpty(getTemplateExpressions())) {
-      TemplateExpression configIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
-      if (configIdExpression != null) {
-        SettingAttribute settingAttribute =
-            templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
-        finalAnalysisServerConfigId = settingAttribute.getUuid();
-      }
-      TemplateExpression indicesExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "indices");
-      if (indicesExpression != null) {
-        finalIndices = templateExpressionProcessor.resolveTemplateExpression(context, indicesExpression);
-      }
-    }
-
     return ElkDataCollectionInfoV2.builder()
-        .connectorId(finalAnalysisServerConfigId)
+        .connectorId(
+            getResolvedConnectorId(context, ElkAnalysisStateKeys.analysisServerConfigId, analysisServerConfigId))
         .workflowExecutionId(context.getWorkflowExecutionId())
         .stateExecutionId(context.getStateExecutionInstanceId())
         .workflowId(context.getWorkflowId())
-        .accountId(appService.get(context.getAppId()).getAccountId())
-        .envId(envId)
+        .accountId(appService.getAccountIdByAppId(context.getAppId()))
+        .envId(getEnvId(context))
         .applicationId(context.getAppId())
         .query(getRenderedQuery())
         .hostnameField(getHostnameField())
         .hosts(hosts)
-        .indices(finalIndices)
+        .indices(getResolvedFieldValue(context, ElkAnalysisStateKeys.indices, indices))
         .messageField(messageField)
         .timestampField(getTimestampField())
         .timestampFieldFormat(getTimestampFormat())

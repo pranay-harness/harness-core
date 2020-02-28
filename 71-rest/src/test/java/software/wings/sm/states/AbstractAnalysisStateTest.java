@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.rule.OwnerRule.SRIRAM;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -29,6 +30,7 @@ import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.CO
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -60,9 +62,12 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Service;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
+import software.wings.common.TemplateExpressionProcessor;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
@@ -81,6 +86,7 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.AbstractAnalysisState.AbstractAnalysisStateKeys;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,11 +103,13 @@ import java.util.UUID;
 public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private StateExecutionService stateExecutionService;
   @Mock private ContainerInstanceHandler containerInstanceHandler;
   @Mock private InfrastructureMappingService infraMappingService;
   @Mock private InfrastructureMapping infrastructureMapping;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private ExecutionContext executionContext;
 
   private final String workflowId = UUID.randomUUID().toString();
   private final String envId = UUID.randomUUID().toString();
@@ -684,5 +692,83 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
 
     assertThat(testNodes.keySet()).isEqualTo(new HashSet<>(Collections.singletonList(newHostName)));
     assertThat(testNodes.get(newHostName)).isEqualTo(DEFAULT_GROUP_NAME);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetResolvedFieldValue_whenNoTemplatizationOrExpression() {
+    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    abstractAnalysisState.setHostnameTemplate(generateUuid());
+    final String resolvedFieldValue = abstractAnalysisState.getResolvedFieldValue(
+        executionContext, AbstractAnalysisStateKeys.hostnameTemplate, abstractAnalysisState.getHostnameTemplate());
+    assertThat(resolvedFieldValue).isEqualTo(abstractAnalysisState.getHostnameTemplate());
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetResolvedFieldValue_whenTemplatizedWithInvalidValue() throws IllegalAccessException {
+    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    FieldUtils.writeField(abstractAnalysisState, "templateExpressionProcessor", templateExpressionProcessor, true);
+    abstractAnalysisState.setHostnameTemplate("${hostnameTemplate}");
+    abstractAnalysisState.setTemplateExpressions(asList(TemplateExpression.builder()
+                                                            .fieldName(AbstractAnalysisStateKeys.hostnameTemplate)
+                                                            .expression("${hostnameTemplate}")
+                                                            .metadata(ImmutableMap.of("entityType", "CONFIG"))
+                                                            .build()));
+    when(executionContext.renderExpression("${workflow.variables.hostnameTemplate}")).thenReturn("${hostnameTemplate}");
+
+    assertThatThrownBy(()
+                           -> abstractAnalysisState.getResolvedFieldValue(executionContext,
+                               AbstractAnalysisStateKeys.hostnameTemplate, abstractAnalysisState.getHostnameTemplate()))
+        .isInstanceOf(DataCollectionException.class)
+        .hasMessage("Template expression ${hostnameTemplate} could not be resolved");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetResolvedFieldValue_whenTemplatizedWithValidValue() throws IllegalAccessException {
+    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    FieldUtils.writeField(abstractAnalysisState, "templateExpressionProcessor", templateExpressionProcessor, true);
+    abstractAnalysisState.setTemplateExpressions(asList(TemplateExpression.builder()
+                                                            .fieldName(AbstractAnalysisStateKeys.hostnameTemplate)
+                                                            .expression("${hostnameTemplate}")
+                                                            .metadata(ImmutableMap.of("entityType", "CONFIG"))
+                                                            .build()));
+    when(executionContext.renderExpression("${workflow.variables.hostnameTemplate}")).thenReturn("resolved template");
+
+    final String resolvedFieldValue = abstractAnalysisState.getResolvedFieldValue(
+        executionContext, AbstractAnalysisStateKeys.hostnameTemplate, abstractAnalysisState.getHostnameTemplate());
+    assertThat(resolvedFieldValue).isEqualTo("resolved template");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetResolvedFieldValue_whenExpressionInvalidValue() {
+    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    abstractAnalysisState.setHostnameTemplate("${hostnameTemplate}");
+    when(executionContext.renderExpression("${hostnameTemplate}")).thenReturn("${hostnameTemplate}");
+
+    assertThatThrownBy(()
+                           -> abstractAnalysisState.getResolvedFieldValue(executionContext,
+                               AbstractAnalysisStateKeys.hostnameTemplate, abstractAnalysisState.getHostnameTemplate()))
+        .isInstanceOf(DataCollectionException.class)
+        .hasMessage("Expression ${hostnameTemplate} could not be resolved");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetResolvedFieldValue_whenExpressionValidValue() {
+    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    abstractAnalysisState.setHostnameTemplate("${hostnameTemplate}");
+    when(executionContext.renderExpression("${hostnameTemplate}")).thenReturn("resolved template");
+
+    final String resolvedFieldValue = abstractAnalysisState.getResolvedFieldValue(
+        executionContext, AbstractAnalysisStateKeys.hostnameTemplate, abstractAnalysisState.getHostnameTemplate());
+    assertThat(resolvedFieldValue).isEqualTo("resolved template");
   }
 }
