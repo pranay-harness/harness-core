@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
@@ -15,6 +16,7 @@ import com.google.inject.Inject;
 import io.harness.CategoryTest;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.GeneralException;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
@@ -44,6 +46,7 @@ public class ArtifactStreamPerpetualTaskManagerTest extends CategoryTest {
   private ArtifactStream artifactStream = DockerArtifactStream.builder()
                                               .accountId(ACCOUNT_ID)
                                               .appId(APP_ID)
+                                              .uuid(ARTIFACT_STREAM_ID)
                                               .settingId(SETTING_ID)
                                               .imageName("wingsplugins/todolist")
                                               .autoPopulate(true)
@@ -63,5 +66,19 @@ public class ArtifactStreamPerpetualTaskManagerTest extends CategoryTest {
   public void shouldCreatePerpetualTask() {
     manager.onSaved(artifactStream);
     verify(artifactStreamService).attachPerpetualTaskId(eq(artifactStream), anyString());
+  }
+
+  @Test(expected = GeneralException.class)
+  @Owner(developers = OwnerRule.SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldNotCreatePerpetualTask() {
+    ArtifactStream artifactStream = DockerArtifactStream.builder()
+                                        .accountId(ACCOUNT_ID)
+                                        .appId(APP_ID)
+                                        .settingId(SETTING_ID)
+                                        .imageName("wingsplugins/todolist")
+                                        .serviceId(SERVICE_ID)
+                                        .build();
+    manager.onSaved(artifactStream);
   }
 }

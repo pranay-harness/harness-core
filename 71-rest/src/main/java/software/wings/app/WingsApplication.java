@@ -147,6 +147,7 @@ import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.BarrierServiceImpl;
@@ -156,6 +157,7 @@ import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
+import software.wings.service.impl.artifact.ArtifactStreamPerpetualTaskManager;
 import software.wings.service.impl.event.DeploymentTimeSeriesEventListener;
 import software.wings.service.impl.infrastructuredefinition.InfrastructureDefinitionServiceImpl;
 import software.wings.service.impl.instance.DeploymentEventListener;
@@ -164,6 +166,7 @@ import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.impl.trigger.ScheduleTriggerHandler;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.YamlPushServiceImpl;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
@@ -645,6 +648,10 @@ public class WingsApplication extends Application<MainConfiguration> {
         (ClusterRecordServiceImpl) injector.getInstance(Key.get(ClusterRecordService.class));
     clusterRecordService.getSubject().register(ccmPerpetualTaskHandler);
 
+    ArtifactStreamServiceImpl artifactStreamService =
+        (ArtifactStreamServiceImpl) injector.getInstance(Key.get(ArtifactStreamService.class));
+    artifactStreamService.getSubject().register(
+        injector.getInstance(Key.get(ArtifactStreamPerpetualTaskManager.class)));
     registerSharedObservers(injector);
   }
 
