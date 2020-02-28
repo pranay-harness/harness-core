@@ -1,6 +1,6 @@
 # to be used when building in Jenkins
 FROM harness/serverjre_8:191
-RUN yum install -y hostname tar gzip
+RUN yum install -y hostname tar gzip net-tools traceroute nmap procps
 
 # install yq - a YAML query command line tool
 RUN curl -Lso yq https://github.com/mikefarah/yq/releases/download/2.2.1/yq_linux_amd64
