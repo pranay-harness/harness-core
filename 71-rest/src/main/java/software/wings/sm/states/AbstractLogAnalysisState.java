@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
@@ -529,7 +530,12 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
   }
 
-  public abstract AnalysisTolerance getAnalysisTolerance();
+  public AnalysisTolerance getAnalysisTolerance() {
+    if (isBlank(tolerance)) {
+      return AnalysisTolerance.LOW;
+    }
+    return AnalysisTolerance.valueOf(tolerance);
+  }
 
   public void setAnalysisTolerance(String tolerance) {
     this.tolerance = tolerance;

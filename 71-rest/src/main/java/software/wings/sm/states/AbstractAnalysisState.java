@@ -38,6 +38,7 @@ import io.harness.k8s.model.K8sPod;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.experimental.FieldNameConstants;
 import org.slf4j.Logger;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.DeploymentType;
@@ -134,6 +135,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by rsingh on 7/6/17.
  */
+@FieldNameConstants(innerTypeName = "AbstractAnalysisStateKeys")
 public abstract class AbstractAnalysisState extends State {
   private static final SecureRandom random = new SecureRandom();
 
@@ -212,7 +214,12 @@ public abstract class AbstractAnalysisState extends State {
     this.timeDuration = timeDuration;
   }
 
-  public abstract AnalysisComparisonStrategy getComparisonStrategy();
+  public AnalysisComparisonStrategy getComparisonStrategy() {
+    if (isBlank(comparisonStrategy)) {
+      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+    }
+    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
+  }
 
   public void setComparisonStrategy(String comparisonStrategy) {
     this.comparisonStrategy = comparisonStrategy;
@@ -1159,6 +1166,32 @@ public abstract class AbstractAnalysisState extends State {
       }
 
       return settingAttribute.getUuid();
+    }
+
+    return fieldValue;
+  }
+
+  protected String getResolvedFieldValue(ExecutionContext context, String fieldName, String fieldValue) {
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression fieldExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), fieldName);
+      if (fieldExpression != null) {
+        final String resolveTemplateExpression =
+            templateExpressionProcessor.resolveTemplateExpression(context, fieldExpression);
+        if (isExpression(fieldName, resolveTemplateExpression, Collections.emptyList())) {
+          throw new DataCollectionException("Template expression " + fieldValue + " could not be resolved");
+        }
+
+        return resolveTemplateExpression;
+      }
+    }
+
+    if (isExpression(fieldName, fieldValue, getTemplateExpressions())) {
+      final String renderedValue = context.renderExpression(fieldValue);
+      if (isExpression(fieldName, renderedValue, getTemplateExpressions())) {
+        throw new DataCollectionException("Expression " + fieldValue + " could not be resolved");
+      }
+      return renderedValue;
     }
 
     return fieldValue;
