@@ -295,6 +295,10 @@ if [[ "" != "$ALLOW_TRIAL_REGISTRATION" ]]; then
   yq write -i $CONFIG_FILE trialRegistrationAllowed "$ALLOW_TRIAL_REGISTRATION"
 fi
 
+if [[ "" != "$ALLOW_TRIAL_REGISTRATION_FOR_BUGATHON" ]]; then
+  yq write -i $CONFIG_FILE trialRegistrationAllowedForBugathon "$ALLOW_TRIAL_REGISTRATION_FOR_BUGATHON"
+fi
+
 if [[ "" != "$GITHUB_OAUTH_CLIENT" ]]; then
   yq write -i $CONFIG_FILE githubConfig.clientId "$GITHUB_OAUTH_CLIENT"
 fi

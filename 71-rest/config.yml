@@ -44,6 +44,7 @@ serviceScheduler:
 
 enableIterators: true
 trialRegistrationAllowed: true
+trialRegistrationAllowedForBugathon: false
 blacklistedEmailDomainsAllowed: true
 pwnedPasswordsAllowed: true
 executionLogStorageMode: MONGO
