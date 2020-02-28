@@ -5,7 +5,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.INSTANA_DOCKER_PLUGIN;
 import static software.wings.common.VerificationConstants.INSTANA_GROUPBY_TAG_TRACE_NAME;
-import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDERV2;
+import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
@@ -72,7 +72,7 @@ public class InstanaServiceImpl implements InstanaService {
               .plugin(INSTANA_DOCKER_PLUGIN)
               .rollup(60)
               .query(setupTestNodeData.getInfraParams().getQuery().replace(
-                  VERIFICATION_HOST_PLACEHOLDERV2, "\"" + setupTestNodeData.getInstanceName() + "\""))
+                  VERIFICATION_HOST_PLACEHOLDER, "\"" + setupTestNodeData.getInstanceName() + "\""))
               .build();
 
       try {

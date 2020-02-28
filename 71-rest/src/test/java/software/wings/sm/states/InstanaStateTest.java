@@ -4,8 +4,12 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.contains;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
@@ -34,6 +38,8 @@ import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +49,7 @@ import java.util.Optional;
 public class InstanaStateTest extends APMStateVerificationTestBase {
   private InstanaState instanaState;
   private List<InstanaTagFilter> instanaTagFilters;
+  private String analysisServerConfigId;
   @Mock private CVActivityLogService.Logger activityLogger;
   @Mock private MetricDataAnalysisService metricAnalysisService;
 
@@ -51,7 +58,7 @@ public class InstanaStateTest extends APMStateVerificationTestBase {
     setupCommon();
     MockitoAnnotations.initMocks(this);
     setupCommonMocks();
-
+    analysisServerConfigId = generateUuid();
     AppService appService = mock(AppService.class);
     when(appService.getAccountIdByAppId(anyString())).thenReturn(generateUuid());
     when(appService.get(anyString()))
@@ -62,7 +69,7 @@ public class InstanaStateTest extends APMStateVerificationTestBase {
 
     instanaState = new InstanaState("InstanaState");
     InstanaInfraParams infraParams = InstanaInfraParams.builder()
-                                         .query("entity.kubernetes.pod.name:${host.hostName}")
+                                         .query("entity.kubernetes.pod.name:${host}")
                                          .metrics(Lists.newArrayList("cpu.total_usage", "memory.usage"))
                                          .build();
     instanaState.setInfraParams(infraParams);
@@ -75,6 +82,7 @@ public class InstanaStateTest extends APMStateVerificationTestBase {
         InstanaApplicationParams.builder().hostTagFilter("kubernetes.pod.name").tagFilters(instanaTagFilters).build();
     instanaState.setApplicationParams(applicationParams);
     instanaState.setTimeDuration("15");
+    instanaState.setAnalysisServerConfigId(analysisServerConfigId);
     setupCommonFields(instanaState);
     FieldUtils.writeField(instanaState, "accountService", accountService, true);
     FieldUtils.writeField(instanaState, "metricAnalysisService", metricAnalysisService, true);
@@ -160,7 +168,7 @@ public class InstanaStateTest extends APMStateVerificationTestBase {
   public void testValidateConfig_queryShouldContainHostPlaceholder() {
     instanaState.getInfraParams().setQuery("query.withouthostplaceholder");
     String expected = "{\n"
-        + "  \"infraParams.query\": \"query should contain ${host.hostName}\"\n"
+        + "  \"infraParams.query\": \"query should contain ${host}\"\n"
         + "}";
     Map<String, String> errors = instanaState.validateFields();
 
@@ -219,6 +227,13 @@ public class InstanaStateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  public void testIsCVTaskEnqueuingEnabled() {
+    assertThat(instanaState.isCVTaskEnqueuingEnabled(generateUuid())).isTrue();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
   public void testValidateConfig_whenValuesAreValid() {
     assertThat(instanaState.validateFields()).isEmpty();
   }
@@ -226,8 +241,62 @@ public class InstanaStateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testIsCVTaskEnqueuingEnabled() {
-    assertThat(instanaState.isCVTaskEnqueuingEnabled(generateUuid())).isTrue();
+  public void testCreateDataCollectionInfo_resolveExpressionToGetServerConfigId() {
+    instanaState.setAnalysisServerConfigId("${workflow.variables.instana_server}");
+    InstanaState spyState = spy(instanaState);
+    when(spyState.getResolvedConnectorId(
+             any(), eq("analysisServerConfigId"), eq("${workflow.variables.instana_server}")))
+        .thenReturn(analysisServerConfigId);
+
+    Map<String, String> hosts = new HashMap<>();
+    hosts.put("host1", "default");
+    InstanaDataCollectionInfo instanaDataCollectionInfo =
+        (InstanaDataCollectionInfo) spyState.createDataCollectionInfo(executionContext, hosts);
+    assertThat(instanaDataCollectionInfo.getStateType()).isEqualTo(StateType.INSTANA);
+    assertThat(instanaDataCollectionInfo.getInstanaConfig()).isNull();
+    assertThat(instanaDataCollectionInfo.getConnectorId()).isEqualTo(analysisServerConfigId);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateDataCollectionInfo_resolveQueryExpression() {
+    instanaState.getInfraParams().setQuery(
+        "entity.kubernetes.pod.name:${host.hostName} AND entity.kubernetes.cluster.name:${workflow.variables.cluster}");
+    when(executionContext.renderExpression(contains("${workflow.variables.cluster}")))
+        .thenReturn("entity.kubernetes.pod.name:${host.hostName} AND entity.kubernetes.cluster.name:harness");
+    Map<String, String> hosts = new HashMap<>();
+    hosts.put("host1", "default");
+    InstanaDataCollectionInfo instanaDataCollectionInfo =
+        (InstanaDataCollectionInfo) instanaState.createDataCollectionInfo(executionContext, hosts);
+    assertThat(instanaDataCollectionInfo.getStateType()).isEqualTo(StateType.INSTANA);
+    assertThat(instanaDataCollectionInfo.getQuery())
+        .isEqualTo("entity.kubernetes.pod.name:${host.hostName} AND entity.kubernetes.cluster.name:harness");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateDataCollectionInfo_resolveTagFilterValueExpression() {
+    ArrayList<InstanaTagFilter> tagFilters = new ArrayList<>();
+    tagFilters.add(InstanaTagFilter.builder()
+                       .name("service.name")
+                       .operator(InstanaTagFilter.Operator.EQUALS)
+                       .value("${workflow.variables.service_name}")
+                       .build());
+    instanaState.getApplicationParams().setTagFilters(tagFilters);
+    when(executionContext.renderExpression(eq("${workflow.variables.service_name}"))).thenReturn("todolist");
+    Map<String, String> hosts = new HashMap<>();
+    hosts.put("host1", "default");
+    InstanaDataCollectionInfo instanaDataCollectionInfo =
+        (InstanaDataCollectionInfo) instanaState.createDataCollectionInfo(executionContext, hosts);
+    assertThat(instanaDataCollectionInfo.getStateType()).isEqualTo(StateType.INSTANA);
+    assertThat(instanaDataCollectionInfo.getTagFilters())
+        .isEqualTo(Arrays.asList(InstanaTagFilter.builder()
+                                     .name("service.name")
+                                     .operator(InstanaTagFilter.Operator.EQUALS)
+                                     .value("todolist")
+                                     .build()));
   }
 
   @Test
