@@ -7,6 +7,7 @@ import io.harness.artifact.ArtifactCollectionPTaskClientParams;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
+import io.harness.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -21,8 +22,9 @@ public class ArtifactStreamPerpetualTaskManager implements ArtifactStreamService
   @Override
   public void onSaved(ArtifactStream artifactStream) {
     PerpetualTaskServiceClient client = clientRegistry.getClient(PerpetualTaskType.ARTIFACT_COLLECTION);
+    Validator.notNullCheck("Artifact StremId is missing", artifactStream.getUuid());
     ArtifactCollectionPTaskClientParams artifactCollectionPTaskClientParams =
-        ArtifactCollectionPTaskClientParams.builder().artifactStreamId(artifactStream.getArtifactStreamId()).build();
+        ArtifactCollectionPTaskClientParams.builder().artifactStreamId(artifactStream.getUuid()).build();
     logger.info("Creating Perpetual Task for artifactStreamId [{}] of accountId [{}]", artifactStream.getUuid(),
         artifactStream.getAccountId());
     String watcherTaskId = client.create(artifactStream.getAccountId(), artifactCollectionPTaskClientParams);

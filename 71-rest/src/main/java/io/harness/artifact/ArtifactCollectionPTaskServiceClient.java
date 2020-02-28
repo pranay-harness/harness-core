@@ -1,9 +1,12 @@
 package io.harness.artifact;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
+import io.harness.exception.InvalidRequestException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -24,6 +27,10 @@ public class ArtifactCollectionPTaskServiceClient
   @Override
   public String create(String accountId, ArtifactCollectionPTaskClientParams clientParams) {
     Map<String, String> clientParamMap = new HashMap<>();
+    if (isEmpty(clientParams.getArtifactStreamId())) {
+      throw new InvalidRequestException(
+          "Failed to create Perpetual Task as Artifact Stream Id is missing from clientParams");
+    }
     clientParamMap.put(ARTIFACT_STREAM_ID, clientParams.getArtifactStreamId());
 
     PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(clientParamMap);

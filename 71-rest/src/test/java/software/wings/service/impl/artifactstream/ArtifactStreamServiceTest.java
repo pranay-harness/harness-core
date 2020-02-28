@@ -54,6 +54,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.observer.Subject;
 import io.harness.rule.Owner;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -107,6 +108,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.artifact.ArtifactStreamServiceObserver;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ArtifactType;
@@ -144,6 +146,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private TemplateService templateService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AlertService alertService;
+  @Mock private Subject<ArtifactStreamServiceObserver> subject;
 
   @Before
   public void setUp() {
@@ -1782,7 +1785,10 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .autoPopulate(true)
                                                     .serviceId(SERVICE_ID)
                                                     .build();
-    validateDockerArtifactStream(dockerArtifactStream, APP_ID);
+    ArtifactStream savedArtifactSteam = createArtifactStream(dockerArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertDockerArtifactStream(savedArtifactSteam, APP_ID);
+    verify(buildSourceService).validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
 
   @Test
@@ -1796,11 +1802,13 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .imageName("wingsplugins/todolist")
                                                     .autoPopulate(true)
                                                     .build();
-    validateDockerArtifactStream(dockerArtifactStream, GLOBAL_APP_ID);
+    ArtifactStream savedArtifactSteam = createArtifactStream(dockerArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertDockerArtifactStream(savedArtifactSteam, GLOBAL_APP_ID);
+    verify(buildSourceService).validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
 
-  private void validateDockerArtifactStream(DockerArtifactStream dockerArtifactStream, String appId) {
-    ArtifactStream savedArtifactSteam = createArtifactStream(dockerArtifactStream);
+  private void assertDockerArtifactStream(ArtifactStream savedArtifactSteam, String appId) {
     assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
@@ -1814,8 +1822,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactSteam.getCollectionStatus()).isEqualTo(UNSTABLE.name());
     DockerArtifactStream savedDockerArtifactStream = (DockerArtifactStream) savedArtifactSteam;
     assertThat(savedDockerArtifactStream.getImageName()).isEqualTo("wingsplugins/todolist");
-
-    verify(buildSourceService).validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
 
   @Test
@@ -3533,11 +3539,31 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .autoPopulate(true)
                                                     .serviceId(SERVICE_ID)
                                                     .build();
-    validateDockerArtifactStream(dockerArtifactStream, APP_ID);
+    ArtifactStream savedArtifactSteam = createArtifactStream(dockerArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertDockerArtifactStream(dockerArtifactStream, APP_ID);
 
     ArtifactStream savedArtifactStream = artifactStreamService.get(dockerArtifactStream.getUuid());
     assertThat(artifactStreamService.attachPerpetualTaskId(savedArtifactStream, "PERPETUAL_TASK_ID")).isTrue();
     assertThat(artifactStreamService.get(dockerArtifactStream.getUuid()).getPerpetualTaskIds())
         .contains("PERPETUAL_TASK_ID");
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldCreatePerpetualTask() {
+    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .imageName("wingsplugins/todolist")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .build();
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, ACCOUNT_ID)).thenReturn(true);
+    ArtifactStream savedArtifactStream = createArtifactStream(dockerArtifactStream);
+    assertThat(savedArtifactStream).isNotNull();
+    verify(subject).fireInform(any(), any());
   }
 }

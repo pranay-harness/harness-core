@@ -457,6 +457,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
           AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_STREAM_ADDED).build(), true, true);
     }
 
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, accountId)) {
+      createPerpetualTask(artifactStream);
+    }
+
     return get(id);
   }
 
@@ -465,6 +469,14 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     String appId = artifactStream.fetchAppId();
     if (appId == null || appId.equals(GLOBAL_APP_ID)) {
       artifactStream.setServiceId(artifactStream.getSettingId());
+    }
+  }
+
+  private void createPerpetualTask(ArtifactStream artifactStream) {
+    try {
+      subject.fireInform(ArtifactStreamServiceObxxxxxxxx:onSaved, artifactStream);
+    } catch (Exception e) {
+      logger.error("Encountered exception while informing the observers of Artifact Stream", e);
     }
   }
 
