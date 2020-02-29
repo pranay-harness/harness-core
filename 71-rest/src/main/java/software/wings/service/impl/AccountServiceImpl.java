@@ -104,6 +104,7 @@ import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapSettings.LdapSettingsKeys;
 import software.wings.beans.sso.OauthSettings;
+import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
@@ -200,7 +201,7 @@ public class AccountServiceImpl implements AccountService {
   private static final String APP_ID = "appId";
 
   private static Set<Class<? extends PersistentEntity>> seperateDeletionEntities =
-      new HashSet<>(Arrays.asList(Account.class, User.class));
+      new HashSet<>(Arrays.asList(Account.class, User.class, SSOSettings.class));
 
   @Inject protected AuthService authService;
   @Inject protected CacheManager cacheManager;
@@ -497,6 +498,7 @@ public class AccountServiceImpl implements AccountService {
     if (get(accountId) == null) {
       throw new InvalidRequestException("The account to be deleted doesn't exist");
     }
+
     Set<Class<? extends PersistentEntity>> toBeExported = findExportableEntityTypes();
     logger.info("The exportable entities are {}", toBeExported);
 
@@ -515,6 +517,7 @@ public class AccountServiceImpl implements AccountService {
     if (!users.isEmpty()) {
       users.forEach(user -> userService.delete(accountId, user.getUuid()));
     }
+    ssoSettingService.deleteByAccountId(accountId);
     return wingsPersistence.delete(Account.class, accountId);
   }
 
