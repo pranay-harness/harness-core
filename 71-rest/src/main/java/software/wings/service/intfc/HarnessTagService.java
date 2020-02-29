@@ -38,7 +38,9 @@ public interface HarnessTagService {
   PageResponse<HarnessTag> listTagsWithInUseValues(PageRequest<HarnessTag> request);
   List<HarnessTag> listTags(String accountId);
   HarnessTag createTag(HarnessTag tag, boolean syncFromGit, boolean allowSystemTagCreate);
+  HarnessTag createTag(HarnessTag tag, boolean syncFromGit, boolean allowSystemTagCreate, boolean allowExpressions);
   HarnessTag updateTag(HarnessTag tag, boolean syncFromGit);
+  HarnessTag updateTag(HarnessTag tag, boolean syncFromGit, boolean allowExpressions);
   void deleteTag(@NotBlank String accountId, @NotBlank String key, boolean syncFromGit);
 
   void validateTagResourceAccess(String appId, String accountId, String entityId, EntityType entityType, Action action);
