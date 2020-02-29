@@ -67,6 +67,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Role;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.StringValue.Builder;
@@ -945,11 +946,26 @@ public class AccountServiceTest extends WingsBaseTest {
                     .accounts(Arrays.asList(account))
                     .build();
 
+    Application application = Application.Builder.anApplication()
+                                  .createdAt(1L)
+                                  .appId(appId)
+                                  .accountId(accountId)
+                                  .uuid(appId)
+                                  .name("app_name")
+                                  .build();
+
+    ServiceTemplate serviceTemplate = ServiceTemplate.Builder.aServiceTemplate()
+                                          .withName("service_template")
+                                          .withAppId(application.getUuid())
+                                          .build();
+
     wingsPersistence.save(account);
+    wingsPersistence.save(application);
+    wingsPersistence.save(serviceTemplate);
 
     when(userService.getUsersOfAccount(accountId)).thenReturn(Arrays.asList(user));
     boolean deleted = accountService.deleteExportableAccountData(accountId);
     assertThat(deleted).isTrue();
-    wingsPersistence.delete(account);
+    assertThat(wingsPersistence.get(Account.class, account.getUuid())).isNull();
   }
 }
