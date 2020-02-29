@@ -69,7 +69,6 @@ import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -89,12 +88,10 @@ import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
-import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
-import software.wings.beans.Schema;
 import software.wings.beans.Service;
 import software.wings.beans.SubdomainUrl;
 import software.wings.beans.SystemCatalog;
@@ -128,7 +125,6 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.authentication.AccountSettingsResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.OauthProviderType;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.event.AccountEntityEvent;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -201,12 +197,10 @@ public class AccountServiceImpl implements AccountService {
   private static final String SAMPLE_DELEGATE_STATUS_ENDPOINT_FORMAT_STRING = "http://%s/account-%s.txt";
   private static final String DELIMITER = "####";
   private static final String ACCOUNT_ID = "accountId";
+  private static final String APP_ID = "appId";
 
   private static Set<Class<? extends PersistentEntity>> seperateDeletionEntities =
       new HashSet<>(Arrays.asList(Account.class, User.class));
-
-  private static Set<Class<? extends PersistentEntity>> includedMongoCollections =
-      new HashSet<>(Arrays.asList(Application.class, Schema.class, EncryptedData.class, KmsConfig.class));
 
   @Inject protected AuthService authService;
   @Inject protected CacheManager cacheManager;
@@ -473,14 +467,28 @@ public class AccountServiceImpl implements AccountService {
 
     morphia.getMapper().getMappedClasses().forEach(mc -> {
       Class<? extends PersistentEntity> clazz = (Class<? extends PersistentEntity>) mc.getClazz();
-      if (mc.getEntityAnnotation() != null && isAnnotatedExportable(clazz) && !seperateDeletionEntities.contains(clazz)
-          && !includedMongoCollections.contains(clazz)) {
+      if (mc.getEntityAnnotation() != null && isAnnotatedExportable(clazz)
+          && !seperateDeletionEntities.contains(clazz)) {
         // Find out non-abstract classes with both 'Entity' and 'HarnessEntity' annotation.
         logger.info("Collection '{}' is exportable", clazz.getName());
         toBeExported.add(clazz);
       }
     });
     return toBeExported;
+  }
+
+  private void deleteAppLevelDocuments(String accountId, Class<? extends PersistentEntity> entry) {
+    try (HIterator<Application> applicationsInAccount = new HIterator<>(
+             wingsPersistence.createQuery(Application.class).filter(ApplicationKeys.accountId, accountId).fetch())) {
+      while (applicationsInAccount.hasNext()) {
+        Application application = applicationsInAccount.next();
+        logger.info("Deleting app level documents from collection {} and count of app level records deleted are {}",
+            entry.getName(), wingsPersistence.createQuery(entry).filter(APP_ID, application.getUuid()).count());
+        wingsPersistence.delete(wingsPersistence.createQuery(entry).filter(APP_ID, application.getUuid()));
+      }
+    } catch (Exception e) {
+      logger.error("Issue while deleting app level documents for this collection {}", entry.getName(), e);
+    }
   }
 
   @Override
@@ -491,22 +499,16 @@ public class AccountServiceImpl implements AccountService {
     }
     Set<Class<? extends PersistentEntity>> toBeExported = findExportableEntityTypes();
     logger.info("The exportable entities are {}", toBeExported);
+
     toBeExported.forEach(entry -> {
       try {
-        logger.info("Deleting from collection {} and count of records deleted are {}", entry.getName(),
-            wingsPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId).count());
+        deleteAppLevelDocuments(accountId, entry);
+        logger.info(
+            "Deleting account level documents from collection {} and count of account level records deleted are {}",
+            entry.getName(), wingsPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId).count());
         wingsPersistence.delete(wingsPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId));
-      } catch (ValidationException ve) {
-        logger.error("Issue while deleting this collection {}", entry.getName());
-      }
-    });
-    includedMongoCollections.forEach(entry -> {
-      try {
-        logger.info("Deleting from mongo collection {} and count of records deleted are {}", entry.getName(),
-            wingsPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId).count());
-        wingsPersistence.delete(wingsPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId));
-      } catch (ValidationException ve) {
-        logger.error("Issue while deleting this mongo collection {}", entry.getName());
+      } catch (Exception e) {
+        logger.error("Issue while deleting account level documents this collection {}", entry.getName(), e);
       }
     });
     List<User> users = userService.getUsersOfAccount(accountId);
