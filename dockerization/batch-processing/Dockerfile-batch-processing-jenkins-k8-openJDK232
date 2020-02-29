@@ -1,0 +1,14 @@
+# to be used when building in Jenkins
+FROM us.gcr.io/platform-205701/harness/serverjre_8:232python
+
+# Add the capsule JAR and config.yml
+COPY batch-processing-capsule.jar batch-processing-config.yml  /opt/harness/
+
+COPY scripts /opt/harness
+
+RUN chmod +x /opt/harness/*.sh
+RUN mkdir -p /opt/harness/plugins
+
+WORKDIR /opt/harness
+
+CMD [ "./run.sh" ]

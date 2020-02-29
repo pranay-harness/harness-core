@@ -1,0 +1,20 @@
+# to be used when building in Jenkins
+FROM ubuntu:18.04
+
+RUN apt-get update && apt-get -y upgrade && apt-get -y install apt-utils curl unzip apt-transport-https gnupg2
+
+RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+
+COPY dockerization/delegate/apt-source-list /etc/apt/sources.list.d/kubernetes.list
+
+RUN apt-get update && apt-get install -y kubectl
+
+COPY dockerization/delegate/scripts /opt/harness-delegate/
+
+RUN chmod +x /opt/harness-delegate/*.sh
+
+WORKDIR /opt/harness-delegate
+
+RUN curl -s https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u232/OpenJDK8U-jre_x64_linux_8u232b09.tar.gz | tar -xz
+
+CMD ./start.sh && bash -c 'while [[ ! -e delegate.log ]]; do sleep 10s; done && tail -F delegate.log'
