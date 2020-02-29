@@ -7,6 +7,7 @@ import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -460,5 +461,52 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     assertThat(serviceTemplate.equals(serviceTemplate2)).isFalse();
     serviceTemplate2.setHelmChartOverride(helmManifest);
     assertThat(serviceTemplate.equals(serviceTemplate2)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetOrCreateAlreadyExists() {
+    ServiceTemplate serviceTemplate = aServiceTemplate().build();
+    when(query.get()).thenReturn(serviceTemplate);
+    assertThat(templateService.getOrCreate(APP_ID, SERVICE_ID, ENV_ID)).isEqualTo(serviceTemplate);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetOrCreateInvalidService() {
+    when(query.get()).thenReturn(null);
+    when(serviceResourceService.getName(APP_ID, SERVICE_ID)).thenReturn(null);
+    when(environmentService.exist(APP_ID, ENV_ID)).thenReturn(true);
+    assertThat(templateService.getOrCreate(APP_ID, SERVICE_ID, ENV_ID)).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetOrCreateInvalidEnv() {
+    when(query.get()).thenReturn(null);
+    when(serviceResourceService.getName(APP_ID, SERVICE_ID)).thenReturn(SERVICE_NAME);
+    when(environmentService.exist(APP_ID, ENV_ID)).thenReturn(false);
+    assertThat(templateService.getOrCreate(APP_ID, SERVICE_ID, ENV_ID)).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetOrCreate() {
+    when(query.get()).thenReturn(null);
+    when(serviceResourceService.getName(APP_ID, SERVICE_ID)).thenReturn(SERVICE_NAME);
+    when(environmentService.exist(APP_ID, ENV_ID)).thenReturn(true);
+    when(wingsPersistence.saveAndGet(eq(ServiceTemplate.class), any(ServiceTemplate.class)))
+        .thenAnswer(invocation -> invocation.getArgumentAt(1, ServiceTemplate.class));
+    ServiceTemplate serviceTemplate = templateService.getOrCreate(APP_ID, SERVICE_ID, ENV_ID);
+    assertThat(serviceTemplate).isNotNull();
+    assertThat(serviceTemplate.getAppId()).isEqualTo(APP_ID);
+    assertThat(serviceTemplate.getServiceId()).isEqualTo(SERVICE_ID);
+    assertThat(serviceTemplate.getEnvId()).isEqualTo(ENV_ID);
+    assertThat(serviceTemplate.getName()).isEqualTo(SERVICE_NAME);
+    assertThat(serviceTemplate.isDefaultServiceTemplate()).isTrue();
   }
 }

@@ -334,6 +334,30 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
+  public ServiceTemplate getOrCreate(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String envId) {
+    // NOTE: This function is a workaround for the case where some service templates were not created properly. So
+    // before critical operations that require a service template, we try to fetch a service template and if it's not
+    // present we create one and return that.
+    ServiceTemplate serviceTemplate = get(appId, serviceId, envId);
+    if (serviceTemplate != null) {
+      return serviceTemplate;
+    }
+
+    String serviceName = serviceResourceService.getName(appId, serviceId);
+    if (serviceName == null || !environmentService.exist(appId, envId)) {
+      return null;
+    }
+
+    return save(aServiceTemplate()
+                    .withAppId(appId)
+                    .withEnvId(envId)
+                    .withServiceId(serviceId)
+                    .withName(serviceName)
+                    .withDefaultServiceTemplate(true)
+                    .build());
+  }
+
+  @Override
   public List<Key<ServiceTemplate>> getTemplateRefKeysByService(String appId, String serviceId, String envId) {
     Query<ServiceTemplate> templateQuery = wingsPersistence.createQuery(ServiceTemplate.class)
                                                .filter(ServiceTemplate.APP_ID_KEY, appId)
