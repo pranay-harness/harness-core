@@ -31,6 +31,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
+import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.template.TemplateService;
@@ -122,6 +123,9 @@ public class WorkflowServiceTemplateHelper {
   }
 
   public void updateLinkedPhaseStepTemplate(PhaseStep phaseStep, PhaseStep oldPhaseStep, boolean fromYaml) {
+    if (phaseStep != null) {
+      StepSkipStrategy.validateStepSkipStrategies(phaseStep.getStepSkipStrategies());
+    }
     if (phaseStep != null && phaseStep.getSteps() != null) {
       phaseStep.getSteps().stream().filter(step -> step.getTemplateUuid() != null).forEach((GraphNode step) -> {
         GraphNode oldTemplateStep = null;

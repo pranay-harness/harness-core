@@ -26,15 +26,19 @@ import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.container.EcsServiceSpecification.ECS_REPLICA_SCHEDULING_STRATEGY;
+import static software.wings.beans.workflow.StepSkipStrategy.Scope.ALL_STEPS;
+import static software.wings.beans.workflow.StepSkipStrategy.Scope.SPECIFIC_STEPS;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_DAEMON_SCHEDULING_STRATEGY;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
@@ -79,7 +83,9 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
@@ -92,6 +98,7 @@ import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.container.EcsServiceSpecification;
+import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
@@ -1092,6 +1099,115 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     k8sService.setK8sV2(false);
 
     assertThat(workflowServiceHelper.isK8sV2Service(APP_ID, SERVICE_ID)).isFalse();
+  }
+
+  @Test(expected = Test.None.class)
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testCleanupEmptyStepSkipStrategies() {
+    // null phase step.
+    WorkflowServiceHelper.cleanupStepSkipStrategies(null);
+    // empty step skip strategies.
+    WorkflowServiceHelper.cleanupStepSkipStrategies(aPhaseStep(PRE_DEPLOYMENT).build());
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testCleanupStepSkipStrategies() {
+    StepSkipStrategy strategy1 = new StepSkipStrategy(SPECIFIC_STEPS, singletonList("id1"), "true");
+    StepSkipStrategy strategy2 = new StepSkipStrategy(SPECIFIC_STEPS, singletonList("id2"), "true");
+    StepSkipStrategy strategy3 = new StepSkipStrategy(SPECIFIC_STEPS, asList("id1", "id2"), "true");
+    PhaseStep phaseStep = aPhaseStep(PRE_DEPLOYMENT).withStepSkipStrategies(singletonList(strategy1)).build();
+
+    WorkflowServiceHelper.cleanupStepSkipStrategies(phaseStep);
+    assertThat(phaseStep.getStepSkipStrategies()).isNullOrEmpty();
+
+    StepSkipStrategy strategy4 = new StepSkipStrategy(ALL_STEPS, null, "true");
+    phaseStep.setStepSkipStrategies(singletonList(strategy4));
+    WorkflowServiceHelper.cleanupStepSkipStrategies(phaseStep);
+    assertThat(phaseStep.getStepSkipStrategies()).isNotEmpty();
+
+    phaseStep.setSteps(asList(prepareGraphNode(2), prepareGraphNode(3)));
+    phaseStep.setStepSkipStrategies(singletonList(strategy1));
+    WorkflowServiceHelper.cleanupStepSkipStrategies(phaseStep);
+    assertThat(phaseStep.getStepSkipStrategies()).isNullOrEmpty();
+
+    phaseStep.setStepSkipStrategies(singletonList(strategy2));
+    WorkflowServiceHelper.cleanupStepSkipStrategies(phaseStep);
+    assertThat(phaseStep.getStepSkipStrategies()).isNotEmpty();
+
+    phaseStep.setStepSkipStrategies(singletonList(strategy3));
+    WorkflowServiceHelper.cleanupStepSkipStrategies(phaseStep);
+    assertThat(phaseStep.getStepSkipStrategies()).isNotEmpty();
+    assertThat(phaseStep.getStepSkipStrategies().size()).isEqualTo(1);
+
+    StepSkipStrategy finalStrategy = phaseStep.getStepSkipStrategies().get(0);
+    assertThat(finalStrategy.getScope()).isEqualTo(SPECIFIC_STEPS);
+    assertThat(finalStrategy.getStepIds()).containsExactly("id2");
+  }
+
+  private GraphNode prepareGraphNode(int idx) {
+    return GraphNode.builder().id("id" + idx).build();
+  }
+
+  @Test(expected = Test.None.class)
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testCleanupEmptyPhaseStepSkipStrategies() {
+    // null phase.
+    WorkflowServiceHelper.cleanupPhaseStepSkipStrategies(null);
+    // empty step skip strategies.
+    WorkflowServiceHelper.cleanupPhaseStepSkipStrategies(aWorkflowPhase().build());
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testCleanupPhaseStepSkipStrategies() {
+    PhaseStep phaseStep =
+        aPhaseStep(PRE_DEPLOYMENT)
+            .addStep(prepareGraphNode(2))
+            .addStep(prepareGraphNode(3))
+            .withStepSkipStrategies(singletonList(new StepSkipStrategy(SPECIFIC_STEPS, asList("id1", "id2"), "true")))
+            .build();
+    WorkflowPhase phase = aWorkflowPhase().phaseSteps(singletonList(phaseStep)).build();
+    WorkflowServiceHelper.cleanupPhaseStepSkipStrategies(phase);
+    assertThat(phaseStep.getStepSkipStrategies()).isNotEmpty();
+
+    StepSkipStrategy finalStrategy = phaseStep.getStepSkipStrategies().get(0);
+    assertThat(finalStrategy.getScope()).isEqualTo(SPECIFIC_STEPS);
+    assertThat(finalStrategy.getStepIds()).containsExactly("id2");
+  }
+
+  @Test(expected = Test.None.class)
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testCleanupEmptyWorkflowStepSkipStrategies() {
+    // null phase.
+    WorkflowServiceHelper.cleanupWorkflowStepSkipStrategies(null);
+    // empty step skip strategies.
+    WorkflowServiceHelper.cleanupWorkflowStepSkipStrategies(aCanaryOrchestrationWorkflow().build());
+  }
+
+  @Test(expected = Test.None.class)
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testCleanupWorkflowStepSkipStrategies() {
+    PhaseStep phaseStep =
+        aPhaseStep(PRE_DEPLOYMENT)
+            .addStep(prepareGraphNode(2))
+            .addStep(prepareGraphNode(3))
+            .withStepSkipStrategies(singletonList(new StepSkipStrategy(SPECIFIC_STEPS, asList("id1", "id2"), "true")))
+            .build();
+    WorkflowPhase phase = aWorkflowPhase().phaseSteps(singletonList(phaseStep)).build();
+    OrchestrationWorkflow orchestrationWorkflow = aCanaryOrchestrationWorkflow().addWorkflowPhase(phase).build();
+    WorkflowServiceHelper.cleanupWorkflowStepSkipStrategies(orchestrationWorkflow);
+    assertThat(phaseStep.getStepSkipStrategies()).isNotEmpty();
+
+    StepSkipStrategy finalStrategy = phaseStep.getStepSkipStrategies().get(0);
+    assertThat(finalStrategy.getScope()).isEqualTo(SPECIFIC_STEPS);
+    assertThat(finalStrategy.getStepIds()).containsExactly("id2");
   }
 
   private void verifyPhase(WorkflowPhase workflowPhase, List<String> expectedNames, int stepCount) {

@@ -86,6 +86,7 @@ import software.wings.api.ServiceNowExecutionData;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.SimpleWorkflowParam;
+import software.wings.api.SkipStateExecutionData;
 import software.wings.api.SpotinstAmiDeploymentInfo;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
@@ -1011,6 +1012,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.ElbStateExecutionData", ElbStateExecutionData.class);
     w.put("api.EmailStateExecutionData", EmailStateExecutionData.class);
     w.put("api.EnvStateExecutionData", EnvStateExecutionData.class);
+    w.put("api.SkipStateExecutionData", SkipStateExecutionData.class);
     w.put("api.ForkElement", ForkElement.class);
     w.put("api.HelmDeployContextElement", HelmDeployContextElement.class);
     w.put("api.HelmDeployStateExecutionData", HelmDeployStateExecutionData.class);

@@ -31,6 +31,6 @@ public class RollingWorkflowYaml extends WorkflowYaml {
       List<VariableYaml> userVariables, String concurrencyStrategy) {
     super(type, harnessApiVersion, description, templateExpressions, envName, templatized, preDeploymentSteps, phases,
         rollbackPhases, postDeploymentSteps, notificationRules, failureStrategies, userVariables, concurrencyStrategy,
-        null, null);
+        null, null, null, null);
   }
 }

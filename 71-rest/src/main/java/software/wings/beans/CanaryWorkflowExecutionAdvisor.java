@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.STARTING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -24,15 +25,18 @@ import static software.wings.sm.StateType.SUB_WORKFLOW;
 import static software.wings.sm.rollback.RollbackStateMachineGenerator.STAGING_PHASE_NAME;
 import static software.wings.sm.rollback.RollbackStateMachineGenerator.WHITE_SPACE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PhaseElement;
+import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
@@ -223,6 +227,9 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           && ((PhaseStepSubWorkflow) state).getPhaseStepType() == PRE_DEPLOYMENT
           && executionEvent.getExecutionStatus() == FAILED) {
         return getRollbackProvisionerAdviceIfNeeded(orchestrationWorkflow.getPreDeploymentSteps());
+      } else if (executionEvent.getExecutionStatus() == STARTING) {
+        PhaseStep phaseStep = findPhaseStep(orchestrationWorkflow, phaseElement, state);
+        return shouldSkipStep(context, phaseStep, state);
       } else if (!(executionEvent.getExecutionStatus() == FAILED || executionEvent.getExecutionStatus() == ERROR)) {
         return null;
       }
@@ -278,26 +285,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       }
 
       if (state.getParentId() != null) {
-        PhaseStep phaseStep = null;
-        if (state.getParentId().equals(orchestrationWorkflow.getPreDeploymentSteps().getUuid())) {
-          phaseStep = orchestrationWorkflow.getPreDeploymentSteps();
-        } else if (orchestrationWorkflow.getRollbackProvisioners() != null
-            && state.getParentId().equals(orchestrationWorkflow.getRollbackProvisioners().getUuid())) {
-          phaseStep = orchestrationWorkflow.getRollbackProvisioners();
-        } else if (state.getParentId().equals(orchestrationWorkflow.getPostDeploymentSteps().getUuid())) {
-          phaseStep = orchestrationWorkflow.getPostDeploymentSteps();
-        } else {
-          WorkflowPhase phase = orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseElement.getUuid());
-          if (phase != null) {
-            Optional<PhaseStep> phaseStep1 = phase.getPhaseSteps()
-                                                 .stream()
-                                                 .filter(ps -> ps != null && state.getParentId().equals(ps.getUuid()))
-                                                 .findFirst();
-            if (phaseStep1.isPresent()) {
-              phaseStep = phaseStep1.get();
-            }
-          }
-        }
+        PhaseStep phaseStep = findPhaseStep(orchestrationWorkflow, phaseElement, state);
         if (phaseStep != null && isNotEmpty(phaseStep.getFailureStrategies())) {
           FailureStrategy failureStrategy = selectTopMatchingStrategy(
               phaseStep.getFailureStrategies(), executionEvent.getFailureTypes(), state.getName());
@@ -322,6 +310,99 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             workflowExecution.getUuid(), ex);
       }
     }
+  }
+
+  @VisibleForTesting
+  public static PhaseStep findPhaseStep(
+      CanaryOrchestrationWorkflow orchestrationWorkflow, PhaseElement phaseElement, State state) {
+    if (orchestrationWorkflow == null || state.getParentId() == null || REPEAT.name().equals(state.getStateType())
+        || FORK.name().equals(state.getStateType())) {
+      return null;
+    }
+
+    if (state.getParentId().equals(orchestrationWorkflow.getPreDeploymentSteps().getUuid())) {
+      return orchestrationWorkflow.getPreDeploymentSteps();
+    } else if (orchestrationWorkflow.getRollbackProvisioners() != null
+        && state.getParentId().equals(orchestrationWorkflow.getRollbackProvisioners().getUuid())) {
+      return orchestrationWorkflow.getRollbackProvisioners();
+    } else if (state.getParentId().equals(orchestrationWorkflow.getPostDeploymentSteps().getUuid())) {
+      return orchestrationWorkflow.getPostDeploymentSteps();
+    } else {
+      if (phaseElement == null) {
+        return null;
+      }
+
+      WorkflowPhase phase;
+      if (phaseElement.isRollback()) {
+        phase = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() == null
+            ? null
+            : orchestrationWorkflow.getRollbackWorkflowPhaseIdMap()
+                  .values()
+                  .stream()
+                  .filter(phase1 -> phase1 != null && phase1.getUuid().equals(phaseElement.getUuid()))
+                  .findFirst()
+                  .orElse(null);
+      } else {
+        phase = orchestrationWorkflow.getWorkflowPhaseIdMap() == null
+            ? null
+            : orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseElement.getUuid());
+      }
+
+      if (phase == null || isEmpty(phase.getPhaseSteps())) {
+        return null;
+      }
+
+      Optional<PhaseStep> phaseStepOptional = phase.getPhaseSteps()
+                                                  .stream()
+                                                  .filter(ps -> ps != null && state.getParentId().equals(ps.getUuid()))
+                                                  .findFirst();
+      if (phaseStepOptional.isPresent()) {
+        return phaseStepOptional.get();
+      }
+    }
+
+    return null;
+  }
+
+  @VisibleForTesting
+  public static ExecutionEventAdvice shouldSkipStep(ExecutionContextImpl context, PhaseStep phaseStep, State state) {
+    if (phaseStep == null || isEmpty(phaseStep.getStepSkipStrategies())) {
+      return null;
+    }
+
+    List<StepSkipStrategy> stepSkipStrategies = phaseStep.getStepSkipStrategies();
+    for (StepSkipStrategy strategy : stepSkipStrategies) {
+      String assertionExpression = strategy.getAssertionExpression();
+      if (!strategy.containsStepId(state.getId())) {
+        continue;
+      }
+
+      try {
+        Object resultObj = context.evaluateExpression(assertionExpression);
+        if (!(resultObj instanceof Boolean)) {
+          return anExecutionEventAdvice()
+              .withSkipState(true)
+              .withSkipExpression(assertionExpression)
+              .withSkipError("Error evaluating skip condition: Expression '" + assertionExpression
+                  + "' did not return a boolean value")
+              .build();
+        }
+
+        boolean assertionResult = (boolean) resultObj;
+        if (assertionResult) {
+          return anExecutionEventAdvice().withSkipState(true).withSkipExpression(assertionExpression).build();
+        }
+      } catch (Exception ex) {
+        return anExecutionEventAdvice()
+            .withSkipState(true)
+            .withSkipExpression(assertionExpression)
+            .withSkipError(
+                "Error evaluating skip condition: " + assertionExpression + ": " + ExceptionUtils.getMessage(ex))
+            .build();
+      }
+    }
+
+    return null;
   }
 
   boolean isExecutionHostsPresent(ExecutionContextImpl context) {
@@ -577,6 +658,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     }
     return null;
   }
+
   private ExecutionEventAdvice phaseSubWorkflowAdviceForOthers(CanaryOrchestrationWorkflow orchestrationWorkflow,
       PhaseSubWorkflow phaseSubWorkflow, StateExecutionInstance stateExecutionInstance) {
     if (!phaseSubWorkflow.isRollback()) {

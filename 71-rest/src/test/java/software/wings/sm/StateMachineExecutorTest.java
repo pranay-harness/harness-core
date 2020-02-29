@@ -2,8 +2,10 @@ package software.wings.sm;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.NEW;
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
@@ -43,6 +45,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.SkipStateExecutionData;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
@@ -942,5 +945,26 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(notificationRule.getNotificationGroups().get(0).getName()).isEqualTo(USER_NAME);
     assertThat(notificationRule.getNotificationGroups().get(0).getUuid()).isEqualTo(NOTIFICATION_GROUP_ID);
     assertThat(notificationRule.getNotificationGroups().get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testSkipStateExecutionResponse() {
+    String expr = "${env.name} == \"qa\"";
+    String errorMsg = "skip error msg";
+    ExecutionEventAdvice advice =
+        anExecutionEventAdvice().withSkipState(true).withSkipExpression(expr).withSkipError(errorMsg).build();
+    ExecutionResponse response = StateMachineExecutor.skipStateExecutionResponse(advice);
+    assertThat(response).isNotNull();
+    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThat(((SkipStateExecutionData) response.getStateExecutionData()).getSkipAssertionExpression()).isNull();
+
+    advice.setSkipError(null);
+    response = StateMachineExecutor.skipStateExecutionResponse(advice);
+    assertThat(response).isNotNull();
+    assertThat(response.getExecutionStatus()).isEqualTo(SKIPPED);
+    assertThat(((SkipStateExecutionData) response.getStateExecutionData()).getSkipAssertionExpression())
+        .isEqualTo(expr);
   }
 }

@@ -13,6 +13,9 @@ public class ExecutionEventAdvice {
   private Integer waitInterval;
   private Map<String, Object> stateParams;
   private String rollbackPhaseName;
+  private boolean skipState;
+  private String skipExpression;
+  private String skipError;
 
   public ExecutionInterruptType getExecutionInterruptType() {
     return executionInterruptType;
@@ -70,6 +73,30 @@ public class ExecutionEventAdvice {
     this.rollbackPhaseName = rollbackPhaseName;
   }
 
+  public boolean isSkipState() {
+    return skipState;
+  }
+
+  public void setSkipState(boolean skipState) {
+    this.skipState = skipState;
+  }
+
+  public String getSkipExpression() {
+    return skipExpression;
+  }
+
+  public void setSkipExpression(String skipExpression) {
+    this.skipExpression = skipExpression;
+  }
+
+  public String getSkipError() {
+    return skipError;
+  }
+
+  public void setSkipError(String skipError) {
+    this.skipError = skipError;
+  }
+
   public static final class ExecutionEventAdviceBuilder {
     private ExecutionInterruptType executionInterruptType;
     private String nextStateDisplayName;
@@ -78,6 +105,9 @@ public class ExecutionEventAdvice {
     private Integer waitInterval;
     private Map<String, Object> stateParams;
     private String rollbackPhaseName;
+    private boolean skipState;
+    private String skipExpression;
+    private String skipError;
 
     private ExecutionEventAdviceBuilder() {}
 
@@ -120,6 +150,21 @@ public class ExecutionEventAdvice {
       return this;
     }
 
+    public ExecutionEventAdviceBuilder withSkipState(boolean skipState) {
+      this.skipState = skipState;
+      return this;
+    }
+
+    public ExecutionEventAdviceBuilder withSkipExpression(String skipExpression) {
+      this.skipExpression = skipExpression;
+      return this;
+    }
+
+    public ExecutionEventAdviceBuilder withSkipError(String skipError) {
+      this.skipError = skipError;
+      return this;
+    }
+
     public ExecutionEventAdvice build() {
       ExecutionEventAdvice executionEventAdvice = new ExecutionEventAdvice();
       executionEventAdvice.setExecutionInterruptType(executionInterruptType);
@@ -129,6 +174,9 @@ public class ExecutionEventAdvice {
       executionEventAdvice.setWaitInterval(waitInterval);
       executionEventAdvice.setStateParams(stateParams);
       executionEventAdvice.setRollbackPhaseName(rollbackPhaseName);
+      executionEventAdvice.setSkipState(skipState);
+      executionEventAdvice.setSkipExpression(skipExpression);
+      executionEventAdvice.setSkipError(skipError);
       return executionEventAdvice;
     }
   }

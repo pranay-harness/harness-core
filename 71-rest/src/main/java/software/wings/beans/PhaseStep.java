@@ -26,6 +26,7 @@ import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
+import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.common.Constants;
 import software.wings.sm.StateType;
 import software.wings.sm.TransitionType;
@@ -51,6 +52,7 @@ public class PhaseStep {
   @Transient private List<GraphNode> steps = new ArrayList<>();
   private boolean stepsInParallel;
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
+  private List<StepSkipStrategy> stepSkipStrategies = new ArrayList<>();
 
   private boolean rollback;
   private String phaseStepNameForRollback;
@@ -123,6 +125,14 @@ public class PhaseStep {
 
   public void setFailureStrategies(List<FailureStrategy> failureStrategies) {
     this.failureStrategies = failureStrategies;
+  }
+
+  public List<StepSkipStrategy> getStepSkipStrategies() {
+    return stepSkipStrategies;
+  }
+
+  public void setStepSkipStrategies(List<StepSkipStrategy> stepSkipStrategies) {
+    this.stepSkipStrategies = stepSkipStrategies;
   }
 
   public List<String> getStepsIds() {
@@ -320,6 +330,7 @@ public class PhaseStep {
                                     .withPhaseStepType(stepType)
                                     .withRollback(isRollback())
                                     .withFailureStrategies(getFailureStrategies())
+                                    .withStepSkipStrategies(getStepSkipStrategies())
                                     .withStatusForRollback(getStatusForRollback())
                                     .withStepsInParallel(isStepsInParallel())
                                     .withArtifactNeeded(isArtifactNeeded())
@@ -411,6 +422,7 @@ public class PhaseStep {
     private List<GraphNode> steps = new ArrayList<>();
     private boolean stepsInParallel;
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
+    private List<StepSkipStrategy> stepSkipStrategies = new ArrayList<>();
     private boolean rollback;
     private String phaseStepNameForRollback;
     private ExecutionStatus statusForRollback;
@@ -465,6 +477,11 @@ public class PhaseStep {
       return this;
     }
 
+    public PhaseStepBuilder withStepSkipStrategies(List<StepSkipStrategy> stepSkipStrategies) {
+      this.stepSkipStrategies = stepSkipStrategies;
+      return this;
+    }
+
     public PhaseStepBuilder withRollback(boolean rollback) {
       this.rollback = rollback;
       return this;
@@ -509,6 +526,7 @@ public class PhaseStep {
       phaseStep.setSteps(steps);
       phaseStep.setStepsInParallel(stepsInParallel);
       phaseStep.setFailureStrategies(failureStrategies);
+      phaseStep.setStepSkipStrategies(stepSkipStrategies);
       phaseStep.setRollback(rollback);
       phaseStep.setPhaseStepNameForRollback(phaseStepNameForRollback);
       phaseStep.setStatusForRollback(statusForRollback);
@@ -529,18 +547,21 @@ public class PhaseStep {
     private boolean stepsInParallel;
     private List<StepYaml> steps = new ArrayList<>();
     private List<FailureStrategy.Yaml> failureStrategies = new ArrayList<>();
+    private List<StepSkipStrategy.Yaml> stepSkipStrategies = new ArrayList<>();
     private String phaseStepNameForRollback;
     private Integer waitInterval;
 
     @lombok.Builder
     public Yaml(String type, String name, String statusForRollback, boolean stepsInParallel, List<StepYaml> steps,
-        List<FailureStrategy.Yaml> failureStrategies, String phaseStepNameForRollback, Integer waitInterval) {
+        List<FailureStrategy.Yaml> failureStrategies, List<StepSkipStrategy.Yaml> stepSkipStrategies,
+        String phaseStepNameForRollback, Integer waitInterval) {
       super(type);
       this.name = name;
       this.statusForRollback = statusForRollback;
       this.stepsInParallel = stepsInParallel;
       this.steps = steps;
       this.failureStrategies = failureStrategies;
+      this.stepSkipStrategies = stepSkipStrategies;
       this.phaseStepNameForRollback = phaseStepNameForRollback;
       this.waitInterval = waitInterval;
     }
