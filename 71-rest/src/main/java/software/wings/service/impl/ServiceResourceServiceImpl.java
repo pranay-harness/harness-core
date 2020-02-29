@@ -841,6 +841,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return service;
   }
 
+  @Override
+  public String getName(String appId, String serviceId) {
+    Service service = wingsPersistence.createQuery(Service.class)
+                          .filter(ServiceKeys.appId, appId)
+                          .filter(ServiceKeys.uuid, serviceId)
+                          .project(ServiceKeys.name, true)
+                          .get();
+    return service == null ? null : service.getName();
+  }
+
   private void setServiceDetails(Service service, String appId) {
     service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
     service.setServiceVariables(

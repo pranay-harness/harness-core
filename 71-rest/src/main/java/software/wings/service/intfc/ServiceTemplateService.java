@@ -133,6 +133,8 @@ public interface ServiceTemplateService extends OwnedByEnvironment, OwnedByServi
    */
   ServiceTemplate get(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String environmentId);
 
+  ServiceTemplate getOrCreate(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String environmentId);
+
   /**
    * Create default templates by env.
    *

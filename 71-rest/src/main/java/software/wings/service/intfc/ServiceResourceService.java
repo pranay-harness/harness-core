@@ -119,6 +119,8 @@ public interface ServiceResourceService extends OwnedByApplication {
    */
   Service get(@NotEmpty String appId, @NotEmpty String serviceId, boolean includeCommands);
 
+  String getName(@NotEmpty String appId, @NotEmpty String serviceId);
+
   /**
    * Gets service by name.
    *
