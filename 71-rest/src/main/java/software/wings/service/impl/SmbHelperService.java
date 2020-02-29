@@ -39,8 +39,9 @@ public class SmbHelperService {
   @Inject private EncryptionService encryptionService;
   private String buildNo = "";
 
-  public void checkConnection(software.wings.beans.SmbConfig smbConfig, List<EncryptedDataDetail> encryptionDataDetails)
+  public void checkConnection(software.wings.beans.SmbConfig smbConfig, List<EncryptedDataDetail> encryptionDetails)
       throws IOException {
+    encryptionService.decrypt(smbConfig, encryptionDetails);
     try (SMBClient client = new SMBClient(getSMBConnectionConfig());
          Connection connection = client.connect(getSMBConnectionHost(smbConfig.getSmbUrl()))) {
       AuthenticationContext ac =

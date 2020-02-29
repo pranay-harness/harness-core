@@ -385,13 +385,17 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         String shareUrl = smbHelperService.getSMBConnectionHost(smbConfig.getSmbUrl()) + "\\"
             + smbHelperService.getSharedFolderName(smbConfig.getSmbUrl());
 
-        String artifactFolder = getArtifactFolder(artifactPath, artifactFileName);
+        // Remove trailing slashes from the folder name as the net use command fails with it.
+        String artifactFolder = StringUtils.stripEnd(getArtifactFolder(artifactPath, artifactFileName), "/\\");
         if (!isEmpty(artifactFolder)) {
+          // Make all the slashes as back slashes.
+          artifactFolder = artifactFolder.replace("/", "\\");
           shareUrl = shareUrl + "\\" + artifactFolder;
         }
 
-        String roboCopyCommand = "robocopy \\\\" + shareUrl + " " + getCommandPath() + " " + artifactFileName;
-        command = "net use \\\\" + shareUrl + " " + userPassword + " /persistent:no\n " + roboCopyCommand;
+        String roboCopyCommand =
+            "robocopy \\\\\"" + shareUrl + "\" \"" + getCommandPath() + "\" \"" + artifactFileName + "\"";
+        command = "net use \\\\\"" + shareUrl + "\" " + userPassword + " /persistent:no\n " + roboCopyCommand;
         break;
       default:
         throw new InvalidRequestException("Invalid Script type", USER);
