@@ -329,7 +329,7 @@ public class AccountResource {
     }
   }
 
-  @GET
+  @DELETE
   @Path("export-delete")
   @Timed
   @ExceptionMetered
