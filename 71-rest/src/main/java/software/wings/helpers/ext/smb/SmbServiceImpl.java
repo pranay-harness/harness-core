@@ -45,7 +45,7 @@ public class SmbServiceImpl implements SmbService {
     } catch (SMBApiException SMBe) {
       throw new InvalidArtifactServerException("Invalid Samba Server credentials", SMBe);
     } catch (Exception e) {
-      throw new InvalidArtifactServerException(e.getMessage(), e);
+      throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), e);
     }
     return true;
   }
