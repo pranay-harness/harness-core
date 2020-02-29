@@ -120,6 +120,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.EcsServiceSpecification;
+import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.CloudProviderInfrastructure;
@@ -2590,5 +2591,58 @@ public class WorkflowServiceHelper {
       }
     }
     return new ArrayList<>();
+  }
+
+  public static void cleanupStepSkipStrategies(PhaseStep phaseStep) {
+    if (phaseStep == null || isEmpty(phaseStep.getStepSkipStrategies())) {
+      return;
+    }
+
+    Set<String> stepIds = phaseStep.getSteps() == null
+        ? Collections.emptySet()
+        : phaseStep.getSteps().stream().map(GraphNode::getId).collect(Collectors.toSet());
+    phaseStep.setStepSkipStrategies(
+        phaseStep.getStepSkipStrategies()
+            .stream()
+            .filter(stepSkipStrategy -> {
+              if (stepSkipStrategy.getScope() == StepSkipStrategy.Scope.ALL_STEPS) {
+                return true;
+              }
+
+              if (isNotEmpty(stepSkipStrategy.getStepIds())) {
+                stepSkipStrategy.setStepIds(
+                    stepSkipStrategy.getStepIds().stream().filter(stepIds::contains).collect(toList()));
+              }
+
+              return isNotEmpty(stepSkipStrategy.getStepIds());
+            })
+            .collect(toList()));
+  }
+
+  public static void cleanupPhaseStepSkipStrategies(WorkflowPhase workflowPhase) {
+    if (workflowPhase == null || isEmpty(workflowPhase.getPhaseSteps())) {
+      return;
+    }
+
+    for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
+      cleanupStepSkipStrategies(phaseStep);
+    }
+  }
+
+  public static void cleanupWorkflowStepSkipStrategies(OrchestrationWorkflow orchestrationWorkflow) {
+    if (!(orchestrationWorkflow instanceof CanaryOrchestrationWorkflow)) {
+      return;
+    }
+
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+    cleanupStepSkipStrategies(canaryOrchestrationWorkflow.getPreDeploymentSteps());
+    cleanupStepSkipStrategies(canaryOrchestrationWorkflow.getPostDeploymentSteps());
+    if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
+      return;
+    }
+
+    for (WorkflowPhase workflowPhase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
+      cleanupPhaseStepSkipStrategies(workflowPhase);
+    }
   }
 }

@@ -92,6 +92,7 @@ import software.wings.api.ServiceTemplateElement;
 import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.SimpleWorkflowParam;
+import software.wings.api.SkipStateExecutionData;
 import software.wings.api.SplunkStateExecutionData;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
@@ -1507,5 +1508,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsVPC.class, 7319);
     kryo.register(AwsSubnet.class, 7320);
     kryo.register(AwsSecurityGroup.class, 7321);
+
+    kryo.register(SkipStateExecutionData.class, 7322);
   }
 }

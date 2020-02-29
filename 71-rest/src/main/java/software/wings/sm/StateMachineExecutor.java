@@ -10,6 +10,7 @@ import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.PAUSING;
 import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.STARTING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
@@ -45,6 +46,7 @@ import static software.wings.sm.ExecutionInterruptType.RETRY;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -77,6 +79,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
+import software.wings.api.SkipStateExecutionData;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -493,12 +496,16 @@ public class StateMachineExecutor implements StateInspectionListener {
         MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
       }
       injector.injectMembers(currentState);
-      invokeAdvisors(ExecutionEvent.builder()
-                         .failureTypes(EnumSet.noneOf(FailureType.class))
-                         .context(context)
-                         .state(currentState)
-                         .build());
-      executionResponse = currentState.execute(context);
+      ExecutionEventAdvice executionEventAdvice = invokeAdvisors(ExecutionEvent.builder()
+                                                                     .failureTypes(EnumSet.noneOf(FailureType.class))
+                                                                     .context(context)
+                                                                     .state(currentState)
+                                                                     .build());
+      if (executionEventAdvice != null && executionEventAdvice.isSkipState()) {
+        executionResponse = skipStateExecutionResponse(executionEventAdvice);
+      } else {
+        executionResponse = currentState.execute(context);
+      }
 
       final Map<String, Map<Object, Integer>> usage = context.getVariableResolverTracker().getUsage();
       if (isNotEmpty(usage)) {
@@ -525,6 +532,24 @@ public class StateMachineExecutor implements StateInspectionListener {
     if (ex != null) {
       handleExecuteResponseException(context, ex);
     }
+  }
+
+  @VisibleForTesting
+  public static ExecutionResponse skipStateExecutionResponse(ExecutionEventAdvice executionEventAdvice) {
+    if (isNotEmpty(executionEventAdvice.getSkipError())) {
+      return ExecutionResponse.builder()
+          .executionStatus(FAILED)
+          .errorMessage(executionEventAdvice.getSkipError())
+          .stateExecutionData(SkipStateExecutionData.builder().build())
+          .build();
+    }
+
+    return ExecutionResponse.builder()
+        .executionStatus(SKIPPED)
+        .errorMessage("Skip condition: " + executionEventAdvice.getSkipExpression())
+        .stateExecutionData(
+            SkipStateExecutionData.builder().skipAssertionExpression(executionEventAdvice.getSkipExpression()).build())
+        .build();
   }
 
   private ExecutionEventAdvice invokeAdvisors(ExecutionEvent executionEvent) {
@@ -609,7 +634,7 @@ public class StateMachineExecutor implements StateInspectionListener {
                                                                      .context(context)
                                                                      .state(currentState)
                                                                      .build());
-      if (executionEventAdvice != null) {
+      if (executionEventAdvice != null && !executionEventAdvice.isSkipState()) {
         return handleExecutionEventAdvice(context, stateExecutionInstance, status, executionEventAdvice);
       } else if (isPositiveStatus(status)) {
         return successTransition(context);
@@ -641,6 +666,13 @@ public class StateMachineExecutor implements StateInspectionListener {
   private StateExecutionInstance handleExecutionEventAdvice(ExecutionContextImpl context,
       StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
       ExecutionEventAdvice executionEventAdvice) {
+    // NOTE: Pre-requisites for calling this function:
+    // - executionEventAdvice != null
+    // - !executionEventAdvice.isSkipState()
+    if (executionEventAdvice == null || executionEventAdvice.isSkipState()) {
+      return stateExecutionInstance;
+    }
+
     switch (executionEventAdvice.getExecutionInterruptType()) {
       case MARK_FAILED: {
         return failedTransition(context, null);
@@ -844,7 +876,7 @@ public class StateMachineExecutor implements StateInspectionListener {
                              .context(context)
                              .state(currentState)
                              .build());
-      if (executionEventAdvice != null) {
+      if (executionEventAdvice != null && !executionEventAdvice.isSkipState()) {
         return handleExecutionEventAdvice(context, stateExecutionInstance, FAILED, executionEventAdvice);
       }
     } catch (RuntimeException ex) {

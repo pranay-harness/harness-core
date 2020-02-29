@@ -86,6 +86,7 @@ import software.wings.service.impl.yaml.handler.workflow.FailureStrategyYamlHand
 import software.wings.service.impl.yaml.handler.workflow.PhaseStepYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.PipelineStageYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.PipelineYamlHandler;
+import software.wings.service.impl.yaml.handler.workflow.StepSkipStrategyYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.StepYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowPhaseYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowYamlHandler;
@@ -152,6 +153,7 @@ public class YamlHandlerFactory {
   @Inject private NotificationRulesYamlHandler notificationRulesYamlHandler;
   @Inject private NotificationGroupYamlHandler notificationGroupYamlHandler;
   @Inject private FailureStrategyYamlHandler failureStrategyYamlHandler;
+  @Inject private StepSkipStrategyYamlHandler stepSkipStrategyYamlHandler;
   @Inject private PipelineYamlHandler pipelineYamlHandler;
   @Inject private PipelineStageYamlHandler pipelineStageYamlHandler;
   @Inject private ContainerDefinitionYamlHandler containerDefinitionYamlHandler;
@@ -302,6 +304,9 @@ public class YamlHandlerFactory {
         break;
       case FAILURE_STRATEGY:
         yamlHandler = failureStrategyYamlHandler;
+        break;
+      case STEP_SKIP_STRATEGY:
+        yamlHandler = stepSkipStrategyYamlHandler;
         break;
       case CONTAINER_DEFINITION:
         yamlHandler = containerDefinitionYamlHandler;

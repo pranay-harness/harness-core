@@ -82,6 +82,7 @@ import software.wings.beans.template.Template;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.infra.CloudProviderInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.settings.SettingValue;
@@ -327,6 +328,7 @@ public enum YamlType {
   VARIABLE(ObjectType.VARIABLE, "", "", Variable.class),
   STEP(ObjectType.STEP, "", "", GraphNode.class),
   FAILURE_STRATEGY(ObjectType.FAILURE_STRATEGY, "", "", FailureStrategy.class),
+  STEP_SKIP_STRATEGY(ObjectType.STEP_SKIP_STRATEGY, "", "", StepSkipStrategy.class),
   NOTIFICATION_RULE(ObjectType.NOTIFICATION_RULE, "", "", NotificationRule.class),
   PIPELINE_STAGE(ObjectType.PIPELINE_STAGE, "", "", PipelineStage.class),
   NOTIFICATION_GROUP(ObjectType.NOTIFICATION_GROUP,

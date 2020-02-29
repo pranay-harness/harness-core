@@ -8,6 +8,7 @@ import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.service.impl.yaml.handler.workflow.PhaseStepYamlHandler.PHASE_STEP_PROPERTY_NAME;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -35,6 +36,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowPhase.Yaml;
+import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
@@ -261,6 +263,17 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       preDeploymentSteps.withFailureStrategies(preDeploymentFailureStrategies);
       postDeploymentSteps.withFailureStrategies(postDeploymentFailureStrategies);
 
+      PhaseStep preDeploymentStepsFinal = preDeploymentSteps.build();
+      PhaseStep postDeploymentStepsFinal = postDeploymentSteps.build();
+
+      // Step Skip strategies
+      List<StepSkipStrategy> preDeploymentStepSkipStrategies = getStepSkipStrategiesFromYaml(
+          changeContext, changeContextList, yaml.getPreDeploymentStepSkipStrategy(), preDeploymentStepsFinal);
+      List<StepSkipStrategy> postDeploymentStepSkipStrategies = getStepSkipStrategiesFromYaml(
+          changeContext, changeContextList, yaml.getPostDeploymentStepSkipStrategy(), postDeploymentStepsFinal);
+      preDeploymentStepsFinal.setStepSkipStrategies(preDeploymentStepSkipStrategies);
+      postDeploymentStepsFinal.setStepSkipStrategies(postDeploymentStepSkipStrategies);
+
       // Notification rules
       List<NotificationRule> notificationRules = Lists.newArrayList();
       if (yaml.getNotificationRules() != null) {
@@ -283,8 +296,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       WorkflowInfo workflowInfo = WorkflowInfo.builder()
                                       .failureStrategies(failureStrategies)
                                       .notificationRules(notificationRules)
-                                      .postDeploymentSteps(postDeploymentSteps.build())
-                                      .preDeploymentSteps(preDeploymentSteps.build())
+                                      .postDeploymentSteps(postDeploymentStepsFinal)
+                                      .preDeploymentSteps(preDeploymentStepsFinal)
                                       .rollbackPhaseMap(rollbackPhaseMap)
                                       .userVariables(userVariables)
                                       .phaseList(phaseList)
@@ -313,7 +326,6 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     }
     FailureStrategyYamlHandler failureStrategyYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY);
-    List<FailureStrategy> failureStrategies;
     return failureStrategyYaml.stream()
         .map(failureStrategy -> {
           try {
@@ -324,6 +336,27 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
           }
         })
         .collect(toList());
+  }
+
+  private List<StepSkipStrategy> getStepSkipStrategiesFromYaml(ChangeContext<Y> changeContext,
+      List<ChangeContext> changeContextList, List<StepSkipStrategy.Yaml> stepSkipStrategyYaml, PhaseStep phaseStep) {
+    if (isEmpty(stepSkipStrategyYaml)) {
+      return emptyList();
+    }
+
+    StepSkipStrategyYamlHandler stepSkipStrategyYamlHandler =
+        yamlHandlerFactory.getYamlHandler(YamlType.STEP_SKIP_STRATEGY);
+    List<StepSkipStrategy> stepSkipStrategies =
+        stepSkipStrategyYaml.stream()
+            .map(stepSkipStrategy -> {
+              ChangeContext<StepSkipStrategy.Yaml> clonedContext =
+                  cloneFileChangeContext(changeContext, stepSkipStrategy).build();
+              clonedContext.getProperties().put(PHASE_STEP_PROPERTY_NAME, phaseStep);
+              return stepSkipStrategyYamlHandler.upsertFromYaml(clonedContext, changeContextList);
+            })
+            .collect(toList());
+    StepSkipStrategy.validateStepSkipStrategies(stepSkipStrategies);
+    return stepSkipStrategies;
   }
 
   private String getPreviousWorkflowPhaseId(String name, Workflow previous) {
@@ -435,6 +468,30 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
             .map(failureStrategy -> failureStrategyYamlHandler.toYaml(failureStrategy, appId))
             .collect(toList());
 
+    // Step Skip Strategy
+    StepSkipStrategyYamlHandler stepSkipStrategyYamlHandler =
+        yamlHandlerFactory.getYamlHandler(YamlType.STEP_SKIP_STRATEGY);
+
+    // Pre Deployment Step Skip Strategy
+    List<StepSkipStrategy.Yaml> preDeploymentStepSkipStrategyYaml =
+        emptyIfNull(orchestrationWorkflow.getPreDeploymentSteps().getStepSkipStrategies())
+            .stream()
+            .map(stepSkipStrategy -> {
+              stepSkipStrategy.setPhaseStep(preDeploymentSteps);
+              return stepSkipStrategyYamlHandler.toYaml(stepSkipStrategy, appId);
+            })
+            .collect(toList());
+
+    // Post Deployment Step Skip Strategy
+    List<StepSkipStrategy.Yaml> postDeploymentStepSkipStrategyYaml =
+        emptyIfNull(orchestrationWorkflow.getPostDeploymentSteps().getStepSkipStrategies())
+            .stream()
+            .map(stepSkipStrategy -> {
+              stepSkipStrategy.setPhaseStep(postDeploymentSteps);
+              return stepSkipStrategyYamlHandler.toYaml(stepSkipStrategy, appId);
+            })
+            .collect(toList());
+
     yaml.setDescription(workflow.getDescription());
     yaml.setEnvName(envName);
     yaml.setTemplateExpressions(templateExprYamlList);
@@ -453,6 +510,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     }
     yaml.setPreDeploymentFailureStrategy(preDeploymentFailureStrategyYaml);
     yaml.setPostDeploymentFailureStrategy(postDeploymentFailureStrategyYaml);
+    yaml.setPreDeploymentStepSkipStrategy(preDeploymentStepSkipStrategyYaml);
+    yaml.setPostDeploymentStepSkipStrategy(postDeploymentStepSkipStrategyYaml);
 
     updateYamlWithAdditionalInfo(workflow, appId, yaml);
   }

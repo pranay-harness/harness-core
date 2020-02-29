@@ -17,6 +17,7 @@ import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStep.Yaml;
 import software.wings.beans.PhaseStepType;
+import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
@@ -25,6 +26,7 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.utils.Utils;
 import software.wings.yaml.workflow.StepYaml;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,6 +34,8 @@ import java.util.List;
  */
 @Singleton
 public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseStep> {
+  public static final String PHASE_STEP_PROPERTY_NAME = "PHASE_STEP";
+
   @Inject YamlHandlerFactory yamlHandlerFactory;
 
   private PhaseStep toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
@@ -83,14 +87,33 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
     }
 
     Boolean isRollback = (Boolean) changeContext.getProperties().get(YamlConstants.IS_ROLLBACK);
-    return phaseStepBuilder.addAllSteps(stepList)
-        .withFailureStrategies(failureStrategies)
-        .withPhaseStepNameForRollback(yaml.getPhaseStepNameForRollback())
-        .withRollback(isRollback)
-        .withStatusForRollback(statusForRollback)
-        .withStepsInParallel(yaml.isStepsInParallel())
-        .withWaitInterval(yaml.getWaitInterval())
-        .build();
+    PhaseStep phaseStep = phaseStepBuilder.addAllSteps(stepList)
+                              .withFailureStrategies(failureStrategies)
+                              .withPhaseStepNameForRollback(yaml.getPhaseStepNameForRollback())
+                              .withRollback(isRollback)
+                              .withStatusForRollback(statusForRollback)
+                              .withStepsInParallel(yaml.isStepsInParallel())
+                              .withWaitInterval(yaml.getWaitInterval())
+                              .build();
+
+    List<StepSkipStrategy> stepSkipStrategies = new ArrayList<>();
+    if (yaml.getStepSkipStrategies() != null) {
+      StepSkipStrategyYamlHandler stepSkipStrategyYamlHandler =
+          yamlHandlerFactory.getYamlHandler(YamlType.STEP_SKIP_STRATEGY);
+      stepSkipStrategies = yaml.getStepSkipStrategies()
+                               .stream()
+                               .map(stepSkipStrategy -> {
+                                 ChangeContext<StepSkipStrategy.Yaml> clonedContext =
+                                     cloneFileChangeContext(changeContext, stepSkipStrategy).build();
+                                 clonedContext.getProperties().put(PHASE_STEP_PROPERTY_NAME, phaseStep);
+                                 return stepSkipStrategyYamlHandler.upsertFromYaml(clonedContext, changeSetContext);
+                               })
+                               .collect(toList());
+    }
+
+    StepSkipStrategy.validateStepSkipStrategies(stepSkipStrategies);
+    phaseStep.setStepSkipStrategies(stepSkipStrategies);
+    return phaseStep;
   }
 
   @Override
@@ -104,6 +127,18 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
             .map(failureStrategy -> failureStrategyYamlHandler.toYaml(failureStrategy, appId))
             .collect(toList());
 
+    // Step skip strategies
+    StepSkipStrategyYamlHandler stepSkipStrategyYamlHandler =
+        yamlHandlerFactory.getYamlHandler(YamlType.STEP_SKIP_STRATEGY);
+    List<StepSkipStrategy> stepSkipStrategies = bean.getStepSkipStrategies();
+    List<StepSkipStrategy.Yaml> stepSkipStrategyYamlList =
+        stepSkipStrategies.stream()
+            .map(stepSkipStrategy -> {
+              stepSkipStrategy.setPhaseStep(bean);
+              return stepSkipStrategyYamlHandler.toYaml(stepSkipStrategy, appId);
+            })
+            .collect(toList());
+
     // Phase steps
     StepYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP);
     List<StepYaml> stepsYamlList =
@@ -111,6 +146,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
 
     return Yaml.builder()
         .failureStrategies(failureStrategyYamlList)
+        .stepSkipStrategies(stepSkipStrategyYamlList)
         .name(bean.getName())
         .phaseStepNameForRollback(bean.getPhaseStepNameForRollback())
         .statusForRollback(bean.getStatusForRollback() != null ? bean.getStatusForRollback().name() : null)
