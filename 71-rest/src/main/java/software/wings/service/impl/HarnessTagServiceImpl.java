@@ -85,6 +85,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
@@ -115,9 +117,17 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       ImmutableSet.of(SERVICE, ENVIRONMENT, WORKFLOW, PROVISIONER, PIPELINE, TRIGGER, APPLICATION);
 
   private static final String ALLOWED_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ /";
+  private static final String ALLOWED_CHARS_WITH_EXPRESSIONS =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ /${}";
   private static final Set<Character> ALLOWED_CHARS_SET = Sets.newHashSet(Lists.charactersOf(ALLOWED_CHARS));
+  private static final Set<Character> ALLOWED_CHARS_SET_WITH_EXPRESSIONS =
+      Sets.newHashSet(Lists.charactersOf(ALLOWED_CHARS_WITH_EXPRESSIONS));
   private static final String SYSTEM_TAG_PREFIX = "system/";
   private static final String HARNESS_TAG_PREFIX = "harness.io/";
+
+  private static final Pattern workflowVariablesPattern = Pattern.compile("\\$\\{workflow\\.variables\\.([^.{}]+)[}]");
+  private static final Pattern appDefaultsPattern = Pattern.compile("\\$\\{app\\.defaults\\.([^.{}]+)[}]");
+  private static final Pattern accountDefaultsPattern = Pattern.compile("\\$\\{account\\.defaults\\.([^.{}]+)[}]");
 
   private static int MAX_TAG_KEY_LENGTH = 128;
   private static int MAX_TAG_VALUE_LENGTH = 256;
@@ -126,7 +136,13 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
   @Override
   public HarnessTag createTag(HarnessTag tag, boolean syncFromGit, boolean allowSystemTagsCreate) {
-    sanitizeAndValidateHarnessTag(tag);
+    return createTag(tag, syncFromGit, allowSystemTagsCreate, false);
+  }
+
+  @Override
+  public HarnessTag createTag(
+      HarnessTag tag, boolean syncFromGit, boolean allowSystemTagsCreate, boolean allowExpressions) {
+    sanitizeAndValidateHarnessTag(tag, allowExpressions);
     validateSystemTagNameCreation(tag, allowSystemTagsCreate);
 
     checkIfTagCanBeCreated(tag);
@@ -159,13 +175,20 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
   @Override
   public HarnessTag create(HarnessTag tag) {
-    return createTag(tag, false, true);
+    return createTag(tag, false, true, false);
   }
 
   @Override
   @RestrictedApi(TagsFeature.class)
   public HarnessTag updateTag(@GetAccountId(HarnessTagAccountIdExtractor.class) HarnessTag tag, boolean syncFromGit) {
-    sanitizeAndValidateHarnessTag(tag);
+    return updateTag(tag, syncFromGit, false);
+  }
+
+  @Override
+  @RestrictedApi(TagsFeature.class)
+  public HarnessTag updateTag(
+      @GetAccountId(HarnessTagAccountIdExtractor.class) HarnessTag tag, boolean syncFromGit, boolean allowExpressions) {
+    sanitizeAndValidateHarnessTag(tag, allowExpressions);
 
     HarnessTag existingTag = get(tag.getAccountId(), tag.getKey());
     if (existingTag == null) {
@@ -194,7 +217,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Override
   @RestrictedApi(TagsFeature.class)
   public HarnessTag update(@GetAccountId(HarnessTagAccountIdExtractor.class) HarnessTag tag) {
-    return updateTag(tag, false);
+    return updateTag(tag, false, false);
   }
 
   private void validateAllowedValuesUpdate(HarnessTag harnessTag) {
@@ -306,7 +329,13 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Override
   public void attachTagWithoutGitPush(HarnessTagLink tagLink) {
     validateAndSanitizeTagLink(tagLink);
-    validateAndCreateTagIfNeeded(tagLink.getAccountId(), tagLink.getKey(), tagLink.getValue());
+    boolean allowExpressions = false;
+    if (featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, tagLink.getAccountId())) {
+      if (tagLink.getEntityType() == WORKFLOW || tagLink.getEntityType() == PIPELINE) {
+        allowExpressions = true;
+      }
+    }
+    validateAndCreateTagIfNeeded(tagLink.getAccountId(), tagLink.getKey(), tagLink.getValue(), allowExpressions);
 
     HarnessTagLink existingTagLink = wingsPersistence.createQuery(HarnessTagLink.class)
                                          .filter(HarnessTagLinkKeys.accountId, tagLink.getAccountId())
@@ -404,19 +433,19 @@ public class HarnessTagServiceImpl implements HarnessTagService {
         appId, tagLink.getAccountId(), tagLink.getEntityId(), tagLink.getEntityType(), Action.UPDATE);
   }
 
-  private void sanitizeAndValidateHarnessTag(HarnessTag tag) {
-    tag.setKey(validateTagKey(tag.getKey()));
+  private void sanitizeAndValidateHarnessTag(HarnessTag tag, boolean allowExpressions) {
+    tag.setKey(validateTagKey(tag.getKey(), allowExpressions));
 
     if (isNotEmpty(tag.getAllowedValues())) {
       Set<String> sanitizedAllowedValues = new HashSet<>();
       for (String value : tag.getAllowedValues()) {
-        sanitizedAllowedValues.add(validateTagValue(value));
+        sanitizedAllowedValues.add(validateTagValue(value, allowExpressions));
       }
       tag.setAllowedValues(sanitizedAllowedValues);
     }
   }
 
-  private String validateTagKey(String key) {
+  private String validateTagKey(String key, boolean allowExpressions) {
     if (isBlank(key)) {
       throw new InvalidRequestException("Tag name cannot be blank");
     }
@@ -426,7 +455,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       throw new InvalidRequestException("Max allowed size for tag name is " + MAX_TAG_KEY_LENGTH);
     }
 
-    validateTagNameValueCharacterSet(trimmedKey);
+    validateTagNameValueCharacterSet(trimmedKey, allowExpressions);
 
     if (trimmedKey.startsWith(HARNESS_TAG_PREFIX)) {
       throw new InvalidRequestException("Unauthorized: harness.io is a reserved Tag name prefix");
@@ -435,7 +464,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     return trimmedKey;
   }
 
-  private String validateTagValue(String value) {
+  private String validateTagValue(String value, boolean allowExpressions) {
     if (value == null) {
       throw new InvalidRequestException("Tag value cannot be null");
     }
@@ -445,21 +474,41 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       throw new InvalidRequestException("Max allowed size for tag value is " + MAX_TAG_VALUE_LENGTH);
     }
 
-    validateTagNameValueCharacterSet(trimmedValue);
+    validateTagNameValueCharacterSet(trimmedValue, allowExpressions);
     return trimmedValue;
   }
 
-  private void validateTagNameValueCharacterSet(String value) {
+  private void validateTagNameValueCharacterSet(String value, boolean allowExpressions) {
     if (isBlank(value)) {
       return;
     }
 
-    if (!ALLOWED_CHARS_SET.containsAll(Lists.charactersOf(value))) {
-      throw new InvalidRequestException("Tag name/value can contain only " + ALLOWED_CHARS);
+    if (allowExpressions) {
+      if (!ALLOWED_CHARS_SET_WITH_EXPRESSIONS.containsAll(Lists.charactersOf(value))) {
+        throw new InvalidRequestException("Tag name/value can contain only " + ALLOWED_CHARS_WITH_EXPRESSIONS);
+      }
+      // allow only workflow variables, app level and account level defaults to be added here
+      validateExpression(value);
+    } else {
+      if (!ALLOWED_CHARS_SET.containsAll(Lists.charactersOf(value))) {
+        throw new InvalidRequestException("Tag name/value can contain only " + ALLOWED_CHARS);
+      }
     }
 
     if (Sets.newHashSet('.', '_', '-', '/').contains(value.charAt(0))) {
       throw new InvalidRequestException("Tag name/value cannot begin with .-_/");
+    }
+  }
+
+  private void validateExpression(String expression) {
+    if (expression.startsWith("${")) {
+      Matcher workflowVariableMatcher = workflowVariablesPattern.matcher(expression);
+      Matcher appDefaultsMatcher = appDefaultsPattern.matcher(expression);
+      Matcher accountDefaultsMatcher = accountDefaultsPattern.matcher(expression);
+      if (!workflowVariableMatcher.matches() && !appDefaultsMatcher.matches() && !accountDefaultsMatcher.matches()) {
+        throw new InvalidRequestException(
+            "Only workflow variables, app defaults and account defaults can be added as expressions");
+      }
     }
   }
 
@@ -474,14 +523,23 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       throw new InvalidRequestException("Tag value cannot be null");
     }
 
-    tagLink.setKey(validateTagKey(tagLink.getKey()));
-    tagLink.setValue(validateTagValue(tagLink.getValue()));
+    boolean allowExpressions = false;
+    if (featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, tagLink.getAccountId())) {
+      if (tagLink.getEntityType() == WORKFLOW || tagLink.getEntityType() == PIPELINE) {
+        allowExpressions = true;
+        if (tagLink.getKey().startsWith("${") && !tagLink.getValue().equals("")) {
+          throw new InvalidRequestException("Tag value should be empty as key contains expression");
+        }
+      }
+    }
+    tagLink.setKey(validateTagKey(tagLink.getKey(), allowExpressions));
+    tagLink.setValue(validateTagValue(tagLink.getValue(), allowExpressions));
   }
 
-  private void validateAndCreateTagIfNeeded(String accountId, String key, String value) {
+  private void validateAndCreateTagIfNeeded(String accountId, String key, String value, boolean allowExpressions) {
     HarnessTag existingTag = get(accountId, key);
     if (existingTag == null) {
-      createTag(HarnessTag.builder().accountId(accountId).key(key).build(), false, false);
+      createTag(HarnessTag.builder().accountId(accountId).key(key).build(), false, false, allowExpressions);
       return;
     }
 

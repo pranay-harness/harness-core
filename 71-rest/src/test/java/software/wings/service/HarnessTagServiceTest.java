@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static junit.framework.TestCase.fail;
@@ -8,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.common.collect.ImmutableSet;
@@ -30,6 +32,7 @@ import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.EntityType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.ResourceLookup;
@@ -37,6 +40,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.EntityNameCache;
 import software.wings.service.impl.HarnessTagServiceImpl;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.utils.WingsTestConstants;
 
@@ -48,6 +52,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
 
   @Mock private MainConfiguration mainConfiguration;
   @Mock private ResourceLookupService resourceLookupService;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock EntityNameCache entityNameCache;
 
   @Inject @InjectMocks @Spy private HarnessTagServiceImpl harnessTagService;
@@ -57,6 +62,8 @@ public class HarnessTagServiceTest extends WingsBaseTest {
 
   private String colorTagKey = "color";
   private HarnessTag colorTag = HarnessTag.builder().accountId(TEST_ACCOUNT_ID).key(colorTagKey).build();
+  private static final String EXPR_FAIL_MESSAGE =
+      "Only workflow variables, app defaults and account defaults can be added as expressions";
 
   @Before
   public void setUp() throws Exception {
@@ -407,6 +414,8 @@ public class HarnessTagServiceTest extends WingsBaseTest {
     testInvalidTagKeyUtil(" tag + key",
         "Tag name/value can contain only abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ /");
     testInvalidTagKeyUtil("harness.io/abc", "Unauthorized: harness.io is a reserved Tag name prefix");
+    testInvalidTagKeyUtil(" ${workflow.variables.tag1}",
+        "Tag name/value can contain only abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ /");
   }
 
   @Test
@@ -432,6 +441,8 @@ public class HarnessTagServiceTest extends WingsBaseTest {
     testInvalidTagValueUtil(" .value", "Tag name/value cannot begin with .-_/");
     testInvalidTagValueUtil(" /value", "Tag name/value cannot begin with .-_/");
     testInvalidTagValueUtil(" tag + key",
+        "Tag name/value can contain only abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ /");
+    testInvalidTagValueUtil("${workflow.variables.tag1}",
         "Tag name/value can contain only abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ /");
   }
 
@@ -559,6 +570,144 @@ public class HarnessTagServiceTest extends WingsBaseTest {
       assertThat(exception.getParams().get("message"))
           .isEqualTo(
               "Allowed values must contain all in used values. Value [red] is missing in current allowed values list");
+    }
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void attachTagWithWorkflowVariableAsKey() {
+    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(TEST_ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .entityId("id")
+                                    .entityType(WORKFLOW)
+                                    .key("${workflow.variables.myVar}")
+                                    .value("")
+                                    .build());
+    HarnessTag savedTag = harnessTagService.get(TEST_ACCOUNT_ID, "${workflow.variables.myVar}");
+    assertThat(savedTag).isNotNull();
+    assertThat(savedTag.getUuid()).isNotEmpty();
+    assertThat(savedTag).hasFieldOrPropertyWithValue("key", "${workflow.variables.myVar}");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void attachTagWithAccountDefaultAsKey() {
+    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(TEST_ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .entityId("id")
+                                    .entityType(WORKFLOW)
+                                    .key("${account.defaults.def1}")
+                                    .value("")
+                                    .build());
+    HarnessTag savedTag = harnessTagService.get(TEST_ACCOUNT_ID, "${account.defaults.def1}");
+    assertThat(savedTag).isNotNull();
+    assertThat(savedTag.getUuid()).isNotEmpty();
+    assertThat(savedTag).hasFieldOrPropertyWithValue("key", "${account.defaults.def1}");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void attachTagWithAppDefaultAsKey() {
+    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(TEST_ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .entityId("id")
+                                    .entityType(WORKFLOW)
+                                    .key("${app.defaults.def1}")
+                                    .value("")
+                                    .build());
+    HarnessTag savedTag = harnessTagService.get(TEST_ACCOUNT_ID, "${app.defaults.def1}");
+    assertThat(savedTag).isNotNull();
+    assertThat(savedTag.getUuid()).isNotEmpty();
+    assertThat(savedTag).hasFieldOrPropertyWithValue("key", "${app.defaults.def1}");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void attachTagWithInvalidExpressionAsKey() {
+    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
+    try {
+      harnessTagService.attachTag(HarnessTagLink.builder()
+                                      .accountId(TEST_ACCOUNT_ID)
+                                      .appId(APP_ID)
+                                      .entityId("id")
+                                      .entityType(WORKFLOW)
+                                      .key("${app.name}")
+                                      .value("")
+                                      .build());
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message")).isEqualTo(EXPR_FAIL_MESSAGE);
+    }
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void attachTagWithExpressionAsKeyAndValueShouldFail() {
+    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
+    try {
+      harnessTagService.attachTag(HarnessTagLink.builder()
+                                      .accountId(TEST_ACCOUNT_ID)
+                                      .appId(APP_ID)
+                                      .entityId("id")
+                                      .entityType(WORKFLOW)
+                                      .key("${workflow.variables.myTag}")
+                                      .value("abc")
+                                      .build());
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message"))
+          .isEqualTo("Tag value should be empty as key contains expression");
+    }
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void attachTagWithWorkflowVariableAsValue() {
+    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(TEST_ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .entityId("id")
+                                    .entityType(WORKFLOW)
+                                    .key("env")
+                                    .value("${workflow.variables.myVar}")
+                                    .build());
+
+    HarnessTag tag = harnessTagService.getTagWithInUseValues(TEST_ACCOUNT_ID, "env");
+    assertThat(tag.getKey()).isEqualTo("env");
+    assertThat(tag.getInUseValues()).containsAll(ImmutableSet.of("${workflow.variables.myVar}"));
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void attachTagWithInvalidCharacterInKey() {
+    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
+    try {
+      harnessTagService.attachTag(HarnessTagLink.builder()
+                                      .accountId(TEST_ACCOUNT_ID)
+                                      .appId(APP_ID)
+                                      .entityId("id")
+                                      .entityType(WORKFLOW)
+                                      .key("env")
+                                      .value("\\sds")
+                                      .build());
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message"))
+          .isEqualTo(
+              "Tag name/value can contain only abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ /$ {}");
     }
   }
 }
