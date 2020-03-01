@@ -168,20 +168,29 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     return data.getEncryptedValue();
   }
 
-  protected VaultConfig getVaultConfig() {
-    return getVaultConfig(generateUuid());
-  }
-
-  protected VaultConfig getVaultConfig(String authToken) {
-    VaultConfig vaultConfig = VaultConfig.builder()
-                                  .vaultUrl("http://127.0.0.1:8200")
-                                  .authToken(authToken)
-                                  .name("myVault")
-                                  .secretEngineVersion(1)
-                                  .build();
+  private VaultConfig getCommonVaultConfig() {
+    VaultConfig vaultConfig =
+        VaultConfig.builder().vaultUrl("http://127.0.0.1:8200").name("myVault").secretEngineVersion(1).build();
     vaultConfig.setDefault(true);
     vaultConfig.setReadOnly(false);
     vaultConfig.setEncryptionType(EncryptionType.VAULT);
+    return vaultConfig;
+  }
+
+  protected VaultConfig getVaultConfigWithAuthToken() {
+    return getVaultConfigWithAuthToken(generateUuid());
+  }
+
+  protected VaultConfig getVaultConfigWithAuthToken(String authToken) {
+    VaultConfig vaultConfig = getCommonVaultConfig();
+    vaultConfig.setAuthToken(authToken);
+    return vaultConfig;
+  }
+
+  protected VaultConfig getVaultConfigWithAppRole(String appRoleId, String secretId) {
+    VaultConfig vaultConfig = getCommonVaultConfig();
+    vaultConfig.setAppRoleId(appRoleId);
+    vaultConfig.setSecretId(secretId);
     return vaultConfig;
   }
 

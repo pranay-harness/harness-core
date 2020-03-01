@@ -757,17 +757,12 @@ public class AccountServiceTest extends WingsBaseTest {
     long workflowDataCollectionIteration = random.nextLong();
     FieldUtils.writeField(account, AccountKeys.workflowDataCollectionIteration, workflowDataCollectionIteration, true);
 
-    long secretManagerValidationIterator = random.nextLong();
-    FieldUtils.writeField(account, AccountKeys.secretManagerValidationIterator, secretManagerValidationIterator, true);
-
     assertThat(account.obtainNextIteration(AccountKeys.serviceGuardDataCollectionIteration))
         .isEqualTo(serviceGuardDataCollectionIteration);
     assertThat(account.obtainNextIteration(AccountKeys.serviceGuardDataAnalysisIteration))
         .isEqualTo(serviceGuardDataAnalysisIteration);
     assertThat(account.obtainNextIteration(AccountKeys.workflowDataCollectionIteration))
         .isEqualTo(workflowDataCollectionIteration);
-    assertThat(account.obtainNextIteration(AccountKeys.secretManagerValidationIterator))
-        .isEqualTo(secretManagerValidationIterator);
 
     serviceGuardDataCollectionIteration = random.nextLong();
     account.updateNextIteration(AccountKeys.serviceGuardDataCollectionIteration, serviceGuardDataCollectionIteration);
@@ -783,11 +778,6 @@ public class AccountServiceTest extends WingsBaseTest {
     account.updateNextIteration(AccountKeys.workflowDataCollectionIteration, workflowDataCollectionIteration);
     assertThat(account.obtainNextIteration(AccountKeys.workflowDataCollectionIteration))
         .isEqualTo(workflowDataCollectionIteration);
-
-    secretManagerValidationIterator = random.nextLong();
-    account.updateNextIteration(AccountKeys.secretManagerValidationIterator, secretManagerValidationIterator);
-    assertThat(account.obtainNextIteration(AccountKeys.secretManagerValidationIterator))
-        .isEqualTo(secretManagerValidationIterator);
 
     try {
       account.updateNextIteration(generateUuid(), random.nextLong());

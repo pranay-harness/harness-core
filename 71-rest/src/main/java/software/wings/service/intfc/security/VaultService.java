@@ -41,9 +41,9 @@ public interface VaultService {
 
   VaultConfig getVaultConfigByName(String accountId, String name);
 
-  void renewTokens(String accountId);
+  void renewTokens(VaultConfig vaultConfig);
 
-  void renewAppRoleClientToken(String accountId);
+  void renewAppRoleClientToken(VaultConfig vaultConfig);
 
   EncryptedData encryptFile(
       String accountId, VaultConfig vaultConfig, String name, byte[] inputBytes, EncryptedData savedEncryptedData);

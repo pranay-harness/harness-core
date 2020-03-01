@@ -22,9 +22,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
-import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +33,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
+import software.wings.beans.VaultConfig.VaultConfigKeys;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.security.encryption.EncryptedData;
@@ -157,84 +158,58 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   @Override
-  public void renewTokens(String accountId) {
+  public void renewTokens(VaultConfig vaultConfig) {
     long currentTime = System.currentTimeMillis();
-    logger.info("renewing vault token for {}", accountId);
-    try (HIterator<SecretManagerConfig> query = new HIterator<>(
-             wingsPersistence.createQuery(SecretManagerConfig.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
-      for (SecretManagerConfig secretManagerConfig : query) {
-        if (!(secretManagerConfig instanceof VaultConfig)) {
-          continue;
-        }
+    String accountId = vaultConfig.getAccountId();
+    if (vaultConfig.getRenewIntervalHours() <= 0) {
+      logger.info("renewing not configured for {}", vaultConfig.getUuid());
+      return;
+    }
+    // don't renew if renewed within configured time
+    if (TimeUnit.MILLISECONDS.toHours(currentTime - vaultConfig.getRenewedAt()) < vaultConfig.getRenewIntervalHours()) {
+      logger.info("{} renewed at {} not renewing now", vaultConfig.getUuid(), new Date(vaultConfig.getRenewedAt()));
+      return;
+    }
 
-        VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
-        // don't renew if renewal interval not configured
-        if (vaultConfig.getRenewIntervalHours() <= 0) {
-          logger.info("renewing not configured for {} for account {}", vaultConfig.getUuid(), accountId);
-          continue;
-        }
-        // don't renew if renewed within configured time
-        if (TimeUnit.MILLISECONDS.toHours(currentTime - vaultConfig.getRenewedAt())
-            < vaultConfig.getRenewIntervalHours()) {
-          logger.info("{} renewed at {} not renewing now for account {}", vaultConfig.getUuid(),
-              new Date(vaultConfig.getRenewedAt()), accountId);
-          continue;
-        }
-
-        VaultConfig decryptedVaultConfig = getVaultConfig(accountId, vaultConfig.getUuid());
-        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                              .accountId(accountId)
-                                              .appId(GLOBAL_APP_ID)
-                                              .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                              .build();
-        KmsSetupAlert kmsSetupAlert =
-            KmsSetupAlert.builder()
-                .kmsId(vaultConfig.getUuid())
-                .message(vaultConfig.getName()
-                    + "(Hashicorp Vault) is not able to renew the token. Please check your setup and ensure that token is renewable")
-                .build();
-        try {
-          delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-              .renewVaultToken(decryptedVaultConfig);
-          alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
-          vaultConfig.setRenewedAt(System.currentTimeMillis());
-          wingsPersistence.save(vaultConfig);
-        } catch (Exception e) {
-          logger.info("Error while renewing token for : " + vaultConfig, e);
-          alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
-        }
-      }
+    VaultConfig decryptedVaultConfig = getVaultConfig(accountId, vaultConfig.getUuid());
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    KmsSetupAlert kmsSetupAlert =
+        KmsSetupAlert.builder()
+            .kmsId(vaultConfig.getUuid())
+            .message(vaultConfig.getName()
+                + "(Hashicorp Vault) is not able to renew the token. Please check your setup and ensure that token is renewable")
+            .build();
+    try {
+      delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+          .renewVaultToken(decryptedVaultConfig);
+      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
+      wingsPersistence.updateField(
+          SecretManagerConfig.class, vaultConfig.getUuid(), VaultConfigKeys.renewedAt, System.currentTimeMillis());
+    } catch (Exception e) {
+      logger.info("Error while renewing token for : " + vaultConfig, e);
+      alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
     }
   }
 
   @Override
-  public void renewAppRoleClientToken(String accountId) {
-    logger.info("Renewing Vault AppRole client token for {}", accountId);
-    try (HIterator<SecretManagerConfig> query = new HIterator<>(
-             wingsPersistence.createQuery(SecretManagerConfig.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
-      for (SecretManagerConfig secretManagerConfig : query) {
-        if (!(secretManagerConfig instanceof VaultConfig)) {
-          continue;
+  public void renewAppRoleClientToken(VaultConfig vaultConfig) {
+    logger.info("Renewing Vault AppRole client token for vault id {}", vaultConfig.getUuid());
+    if (isNotEmpty(vaultConfig.getAppRoleId())) {
+      VaultConfig decryptedVaultConfig = getVaultConfig(vaultConfig.getAccountId(), vaultConfig.getUuid());
+      try {
+        VaultAppRoleLoginResult loginResult = appRoleLogin(decryptedVaultConfig);
+        if (loginResult != null && isNotEmpty(loginResult.getClientToken())) {
+          logger.info("Login result is {} {}", loginResult.getLeaseDuration(), loginResult.getPolicies());
+          saveSecretField(
+              vaultConfig, vaultConfig, vaultConfig.getUuid(), loginResult.getClientToken(), TOKEN_SECRET_NAME_SUFFIX);
+          wingsPersistence.updateField(
+              SecretManagerConfig.class, vaultConfig.getUuid(), VaultConfigKeys.renewedAt, System.currentTimeMillis());
         }
-
-        VaultConfig encryptedVaultConfig = (VaultConfig) secretManagerConfig;
-        if (isNotEmpty(encryptedVaultConfig.getAppRoleId())) {
-          VaultConfig decryptedVaultConfig = getVaultConfig(accountId, encryptedVaultConfig.getUuid());
-          try {
-            VaultAppRoleLoginResult loginResult = appRoleLogin(decryptedVaultConfig);
-            if (loginResult != null && isNotEmpty(loginResult.getClientToken())) {
-              logger.info("Login result is {} {}", loginResult.getLeaseDuration(), loginResult.getPolicies());
-              encryptedVaultConfig.setRenewedAt(System.currentTimeMillis());
-              saveSecretField(encryptedVaultConfig, encryptedVaultConfig, encryptedVaultConfig.getUuid(),
-                  loginResult.getClientToken(), TOKEN_SECRET_NAME_SUFFIX);
-              wingsPersistence.save(encryptedVaultConfig);
-            }
-          } catch (Exception e) {
-            logger.info("Error while renewing client token for Vault AppRole  " + encryptedVaultConfig.getAppRoleId()
-                    + " in secret manager " + encryptedVaultConfig.getName(),
-                e);
-          }
-        }
+      } catch (Exception e) {
+        logger.info("Error while renewing client token for Vault AppRole  " + vaultConfig.getAppRoleId()
+                + " in secret manager " + vaultConfig.getName(),
+            e);
       }
     }
   }
@@ -533,12 +508,12 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       // Need to try using Vault AppRole login to generate a client token if configured so
       if (isNotEmpty(vaultConfig.getAppRoleId())) {
         VaultAppRoleLoginResult loginResult = appRoleLogin(vaultConfig);
-        if (loginResult == null) {
+        if (loginResult != null && EmptyPredicate.isNotEmpty(loginResult.getClientToken())) {
+          vaultConfig.setAuthToken(loginResult.getClientToken());
+        } else {
           String message =
               "Was not able to login Vault using the AppRole auth method. Please check your credentials and try again";
           throw new SecretManagementException(VAULT_OPERATION_ERROR, message, USER);
-        } else {
-          vaultConfig.setAuthToken(loginResult.getClientToken());
         }
       }
     } catch (WingsException e) {
