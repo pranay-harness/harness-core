@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -86,6 +87,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -107,6 +109,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock ResourceLookupService resourceLookupService;
   @Mock AppService appService;
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject @InjectMocks InfrastructureProvisionerServiceImpl infrastructureProvisionerServiceImpl;
 
   @Test
   @Owner(developers = SATYAM)
@@ -543,5 +546,26 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     assertThat(returned).isNotNull();
     assertThat(returned.getMappingBlueprints().size()).isEqualTo(1);
     assertThat(returned.getMappingBlueprints().get(0).getServiceId()).isEqualTo(SVC_ID_00);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testRemoveDuplicateVariables() {
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder().build();
+    infrastructureProvisionerServiceImpl.removeDuplicateVariables(provisioner);
+
+    provisioner.setVariables(emptyList());
+    infrastructureProvisionerServiceImpl.removeDuplicateVariables(provisioner);
+
+    NameValuePair var1 = NameValuePair.builder().name("var1").build();
+    NameValuePair var2 = NameValuePair.builder().name("var2").build();
+    NameValuePair duplicateVar1 = NameValuePair.builder().name("var1").build();
+
+    provisioner.setVariables(Arrays.asList(var1, var2, duplicateVar1));
+    infrastructureProvisionerServiceImpl.removeDuplicateVariables(provisioner);
+    assertThat(provisioner.getVariables()).hasSize(2);
+    assertThat(provisioner.getVariables().get(0)).isEqualTo(var1);
+    assertThat(provisioner.getVariables().get(1)).isEqualTo(var2);
   }
 }

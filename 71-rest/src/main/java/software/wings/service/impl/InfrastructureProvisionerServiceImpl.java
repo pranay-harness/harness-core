@@ -164,6 +164,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     return LimitEnforcementUtils.withLimitCheck(checker, () -> {
       populateDerivedFields(infrastructureProvisioner);
 
+      removeDuplicateVariables(infrastructureProvisioner);
       validateProvisioner(infrastructureProvisioner);
 
       InfrastructureProvisioner finalInfraProvisioner =
@@ -174,6 +175,22 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
       return finalInfraProvisioner;
     });
+  }
+
+  void removeDuplicateVariables(InfrastructureProvisioner infrastructureProvisioner) {
+    List<NameValuePair> variables = infrastructureProvisioner.getVariables();
+    if (isEmpty(variables)) {
+      return;
+    }
+    ArrayList<NameValuePair> distinctVariables = new ArrayList<>(variables.size());
+    HashSet<String> distinctVariableNames = new HashSet<>();
+    for (NameValuePair variable : variables) {
+      if (!distinctVariableNames.contains(variable.getName())) {
+        distinctVariables.add(variable);
+        distinctVariableNames.add(variable.getName());
+      }
+    }
+    infrastructureProvisioner.setVariables(distinctVariables);
   }
 
   @VisibleForTesting
@@ -198,6 +215,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   public InfrastructureProvisioner update(@Valid InfrastructureProvisioner infrastructureProvisioner) {
     populateDerivedFields(infrastructureProvisioner);
 
+    removeDuplicateVariables(infrastructureProvisioner);
     validateProvisioner(infrastructureProvisioner);
 
     InfrastructureProvisioner savedInfraProvisioner =
