@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -16,6 +17,7 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Update;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -45,8 +47,10 @@ import javax.validation.constraints.NotNull;
 })
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class SecretManagerConfig implements EncryptionConfig, PersistentEntity, UuidAware, CreatedAtAware,
-                                                     CreatedByAware, UpdatedAtAware, UpdatedByAware {
+@FieldNameConstants(innerTypeName = "SecretManagerConfigKeys")
+public abstract class SecretManagerConfig
+    implements EncryptionConfig, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
+               UpdatedByAware, PersistentRegularIterable {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   private EncryptionType encryptionType;
@@ -67,7 +71,26 @@ public abstract class SecretManagerConfig implements EncryptionConfig, Persisten
 
   @SchemaIgnore @NotNull private long lastUpdatedAt;
 
+  @Indexed private Long nextTokenRenewIteration;
+
   public abstract void maskSecrets();
+
+  @Override
+  public void updateNextIteration(String fieldName, Long nextIteration) {
+    if (SecretManagerConfigKeys.nextTokenRenewIteration.equals(fieldName)) {
+      this.nextTokenRenewIteration = nextIteration;
+      return;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    if (SecretManagerConfigKeys.nextTokenRenewIteration.equals(fieldName)) {
+      return nextTokenRenewIteration;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
 
   @Override
   @JsonIgnore

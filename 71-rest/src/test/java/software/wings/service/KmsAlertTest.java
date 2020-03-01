@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -26,9 +25,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.Account;
-import software.wings.beans.AccountStatus;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.Alert;
@@ -93,14 +90,14 @@ public class KmsAlertTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAlertFiredForVaultRenewal() throws InterruptedException {
-    VaultConfig vaultConfig = getVaultConfig();
+    VaultConfig vaultConfig = getVaultConfigWithAuthToken();
     vaultConfig.setRenewIntervalHours(1);
     vaultConfig.setRenewedAt(0);
     vaultConfig.setAccountId(accountId);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     vaultService.saveVaultConfig(accountId, vaultConfig);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
-    vaultService.renewTokens(accountId);
+    vaultService.renewTokens(vaultConfig);
 
     PageResponse<Alert> alerts = listOpenAlerts(accountId);
     assertThat(alerts).hasSize(1);
@@ -115,7 +112,7 @@ public class KmsAlertTest extends WingsBaseTest {
     assertThat(savedVaultConfig.getRenewedAt()).isEqualTo(0);
 
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
-    vaultService.renewTokens(accountId);
+    vaultService.renewTokens(savedVaultConfig);
     Thread.sleep(2000);
     assertThat(listOpenAlerts(accountId)).isEmpty();
     savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
@@ -134,27 +131,6 @@ public class KmsAlertTest extends WingsBaseTest {
     kmsService.saveKmsConfig(accountId, kmsConfig);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
     kmsService.saveKmsConfig(accountId, kmsConfig);
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void testNoAlertForInactiveAccount() {
-    accountId =
-        wingsPersistence.save(Account.Builder.anAccount()
-                                  .withAccountName(UUID.randomUUID().toString())
-                                  .withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.INACTIVE).build())
-                                  .build());
-
-    final KmsConfig kmsConfig = getKmsConfig();
-    kmsConfig.setAccountId(accountId);
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
-    kmsService.saveKmsConfig(accountId, kmsConfig);
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
-    vaultService.renewTokens(accountId);
-    vaultService.renewAppRoleClientToken(accountId);
-    PageResponse<Alert> alerts = listOpenAlerts(accountId);
-    assertThat(alerts).hasSize(0);
   }
 
   private PageResponse<Alert> listOpenAlerts(String accountId) {
