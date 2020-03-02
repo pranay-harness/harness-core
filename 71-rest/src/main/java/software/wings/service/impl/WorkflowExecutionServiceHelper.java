@@ -23,7 +23,6 @@ import software.wings.api.WorkflowElement;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
-import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
@@ -243,8 +242,7 @@ public class WorkflowExecutionServiceHelper {
           ? null
           : workflow.getOrchestrationWorkflow().getUserVariables();
     } else {
-      Pipeline pipeline = pipelineService.readPipelineWithVariables(appId, executionArgs.getPipelineId());
-      workflowVariables = (pipeline == null) ? null : pipeline.getPipelineVariables();
+      workflowVariables = pipelineService.getPipelineVariables(appId, executionArgs.getPipelineId());
     }
     return (workflowVariables == null) ? Collections.emptyList() : workflowVariables;
   }

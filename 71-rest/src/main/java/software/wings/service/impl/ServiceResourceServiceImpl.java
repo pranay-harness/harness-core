@@ -3,6 +3,9 @@ package software.wings.service.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
+import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -48,6 +51,7 @@ import static software.wings.yaml.YamlHelper.trimYaml;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -57,6 +61,7 @@ import de.danielbechler.diff.node.DiffNode;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityNameValidator;
@@ -65,6 +70,7 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
 import io.harness.limits.Action;
@@ -150,6 +156,7 @@ import software.wings.common.NotificationMessageResolver.NotificationMessageType
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.HelmHelper;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.service.ServiceHelper;
@@ -197,6 +204,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -223,6 +231,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private static final String IIS_INSTALL_COMMAND_NAME = "Install";
   private static final String INSTALL_IIS_WEBSITE_TEMPLATE_NAME = "Install IIS Website";
   private static final String INSTALL_IIS_APPLICATION_TEMPLATE_NAME = "Install IIS Application";
+  private static final String INFRA_ID_FILTER = "infraDefinitionId";
+  public static final String APP_ID = "appId";
   private static String default_k8s_deployment_yaml;
   private static String default_k8s_namespace_yaml;
   private static String default_k8s_service_yaml;
@@ -301,6 +311,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public PageResponse<Service> list(PageRequest<Service> request, boolean withBuildSource, boolean withServiceCommands,
       boolean withTags, String tagFilter) {
+    if (request.getUriInfo() != null && request.getUriInfo().getQueryParameters().containsKey(INFRA_ID_FILTER)) {
+      applyInfraBasedFilters(request);
+    }
     PageResponse<Service> pageResponse =
         resourceLookupService.listWithTagFilters(request, tagFilter, EntityType.SERVICE, withTags);
 
@@ -313,6 +326,75 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       setArtifactStreamBindings(services);
     }
     return pageResponse;
+  }
+
+  private void applyInfraBasedFilters(PageRequest<Service> request) {
+    Optional<SearchFilter> appIdFilter =
+        request.getFilters().stream().filter(t -> t.getFieldName().equals(APP_ID)).findFirst();
+    if (!appIdFilter.isPresent()) {
+      logger.info("No AppId filter present in page request {}. Cannot apply infra filter", request);
+      return;
+    }
+    List<Object> appIdValues = asList(appIdFilter.get().getFieldValues());
+
+    if (appIdValues.size() > 1) {
+      throw new InvalidRequestException("More than 1 appId not supported for listing services");
+    }
+    String appId = (String) appIdValues.get(0);
+    String accountId = appService.getAccountIdByAppId(appId);
+    if (!featureFlagService.isEnabled(FeatureName.TEMPLATED_PIPELINES, accountId)) {
+      return;
+    }
+    List<String> infraIds = request.getUriInfo().getQueryParameters().get(INFRA_ID_FILTER);
+    if (isEmpty(infraIds)) {
+      return;
+    }
+
+    EnumSet<DeploymentType> deploymentType = EnumSet.noneOf(DeploymentType.class);
+    List<Set<String>> scopedServicesList = new ArrayList<>();
+    List<String> infraNames = new ArrayList<>();
+    for (String infraId : infraIds) {
+      // if infra value for related field is variable or there is no value,
+      if (isEmpty(infraId) || ExpressionEvaluator.matchesVariablePattern(infraId)) {
+        continue;
+      }
+      InfrastructureDefinition infra = infrastructureDefinitionService.get(appId, infraId);
+      deploymentType.add(infra.getDeploymentType());
+      if (isNotEmpty(infra.getScopedToServices())) {
+        scopedServicesList.add(Sets.newHashSet(infra.getScopedToServices()));
+        infraNames.add(infra.getName());
+      }
+    }
+    Set<String> scopedServices;
+
+    // Getting intersection of all scoped services and loading only those.
+    scopedServices = scopedServicesList.stream().reduce(Sets::intersection).orElse(null);
+    if (scopedServices != null) {
+      if (!scopedServices.isEmpty()) {
+        request.addFilter(ID_KEY, IN, scopedServices.toArray());
+        return;
+      } else {
+        throw new InvalidRequestException(
+            "No common scoped Services for selected Infra Definitions: " + infraNames.toString());
+      }
+    }
+
+    // else filtering by deployment type. Artifact type filter is already be present in the API call.
+    if (isNotEmpty(deploymentType)) {
+      // if only one deployment type, load services with null deployment type or this one.
+      if (deploymentType.size() == 1) {
+        SearchFilter op1 = SearchFilter.builder()
+                               .fieldName(ServiceKeys.deploymentType)
+                               .op(EQ)
+                               .fieldValues(deploymentType.toArray())
+                               .build();
+        SearchFilter op2 = SearchFilter.builder().fieldName(ServiceKeys.deploymentType).op(NOT_EXISTS).build();
+        request.addFilter(ServiceKeys.deploymentType, OR, op1, op2);
+      } else {
+        // else load null deployment type services.
+        request.addFilter(ServiceKeys.deploymentType, NOT_EXISTS);
+      }
+    }
   }
 
   /**
@@ -823,7 +905,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service getServiceByName(String appId, String serviceName, boolean withDetails) {
     Service service =
-        wingsPersistence.createQuery(Service.class).filter("appId", appId).filter(ServiceKeys.name, serviceName).get();
+        wingsPersistence.createQuery(Service.class).filter(APP_ID, appId).filter(ServiceKeys.name, serviceName).get();
     if (service != null) {
       if (withDetails) {
         setServiceDetails(service, appId);
@@ -870,8 +952,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public boolean exist(@NotEmpty String appId, @NotEmpty String serviceId) {
-    return wingsPersistence.createQuery(Service.class).filter("appId", appId).filter(ID_KEY, serviceId).getKey()
-        != null;
+    return wingsPersistence.createQuery(Service.class).filter(APP_ID, appId).filter(ID_KEY, serviceId).getKey() != null;
   }
 
   /**
@@ -1084,7 +1165,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     boolean serviceCommandDeleted = wingsPersistence.delete(serviceCommand);
     if (serviceCommandDeleted) {
       boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(Command.class)
-                                                    .filter("appId", service.getAppId())
+                                                    .filter(APP_ID, service.getAppId())
                                                     .filter(CommandKeys.originEntityId, serviceCommand.getUuid()));
       if (deleted) {
         String accountId = appService.getAccountIdByAppId(service.getAppId());
@@ -1097,7 +1178,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     List<Workflow> workflows =
         workflowService
             .listWorkflows(
-                aPageRequest().withLimit(UNLIMITED).addFilter("appId", Operator.EQ, service.getAppId()).build())
+                aPageRequest().withLimit(UNLIMITED).addFilter(APP_ID, Operator.EQ, service.getAppId()).build())
             .getResponse();
     StringBuilder sb = new StringBuilder();
     for (Workflow workflow : workflows) {
@@ -1227,7 +1308,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public ContainerTask updateContainerTaskAdvanced(
       String appId, String serviceId, String taskId, KubernetesPayload kubernetesPayload, boolean reset) {
     ContainerTask containerTask = wingsPersistence.createQuery(ContainerTask.class)
-                                      .filter("appId", appId)
+                                      .filter(APP_ID, appId)
                                       .filter(ContainerTaskKeys.serviceId, serviceId)
                                       .filter(ID_KEY, taskId)
                                       .get();
@@ -1248,7 +1329,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public EcsServiceSpecification getEcsServiceSpecification(String appId, String serviceId) {
     return wingsPersistence.createQuery(EcsServiceSpecification.class)
-        .filter("appId", appId)
+        .filter(APP_ID, appId)
         .filter(EcsServiceSpecificationKeys.serviceId, serviceId)
         .get();
   }
@@ -1835,7 +1916,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public UserDataSpecification getUserDataSpecification(String appId, String serviceId) {
     return wingsPersistence.createQuery(UserDataSpecification.class)
-        .filter("appId", appId)
+        .filter(APP_ID, appId)
         .filter(UserDataSpecificationKeys.serviceId, serviceId)
         .get();
   }
@@ -1889,7 +1970,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public ContainerTask getContainerTaskByDeploymentType(String appId, String serviceId, String deploymentType) {
     return wingsPersistence.createQuery(ContainerTask.class)
-        .filter("appId", appId)
+        .filter(APP_ID, appId)
         .filter(ContainerTaskKeys.serviceId, serviceId)
         .filter(ContainerTaskKeys.deploymentType, deploymentType)
         .get();
@@ -1903,7 +1984,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public HelmChartSpecification getHelmChartSpecification(String appId, String serviceId) {
     return wingsPersistence.createQuery(HelmChartSpecification.class)
-        .filter("appId", appId)
+        .filter(APP_ID, appId)
         .filter(HelmChartSpecificationKeys.serviceId, serviceId)
         .get();
   }
@@ -1911,7 +1992,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public PcfServiceSpecification getPcfServiceSpecification(String appId, String serviceId) {
     return wingsPersistence.createQuery(PcfServiceSpecification.class)
-        .filter("appId", appId)
+        .filter(APP_ID, appId)
         .filter(PcfServiceSpecificationKeys.serviceId, serviceId)
         .get();
   }
@@ -2021,7 +2102,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public LambdaSpecification getLambdaSpecification(String appId, String serviceId) {
     return wingsPersistence.createQuery(LambdaSpecification.class)
-        .filter("appId", appId)
+        .filter(APP_ID, appId)
         .filter(LambdaSpecificationKeys.serviceId, serviceId)
         .get();
   }
@@ -2044,7 +2125,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public List<ServiceCommand> getServiceCommands(String appId, String serviceId, boolean withCommandDetails) {
     PageRequest<ServiceCommand> serviceCommandPageRequest =
-        aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFilter("serviceId", EQ, serviceId).build();
+        aPageRequest().withLimit(UNLIMITED).addFilter(APP_ID, EQ, appId).addFilter("serviceId", EQ, serviceId).build();
     List<ServiceCommand> serviceCommands =
         wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest).getResponse();
     if (withCommandDetails) {
@@ -2259,7 +2340,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   private List<ContainerTask> findContainerTaskForService(String appId, String serviceId) {
     PageRequest<ContainerTask> pageRequest =
-        aPageRequest().addFilter("appId", EQ, appId).addFilter("serviceId", EQ, serviceId).build();
+        aPageRequest().addFilter(APP_ID, EQ, appId).addFilter("serviceId", EQ, serviceId).build();
     return wingsPersistence.query(ContainerTask.class, pageRequest).getResponse();
   }
 

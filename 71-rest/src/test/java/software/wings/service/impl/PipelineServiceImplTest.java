@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
 import static software.wings.beans.EntityType.APPDYNAMICS_TIERID;
@@ -23,6 +24,7 @@ import static software.wings.beans.EntityType.NEWRELIC_MARKER_CONFIGID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SPLUNK_CONFIGID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.mockChecker;
@@ -51,6 +53,7 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
+import software.wings.beans.Workflow;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WorkflowService;
@@ -59,6 +62,7 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ApprovalState.ApprovalStateKeys;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -161,8 +165,8 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                            .fixed(false)
                                            .metadata(metadataMapInfra)
                                            .build();
-    pipelineServiceImpl.populateParentFields(
-        infraMappingPipelineVar, INFRASTRUCTURE_MAPPING, workflowVariables, "ServiceInfra_ECS", pseWorkflowVariables);
+    pipelineServiceImpl.populateParentFields(infraMappingPipelineVar, INFRASTRUCTURE_MAPPING, workflowVariables,
+        "ServiceInfra_ECS", pseWorkflowVariables, false);
     assertThat(infraMappingPipelineVar.getMetadata().get(Variable.ENV_ID)).isNotNull();
     assertThat(infraMappingPipelineVar.getMetadata().get(Variable.ENV_ID)).isEqualTo("Environment 2");
 
@@ -181,8 +185,8 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                        .metadata(metadataMapInfraDef)
                                        .build();
 
-    pipelineServiceImpl.populateParentFields(
-        infraDefPipelineVar, INFRASTRUCTURE_DEFINITION, workflowVariables, "ServiceInfra_ECS", pseWorkflowVariables);
+    pipelineServiceImpl.populateParentFields(infraDefPipelineVar, INFRASTRUCTURE_DEFINITION, workflowVariables,
+        "ServiceInfra_ECS", pseWorkflowVariables, false);
     assertThat(infraDefPipelineVar.getMetadata().get(Variable.ENV_ID)).isNotNull();
     assertThat(infraDefPipelineVar.getMetadata().get(Variable.ENV_ID)).isEqualTo("Environment 2");
 
@@ -203,7 +207,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                        .build();
 
     pipelineServiceImpl.populateParentFields(
-        appdTierPipelineVar, APPDYNAMICS_TIERID, workflowVariables, "AppdTierId", pseWorkflowVariables);
+        appdTierPipelineVar, APPDYNAMICS_TIERID, workflowVariables, "AppdTierId", pseWorkflowVariables, false);
     assertThat(appdTierPipelineVar.getMetadata().get(Variable.PARENT_FIELDS)).isNotNull();
     Map<String, String> parents = (Map<String, String>) appdTierPipelineVar.getMetadata().get(Variable.PARENT_FIELDS);
     assertThat(parents.get("applicationId")).isEqualTo("AppD app 1");
@@ -222,7 +226,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                       .build();
 
     pipelineServiceImpl.populateParentFields(
-        appdAppPipelineVar, APPDYNAMICS_APPID, workflowVariables, "AppdTierId", pseWorkflowVariables);
+        appdAppPipelineVar, APPDYNAMICS_APPID, workflowVariables, "AppdTierId", pseWorkflowVariables, false);
     assertThat(appdAppPipelineVar.getMetadata().get(Variable.PARENT_FIELDS)).isNotNull();
     parents = (Map<String, String>) appdAppPipelineVar.getMetadata().get(Variable.PARENT_FIELDS);
     assertThat(parents.get("analysisServerConfigId")).isEqualTo("AppD config 2");
@@ -240,7 +244,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                          .build();
 
     pipelineServiceImpl.populateParentFields(
-        elkIndicesPipelineVar, ELK_INDICES, workflowVariables, "ElkIndices", pseWorkflowVariables);
+        elkIndicesPipelineVar, ELK_INDICES, workflowVariables, "ElkIndices", pseWorkflowVariables, false);
     assertThat(elkIndicesPipelineVar.getMetadata().get(Variable.PARENT_FIELDS)).isNotNull();
     parents = (Map<String, String>) elkIndicesPipelineVar.getMetadata().get(Variable.PARENT_FIELDS);
     assertThat(parents.get("analysisServerConfigId")).isEqualTo("elkconfig");
@@ -258,7 +262,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                        .build();
 
     pipelineServiceImpl.populateParentFields(
-        newRelicPipelineVar, NEWRELIC_APPID, workflowVariables, "NewRelicAppId", pseWorkflowVariables);
+        newRelicPipelineVar, NEWRELIC_APPID, workflowVariables, "NewRelicAppId", pseWorkflowVariables, false);
     assertThat(newRelicPipelineVar.getMetadata().get(Variable.PARENT_FIELDS)).isNotNull();
     parents = (Map<String, String>) newRelicPipelineVar.getMetadata().get(Variable.PARENT_FIELDS);
     assertThat(parents.get("analysisServerConfigId")).isEqualTo("newRelicConfigId");
@@ -276,13 +280,13 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                              .build();
 
     pipelineServiceImpl.populateParentFields(newRelicMarkerPipelineVar, NEWRELIC_MARKER_APPID, workflowVariables,
-        "NewRelicMarkerAppId", pseWorkflowVariables);
+        "NewRelicMarkerAppId", pseWorkflowVariables, false);
     assertThat(newRelicMarkerPipelineVar.getMetadata().get(Variable.PARENT_FIELDS)).isNotNull();
     parents = (Map<String, String>) newRelicMarkerPipelineVar.getMetadata().get(Variable.PARENT_FIELDS);
     assertThat(parents.get("analysisServerConfigId")).isEqualTo("newRelicMarkerconfigId");
 
     pipelineServiceImpl.populateParentFields(
-        newRelicMarkerPipelineVar, NEWRELIC_MARKER_APPID, null, "NewRelicMarkerAppId", pseWorkflowVariables);
+        newRelicMarkerPipelineVar, NEWRELIC_MARKER_APPID, null, "NewRelicMarkerAppId", pseWorkflowVariables, false);
     assertThat(newRelicMarkerPipelineVar.getMetadata().get(Variable.PARENT_FIELDS)).isNotNull();
   }
 
@@ -421,5 +425,308 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     PowerMockito.doReturn(mockQuery).when(mockQuery).filter(anyString(), any());
     PowerMockito.doReturn(Collections.emptyMap()).when(mockWorkflowService).stencilMap(anyString());
     PowerMockito.whenNew(StateMachine.class).withAnyArguments().thenReturn(null);
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void updateMetadtaWhenSameEnvironmentVariableUsedAgain() {
+    HashMap<String, Object> metadataStored = new HashMap<>();
+    metadataStored.put(Variable.RELATED_FIELD, "infra1");
+    metadataStored.put(Variable.ENTITY_TYPE, ENVIRONMENT);
+
+    List<Variable> pipelineVariables = new ArrayList<>();
+    Variable envVarStored = aVariable().entityType(ENVIRONMENT).name("env").metadata(metadataStored).build();
+    pipelineVariables.add(envVarStored);
+
+    List<Variable> workflowVariables = new ArrayList<>();
+    Variable envWorkflowVariable = aVariable()
+                                       .entityType(ENVIRONMENT)
+                                       .name("Environment")
+                                       .metadata(ImmutableMap.of(Variable.RELATED_FIELD, "InfraDefinition_KUBERNETES",
+                                           Variable.ENTITY_TYPE, ENVIRONMENT))
+                                       .build();
+    Variable infraWorkflowVariable = aVariable()
+                                         .entityType(INFRASTRUCTURE_DEFINITION)
+                                         .name("Infrastructure_KUBERNETES")
+                                         .metadata(ImmutableMap.of(Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION))
+                                         .build();
+    workflowVariables.add(envWorkflowVariable);
+    workflowVariables.add(infraWorkflowVariable);
+
+    Map<String, String> pseWorkflowVariables = new HashMap<>();
+    pseWorkflowVariables.put("Environment", "${env}");
+    pseWorkflowVariables.put("Infrastructure_KUBERNETES", "${infra2}");
+    pipelineServiceImpl.updateStoredVariable(
+        pipelineVariables, true, false, workflowVariables, pseWorkflowVariables, envWorkflowVariable, "env");
+    assertThat(envVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra1,infra2");
+  }
+
+  // When Service and infra both templatised in both phases, with same service var, but different infra var
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void updateMetadataServiceVarTC_1() {
+    HashMap<String, Object> metadataStored = new HashMap<>();
+    metadataStored.put(Variable.RELATED_FIELD, "infra1");
+    metadataStored.put(Variable.ENTITY_TYPE, SERVICE);
+    metadataStored.put(Variable.ARTIFACT_TYPE, "DOCKER");
+
+    List<Variable> pipelineVariables = new ArrayList<>();
+    Variable serviceVarStored = aVariable().entityType(SERVICE).name("srv").metadata(metadataStored).build();
+    pipelineVariables.add(serviceVarStored);
+    List<Variable> workflowVariables = new ArrayList<>();
+    Variable serviceWorkflowVariable = aVariable()
+                                           .entityType(SERVICE)
+                                           .name("Service")
+                                           .metadata(ImmutableMap.of(Variable.ARTIFACT_TYPE, "DOCKER",
+                                               Variable.RELATED_FIELD, "infra2", Variable.ENTITY_TYPE, SERVICE))
+                                           .build();
+    Variable infraWorkflowVariable = aVariable()
+                                         .entityType(INFRASTRUCTURE_DEFINITION)
+                                         .name("Infrastructure_KUBERNETES")
+                                         .metadata(ImmutableMap.of(Variable.RELATED_FIELD, "Service",
+                                             Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION))
+                                         .build();
+    workflowVariables.add(serviceWorkflowVariable);
+    workflowVariables.add(infraWorkflowVariable);
+
+    Map<String, String> pseWorkflowVariables = new HashMap<>();
+    pseWorkflowVariables.put("Service", "${srv}");
+    pseWorkflowVariables.put("Infrastructure_KUBERNETES", "${infra2}");
+    pipelineServiceImpl.updateStoredVariable(
+        pipelineVariables, true, true, workflowVariables, pseWorkflowVariables, serviceWorkflowVariable, "srv");
+    assertThat(serviceVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra1,infra2");
+  }
+
+  // When Service templatised in both phases, with same service var, infra templatised in 1, concrete in other
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void updateMetadataServiceVarTC_2() {
+    HashMap<String, Object> metadataStored = new HashMap<>();
+    metadataStored.put(Variable.INFRA_ID, "infra_id_1");
+    metadataStored.put(Variable.ENTITY_TYPE, SERVICE);
+    metadataStored.put(Variable.ARTIFACT_TYPE, "DOCKER");
+
+    List<Variable> pipelineVariables = new ArrayList<>();
+    Variable serviceVarStored = aVariable().entityType(SERVICE).name("srv").metadata(metadataStored).build();
+    pipelineVariables.add(serviceVarStored);
+
+    Variable serviceVariableNewPhase = aVariable()
+                                           .entityType(SERVICE)
+                                           .name("Service")
+                                           .metadata(ImmutableMap.of(Variable.ARTIFACT_TYPE, "DOCKER",
+                                               Variable.RELATED_FIELD, "infra2", Variable.ENTITY_TYPE, SERVICE))
+                                           .build();
+
+    pipelineServiceImpl.updateStoredVariable(
+        pipelineVariables, true, true, new ArrayList<>(), new HashMap<>(), serviceVariableNewPhase, "srv");
+    assertThat(serviceVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra2");
+    assertThat(serviceVarStored.getMetadata().get(Variable.INFRA_ID)).isEqualTo("infra_id_1");
+  }
+
+  // When Service templatised in both phases, with same service var, infra concrete in both phases
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void updateMetadataServiceVarTC_3() {
+    HashMap<String, Object> metadataStored = new HashMap<>();
+    metadataStored.put(Variable.INFRA_ID, "infra_id_1");
+    metadataStored.put(Variable.ENTITY_TYPE, SERVICE);
+    metadataStored.put(Variable.ARTIFACT_TYPE, "DOCKER");
+
+    List<Variable> pipelineVariables = new ArrayList<>();
+    Variable serviceVarStored = aVariable().entityType(SERVICE).name("srv").metadata(metadataStored).build();
+    pipelineVariables.add(serviceVarStored);
+
+    Variable serviceVariableNewPhase = aVariable()
+                                           .entityType(SERVICE)
+                                           .name("Service")
+                                           .metadata(ImmutableMap.of(Variable.ARTIFACT_TYPE, "DOCKER",
+                                               Variable.INFRA_ID, "infra_id_2", Variable.ENTITY_TYPE, SERVICE))
+                                           .build();
+    pipelineServiceImpl.updateStoredVariable(
+        pipelineVariables, true, true, new ArrayList<>(), new HashMap<>(), serviceVariableNewPhase, "srv");
+    assertThat(serviceVarStored.getMetadata().get(Variable.INFRA_ID)).isEqualTo("infra_id_1,infra_id_2");
+  }
+
+  // When Service templatised in both phases, but different artifact type workflows
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void updateMetadataServiceVarTC_4() {
+    HashMap<String, Object> metadataStored = new HashMap<>();
+    metadataStored.put(Variable.INFRA_ID, "infra_id_1");
+    metadataStored.put(Variable.ENTITY_TYPE, SERVICE);
+    metadataStored.put(Variable.ARTIFACT_TYPE, "DOCKER");
+
+    List<Variable> pipelineVariables = new ArrayList<>();
+    Variable serviceVarStored = aVariable().entityType(SERVICE).name("srv").metadata(metadataStored).build();
+    pipelineVariables.add(serviceVarStored);
+    Variable serviceVariableNewPhase = aVariable()
+                                           .entityType(SERVICE)
+                                           .name("Service")
+                                           .metadata(ImmutableMap.of(Variable.ARTIFACT_TYPE, "WAR",
+                                               Variable.RELATED_FIELD, "infra2", Variable.ENTITY_TYPE, SERVICE))
+                                           .build();
+
+    assertThatThrownBy(()
+                           -> pipelineServiceImpl.updateStoredVariable(pipelineVariables, true, true, new ArrayList<>(),
+                               new HashMap<>(), serviceVariableNewPhase, "srv"))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining(
+            "The same Workflow variable name srv cannot be used for Services using different Artifact types. Change the name of the variable in one or more Workflow.");
+  }
+
+  // When Infra templatised in both phases, but different envId selected
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void updateStoredVariableInfraTC_1() {
+    HashMap<String, Object> metadataStored = new HashMap<>();
+    metadataStored.put(Variable.ENV_ID, "env_id_1");
+    metadataStored.put(Variable.SERVICE_ID, "s1");
+    metadataStored.put(Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION);
+    List<Variable> pipelineVariables = new ArrayList<>();
+    Variable serviceVarStored =
+        aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("infra").metadata(metadataStored).build();
+    pipelineVariables.add(serviceVarStored);
+    Variable infraVariableNewPhase = aVariable()
+                                         .entityType(INFRASTRUCTURE_DEFINITION)
+                                         .name("infra")
+                                         .metadata(ImmutableMap.of(Variable.ENV_ID, "env_id_2", Variable.SERVICE_ID,
+                                             "s2", Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION))
+                                         .build();
+
+    assertThatThrownBy(()
+                           -> pipelineServiceImpl.updateStoredVariable(pipelineVariables, true, true, new ArrayList<>(),
+                               new HashMap<>(), infraVariableNewPhase, "infra"))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining(
+            "The same Workflow variable name infra cannot be used for InfraDefinitions using different Environment. Change the name of the variable in one or more Workflow.");
+  }
+
+  // When Infra templatised in both phases, with same var,service templatised in both phases
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void updateStoredVariableInfraTC_2() {
+    HashMap<String, Object> metadataStored = new HashMap<>();
+    metadataStored.put(Variable.ENV_ID, "env_id_1");
+    metadataStored.put(Variable.RELATED_FIELD, "srv1");
+    metadataStored.put(Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION);
+    List<Variable> pipelineVariables = new ArrayList<>();
+    Variable infraVarStored =
+        aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("infra").metadata(metadataStored).build();
+    pipelineVariables.add(infraVarStored);
+    Variable infraVariableNewPhase = aVariable()
+                                         .entityType(INFRASTRUCTURE_DEFINITION)
+                                         .name("infra")
+                                         .metadata(ImmutableMap.of(Variable.ENV_ID, "env_id_1", Variable.RELATED_FIELD,
+                                             "srv2", Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION))
+                                         .build();
+
+    pipelineServiceImpl.updateStoredVariable(
+        pipelineVariables, true, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra");
+    assertThat(infraVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("srv1,srv2");
+  }
+
+  // When Infra templatised in both phases, with same var,service templatised in one phase, concrete in another
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void updateStoredVariableInfraTC_3() {
+    HashMap<String, Object> metadataStored = new HashMap<>();
+    metadataStored.put(Variable.ENV_ID, "env_id_1");
+    metadataStored.put(Variable.RELATED_FIELD, "srv1");
+    metadataStored.put(Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION);
+    List<Variable> pipelineVariables = new ArrayList<>();
+    Variable infraVarStored =
+        aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("infra").metadata(metadataStored).build();
+    pipelineVariables.add(infraVarStored);
+    Variable infraVariableNewPhase = aVariable()
+                                         .entityType(INFRASTRUCTURE_DEFINITION)
+                                         .name("infra")
+                                         .metadata(ImmutableMap.of(Variable.ENV_ID, "env_id_1", Variable.SERVICE_ID,
+                                             "service_id_2", Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION))
+                                         .build();
+
+    pipelineServiceImpl.updateStoredVariable(
+        pipelineVariables, true, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra");
+    assertThat(infraVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("srv1");
+    assertThat(infraVarStored.getMetadata().get(Variable.SERVICE_ID)).isEqualTo("service_id_2");
+  }
+
+  // When Infra templatised in both phases, with same var,service concrete in both
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void updateStoredVariableInfraTC_4() {
+    HashMap<String, Object> metadataStored = new HashMap<>();
+    metadataStored.put(Variable.ENV_ID, "env_id_1");
+    metadataStored.put(Variable.SERVICE_ID, "serviceID_1,serviceID_2");
+    metadataStored.put(Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION);
+    List<Variable> pipelineVariables = new ArrayList<>();
+    Variable infraVarStored =
+        aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("infra").metadata(metadataStored).build();
+    pipelineVariables.add(infraVarStored);
+    Variable infraVariableNewPhase = aVariable()
+                                         .entityType(INFRASTRUCTURE_DEFINITION)
+                                         .name("infra")
+                                         .metadata(ImmutableMap.of(Variable.ENV_ID, "env_id_1", Variable.SERVICE_ID,
+                                             "serviceID_2", Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION))
+                                         .build();
+
+    pipelineServiceImpl.updateStoredVariable(
+        pipelineVariables, true, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra");
+    assertThat(infraVarStored.getMetadata().get(Variable.SERVICE_ID)).isEqualTo("serviceID_1,serviceID_2");
+  }
+
+  // When two phase has same env variables, Service non templatised, and infra variable with different vars
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void setPipelineVariablesTC_1() {
+    HashMap<String, Object> metadataEnv = new HashMap<>();
+    metadataEnv.put(Variable.RELATED_FIELD, "InfraDefinition_ECS");
+    metadataEnv.put(Variable.ENTITY_TYPE, ENVIRONMENT);
+
+    Variable envVarWorkflow = aVariable().entityType(ENVIRONMENT).name("Environment").metadata(metadataEnv).build();
+
+    HashMap<String, Object> metadataInfra = new HashMap<>();
+    metadataInfra.put(Variable.SERVICE_ID, "s1");
+    metadataInfra.put(Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION);
+    Variable infraVarWorkflow =
+        aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("InfraDefinition_ECS").metadata(metadataInfra).build();
+    List<Variable> userVariables = new ArrayList<>();
+    userVariables.add(envVarWorkflow);
+    userVariables.add(infraVarWorkflow);
+
+    Workflow workflow =
+        aWorkflow()
+            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(userVariables).build())
+            .accountId("ACCOUNT_ID")
+            .build();
+
+    List<Variable> pipelineVariables = new ArrayList<>();
+
+    Map<String, String> pseWorkflowVariables = new HashMap<>();
+    pseWorkflowVariables.put("Environment", "${env}");
+    pseWorkflowVariables.put("InfraDefinition_ECS", "${infra1}");
+
+    PipelineStageElement pse = PipelineStageElement.builder().workflowVariables(pseWorkflowVariables).build();
+
+    Map<String, String> pse2WorkflowVariables = new HashMap<>();
+    pse2WorkflowVariables.put("Environment", "${env}");
+    pse2WorkflowVariables.put("InfraDefinition_ECS", "${infra2}");
+    PipelineStageElement pse2 = PipelineStageElement.builder().workflowVariables(pse2WorkflowVariables).build();
+
+    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
+    pipelineServiceImpl.setPipelineVariables(workflow, pse2, pipelineVariables, false, true);
+
+    assertThat(pipelineVariables).isNotEmpty();
+    assertThat(pipelineVariables.get(0).getName()).isEqualTo("env");
+    assertThat(pipelineVariables.get(0).getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra1,infra2");
   }
 }

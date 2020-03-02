@@ -158,6 +158,7 @@ import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.impl.spotinst.SpotinstHelperServiceManager;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureDefinitionServiceObserver;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -208,6 +209,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject private AppService appService;
   @Inject private EnvironmentService environmentService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -257,11 +259,6 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @VisibleForTesting
   public void applyServiceFilter(PageRequest<InfrastructureDefinition> pageRequest) {
-    List<String> serviceIds = pageRequest.getUriInfo().getQueryParameters().get("serviceId");
-    if (serviceIds.size() > 1) {
-      throw new InvalidRequestException("More than 1 service not supported for listing infra definitions");
-    }
-    String serviceId = serviceIds.get(0);
     if (!pageRequest.getUriInfo().getQueryParameters().containsKey("appId")) {
       throw new InvalidRequestException("AppId is mandatory for service-based filtering");
     }
@@ -270,22 +267,46 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       throw new InvalidRequestException("More than 1 app not supported for listing infra definitions");
     }
     String appId = appIds.get(0);
-    Service service = serviceResourceService.get(appId, serviceId);
-    if (service == null) {
-      throw new InvalidRequestException(format("No service exists for id : [%s]", serviceId));
+    List<String> serviceIds = pageRequest.getUriInfo().getQueryParameters().get("serviceId");
+
+    EnumSet<DeploymentType> deploymentType = EnumSet.noneOf(DeploymentType.class);
+    List<String> serviceIdsInScope = new ArrayList<>();
+    for (String serviceId : serviceIds) {
+      if (isEmpty(serviceId) || ExpressionEvaluator.matchesVariablePattern(serviceId)) {
+        continue;
+      }
+      Service service = serviceResourceService.get(appId, serviceId);
+      if (service == null) {
+        throw new InvalidRequestException(format("No service exists for id : [%s]", serviceId));
+      }
+      if (service.getDeploymentType() != null) {
+        deploymentType.add(service.getDeploymentType());
+      }
+      serviceIdsInScope.add(serviceId);
     }
-    if (service.getDeploymentType() != null) {
+
+    if (isNotEmpty(deploymentType)) {
+      if (deploymentType.size() > 1) {
+        throw new InvalidRequestException(
+            "Cannot load infra for different deployment type service " + serviceIds, USER);
+      }
       pageRequest.addFilter(
-          InfrastructureDefinitionKeys.deploymentType, Operator.EQ, service.getDeploymentType().name());
+          InfrastructureDefinitionKeys.deploymentType, Operator.EQ, deploymentType.iterator().next().name());
     }
-    SearchFilter op1 =
-        SearchFilter.builder().fieldName(InfrastructureDefinitionKeys.scopedToServices).op(Operator.NOT_EXISTS).build();
-    SearchFilter op2 = SearchFilter.builder()
-                           .fieldName(InfrastructureDefinitionKeys.scopedToServices)
-                           .op(Operator.CONTAINS)
-                           .fieldValues(new Object[] {serviceId})
-                           .build();
-    pageRequest.addFilter(InfrastructureDefinitionKeys.scopedToServices, Operator.OR, op1, op2);
+
+    if (isNotEmpty(serviceIdsInScope)) {
+      SearchFilter op1 = SearchFilter.builder()
+                             .fieldName(InfrastructureDefinitionKeys.scopedToServices)
+                             .op(Operator.NOT_EXISTS)
+                             .build();
+
+      SearchFilter op2 = SearchFilter.builder()
+                             .fieldName(InfrastructureDefinitionKeys.scopedToServices)
+                             .op(Operator.CONTAINS)
+                             .fieldValues(serviceIdsInScope.toArray())
+                             .build();
+      pageRequest.addFilter(InfrastructureDefinitionKeys.scopedToServices, Operator.OR, op1, op2);
+    }
   }
 
   @Override
