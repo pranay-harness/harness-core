@@ -42,7 +42,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 25px; padding-bottom: 25px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;" class="paragraph" width="87.5%">
+                        <td valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 25px; padding-bottom: 5px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;" class="paragraph" width="87.5%">
                             <div style="color: #77787b; line-height: 30px; font-weight: normal;">
                                 Hi ${name},
                                 <br>Welcome to Harness! Click the link below to sign up.
@@ -56,6 +56,17 @@
                             </a>
                         </td>
                     </tr>
+                    <#if shouldMailContainTwoFactorInfo == "true">
+                        <tr>
+                            <td valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 25px; padding-bottom: 5px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;" class="paragraph" width="87.5%">
+                                <div style="color: #77787b; line-height: 30px; font-weight: normal;">
+                                    Use this QR code to set up two-factor authentication: <br>
+                                    <img src="https://chart.googleapis.com/chart?cht=qr&chl=${totpUrl}&chs=200x200&chld=L|0" ali><br>
+                                    <h0>Secret key : ${totpSecret}</h0>
+                                </div>
+                            </td>
+                        </tr>
+                    </#if>
                     <tr>
                         <td align="center" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; padding-top: 25px; border-collapse: collapse;" class="line" width="87.5%">
                             <hr color="#DBDCDD" align="center" width="100%" size="1" noshade="" style="margin: 0; padding: 0;">

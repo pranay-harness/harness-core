@@ -146,6 +146,7 @@ import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.OauthProviderType;
+import software.wings.security.authentication.TOTPAuthHandler;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
@@ -245,6 +246,7 @@ public class UserServiceImpl implements UserService {
   @Inject private SignupSpamChecker spamChecker;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Inject private TOTPAuthHandler totpAuthHandler;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -653,7 +655,9 @@ public class UserServiceImpl implements UserService {
     UserInvite newInvite =
         UserInviteBuilder.anUserInvite().withAccountId(accountId).withAppId(GLOBAL_APP_ID).withEmail(email).build();
     wingsPersistence.save(newInvite);
-    userService.sendNewInvitationMail(newInvite, accountService.get(accountId));
+    Account account = accountService.get(accountId);
+    existingUser = checkIfTwoFactorAuthenticationIsEnabledForAccount(existingUser, account);
+    userService.sendNewInvitationMail(newInvite, account, existingUser);
     logger.info("Resent invitation email for user: {}", email);
     return true;
   }
@@ -745,17 +749,13 @@ public class UserServiceImpl implements UserService {
                  .imported(userInvite.getImportedByScim())
                  .build();
       user = save(user, accountId);
+      user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
       // Invitation email should sent only in case of USER_PASSWORD authentication mechanism. Because only in that case
       // we need user to set the password.
       if (currentAuthenticationMechanism == AuthenticationMechanism.USER_PASSWORD) {
-        sendNewInvitationMail(userInvite, account);
+        sendNewInvitationMail(userInvite, account, user);
         sendNotification = false;
       }
-
-      // TODO: PL-2771: Enable the invited User's 2FA if the account is 2FA enabled.
-      //      if (account.isTwoFactorAdminEnforced()) {
-      //        enableTwoFactorAuthenticationForUser(user);
-      //      }
     } else {
       boolean userAlreadyAddedToAccount = user.getAccounts().stream().anyMatch(acc -> acc.getUuid().equals(accountId));
       if (userAlreadyAddedToAccount) {
@@ -765,7 +765,8 @@ public class UserServiceImpl implements UserService {
       }
       if (!accountService.isSSOEnabled(account)) {
         if (!user.isEmailVerified()) {
-          sendNewInvitationMail(userInvite, account);
+          user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
+          sendNewInvitationMail(userInvite, account, user);
           sendNotification = false;
         }
       }
@@ -879,13 +880,18 @@ public class UserServiceImpl implements UserService {
     return pageResponse.getResponse();
   }
 
-  private Map<String, String> getNewInvitationTemplateModel(UserInvite userInvite, Account account)
+  private Map<String, String> getNewInvitationTemplateModel(UserInvite userInvite, Account account, User user)
       throws URISyntaxException {
     Map<String, String> model = new HashMap<>();
     String inviteUrl = getUserInviteUrl(userInvite, account);
     model.put("company", account.getCompanyName());
     model.put("name", userInvite.getEmail());
     model.put("url", inviteUrl);
+    boolean shouldMailContainTwoFactorInfo = user.isTwoFactorAuthenticationEnabled();
+    model.put("shouldMailContainTwoFactorInfo", Boolean.toString(shouldMailContainTwoFactorInfo));
+    model.put("totpSecret", user.getTotpSecretKey());
+    String otpUrl = totpAuthHandler.generateOtpUrl(account.getCompanyName(), user.getEmail(), user.getTotpSecretKey());
+    model.put("totpUrl", otpUrl);
     return model;
   }
 
@@ -928,9 +934,9 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public void sendNewInvitationMail(UserInvite userInvite, Account account) {
+  public void sendNewInvitationMail(UserInvite userInvite, Account account, User user) {
     try {
-      Map<String, String> templateModel = getNewInvitationTemplateModel(userInvite, account);
+      Map<String, String> templateModel = getNewInvitationTemplateModel(userInvite, account, user);
       signupService.sendEmail(userInvite, INVITE_EMAIL_TEMPLATE_NAME, templateModel);
     } catch (URISyntaxException e) {
       logger.error("Invitation email couldn't be sent ", e);
@@ -1575,12 +1581,13 @@ public class UserServiceImpl implements UserService {
       Query<User> updateQuery = wingsPersistence.createQuery(User.class);
       updateQuery.filter(UserKeys.accounts, accountId);
       if (updateQuery.count() > 0) {
-        for (User u : updateQuery) {
-          // Look for user who has only 1 account
-          if (u.getAccounts().size() == 1) {
-            if (!u.isTwoFactorAuthenticationEnabled()) {
-              enableTwoFactorAuthenticationForUser(u);
-            }
+        for (User user : updateQuery) {
+          String defaultAccountId = authenticationUtils.getDefaultAccount(user).getUuid();
+          logger.info("User {} default account Id is {}", user.getEmail(), defaultAccountId);
+          if (defaultAccountId.equals(accountId) && !user.isTwoFactorAuthenticationEnabled()) {
+            user = enableTwoFactorAuthenticationForUser(user);
+            logger.info("Sending 2FA reset email to user {}", user.getEmail());
+            totpAuthHandler.sendTwoFactorAuthenticationResetEmail(user);
           }
         }
       }
@@ -1591,11 +1598,29 @@ public class UserServiceImpl implements UserService {
     return true;
   }
 
-  private void enableTwoFactorAuthenticationForUser(User user) {
-    user.setTwoFactorAuthenticationEnabled(true);
-    user.setTwoFactorAuthenticationMechanism(TwoFactorAuthenticationMechanism.TOTP);
-    update(user);
-    twoFactorAuthenticationManager.sendTwoFactorAuthenticationResetEmail(user.getUuid());
+  private User enableTwoFactorAuthenticationForUser(User user) {
+    logger.info("Enabling 2FA for user {}", user.getEmail());
+    TwoFactorAuthenticationSettings twoFactorAuthenticationSettings =
+        totpAuthHandler.createTwoFactorAuthenticationSettings(user);
+    twoFactorAuthenticationSettings.setTwoFactorAuthenticationEnabled(true);
+    return updateTwoFactorAuthenticationSettings(user, twoFactorAuthenticationSettings);
+  }
+
+  /**
+   * Checks if the user's default account has 2FA enabled account wide. If yes, then setup 2FA for the user if not
+   * already set
+   * @param user
+   * @param account
+   */
+  private User checkIfTwoFactorAuthenticationIsEnabledForAccount(User user, Account account) {
+    String defaultAccountId = authenticationUtils.getDefaultAccount(user).getUuid();
+    logger.info("User {} default account Id is {}", user.getEmail(), defaultAccountId);
+    logger.info("2FA enabled is {} account wide for account {}", account.isTwoFactorAdminEnforced(), account.getUuid());
+    if (defaultAccountId.equals(account.getUuid()) && account.isTwoFactorAdminEnforced()
+        && !user.isTwoFactorAuthenticationEnabled()) {
+      user = enableTwoFactorAuthenticationForUser(user);
+    }
+    return user;
   }
 
   private void sendResetPasswordEmail(User user, String token) {
