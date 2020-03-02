@@ -73,8 +73,10 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
+import software.wings.expression.ArtifactLabelEvaluator;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.expression.SecretFunctor;
 import software.wings.expression.ShellScriptFunctor;
@@ -89,6 +91,7 @@ import software.wings.service.impl.WorkflowExecutionLogContext;
 import software.wings.service.impl.WorkflowLogContext;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -127,6 +130,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   private static final Pattern wildCharPattern = Pattern.compile("[-+*/\\\\ &$\"'.|]");
   private static final Pattern argsCharPattern = Pattern.compile("[()\"']");
 
+  @Inject private BuildSourceService buildSourceService;
   @Inject private transient ArtifactService artifactService;
   @Inject private transient ArtifactStreamService artifactStreamService;
   @Inject private transient ExpressionProcessorFactory expressionProcessorFactory;
@@ -182,11 +186,18 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
   }
 
-  public static void addArtifactToContext(
-      ArtifactStreamService artifactStreamService, String accountId, Map<String, Object> map, Artifact artifact) {
+  public static void addArtifactToContext(ArtifactStreamService artifactStreamService, String accountId,
+      Map<String, Object> map, Artifact artifact, BuildSourceService buildSourceService) {
     if (artifact != null) {
       artifact.setSource(
           artifactStreamService.fetchArtifactSourceProperties(accountId, artifact.getArtifactStreamId()));
+      ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
+
+      artifact.label = ArtifactLabelEvaluator.builder()
+                           .buildNo(artifact.getBuildNo())
+                           .buildSourceService(buildSourceService)
+                           .artifactStream(artifactStream)
+                           .build();
       map.put(ARTIFACT, artifact);
       String artifactFileName = null;
       if (isNotEmpty(artifact.getArtifactFiles())) {
@@ -877,7 +888,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       map = copyIfNeeded(map);
       Application app = getApp();
       if (app != null) {
-        addArtifactToContext(artifactStreamService, app.getAccountId(), map, stateExecutionContext.getArtifact());
+        addArtifactToContext(
+            artifactStreamService, app.getAccountId(), map, stateExecutionContext.getArtifact(), buildSourceService);
       }
     }
     if (stateExecutionContext.getArtifactFileName() != null) {

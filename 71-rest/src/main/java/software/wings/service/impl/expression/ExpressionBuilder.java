@@ -78,6 +78,7 @@ public abstract class ExpressionBuilder {
   protected static final String ARTIFACT_ARTIFACT_FILE_NAME = "artifact.fileName";
   protected static final String ARTIFACT_BUCKET_NAME = "artifact.bucketName";
   protected static final String ARTIFACT_BUCKET_KEY = "artifact.key";
+  protected static final String ARTIFACT_LABEL = "artifact.label";
   protected static final String ARTIFACT_URL = "artifact.url";
   protected static final String ARTIFACT_BUILD_FULL_DISPLAYNAME = "artifact.buildFullDisplayName";
   protected static final String ARTIFACT_METADATA_IMAGE = ARTIFACT_PREFIX + ArtifactKeys.metadata_image;
@@ -199,7 +200,7 @@ public abstract class ExpressionBuilder {
       expressions.addAll(asList(ARTIFACT_DISPLAY_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION,
           ARTIFACT_FILE_NAME, ARTIFACT_ARTIFACT_FILE_NAME, ARTIFACT_BUILD_FULL_DISPLAYNAME, ARTIFACT_BUCKET_NAME,
           ARTIFACT_BUCKET_KEY, ARTIFACT_PATH, ARTIFACT_URL, ARTIFACT_SOURCE_USER_NAME, ARTIFACT_SOURCE_REGISTRY_URL,
-          ARTIFACT_SOURCE_REPOSITORY_NAME, ARTIFACT_METADATA_IMAGE, ARTIFACT_METADATA_TAG));
+          ARTIFACT_SOURCE_REPOSITORY_NAME, ARTIFACT_METADATA_IMAGE, ARTIFACT_METADATA_TAG, ARTIFACT_LABEL));
     }
     expressions.addAll(asList(ENV_NAME, ENV_DESCRIPTION));
     expressions.addAll(asList(SERVICE_NAME, SERVICE_DESCRIPTION));

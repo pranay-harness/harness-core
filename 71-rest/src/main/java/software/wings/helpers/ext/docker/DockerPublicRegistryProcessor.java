@@ -155,12 +155,12 @@ public class DockerPublicRegistryProcessor {
     }
   }
 
-  public List<Map<String, String>> getLabels(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails,
-      String imageName, List<String> buildNos, long deadline) {
+  public List<Map<String, String>> getLabels(
+      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, List<String> buildNos) {
     DockerRegistryRestClient registryRestClient =
         dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig, encryptionDetails);
     Function<Headers, String> getToken = headers -> getToken(headers, registryRestClient);
-    return dockerRegistryUtils.getLabels(registryRestClient, getToken, "", imageName, buildNos, deadline);
+    return dockerRegistryUtils.getLabels(registryRestClient, getToken, "", imageName, buildNos);
   }
 
   private String getToken(Headers headers, DockerRegistryRestClient registryRestClient) {

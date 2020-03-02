@@ -60,7 +60,6 @@ import software.wings.utils.RepositoryType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -278,10 +277,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
     }
 
-    // Timeout of 45 secs for collecting labels.
-    long deadline = (new Date()).getTime() + 45 * 1000;
     return getBuildService(settingAttribute, appId)
-        .getLabels(artifactStreamAttributes, buildNos, settingValue, encryptedDataDetails, deadline);
+        .getLabels(artifactStreamAttributes.getImageName(), buildNos, settingValue, encryptedDataDetails);
   }
 
   private ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, Service service) {

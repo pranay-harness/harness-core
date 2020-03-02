@@ -37,6 +37,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -70,6 +71,8 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   @Inject private transient MainConfiguration configuration;
 
   @Inject private transient ArtifactStreamService artifactStreamService;
+
+  @Inject private transient BuildSourceService buildSourceService;
 
   @Inject private transient WorkflowExecutionService workflowExecutionService;
 
@@ -159,14 +162,15 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     if (serviceElement == null) {
       if (isNotEmpty(artifactIds)) {
         Artifact artifact = artifactService.get(artifactIds.get(0));
-        ExecutionContextImpl.addArtifactToContext(artifactStreamService, getApp().getAccountId(), map, artifact);
+        ExecutionContextImpl.addArtifactToContext(
+            artifactStreamService, getApp().getAccountId(), map, artifact, buildSourceService);
       }
     } else {
       String accountId = getApp().getAccountId();
       String serviceId = serviceElement.getUuid();
       if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
         Artifact artifact = getArtifactForService(serviceId);
-        ExecutionContextImpl.addArtifactToContext(artifactStreamService, accountId, map, artifact);
+        ExecutionContextImpl.addArtifactToContext(artifactStreamService, accountId, map, artifact, buildSourceService);
       }
     }
 

@@ -1,9 +1,6 @@
 package software.wings.service.intfc;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.Integer.min;
-import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
 import com.google.common.collect.Lists;
 
@@ -20,14 +17,11 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Created by peeyushaggarwal on 5/13/16.
@@ -260,8 +254,8 @@ public interface BuildService<T> {
     return jobNames;
   }
 
-  default List<Map<String, String>> getLabels(ArtifactStreamAttributes artifactStreamAttributes, List<String> buildNos,
-      T config, List<EncryptedDataDetail> encryptionDetails, long deadline) {
+  default List<Map<String, String>> getLabels(
+      String imageName, List<String> buildNos, T dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     throw new UnsupportedOperationException();
   }
 
@@ -305,40 +299,5 @@ public interface BuildService<T> {
     List<BuildDetails> buildDetailsList = wrapNewBuildsWithLabels(
         Collections.singletonList(buildDetails), artifactStreamAttributes, config, encryptionDetails);
     return isEmpty(buildDetailsList) ? null : buildDetailsList.get(0);
-  }
-
-  /**
-   * wrapBuildDetailsWithLabels is a helper function for wrapNewBuildsWithLabels and wrapLastSuccessfulBuildWithLabels.
-   */
-  default List<BuildDetails> wrapBuildDetailsWithLabels(List<BuildDetails> buildDetails,
-      ArtifactStreamAttributes artifactStreamAttributes, T config, List<EncryptedDataDetail> encryptionDetails) {
-    if (isEmpty(buildDetails) || !artifactStreamAttributes.isCollection()
-        || !DOCKER.name().equals(artifactStreamAttributes.getArtifactStreamType())) {
-      return buildDetails;
-    }
-
-    // Timeout of 45 secs for collecting labels.
-    long deadline = (new Date()).getTime() + 45 * 1000;
-    // Collect labels for DOCKER.
-    List<String> buildNos = buildDetails.stream().map(BuildDetails::getNumber).collect(Collectors.toList());
-    List<Map<String, String>> labelsList =
-        getLabels(artifactStreamAttributes, buildNos, config, encryptionDetails, deadline);
-    if (isEmpty(labelsList)) {
-      // Return if labels could not be collected properly.
-      return buildDetails;
-    }
-
-    int minSize = min(buildNos.size(), labelsList.size());
-    if (minSize > 0) {
-      for (int i = 0; i < minSize; i++) {
-        if (isNotEmpty(labelsList.get(i))) {
-          buildDetails.get(i).setLabels(labelsList.get(i));
-        }
-      }
-    }
-    if (minSize < buildNos.size()) {
-      return new ArrayList<>(buildDetails.subList(0, minSize));
-    }
-    return buildDetails;
   }
 }
