@@ -101,6 +101,7 @@ import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
@@ -126,6 +127,7 @@ import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
+import software.wings.helpers.ext.kustomize.KustomizeTaskHelper;
 import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -158,6 +160,7 @@ public class K8sTaskHelper {
   @Inject private EncryptionService encryptionService;
   @Inject private HelmTaskHelper helmTaskHelper;
   @Inject private KubernetesHelperService kubernetesHelperService;
+  @Inject private KustomizeTaskHelper kustomizeTaskHelper;
 
   private static String eventOutputFormat =
       "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,MESSAGE:.message,REASON:.reason";
@@ -862,6 +865,10 @@ public class K8sTaskHelper {
         return renderTemplateForHelm(k8sDelegateTaskParams, manifestFilesDirectory, valuesFiles, releaseName, namespace,
             executionLogCallback, k8sTaskParameters.getHelmVersion());
 
+      case KustomizeSourceRepo:
+        return kustomizeTaskHelper.build(manifestFilesDirectory, k8sDelegateTaskParams.getKustomizeBinaryPath(),
+            k8sDelegateManifestConfig.getKustomizeConfig(), executionLogCallback);
+
       default:
         unhandled(storeType);
     }
@@ -870,9 +877,9 @@ public class K8sTaskHelper {
   }
 
   public List<ManifestFile> renderTemplateForApply(K8sDelegateTaskParams k8sDelegateTaskParams,
-      K8sDelegateManifestConfig k8sDelegateManifestConfig, String manifestFilesDirectory, List<String> filesToApply,
-      List<String> valuesFiles, String releaseName, String namespace, ExecutionLogCallback executionLogCallback,
-      K8sTaskParameters k8sTaskParameters) throws Exception {
+      K8sDelegateManifestConfig k8sDelegateManifestConfig, String manifestFilesDirectory,
+      @NotEmpty List<String> filesToApply, List<String> valuesFiles, String releaseName, String namespace,
+      ExecutionLogCallback executionLogCallback, K8sTaskParameters k8sTaskParameters) throws Exception {
     StoreType storeType = k8sDelegateManifestConfig.getManifestStoreTypes();
 
     switch (storeType) {
@@ -893,6 +900,9 @@ public class K8sTaskHelper {
                 .toString();
         return renderTemplateForHelmChartFiles(k8sDelegateTaskParams, manifestFilesDirectory, filesToApply, valuesFiles,
             releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion());
+      case KustomizeSourceRepo:
+        return kustomizeTaskHelper.buildForApply(k8sDelegateTaskParams.getKustomizeBinaryPath(),
+            k8sDelegateManifestConfig.getKustomizeConfig(), manifestFilesDirectory, filesToApply, executionLogCallback);
 
       default:
         unhandled(storeType);
@@ -1051,6 +1061,7 @@ public class K8sTaskHelper {
 
       case Remote:
       case HelmSourceRepo:
+      case KustomizeSourceRepo:
         return downloadManifestFilesFromGit(delegateManifestConfig, manifestFilesDirectory, executionLogCallback);
 
       case HelmChartRepo:

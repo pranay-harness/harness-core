@@ -3,6 +3,7 @@ package software.wings.sm.states.k8s;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -16,6 +17,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
+import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StepType.K8S_SCALE;
@@ -80,6 +83,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.k8s.kustomize.KustomizeHelper;
 import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.ArrayList;
@@ -96,6 +100,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private SecretManager secretManager;
   @Mock private HelmChartConfigHelperService helmChartConfigHelperService;
+  @Mock private KustomizeHelper kustomizeHelper;
 
   @Inject @InjectMocks private K8sStateHelper k8sStateHelper;
 
@@ -382,5 +387,37 @@ public class K8sStateHelperTest extends WingsBaseTest {
 
     wingsPersistence.save(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).isK8sV2(true).build());
     k8sStateHelper.validateK8sV2TypeServiceUsed(context);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testRenderForKustomizeInDelegateManifestConfig() {
+    when(settingsService.fetchGitConfigFromConnectorId(anyString())).thenReturn(new GitConfig());
+    when(gitFileConfigHelperService.renderGitFileConfig(any(ExecutionContext.class), any(GitFileConfig.class)))
+        .thenReturn(new GitFileConfig());
+
+    ApplicationManifest appManifest = buildKustomizeAppManifest();
+    K8sDelegateManifestConfig delegateManifestConfig =
+        k8sStateHelper.createDelegateManifestConfig(context, appManifest);
+
+    verify(gitFileConfigHelperService, times(1)).renderGitFileConfig(context, appManifest.getGitFileConfig());
+    verify(kustomizeHelper, times(1)).renderKustomizeConfig(context, appManifest.getKustomizeConfig());
+    assertThat(delegateManifestConfig.getKustomizeConfig()).isEqualTo(appManifest.getKustomizeConfig());
+  }
+
+  private ApplicationManifest buildKustomizeAppManifest() {
+    GitFileConfig gitFileConfig = GitFileConfig.builder()
+                                      .filePath("${filePath}")
+                                      .connectorId("connector-id")
+                                      .useBranch(true)
+                                      .branch("${branch}")
+                                      .build();
+    return ApplicationManifest.builder()
+        .kind(K8S_MANIFEST)
+        .gitFileConfig(gitFileConfig)
+        .storeType(KustomizeSourceRepo)
+        .serviceId("serviceId")
+        .build();
   }
 }

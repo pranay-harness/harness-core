@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitFileConfig;
@@ -20,6 +21,7 @@ import software.wings.beans.appmanifest.ApplicationManifest.Yaml;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -48,6 +50,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
         .storeType(applicationManifest.getStoreType().name())
         .gitFileConfig(getGitFileConfigForToYaml(applicationManifest))
         .helmChartConfig(getHelmChartConfigForToYaml(applicationManifest))
+        .kustomizeConfig(applicationManifest.getKustomizeConfig())
         .build();
   }
 
@@ -95,6 +98,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     AppManifestKind kind = yamlHelper.getAppManifestKindFromPath(filePath);
     GitFileConfig gitFileConfig = getGitFileConfigFromYaml(accountId, appId, yaml, storeType);
     HelmChartConfig helmChartConfig = getHelmChartConfigFromYaml(accountId, appId, yaml, storeType);
+    KustomizeConfig kustomizeConfig = getKustomizeConfigFromYaml(yaml, storeType);
 
     ApplicationManifest manifest = ApplicationManifest.builder()
                                        .serviceId(serviceId)
@@ -103,10 +107,20 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
                                        .gitFileConfig(gitFileConfig)
                                        .helmChartConfig(helmChartConfig)
                                        .kind(kind)
+                                       .kustomizeConfig(kustomizeConfig)
                                        .build();
 
     manifest.setAppId(appId);
     return manifest;
+  }
+
+  private KustomizeConfig getKustomizeConfigFromYaml(Yaml yaml, StoreType storeType) {
+    KustomizeConfig kustomizeConfig = yaml.getKustomizeConfig();
+    if (kustomizeConfig != null && storeType != StoreType.KustomizeSourceRepo) {
+      throw new InvalidRequestException(
+          "KustomizeConfig should only be used with KustomizeSourceRepo store type", USER);
+    }
+    return kustomizeConfig;
   }
 
   @Override

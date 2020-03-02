@@ -222,6 +222,27 @@ for tfConfigInspectVersion in v1.0; do
 
 done
 
+for kustomizeVersion in v3.5.4; do
+  echo "Adding kustomize" $kustomizeVersion
+
+  KUSTOMIZE_LINUX_DIR="${IMAGES_DIR}/kustomize/linux/$kustomizeVersion/"
+  KUSTOMIZE_MAC_DIR="${IMAGES_DIR}/kustomize/darwin/$kustomizeVersion/"
+
+  KUSTOMIZE_LINUX_URL=https://app.harness.io/storage/harness-download/harness-kustomize/release/"$kustomizeVersion"/bin/linux/amd64/kustomize
+  KUSTOMIZE_MAC_URL=https://app.harness.io/storage/harness-download/harness-kustomize/release/"$kustomizeVersion"/bin/darwin/amd64/kustomize
+
+  echo "$KUSTOMIZE_LINUX_DIR"
+  echo "$KUSTOMIZE_MAC_DIR"
+
+  mkdir -p "$KUSTOMIZE_LINUX_DIR"
+  mkdir -p "$KUSTOMIZE_MAC_DIR"
+
+  curl -L -o "${KUSTOMIZE_LINUX_DIR}kustomize" "$KUSTOMIZE_LINUX_URL"
+  curl -L -o "${KUSTOMIZE_MAC_DIR}kustomize" "$KUSTOMIZE_MAC_URL"
+
+
+done
+
 cp delegate.jar "${IMAGES_DIR}/"
 cp watcher.jar "${IMAGES_DIR}/"
 mv "${JRE_SOLARIS_1}" "${IMAGES_DIR}/"

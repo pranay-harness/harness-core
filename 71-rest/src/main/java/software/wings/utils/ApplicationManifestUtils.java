@@ -12,6 +12,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
+import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 
@@ -381,5 +382,10 @@ public class ApplicationManifestUtils {
     return applicationManifest != null && StoreType.HelmChartRepo == applicationManifest.getStoreType()
         && applicationManifest.getHelmChartConfig() != null
         && isNotBlank(applicationManifest.getHelmChartConfig().getChartName());
+  }
+
+  public boolean isKustomizeSource(ExecutionContext context) {
+    ApplicationManifest appManifest = getApplicationManifestForService(context);
+    return appManifest != null && appManifest.getStoreType() == KustomizeSourceRepo;
   }
 }

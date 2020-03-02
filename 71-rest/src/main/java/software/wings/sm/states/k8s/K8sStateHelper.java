@@ -86,6 +86,7 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
+import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
@@ -107,6 +108,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.k8s.kustomize.KustomizeHelper;
 import software.wings.utils.ApplicationManifestUtils;
 
 import java.io.IOException;
@@ -143,6 +145,7 @@ public class K8sStateHelper {
   @Inject private HelmChartConfigHelperService helmChartConfigHelperService;
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private KustomizeHelper kustomizeHelper;
 
   private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
   private static final long MAX_TASK_TIMEOUT_IN_MINUTES = 120L;
@@ -187,23 +190,15 @@ public class K8sStateHelper {
             applicationManifestService.getManifestFilesByAppManifestId(appManifest.getAppId(), appManifest.getUuid()));
         break;
 
+      case KustomizeSourceRepo:
+        KustomizeConfig kustomizeConfig = appManifest.getKustomizeConfig();
+        kustomizeHelper.renderKustomizeConfig(context, kustomizeConfig);
+        manifestConfigBuilder.kustomizeConfig(kustomizeConfig);
+        prepareRemoteDelegateManifestConfig(context, appManifest, manifestConfigBuilder);
+        break;
       case Remote:
       case HelmSourceRepo:
-        ApplicationManifest appManifestWithSourceRepoOverrideApplied =
-            applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context);
-        appManifest =
-            appManifestWithSourceRepoOverrideApplied == null ? appManifest : appManifestWithSourceRepoOverrideApplied;
-        GitFileConfig gitFileConfig =
-            gitFileConfigHelperService.renderGitFileConfig(context, appManifest.getGitFileConfig());
-        GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
-        notNullCheck("Git config not found", gitConfig);
-        List<EncryptedDataDetail> encryptionDetails =
-            secretManager.getEncryptionDetails(gitConfig, appManifest.getAppId(), null);
-
-        gitFileConfig.setFilePath(normalizeFolderPath(gitFileConfig.getFilePath()));
-        manifestConfigBuilder.gitFileConfig(gitFileConfig);
-        manifestConfigBuilder.gitConfig(gitConfig);
-        manifestConfigBuilder.encryptedDataDetails(encryptionDetails);
+        prepareRemoteDelegateManifestConfig(context, appManifest, manifestConfigBuilder);
         break;
 
       case HelmChartRepo:
@@ -220,6 +215,25 @@ public class K8sStateHelper {
     }
 
     return manifestConfigBuilder.build();
+  }
+
+  private void prepareRemoteDelegateManifestConfig(ExecutionContext context, ApplicationManifest appManifest,
+      K8sDelegateManifestConfigBuilder manifestConfigBuilder) {
+    ApplicationManifest appManifestWithSourceRepoOverrideApplied =
+        applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context);
+    appManifest =
+        appManifestWithSourceRepoOverrideApplied == null ? appManifest : appManifestWithSourceRepoOverrideApplied;
+    GitFileConfig gitFileConfig =
+        gitFileConfigHelperService.renderGitFileConfig(context, appManifest.getGitFileConfig());
+    GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
+    notNullCheck("Git config not found", gitConfig);
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails(gitConfig, appManifest.getAppId(), null);
+
+    gitFileConfig.setFilePath(normalizeFolderPath(gitFileConfig.getFilePath()));
+    manifestConfigBuilder.gitFileConfig(gitFileConfig);
+    manifestConfigBuilder.gitConfig(gitConfig);
+    manifestConfigBuilder.encryptedDataDetails(encryptionDetails);
   }
 
   public ExecutionResponse executeGitTask(ExecutionContext context,
@@ -557,9 +571,10 @@ public class K8sStateHelper {
 
       boolean valuesInGit = isValuesInGit(appManifestMap);
       boolean valuesInHelmChartRepo = applicationManifestUtils.isValuesInHelmChartRepo(context);
+      boolean kustomizeSource = applicationManifestUtils.isKustomizeSource(context);
 
       Activity activity = createK8sActivity(context, k8sStateExecutor.commandName(), k8sStateExecutor.stateType(),
-          activityService, k8sStateExecutor.commandUnitList(valuesInGit || valuesInHelmChartRepo));
+          activityService, k8sStateExecutor.commandUnitList(valuesInGit || valuesInHelmChartRepo || kustomizeSource));
 
       if (valuesInHelmChartRepo) {
         return executeHelmValuesFetchTask(context, activity.getUuid(), k8sStateExecutor.commandName());

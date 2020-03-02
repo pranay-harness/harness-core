@@ -125,6 +125,8 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
+import software.wings.helpers.ext.kustomize.KustomizeClient;
+import software.wings.helpers.ext.kustomize.KustomizeClientImpl;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
 import software.wings.helpers.ext.pcf.PcfClient;
@@ -404,6 +406,7 @@ public class DelegateModule extends DependencyModule {
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
     bind(HelmClient.class).to(HelmClientImpl.class);
+    bind(KustomizeClient.class).to(KustomizeClientImpl.class);
     bind(HelmDeployService.class).to(HelmDeployServiceImpl.class);
     bind(ContainerDeploymentDelegateHelper.class);
     bind(MessageService.class)

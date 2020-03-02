@@ -12,4 +12,5 @@ public class K8sDelegateTaskParams {
   String goTemplateClientPath;
   String helmPath;
   String ocPath;
+  String kustomizeBinaryPath;
 }

@@ -1,10 +1,12 @@
 package software.wings.yaml.handler.services;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -19,9 +21,12 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import org.apache.commons.io.FileUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.Application;
@@ -36,6 +41,7 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
+import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.yaml.handler.service.ApplicationManifestYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -47,7 +53,9 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.utils.WingsTestConstants;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock private AppService appService;
@@ -62,6 +70,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
 
   private ApplicationManifest localApplicationManifest;
   private ApplicationManifest remoteApplicationManifest;
+  private ApplicationManifest kustomizeApplicationManifest;
 
   private static final String CONNECTOR_ID = "CONNECTOR_ID";
   private static final String CONNECTOR_NAME = "CONNECTOR_NAME";
@@ -108,6 +117,10 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   private String envServiceOverrideValidYamlFilePath =
       "Setup/Applications/APP_NAME/Environments/ENV_NAME/Values/Services/SERVICE_NAME/Index.yaml";
 
+  private static final String resourcePath = "./yaml/ApplicationManifest";
+  private static final String kustomizeYamlFile = "kustomize_manifest.yaml";
+  ArgumentCaptor<ApplicationManifest> captor = ArgumentCaptor.forClass(ApplicationManifest.class);
+
   @Before
   public void setUp() {
     localApplicationManifest = ApplicationManifest.builder()
@@ -126,6 +139,13 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
                                                        .build())
                                     .kind(AppManifestKind.VALUES)
                                     .build();
+    kustomizeApplicationManifest =
+        ApplicationManifest.builder()
+            .serviceId(SERVICE_ID)
+            .storeType(StoreType.KustomizeSourceRepo)
+            .gitFileConfig(GitFileConfig.builder().branch("BRANCH").useBranch(true).connectorId(CONNECTOR_ID).build())
+            .kind(AppManifestKind.VALUES)
+            .build();
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(appService.getAppByName(ACCOUNT_ID, APP_NAME))
@@ -348,5 +368,50 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
 
     ApplicationManifest applicationManifestFromGet = yamlHandler.get(ACCOUNT_ID, envServiceOverrideValidYamlFilePath);
     compareAppManifest(applicationManifest, applicationManifestFromGet);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testCRUDFileAndGetForKustomizeManifest() throws HarnessException, IOException {
+    String kustomizeYamlContent = readResourceFile(kustomizeYamlFile);
+    ApplicationManifest kustomizeManifest = kustomizeApplicationManifest.cloneInternal();
+    kustomizeManifest.setKustomizeConfig(KustomizeConfig.builder().kustomizeDirPath("a").pluginRootDir("b").build());
+    ChangeContext<ApplicationManifest.Yaml> changeContext =
+        createChangeContext(kustomizeYamlContent, validYamlFilePath);
+
+    ApplicationManifest.Yaml yamlObject =
+        (ApplicationManifest.Yaml) getYaml(kustomizeYamlContent, ApplicationManifest.Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    compareAppManifest(kustomizeManifest, savedApplicationManifest);
+
+    validateYamlContent(kustomizeYamlContent, kustomizeManifest);
+
+    ApplicationManifest applicationManifestFromGet = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
+    compareAppManifest(kustomizeManifest, applicationManifestFromGet);
+  }
+
+  /*
+  If this test breaks, make sure you have added the new attribute in the yaml class as well. After that
+  we also need to update the toYaml and fromYaml method of the corresponding Yaml Handler.
+   */
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testFieldsInYaml() {
+    int attributeDiff = attributeDiff(ApplicationManifest.class, ApplicationManifest.Yaml.class);
+    assertThat(attributeDiff).isEqualTo(3);
+  }
+
+  private String readResourceFile(String fileName) throws IOException {
+    File yamlFile = null;
+    try {
+      yamlFile = new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + fileName).toURI());
+    } catch (URISyntaxException e) {
+      Assertions.fail("Unable to find yaml file " + fileName);
+    }
+    return FileUtils.readFileToString(yamlFile, "UTF-8");
   }
 }

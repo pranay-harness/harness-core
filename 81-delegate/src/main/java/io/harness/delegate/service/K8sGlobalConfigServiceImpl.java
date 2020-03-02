@@ -50,4 +50,9 @@ public class K8sGlobalConfigServiceImpl implements K8sGlobalConfigService {
   public String getOcPath() {
     return InstallUtils.getOcPath();
   }
+
+  @Override
+  public String getKustomizePath() {
+    return InstallUtils.getKustomizePath();
+  }
 }
