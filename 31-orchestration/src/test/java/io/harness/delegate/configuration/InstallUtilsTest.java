@@ -2,19 +2,23 @@ package io.harness.delegate.configuration;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.AVMOHAN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
+import io.harness.category.element.IntegrationTests;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.File;
+import java.io.IOException;
 
 public class InstallUtilsTest extends CategoryTest implements MockableTestMixin {
   DelegateConfiguration delegateConfiguration =
@@ -118,5 +122,24 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
   public void testGetHelmPath() {
     assertThat(InstallUtils.getHelm2Path()).isNotNull();
     assertThat(InstallUtils.getHelm3Path()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(IntegrationTests.class)
+  public void shouldInstallKustomize() throws IOException {
+    FileUtils.deleteDirectory(new File("./client-tools/kustomize/"));
+    assertThat(InstallUtils.installKustomize(delegateConfiguration)).isTrue();
+
+    // Won't download this time
+    assertThat(InstallUtils.installKustomize(delegateConfiguration)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldNotInstallWhenPathSetInDelegateConfig() {
+    DelegateConfiguration delegateConfiguration = DelegateConfiguration.builder().kustomizePath("RANDOM").build();
+    assertThat(InstallUtils.installKustomize(delegateConfiguration)).isTrue();
   }
 }
