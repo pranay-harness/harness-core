@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -30,6 +31,7 @@ public class Variable {
   public static final String STATE_TYPE = "stateType";
   public static final String PARENT_FIELDS = "parentFields";
   public static final String ENV_ID = "envId";
+  public static final String INFRA_ID = "infraDefinitionId";
   public static final String SERVICE_ID = "serviceId";
 
   private Map<String, Object> metadata = new HashMap<>();
@@ -59,7 +61,7 @@ public class Variable {
         .description(description)
         .mandatory(mandatory)
         .fixed(fixed)
-        .metadata(metadata)
+        .metadata(isNotEmpty(metadata) ? new HashMap<>(metadata) : new HashMap<>())
         .allowedValues(allowedValues)
         .allowedList(allowedList)
         .build();
@@ -83,6 +85,33 @@ public class Variable {
     return metadata.get(RELATED_FIELD) != null ? (String) metadata.get(RELATED_FIELD) : "";
   }
 
+  public String obtainArtifactTypeField() {
+    if (metadata == null) {
+      return "";
+    }
+    return metadata.get(ARTIFACT_TYPE) != null ? (String) metadata.get(ARTIFACT_TYPE) : "";
+  }
+
+  public String obtainEnvIdField() {
+    if (metadata == null) {
+      return "";
+    }
+    return metadata.get(ENV_ID) != null ? (String) metadata.get(ENV_ID) : "";
+  }
+
+  public String obtainInfraIdField() {
+    if (metadata == null) {
+      return "";
+    }
+    return metadata.get(INFRA_ID) != null ? (String) metadata.get(INFRA_ID) : "";
+  }
+
+  public String obtainServiceIdField() {
+    if (metadata == null) {
+      return "";
+    }
+    return metadata.get(SERVICE_ID) != null ? (String) metadata.get(SERVICE_ID) : "";
+  }
   @Override
   public boolean equals(Object o) {
     if (this == o) {

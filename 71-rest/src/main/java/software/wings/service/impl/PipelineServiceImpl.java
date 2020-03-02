@@ -51,6 +51,8 @@ import io.harness.beans.PageResponse;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -656,6 +658,28 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
+  @Override
+  public List<Variable> getPipelineVariables(String appId, String pipelineId) {
+    Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
+    notNullCheck("Pipeline does not exist", pipeline, USER);
+
+    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
+    List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+    List<Variable> pipelineVariables = new ArrayList<>();
+    Map<String, Workflow> workflowCache = new HashMap<>();
+    for (PipelineStage pipelineStage : pipelineStages) {
+      for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
+        if (!ENV_STATE.name().equals(pse.getType()) || pse.checkDisableAssertion()) {
+          continue;
+        }
+        String workflowId = (String) pse.getProperties().get("workflowId");
+        Workflow workflow = getWorkflow(pipeline, infraRefactor, workflowCache, workflowId);
+        setPipelineVariables(workflow, pse, pipelineVariables, true, infraRefactor);
+      }
+    }
+    return pipelineVariables;
+  }
+
   private void setSinglePipelineDetails(Pipeline pipeline, boolean withFinalValuesOnly) {
     boolean hasSshInfraMapping = false;
     boolean templatized = false;
@@ -674,15 +698,7 @@ public class PipelineServiceImpl implements PipelineService {
 
         try {
           String workflowId = (String) pse.getProperties().get("workflowId");
-          Workflow workflow;
-          if (workflowCache.containsKey(workflowId)) {
-            workflow = workflowCache.get(workflowId);
-          } else {
-            workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
-            notNullCheck("Workflow does not exist", workflow, USER);
-            notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
-            workflowCache.put(workflowId, workflow);
-          }
+          Workflow workflow = getWorkflow(pipeline, infraRefactor, workflowCache, workflowId);
 
           if (!hasSshInfraMapping) {
             hasSshInfraMapping = workflowServiceHelper.workflowHasSshDeploymentPhase(
@@ -719,6 +735,20 @@ public class PipelineServiceImpl implements PipelineService {
     pipeline.setEnvParameterized(pipelineParameterized);
     pipeline.setTemplatized(templatized);
     pipeline.setDeploymentTypes(deploymentTypes.stream().distinct().collect(toList()));
+  }
+
+  private Workflow getWorkflow(
+      Pipeline pipeline, boolean infraRefactor, Map<String, Workflow> workflowCache, String workflowId) {
+    Workflow workflow;
+    if (workflowCache.containsKey(workflowId)) {
+      workflow = workflowCache.get(workflowId);
+    } else {
+      workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
+      notNullCheck("Workflow does not exist", workflow, USER);
+      notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
+      workflowCache.put(workflowId, workflow);
+    }
+    return workflow;
   }
 
   private List<Variable> reorderPipelineVariables(List<Variable> pipelineVariables) {
@@ -772,15 +802,7 @@ public class PipelineServiceImpl implements PipelineService {
           }
 
           String workflowId = (String) pse.getProperties().get("workflowId");
-          Workflow workflow;
-          if (workflowCache.containsKey(workflowId)) {
-            workflow = workflowCache.get(workflowId);
-          } else {
-            workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
-            notNullCheck("Workflow does not exist", workflow, USER);
-            notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
-            workflowCache.put(workflowId, workflow);
-          }
+          Workflow workflow = getWorkflow(pipeline, infraRefactor, workflowCache, workflowId);
 
           if (!workflow.getOrchestrationWorkflow().isValid()) {
             invalidWorkflows.add(workflow.getName());
@@ -818,9 +840,13 @@ public class PipelineServiceImpl implements PipelineService {
     pipeline.setHasBuildWorkflow(hasBuildWorkflow);
   }
 
-  private void setPipelineVariables(Workflow workflow, PipelineStageElement pse, List<Variable> pipelineVariables,
+  @VisibleForTesting
+  void setPipelineVariables(Workflow workflow, PipelineStageElement pse, List<Variable> pipelineVariables,
       boolean withFinalValuesOnly, boolean infraRefator) {
     List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
+
+    boolean templatedPipeline = featureFlagService.isEnabled(FeatureName.TEMPLATED_PIPELINES, workflow.getAccountId());
+
     Map<String, String> pseWorkflowVariables = pse.getWorkflowVariables();
 
     if (isEmpty(workflowVariables)) {
@@ -845,53 +871,175 @@ public class PipelineServiceImpl implements PipelineService {
       notEmptyCheck("Empty variable name", variable.getName());
       String value = pseWorkflowVariables.get(variable.getName());
       if (variable.obtainEntityType() == null) {
-        // Non-entity variables.
-        if (isEmpty(value) && !variable.isFixed()) {
-          if (!contains(pipelineVariables, variable.getName())) {
-            pipelineVariables.add(variable.cloneInternal());
-          }
-        }
+        handleNonEntityVariables(pipelineVariables, variable, value);
       } else {
         // Entity variables.
-        if (isNotEmpty(value)) {
-          String variableName = matchesVariablePattern(value) ? getName(value) : null;
-          if (variableName != null) {
-            // Variable is an expression - templatized pipeline.
-            if (!contains(pipelineVariables, variableName)) {
-              // Variable is an expression so prompt for the value at runtime.
-              Variable pipelineVariable = variable.cloneInternal();
-              pipelineVariable.setName(variableName);
-              EntityType entityType = pipelineVariable.obtainEntityType();
+        handleEntityVariables(pipelineVariables, withFinalValuesOnly, infraRefator, workflowVariables,
+            templatedPipeline, pseWorkflowVariables, variable);
+      }
+    }
+  }
 
-              if (ENVIRONMENT == entityType) {
-                setRelatedFieldEnvironment(infraRefator, workflowVariables, pseWorkflowVariables, pipelineVariable);
-              } else {
-                cloneRelatedFieldName(pseWorkflowVariables, pipelineVariable);
-              }
-              populateParentFields(
-                  pipelineVariable, entityType, workflowVariables, variable.getName(), pseWorkflowVariables);
-              if (withFinalValuesOnly) {
-                // If only final concrete values are needed, set value as null as the used has not entered them yet.
-                pipelineVariable.setValue(null);
-              } else {
-                // Set variable value as workflow templatized variable name.
-                pipelineVariable.setValue(variable.getName());
-              }
-              pipelineVariables.add(pipelineVariable);
-            } else {
-              Variable storedVar = getContainedVariable(pipelineVariables, variableName);
-              if (storedVar != null && ENVIRONMENT == storedVar.obtainEntityType()) {
-                updateRelatedFieldEnvironment(infraRefator, workflowVariables, pseWorkflowVariables, storedVar);
-              }
-            }
+  private void handleEntityVariables(List<Variable> pipelineVariables, boolean withFinalValuesOnly,
+      boolean infraRefactor, List<Variable> workflowVariables, boolean templatedPipeline,
+      Map<String, String> pseWorkflowVariables, Variable variable) {
+    String value = pseWorkflowVariables.get(variable.getName());
+    if (isNotEmpty(value)) {
+      String variableName = matchesVariablePattern(value) ? getName(value) : null;
+      if (variableName != null) {
+        // Variable is an expression - templatized pipeline.
+        Variable pipelineVariable = variable.cloneInternal();
+        pipelineVariable.setName(variableName);
+        EntityType entityType = pipelineVariable.obtainEntityType();
+
+        setParentAndRelatedFields(infraRefactor, workflowVariables, templatedPipeline, pseWorkflowVariables, variable,
+            pipelineVariable, entityType);
+        if (!contains(pipelineVariables, variableName)) {
+          // Variable is an expression so prompt for the value at runtime.
+          if (withFinalValuesOnly) {
+            // If only final concrete values are needed, set value as null as the used has not entered them yet.
+            pipelineVariable.setValue(null);
+          } else {
+            // Set variable value as workflow templatized variable name.
+            pipelineVariable.setValue(variable.getName());
           }
+          pipelineVariables.add(pipelineVariable);
+        } else {
+          updateStoredVariable(pipelineVariables, infraRefactor, templatedPipeline, workflowVariables,
+              pseWorkflowVariables, pipelineVariable, variableName);
         }
       }
     }
   }
 
+  private void setParentAndRelatedFields(boolean infraRefator, List<Variable> workflowVariables,
+      boolean templatedPipeline, Map<String, String> pseWorkflowVariables, Variable variable, Variable pipelineVariable,
+      EntityType entityType) {
+    if (ENVIRONMENT == entityType) {
+      setRelatedFieldEnvironment(infraRefator, workflowVariables, pseWorkflowVariables, pipelineVariable);
+    } else {
+      cloneRelatedFieldName(pseWorkflowVariables, pipelineVariable);
+    }
+    populateParentFields(
+        pipelineVariable, entityType, workflowVariables, variable.getName(), pseWorkflowVariables, templatedPipeline);
+  }
+
+  private void handleNonEntityVariables(List<Variable> pipelineVariables, Variable variable, String value) {
+    // Non-entity variables. Here we can handle values like ${myTeam} for non entity variables
+    if (isEmpty(value) && !variable.isFixed()) {
+      if (!contains(pipelineVariables, variable.getName())) {
+        pipelineVariables.add(variable.cloneInternal());
+      }
+    }
+  }
+
+  @VisibleForTesting
+  void updateStoredVariable(List<Variable> pipelineVariables, boolean infraRefator, boolean templatedPipelines,
+      List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables, Variable variable,
+      String variableName) {
+    Variable storedVar = getContainedVariable(pipelineVariables, variableName);
+    if (storedVar != null) {
+      if (ENVIRONMENT == storedVar.obtainEntityType()) {
+        updateRelatedFieldEnvironment(infraRefator, workflowVariables, pseWorkflowVariables, storedVar);
+      } else if (SERVICE == storedVar.obtainEntityType() && templatedPipelines) {
+        mergeMetadataServiceVariable(variable, storedVar);
+      } else if (INFRASTRUCTURE_DEFINITION == storedVar.obtainEntityType() && templatedPipelines) {
+        mergeMetadataInfraVariable(variable, storedVar);
+      }
+    }
+  }
+
+  private void mergeMetadataServiceVariable(Variable variable, Variable storedVar) {
+    if (isEmpty(storedVar.getMetadata())) {
+      throw new UnexpectedException(
+          "Service variable" + storedVar.getName() + " stored without any AtifactType and Metadata");
+    }
+    validateArtifactType(storedVar.obtainArtifactTypeField(), variable.obtainArtifactTypeField(), storedVar.getName());
+
+    String newRelatedFiledVal = joinFieldValuesMetadata(storedVar.obtainRelatedField(), variable.obtainRelatedField());
+    if (isNotEmpty(newRelatedFiledVal)) {
+      storedVar.getMetadata().put(Variable.RELATED_FIELD, newRelatedFiledVal);
+    } else {
+      storedVar.getMetadata().remove(Variable.RELATED_FIELD);
+    }
+
+    String mergedInfraIdVal = joinFieldValuesMetadata(storedVar.obtainInfraIdField(), variable.obtainInfraIdField());
+    if (isNotEmpty(mergedInfraIdVal)) {
+      storedVar.getMetadata().put(Variable.INFRA_ID, mergedInfraIdVal);
+    } else {
+      storedVar.getMetadata().remove(Variable.INFRA_ID);
+    }
+  }
+
+  private void validateArtifactType(String storedArtifactTypeField, String newArtifactTypeField, String varName) {
+    if (isEmpty(storedArtifactTypeField) || isEmpty(newArtifactTypeField)
+        || !storedArtifactTypeField.equals(newArtifactTypeField)) {
+      throw new InvalidRequestException("The same Workflow variable name " + varName
+              + " cannot be used for Services using different Artifact types. Change the name of the variable in one or more Workflow.",
+          USER);
+    }
+  }
+
+  private void mergeMetadataInfraVariable(Variable variable, Variable storedVar) {
+    if (isEmpty(storedVar.getMetadata())) {
+      throw new UnexpectedException("Infra variable" + storedVar.getName() + " stored without any Metadata");
+    }
+    validateEnvId(storedVar.obtainEnvIdField(), variable.obtainEnvIdField(), storedVar.getName());
+
+    String newRelatedFiledVal = joinFieldValuesMetadata(storedVar.obtainRelatedField(), variable.obtainRelatedField());
+    if (isNotEmpty(newRelatedFiledVal)) {
+      storedVar.getMetadata().put(Variable.RELATED_FIELD, newRelatedFiledVal);
+    } else {
+      storedVar.getMetadata().remove(Variable.RELATED_FIELD);
+    }
+
+    String mergedServiceIdsVal =
+        joinFieldValuesMetadata(storedVar.obtainServiceIdField(), variable.obtainServiceIdField());
+    if (isNotEmpty(mergedServiceIdsVal)) {
+      storedVar.getMetadata().put(Variable.SERVICE_ID, mergedServiceIdsVal);
+    } else {
+      storedVar.getMetadata().remove(Variable.SERVICE_ID);
+    }
+  }
+
+  private void validateEnvId(String storedEnvIdField, String newEnvIdField, String varName) {
+    if (isEmpty(storedEnvIdField) || isEmpty(newEnvIdField)) {
+      return;
+    }
+    if (!storedEnvIdField.equals(newEnvIdField)) {
+      throw new InvalidRequestException("The same Workflow variable name " + varName
+              + " cannot be used for InfraDefinitions using different Environment. Change the name of the variable in one or more Workflow.",
+          USER);
+    }
+  }
+
+  private String joinFieldValuesMetadata(String storedRelatedField, String newRelatedField) {
+    if (isEmpty(storedRelatedField)) {
+      return newRelatedField;
+    }
+
+    if (isEmpty(newRelatedField)) {
+      return storedRelatedField;
+    }
+
+    if (storedRelatedField.equals(newRelatedField)) {
+      return newRelatedField;
+    }
+
+    if (storedRelatedField.contains(",")) {
+      Set<String> relatedFields = stream(storedRelatedField.split(",")).collect(toSet());
+      if (relatedFields.contains(newRelatedField)) {
+        return storedRelatedField;
+      } else {
+        return join(",", storedRelatedField, newRelatedField);
+      }
+    }
+
+    return join(",", storedRelatedField, newRelatedField);
+  }
+
   void populateParentFields(Variable pipelineVariable, EntityType entityType, List<Variable> workflowVariables,
-      String originalVarName, Map<String, String> pseWorkflowVariables) {
+      String originalVarName, Map<String, String> pseWorkflowVariables, boolean templatedPiplines) {
     if (workflowVariables == null) {
       return;
     }
@@ -902,6 +1050,10 @@ public class PipelineServiceImpl implements PipelineService {
                             .collect(Collectors.toList());
     Map<String, String> parentFields = new HashMap<>();
     switch (entityType) {
+      case SERVICE:
+        handleServiceVariable(
+            pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables, templatedPiplines);
+        break;
       case INFRASTRUCTURE_MAPPING:
       case INFRASTRUCTURE_DEFINITION:
         // instead of parent fields they have envId and service Id which is set inside the method
@@ -1061,12 +1213,33 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
+  private void handleServiceVariable(Variable pipelineVariable, List<Variable> workflowVariables,
+      String originalVarName, Map<String, String> pseWorkflowVariables, boolean templatedPipelines) {
+    if (!templatedPipelines) {
+      return;
+    }
+    for (Variable var : workflowVariables) {
+      if (INFRASTRUCTURE_DEFINITION == var.obtainEntityType()) {
+        if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
+          String relatedVarValue = pseWorkflowVariables.get(var.getName());
+          if (!matchesVariablePattern(relatedVarValue)) {
+            pipelineVariable.getMetadata().put(Variable.INFRA_ID, relatedVarValue);
+          }
+        }
+      }
+    }
+  }
+
   private void cloneRelatedFieldName(Map<String, String> pseWorkflowVariables, Variable pipelineVariable) {
     if (pipelineVariable.getMetadata().get("relatedField") != null) {
       String relatedFieldOldValue = String.valueOf(pipelineVariable.getMetadata().get("relatedField"));
       if (isNotEmpty(relatedFieldOldValue) && !relatedFieldOldValue.equals("null")) {
-        String relatedFieldNewValue = getName(pseWorkflowVariables.get(relatedFieldOldValue));
-        pipelineVariable.getMetadata().put("relatedField", relatedFieldNewValue);
+        if (ExpressionEvaluator.matchesVariablePattern(pseWorkflowVariables.get(relatedFieldOldValue))) {
+          String relatedFieldNewValue = getName(pseWorkflowVariables.get(relatedFieldOldValue));
+          pipelineVariable.getMetadata().put(Variable.RELATED_FIELD, relatedFieldNewValue);
+        } else {
+          pipelineVariable.getMetadata().remove(Variable.RELATED_FIELD);
+        }
       }
     }
   }
@@ -1083,6 +1256,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
+  // Need to check. Might cause regression
   void updateRelatedFieldEnvironment(boolean infraRefactor, List<Variable> workflowVariables,
       Map<String, String> pseWorkflowVariables, Variable pipelineVariable) {
     if (infraRefactor) {

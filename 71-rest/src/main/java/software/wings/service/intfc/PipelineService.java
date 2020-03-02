@@ -9,6 +9,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Pipeline;
+import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.deployment.DeploymentMetadata;
@@ -67,6 +68,7 @@ public interface PipelineService extends OwnedByApplication {
 
   void setPipelineDetails(List<Pipeline> pipelines, boolean withFinalValuesOnly);
 
+  List<Variable> getPipelineVariables(String appId, String pipelineId);
   /**
    * Create pipeline pipeline.
    *

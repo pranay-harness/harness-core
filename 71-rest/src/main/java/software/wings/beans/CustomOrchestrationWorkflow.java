@@ -51,7 +51,7 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   }
 
   @Override
-  public void onLoad(boolean infraRefactor, Workflow workflow) {
+  public void onLoad(boolean infraRefactor, boolean templatedPipeline, Workflow workflow) {
     // do nothing
   }
 

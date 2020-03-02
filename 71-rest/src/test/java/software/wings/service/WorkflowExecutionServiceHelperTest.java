@@ -93,7 +93,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   public void shouldFetchWorkflowVariablesSimplePipeline() {
     List<Variable> workflowVariables = asList(aVariable().build(), aVariable().build());
     Pipeline pipeline = preparePipeline(workflowVariables);
-    when(pipelineService.readPipelineWithVariables(APP_ID, PIPELINE_ID)).thenReturn(pipeline);
+    when(pipelineService.getPipelineVariables(APP_ID, PIPELINE_ID)).thenReturn(pipeline.getPipelineVariables());
     WorkflowVariablesMetadata workflowVariablesMetadata =
         workflowExecutionServiceHelper.fetchWorkflowVariables(APP_ID, prepareExecutionArgs(null, true), null);
     assertThat(workflowVariablesMetadata.isChanged()).isFalse();
@@ -105,7 +105,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariablesSimplePipelineInvalid() {
-    when(pipelineService.readPipelineWithVariables(APP_ID, PIPELINE_ID)).thenReturn(null);
+    when(pipelineService.getPipelineVariables(APP_ID, PIPELINE_ID)).thenReturn(null);
     WorkflowVariablesMetadata workflowVariablesMetadata =
         workflowExecutionServiceHelper.fetchWorkflowVariables(APP_ID, prepareExecutionArgs(null, true), null);
     assertThat(workflowVariablesMetadata.isChanged()).isFalse();
@@ -177,7 +177,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
     Map<String, String> workflowVariablesMap = prepareWorkflowVariablesMap(2);
     Pipeline pipeline = preparePipeline(workflowVariables);
     WorkflowExecution workflowExecution = prepareWorkflowExecution(workflowVariables, workflowVariablesMap, true);
-    when(pipelineService.readPipelineWithVariables(APP_ID, PIPELINE_ID)).thenReturn(pipeline);
+    when(pipelineService.getPipelineVariables(APP_ID, PIPELINE_ID)).thenReturn(pipeline.getPipelineVariables());
     when(workflowExecutionService.getWorkflowExecution(APP_ID, WORKFLOW_EXECUTION_ID)).thenReturn(workflowExecution);
     WorkflowVariablesMetadata workflowVariablesMetadata = workflowExecutionServiceHelper.fetchWorkflowVariables(
         APP_ID, prepareExecutionArgs(null, true), WORKFLOW_EXECUTION_ID);
@@ -200,7 +200,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
     Map<String, String> workflowVariablesMap = prepareWorkflowVariablesMap(2);
 
     Pipeline pipeline = preparePipeline(workflowVariables);
-    when(pipelineService.readPipelineWithVariables(APP_ID, PIPELINE_ID)).thenReturn(pipeline);
+    when(pipelineService.getPipelineVariables(APP_ID, PIPELINE_ID)).thenReturn(pipeline.getPipelineVariables());
     when(workflowExecutionService.getWorkflowExecution(APP_ID, WORKFLOW_EXECUTION_ID)).thenReturn(null);
     WorkflowVariablesMetadata workflowVariablesMetadata = workflowExecutionServiceHelper.fetchWorkflowVariables(
         APP_ID, prepareExecutionArgs(null, true), WORKFLOW_EXECUTION_ID);
