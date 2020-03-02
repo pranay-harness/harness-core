@@ -1,0 +1,10 @@
+harnessApiVersion: '1.0'
+type: APPLICATION_MANIFEST
+gitFileConfig:
+  branch: BRANCH
+  connectorName: CONNECTOR_NAME
+  useBranch: true
+kustomizeConfig:
+  kustomizeDirPath: a
+  pluginRootDir: b
+storeType: KustomizeSourceRepo

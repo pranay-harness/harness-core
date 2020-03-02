@@ -438,6 +438,7 @@ import software.wings.helpers.ext.k8s.response.K8sScaleResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 import software.wings.helpers.ext.k8s.response.K8sTrafficSplitResponse;
+import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -1510,5 +1511,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsSecurityGroup.class, 7321);
 
     kryo.register(SkipStateExecutionData.class, 7322);
+    kryo.register(KustomizeConfig.class, 7323);
   }
 }

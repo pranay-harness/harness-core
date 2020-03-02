@@ -39,6 +39,8 @@ import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.docker.DockerRegistryServiceImpl;
 import software.wings.helpers.ext.docker.client.DockerRestClientFactory;
 import software.wings.helpers.ext.docker.client.DockerRestClientFactoryImpl;
+import software.wings.helpers.ext.kustomize.KustomizeClient;
+import software.wings.helpers.ext.kustomize.KustomizeClientImpl;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
 import software.wings.helpers.ext.pcf.PcfClient;
@@ -158,6 +160,7 @@ public class WingsTestModule extends AbstractModule {
     bind(AwsEc2HelperServiceDelegate.class).to(AwsEc2HelperServiceDelegateImpl.class);
     bind(AwsEcsHelperServiceDelegate.class).to(AwsEcsHelperServiceDelegateImpl.class);
     bind(GitService.class).to(GitServiceImpl.class);
+    bind(KustomizeClient.class).to(KustomizeClientImpl.class);
     bind(ChartMuseumClient.class).to(ChartMuseumClientImpl.class);
     bind(SearchDao.class).to(ElasticsearchDao.class);
     bind(PcfClient.class).to(PcfClientImpl.class);

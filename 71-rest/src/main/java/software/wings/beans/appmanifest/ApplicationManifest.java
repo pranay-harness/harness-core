@@ -15,6 +15,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
+import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.yaml.BaseEntityYaml;
 
 @Indexes(@Index(options = @IndexOptions(name = "appManifestIdx", unique = true),
@@ -33,6 +34,7 @@ public class ApplicationManifest extends Base {
   @NonNull private StoreType storeType;
   private GitFileConfig gitFileConfig;
   private HelmChartConfig helmChartConfig;
+  private KustomizeConfig kustomizeConfig;
 
   public ApplicationManifest cloneInternal() {
     ApplicationManifest manifest = ApplicationManifest.builder()
@@ -42,6 +44,7 @@ public class ApplicationManifest extends Base {
                                        .gitFileConfig(this.gitFileConfig)
                                        .kind(this.kind)
                                        .helmChartConfig(helmChartConfig)
+                                       .kustomizeConfig(KustomizeConfig.cloneFrom(this.kustomizeConfig))
                                        .build();
     manifest.setAppId(this.appId);
     return manifest;
@@ -56,14 +59,16 @@ public class ApplicationManifest extends Base {
     private String storeType;
     private GitFileConfig gitFileConfig;
     private HelmChartConfig helmChartConfig;
+    private KustomizeConfig kustomizeConfig;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig,
-        HelmChartConfig helmChartConfig) {
+        HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig) {
       super(type, harnessApiVersion);
       this.storeType = storeType;
       this.gitFileConfig = gitFileConfig;
       this.helmChartConfig = helmChartConfig;
+      this.kustomizeConfig = kustomizeConfig;
     }
   }
 }

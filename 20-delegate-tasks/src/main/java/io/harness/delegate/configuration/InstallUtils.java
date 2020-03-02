@@ -51,6 +51,11 @@ public class InstallUtils {
   private static final String ocBaseDir = "./client-tools/oc/";
 
   private static String kubectlPath = "kubectl";
+
+  private static String kustomizeBaseDir = "./client-tools/kustomize/";
+  private static String kustomizeVersion = "v3.5.4";
+  private static String kustomizePath = "kustomize";
+
   private static String goTemplateToolPath = "go-template";
   private static Map<String, String> helmPaths = new HashMap<>();
 
@@ -95,6 +100,10 @@ public class InstallUtils {
 
   public static String getOcPath() {
     return ocPath;
+  }
+
+  public static String getKustomizePath() {
+    return kustomizePath;
   }
 
   public static boolean installKubectl(DelegateConfiguration configuration) {
@@ -332,6 +341,11 @@ public class InstallUtils {
       logger.error("Error checking helm", e);
       return false;
     }
+  }
+
+  private static String getKustomizeDownloadUrl(String managerBaseUrl, String version) {
+    return managerBaseUrl + "storage/harness-download/harness-kustomize/release/" + version + "/bin/" + getOsPath()
+        + "/amd64/kustomize";
   }
 
   private static String getHelmDownloadUrl(String managerBaseUrl, String version) {
@@ -695,5 +709,93 @@ public class InstallUtils {
   private static String getOcDownloadUrl(String managerBaseUrl, String version) {
     return managerBaseUrl + "storage/harness-download/harness-oc/release/" + version + "/bin/" + getOsPath()
         + "/amd64/oc";
+  }
+
+  public static boolean installKustomize(DelegateConfiguration configuration) {
+    try {
+      if (StringUtils.isNotEmpty(configuration.getKustomizePath())) {
+        kustomizePath = configuration.getKustomizePath();
+        logger.info("Found user configured kustomize at {}. Skipping Install.", kustomizePath);
+        return true;
+      }
+
+      if (SystemUtils.IS_OS_WINDOWS) {
+        logger.info("Skipping kustomize install on Windows");
+        return true;
+      }
+
+      String kustomizeDir = kustomizeBaseDir + kustomizeVersion;
+
+      if (validateKustomizeExists(kustomizeDir)) {
+        kustomizePath = Paths.get(kustomizeDir + "/kustomize").toAbsolutePath().normalize().toString();
+        logger.info("kustomize version {} already installed", kustomizeVersion);
+        return true;
+      }
+
+      logger.info("Installing kustomize");
+
+      createDirectoryIfDoesNotExist(kustomizeDir);
+
+      String downloadUrl = getKustomizeDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()), kustomizeVersion);
+
+      logger.info("download Url is {}", downloadUrl);
+
+      String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
+          + "chmod +x ./kustomize\n"
+          + "./kustomize version --short\n";
+
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(10, TimeUnit.MINUTES)
+                                            .directory(new File(kustomizeDir))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+
+      if (result.getExitValue() == 0) {
+        kustomizePath = Paths.get(kustomizeDir + "/kustomize").toAbsolutePath().normalize().toString();
+        logger.info(result.outputString());
+        if (validateKustomizeExists(kustomizeDir)) {
+          logger.info("kustomize path: {}", kustomizePath);
+          return true;
+        } else {
+          logger.error("kustomize not validated after download: {}", kustomizePath);
+          return false;
+        }
+      } else {
+        logger.error("kustomize install failed");
+        logger.error(result.outputString());
+        return false;
+      }
+    } catch (Exception e) {
+      logger.error("Error installing kustomize", e);
+      return false;
+    }
+  }
+
+  private static boolean validateKustomizeExists(String kustomizeDir) {
+    try {
+      if (!Paths.get(kustomizeDir + "/kustomize").toFile().exists()) {
+        return false;
+      }
+
+      String script = "./kustomize version --short\n";
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(1, TimeUnit.MINUTES)
+                                            .directory(new File(kustomizeDir))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+
+      if (result.getExitValue() == 0) {
+        logger.info(result.outputString());
+        return true;
+      } else {
+        logger.error(result.outputString());
+        return false;
+      }
+    } catch (Exception e) {
+      logger.error("Error checking kustomize", e);
+      return false;
+    }
   }
 }

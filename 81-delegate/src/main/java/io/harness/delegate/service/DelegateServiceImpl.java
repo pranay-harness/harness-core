@@ -8,6 +8,7 @@ import static io.harness.delegate.configuration.InstallUtils.installChartMuseum;
 import static io.harness.delegate.configuration.InstallUtils.installGoTemplateTool;
 import static io.harness.delegate.configuration.InstallUtils.installHelm;
 import static io.harness.delegate.configuration.InstallUtils.installKubectl;
+import static io.harness.delegate.configuration.InstallUtils.installKustomize;
 import static io.harness.delegate.configuration.InstallUtils.installOc;
 import static io.harness.delegate.configuration.InstallUtils.installTerraformConfigInspect;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
@@ -323,6 +324,7 @@ public class DelegateServiceImpl implements DelegateService {
       boolean chartMuseumInstalled = installChartMuseum(delegateConfiguration);
       boolean tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
       boolean ocInstalled = installOc(delegateConfiguration);
+      boolean kustomizeInstalled = installKustomize(delegateConfiguration);
 
       long start = clock.millis();
       String description = "description here".equals(delegateConfiguration.getDescription())
@@ -464,6 +466,7 @@ public class DelegateServiceImpl implements DelegateService {
           boolean chartMuseum = chartMuseumInstalled;
           boolean tfConfigInspect = tfConfigInspectInstalled;
           boolean oc = ocInstalled;
+          boolean kustomize = kustomizeInstalled;
 
           int retries = CLIENT_TOOL_RETRIES;
           while ((!kubectl || !goTemplate || !helm || !chartMuseum || !tfConfigInspect) && retries > 0) {
@@ -489,6 +492,9 @@ public class DelegateServiceImpl implements DelegateService {
             if (!oc) {
               oc = installOc(delegateConfiguration);
             }
+            if (!kustomize) {
+              kustomize = installKustomize(delegateConfiguration);
+            }
 
             retries--;
           }
@@ -507,6 +513,9 @@ public class DelegateServiceImpl implements DelegateService {
           }
           if (!tfConfigInspect) {
             logger.error("Failed to install tf-config-inspect after {} retries", CLIENT_TOOL_RETRIES);
+          }
+          if (!kustomize) {
+            logger.error("Failed to install kustomize after {} retries", CLIENT_TOOL_RETRIES);
           }
         });
       }

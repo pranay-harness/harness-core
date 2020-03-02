@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class K8sCanaryDeployTaskParameters extends K8sTaskParameters {
+public class K8sCanaryDeployTaskParameters extends K8sTaskParameters implements ManifestAwareTaskParams {
   private K8sDelegateManifestConfig k8sDelegateManifestConfig;
   @Expression private List<String> valuesYamlList;
   private Integer instances;

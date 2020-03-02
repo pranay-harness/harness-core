@@ -30,4 +30,14 @@ public class BaseYamlHandlerTest extends WingsBaseTest {
 
     return mapper.readValue(yamlString, yamlClass);
   }
+
+  /*
+  If this test breaks, make sure you have added the new attribute in the yaml class as well. After that
+  we also need to update the toYaml and fromYaml method of the corresponding Yaml Handler.
+   */
+  public int attributeDiff(Class bean, Class yaml) {
+    int attributesInBean = bean.getDeclaredFields().length;
+    int attributesInYaml = yaml.getDeclaredFields().length;
+    return attributesInBean - attributesInYaml;
+  }
 }

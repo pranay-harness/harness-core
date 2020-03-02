@@ -30,4 +30,9 @@ public class K8sGlobalConfigServiceUnsupported implements K8sGlobalConfigService
   public String getOcPath() {
     throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_MSG);
   }
+
+  @Override
+  public String getKustomizePath() {
+    throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_MSG);
+  }
 }

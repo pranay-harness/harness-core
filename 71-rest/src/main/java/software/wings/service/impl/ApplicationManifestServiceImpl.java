@@ -8,6 +8,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
@@ -301,13 +302,15 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     return savedApplicationManifest;
   }
 
-  private boolean exists(ApplicationManifest applicationManifest) {
+  @VisibleForTesting
+  boolean exists(ApplicationManifest applicationManifest) {
     ApplicationManifest appManifest = getAppManifest(applicationManifest.getAppId(), applicationManifest.getEnvId(),
         applicationManifest.getServiceId(), applicationManifest.getKind());
     return appManifest != null;
   }
 
-  private void resetReadOnlyProperties(ApplicationManifest applicationManifest) {
+  @VisibleForTesting
+  void resetReadOnlyProperties(ApplicationManifest applicationManifest) {
     ApplicationManifest savedAppManifest = getById(applicationManifest.getAppId(), applicationManifest.getUuid());
     applicationManifest.setKind(savedAppManifest.getKind());
   }
@@ -579,11 +582,22 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     if (applicationManifest.getHelmChartConfig() != null) {
       throw new InvalidRequestException("helmChartConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
     }
+    validateGitFileConfigForRemoteManifest(applicationManifest.getGitFileConfig());
+  }
 
+  private void validateKustomizeAppManifest(ApplicationManifest applicationManifest) {
+    if (applicationManifest.getKustomizeConfig() == null) {
+      throw new InvalidRequestException("KustomizeConfig must be present for Kustomize Manifests", USER);
+    }
     GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
+    validateGitFileConfigForRemoteManifest(gitFileConfig);
+    if (isNotEmpty(gitFileConfig.getFilePath())) {
+      throw new InvalidRequestException("File Path has to be empty for Git Config for Kustomize Manifests", USER);
+    }
+  }
 
+  private void validateGitFileConfigForRemoteManifest(GitFileConfig gitFileConfig) {
     notNullCheck("gitFileConfig has to be specified for Remote", gitFileConfig, USER);
-
     if (isBlank(gitFileConfig.getConnectorId())) {
       throw new InvalidRequestException("Connector id cannot be empty. ", USER);
     }
@@ -614,6 +628,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       case HelmSourceRepo:
         validateRemoteAppManifest(applicationManifest);
         break;
+      case KustomizeSourceRepo:
+        validateKustomizeAppManifest(applicationManifest);
+        break;
 
       case Local:
         validateLocalAppManifest(applicationManifest);
@@ -633,11 +650,16 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
-  private void sanitizeApplicationManifestConfigs(ApplicationManifest applicationManifest) {
+  @VisibleForTesting
+  void sanitizeApplicationManifestConfigs(ApplicationManifest applicationManifest) {
     switch (applicationManifest.getStoreType()) {
       case Local:
       case Remote:
       case HelmSourceRepo:
+        break;
+      case KustomizeSourceRepo:
+        applicationManifest.getKustomizeConfig().setKustomizeDirPath(
+            defaultString(applicationManifest.getKustomizeConfig().getKustomizeDirPath()));
         break;
 
       case HelmChartRepo:

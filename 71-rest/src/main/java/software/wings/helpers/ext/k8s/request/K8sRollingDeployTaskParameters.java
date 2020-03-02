@@ -10,7 +10,7 @@ import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class K8sRollingDeployTaskParameters extends K8sTaskParameters {
+public class K8sRollingDeployTaskParameters extends K8sTaskParameters implements ManifestAwareTaskParams {
   private K8sDelegateManifestConfig k8sDelegateManifestConfig;
   @Expression private List<String> valuesYamlList;
   private boolean isInCanaryWorkflow;
