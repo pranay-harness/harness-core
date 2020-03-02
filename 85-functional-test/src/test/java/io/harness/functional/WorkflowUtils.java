@@ -90,12 +90,13 @@ public class WorkflowUtils {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private TemplateGenerator templateGenerator;
 
-  public void checkForWorkflowSuccess(WorkflowExecution workflowExecution) {
+  public WorkflowExecution checkForWorkflowSuccess(WorkflowExecution workflowExecution) {
     WorkflowExecution finalWorkflowExecution = awaitAndFetchFinalWorkflowExecution(workflowExecution);
     if (finalWorkflowExecution.getStatus() != ExecutionStatus.SUCCESS) {
       throw new InvalidRequestException(
           "workflow execution did not succeed. Final status: " + finalWorkflowExecution.getStatus());
     }
+    return finalWorkflowExecution;
   }
 
   public void validateWorkflowStatus(WorkflowExecution workflowExecution, ExecutionStatus expectedStatus) {

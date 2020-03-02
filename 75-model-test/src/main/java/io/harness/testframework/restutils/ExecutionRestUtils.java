@@ -2,6 +2,8 @@ package io.harness.testframework.restutils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableMap;
+
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
@@ -10,9 +12,12 @@ import io.restassured.path.json.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import software.wings.beans.Account;
+import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.WorkflowExecution;
 
+import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.GenericType;
 
@@ -104,6 +109,12 @@ public class ExecutionRestUtils {
 
   public static String getWorkflowExecutionStatus(
       String bearerToken, Account account, String appId, String executionId) {
+    Map<Object, Object> resource = getWorkflowExecution(bearerToken, account, appId, executionId);
+    return resource.get("status").toString();
+  }
+
+  public static Map<Object, Object> getWorkflowExecution(
+      String bearerToken, Account account, String appId, String executionId) {
     JsonPath jsonPath = Setup.portal()
                             .auth()
                             .oauth2(bearerToken)
@@ -113,8 +124,7 @@ public class ExecutionRestUtils {
                             .get("/executions/" + executionId)
                             .getBody()
                             .jsonPath();
-    Map<Object, Object> resource = jsonPath.getMap("resource");
-    return resource.get("status").toString();
+    return jsonPath.getMap("resource");
   }
 
   public static void executeAndCheck(
@@ -125,5 +135,24 @@ public class ExecutionRestUtils {
     if (!(status.equals("RUNNING") || status.equals("QUEUED"))) {
       Assert.fail("ERROR: Execution did not START");
     }
+  }
+
+  public static void approvePipeline(String bearerToken, Account account, String appId, String executionId,
+      String approvalId, ApprovalDetails.Action action, List<NameValuePair> variables) {
+    GenericType<RestResponse<Boolean>> approvalResponseType = new GenericType<RestResponse<Boolean>>() {};
+
+    Map<String, Object> body =
+        ImmutableMap.of("approvalId", approvalId, "action", action.name(), "variables", variables, "comments", "");
+    RestResponse<Boolean> approvalResponse = Setup.portal()
+                                                 .auth()
+                                                 .oauth2(bearerToken)
+                                                 .queryParam("appId", appId)
+                                                 .queryParam("accountId", account.getUuid())
+                                                 .contentType(ContentType.JSON)
+                                                 .body(body, ObjectMapperType.GSON)
+                                                 .put("/executions/" + executionId + "/approval")
+                                                 .as(approvalResponseType.getType());
+
+    assertThat(approvalResponse.getResource()).withFailMessage(approvalResponse.toString()).isNotNull();
   }
 }
