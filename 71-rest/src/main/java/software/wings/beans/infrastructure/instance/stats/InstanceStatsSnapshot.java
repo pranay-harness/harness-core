@@ -1,5 +1,7 @@
 package software.wings.beans.infrastructure.instance.stats;
 
+import static org.mongodb.morphia.utils.IndexType.DESC;
+
 import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
@@ -29,9 +31,14 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "instanceStats", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Indexes(@Index(fields = { @Field("accountId")
-                           , @Field("timestamp") },
-    options = @IndexOptions(unique = true, name = "accountId_timestamp_unique_idx", background = true)))
+@Indexes({
+  @Index(fields = { @Field("accountId")
+                    , @Field("timestamp") },
+      options = @IndexOptions(unique = true, name = "accountId_timestamp_unique_idx", background = true))
+  ,
+      @Index(fields = { @Field(value = "timestamp", type = DESC) },
+          options = @IndexOptions(name = "timestamp_idx", background = true))
+})
 @FieldNameConstants(innerTypeName = "InstanceStatsSnapshotKeys")
 public class InstanceStatsSnapshot extends Base {
   private static final List<EntityType> ENTITY_TYPES_TO_AGGREGATE_ON = Arrays.asList(EntityType.APPLICATION);

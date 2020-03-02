@@ -23,7 +23,6 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -43,8 +42,8 @@ import software.wings.service.intfc.instance.ServerlessDashboardService;
 import software.wings.service.intfc.instance.stats.ServerlessInstanceStatService;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
@@ -133,12 +132,13 @@ public class ServerlessDashboardResourceTest extends CategoryTest {
   @Test
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
-  @Ignore("TODO: It looks like it is failing due to leap year. Rohit will fix it")
   public void test_getTimeRanges() {
-    doReturn(Instant.now().minus(31, ChronoUnit.DAYS))
-        .when(serverlessInstanceStatService)
-        .getFirstSnapshotTime(anyString());
+    Calendar c = Calendar.getInstance();
+    c.add(Calendar.MONTH, -1);
+    final Instant now_minus_1_month = c.toInstant();
+    doReturn(now_minus_1_month).when(serverlessInstanceStatService).getFirstSnapshotTime(anyString());
     final RestResponse<List<TimeRange>> timeRanges = serverlessDashboardResource.getTimeRanges(ACCOUNTID);
+
     Assertions.assertThat(timeRanges.getResource().size()).isEqualTo(2);
   }
 
