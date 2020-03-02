@@ -41,6 +41,10 @@ import javax.validation.constraints.NotNull;
         @Field(ResourceConstraintInstanceKeys.resourceConstraintId), @Field(ResourceConstraintInstanceKeys.order),
       }), @Index(options = @IndexOptions(name = "iterationIndex"), fields = {
         @Field(ResourceConstraintInstanceKeys.state), @Field(ResourceConstraintInstanceKeys.nextIteration),
+      }), @Index(options = @IndexOptions(name = "app_release_entity"), fields = {
+        @Field(ResourceConstraintInstanceKeys.appId)
+        , @Field(ResourceConstraintInstanceKeys.releaseEntityType),
+            @Field(ResourceConstraintInstanceKeys.releaseEntityId)
       })
 })
 @FieldNameConstants(innerTypeName = "ResourceConstraintInstanceKeys")
