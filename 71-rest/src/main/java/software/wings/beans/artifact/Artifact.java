@@ -3,6 +3,7 @@ package software.wings.beans.artifact;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
@@ -21,6 +22,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.Service;
+import software.wings.expression.ArtifactLabelEvaluator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,6 +81,7 @@ public class Artifact extends Base {
   private String artifactSourceName;
   private Map<String, String> metadata = Maps.newHashMap();
   private Map<String, String> labels = Maps.newHashMap();
+  @Transient @JsonIgnore public ArtifactLabelEvaluator label;
   @NotEmpty private String displayName;
   private String revision;
   private List<String> serviceIds = new ArrayList<>();
@@ -314,6 +317,7 @@ public class Artifact extends Base {
     private String artifactSourceName;
     private Map<String, String> metadata = Maps.newHashMap();
     private Map<String, String> labels = Maps.newHashMap();
+    private ArtifactLabelEvaluator label;
     private String displayName;
     private String revision;
     private List<String> serviceIds = new ArrayList<>();
@@ -430,6 +434,11 @@ public class Artifact extends Base {
       return this;
     }
 
+    public Builder withLabel(ArtifactLabelEvaluator label) {
+      this.label = label;
+      return this;
+    }
+
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
@@ -471,6 +480,7 @@ public class Artifact extends Base {
           .withArtifactSourceName(artifactSourceName)
           .withMetadata(metadata)
           .withLabels(labels)
+          .withLabel(label)
           .withDisplayName(displayName)
           .withRevision(revision)
           .withServiceIds(serviceIds)
@@ -500,6 +510,7 @@ public class Artifact extends Base {
       artifact.setArtifactSourceName(artifactSourceName);
       artifact.setMetadata(metadata);
       artifact.setLabels(labels);
+      artifact.setLabel(label);
       artifact.setDisplayName(displayName);
       artifact.setRevision(revision);
       artifact.setServiceIds(serviceIds);

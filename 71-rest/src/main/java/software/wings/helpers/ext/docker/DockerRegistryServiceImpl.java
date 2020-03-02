@@ -165,17 +165,17 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   }
 
   @Override
-  public List<Map<String, String>> getLabels(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails,
-      String imageName, List<String> buildNos, long deadline) {
+  public List<Map<String, String>> getLabels(
+      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, List<String> buildNos) {
     if (!dockerConfig.hasCredentials()) {
-      return dockerPublicRegistryProcessor.getLabels(dockerConfig, encryptionDetails, imageName, buildNos, deadline);
+      return dockerPublicRegistryProcessor.getLabels(dockerConfig, encryptionDetails, imageName, buildNos);
     }
 
     DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
     String authHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
     Function<Headers, String> getToken =
         headers -> getToken(dockerConfig, encryptionDetails, headers, registryRestClient);
-    return dockerRegistryUtils.getLabels(registryRestClient, getToken, authHeader, imageName, buildNos, deadline);
+    return dockerRegistryUtils.getLabels(registryRestClient, getToken, authHeader, imageName, buildNos);
   }
 
   @Override

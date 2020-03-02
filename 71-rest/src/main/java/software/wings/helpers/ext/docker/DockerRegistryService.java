@@ -32,8 +32,8 @@ public interface DockerRegistryService {
    * @param tags         the image tags to find labels of
    * @return the builds
    */
-  List<Map<String, String>> getLabels(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails,
-      String imageName, List<String> tags, long deadline);
+  List<Map<String, String>> getLabels(
+      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, List<String> tags);
 
   /**
    * Gets last successful build.

@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidCredentialsException;
 import lombok.extern.slf4j.Slf4j;
@@ -20,15 +19,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -37,17 +32,14 @@ import java.util.stream.Collectors;
 public class DockerRegistryUtils {
   @Inject private ExecutorService executorService;
 
-  private static final int MAX_GET_LABELS_CONCURRENCY = 20;
-
   public List<Map<String, String>> getLabels(DockerRegistryRestClient registryRestClient,
-      Function<Headers, String> getTokenFn, String authHeader, String imageName, List<String> tags, long deadline) {
+      Function<Headers, String> getTokenFn, String authHeader, String imageName, List<String> tags) {
     Map<Integer, Map<String, String>> labelsMap = new ConcurrentHashMap<>();
     if (EmptyPredicate.isEmpty(tags)) {
       return Collections.emptyList();
     }
 
     final int size = tags.size();
-    int start = 1;
     try {
       // Get labels for the first tag to get the latest auth header.
       String tag = tags.get(0);
@@ -59,55 +51,25 @@ public class DockerRegistryUtils {
       }
       labelsMap.put(0, res.getLeft());
 
-      while (start < size) {
+      for (int i = 1; i < size; i++) {
         // Get labels for the next (at most) MAX_GET_LABELS_CONCURRENCY tags.
-        List<Callable<Boolean>> callables = new ArrayList<>();
-        for (int i = start; i < size && i < start + MAX_GET_LABELS_CONCURRENCY; i++) {
-          int index = i;
-          callables.add(() -> {
-            String tagInternal = tags.get(index);
-            try {
-              Map<String, String> newLabels =
-                  getSingleTagLabels(registryRestClient, finalAuthHeader, imageName, tagInternal);
-              labelsMap.put(index, newLabels);
-              return true;
-            } catch (Exception e) {
-              logger.error("Could not fetch docker labels for {}:{}", imageName, tagInternal, e);
-              return false;
-            }
-          });
+        String tagInternal = tags.get(i);
+        try {
+          Map<String, String> newLabels =
+              getSingleTagLabels(registryRestClient, finalAuthHeader, imageName, tagInternal);
+          labelsMap.put(i, newLabels);
+        } catch (Exception e) {
+          logger.error("Could not fetch docker labels for {}:{}", imageName, tagInternal, e);
         }
-
-        // Wait for all the futures in this iteration with a deadline.
-        long timeout = deadline - (new Date()).getTime();
-        List<Future<Boolean>> futures = executorService.invokeAll(callables, timeout, TimeUnit.MILLISECONDS);
-        boolean timeoutExceeded = false;
-        boolean gotException = false;
-        for (Future<Boolean> future : futures) {
-          if (future.isCancelled() || !future.isDone()) {
-            timeoutExceeded = true;
-          } else if (!future.get()) {
-            gotException = true;
-          }
-        }
-
-        if (gotException) {
-          throw new ArtifactServerException("Failed to fetch docker image labels");
-        } else if (timeoutExceeded) {
-          // Deadline exceeded, return with the labels for the processed tags.
-          break;
-        }
-        start += MAX_GET_LABELS_CONCURRENCY;
       }
+
     } catch (Exception e) {
       // Ignore error until we understand why fetching labels is failing sometimes.
       logger.error("Failed to fetch docker image labels", e);
       return Collections.emptyList();
     }
 
-    // The total number of tags that we have processed (collected labels for) might be less than tags.size() as we might
-    // have hit the deadline. In that case we return a list of size tagsProcessed.
-    int tagsProcessed = Math.min(tags.size(), start);
+    int tagsProcessed = tags.size();
     List<Map<String, String>> labelsList = new ArrayList<>();
     for (int i = 0; i < tagsProcessed; i++) {
       Map<String, String> labels = labelsMap.getOrDefault(i, null);
