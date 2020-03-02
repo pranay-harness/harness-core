@@ -693,50 +693,37 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   private void obtainEncryptedValues(String appId, String workflowExecutionId, List<ServiceVariable> serviceVariables) {
     String accountId = appService.get(appId).getAccountId();
-    if (featureFlagService.isEnabled(FeatureName.BATCH_SECRET_DECRYPTION, accountId)) {
-      Map<EncryptionConfig, List<EncryptableSettingWithEncryptionDetails>> encryptableSettingDetailsMap =
-          new HashMap<>();
-      serviceVariables.forEach(serviceVariable -> {
-        if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
-          if (isEmpty(serviceVariable.getAccountId())) {
-            serviceVariable.setAccountId(accountId);
-          }
+    Map<EncryptionConfig, List<EncryptableSettingWithEncryptionDetails>> encryptableSettingDetailsMap = new HashMap<>();
+    serviceVariables.forEach(serviceVariable -> {
+      if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
+        if (isEmpty(serviceVariable.getAccountId())) {
+          serviceVariable.setAccountId(accountId);
+        }
 
-          List<EncryptedDataDetail> encryptedDataDetails =
-              secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId);
-          if (isNotEmpty(encryptedDataDetails)) {
-            EncryptableSettingWithEncryptionDetails encryptableSettingWithEncryptionDetails =
-                EncryptableSettingWithEncryptionDetails.builder()
-                    .encryptableSetting(serviceVariable)
-                    .encryptedDataDetails(encryptedDataDetails)
-                    .build();
-            EncryptionConfig encryptionConfig = encryptedDataDetails.get(0).getEncryptionConfig();
-            List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList =
-                encryptableSettingDetailsMap.get(encryptionConfig);
-            if (encryptableSettingWithEncryptionDetailsList == null) {
-              encryptableSettingWithEncryptionDetailsList = new ArrayList<>();
-              encryptableSettingDetailsMap.put(encryptionConfig, encryptableSettingWithEncryptionDetailsList);
-            }
-            encryptableSettingWithEncryptionDetailsList.add(encryptableSettingWithEncryptionDetails);
+        List<EncryptedDataDetail> encryptedDataDetails =
+            secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId);
+        if (isNotEmpty(encryptedDataDetails)) {
+          EncryptableSettingWithEncryptionDetails encryptableSettingWithEncryptionDetails =
+              EncryptableSettingWithEncryptionDetails.builder()
+                  .encryptableSetting(serviceVariable)
+                  .encryptedDataDetails(encryptedDataDetails)
+                  .build();
+          EncryptionConfig encryptionConfig = encryptedDataDetails.get(0).getEncryptionConfig();
+          List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList =
+              encryptableSettingDetailsMap.get(encryptionConfig);
+          if (encryptableSettingWithEncryptionDetailsList == null) {
+            encryptableSettingWithEncryptionDetailsList = new ArrayList<>();
+            encryptableSettingDetailsMap.put(encryptionConfig, encryptableSettingWithEncryptionDetailsList);
           }
+          encryptableSettingWithEncryptionDetailsList.add(encryptableSettingWithEncryptionDetails);
         }
-      });
-      // PL-3926: Run batch decrypt through one single delegate task if feature enabled. Also break down the full list
-      // by smaller batches aggregated by the same secret manager.
-      for (List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList :
-          encryptableSettingDetailsMap.values()) {
-        managerDecryptionService.decrypt(accountId, encryptableSettingWithEncryptionDetailsList);
       }
-    } else {
-      serviceVariables.forEach(serviceVariable -> {
-        if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
-          if (isEmpty(serviceVariable.getAccountId())) {
-            serviceVariable.setAccountId(accountId);
-          }
-          managerDecryptionService.decrypt(
-              serviceVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
-        }
-      });
+    });
+    // PL-3926: Run batch decrypt through one single delegate task if feature enabled. Also break down the full list
+    // by smaller batches aggregated by the same secret manager.
+    for (List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList :
+        encryptableSettingDetailsMap.values()) {
+      managerDecryptionService.decrypt(accountId, encryptableSettingWithEncryptionDetailsList);
     }
   }
 
