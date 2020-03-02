@@ -14,6 +14,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTimeUtils;
+import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.logcontext.UserLogContext;
@@ -100,7 +101,7 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
     return TimeBasedOneTimePasswordUtil.generateBase32Secret();
   }
 
-  private String generateOtpUrl(String companyName, String userEmailAddress, String secret) {
+  public String generateOtpUrl(String companyName, String userEmailAddress, String secret) {
     return format(
         "otpauth://totp/%s:%s?secret=%s&issuer=Harness-Inc", companyName.replace(" ", "-"), userEmailAddress, secret);
   }
@@ -108,11 +109,22 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
   @Override
   public boolean resetAndSendEmail(User user) {
     TwoFactorAuthenticationSettings settings = createTwoFactorAuthenticationSettings(user);
-    applyTwoFactorAuthenticationSettings(user, settings);
+    user = applyTwoFactorAuthenticationSettings(user, settings);
+    return sendTwoFactorAuthenticationResetEmail(user);
+  }
+
+  /**
+   * Send 2FA Reset email to the user
+   * @param user
+   * @return
+   */
+  public boolean sendTwoFactorAuthenticationResetEmail(User user) {
     Map<String, String> templateModel = new HashMap<>();
+    Account defaultAccount = authenticationUtils.getDefaultAccount(user);
     templateModel.put("name", user.getName());
-    templateModel.put("totpSecret", settings.getTotpSecretKey());
-    templateModel.put("totpUrl", settings.getTotpqrurl());
+    templateModel.put("totpSecret", user.getTotpSecretKey());
+    String totpUrl = generateOtpUrl(defaultAccount.getCompanyName(), user.getEmail(), user.getTotpSecretKey());
+    templateModel.put("totpUrl", totpUrl);
 
     List<String> toList = new ArrayList();
     toList.add(user.getEmail());
@@ -120,7 +132,7 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
                               .to(toList)
                               .templateName("reset_2fa")
                               .templateModel(templateModel)
-                              .accountId(authenticationUtils.getDefaultAccount(user).getUuid())
+                              .accountId(defaultAccount.getUuid())
                               .build();
     emailData.setCc(Collections.emptyList());
     emailData.setRetries(2);

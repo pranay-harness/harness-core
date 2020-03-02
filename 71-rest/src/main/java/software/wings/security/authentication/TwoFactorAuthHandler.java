@@ -20,4 +20,6 @@ public interface TwoFactorAuthHandler {
   User disableTwoFactorAuthentication(User user);
 
   boolean resetAndSendEmail(User user);
+
+  boolean sendTwoFactorAuthenticationResetEmail(User user);
 }

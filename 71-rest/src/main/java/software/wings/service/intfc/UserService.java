@@ -272,7 +272,7 @@ public interface UserService extends OwnedByAccount {
    * @param userInvite  user invite
    * @param account     account
    */
-  void sendNewInvitationMail(UserInvite userInvite, Account account);
+  void sendNewInvitationMail(UserInvite userInvite, Account account, User user);
 
   /**
    * Send added new role email

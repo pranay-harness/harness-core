@@ -88,6 +88,7 @@ import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.validator.routines.UrlValidator;
@@ -139,7 +140,9 @@ import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.LogoutResponse;
+import software.wings.security.authentication.TOTPAuthHandler;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AwsMarketPlaceApiHandlerImpl;
 import software.wings.service.impl.UserServiceImpl;
@@ -160,6 +163,8 @@ import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -218,6 +223,8 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private EventPublishHelper eventPublishHelper;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private AuthenticationUtils authenticationUtils;
+  @Mock private TOTPAuthHandler totpAuthHandler;
   @Mock private SSOSettingService ssoSettingService;
   @Spy @InjectMocks private SignupServiceImpl signupService;
 
@@ -259,6 +266,7 @@ public class UserServiceTest extends WingsBaseTest {
         .thenReturn(WingsTestConstants.mockChecker());
 
     when(configuration.isBlacklistedEmailDomainsAllowed()).thenReturn(true);
+    when(totpAuthHandler.generateOtpUrl(any(), any(), any())).thenReturn(StringUtils.EMPTY);
   }
 
   @Test
@@ -385,7 +393,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(accountService.save(any(Account.class), eq(false))).thenReturn(account);
     when(wingsPersistence.query(eq(User.class), any(PageRequest.class))).thenReturn(aPageResponse().build());
     when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean())).thenReturn(aPageResponse().build());
-    when(subdomainUrlHelper.getPortalBaseUrl(account.getUuid())).thenReturn(PORTAL_URL + "/");
+    when(subdomainUrlHelper.getPortalBaseUrl(ACCOUNT_ID)).thenReturn(PORTAL_URL + "/");
 
     userService.register(userBuilder.build());
 
@@ -408,7 +416,6 @@ public class UserServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldIncludeEnvPathInTrialSignupEmailUrl() {
     when(configuration.isTrialRegistrationAllowed()).thenReturn(true);
-    when(configuration.getPortal().getUrl()).thenReturn("https://qa.harness.io");
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("https://qa.harness.io/");
 
     String inviteId = UUIDGenerator.generateUuid();
@@ -444,7 +451,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testNewUserSignup() {
+  public void testNewUserSignup() throws URISyntaxException {
     when(configuration.isTrialRegistrationAllowed()).thenReturn(true);
     when(configuration.getPortal().getUrl()).thenReturn("https://qa.harness.io");
     doNothing().when(signupService).validatePassword(any());
@@ -461,10 +468,12 @@ public class UserServiceTest extends WingsBaseTest {
                                 .withEmail(email)
                                 .withName(userName)
                                 .build();
-    when(subdomainUrlHelper.getPortalBaseUrl(userInvite.getAccountId())).thenReturn(PORTAL_URL);
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL);
     userInvite.setPassword("password".toCharArray());
     UtmInfo utmInfo = UtmInfo.builder().utmCampaign("campaign").utmContent("content").utmSource("source").build();
     userInvite.setUtmInfo(utmInfo);
+    when(authenticationUtils.getDefaultAccount(any())).thenReturn(anAccount().withUuid(ACCOUNT_ID).build());
+    when(authenticationUtils.buildAbsoluteUrl(anyString(), anyString(), any())).thenReturn(new URI(StringUtils.EMPTY));
     userService.trialSignup(userInvite);
     verify(eventPublishHelper).publishTrialUserSignupEvent(utmInfo, email, userName, inviteId);
   }
@@ -518,7 +527,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
         .thenReturn(anEmailVerificationToken().withToken("token123").build());
     when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean())).thenReturn(aPageResponse().build());
-    when(subdomainUrlHelper.getPortalBaseUrl(account.getUuid())).thenReturn(PORTAL_URL);
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL);
 
     userService.register(userBuilder.build());
 
@@ -773,11 +782,12 @@ public class UserServiceTest extends WingsBaseTest {
                           .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
                           .build();
 
-    when(subdomainUrlHelper.getPortalBaseUrl(account.getUuid())).thenReturn(PORTAL_URL);
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL);
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(userBuilder.uuid(USER_ID).build());
+    when(authenticationUtils.getDefaultAccount(any())).thenReturn(account);
 
     userService.inviteUsers(userInvite);
     verify(wingsPersistence).save(any(UserInvite.class));
@@ -820,15 +830,16 @@ public class UserServiceTest extends WingsBaseTest {
                                 .build();
 
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
-    when(accountService.get(ACCOUNT_ID))
-        .thenReturn(anAccount()
-                        .withCompanyName(COMPANY_NAME)
-                        .withUuid(ACCOUNT_ID)
-                        .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
-                        .build());
+    Account account = anAccount()
+                          .withCompanyName(COMPANY_NAME)
+                          .withUuid(ACCOUNT_ID)
+                          .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                          .build();
+    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(userBuilder.uuid(USER_ID).build());
-    when(subdomainUrlHelper.getPortalBaseUrl(userInvite.getAccountId())).thenReturn(PORTAL_URL);
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL);
+    when(authenticationUtils.getDefaultAccount(any())).thenReturn(account);
     userService.inviteUsers(userInvite);
 
     verify(wingsPersistence).saveAndGet(eq(User.class), userArgumentCaptor.capture());
@@ -1177,7 +1188,8 @@ public class UserServiceTest extends WingsBaseTest {
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     when(mockedUserService.getUserByEmail(USER_EMAIL)).thenReturn(user);
     when(mockedUserService.deleteInvites(ACCOUNT_ID, USER_EMAIL)).thenCallRealMethod();
-    doCallRealMethod().when(mockedUserService).sendNewInvitationMail(userInvite, account);
+    doCallRealMethod().when(mockedUserService).sendNewInvitationMail(userInvite, account, user);
+    when(authenticationUtils.getDefaultAccount(user)).thenReturn(account);
     userService.resendInvitationEmail(mockedUserService, ACCOUNT_ID, USER_EMAIL);
     verify(accountService).get(ACCOUNT_ID);
     verify(wingsPersistence).delete(any(Query.class));
