@@ -7,6 +7,7 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
@@ -15,7 +16,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
-import io.harness.exception.WingsException;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.beans.GcpConfig;
@@ -56,6 +57,7 @@ import java.util.concurrent.TimeUnit;
  * Created by Pranjal on 11/28/2018
  */
 @Slf4j
+@FieldNameConstants(innerTypeName = "StackDriverStateKeys")
 public class StackDriverState extends AbstractMetricAnalysisState {
   @Inject private transient StackDriverService stackDriverService;
 
@@ -165,11 +167,12 @@ public class StackDriverState extends AbstractMetricAnalysisState {
         ? null
         : workflowStandardParams.getEnv().getUuid();
 
-    SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+    String resolvedConnectorId =
+        getResolvedConnectorId(context, StackDriverStateKeys.analysisServerConfigId, analysisServerConfigId);
 
-    if (settingAttribute == null) {
-      throw new WingsException("No gcp config with id: " + analysisServerConfigId + " found");
-    }
+    SettingAttribute settingAttribute = settingsService.get(resolvedConnectorId);
+
+    Preconditions.checkNotNull(settingAttribute);
 
     TimeSeriesMlAnalysisType analyzedTierAnalysisType = getComparisonStrategy() == AnalysisComparisonStrategy.PREDICTIVE
         ? PREDICTIVE
