@@ -439,27 +439,34 @@ public class YamlGitServiceImpl implements YamlGitService {
         gitFileChanges, accountId, appTemplates, appPath.getPath(), true, false, Optional.empty());
   }
 
-  private List<YamlChangeSet> obtainAllApplicationYamlChangeSet(String accountId, boolean forcePush) {
+  private List<YamlChangeSet> obtainAllApplicationYamlChangeSet(
+      String accountId, boolean forcePush, boolean onlyGitSyncConfiguredApps) {
     List<YamlChangeSet> yamlChangeSets = new ArrayList<>();
     List<Application> apps = appService.getAppsByAccountId(accountId);
 
     if (isEmpty(apps)) {
       return yamlChangeSets;
     }
-
     for (Application app : apps) {
-      List<GitFileChange> gitFileChanges = obtainApplicationYamlGitFileChanges(accountId, app);
-      yamlChangeSets.add(obtainYamlChangeSet(accountId, app.getUuid(), gitFileChanges, forcePush));
+      if (!onlyGitSyncConfiguredApps || gitSyncConfiguredForApp(app.getAppId(), accountId)) {
+        List<GitFileChange> gitFileChanges = obtainApplicationYamlGitFileChanges(accountId, app);
+        yamlChangeSets.add(obtainYamlChangeSet(accountId, app.getUuid(), gitFileChanges, forcePush));
+      } else {
+        logger.info("Git Sync not configured for appId =[{}]. Skip generating changeset.", app.getAppId());
+      }
     }
 
     return yamlChangeSets;
+  }
+  private boolean gitSyncConfiguredForApp(String appId, String accountId) {
+    return yamlDirectoryService.weNeedToPushChanges(accountId, appId) != null;
   }
 
   @Override
   public List<GitFileChange> performFullSyncDryRun(String accountId) {
     List<GitFileChange> gitFileChanges = new ArrayList<>();
 
-    List<YamlChangeSet> yamlChangeSets = obtainChangeSetFromFullSyncDryRun(accountId);
+    List<YamlChangeSet> yamlChangeSets = obtainChangeSetFromFullSyncDryRun(accountId, false);
     for (YamlChangeSet yamlChangeSet : yamlChangeSets) {
       gitFileChanges.addAll(yamlChangeSet.getGitFileChanges());
     }
@@ -468,15 +475,20 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
-  public List<YamlChangeSet> obtainChangeSetFromFullSyncDryRun(String accountId) {
+  public List<YamlChangeSet> obtainChangeSetFromFullSyncDryRun(
+      String accountId, boolean onlyGitSyncConfiguredEntities) {
     try {
       logger.info("Performing full-sync dry-run for account {}", accountId);
       List<YamlChangeSet> yamlChangeSets = new ArrayList<>();
 
-      List<GitFileChange> gitFileChanges = obtainAccountOnlyGitFileChanges(accountId, false);
-      yamlChangeSets.add(obtainYamlChangeSet(accountId, GLOBAL_APP_ID, gitFileChanges, false));
+      if (!onlyGitSyncConfiguredEntities || isGitSyncConfiguredForAccount(accountId)) {
+        List<GitFileChange> gitFileChanges = obtainAccountOnlyGitFileChanges(accountId, false);
+        yamlChangeSets.add(obtainYamlChangeSet(accountId, GLOBAL_APP_ID, gitFileChanges, false));
+      } else {
+        logger.info("Git Sync not configured for accountId =[{}]. Skip generating changeset.", accountId);
+      }
 
-      yamlChangeSets.addAll(obtainAllApplicationYamlChangeSet(accountId, false));
+      yamlChangeSets.addAll(obtainAllApplicationYamlChangeSet(accountId, false, onlyGitSyncConfiguredEntities));
 
       logger.info("Performed full-sync dry-run for account {}", accountId);
       return yamlChangeSets;
@@ -485,6 +497,9 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
 
     return new ArrayList<>();
+  }
+  private boolean isGitSyncConfiguredForAccount(String accountId) {
+    return yamlDirectoryService.weNeedToPushChanges(accountId, GLOBAL_APP_ID) != null;
   }
 
   private List<GitFileChange> obtainAccountOnlyGitFileChanges(String accountId, boolean includeFiles) {

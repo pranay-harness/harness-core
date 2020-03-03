@@ -188,7 +188,7 @@ public interface YamlGitService {
 
   SettingAttribute getAndDecryptSettingAttribute(String sshSettingId);
 
-  List<YamlChangeSet> obtainChangeSetFromFullSyncDryRun(String accountId);
+  List<YamlChangeSet> obtainChangeSetFromFullSyncDryRun(String accountId, boolean onlyGitSyncConfiguredEntities);
 
   boolean checkApplicationChange(GitFileChange gitFileChange);
 
