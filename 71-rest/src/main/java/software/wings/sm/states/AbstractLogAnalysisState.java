@@ -435,7 +435,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId)
                && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))
         || GA_PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))) {
-      DataCollectionInfo dataCollectionInfo = createDataCollectionInfo(analysisContext);
+      DataCollectionInfo dataCollectionInfo = createDataCollectionInfo(analysisContext, context);
       analysisContext.setDataCollectionInfo(dataCollectionInfo);
     }
     sampleHostsMap(analysisContext);
@@ -460,7 +460,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
   }
 
-  public DataCollectionInfo createDataCollectionInfo(AnalysisContext analysisContext) {
+  public DataCollectionInfo createDataCollectionInfo(
+      AnalysisContext analysisContext, ExecutionContext executionContext) {
     StateType stateType = StateType.valueOf(getStateType());
     switch (stateType) {
       case SUMO:
@@ -508,7 +509,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .build();
       case STACK_DRIVER_LOG:
         StackDriverLogState stackDriverLogState = (StackDriverLogState) this;
-        GcpConfig gcpConfig = (GcpConfig) settingsService.get(getAnalysisServerConfigId()).getValue();
+        GcpConfig gcpConfig = (GcpConfig) settingsService
+                                  .get(getResolvedConnectorId(executionContext,
+                                      AnalysisContextKeys.analysisServerConfigId, getAnalysisServerConfigId()))
+                                  .getValue();
         return StackDriverLogDataCollectionInfo.builder()
             .gcpConfig(gcpConfig)
             .hostnameField(analysisContext.getHostNameField())
