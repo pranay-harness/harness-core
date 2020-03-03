@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.FunctionalTests;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.apache.commons.io.FileUtils;
@@ -126,7 +126,7 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
 
   @Test
   @Owner(developers = VAIBHAV_SI)
-  @Category(IntegrationTests.class)
+  @Category(FunctionalTests.class)
   public void shouldInstallKustomize() throws IOException {
     FileUtils.deleteDirectory(new File("./client-tools/kustomize/"));
     assertThat(InstallUtils.installKustomize(delegateConfiguration)).isTrue();
