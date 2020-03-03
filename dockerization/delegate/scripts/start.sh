@@ -151,15 +151,6 @@ fi
 if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
   echo "delegateCheckLocation: $DELEGATE_STORAGE_URL/$DELEGATE_CHECK_LOCATION" >> config-watcher.yml
 fi
-if ! `grep publishTarget config-watcher.yml > /dev/null`; then
-  echo "publishTarget: $PUBLISH_TARGET" >> config-watcher.yml
-fi
-if ! `grep publishAuthority config-watcher.yml > /dev/null`; then
-  echo "publishAuthority: $PUBLISH_AUTHORITY" >> config-watcher.yml
-fi
-if ! `grep queueFilePath config-watcher.yml > /dev/null`; then
-  echo "queueFilePath: $QUEUE_FILE_PATH" >> config-watcher.yml
-fi
 
 if [ ! -e config-delegate.yml ]; then
   echo "accountId: $ACCOUNT_ID" > config-delegate.yml
@@ -196,18 +187,6 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
   else
       echo "pollForTasks: ${POLL_FOR_TASKS:-false}" >> config-delegate.yml
   fi
-fi
-if ! `grep queueFilePath config-delegate.yml > /dev/null`; then
-  echo "queueFilePath: $QUEUE_FILE_PATH" >> config-delegate.yml
-fi
-if ! `grep managerTarget config-delegate.yml > /dev/null`; then
-  echo "managerTarget: $MANAGER_TARGET" >> config-delegate.yml
-fi
-if ! `grep managerAuthority config-delegate.yml > /dev/null`; then
-  echo "managerAuthority: $MANAGER_AUTHORITY" >> config-delegate.yml
-fi
-if ! `grep enablePerpetualTasks config-delegate.yml > /dev/null`; then
-  echo "enablePerpetualTasks: $ENABLE_PERPETUAL_TASKS" >> config-delegate.yml
 fi
 
 export HOSTNAME

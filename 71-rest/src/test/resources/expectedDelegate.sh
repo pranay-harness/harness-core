@@ -80,6 +80,7 @@ else
   fi
 fi
 
+export MANAGER_HOST_AND_PORT=https://localhost:9090
 if [ -e proxy.config ]; then
   source proxy.config
   if [[ $PROXY_HOST != "" ]]; then
@@ -101,7 +102,6 @@ if [ -e proxy.config ]; then
   if [[ $PROXY_MANAGER == "true" || $PROXY_MANAGER == "" ]]; then
     export MANAGER_PROXY_CURL=$PROXY_CURL
   else
-    MANAGER_HOST_AND_PORT=https://localhost:9090
     HOST_AND_PORT_ARRAY=(${MANAGER_HOST_AND_PORT//:/ })
     MANAGER_HOST="${HOST_AND_PORT_ARRAY[1]}"
     MANAGER_HOST="${MANAGER_HOST:2}"
@@ -189,12 +189,6 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
   else
       echo "pollForTasks: false" >> config-delegate.yml
   fi
-fi
-if ! `grep managerTarget config-delegate.yml > /dev/null`; then
-  echo "managerTarget : localhost:9090" >> config-delegate.yml
-fi
-if ! `grep managerAuthority config-delegate.yml > /dev/null`; then
-  echo "managerAuthority  : manager-grpc-localhost:9090" >> config-delegate.yml
 fi
 
 export KUBECTL_VERSION=v1.12.2

@@ -30,11 +30,3 @@ watcherStorageUrl: ${watcherStorageUrl}
 watcherCheckLocation: ${watcherCheckLocation}
 delegateStorageUrl: ${delegateStorageUrl}
 delegateCheckLocation: ${delegateCheckLocation}
-managerTarget: ${managerTarget}
-managerAuthority: ${managerAuthority}
-<#if CCM_EVENT_COLLECTION??>
-publishTarget: ${publishTarget}
-publishAuthority: ${publishAuthority}
-queueFilePath: ${queueFilePath}
-enablePerpetualTasks: ${enablePerpetualTasks}
-</#if>

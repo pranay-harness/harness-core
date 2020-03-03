@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class ChronicleQueueMonitor extends AbstractScheduledService {
   // Since the queue is configured with RollCycles.MINUTELY, each file correspond to one minute of data.
-  public static final int THRESHOLD = 30;
+  private static final int THRESHOLD = 30;
 
   private final RollingChronicleQueue queue;
 
@@ -37,7 +37,7 @@ public class ChronicleQueueMonitor extends AbstractScheduledService {
   }
 
   @Override
-  protected void runOneIteration() throws Exception {
+  protected void runOneIteration() {
     try {
       long fileCount = Optional.ofNullable(queue.file())
                            .map(File::listFiles)

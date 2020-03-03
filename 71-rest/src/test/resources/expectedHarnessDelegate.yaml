@@ -104,10 +104,6 @@ spec:
           value: harness-delegate
         - name: DELEGATE_PROFILE
           value: ""
-        - name: MANAGER_TARGET
-          value: "localhost:9090"
-        - name: MANAGER_AUTHORITY
-          value: "manager-grpc-localhost:9090"
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT

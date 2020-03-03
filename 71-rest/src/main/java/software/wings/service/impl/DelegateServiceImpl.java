@@ -39,13 +39,10 @@ import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSeque
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static software.wings.beans.Event.Builder.anEvent;
-import static software.wings.beans.FeatureName.CCM_EVENT_COLLECTION;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.TaskType.HOST_VALIDATION;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE_LAST_HEARTBEAT;
-import static software.wings.service.impl.DelegateGrpcConfigExtractor.extractAuthority;
-import static software.wings.service.impl.DelegateGrpcConfigExtractor.extractTarget;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -780,15 +777,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       if (inquiry.getDelegateProfile() != null) {
         params.put("delegateProfile", inquiry.getDelegateProfile());
-      }
-      params.put("managerTarget", extractTarget(inquiry.getManagerHost()));
-      params.put("managerAuthority", extractAuthority(inquiry.getManagerHost(), "manager"));
-      if (featureFlagService.isEnabled(CCM_EVENT_COLLECTION, inquiry.getAccountId())) {
-        params.put("CCM_EVENT_COLLECTION", "enabled");
-        params.put("publishTarget", extractTarget(inquiry.getManagerHost()));
-        params.put("publishAuthority", extractAuthority(inquiry.getManagerHost(), "events"));
-        params.put("queueFilePath", mainConfiguration.getDelegateConfigParams().getQueueFilePath());
-        params.put("enablePerpetualTasks", "true");
       }
       return params.build();
     }

@@ -12,12 +12,15 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.util.Durations;
 
+import io.grpc.StatusRuntimeException;
+import io.harness.flow.BackoffScheduler;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.LoggingListener;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -30,12 +33,11 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Singleton
 public class PerpetualTaskWorker extends AbstractScheduledService {
-  private static final int PERPETUAL_TASK_POLL_INTERVAL_MINUTES = 1;
-
   @Getter private Set<PerpetualTaskId> assignedTasks;
   @Getter private final Map<PerpetualTaskId, PerpetualTaskHandle> runningTaskMap = new ConcurrentHashMap<>();
   private ScheduledExecutorService scheduledService;
 
+  private final BackoffScheduler backoffScheduler;
   private final TimeLimiter timeLimiter;
   private final PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient;
   private Map<String, PerpetualTaskExecutor> factoryMap;
@@ -49,6 +51,7 @@ public class PerpetualTaskWorker extends AbstractScheduledService {
     scheduledService = Executors.newSingleThreadScheduledExecutor(
         new ThreadFactoryBuilder().setNameFormat("perpetual-task-worker").build());
     addListener(new LoggingListener(this), MoreExecutors.directExecutor());
+    backoffScheduler = new BackoffScheduler(Duration.ofMinutes(1), Duration.ofMinutes(5));
   }
 
   private void handleTasks() {
@@ -56,8 +59,11 @@ public class PerpetualTaskWorker extends AbstractScheduledService {
       updateAssignedTaskIds();
       stopCancelledTasks();
       startAssignedTasks();
+      backoffScheduler.recordSuccess();
+    } catch (StatusRuntimeException ex) {
+      logger.error("Grpc status exception in perpetual task worker. Backing off...", ex);
+      backoffScheduler.recordFailure();
     } catch (Exception ex) {
-      // TODO(Tang): handle exception
       logger.error("Exception in perpetual task worker ", ex);
     }
   }
@@ -135,6 +141,6 @@ public class PerpetualTaskWorker extends AbstractScheduledService {
 
   @Override
   protected Scheduler scheduler() {
-    return Scheduler.newFixedDelaySchedule(0, PERPETUAL_TASK_POLL_INTERVAL_MINUTES, TimeUnit.MINUTES);
+    return backoffScheduler;
   }
 }

@@ -12,6 +12,7 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
+import io.harness.event.client.impl.EventPublisherConstants;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.auth.DelegateAuthCallCredentials;
 import io.harness.security.TokenGenerator;
@@ -19,10 +20,7 @@ import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.Value;
 import net.openhft.chronicle.queue.ChronicleQueue;
-import net.openhft.chronicle.queue.RollCycles;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
-
-import java.time.Duration;
 
 public class TailerModule extends ProviderModule {
   private final Config config;
@@ -36,8 +34,8 @@ public class TailerModule extends ProviderModule {
   @Named("tailer")
   RollingChronicleQueue chronicleQueue(FileDeletionManager fileDeletionManager) {
     return ChronicleQueue.singleBuilder(config.queueFilePath)
-        .rollCycle(RollCycles.MINUTELY)
-        .timeoutMS(Duration.ofSeconds(30).toMillis())
+        .rollCycle(EventPublisherConstants.QUEUE_ROLL_CYCLE)
+        .timeoutMS(EventPublisherConstants.QUEUE_TIMEOUT_MS)
         .storeFileListener(fileDeletionManager)
         .build();
   }

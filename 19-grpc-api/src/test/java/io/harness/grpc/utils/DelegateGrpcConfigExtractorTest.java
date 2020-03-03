@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package io.harness.grpc.utils;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;

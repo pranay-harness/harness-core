@@ -36,7 +36,6 @@ import io.harness.scheduler.SchedulerConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Value;
 import software.wings.DataStorageMode;
 import software.wings.beans.DefaultSalesContacts;
 import software.wings.beans.HttpMethod;
@@ -131,8 +130,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("workers") private WorkersConfiguration workers;
   @JsonProperty("publishers") private PublisherConfiguration publisherConfiguration;
   @JsonProperty("pipelineConfig") private PipelineConfig pipelineConfig = new PipelineConfig();
-
-  private DelegateConfigParams delegateConfigParams;
 
   private int applicationPort;
   private boolean sslEnabled;
@@ -229,13 +226,5 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
      * @return the resource path to uri mappings
      */
     @JsonIgnore public abstract Map<String, String> getResourcePathToUriMappings();
-  }
-
-  /**
-   * Data for templatizing delegate configuration.
-   */
-  @Value
-  public static class DelegateConfigParams {
-    private String queueFilePath;
   }
 }

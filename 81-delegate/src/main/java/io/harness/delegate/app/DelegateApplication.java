@@ -9,12 +9,12 @@ import static io.harness.delegate.message.MessageConstants.WATCHER_PROCESS;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.delegate.service.DelegateServiceImpl.getDelegateId;
+import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractAuthority;
+import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractTarget;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.app.DeployMode.DEPLOY_MODE;
 import static software.wings.app.DeployMode.isOnPrem;
-import static software.wings.service.impl.DelegateGrpcConfigExtractor.extractAuthority;
-import static software.wings.service.impl.DelegateGrpcConfigExtractor.extractTarget;
 
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -30,6 +30,7 @@ import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateService;
 import io.harness.event.client.EventPublisher;
+import io.harness.event.client.impl.EventPublisherConstants;
 import io.harness.event.client.impl.appender.AppenderModule;
 import io.harness.event.client.impl.appender.AppenderModule.Config;
 import io.harness.grpc.ManagerGrpcClientModule;
@@ -56,6 +57,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -130,26 +132,25 @@ public class DelegateApplication {
     });
     modules.add(new ManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
         configuration.getAccountId(), configuration.getAccountSecret()));
+    String managerHostAndPort = System.getenv("MANAGER_HOST_AND_PORT");
     modules.add(new ManagerGrpcClientModule(
         ManagerGrpcClientModule.Config.builder()
-            .target(configuration.getManagerTarget() != null ? configuration.getManagerTarget()
-                                                             : extractTarget(System.getenv("MANAGER_HOST_AND_PORT")))
-            .authority(configuration.getManagerAuthority() != null
-                    ? configuration.getManagerAuthority()
-                    : extractAuthority(System.getenv("MANAGER_HOST_AND_PORT"), "manager"))
+            .target(Optional.ofNullable(configuration.getManagerTarget())
+                        .orElseGet(() -> extractTarget(managerHostAndPort)))
+            .authority(Optional.ofNullable(configuration.getManagerAuthority())
+                           .orElseGet(() -> extractAuthority(managerHostAndPort, "manager")))
             .accountId(configuration.getAccountId())
             .accountSecret(configuration.getAccountSecret())
             .build()));
     if (!isOnPrem(System.getenv().get(DEPLOY_MODE))) {
       modules.add(new PingPongModule());
-    }
-    if (configuration.isEnablePerpetualTasks()) {
       modules.add(new PerpetualTaskWorkerModule());
     }
     modules.add(new KubernetesClientFactoryModule());
     modules.add(new KubernetesApiClientFactoryModule());
-    modules.add(new AppenderModule(Config.builder().queueFilePath(configuration.getQueueFilePath()).build(),
-        () -> getDelegateId().orElse("UNREGISTERED")));
+    modules.add(
+        new AppenderModule(Config.builder().queueFilePath(EventPublisherConstants.DEFAULT_QUEUE_FILE_PATH).build(),
+            () -> getDelegateId().orElse("UNREGISTERED")));
     modules.addAll(new DelegateModule().cumulativeDependencies());
 
     Injector injector = Guice.createInjector(modules);

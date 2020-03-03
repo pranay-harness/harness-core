@@ -39,6 +39,7 @@ else
   fi
 fi
 
+export MANAGER_HOST_AND_PORT=${managerHostAndPort}
 if [[ -e proxy.config ]]; then
   source proxy.config
   if [[ $PROXY_HOST != "" ]]; then
@@ -60,7 +61,6 @@ if [[ -e proxy.config ]]; then
   if [[ $PROXY_MANAGER == "true" || $PROXY_MANAGER == "" ]]; then
     export MANAGER_PROXY_CURL=$PROXY_CURL
   else
-    MANAGER_HOST_AND_PORT=${managerHostAndPort}
 <#noparse>
     HOST_AND_PORT_ARRAY=(${MANAGER_HOST_AND_PORT//:/ })
     MANAGER_HOST="${HOST_AND_PORT_ARRAY[1]}"
@@ -168,17 +168,6 @@ fi
 if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
   echo "delegateCheckLocation: ${delegateStorageUrl}/${delegateCheckLocation}" >> config-watcher.yml
 fi
-<#if CCM_EVENT_COLLECTION??>
-if ! `grep publishTarget config-watcher.yml > /dev/null`; then
-  echo "publishTarget: ${publishTarget}" >> config-watcher.yml
-fi
-if ! `grep publishAuthority config-watcher.yml > /dev/null`; then
-  echo "publishAuthority: ${publishAuthority}" >> config-watcher.yml
-fi
-if ! `grep queueFilePath config-watcher.yml > /dev/null`; then
-  echo "queueFilePath: ${queueFilePath}" >> config-watcher.yml
-fi
-</#if>
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
