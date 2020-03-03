@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.task.CapabilityUtils.isTaskTypeMigratedToCapabilityFramework;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -17,7 +16,6 @@ import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -277,18 +275,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     return delegateIds;
   }
 
-  // TODO: This is temporary solution till all DelegateValidationTasks are moved to
-  // TODO: New Capability Framework. This will simplify once that is done
   private List<String> fetchCriteria(DelegateTask task) {
-    // Capability Generation has already happened.
-    if (isNotEmpty(task.getExecutionCapabilities())) {
-      return task.getExecutionCapabilities().stream().map(ExecutionCapability::fetchCapabilityBasis).collect(toList());
-    }
-
-    if (isTaskTypeMigratedToCapabilityFramework(task.getData().getTaskType())
-        && featureFlagService.isEnabled(FeatureName.DELEGATE_CAPABILITY_FRAMEWORK, task.getAccountId())) {
-      return TaskType.valueOf(task.getData().getTaskType()).getCriteriaVersionForCapabilityFramework(task, injector);
-    }
+    // TODO: For now always use the original criteria
     return TaskType.valueOf(task.getData().getTaskType()).getCriteria(task, injector);
   }
 
