@@ -57,10 +57,13 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
-    CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(yamlFilePath, appId, envId);
+    String name = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
+    CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(name, appId, envId);
 
-    cvConfigurationService.deleteConfiguration(
-        accountId, appId, cvConfiguration.getUuid(), changeContext.getChange().isSyncFromGit());
+    if (cvConfiguration != null) {
+      cvConfigurationService.deleteConfiguration(
+          accountId, appId, cvConfiguration.getUuid(), changeContext.getChange().isSyncFromGit());
+    }
   }
 
   public void toBean(ChangeContext<Y> changeContext, B bean, String appId, String yamlPath) {
