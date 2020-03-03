@@ -1,8 +1,10 @@
 package io.harness.perpetualtask.k8s.informer.handlers;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.Timestamp;
 
+import io.harness.ccm.health.HealthStatusService;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
@@ -40,8 +42,8 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
   }
 
   protected void publishMessage(K8sWatchEvent resourceDetailsProto, Timestamp occurredAt) {
-    eventPublisher.publishMessage(
-        K8sWatchEvent.newBuilder(clusterDetailsProto).mergeFrom(resourceDetailsProto).build(), occurredAt);
+    eventPublisher.publishMessage(K8sWatchEvent.newBuilder(clusterDetailsProto).mergeFrom(resourceDetailsProto).build(),
+        occurredAt, ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterDetailsProto.getClusterId()));
   }
 
   @Override

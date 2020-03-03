@@ -2,6 +2,7 @@ package io.harness.perpetualtask.k8s.watch;
 
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -10,6 +11,7 @@ import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
+import io.harness.ccm.health.HealthStatusService;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
 import lombok.Builder;
@@ -92,7 +94,8 @@ public class ClusterEventWatcher implements Watcher<Event> {
                                                      .setReason(event.getReason())
                                                      .setMessage(event.getMessage());
       addInvolvedObjectInfo(event, msgBuilder);
-      eventPublisher.publishMessage(msgBuilder.build(), HTimestamps.parse(event.getLastTimestamp()));
+      eventPublisher.publishMessage(msgBuilder.build(), HTimestamps.parse(event.getLastTimestamp()),
+          ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterEventPrototype.getClusterId()));
     }
   }
 

@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -105,7 +106,7 @@ public class ClusterEventWatcherTest extends CategoryTest {
                                                        .setResourceVersion("160985299")
                                                        .build())
                                 .build()),
-            eq(HTimestamps.parse("2020-01-22T09:29:51Z")));
+            eq(HTimestamps.parse("2020-01-22T09:29:51Z")), anyMapOf(String.class, String.class));
   }
 
   @Test
@@ -142,7 +143,7 @@ public class ClusterEventWatcherTest extends CategoryTest {
                                                        .setResourceVersion("160985342")
                                                        .build())
                                 .build()),
-            eq(HTimestamps.parse("2020-01-22T09:29:51Z")));
+            eq(HTimestamps.parse("2020-01-22T09:29:51Z")), anyMapOf(String.class, String.class));
   }
 
   @Test
@@ -179,6 +180,6 @@ public class ClusterEventWatcherTest extends CategoryTest {
                                                        .setResourceVersion("62983483")
                                                        .build())
                                 .build()),
-            eq(HTimestamps.parse("2020-01-22T09:53:34Z")));
+            eq(HTimestamps.parse("2020-01-22T09:53:34Z")), anyMapOf(String.class, String.class));
   }
 }

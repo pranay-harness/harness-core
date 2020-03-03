@@ -2,6 +2,7 @@ package io.harness.perpetualtask.k8s.informer.handlers;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -99,7 +100,7 @@ public class BaseHandlerTest extends CategoryTest {
                                                .setDescription("ReplicaSet created")
                                                .build())
                                 .build()),
-            any());
+            any(), anyMapOf(String.class, String.class));
     verifyNoMoreInteractions(eventPublisher);
   }
 
@@ -244,7 +245,7 @@ public class BaseHandlerTest extends CategoryTest {
                                                .setDescription("ReplicaSet updated")
                                                .build())
                                 .build()),
-            any());
+            any(), anyMapOf(String.class, String.class));
     verifyNoMoreInteractions(eventPublisher);
   }
 
@@ -304,7 +305,7 @@ public class BaseHandlerTest extends CategoryTest {
                                                .setDescription("ReplicaSet deleted")
                                                .build())
                                 .build()),
-            any());
+            any(), anyMapOf(String.class, String.class));
     verifyNoMoreInteractions(eventPublisher);
   }
 
