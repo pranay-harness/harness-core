@@ -80,6 +80,8 @@ import software.wings.graphql.datafetcher.outcome.OutcomeConnectionDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineConnectionDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineStatsDataFetcher;
+import software.wings.graphql.datafetcher.secretManager.SecretManagerDataFetcher;
+import software.wings.graphql.datafetcher.secretManager.SecretManagersDataFetcher;
 import software.wings.graphql.datafetcher.secrets.CreateSecretDataFetcher;
 import software.wings.graphql.datafetcher.secrets.DeleteSecretDataFetcher;
 import software.wings.graphql.datafetcher.secrets.GetSecretDataFetcher;
@@ -250,6 +252,8 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(CreateSecretDataFetcher.class);
     bindDataFetcherWithAnnotation(UpdateSecretDataFetcher.class);
     bindDataFetcherWithAnnotation(DeleteSecretDataFetcher.class);
+    bindDataFetcherWithAnnotation(SecretManagerDataFetcher.class);
+    bindDataFetcherWithAnnotation(SecretManagersDataFetcher.class);
     bindDataFetcherWithAnnotation(GetSecretDataFetcher.class);
   }
 
