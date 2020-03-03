@@ -17,6 +17,7 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
   }
   private ArtifactCollectionTaskParams() {
     artifactStreamId_ = "";
+    buildSourceParams_ = com.google.protobuf.ByteString.EMPTY;
   }
 
   @java.
@@ -45,6 +46,10 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
             java.lang.String s = input.readStringRequireUtf8();
 
             artifactStreamId_ = s;
+            break;
+          }
+          case 18: {
+            buildSourceParams_ = input.readBytes();
             break;
           }
           default: {
@@ -108,6 +113,15 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
     }
   }
 
+  public static final int BUILD_SOURCE_PARAMS_FIELD_NUMBER = 2;
+  private com.google.protobuf.ByteString buildSourceParams_;
+  /**
+   * <code>bytes build_source_params = 2;</code>
+   */
+  public com.google.protobuf.ByteString getBuildSourceParams() {
+    return buildSourceParams_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -126,6 +140,9 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
     if (!getArtifactStreamIdBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 1, artifactStreamId_);
     }
+    if (!buildSourceParams_.isEmpty()) {
+      output.writeBytes(2, buildSourceParams_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -138,6 +155,9 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
     size = 0;
     if (!getArtifactStreamIdBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, artifactStreamId_);
+    }
+    if (!buildSourceParams_.isEmpty()) {
+      size += com.google.protobuf.CodedOutputStream.computeBytesSize(2, buildSourceParams_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -157,6 +177,8 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
 
     if (!getArtifactStreamId().equals(other.getArtifactStreamId()))
       return false;
+    if (!getBuildSourceParams().equals(other.getBuildSourceParams()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -171,6 +193,8 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
     hash = (19 * hash) + getDescriptor().hashCode();
     hash = (37 * hash) + ARTIFACT_STREAM_ID_FIELD_NUMBER;
     hash = (53 * hash) + getArtifactStreamId().hashCode();
+    hash = (37 * hash) + BUILD_SOURCE_PARAMS_FIELD_NUMBER;
+    hash = (53 * hash) + getBuildSourceParams().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -288,6 +312,8 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
       super.clear();
       artifactStreamId_ = "";
 
+      buildSourceParams_ = com.google.protobuf.ByteString.EMPTY;
+
       return this;
     }
 
@@ -320,6 +346,7 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
       io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams result =
           new io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams(this);
       result.artifactStreamId_ = artifactStreamId_;
+      result.buildSourceParams_ = buildSourceParams_;
       onBuilt();
       return result;
     }
@@ -365,6 +392,9 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
       if (!other.getArtifactStreamId().isEmpty()) {
         artifactStreamId_ = other.artifactStreamId_;
         onChanged();
+      }
+      if (other.getBuildSourceParams() != com.google.protobuf.ByteString.EMPTY) {
+        setBuildSourceParams(other.getBuildSourceParams());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -451,6 +481,34 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
       checkByteStringIsUtf8(value);
 
       artifactStreamId_ = value;
+      onChanged();
+      return this;
+    }
+
+    private com.google.protobuf.ByteString buildSourceParams_ = com.google.protobuf.ByteString.EMPTY;
+    /**
+     * <code>bytes build_source_params = 2;</code>
+     */
+    public com.google.protobuf.ByteString getBuildSourceParams() {
+      return buildSourceParams_;
+    }
+    /**
+     * <code>bytes build_source_params = 2;</code>
+     */
+    public Builder setBuildSourceParams(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      buildSourceParams_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>bytes build_source_params = 2;</code>
+     */
+    public Builder clearBuildSourceParams() {
+      buildSourceParams_ = getDefaultInstance().getBuildSourceParams();
       onChanged();
       return this;
     }

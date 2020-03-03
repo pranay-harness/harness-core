@@ -24,9 +24,10 @@ public final class ArtifactCollectionTaskParamsOuterClass {
   static {
     java.lang.String[] descriptorData = {"\nDio/harness/perpetualtask/artifact/Arti"
         + "factCollectionTaskParams.proto\022!io.harne"
-        + "ss.perpetualtask.artifact\":\n\034ArtifactCol"
+        + "ss.perpetualtask.artifact\"W\n\034ArtifactCol"
         + "lectionTaskParams\022\032\n\022artifact_stream_id\030"
-        + "\001 \001(\tB\002P\001b\006proto3"};
+        + "\001 \001(\t\022\033\n\023build_source_params\030\002 \001(\014B\002P\001b\006"
+        + "proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -44,6 +45,7 @@ public final class ArtifactCollectionTaskParamsOuterClass {
             internal_static_io_harness_perpetualtask_artifact_ArtifactCollectionTaskParams_descriptor,
             new java.lang.String[] {
                 "ArtifactStreamId",
+                "BuildSourceParams",
             });
   }
 
