@@ -34,6 +34,7 @@ else
   fi
 fi
 
+export MANAGER_HOST_AND_PORT=${managerHostAndPort}
 if [ -e proxy.config ]; then
   source proxy.config
   if [[ $PROXY_HOST != "" ]]; then
@@ -55,7 +56,6 @@ if [ -e proxy.config ]; then
   if [[ $PROXY_MANAGER == "true" || $PROXY_MANAGER == "" ]]; then
     export MANAGER_PROXY_CURL=$PROXY_CURL
   else
-    MANAGER_HOST_AND_PORT=${managerHostAndPort}
 <#noparse>
     HOST_AND_PORT_ARRAY=(${MANAGER_HOST_AND_PORT//:/ })
     MANAGER_HOST="${HOST_AND_PORT_ARRAY[1]}"
@@ -146,20 +146,6 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
       echo "pollForTasks: false" >> config-delegate.yml
   fi
 fi
-if ! `grep managerTarget config-delegate.yml > /dev/null`; then
-  echo "managerTarget : ${managerTarget}" >> config-delegate.yml
-fi
-if ! `grep managerAuthority config-delegate.yml > /dev/null`; then
-  echo "managerAuthority  : ${managerAuthority}" >> config-delegate.yml
-fi
-<#if CCM_EVENT_COLLECTION??>
-if ! `grep queueFilePath config-delegate.yml > /dev/null`; then
-  echo "queueFilePath : ${queueFilePath}" >> config-delegate.yml
-fi
-if ! `grep enablePerpetualTasks config-delegate.yml > /dev/null`; then
-  echo "enablePerpetualTasks  : ${enablePerpetualTasks}" >> config-delegate.yml
-fi
-</#if>
 
 export KUBECTL_VERSION=${kubectlVersion}
 

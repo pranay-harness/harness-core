@@ -1,11 +1,12 @@
-package software.wings.service.impl;
-
-import com.google.common.base.Joiner;
+package io.harness.grpc.utils;
 
 import lombok.experimental.UtilityClass;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Utility class for the methods to extract grpc target & authority from manager url. Used to provide values while
@@ -13,13 +14,11 @@ import java.net.URISyntaxException;
  */
 @UtilityClass
 public class DelegateGrpcConfigExtractor {
-  private static final Joiner JOINER = Joiner.on("-").skipNulls();
-
   public static String extractTarget(String managerUrl) {
     try {
       return new URI(managerUrl).getAuthority();
     } catch (URISyntaxException e) {
-      throw new IllegalArgumentException("Invalid manager url " + managerUrl);
+      throw new IllegalArgumentException("Invalid manager url " + managerUrl, e);
     }
   }
 
@@ -28,13 +27,15 @@ public class DelegateGrpcConfigExtractor {
       URI uri = new URI(managerUrl);
       String path = uri.getPath();
       String[] parts = path.split("/");
-      String namespace = null;
+      String prefix = null;
       if (parts.length > 1) {
-        namespace = parts[1];
+        prefix = parts[1];
       }
-      return JOINER.join(namespace, svc, "grpc", uri.getAuthority());
+      return Stream.of(prefix, svc, "grpc", uri.getAuthority())
+          .filter(Objects::nonNull)
+          .collect(Collectors.joining("-"));
     } catch (URISyntaxException e) {
-      throw new IllegalArgumentException("Invalid manager url " + managerUrl);
+      throw new IllegalArgumentException("Invalid manager url " + managerUrl, e);
     }
   }
 }

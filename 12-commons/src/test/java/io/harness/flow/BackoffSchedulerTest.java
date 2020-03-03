@@ -1,4 +1,4 @@
-package io.harness.event.client.impl.tailer;
+package io.harness.flow;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;

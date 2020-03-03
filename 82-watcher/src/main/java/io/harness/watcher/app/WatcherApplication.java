@@ -3,6 +3,8 @@ package io.harness.watcher.app;
 import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.delegate.message.MessageConstants.NEW_WATCHER;
 import static io.harness.delegate.message.MessengerType.WATCHER;
+import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractAuthority;
+import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractTarget;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Splitter;
@@ -15,6 +17,7 @@ import com.google.inject.Module;
 import com.google.inject.name.Names;
 
 import io.harness.delegate.message.MessageService;
+import io.harness.event.client.impl.EventPublisherConstants;
 import io.harness.event.client.impl.tailer.TailerModule;
 import io.harness.event.client.impl.tailer.TailerModule.Config;
 import io.harness.managerclient.ManagerClientModule;
@@ -30,6 +33,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -117,15 +121,19 @@ public class WatcherApplication {
         configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
 
     modules.addAll(new WatcherModule().cumulativeDependencies());
-    if (configuration.getQueueFilePath() != null) {
-      modules.add(new TailerModule(Config.builder()
-                                       .accountId(configuration.getAccountId())
-                                       .accountSecret(configuration.getAccountSecret())
-                                       .queueFilePath(configuration.getQueueFilePath())
-                                       .publishAuthority(configuration.getPublishAuthority())
-                                       .publishTarget(configuration.getPublishTarget())
-                                       .build()));
-    }
+
+    String managerHostAndPort = System.getenv("MANAGER_HOST_AND_PORT");
+    modules.add(
+        new TailerModule(Config.builder()
+                             .accountId(configuration.getAccountId())
+                             .accountSecret(configuration.getAccountSecret())
+                             .queueFilePath(Optional.ofNullable(configuration.getQueueFilePath())
+                                                .orElse(EventPublisherConstants.DEFAULT_QUEUE_FILE_PATH))
+                             .publishAuthority(Optional.ofNullable(configuration.getPublishAuthority())
+                                                   .orElseGet(() -> extractAuthority(managerHostAndPort, "events")))
+                             .publishTarget(Optional.ofNullable(configuration.getPublishTarget())
+                                                .orElseGet(() -> extractTarget(managerHostAndPort)))
+                             .build()));
 
     Injector injector = Guice.createInjector(modules);
 

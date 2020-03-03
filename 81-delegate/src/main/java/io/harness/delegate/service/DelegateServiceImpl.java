@@ -186,6 +186,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManager;
@@ -239,6 +240,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private DelegateDecryptionService delegateDecryptionService;
   @Inject private DelegateLogService delegateLogService;
   @Inject private EncryptionService encryptionService;
+  @Inject(optional = true) @Nullable private PerpetualTaskWorker perpetualTaskWorker;
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
 
@@ -989,8 +991,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void startTaskPolling() {
     taskPollExecutor.scheduleAtFixedRate(this ::pollForTask, 0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
-    if (delegateConfiguration.isEnablePerpetualTasks()) {
-      injector.getInstance(PerpetualTaskWorker.class).startAsync();
+    if (perpetualTaskWorker != null) {
+      perpetualTaskWorker.startAsync();
     }
   }
 

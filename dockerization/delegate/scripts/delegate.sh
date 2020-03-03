@@ -121,18 +121,6 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
       echo "pollForTasks: ${POLL_FOR_TASKS:-false}" >> config-delegate.yml
   fi
 fi
-if ! `grep queueFilePath config-delegate.yml > /dev/null`; then
-  echo "queueFilePath: $QUEUE_FILE_PATH" >> config-delegate.yml
-fi
-if ! `grep managerTarget config-delegate.yml > /dev/null`; then
-  echo "managerTarget: $MANAGER_TARGET" >> config-delegate.yml
-fi
-if ! `grep managerAuthority config-delegate.yml > /dev/null`; then
-  echo "managerAuthority: $MANAGER_AUTHORITY" >> config-delegate.yml
-fi
-if ! `grep enablePerpetualTasks config-delegate.yml > /dev/null`; then
-  echo "enablePerpetualTasks: $ENABLE_PERPETUAL_TASKS" >> config-delegate.yml
-fi
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"

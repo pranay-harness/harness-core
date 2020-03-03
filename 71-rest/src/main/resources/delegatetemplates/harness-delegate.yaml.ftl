@@ -104,20 +104,6 @@ spec:
           value: ${delegateName}
         - name: DELEGATE_PROFILE
           value: "${delegateProfile}"
-        - name: MANAGER_TARGET
-          value: "${managerTarget}"
-        - name: MANAGER_AUTHORITY
-          value: "${managerAuthority}"
-<#if CCM_EVENT_COLLECTION??>
-        - name: PUBLISH_TARGET
-          value: "${publishTarget}"
-        - name: PUBLISH_AUTHORITY
-          value: "${publishAuthority}"
-        - name: QUEUE_FILE_PATH
-          value: "${queueFilePath}"
-        - name: ENABLE_PERPETUAL_TASKS
-          value: "${enablePerpetualTasks}"
-</#if>
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT

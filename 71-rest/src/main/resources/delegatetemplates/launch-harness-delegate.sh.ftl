@@ -21,12 +21,4 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e POLL_FOR_TASKS=false \
 -e HELM_DESIRED_VERSION= \
 -e CF_PLUGIN_HOME= \
--e MANAGER_TARGET=${managerTarget} \
--e MANAGER_AUTHORITY=${managerAuthority} \
-<#if CCM_EVENT_COLLECTION??>
--e PUBLISH_TARGET=${publishTarget} \
--e PUBLISH_AUTHORITY=${publishAuthority} \
--e QUEUE_FILE_PATH=${queueFilePath} \
--e ENABLE_PERPETUAL_TASKS=${enablePerpetualTasks} \
-</#if>
 ${delegateDockerImage}

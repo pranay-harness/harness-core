@@ -392,9 +392,6 @@ techStacks:
     title: Connect to a verification provider
     url: https://docs.harness.io/article/r6ut6tldy0-verification-providers
 
-delegateConfigParams:
-  queueFilePath: eventQueue
-
 workers:
   active:
     io.harness: true

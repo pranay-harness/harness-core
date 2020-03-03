@@ -27,7 +27,6 @@ public class DelegateConfiguration {
   private String ocPath;
   private String kustomizePath;
 
-  private boolean enablePerpetualTasks;
   private String managerTarget;
   private String managerAuthority;
   private String queueFilePath;

@@ -7,7 +7,6 @@ localDiskPath: /tmp
 doUpgrade: false
 pollForTasks: false
 description: description here
-enablePerpetualTasks: true
 managerTarget: localhost:9880
 managerAuthority: localhost
 queueFilePath: ../eventQueue
