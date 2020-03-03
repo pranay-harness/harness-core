@@ -5,8 +5,10 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static java.lang.String.format;
 import static software.wings.sm.StateType.PHASE;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -35,6 +37,8 @@ import software.wings.beans.Application;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.FeatureName;
+import software.wings.beans.HarnessTagLink;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
@@ -44,6 +48,7 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -54,6 +59,7 @@ import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +93,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private AccountService accountService;
   @Inject private UsageMetricsHelper usageMetricsHelper;
   @Inject private SegmentHandler segmentHandler;
+  @Inject private HarnessTagService harnessTagService;
 
   /**
    * Instantiates a new workflow execution update.
@@ -197,7 +204,12 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
     handlePostExecution(context);
 
-    final String workflowId = context.getWorkflowId();
+    final String workflowId = context.getWorkflowId(); // this will be pipelineId in case of pipeline
+    if (featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, appService.getAccountIdByAppId(appId))) {
+      List<NameValuePair> resolvedTags = resolveDeploymentTags(context, workflowId);
+      addTagsToWorkflowExecution(resolvedTags);
+    }
+
     if (WorkflowType.PIPELINE != context.getWorkflowType()) {
       try {
         workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
@@ -273,6 +285,46 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         logger.error(
             "Failed to generate events for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId, e);
       }
+    }
+  }
+
+  @VisibleForTesting
+  public List<NameValuePair> resolveDeploymentTags(ExecutionContext context, String workflowId) {
+    String accountId = appService.getAccountIdByAppId(appId);
+    List<HarnessTagLink> harnessTagLinks = harnessTagService.getTagLinksWithEntityId(accountId, workflowId);
+    List<NameValuePair> resolvedTags = new ArrayList<>();
+    if (isNotEmpty(harnessTagLinks)) {
+      for (HarnessTagLink harnessTagLink : harnessTagLinks) {
+        String tagKey = context.renderExpression(harnessTagLink.getKey());
+        // checking string equals null as the jexl library seems to be returning the string "null" in some cases when
+        // the expression can't be evaluated instead of returning the original expression
+        // if key can't be evaluated, don't store it
+        if (tagKey == null || tagKey.equals("null")
+            || (harnessTagLink.getKey().startsWith("${") && harnessTagLink.getKey().equals(tagKey))) {
+          continue;
+        }
+        String tagValue = context.renderExpression(harnessTagLink.getValue());
+        // if value can't be evaluated, set it to ""
+        if (tagValue == null || tagValue.equals("null")
+            || (harnessTagLink.getValue().startsWith("${") && harnessTagLink.getValue().equals(tagValue))) {
+          tagValue = "";
+        }
+        resolvedTags.add(NameValuePair.builder().name(tagKey).value(tagValue).build());
+      }
+    }
+    return resolvedTags;
+  }
+
+  @VisibleForTesting
+  public void addTagsToWorkflowExecution(List<NameValuePair> resolvedTags) {
+    if (isNotEmpty(resolvedTags)) {
+      Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                           .filter(WorkflowExecutionKeys.appId, appId)
+                                           .filter(WorkflowExecutionKeys.uuid, workflowExecutionId);
+      UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                                                          .addToSet(WorkflowExecutionKeys.tags, resolvedTags);
+      wingsPersistence.findAndModify(query, updateOps, callbackFindAndModifyOptions);
+      logger.info(format("[%d] tags added to workflow execution: [%s]", resolvedTags.size(), workflowExecutionId));
     }
   }
 

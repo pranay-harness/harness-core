@@ -103,6 +103,13 @@ import javax.validation.constraints.NotNull;
         , @Field(WorkflowExecutionKeys.workflowId), @Field(WorkflowExecutionKeys.status),
             @Field(WorkflowExecutionKeys.serviceIds),
             @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
+      }), @Index(options = @IndexOptions(name = "accountId_tags_createdAt"), fields = {
+        @Field(WorkflowExecutionKeys.accountId)
+        , @Field("tags.name"), @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
+      }), @Index(options = @IndexOptions(name = "accountId_appId_tags_createdAt"), fields = {
+        @Field(WorkflowExecutionKeys.accountId)
+        , @Field(WorkflowExecutionKeys.appId), @Field("tags.name"),
+            @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
       })
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -189,6 +196,7 @@ public class WorkflowExecution
   private ConcurrencyStrategy concurrencyStrategy;
 
   private Long nextIteration;
+  private List<NameValuePair> tags;
 
   @Default
   @JsonIgnore
