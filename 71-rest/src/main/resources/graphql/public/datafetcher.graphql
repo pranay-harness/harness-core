@@ -73,4 +73,5 @@ enum DataFetcherEnum {
   createSecret
   updateSecret
   deleteSecret
+  getSecret
 }

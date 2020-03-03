@@ -24,7 +24,7 @@ public class DeleteWinRMCredentialTest extends GraphQLTest {
   @Owner(developers = DEEPAK)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testDeletingEncryptedText() {
-    String secretId = winRMCredentialHelper.createWinRMCredential();
+    String secretId = winRMCredentialHelper.createWinRMCredential("secretName");
     String query = $GQL(/*
     mutation{
         deleteSecret(input:%s){

@@ -77,6 +77,8 @@ public class CreateSecretDataFetcher extends BaseMutatorDataFetcher<QLCreateSecr
         SettingAttribute savedSSH = saveSSHCredential(input, mutationContext.getAccountId());
         secret = sshCredentialController.populateSSHCredential(savedSSH);
         break;
+      case ENCRYPTED_FILE:
+        throw new InvalidRequestException("Encrypted file secret cannot be created through API.");
       default:
         throw new InvalidRequestException("Invalid secret Type");
     }

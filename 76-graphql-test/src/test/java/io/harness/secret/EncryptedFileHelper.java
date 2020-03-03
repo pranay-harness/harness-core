@@ -1,18 +1,19 @@
 package io.harness.secret;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
-import lombok.Data;
+import io.harness.stream.BoundedInputStream;
 import software.wings.beans.Account;
-import software.wings.graphql.schema.type.secrets.QLEncryptedText;
 import software.wings.service.intfc.security.SecretManager;
 
-@Singleton
-public class EncryptedTextHelper {
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+
+public class EncryptedFileHelper {
   @Inject private OwnerManager ownerManager;
   @Inject private AccountGenerator accountGenerator;
   private String accountId;
@@ -20,17 +21,13 @@ public class EncryptedTextHelper {
   private String secret = "secret";
   @Inject SecretManager secretManager;
 
-  @Data
-  public static class CreateEncryptedTextResult {
-    String clientMutationId;
-    QLEncryptedText secret;
-  }
-
-  public String CreateEncryptedText(String name) {
+  public String createEncryptedFile(String name) {
     final Randomizer.Seed seed = new Randomizer.Seed(0);
     final OwnerManager.Owners owners = ownerManager.create();
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     accountId = account.getUuid();
-    return secretManager.saveSecret(accountId, null, name, secret, null, null);
+    InputStream is = new ByteArrayInputStream(Charset.forName("UTF-16").encode("test").array());
+    BoundedInputStream boundedInputStream = new BoundedInputStream(is);
+    return secretManager.saveFile(accountId, null, name, 120, null, boundedInputStream);
   }
 }

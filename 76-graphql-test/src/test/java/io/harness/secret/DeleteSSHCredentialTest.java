@@ -24,7 +24,7 @@ public class DeleteSSHCredentialTest extends GraphQLTest {
   @Owner(developers = DEEPAK)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testDeletingEncryptedText() {
-    String secretId = sshCredentialHelper.createSSHCredential();
+    String secretId = sshCredentialHelper.createSSHCredential("secretName");
     String query = $GQL(/*
     mutation{
         deleteSecret(input:%s){

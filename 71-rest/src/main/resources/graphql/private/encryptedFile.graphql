@@ -1,0 +1,7 @@
+type EncryptedFile implements Secret {
+  secretManagerId: String
+  name: String
+  secretType: SecretType
+  id: String
+  usageScope: UsageScope
+}
