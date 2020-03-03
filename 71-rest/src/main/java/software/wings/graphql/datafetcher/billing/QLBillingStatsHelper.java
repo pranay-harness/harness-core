@@ -98,7 +98,11 @@ public class QLBillingStatsHelper {
       if (cluster != null) {
         if (cluster.getClusterType().equals(AWS_ECS)) {
           EcsCluster ecsCluster = (EcsCluster) cluster;
-          return ecsCluster.getClusterName();
+          if (null != ecsCluster.getClusterName()) {
+            return ecsCluster.getClusterName();
+          } else {
+            return entityId;
+          }
         } else if (cluster.getClusterType().equals(DIRECT_KUBERNETES)) {
           DirectKubernetesCluster kubernetesCluster = (DirectKubernetesCluster) cluster;
           String clusterName = kubernetesCluster.getClusterName();

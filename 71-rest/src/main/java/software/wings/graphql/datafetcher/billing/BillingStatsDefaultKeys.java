@@ -13,7 +13,7 @@ public class BillingStatsDefaultKeys {
   public static final Double COSTTREND = 0.0;
   public static final String TRENDTYPE = "Increasing";
   public static final String REGION = "-";
-  public static final String LAUNCHTYPE = "Total";
+  public static final String LAUNCHTYPE = "-";
   public static final String CLOUDSERVICENAME = "Total";
   public static final String WORKLOADNAME = "Total";
   public static final String WORKLOADTYPE = "Default_WorkloadType";
