@@ -43,7 +43,7 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
   private String appId = "APP_ID";
   private String clusterId = "CLUSTER_ID";
   private String clusterName = "CLUSTER_NAME";
-  private String computeProvider = "clusterName";
+  private String computeProviderName = "clusterName";
   private Cluster k8sCluster;
   private ClusterRecord clusterRecord;
   private ClusterRecord clusterRecordWithId;
@@ -121,20 +121,21 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void testFrom() {
+  public void testFromInfrastructureMapping() {
     DirectKubernetesInfrastructureMapping k8sInfraMapping = DirectKubernetesInfrastructureMapping.builder()
                                                                 .accountId(accountId)
                                                                 .infraMappingType(DIRECT_KUBERNETES)
                                                                 .cloudProviderId(cloudProviderId)
                                                                 .build();
-    k8sInfraMapping.setComputeProviderName(computeProvider);
+    k8sInfraMapping.setComputeProviderName(computeProviderName);
 
-    ClusterRecord expectedClusterRecord =
-        ClusterRecord.builder()
-            .accountId(accountId)
-            .cluster(
-                DirectKubernetesCluster.builder().cloudProviderId(cloudProviderId).clusterName(computeProvider).build())
-            .build();
+    ClusterRecord expectedClusterRecord = ClusterRecord.builder()
+                                              .accountId(accountId)
+                                              .cluster(DirectKubernetesCluster.builder()
+                                                           .cloudProviderId(cloudProviderId)
+                                                           .clusterName(computeProviderName)
+                                                           .build())
+                                              .build();
     ClusterRecord actualClusterRecord = clusterRecordService.from(k8sInfraMapping);
     assertThat(actualClusterRecord).isEqualTo(expectedClusterRecord);
   }
