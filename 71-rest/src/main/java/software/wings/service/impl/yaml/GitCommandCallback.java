@@ -2,13 +2,17 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.GitCommand.GitCommandType.COMMIT_AND_PUSH;
 import static software.wings.beans.yaml.GitCommand.GitCommandType.DIFF;
+import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
+import static software.wings.service.impl.yaml.YamlProcessingLogContext.CHANGESET_ID;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
@@ -23,6 +27,7 @@ import software.wings.beans.Base;
 import software.wings.beans.GitCommit;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitConnectionErrorAlert;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
@@ -30,6 +35,7 @@ import software.wings.beans.yaml.GitCommandResult;
 import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffResult;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.yaml.gitdiff.GitChangeSetProcesser;
 import software.wings.service.intfc.AppService;
@@ -38,16 +44,22 @@ import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.YamlService;
+import software.wings.utils.Utils;
+import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class GitCommandCallback implements NotifyCallback {
+  public static final long _30_days_millis = System.currentTimeMillis() - Duration.ofDays(30).toMillis();
+
   private String accountId;
   private String changeSetId;
   private GitCommandType gitCommandType;
@@ -121,11 +133,18 @@ public class GitCommandCallback implements NotifyCallback {
         } else if (gitCommandResult.getGitCommandType() == DIFF) {
           try {
             GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
+
+            if (isNotEmpty(gitDiffResult.getGitFileChanges())) {
+              addActiveGitSyncErrorsToProcessAgain(gitDiffResult, accountId);
+            } else {
+              logger.info("No file changes found in git diff. Skip adding active errors for processing");
+            }
+
             gitChangeSetProcesser.processGitChangeSet(accountId, gitDiffResult);
             yamlChangeSetService.updateStatus(accountId, changeSetId, Status.COMPLETED);
           } catch (Exception e) {
+            logger.error("error while processing diff request", e);
             yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
-            throw e;
           }
 
         } else {
@@ -136,6 +155,47 @@ public class GitCommandCallback implements NotifyCallback {
         logger.warn("Unexpected notify response data: [{}]", notifyResponseData);
         updateChangeSetFailureStatusSafely();
       }
+    }
+  }
+
+  private List<GitFileChange> getActiveGitSyncErrorFiles(String accountId, String branchName, String gitConnectorId) {
+    return yamlGitService.getActiveGitToHarnessSyncErrors(accountId, gitConnectorId, branchName, _30_days_millis)
+        .stream()
+        .map(this ::convertToGitFileChange)
+        .collect(Collectors.toList());
+  }
+
+  private GitFileChange convertToGitFileChange(GitSyncError gitSyncError) {
+    return aGitFileChange()
+        .withFilePath(gitSyncError.getYamlFilePath())
+        .withFileContent(gitSyncError.getYamlContent())
+        .withAccountId(gitSyncError.getAccountId())
+        .withChangeType(Utils.getEnumFromString(ChangeType.class, gitSyncError.getChangeType()))
+        .withSyncFromGit(true)
+        .withCommitId(gitSyncError.getGitCommitId())
+        .build();
+  }
+  @VisibleForTesting
+  void addActiveGitSyncErrorsToProcessAgain(GitDiffResult gitDiffResult, String accountId) {
+    final List<GitFileChange> activeGitSyncErrorFiles = emptyIfNull(getActiveGitSyncErrorFiles(accountId,
+        gitDiffResult.getYamlGitConfig().getBranchName(), gitDiffResult.getYamlGitConfig().getGitConnectorId()));
+
+    logger.info("Active git sync error files =[{}]",
+        activeGitSyncErrorFiles.stream().map(GitFileChange::getFilePath).collect(Collectors.toList()));
+
+    if (isNotEmpty(activeGitSyncErrorFiles)) {
+      final Set<String> filesAlreadyInDiffSet =
+          gitDiffResult.getGitFileChanges().stream().map(GitFileChange::getFilePath).collect(Collectors.toSet());
+
+      final List<GitFileChange> activeErrorsNotInDiff =
+          activeGitSyncErrorFiles.stream()
+              .filter(gitFileChange -> !filesAlreadyInDiffSet.contains(gitFileChange.getFilePath()))
+              .collect(Collectors.toList());
+
+      logger.info("Active git sync error files not in diff =[{}]",
+          activeErrorsNotInDiff.stream().map(GitFileChange::getFilePath).collect(Collectors.toList()));
+
+      activeErrorsNotInDiff.forEach(gitDiffResult::addChangeFile);
     }
   }
 
@@ -201,7 +261,7 @@ public class GitCommandCallback implements NotifyCallback {
     context.put("gitCommandCallBackType", gitCommandType.toString());
 
     if (isNotBlank(changeSetId)) {
-      context.put("gitCommandCallChangeSetId", changeSetId);
+      context.put(CHANGESET_ID, changeSetId);
     }
 
     return context.build();

@@ -8,6 +8,7 @@ import static io.harness.maintenance.MaintenanceController.getMaintenanceFilenam
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static software.wings.service.impl.yaml.YamlProcessingLogContext.CHANGESET_ID;
 
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
@@ -96,7 +97,7 @@ public class GitChangeSetRunnable implements Runnable {
         try (AccountLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
           queuedChangeSet = yamlChangeSetService.getQueuedChangeSetForWaitingAccount(accountId);
           if (queuedChangeSet != null) {
-            logger.info(GIT_YAML_LOG_PREFIX + "Processing  changeSetId: [{}]", queuedChangeSet.getUuid());
+            logger.info(GIT_YAML_LOG_PREFIX + "Processing  " + CHANGESET_ID + ": [{}]", queuedChangeSet.getUuid());
             if (queuedChangeSet.isGitToHarness()) {
               yamlGitSyncService.handleGitChangeSet(queuedChangeSet, accountId);
             } else {
@@ -110,7 +111,7 @@ public class GitChangeSetRunnable implements Runnable {
               new StringBuilder().append("Unexpected error while processing commit for accountId: ").append(accountId);
           if (queuedChangeSet != null) {
             yamlChangeSetService.updateStatusForYamlChangeSets(accountId, Status.FAILED, Status.RUNNING);
-            stringBuilder.append(" and for changeSet: ").append(queuedChangeSet.getUuid()).append("  ");
+            stringBuilder.append(" and for " + CHANGESET_ID + ": ").append(queuedChangeSet.getUuid()).append("  ");
           }
           stringBuilder.append(" Reason: ").append(ExceptionUtils.getMessage(ex));
           logger.error(GIT_YAML_LOG_PREFIX + stringBuilder.toString(), ex);

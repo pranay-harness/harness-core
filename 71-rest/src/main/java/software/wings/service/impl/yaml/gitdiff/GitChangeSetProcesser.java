@@ -3,6 +3,8 @@ package software.wings.service.impl.yaml.gitdiff;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.manage.GlobalContextManager.ensureGlobalContextGuard;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 
 import com.google.common.base.Stopwatch;
@@ -14,6 +16,7 @@ import io.harness.mongo.ProcessTimeLogContext;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.yaml.GitDiffResult;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.service.impl.yaml.YamlProcessingLogContext;
 import software.wings.service.impl.yaml.gitdiff.gitaudit.YamlAuditRecordGenerationUtils;
@@ -38,7 +41,9 @@ public class GitChangeSetProcesser {
                                                 .repoName(gitDiffResult.getRepoName())
                                                 .commitId(gitDiffResult.getCommitId())
                                                 .build(OVERRIDE_ERROR)) {
-      logger.info(GIT_YAML_LOG_PREFIX + "Started processing git diff results");
+      logger.info(GIT_YAML_LOG_PREFIX + "Started processing git diff results with files [{}]",
+          emptyIfNull(gitDiffResult.getGitFileChanges()).stream().map(GitFileChange::getFilePath).collect(toList()));
+
       // ensure gitCommit is not already processed. Else nothing to be done.
       boolean commitAlreadyProcessed = yamlGitService.isCommitAlreadyProcessed(accountId, gitDiffResult.getCommitId());
       if (commitAlreadyProcessed) {

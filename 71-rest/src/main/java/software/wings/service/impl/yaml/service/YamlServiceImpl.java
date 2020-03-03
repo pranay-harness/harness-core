@@ -10,6 +10,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections4.MapUtils.emptyIfNull;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
@@ -65,6 +66,7 @@ import static software.wings.beans.yaml.YamlType.WORKFLOW;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -131,7 +133,6 @@ import java.io.OutputStream;
 import java.io.StringWriter;
 import java.util.Comparator;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -220,28 +221,30 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
     // compute the order of processing
     computeProcessingOrder(changeList);
+
     // validate
-    ChangeContextErrorMap pairErrorChange = validate(changeList);
+    final ChangeContextErrorMap validationResponseMap = validate(changeList);
     // process in the given order
-    Map<String, ChangeWithErrorMsg> processingError = process(pairErrorChange.changeContextList, isGitSyncPath);
-    Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap = new HashMap<>();
-    if (processingError != null) {
-      failedYamlFileChangeMap.putAll(processingError);
-    }
-    if (pairErrorChange.errorMsgMap != null) {
-      failedYamlFileChangeMap.putAll(pairErrorChange.errorMsgMap);
-    }
-    checkForErrors(failedYamlFileChangeMap);
-    return pairErrorChange.changeContextList;
+    final Map<String, ChangeWithErrorMsg> processingErrorMap =
+        process(validationResponseMap.changeContextList, isGitSyncPath);
+
+    final Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap =
+        ImmutableMap.<String, ChangeWithErrorMsg>builder()
+            .putAll(emptyIfNull(processingErrorMap))
+            .putAll(emptyIfNull(validationResponseMap.errorMsgMap))
+            .build();
+
+    ensureNoError(failedYamlFileChangeMap);
+
+    logger.info(GIT_YAML_LOG_PREFIX + "Processed all the changes from GIT without any error.");
+    return validationResponseMap.changeContextList;
   }
 
-  private void checkForErrors(Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap) throws YamlProcessingException {
-    if (failedYamlFileChangeMap.isEmpty()) {
-      logger.info(GIT_YAML_LOG_PREFIX + "Processed all the changes from GIT without any error.");
-      return;
+  private void ensureNoError(Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap) throws YamlProcessingException {
+    if (!failedYamlFileChangeMap.isEmpty()) {
+      throw new YamlProcessingException(
+          "Error while processing some yaml files in the changeset.", failedYamlFileChangeMap);
     }
-    throw new YamlProcessingException(
-        "Error while processing some yaml files in the changeset.", failedYamlFileChangeMap);
   }
 
   @VisibleForTesting
@@ -621,7 +624,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           logger.info("Processing file: [{}]", changeContext.getChange().getFilePath());
           processYamlChange(changeContext, changeContextList);
           if (gitSyncPath) {
-            yamlGitService.discardGitSyncError(changeContext.getChange().getAccountId(), yamlFilePath);
+            yamlGitService.discardGitSyncErrorForFilePath(changeContext.getChange().getAccountId(), yamlFilePath);
           }
 
           logger.info("Processing done for file [{}]", changeContext.getChange().getFilePath());

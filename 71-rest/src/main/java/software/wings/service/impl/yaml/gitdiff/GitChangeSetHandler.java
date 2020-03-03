@@ -3,6 +3,10 @@ package software.wings.service.impl.yaml.gitdiff;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
+import static org.apache.commons.collections4.MapUtils.emptyIfNull;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.GitCommit.Status.COMPLETED;
 import static software.wings.beans.GitCommit.Status.FAILED;
@@ -13,6 +17,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -36,7 +41,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 @Slf4j
 public class GitChangeSetHandler {
@@ -54,28 +59,67 @@ public class GitChangeSetHandler {
 
     try {
       List<ChangeContext> fileChangeContexts = yamlService.processChangeSet(gitFileChangeList);
-      logger.info("Processed ChangeSet [{}] for account {}", fileChangeContexts, accountId);
+      logger.info("Successfully Processed ChangeSet [{}] for account {}", fileChangeContexts, accountId);
 
-      List<String> yamlGitConfigIds = obtainYamlGitConfigIds(accountId,
-          gitDiffResult.getYamlGitConfig().getBranchName(), gitDiffResult.getYamlGitConfig().getGitConnectorId());
-
-      saveCommitFromGit(gitDiffResult, yamlGitConfigIds, accountId, COMPLETED);
+      saveProcessedCommit(gitDiffResult, accountId, COMPLETED);
       // this is for GitCommandType.DIFF, where we set gitToHarness = true explicitly as we are responding to
       // webhook invocation
-      yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList, true);
+      removeGitSyncErrorsForSuccessfulFiles(gitFileChangeList, emptySet(), accountId);
+
     } catch (YamlProcessingException ex) {
       logger.warn("Unable to process git commit {} for account {}. ", gitDiffResult.getCommitId(), accountId, ex);
       // this is for GitCommandType.DIFF, where we set gitToHarness = true explicitly as we are responding to
       // webhook invocation
+
+      populatateYamlGitconfigInError(ex.getFailedYamlFileChangeMap(), gitDiffResult.getYamlGitConfig());
+
       yamlGitService.processFailedChanges(accountId, ex.getFailedYamlFileChangeMap(), true);
 
-      List<String> yamlGitConfigIds = obtainYamlGitConfigIds(accountId,
-          gitDiffResult.getYamlGitConfig().getBranchName(), gitDiffResult.getYamlGitConfig().getGitConnectorId());
+      removeGitSyncErrorsForSuccessfulFiles(gitFileChangeList, ex.getFailedYamlFileChangeMap().keySet(), accountId);
       // Add to gitCommits a failed commit.
-      saveCommitFromGit(gitDiffResult, yamlGitConfigIds, accountId, FAILED);
+      saveProcessedCommit(gitDiffResult, accountId, FAILED);
+
       return ex.getFailedYamlFileChangeMap();
     }
     return Collections.EMPTY_MAP;
+  }
+
+  private void populatateYamlGitconfigInError(
+      Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap, YamlGitConfig yamlGitConfig) {
+    emptyIfNull(failedYamlFileChangeMap)
+        .values()
+        .stream()
+        .map(changeWithErrorMsg -> (GitFileChange) changeWithErrorMsg.getChange())
+        .filter(gitFileChange -> gitFileChange.getYamlGitConfig() == null)
+        .forEach(gitFileChange -> gitFileChange.setYamlGitConfig(yamlGitConfig));
+  }
+
+  private void saveProcessedCommit(GitDiffResult gitDiffResult, String accountId, GitCommit.Status gitCommitStatus) {
+    final List<String> yamlGitConfigIds = obtainYamlGitConfigIds(accountId,
+        gitDiffResult.getYamlGitConfig().getBranchName(), gitDiffResult.getYamlGitConfig().getGitConnectorId());
+
+    saveCommitFromGit(gitDiffResult, yamlGitConfigIds, accountId, gitCommitStatus);
+  }
+
+  private void removeGitSyncErrorsForSuccessfulFiles(
+      List<GitFileChange> gitFileChangeList, Set<String> failedFilePathSet, String accountId) {
+    final List<GitFileChange> successfullyProcessedFileList =
+        emptyIfNull(getSuccessfullyProcessedFiles(gitFileChangeList, failedFilePathSet));
+    logger.info("Successfully processed files =[{}]",
+        successfullyProcessedFileList.stream().map(GitFileChange::getFilePath).collect(toList()));
+
+    yamlGitService.removeGitSyncErrors(accountId, successfullyProcessedFileList, true);
+  }
+
+  private List<GitFileChange> getSuccessfullyProcessedFiles(
+      List<GitFileChange> gitFileChangeList, Set<String> failedFilePathSet) {
+    if (CollectionUtils.isEmpty(failedFilePathSet)) {
+      return gitFileChangeList;
+    }
+    return emptyIfNull(gitFileChangeList)
+        .stream()
+        .filter(gitFileChange -> !failedFilePathSet.contains(gitFileChange.getFilePath()))
+        .collect(toList());
   }
 
   private List<GitFileChange> obtainValidGitFileChangesBasedOnYamlGitConfig(
@@ -149,7 +193,7 @@ public class GitChangeSetHandler {
         .asList()
         .stream()
         .map(Base::getUuid)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private void saveCommitFromGit(
