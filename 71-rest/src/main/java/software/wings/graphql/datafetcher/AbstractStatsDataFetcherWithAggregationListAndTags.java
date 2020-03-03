@@ -22,12 +22,17 @@ import software.wings.graphql.schema.type.aggregation.QLBillingStackedTimeSeries
 import software.wings.graphql.schema.type.aggregation.QLBillingStackedTimeSeriesDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLReference;
+import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.TagAggregation;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortType;
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableData;
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableListData;
 import software.wings.service.intfc.HarnessTagService;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +54,8 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
   protected abstract EntityType getEntityType(E entityType);
 
   @Override
-  public QLData postFetch(String accountId, List<G> groupByList, List<A> aggregateFunctions, QLData qlData) {
+  public QLData postFetch(
+      String accountId, List<G> groupByList, List<A> aggregateFunctions, List<S> sortCriteria, QLData qlData) {
     List<TA> groupByTagList = getGroupByTag(groupByList);
     List<LA> groupByLabelList = getGroupByLabel(groupByList);
     if (!groupByTagList.isEmpty()) {
@@ -77,13 +83,13 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       }
     } else if (!groupByLabelList.isEmpty()) {
       LA groupByLabelLevel1 = groupByLabelList.get(0);
-      prepareDataAfterLabelGroupBy(accountId, qlData, aggregateFunctions, groupByLabelLevel1);
+      prepareDataAfterLabelGroupBy(accountId, qlData, aggregateFunctions, groupByLabelLevel1, sortCriteria);
     }
     return qlData;
   }
 
   private void prepareDataAfterLabelGroupBy(
-      String accountId, QLData qlData, List<A> aggregateFunctions, LA groupByLabelLevel1) {
+      String accountId, QLData qlData, List<A> aggregateFunctions, LA groupByLabelLevel1, List<S> sortCriteria) {
     if (qlData instanceof QLBillingStackedTimeSeriesData) {
       List<QLCCMAggregationFunction> billingDataAggregations = (List<QLCCMAggregationFunction>) aggregateFunctions;
       QLBillingStackedTimeSeriesData billingStackedTimeSeriesData = (QLBillingStackedTimeSeriesData) qlData;
@@ -93,6 +99,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       QLEntityTableListData entityTableListData = (QLEntityTableListData) qlData;
       List<QLEntityTableData> entityTableDataPoints = entityTableListData.getData();
       getLabelEntityTableDataPoints(accountId, entityTableDataPoints, groupByLabelLevel1);
+      sortEntityTableData(entityTableDataPoints, (List<QLBillingSortCriteria>) sortCriteria);
     }
   }
 
@@ -320,14 +327,16 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
     if (existingDataPoint != null) {
       switch (operation) {
         case SUM:
-          existingDataPoint.setValue(existingDataPoint.getValue().doubleValue() + dataPoint.getValue().doubleValue());
+          existingDataPoint.setValue(billingDataHelper.getRoundedDoubleValue(
+              existingDataPoint.getValue().doubleValue() + dataPoint.getValue().doubleValue()));
           break;
         case MAX:
-          existingDataPoint.setValue(
-              Math.max(existingDataPoint.getValue().doubleValue(), dataPoint.getValue().doubleValue()));
+          existingDataPoint.setValue(billingDataHelper.getRoundedDoubleValue(
+              Math.max(existingDataPoint.getValue().doubleValue(), dataPoint.getValue().doubleValue())));
           break;
         case AVG:
-          existingDataPoint.setValue(existingDataPoint.getValue().doubleValue() + dataPoint.getValue().doubleValue());
+          existingDataPoint.setValue(billingDataHelper.getRoundedDoubleValue(
+              existingDataPoint.getValue().doubleValue() + dataPoint.getValue().doubleValue()));
           numberOfDataPoints.put(labelMapKey, numberOfDataPoints.get(labelMapKey) + 1);
           break;
         default:
@@ -466,6 +475,27 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       dataPoint.setCostTrend(billingDataHelper.getRoundedDoubleValue(
           dataPoint.getCostTrend() / aggregatedPrevBillingAmount.get(dataPoint.getId())));
     });
+  }
+
+  private void sortEntityTableData(List<QLEntityTableData> dataPoints, List<QLBillingSortCriteria> sortCriteria) {
+    if (sortCriteria != null && sortCriteria.isEmpty()) {
+      sortCriteria.forEach(sort -> {
+        Comparator<QLEntityTableData> comparator;
+        if (sort.getSortType() == QLBillingSortType.Amount) {
+          comparator = Comparator.comparing(QLEntityTableData::getTotalCost);
+        } else if (sort.getSortType() == QLBillingSortType.IdleCost) {
+          comparator = Comparator.comparing(QLEntityTableData::getIdleCost);
+        } else {
+          return;
+        }
+
+        if (sort.getSortOrder() == QLSortOrder.ASCENDING) {
+          Collections.sort(dataPoints, comparator);
+        } else {
+          Collections.sort(dataPoints, comparator.reversed());
+        }
+      });
+    }
   }
 
   protected abstract EA getGroupByEntityFromTag(TA groupByTag);

@@ -504,7 +504,7 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
 
   @Override
   protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList,
-      List<QLCCMAggregationFunction> aggregateFunction, QLData qlData) {
+      List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingSortCriteria> sort, QLData qlData) {
     return null;
   }
 

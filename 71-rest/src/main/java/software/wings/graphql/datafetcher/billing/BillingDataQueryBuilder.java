@@ -49,9 +49,11 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAgg
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -757,13 +759,29 @@ public class BillingDataQueryBuilder {
         } else if (type == QLBillingDataFilterType.Label) {
           QLBillingDataLabelFilter labelFilter = filter.getLabel();
           if (labelFilter != null) {
-            Set<String> workloadNames = k8sLabelHelper.getWorkloadNamesFromLabels(accountId, labelFilter);
+            Set<String> workloadNamesWithNamespaces =
+                k8sLabelHelper.getWorkloadNamesWithNamespacesFromLabels(accountId, labelFilter);
+            Set<String> workloadNames = new HashSet<>();
+            Set<String> namespaces = new HashSet<>();
+            workloadNamesWithNamespaces.forEach(workloadNameWithNamespace -> {
+              StringTokenizer tokenizer = new StringTokenizer(workloadNameWithNamespace, BillingStatsDefaultKeys.TOKEN);
+              workloadNames.add(tokenizer.nextToken());
+              namespaces.add(tokenizer.nextToken());
+            });
             if (isNotEmpty(workloadNames)) {
               newList.add(QLBillingDataFilter.builder()
                               .workloadName(QLIdFilter.builder()
                                                 .operator(QLIdOperator.IN)
                                                 .values(workloadNames.toArray(new String[0]))
                                                 .build())
+                              .build());
+            }
+            if (isNotEmpty(namespaces)) {
+              newList.add(QLBillingDataFilter.builder()
+                              .namespace(QLIdFilter.builder()
+                                             .operator(QLIdOperator.IN)
+                                             .values(namespaces.toArray(new String[0]))
+                                             .build())
                               .build());
             }
           }

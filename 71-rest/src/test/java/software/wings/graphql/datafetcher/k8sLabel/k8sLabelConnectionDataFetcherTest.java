@@ -17,6 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.billing.BillingStatsDefaultKeys;
 import software.wings.graphql.schema.query.QLClustersQueryParameters;
 import software.wings.graphql.schema.type.QLK8sLabelConnection;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
@@ -149,17 +150,17 @@ public class k8sLabelConnectionDataFetcherTest extends AbstractDataFetcherTest {
   @Category(UnitTests.class)
   public void testGetWorkloadNamesFromLabels() {
     Set<String> workloadNames =
-        k8sLabelHelper.getWorkloadNamesFromLabels(ACCOUNT_ID, getTestLabelFilter("key", "value"));
+        k8sLabelHelper.getWorkloadNamesWithNamespacesFromLabels(ACCOUNT_ID, getTestLabelFilter("key", "value"));
     assertThat(workloadNames).hasSize(1);
-    assertThat(workloadNames.contains("testWorkload")).isTrue();
+    assertThat(workloadNames.contains("testWorkload" + BillingStatsDefaultKeys.TOKEN + NAMESPACE)).isTrue();
   }
 
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testGetWorkloadNamesFromLabelsWithFailingFilterConditions() {
-    Set<String> workloadNames =
-        k8sLabelHelper.getWorkloadNamesFromLabels(ACCOUNT_ID, getTestLabelFilter("different key", "value"));
+    Set<String> workloadNames = k8sLabelHelper.getWorkloadNamesWithNamespacesFromLabels(
+        ACCOUNT_ID, getTestLabelFilter("different key", "value"));
     assertThat(workloadNames).hasSize(0);
   }
 
