@@ -82,7 +82,7 @@ public class EcsTaskInfoWriter extends EventWriter implements ItemWriter<Publish
               String serviceName = getIdFromArn(serviceArn);
               metaData.put(InstanceMetaDataConstants.ECS_SERVICE_NAME, serviceName);
               metaData.put(InstanceMetaDataConstants.ECS_SERVICE_ARN, serviceArn);
-              harnessServiceInfo = getHarnessServiceInfo(accountId, clusterId, serviceName);
+              harnessServiceInfo = getHarnessServiceInfo(accountId, clusterName, serviceName);
             }
 
             instanceData = InstanceData.builder()

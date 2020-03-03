@@ -23,7 +23,7 @@ import java.util.Map;
 public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, InstanceInfo> {
   @Autowired private CloudProviderService cloudProviderService;
 
-  private static final String AWS_SPOT_INSTANCE = "Ec2Spot";
+  private static final String AWS_SPOT_INSTANCE = "spot";
 
   @Override
   public InstanceInfo process(PublishedMessage publishedMessage) {
@@ -67,7 +67,7 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
       }
     } else if (k8SCloudProvider == CloudProvider.AWS) {
       String lifecycle = labelsMap.get(K8sCCMConstants.AWS_LIFECYCLE_KEY);
-      if (AWS_SPOT_INSTANCE.equals(lifecycle)) {
+      if (null != lifecycle && lifecycle.toLowerCase().contains(AWS_SPOT_INSTANCE)) {
         return InstanceCategory.SPOT;
       }
     }
