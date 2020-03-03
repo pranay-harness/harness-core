@@ -65,6 +65,7 @@ import software.wings.graphql.schema.type.instance.QLEcsContainerInstance;
 import software.wings.graphql.schema.type.instance.QLK8SPodInstance;
 import software.wings.graphql.schema.type.instance.QLPcfInstance;
 import software.wings.graphql.schema.type.instance.QLPhysicalHostInstance;
+import software.wings.graphql.schema.type.secrets.QLEncryptedFile;
 import software.wings.graphql.schema.type.secrets.QLEncryptedText;
 import software.wings.graphql.schema.type.secrets.QLKerberosAuthentication;
 import software.wings.graphql.schema.type.secrets.QLSSHAuthentication;
@@ -162,6 +163,7 @@ public class TypeResolverManager {
     public static final String ldapSettings = "LDAPSettings";
     public static final String samlSettings = "SAMLSettings";
     public static final String encryptedText = "EncryptedText";
+    public static final String encryptedFile = "EncryptedFile";
     public static final String winRMCredential = "WinRMCredential";
     public static final String sshCredential = "SSHCredential";
     public static final String sshAuthentication = "SSHAuthentication";
@@ -281,6 +283,7 @@ public class TypeResolverManager {
         .put(TypeResolverManagerUnifaces.Secret,
             getResultTypeResolver(ImmutableMap.<Class, String>builder()
                                       .put(QLEncryptedText.class, TypeResolverManagerTypes.encryptedText)
+                                      .put(QLEncryptedFile.class, TypeResolverManagerTypes.encryptedFile)
                                       .put(QLWinRMCredential.class, TypeResolverManagerTypes.winRMCredential)
                                       .put(QLSSHCredential.class, TypeResolverManagerTypes.sshCredential)
                                       .build()))

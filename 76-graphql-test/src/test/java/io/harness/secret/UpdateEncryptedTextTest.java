@@ -40,7 +40,7 @@ public class UpdateEncryptedTextTest extends GraphQLTest {
     final OwnerManager.Owners owners = ownerManager.create();
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     accountId = account.getUuid();
-    secretId = encryptedTextHelper.CreateEncryptedText();
+    secretId = encryptedTextHelper.CreateEncryptedText("secretName");
   }
 
   private String getUpdateEncryptedTextInput() {

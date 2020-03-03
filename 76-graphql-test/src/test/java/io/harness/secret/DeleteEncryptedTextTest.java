@@ -25,7 +25,7 @@ public class DeleteEncryptedTextTest extends GraphQLTest {
   @Owner(developers = DEEPAK)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testDeletingEncryptedText() {
-    String secretId = encryptedTextHelper.CreateEncryptedText();
+    String secretId = encryptedTextHelper.CreateEncryptedText("secretName");
     String query = $GQL(/*
     mutation{
         deleteSecret(input:%s){

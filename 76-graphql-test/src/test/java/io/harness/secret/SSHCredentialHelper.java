@@ -11,6 +11,7 @@ import io.harness.generator.Randomizer;
 import lombok.Data;
 import software.wings.beans.Account;
 import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.KerberosConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
@@ -61,7 +62,7 @@ public class SSHCredentialHelper {
     KerberosCredentialResult secret;
   }
 
-  public String createSSHCredential() {
+  public String createSSHCredential(String name) {
     final Randomizer.Seed seed = new Randomizer.Seed(0);
     final OwnerManager.Owners owners = ownerManager.create();
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
@@ -75,6 +76,7 @@ public class SSHCredentialHelper {
             .withKey("key".toCharArray())
             .withSshPassword("sshPassword".toCharArray())
             .withKerberosPassword("kerberosPassword".toCharArray())
+            .withKerberosConfig(KerberosConfig.builder().principal("principal").realm("realm").build())
             .withKeyPath("keyPath")
             .withKeyless(false)
             .withPassphrase("passphrase".toCharArray())
@@ -82,7 +84,7 @@ public class SSHCredentialHelper {
             .build();
     settingValue.setSettingType(SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES);
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withName("secretName")
+                                            .withName(name)
                                             .withValue(settingValue)
                                             .withAccountId(accountId)
                                             .withCategory(SettingAttribute.SettingCategory.SETTING)
