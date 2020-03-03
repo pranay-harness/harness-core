@@ -16,6 +16,7 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingInt;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -82,6 +83,10 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
 import io.fabric8.kubernetes.client.dsl.ScalableResource;
+import io.fabric8.openshift.api.model.DeploymentConfig;
+import io.fabric8.openshift.api.model.DeploymentConfigList;
+import io.fabric8.openshift.api.model.DoneableDeploymentConfig;
+import io.fabric8.openshift.client.dsl.DeployableScalableResource;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -264,6 +269,15 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                 // Ignore
               }
             }
+            if (controller == null) {
+              try {
+                controller =
+                    deploymentConfigOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
+                allFailed = false;
+              } catch (Exception e) {
+                // Ignore
+              }
+            }
             if (allFailed) {
               controller = deploymentOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
             } else {
@@ -350,6 +364,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     try {
       controllers.addAll(
           (List) daemonOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+              .withLabels(labels)
+              .list()
+              .getItems());
+      allFailed = false;
+    } catch (RuntimeException e) {
+      // Ignore
+    }
+    try {
+      controllers.addAll(
+          (List) deploymentConfigOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
               .withLabels(labels)
               .list()
               .getItems());
@@ -799,7 +823,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         .filter(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName()).isPresent())
         .forEach(ctrl
             -> result.put(ctrl.getMetadata().getName(),
-                getPodTemplateSpec(ctrl)
+                requireNonNull(getPodTemplateSpec(ctrl))
                     .getSpec()
                     .getContainers()
                     .stream()
@@ -873,6 +897,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       return ((StatefulSet) controller).getSpec().getReplicas();
     } else if (controller instanceof DaemonSet) {
       return ((DaemonSet) controller).getStatus().getDesiredNumberScheduled();
+    } else if (controller instanceof DeploymentConfig) {
+      return ((DeploymentConfig) controller).getSpec().getReplicas();
     } else {
       throw new InvalidRequestException(
           format("Unhandled kubernetes resource type [%s] for getting the pod count", controller.getKind()));
@@ -892,6 +918,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       podTemplateSpec = ((ReplicaSet) controller).getSpec().getTemplate();
     } else if (controller instanceof StatefulSet) {
       podTemplateSpec = ((StatefulSet) controller).getSpec().getTemplate();
+    } else if (controller instanceof DeploymentConfig) {
+      podTemplateSpec = ((DeploymentConfig) controller).getSpec().getTemplate();
     }
     return podTemplateSpec;
   }
@@ -945,6 +973,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
         .apps()
         .statefulSets()
+        .inNamespace(namespace);
+  }
+
+  private NonNamespaceOperation<DeploymentConfig, DeploymentConfigList, DoneableDeploymentConfig,
+      DeployableScalableResource<DeploymentConfig, DoneableDeploymentConfig>>
+  deploymentConfigOperations(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String namespace) {
+    namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
+    return kubernetesHelperService.getOpenShiftClient(kubernetesConfig, encryptedDataDetails)
+        .deploymentConfigs()
         .inNamespace(namespace);
   }
 

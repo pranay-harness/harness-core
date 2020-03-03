@@ -20,6 +20,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.KubernetesConvention.DASH;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -42,6 +43,9 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.internal.HorizontalPodAutoscalerOperationsImpl;
 import io.fabric8.kubernetes.client.internal.SSLUtils;
 import io.fabric8.kubernetes.client.utils.Utils;
+import io.fabric8.openshift.client.DefaultOpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftConfig;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.network.Http;
@@ -154,6 +158,21 @@ public class KubernetesHelperService {
     }
   }
 
+  public OpenShiftClient getOpenShiftClient(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    Config config = getConfig(kubernetesConfig, encryptedDataDetails, StringUtils.EMPTY);
+
+    String namespace = "default";
+    if (isNotBlank(config.getNamespace())) {
+      namespace = config.getNamespace();
+    }
+
+    OkHttpClient okHttpClient = createHttpClientWithProxySetting(config);
+    try (DefaultOpenShiftClient client = new DefaultOpenShiftClient(okHttpClient, new OpenShiftConfig(config))) {
+      return client.inNamespace(namespace);
+    }
+  }
+
   private Config getConfig(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String apiVersion) {
     if (!kubernetesConfig.isDecrypted()) {
@@ -237,7 +256,8 @@ public class KubernetesHelperService {
    * use DefaultKubernetesClient(config) constructor version as it internally call
    * super(createHttpClient(config), config)
    */
-  private OkHttpClient createHttpClientWithProxySetting(final Config config) {
+  @VisibleForTesting
+  OkHttpClient createHttpClientWithProxySetting(final Config config) {
     try {
       OkHttpClient.Builder httpClientBuilder = getOkHttpClientBuilder();
       httpClientBuilder.proxy(Http.checkAndGetNonProxyIfApplicable(config.getMasterUrl()));
