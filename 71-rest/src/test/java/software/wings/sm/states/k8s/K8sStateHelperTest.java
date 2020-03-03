@@ -71,6 +71,7 @@ import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
+import software.wings.helpers.ext.kustomize.KustomizeHelper;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
@@ -83,7 +84,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.k8s.kustomize.KustomizeHelper;
 import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.ArrayList;

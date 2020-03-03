@@ -127,7 +127,8 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(FunctionalTests.class)
-  public void shouldInstallKustomize() throws IOException {
+  public void shouldInstallKustomize() throws IOException, IllegalAccessException {
+    setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
     FileUtils.deleteDirectory(new File("./client-tools/kustomize/"));
     assertThat(InstallUtils.installKustomize(delegateConfiguration)).isTrue();
 
