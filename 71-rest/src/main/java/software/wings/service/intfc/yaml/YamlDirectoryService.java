@@ -91,7 +91,7 @@ public interface YamlDirectoryService {
 
   String getRootPathByUserDataSpec(Service service, UserDataSpecification userDataSpecification);
 
-  <T> String getRootPathByConfigFile(T entity);
+  <H, T> String getRootPathByConfigFile(H helperEntity, T entity);
 
   String getRootPathByConfigFileOverride(Environment environment);
 

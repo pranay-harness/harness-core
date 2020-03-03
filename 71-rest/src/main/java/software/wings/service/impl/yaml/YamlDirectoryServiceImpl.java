@@ -11,6 +11,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
+import static software.wings.beans.Service.GLOBAL_SERVICE_NAME_FOR_YAML;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.APPLICATION_TEMPLATE_LIBRARY_FOLDER;
@@ -128,6 +131,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
@@ -186,6 +190,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private PipelineService pipelineService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private ServiceTemplateService serviceTemplateService;
 
   @Inject private YamlArtifactStreamService yamlArtifactStreamService;
   @Inject private YamlGitService yamlGitSyncService;
@@ -1348,12 +1353,45 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         List<ConfigFile> configFiles =
             configService.getConfigFileOverridesForEnv(environment.getAppId(), environment.getUuid());
-        configFiles.forEach(configFile -> {
-          String configFileName = Utils.normalize(configFile.getRelativeFilePath()) + YAML_EXTENSION;
-          configFilesFolder.addChild(new EnvLevelYamlNode(accountId, configFile.getUuid(), configFile.getAppId(),
-              environment.getUuid(), configFileName, ConfigFile.class, configFilesPath.clone().add(configFileName),
-              yamlGitSyncService, Type.CONFIG_FILE_OVERRIDE));
+
+        List<ConfigFile> globalConfigFiles =
+            configFiles.stream().filter(config -> config.getEntityType() == ENVIRONMENT).collect(Collectors.toList());
+        List<ConfigFile> serviceConfigFiles = configFiles.stream()
+                                                  .filter(config -> config.getEntityType() == SERVICE_TEMPLATE)
+                                                  .collect(Collectors.toList());
+
+        final Map<String, List<ConfigFile>> servicesConfigFileMap =
+            serviceConfigFiles.stream().collect(Collectors.groupingBy(ConfigFile::getEntityId));
+
+        // For service overrides create folders.
+        servicesConfigFileMap.forEach((serviceTemplate, configFilesOverrideForService) -> {
+          String serviceName = serviceTemplateService.get(envFolder.getAppId(), serviceTemplate).getName();
+          DirectoryPath servicesFolderPath = configFilesPath.clone().add(serviceName);
+          FolderNode servicesFolder = new FolderNode(accountId, serviceName, SettingAttribute.class, servicesFolderPath,
+              environment.getAppId(), yamlGitSyncService);
+          configFilesFolder.addChild(servicesFolder);
+
+          configFilesOverrideForService.forEach(configFile -> {
+            String configFileName = Utils.normalize(configFile.getRelativeFilePath()) + YAML_EXTENSION;
+            servicesFolder.addChild(new EnvLevelYamlNode(accountId, configFile.getUuid(), configFile.getAppId(),
+                environment.getUuid(), configFileName, ConfigFile.class, servicesFolderPath.clone().add(configFileName),
+                yamlGitSyncService, Type.CONFIG_FILE_OVERRIDE));
+          });
         });
+
+        // For all service overrides create folder.
+        if (!globalConfigFiles.isEmpty()) {
+          DirectoryPath servicesFolderPath = configFilesPath.clone().add(GLOBAL_SERVICE_NAME_FOR_YAML);
+          FolderNode servicesFolder = new FolderNode(accountId, GLOBAL_SERVICE_NAME_FOR_YAML, SettingAttribute.class,
+              servicesFolderPath, environment.getAppId(), yamlGitSyncService);
+          configFilesFolder.addChild(servicesFolder);
+          globalConfigFiles.forEach(configFile -> {
+            String configFileName = Utils.normalize(configFile.getRelativeFilePath()) + YAML_EXTENSION;
+            servicesFolder.addChild(new EnvLevelYamlNode(accountId, configFile.getUuid(), configFile.getAppId(),
+                environment.getUuid(), configFileName, ConfigFile.class, servicesFolderPath.clone().add(configFileName),
+                yamlGitSyncService, Type.CONFIG_FILE_OVERRIDE));
+          });
+        }
 
         // ------------------- END CONFIG FILES SECTION -----------------------
 
@@ -2215,15 +2253,32 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
-  public <T> String getRootPathByConfigFile(T entity) {
-    if (entity instanceof Service) {
-      return getRootPathByService((Service) entity) + PATH_DELIMITER + CONFIG_FILES_FOLDER;
-    } else if (entity instanceof Environment) {
-      return getRootPathByEnvironment((Environment) entity) + PATH_DELIMITER + CONFIG_FILES_FOLDER;
+  public <H, T> String getRootPathByConfigFile(H helperEntity, T entity) {
+    if (helperEntity instanceof Service) {
+      return getRootPathByService((Service) helperEntity) + PATH_DELIMITER + CONFIG_FILES_FOLDER;
+    } else if (helperEntity instanceof Environment) {
+      return getRootPathByEnvironment((Environment) helperEntity) + PATH_DELIMITER + CONFIG_FILES_FOLDER
+          + appendServiceNameToEnvironementConfigFile(entity);
     }
 
     throw new InvalidRequestException(
         "Unhandled case while getting yaml config file root path for entity type " + entity.getClass().getSimpleName());
+  }
+
+  private <T> String appendServiceNameToEnvironementConfigFile(T entity) {
+    String serviceName = null;
+    if (((ConfigFile) entity).getEntityType() == SERVICE_TEMPLATE) {
+      serviceName =
+          serviceTemplateService.get(((ConfigFile) entity).getAppId(), ((ConfigFile) entity).getEntityId()).getName();
+    }
+
+    if (((ConfigFile) entity).getEntityType() == ENVIRONMENT) {
+      serviceName = GLOBAL_SERVICE_NAME_FOR_YAML;
+    }
+    if (serviceName == null) {
+      throw new InvalidRequestException("Config file type not found");
+    }
+    return PATH_DELIMITER + serviceName;
   }
 
   @Override
@@ -2444,7 +2499,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     // Special handling for few entities
     // Don't change the order
     if (entity instanceof ConfigFile) {
-      return getRootPathByConfigFile(helperEntity);
+      return getRootPathByConfigFile(helperEntity, entity);
     } else if (helperEntity instanceof Service) {
       if (entity instanceof ServiceCommand) {
         return getRootPathByServiceCommand((Service) helperEntity, (ServiceCommand) entity);

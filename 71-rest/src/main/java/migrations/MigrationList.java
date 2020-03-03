@@ -116,6 +116,7 @@ import migrations.all.SettingAttributesCategoryMigration;
 import migrations.all.StackdriverServiceGuardMetricsGroupingMigration;
 import migrations.all.SweepingPhaseMigration;
 import migrations.all.SweepingStateMigration;
+import migrations.all.SyncNewFolderForConfigFiles;
 import migrations.all.SystemTemplateGalleryMigration;
 import migrations.all.TimeSeriesAnalysisRecordsMigration;
 import migrations.all.TimeSeriesMLAnalysisCompressionSaveMigration;
@@ -309,6 +310,7 @@ public class MigrationList {
         .add(Pair.of(292, CleanupSyncStatusForDeletedEntities.class))
         .add(Pair.of(293, DeleteCVCronMigration.class))
         .add(Pair.of(294, AmiDeploymentTypeMigration.class))
+        .add(Pair.of(295, SyncNewFolderForConfigFiles.class))
         .build();
   }
 }

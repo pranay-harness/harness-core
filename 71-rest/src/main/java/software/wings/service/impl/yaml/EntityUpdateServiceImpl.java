@@ -284,8 +284,8 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       String fileName = Utils.normalize(configFile.getRelativeFilePath());
 
       if (fileContent != null) {
-        gitFileChanges.add(createGitChangeWhenUsingActualFile(
-            accountId, yamlDirectoryService.getRootPathByConfigFile(helperEntity), fileName, fileContent, changeType));
+        gitFileChanges.add(createGitChangeWhenUsingActualFile(accountId,
+            yamlDirectoryService.getRootPathByConfigFile(helperEntity, entity), fileName, fileContent, changeType));
       }
     } else if (entity instanceof ManifestFile) {
       ManifestFile manifestFile = (ManifestFile) entity;

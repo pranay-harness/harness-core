@@ -38,6 +38,7 @@ import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.valueOf;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
+import static software.wings.beans.Service.GLOBAL_SERVICE_NAME_FOR_YAML;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -412,6 +413,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     String accountId = appService.getAccountIdByAppId(service.getAppId());
     service.setAccountId(accountId);
 
+    if (service.getName().equals(GLOBAL_SERVICE_NAME_FOR_YAML)) {
+      throw new InvalidRequestException("Service name cannot be " + GLOBAL_SERVICE_NAME_FOR_YAML, USER);
+    }
+
     // TODO: ASR: IMP: update the block below for artifact variables as service variable
     if (createdFromYaml) {
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
@@ -766,6 +771,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     // TODO: ASR: YAML: needs to be updated when bindings support is added to YAML
     Service savedService = get(service.getAppId(), service.getUuid(), false);
     notNullCheck("Service", savedService);
+
+    if (service.getName().equals(GLOBAL_SERVICE_NAME_FOR_YAML)) {
+      throw new InvalidRequestException("Service name cannot be " + GLOBAL_SERVICE_NAME_FOR_YAML, USER);
+    }
 
     Set<String> keywords = trimmedLowercaseSet(service.generateKeywords());
     UpdateOperations<Service> updateOperations =
