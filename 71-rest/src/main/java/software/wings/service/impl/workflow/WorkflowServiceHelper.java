@@ -2429,9 +2429,8 @@ public class WorkflowServiceHelper {
     } else if (deploymentType == DeploymentType.AWS_LAMBDA) {
       generateNewWorkflowPhaseStepsForAWSLambda(appId, workflowPhase);
     } else if (deploymentType == AMI) {
-      if (featureFlagService.isEnabled(FeatureName.SPOTINST, accountId)
-          && isSpotInstTypeInfra(infraMappingRefactorEnabled, workflowPhase.getInfraDefinitionId(),
-                 workflowPhase.getInfraMappingId(), appId)) {
+      if (isSpotInstTypeInfra(infraMappingRefactorEnabled, workflowPhase.getInfraDefinitionId(),
+              workflowPhase.getInfraMappingId(), appId)) {
         if (BLUE_GREEN == orchestrationWorkflowType) {
           generateNewWorkflowPhaseStepsForSpotInstBlueGreen(appId, workflowPhase, !serviceRepeat);
         } else {
@@ -2483,9 +2482,8 @@ public class WorkflowServiceHelper {
       return generateRollbackWorkflowPhaseForAwsLambda(workflowPhase);
     } else if (deploymentType == AMI) {
       String accountId = appService.getAccountIdByAppId(appId);
-      if (featureFlagService.isEnabled(FeatureName.SPOTINST, accountId)
-          && isSpotInstTypeInfra(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId),
-                 workflowPhase.getInfraDefinitionId(), workflowPhase.getInfraMappingId(), appId)) {
+      if (isSpotInstTypeInfra(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId),
+              workflowPhase.getInfraDefinitionId(), workflowPhase.getInfraMappingId(), appId)) {
         if (BLUE_GREEN == orchestrationWorkflowType) {
           return generateRollbackWorkflowPhaseForSpotInstBlueGreen(workflowPhase);
         } else {
@@ -2542,9 +2540,7 @@ public class WorkflowServiceHelper {
       return infrastructure instanceof AwsAmiInfrastructure
           && AmiDeploymentType.SPOTINST == ((AwsAmiInfrastructure) infrastructure).getAmiDeploymentType();
     } else {
-      InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, infraMappingId);
-      return infraMapping instanceof AwsAmiInfrastructureMapping
-          && AmiDeploymentType.SPOTINST == ((AwsAmiInfrastructureMapping) infraMapping).getAmiDeploymentType();
+      return false;
     }
   }
 

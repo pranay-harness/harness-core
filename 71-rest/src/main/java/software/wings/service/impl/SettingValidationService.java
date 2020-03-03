@@ -286,8 +286,9 @@ public class SettingValidationService {
     } else if (settingValue instanceof HelmRepoConfig) {
       validateHelmRepoConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof SpotInstConfig) {
-      if (!featureFlagService.isEnabled(FeatureName.SPOTINST, settingAttribute.getAccountId())) {
-        throw new UnavailableFeatureException("Enable Feature Spotinst to create Spotinst Cloud Provider", USER);
+      if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, settingAttribute.getAccountId())) {
+        throw new UnavailableFeatureException(
+            "Enable Feature Flag INFRA_MAPPING_REFACTOR to create Spotinst Cloud Provider", USER);
       }
       validateSpotInstConfig(settingAttribute, encryptedDataDetails);
     }

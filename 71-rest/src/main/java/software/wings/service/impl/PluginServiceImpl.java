@@ -403,7 +403,7 @@ public class PluginServiceImpl implements PluginService {
                        .withUiSchema(readUiSchema("SERVICENOW"))
                        .build());
 
-    if (featureFlagService.isEnabled(FeatureName.SPOTINST, accountId)) {
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
       pluginList.add(anAccountPlugin()
                          .withSettingClass(SpotInstConfig.class)
                          .withAccountId(accountId)
