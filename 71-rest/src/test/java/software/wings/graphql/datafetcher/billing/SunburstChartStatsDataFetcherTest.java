@@ -256,7 +256,7 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
 
   private QLBillingDataFilter makeEndTimeFilter(Long filterTime) {
     QLTimeFilter timeFilter = QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(filterTime).build();
-    return QLBillingDataFilter.builder().startTime(timeFilter).build();
+    return QLBillingDataFilter.builder().endTime(timeFilter).build();
   }
 
   private QLBillingSortCriteria makeDescTotalCostSort() {

@@ -26,10 +26,12 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -150,10 +152,14 @@ public class BillingDataHelper {
   }
 
   protected Map<String, QLBillingAmountData> getEntityIdToBillingAmountData(
-      ResultSet resultSet, BillingDataMetaDataFields field) throws SQLException {
+      ResultSet resultSet, List<BillingDataMetaDataFields> listOfFields) throws SQLException {
     Map<String, QLBillingAmountData> entityIdToBillingAmountData = new HashMap<>();
     while (resultSet != null && resultSet.next()) {
-      String entityId = resultSet.getString(field.getFieldName());
+      StringJoiner entityIdAppender = new StringJoiner(":");
+      for (BillingDataMetaDataFields field : listOfFields) {
+        entityIdAppender.add(resultSet.getString(field.getFieldName()));
+      }
+      String entityId = entityIdAppender.toString();
       QLBillingAmountData billingAmountData =
           QLBillingAmountData.builder()
               .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()))
@@ -201,13 +207,11 @@ public class BillingDataHelper {
       List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters,
       List<QLCCMEntityGroupBy> groupByEntityList, QLCCMTimeSeriesAggregation groupByTime,
       List<QLBillingSortCriteria> sortCriteria) {
-    BillingDataMetaDataFields entity = getEntityForCostTrendMapping(groupByEntityList);
-    if (entity == null) {
-      return new HashMap<>();
-    }
+    List<BillingDataMetaDataFields> entity = getEntityForCostTrendMapping(groupByEntityList);
     List<QLBillingDataFilter> trendFilters = getTrendFilter(filters, getStartInstant(filters), getEndInstant(filters));
-    BillingDataQueryMetadata queryData = billingDataQueryBuilder.formQuery(
-        accountId, trendFilters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria, true, true);
+    boolean addInstanceTypeFilter = setInstanceTypeBoolean(groupByEntityList);
+    BillingDataQueryMetadata queryData = billingDataQueryBuilder.formQuery(accountId, trendFilters, aggregateFunction,
+        groupByEntityList, groupByTime, sortCriteria, addInstanceTypeFilter, true);
     String query = queryData.getQuery();
     logger.info("Billing data query for cost trend {}", query);
     ResultSet resultSet = null;
@@ -223,25 +227,45 @@ public class BillingDataHelper {
     return null;
   }
 
-  protected BillingDataMetaDataFields getEntityForCostTrendMapping(List<QLCCMEntityGroupBy> groupByEntityList) {
+  private boolean setInstanceTypeBoolean(List<QLCCMEntityGroupBy> groupByEntityList) {
+    for (QLCCMEntityGroupBy groupBy : groupByEntityList) {
+      if (groupBy == QLCCMEntityGroupBy.WorkloadName || groupBy == QLCCMEntityGroupBy.Namespace
+          || groupBy == QLCCMEntityGroupBy.TaskId || groupBy == QLCCMEntityGroupBy.CloudServiceName) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  protected List<BillingDataMetaDataFields> getEntityForCostTrendMapping(List<QLCCMEntityGroupBy> groupByEntityList) {
+    List<BillingDataMetaDataFields> listOfFields = new ArrayList<>();
     for (QLCCMEntityGroupBy groupByEntity : groupByEntityList) {
       switch (groupByEntity) {
         case Cluster:
-          return BillingDataMetaDataFields.CLUSTERID;
+          listOfFields.add(BillingDataMetaDataFields.CLUSTERID);
+          break;
         case Namespace:
-          return BillingDataMetaDataFields.NAMESPACE;
+          listOfFields.add(BillingDataMetaDataFields.NAMESPACE);
+          break;
         case WorkloadName:
-          return BillingDataMetaDataFields.WORKLOADNAME;
+          listOfFields.add(BillingDataMetaDataFields.WORKLOADNAME);
+          break;
         case Application:
-          return BillingDataMetaDataFields.APPID;
+          listOfFields.add(BillingDataMetaDataFields.APPID);
+          break;
         case Service:
-          return BillingDataMetaDataFields.SERVICEID;
+          listOfFields.add(BillingDataMetaDataFields.SERVICEID);
+          break;
+        case Environment:
+          listOfFields.add(BillingDataMetaDataFields.ENVID);
+          break;
         case CloudProvider:
-          return BillingDataMetaDataFields.CLOUDPROVIDERID;
+          listOfFields.add(BillingDataMetaDataFields.CLOUDPROVIDERID);
+          break;
         default:
           break;
       }
     }
-    return null;
+    return listOfFields;
   }
 }
