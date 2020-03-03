@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.k8s.metrics.client;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.fabric8.kubernetes.api.model.RootPaths;
 import io.fabric8.kubernetes.client.Client;
 import io.fabric8.kubernetes.client.ExtensionAdapter;
@@ -7,11 +9,10 @@ import io.harness.perpetualtask.k8s.metrics.client.impl.DefaultK8sMetricsClient;
 import okhttp3.OkHttpClient;
 
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 public class K8sMetricsExtensionAdapter implements ExtensionAdapter<K8sMetricsClient> {
-  private static final ConcurrentMap<String, Boolean> cache = new ConcurrentHashMap<>();
+  private final Cache<String, Boolean> cache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build();
 
   @Override
   public Class<K8sMetricsClient> getExtensionType() {
@@ -20,7 +21,7 @@ public class K8sMetricsExtensionAdapter implements ExtensionAdapter<K8sMetricsCl
 
   @Override
   public Boolean isAdaptable(Client client) {
-    return cache.computeIfAbsent(client.getMasterUrl().toString(), uri -> {
+    return cache.get(client.getMasterUrl().toString(), uri -> {
       final RootPaths rootPaths = client.rootPaths();
       if (rootPaths != null) {
         final List<String> paths = rootPaths.getPaths();
