@@ -22,7 +22,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
-import software.wings.beans.FeatureName;
 import software.wings.service.intfc.FeatureFlagService;
 
 import java.time.Instant;
@@ -45,11 +44,6 @@ public class GcpSecretsManagerFunctionalTest extends AbstractFunctionalTest {
   @Before
   public void setUp() {
     account = getAccount();
-    enableFeatureFlag();
-  }
-
-  private void enableFeatureFlag() {
-    featureFlagService.enableAccount(FeatureName.GOOGLE_KMS, account.getUuid());
   }
 
   @Test

@@ -5,7 +5,6 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
-import io.harness.exception.HintException;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import io.harness.rest.RestResponse;
@@ -15,13 +14,11 @@ import io.swagger.annotations.Api;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.utils.AccountPermissionUtils;
 
@@ -48,17 +45,13 @@ public class GcpSecretsManagerResource {
   private GcpSecretsManagerService gcpSecretsManagerService;
   private AccountPermissionUtils accountPermissionUtils;
   private MainConfiguration configuration;
-  private FeatureFlagService featureFlagService;
-  private static final String FEATURE_FLAG_DISABLED_MESSAGE = "Feature not allowed for account: %s ";
 
   @Inject
   GcpSecretsManagerResource(GcpSecretsManagerService gcpSecretsManagerService,
-      AccountPermissionUtils accountPermissionUtils, MainConfiguration mainConfiguration,
-      FeatureFlagService featureFlagService) {
+      AccountPermissionUtils accountPermissionUtils, MainConfiguration mainConfiguration) {
     this.gcpSecretsManagerService = gcpSecretsManagerService;
     this.accountPermissionUtils = accountPermissionUtils;
     this.configuration = mainConfiguration;
-    this.featureFlagService = featureFlagService;
   }
 
   @PUT
@@ -69,9 +62,6 @@ public class GcpSecretsManagerResource {
       @FormDataParam("region") String region, @FormDataParam("encryptionType") EncryptionType encryptionType,
       @FormDataParam("isDefault") boolean isDefault, @FormDataParam("credentials") InputStream uploadedInputStream)
       throws IOException {
-    if (!featureFlagService.isEnabled(FeatureName.GOOGLE_KMS, accountId)) {
-      throw new HintException(String.format(FEATURE_FLAG_DISABLED_MESSAGE, accountId));
-    }
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       BoundedInputStream boundedInputStream =
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
@@ -96,9 +86,6 @@ public class GcpSecretsManagerResource {
       @FormDataParam("projectId") String projectId, @FormDataParam("region") String region,
       @FormDataParam("encryptionType") EncryptionType encryptionType, @FormDataParam("isDefault") boolean isDefault,
       @FormDataParam("credentials") InputStream uploadedInputStream) throws IOException {
-    if (!featureFlagService.isEnabled(FeatureName.GOOGLE_KMS, accountId)) {
-      throw new HintException(String.format(FEATURE_FLAG_DISABLED_MESSAGE, accountId));
-    }
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       BoundedInputStream boundedInputStream =
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
@@ -118,9 +105,6 @@ public class GcpSecretsManagerResource {
       @FormDataParam("region") String region, @FormDataParam("encryptionType") EncryptionType encryptionType,
       @FormDataParam("isDefault") boolean isDefault, @FormDataParam("credentials") InputStream uploadedInputStream)
       throws IOException {
-    if (!featureFlagService.isEnabled(FeatureName.GOOGLE_KMS, accountId)) {
-      throw new HintException(String.format(FEATURE_FLAG_DISABLED_MESSAGE, accountId));
-    }
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       BoundedInputStream boundedInputStream =
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
@@ -135,9 +119,6 @@ public class GcpSecretsManagerResource {
   @DELETE
   public RestResponse<Boolean> deleteGcpSecretsManagerConfig(
       @QueryParam("accountId") final String accountId, @QueryParam("configId") final String secretsManagerConfigId) {
-    if (!featureFlagService.isEnabled(FeatureName.GOOGLE_KMS, accountId)) {
-      throw new HintException(String.format(FEATURE_FLAG_DISABLED_MESSAGE, accountId));
-    }
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(gcpSecretsManagerService.deleteGcpKmsConfig(accountId, secretsManagerConfigId));
     }
