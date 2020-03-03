@@ -22,6 +22,7 @@ import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskClientParams;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 
 import java.util.Arrays;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Singleton
+@Slf4j
 public class CCMPerpetualTaskManager {
   private ClusterRecordService clusterRecordService;
   private PerpetualTaskService perpetualTaskService;
@@ -91,11 +93,15 @@ public class CCMPerpetualTaskManager {
       case AWS_ECS:
         EcsCluster ecsCluster = (EcsCluster) cluster;
         client = clientRegistry.getClient(PerpetualTaskType.ECS_CLUSTER);
-        EcsPerpetualTaskClientParams ecsPerpetualTaskClientParams =
-            new EcsPerpetualTaskClientParams(ecsCluster.getRegion(), ecsCluster.getCloudProviderId(),
-                ecsCluster.getClusterName(), clusterRecord.getUuid());
-        String ecsTaskId = client.create(clusterRecord.getAccountId(), ecsPerpetualTaskClientParams);
-        clusterRecordService.attachPerpetualTaskId(clusterRecord, ecsTaskId);
+        if (null != ecsCluster.getRegion() && null != ecsCluster.getClusterName()) {
+          EcsPerpetualTaskClientParams ecsPerpetualTaskClientParams =
+              new EcsPerpetualTaskClientParams(ecsCluster.getRegion(), ecsCluster.getCloudProviderId(),
+                  ecsCluster.getClusterName(), clusterRecord.getUuid());
+          String ecsTaskId = client.create(clusterRecord.getAccountId(), ecsPerpetualTaskClientParams);
+          clusterRecordService.attachPerpetualTaskId(clusterRecord, ecsTaskId);
+        } else {
+          logger.info("Not creating perpetual task for cluster {}", clusterRecord.getUuid());
+        }
         break;
       case GCP_KUBERNETES:
         GcpKubernetesCluster gcpKubernetesCluster = (GcpKubernetesCluster) cluster;
