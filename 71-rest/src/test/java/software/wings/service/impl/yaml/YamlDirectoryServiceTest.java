@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Service.GLOBAL_SERVICE_NAME_FOR_YAML;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -21,6 +22,7 @@ import static software.wings.beans.command.CommandType.START;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.CONFIG_FILES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CV_CONFIG_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_DEFINITION_FOLDER;
@@ -74,7 +76,9 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
+import software.wings.beans.ConfigFile;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
@@ -87,6 +91,7 @@ import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceNowConfig;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.TerraformInfrastructureProvisioner;
@@ -120,6 +125,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -145,6 +151,7 @@ import java.util.Set;
 public class YamlDirectoryServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ConfigService configService;
   @Mock private EnvironmentService environmentService;
@@ -350,6 +357,18 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
                                                            .envId(environment_2.getUuid())
                                                            .appId(environment_2.getAppId())
                                                            .build();
+
+    final String relativeFilePath = "abc/xyz";
+    final String relativeFilePathForYaml = "abc_xyz";
+    final ConfigFile configFile = ConfigFile.builder()
+                                      .entityType(EntityType.SERVICE_TEMPLATE)
+                                      .entityId(SERVICE_ID)
+                                      .relativeFilePath(relativeFilePath)
+                                      .build();
+    final ConfigFile configFileGlobal =
+        ConfigFile.builder().entityType(EntityType.ENVIRONMENT).relativeFilePath(relativeFilePath).build();
+    final ServiceTemplate serviceTemplate = ServiceTemplate.Builder.aServiceTemplate().withName(SERVICE_NAME).build();
+
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
                                                   .storeType(StoreType.Local)
                                                   .envId(environment_1.getUuid())
@@ -377,7 +396,9 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
         .thenReturn(Arrays.asList(manifestFile));
     when(serviceResourceService.get(environment_1.getAppId(), applicationManifest.getServiceId(), false))
         .thenReturn(service);
-
+    when(configService.getConfigFileOverridesForEnv(application.getUuid(), environment_1.getUuid()))
+        .thenReturn(Arrays.asList(configFile, configFileGlobal));
+    when(serviceTemplateService.get(application.getUuid(), SERVICE_ID)).thenReturn(serviceTemplate);
     final FolderNode envNode = yamlDirectoryService.doEnvironments(application, directoryPath, false, null);
     Assertions.assertThat(envNode).isNotNull();
     List<DirectoryNode> envChildren = envNode.getChildren();
@@ -395,6 +416,20 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     Assertions.assertThat(infraDefEnv_2).hasSize(1);
     nodeName = infraDefEnv_2.get(0).getName();
     assertThat(nodeName).isEqualTo(infraDefinition_2.getName() + YAML_EXTENSION);
+
+    List<DirectoryNode> configFileFolder = getNodesOfClass(envFolderNode_1, ConfigFile.class);
+    Assertions.assertThat(configFileFolder).hasSize(2);
+    nodeName = configFileFolder.get(0).getName();
+    assertThat(nodeName).isEqualTo(SERVICE_NAME);
+    assertThat(((FolderNode) configFileFolder.get(0)).getChildren()).hasSize(1);
+    assertThat(((FolderNode) configFileFolder.get(0)).getChildren().get(0).getName())
+        .isEqualTo(relativeFilePathForYaml + YAML_EXTENSION);
+
+    nodeName = configFileFolder.get(1).getName();
+    assertThat(nodeName).isEqualTo(GLOBAL_SERVICE_NAME_FOR_YAML);
+    assertThat(((FolderNode) configFileFolder.get(1)).getChildren()).hasSize(1);
+    assertThat(((FolderNode) configFileFolder.get(1)).getChildren().get(0).getName())
+        .isEqualTo(relativeFilePathForYaml + YAML_EXTENSION);
   }
 
   @Test
@@ -593,6 +628,19 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     CVConfiguration cvConfiguration = new CVConfiguration();
     cvConfiguration.setAppId(app.getUuid());
     cvConfiguration.setEnvId(env.getUuid());
+
+    ConfigFile globalConfigFile = new ConfigFile();
+    globalConfigFile.setEnvId(env.getUuid());
+    globalConfigFile.setAppId(app.getUuid());
+    globalConfigFile.setEntityType(EntityType.ENVIRONMENT);
+
+    final String entityId = "1";
+    ConfigFile configFile = new ConfigFile();
+    configFile.setEnvId(env.getUuid());
+    configFile.setAppId(app.getUuid());
+    configFile.setEntityType(EntityType.SERVICE_TEMPLATE);
+    configFile.setEntityId(entityId);
+
     Trigger trigger = Trigger.builder().name(TRIGGER_NAME).appId(app.getUuid()).build();
     DeploymentTrigger deploymentTrigger =
         DeploymentTrigger.builder().name(DEPLOYMENT_TRIGGER_NAME).appId(app.getUuid()).build();
@@ -602,6 +650,8 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
     when(artifactStreamServiceBindingService.getService(app.getUuid(), artifactStream.getUuid(), true))
         .thenReturn(service);
+    when(serviceTemplateService.get(app.getUuid(), entityId))
+        .thenReturn(ServiceTemplate.Builder.aServiceTemplate().withName(SERVICE_NAME).build());
 
     String path = null;
 
@@ -650,6 +700,14 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     path = yamlDirectoryService.obtainEntityRootPath(null, cvConfiguration);
     assertThat(path).isEqualTo(join(
         "/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), ENVIRONMENTS_FOLDER, env.getName(), CV_CONFIG_FOLDER));
+
+    path = yamlDirectoryService.obtainEntityRootPath(env, configFile);
+    assertThat(path).isEqualTo(join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), ENVIRONMENTS_FOLDER,
+        env.getName(), CONFIG_FILES_FOLDER, SERVICE_NAME));
+
+    path = yamlDirectoryService.obtainEntityRootPath(env, globalConfigFile);
+    assertThat(path).isEqualTo(join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), ENVIRONMENTS_FOLDER,
+        env.getName(), CONFIG_FILES_FOLDER, GLOBAL_SERVICE_NAME_FOR_YAML));
 
     path = yamlDirectoryService.obtainEntityRootPath(null, trigger);
     assertThat(path).isEqualTo(join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), TRIGGER_FOLDER));

@@ -55,6 +55,7 @@ import java.util.Set;
 @Entity(value = "services", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class Service extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess {
+  public static final String GLOBAL_SERVICE_NAME_FOR_YAML = "__all_service__";
   @Trimmed(message = "Service Name should not contain leading and trailing spaces")
   @EntityName
   @NotEmpty
