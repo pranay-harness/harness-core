@@ -162,7 +162,10 @@ public class BillingStatsEntityDataFetcher
             break;
           case WORKLOADNAME:
             workloadName = resultSet.getString(field.getFieldName());
-            entityId = resultSet.getString(field.getFieldName());
+            // Whenever group by workloadName is present, group bu namespace is also added in form query
+            // To make sure that workloads with identical names across different namespaces are not grouped together
+            entityId = resultSet.getString(BillingDataMetaDataFields.NAMESPACE.getFieldName())
+                + BillingStatsDefaultKeys.TOKEN + resultSet.getString(field.getFieldName());
             break;
           case WORKLOADTYPE:
             workloadType = resultSet.getString(field.getFieldName());

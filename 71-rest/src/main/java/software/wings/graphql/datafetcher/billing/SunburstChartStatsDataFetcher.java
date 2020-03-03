@@ -146,14 +146,19 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupBy);
 
     queryData = billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction,
-        groupByEntityList.isEmpty() ? Collections.emptyList() : groupByEntityList, groupByTime, sort, isClusterGroupBy);
+        groupByEntityList.isEmpty() ? Collections.emptyList() : groupByEntityList, groupByTime, sort, isClusterGroupBy,
+        true);
     logger.info("getSunburstGridData query: {}", queryData.getQuery());
+
+    Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData =
+        billingDataHelper.getBillingAmountDataForEntityCostTrend(
+            accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sort);
 
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(queryData.getQuery());
-      return generateSunburstGridData(
-          queryData, resultSet, unallocatedCostMap, isClusterGroupBy, groupByEntityList.size());
+      return generateSunburstGridData(queryData, resultSet, unallocatedCostMap, isClusterGroupBy,
+          groupByEntityList.size(), entityIdToPrevBillingAmountData, filters);
     } catch (SQLException e) {
       logger.error("SunburstChartStatsDataFetcher (getSunburstGridData) Error exception {}", e);
     } finally {
@@ -163,9 +168,11 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
   }
 
   private List<QLSunburstGridDataPoint> generateSunburstGridData(BillingDataQueryMetadata queryData,
-      ResultSet resultSet, Map<String, Double> unallocatedCostMap, boolean isClusterGroupBy, int groupBySize)
+      ResultSet resultSet, Map<String, Double> unallocatedCostMap, boolean isClusterGroupBy, int groupBySize,
+      Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData, List<QLBillingDataFilter> filters)
       throws SQLException {
     List<QLSunburstGridDataPoint> sunburstGridDataPointList = new ArrayList<>();
+    Double costTrend = BillingStatsDefaultKeys.COSTTREND;
     while (null != resultSet && resultSet.next()) {
       QLSunburstGridDataPointBuilder gridDataPointBuilder = QLSunburstGridDataPoint.builder();
       QLStatsBreakdownInfoBuilder qlStatsBreakdownInfoBuilder = QLStatsBreakdownInfo.builder();
@@ -232,16 +239,22 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
             }
             break;
           default:
-            throw new InvalidRequestException(unsupportedType + field.getDataType());
+            break;
         }
       }
       QLStatsBreakdownInfo breakdownInfo = qlStatsBreakdownInfoBuilder.build();
       validateBreakdownInfo(breakdownInfo, isClusterGroupBy);
       gridDataPointBuilder.efficiencyScore(calculateEfficiencyScore(breakdownInfo, isClusterGroupBy));
       gridDataPointBuilder.value(breakdownInfo.getTotal());
-      // TODO: (ROHIT) Fix the Trend (Added this for Demo Reasons)
-      gridDataPointBuilder.trend(Math.round(Math.random() * 10 * 100D) / 100D);
-      sunburstGridDataPointList.add(gridDataPointBuilder.build());
+      gridDataPointBuilder.trend(costTrend);
+      QLSunburstGridDataPoint sunburstGridDataPoint = gridDataPointBuilder.build();
+      String id = sunburstGridDataPoint.getId();
+      if (entityIdToPrevBillingAmountData != null && entityIdToPrevBillingAmountData.containsKey(id)) {
+        sunburstGridDataPoint.setTrend(
+            billingDataHelper.getCostTrendForEntity(resultSet, entityIdToPrevBillingAmountData.get(id), filters));
+      }
+
+      sunburstGridDataPointList.add(sunburstGridDataPoint);
     }
     return sunburstGridDataPointList;
   }

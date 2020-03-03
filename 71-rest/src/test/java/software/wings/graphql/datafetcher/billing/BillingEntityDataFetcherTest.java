@@ -264,7 +264,8 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getWorkloadName()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
     assertThat(data.getData().get(0).getWorkloadType()).isEqualTo(WORKLOAD_TYPE_ACCOUNT1);
-    assertThat(data.getData().get(0).getId()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
+    assertThat(data.getData().get(0).getId())
+        .isEqualTo(NAMESPACE1 + BillingStatsDefaultKeys.TOKEN + WORKLOAD_NAME_ACCOUNT1);
     assertThat(data.getData().get(0).getName()).isEqualTo(BillingStatsDefaultKeys.NAME);
     assertThat(data.getData().get(0).getType()).isEqualTo(BillingStatsDefaultKeys.TYPE);
     assertThat(data.getData().get(0).getCostTrend()).isEqualTo(BillingStatsDefaultKeys.COSTTREND);
