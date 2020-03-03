@@ -1,4 +1,4 @@
-package software.wings.sm.states.k8s.kustomize;
+package software.wings.helpers.ext.kustomize;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -7,7 +7,6 @@ import com.google.inject.Singleton;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.sm.ExecutionContext;
 
 import javax.annotation.Nullable;

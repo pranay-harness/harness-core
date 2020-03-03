@@ -1,4 +1,4 @@
-package software.wings.sm.states.k8s.kustomize;
+package software.wings.helpers.ext.kustomize;
 
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -15,7 +15,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.sm.ExecutionContext;
 
 public class KustomizeHelperTest extends WingsBaseTest {

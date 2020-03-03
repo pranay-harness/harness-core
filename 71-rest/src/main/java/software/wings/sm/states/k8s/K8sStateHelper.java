@@ -87,6 +87,7 @@ import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
+import software.wings.helpers.ext.kustomize.KustomizeHelper;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
@@ -108,7 +109,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.k8s.kustomize.KustomizeHelper;
 import software.wings.utils.ApplicationManifestUtils;
 
 import java.io.IOException;
