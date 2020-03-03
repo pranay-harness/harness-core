@@ -63,6 +63,8 @@ public class ArtifactCollectionPTaskServiceClientTest extends CategoryTest {
         artifactCollectionPTaskServiceClient.getTaskParams(perpetualTaskClientContext);
     assertThat(collectionTaskParams).isNotNull();
     assertThat(collectionTaskParams.getArtifactStreamId()).isEqualTo(artifactStreamId);
+    assertThat(collectionTaskParams.getBuildSourceParams()).isNotEmpty();
+    verify(artifactCollectionUtils).prepareBuildSourceParameters(artifactStreamId);
   }
 
   @Test

@@ -16,4 +16,9 @@ public interface ArtifactCollectionTaskParamsOrBuilder extends
    * <code>string artifact_stream_id = 1;</code>
    */
   com.google.protobuf.ByteString getArtifactStreamIdBytes();
+
+  /**
+   * <code>bytes build_source_params = 2;</code>
+   */
+  com.google.protobuf.ByteString getBuildSourceParams();
 }

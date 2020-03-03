@@ -10,6 +10,8 @@ import com.google.inject.name.Named;
 import io.grpc.CallCredentials;
 import io.grpc.Channel;
 import io.harness.perpetualtask.PerpetualTaskServiceGrpc.PerpetualTaskServiceBlockingStub;
+import io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams;
+import io.harness.perpetualtask.artifact.ArtifactPerpetualTaskExecutor;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskExecutor;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskParams;
 import io.harness.perpetualtask.example.SamplePerpetualTaskExecutor;
@@ -31,6 +33,7 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
     mapBinder.addBinding(SamplePerpetualTaskParams.class.getSimpleName()).to(SamplePerpetualTaskExecutor.class);
     mapBinder.addBinding(K8sWatchTaskParams.class.getSimpleName()).to(K8SWatchTaskExecutor.class);
     mapBinder.addBinding(EcsPerpetualTaskParams.class.getSimpleName()).to(EcsPerpetualTaskExecutor.class);
+    mapBinder.addBinding(ArtifactCollectionTaskParams.class.getSimpleName()).to(ArtifactPerpetualTaskExecutor.class);
 
     install(new FactoryModuleBuilder()
                 .implement(PodWatcher.class, PodWatcher.class)

@@ -3,6 +3,7 @@ package io.harness.artifact;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
@@ -13,6 +14,8 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams;
+import io.harness.serializer.KryoUtils;
+import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 
 import java.util.HashMap;
@@ -37,7 +40,7 @@ public class ArtifactCollectionPTaskServiceClient
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromMinutes(1))
-                                         .setTimeout(Durations.fromSeconds(30))
+                                         .setTimeout(Durations.fromMinutes(2))
                                          .build();
     return perpetualTaskService.createTask(
         PerpetualTaskType.ARTIFACT_COLLECTION, accountId, clientContext, schedule, false);
@@ -57,7 +60,13 @@ public class ArtifactCollectionPTaskServiceClient
   public ArtifactCollectionTaskParams getTaskParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
     String artifactStreamId = clientParams.get(ARTIFACT_STREAM_ID);
-    return ArtifactCollectionTaskParams.newBuilder().setArtifactStreamId(artifactStreamId).build();
+    BuildSourceParameters buildSourceParameters =
+        artifactCollectionUtils.prepareBuildSourceParameters(artifactStreamId);
+    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(buildSourceParameters));
+    return ArtifactCollectionTaskParams.newBuilder()
+        .setArtifactStreamId(artifactStreamId)
+        .setBuildSourceParams(bytes)
+        .build();
   }
 
   @Override
