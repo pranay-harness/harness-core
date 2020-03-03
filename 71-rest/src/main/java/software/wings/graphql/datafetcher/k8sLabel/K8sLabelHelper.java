@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.ccm.cluster.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
+import software.wings.graphql.datafetcher.billing.BillingStatsDefaultKeys;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataLabelFilter;
 
 import java.util.HashMap;
@@ -15,7 +16,7 @@ import java.util.Set;
 public class K8sLabelHelper {
   @Inject private K8sWorkloadDao k8sWorkloadDao;
 
-  public Set<String> getWorkloadNamesFromLabels(String accountId, QLBillingDataLabelFilter labelFilter) {
+  public Set<String> getWorkloadNamesWithNamespacesFromLabels(String accountId, QLBillingDataLabelFilter labelFilter) {
     Map<String, List<String>> labels = new HashMap<>();
     labelFilter.getLabels().forEach(label -> {
       String labelName = label.getName();
@@ -26,9 +27,11 @@ public class K8sLabelHelper {
       }
     });
     List<K8sWorkload> workloads = k8sWorkloadDao.list(accountId, labels);
-    Set<String> workloadNames = new HashSet<>();
-    workloads.forEach(workload -> workloadNames.add(workload.getName()));
-    return workloadNames;
+    Set<String> workloadNamesWithNamespaces = new HashSet<>();
+    workloads.forEach(workload
+        -> workloadNamesWithNamespaces.add(
+            workload.getName() + BillingStatsDefaultKeys.TOKEN + workload.getNamespace()));
+    return workloadNamesWithNamespaces;
   }
 
   public Set<K8sWorkload> getLabelLinks(String accountId, Set<String> workloadNames, String labelName) {

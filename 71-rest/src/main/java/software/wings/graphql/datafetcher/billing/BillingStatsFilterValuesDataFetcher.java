@@ -202,7 +202,7 @@ public class BillingStatsFilterValuesDataFetcher
 
   @Override
   protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList,
-      List<QLCCMAggregationFunction> aggregationFunctions, QLData qlData) {
+      List<QLCCMAggregationFunction> aggregationFunctions, List<QLBillingSortCriteria> sortCriteria, QLData qlData) {
     return null;
   }
 

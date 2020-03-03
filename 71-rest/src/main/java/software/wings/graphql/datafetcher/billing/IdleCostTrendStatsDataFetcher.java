@@ -278,7 +278,7 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
 
   @Override
   protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList,
-      List<QLCCMAggregationFunction> aggregationFunctions, QLData qlData) {
+      List<QLCCMAggregationFunction> aggregationFunctions, List<QLBillingSortCriteria> sort, QLData qlData) {
     return null;
   }
 
