@@ -184,6 +184,10 @@ public interface YamlGitService {
 
   RestResponse discardGitSyncErrorForFullSync(String accountId, String appId);
 
+  RestResponse discardGitSyncErrorForFilePath(String accountId, String yamlFilePath);
+
+  RestResponse discardGitSyncErrorsForGivenPaths(String accountId, List<String> yamlFilePaths);
+
   RestResponse discardAllGitSyncError(String accountId);
 
   SettingAttribute getAndDecryptSettingAttribute(String sshSettingId);
@@ -212,4 +216,7 @@ public interface YamlGitService {
       String accountId, List<String> gitConnectorsToRetain);
 
   RestResponse discardGitSyncErrorsForGivenIds(String accountId, List<String> errorIds);
+
+  List<GitSyncError> getActiveGitToHarnessSyncErrors(
+      String accountId, String gitConnectorId, String branchName, long fromTimestamp);
 }

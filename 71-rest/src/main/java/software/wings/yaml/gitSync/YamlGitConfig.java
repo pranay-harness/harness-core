@@ -10,6 +10,7 @@ import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -35,6 +36,7 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "yamlGitConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@FieldNameConstants(innerTypeName = "YamlGitConfigKeys")
 public class YamlGitConfig extends Base implements EncryptableSetting {
   public static final String ENTITY_ID_KEY = "entityId";
   public static final String ENTITY_TYPE_KEY = "entityType";
