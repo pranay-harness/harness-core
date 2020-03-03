@@ -148,9 +148,11 @@ public class DelegateApplication {
     }
     modules.add(new KubernetesClientFactoryModule());
     modules.add(new KubernetesApiClientFactoryModule());
-    modules.add(
-        new AppenderModule(Config.builder().queueFilePath(EventPublisherConstants.DEFAULT_QUEUE_FILE_PATH).build(),
-            () -> getDelegateId().orElse("UNREGISTERED")));
+    modules.add(new AppenderModule(Config.builder()
+                                       .queueFilePath(Optional.ofNullable(configuration.getQueueFilePath())
+                                                          .orElse(EventPublisherConstants.DEFAULT_QUEUE_FILE_PATH))
+                                       .build(),
+        () -> getDelegateId().orElse("UNREGISTERED")));
     modules.addAll(new DelegateModule().cumulativeDependencies());
 
     Injector injector = Guice.createInjector(modules);
