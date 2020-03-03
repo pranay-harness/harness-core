@@ -18,6 +18,7 @@ import io.harness.ccm.cluster.entities.GcpKubernetesCluster;
 import io.harness.observer.Subject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -191,6 +192,10 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
                       .cloudProviderId(k8sInfraMapping.getComputeProviderSettingId())
                       .clusterName(k8sInfraMapping.getComputeProviderName())
                       .build();
+        if (StringUtils.isBlank(k8sInfraMapping.getComputeProviderName())) {
+          logger.warn("ClusterRecord derived from Infrastructure mapping {} is missing cluster name", k8sInfraMapping);
+          logger.warn("Stacktrace:\n", new Throwable());
+        }
         break;
       case AWS_ECS:
         EcsInfrastructureMapping ecsInfraMapping = (EcsInfrastructureMapping) infraMapping;
