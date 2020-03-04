@@ -327,6 +327,14 @@ public class DelegateModule extends DependencyModule {
         .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("async-task-%d").setPriority(Thread.MIN_PRIORITY).build()));
     bind(ExecutorService.class)
+        .annotatedWith(Names.named("alternativeExecutor"))
+        .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
+            new ThreadFactoryBuilder()
+                .setNameFormat("alternative-validation-task-%d")
+                .setPriority(Thread.MIN_PRIORITY)
+                .build()));
+
+    bind(ExecutorService.class)
         .annotatedWith(Names.named("artifactExecutor"))
         .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()

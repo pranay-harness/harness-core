@@ -386,7 +386,6 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
-
                                     .accountId(executionContext.getApp().getAccountId())
                                     .waitId(activityId)
                                     .tags(renderedTags)

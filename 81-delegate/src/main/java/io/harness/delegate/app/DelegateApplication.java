@@ -194,6 +194,8 @@ public class DelegateApplication {
       injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor"))).shutdownNow();
       injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("verificationExecutor"))).shutdownNow();
       injector.getInstance(Key.get(ExecutorService.class, Names.named("verificationDataCollector"))).shutdownNow();
+      injector.getInstance(Key.get(ExecutorService.class, Names.named("alternativeExecutor"))).shutdownNow();
+
       injector.getInstance(ExecutorService.class).shutdown();
       injector.getInstance(EventPublisher.class).shutdown();
       logger.info("Executor services have been shut down.");
