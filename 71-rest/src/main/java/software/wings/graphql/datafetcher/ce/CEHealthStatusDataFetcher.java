@@ -7,7 +7,7 @@ import graphql.schema.DataFetchingEnvironment;
 import io.harness.ccm.health.CEHealthStatus;
 import io.harness.ccm.health.HealthStatusService;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.CEHealthStatusDTO;
-import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
+import software.wings.graphql.schema.type.cloudProvider.QLCloudProvider;
 
 public class CEHealthStatusDataFetcher implements DataFetcher<CEHealthStatusDTO> {
   @Inject HealthStatusService healthStatusService;
@@ -18,9 +18,11 @@ public class CEHealthStatusDataFetcher implements DataFetcher<CEHealthStatusDTO>
 
   @Override
   public CEHealthStatusDTO get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
-    QLKubernetesClusterCloudProvider cloudProvider = dataFetchingEnvironment.getSource();
+    QLCloudProvider cloudProvider = dataFetchingEnvironment.getSource();
+    String cloudProviderId = cloudProvider.getId();
+
     try {
-      CEHealthStatus ceHealthStatus = healthStatusService.getHealthStatus(cloudProvider.getId());
+      CEHealthStatus ceHealthStatus = healthStatusService.getHealthStatus(cloudProviderId);
       return CEHealthStatusDTO.builder()
           .isHealthy(ceHealthStatus.isHealthy())
           .clusterHealthStatusList(ceHealthStatus.getCeClusterHealthList())

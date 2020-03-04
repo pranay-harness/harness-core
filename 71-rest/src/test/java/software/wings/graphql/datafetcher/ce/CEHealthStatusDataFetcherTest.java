@@ -36,7 +36,7 @@ public class CEHealthStatusDataFetcherTest extends CategoryTest {
   private List<CEClusterHealth> clusterHealthStatusList = Arrays.asList(clusterHealthStatus);
 
   @Mock private DataFetchingEnvironment environment;
-  private QLKubernetesClusterCloudProvider cloudProvider =
+  private QLKubernetesClusterCloudProvider k8sCloudProvider =
       QLKubernetesClusterCloudProvider.builder().id(cloudProviderId).build();
   private CEHealthStatusDTO ceHealthStatusDTO;
 
@@ -48,7 +48,7 @@ public class CEHealthStatusDataFetcherTest extends CategoryTest {
   public void setUp() {
     ceHealthStatusDTO =
         CEHealthStatusDTO.builder().isHealthy(false).clusterHealthStatusList(clusterHealthStatusList).build();
-    when(environment.getSource()).thenReturn(cloudProvider);
+    when(environment.getSource()).thenReturn(k8sCloudProvider);
     when(healthStatusService.getHealthStatus(eq(cloudProviderId))).thenReturn(ceHealthStatus);
   }
 

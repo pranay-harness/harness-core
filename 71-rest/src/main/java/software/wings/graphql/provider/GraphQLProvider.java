@@ -106,6 +106,8 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
         .directive("dataFetcher", dataFetcherDirective);
     builder.type(newTypeWiring(TypeResolverManagerTypes.KubernetesCloudProvider)
                      .dataFetcher("ceHealthStatus", ceHealthStatusDataFetcher.get()));
+    builder.type(newTypeWiring(TypeResolverManagerTypes.AwsCloudProvider)
+                     .dataFetcher("ceHealthStatus", ceHealthStatusDataFetcher.get()));
     return builder.build();
   }
 
