@@ -18,6 +18,7 @@ import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.yaml.GitSyncServiceImpl;
 import software.wings.yaml.errorhandling.GitSyncError;
+import software.wings.yaml.gitSync.GitFileActivity;
 
 import java.util.Arrays;
 
@@ -48,7 +49,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
 
     final PageRequest pageRequest = PageRequestBuilder.aPageRequest().withOffset("0").withLimit("2").build();
 
-    final PageResponse<GitSyncError> errorList = gitSyncService.list(pageRequest);
+    final PageResponse<GitSyncError> errorList = gitSyncService.fetchErrors(pageRequest);
     assertThat(errorList.size()).isEqualTo(2);
   }
 
@@ -64,7 +65,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                                           .build();
 
     wingsPersistence.save(gitSyncError);
-    gitSyncService.discardGitSyncErrorsForGivenIds(accountId, Arrays.asList(gitSyncError));
+    gitSyncService.updateGitSyncErrorStatus(Arrays.asList(gitSyncError), GitFileActivity.Status.DISCARDED, accountId);
     assertThat(wingsPersistence.get(GitSyncError.class, gitSyncError.getUuid())).isEqualTo(null);
   }
 }

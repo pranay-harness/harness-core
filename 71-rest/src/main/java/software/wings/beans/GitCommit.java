@@ -17,6 +17,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.beans.yaml.GitCommandResult;
+import software.wings.yaml.gitSync.GitFileProcessingSummary;
 import software.wings.yaml.gitSync.YamlChangeSet;
 
 import java.util.List;
@@ -52,6 +53,7 @@ public class GitCommit extends Base {
   private FailureReason failureReason;
   private List<String> yamlChangeSetsProcessed;
   private List<String> yamlGitConfigIds;
+  private GitFileProcessingSummary fileProcessingSummary;
 
   public enum Status { QUEUED, RUNNING, COMPLETED, FAILED }
 

@@ -111,6 +111,7 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
+import software.wings.service.impl.yaml.GitSyncService;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
@@ -124,6 +125,7 @@ import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlPayload;
+import software.wings.yaml.gitSync.GitFileActivity;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -183,6 +185,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private WingsPersistence wingsPersistence;
   @Inject private YamlPushService yamlPushService;
   @Inject private HarnessTagYamlHelper harnessTagYamlHelper;
+  @Inject private GitSyncService gitSyncService;
 
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
 
@@ -217,7 +220,13 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   public List<ChangeContext> processChangeSet(List<Change> changeList, boolean isGitSyncPath)
       throws YamlProcessingException {
     // e.g. remove files outside of setup folder. (checking filePath)
+    List<Change> invalidChangeList = changeList;
     changeList = filterInvalidFilePaths(changeList);
+    invalidChangeList.removeAll(changeList);
+    if (EmptyPredicate.isNotEmpty(invalidChangeList)) {
+      gitSyncService.logFileActivityAndGenerateProcessingSummary(
+          invalidChangeList, null, GitFileActivity.Status.SKIPPED, "Invalid file path");
+    }
 
     // compute the order of processing
     computeProcessingOrder(changeList);
@@ -233,7 +242,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
             .putAll(emptyIfNull(processingErrorMap))
             .putAll(emptyIfNull(validationResponseMap.errorMsgMap))
             .build();
-
+    gitSyncService.logFileActivityAndGenerateProcessingSummary(changeList, failedYamlFileChangeMap, null, null);
     ensureNoError(failedYamlFileChangeMap);
 
     logger.info(GIT_YAML_LOG_PREFIX + "Processed all the changes from GIT without any error.");
@@ -264,7 +273,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     List<GitFileChange> gitFileChangeList = asList(change);
 
     try {
-      List<ChangeContext> changeContextList = processChangeSet(asList(change));
+      final List<ChangeContext> changeContextList = processChangeSet(asList(change));
       notNullCheck("Change Context List is null", changeContextList);
       boolean empty = isEmpty(changeContextList);
       if (!empty) {
@@ -308,7 +317,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
                 try {
                   List changeList = getChangesForZipFile(accountId, fileInputStream, yamlPath);
 
-                  List<ChangeContext> changeSets = processChangeSet(changeList);
+                  final List<ChangeContext> changeSets = processChangeSet(changeList);
                   Map<String, Object> metaDataMap = Maps.newHashMap();
                   metaDataMap.put("yamlFilesProcessed", changeSets.size());
                   return Builder.aRestResponse().withMetaData(metaDataMap).build();

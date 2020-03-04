@@ -79,12 +79,12 @@ public class MigrationServiceImpl implements MigrationService {
         backgroundTimeScaleDBDataMigrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
 
     try (
+
         AcquiredLock lock = persistentLocker.waitToAcquireLock(Schema.class, SCHEMA_ID, ofMinutes(25), ofMinutes(27))) {
       if (lock == null) {
         throw new WingsException(ErrorCode.GENERAL_ERROR)
             .addParam("message", "The persistent lock was not acquired. That very unlikely, but yet it happened.");
       }
-
       logger.info("[Migration] - Initializing Global DB Entries");
       initializeGlobalDbEntriesIfNeeded();
 

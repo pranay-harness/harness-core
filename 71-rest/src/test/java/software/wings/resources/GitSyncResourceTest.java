@@ -63,7 +63,7 @@ public class GitSyncResourceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldListErrors() {
     PageResponse<GitSyncError> pageResponse = aPageResponse().withResponse(Lists.newArrayList(GIT_SYNC_ERROR)).build();
-    when(GIT_SYNC_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
+    when(GIT_SYNC_SERVICE.fetchErrors(any(PageRequest.class))).thenReturn(pageResponse);
 
     RestResponse<PageResponse<GitSyncError>> restResponse =
         RESOURCES.client()
@@ -72,13 +72,13 @@ public class GitSyncResourceTest extends WingsBaseTest {
             .get(new GenericType<RestResponse<PageResponse<GitSyncError>>>() {});
 
     log().info(JsonUtils.asJson(restResponse));
-    verify(GIT_SYNC_SERVICE).list(pageRequestArgumentCaptor.capture());
+    verify(GIT_SYNC_SERVICE).fetchErrors(pageRequestArgumentCaptor.capture());
     assertThat(pageRequestArgumentCaptor.getValue()).isNotNull();
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", pageResponse);
   }
 
   /**
-   * Should update git sync error status
+   * Should discard git sync error
    */
   @Test
   @Owner(developers = VARDAN_BANSAL)

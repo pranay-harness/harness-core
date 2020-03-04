@@ -1,15 +1,18 @@
 package software.wings.yaml.errorhandling;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.iterator.PersistentRegularIterable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.service.impl.yaml.GitSyncErrorStatus;
@@ -26,7 +29,7 @@ import software.wings.service.impl.yaml.GitSyncErrorStatus;
 @FieldNameConstants(innerTypeName = "GitSyncErrorKeys")
 @Entity(value = "gitSyncError")
 @HarnessEntity(exportable = false)
-public class GitSyncError extends Base {
+public class GitSyncError extends Base implements PersistentRegularIterable {
   private String accountId;
   private String yamlFilePath;
   private String yamlContent;
@@ -35,6 +38,7 @@ public class GitSyncError extends Base {
   private String failureReason;
   private boolean fullSyncPath;
   private String lastAttemptedYaml;
+  @Setter @Indexed private Long nextIteration;
   private GitSyncErrorStatus status;
   private String gitConnectorId;
   private String branchName;
@@ -56,5 +60,15 @@ public class GitSyncError extends Base {
     this.gitConnectorId = gitConnectorId;
     this.branchName = branchName;
     this.yamlGitConfigId = yamlGitConfigId;
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return nextIteration;
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, Long nextIteration) {
+    this.nextIteration = nextIteration;
   }
 }
