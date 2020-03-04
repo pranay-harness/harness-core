@@ -7,6 +7,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -52,6 +53,7 @@ import software.wings.service.intfc.security.SecretManager;
 
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -189,7 +191,8 @@ public class LdapGroupSyncJob implements Job {
         });
   }
 
-  private UserGroup syncUserGroupMetadata(UserGroup userGroup, LdapGroupResponse groupResponse) {
+  @VisibleForTesting
+  UserGroup syncUserGroupMetadata(UserGroup userGroup, LdapGroupResponse groupResponse) {
     userGroup.setSsoGroupName(groupResponse.getName());
     return userGroupService.save(userGroup);
   }
@@ -209,7 +212,8 @@ public class LdapGroupSyncJob implements Job {
     });
   }
 
-  private LdapGroupResponse fetchGroupDetails(
+  @VisibleForTesting
+  LdapGroupResponse fetchGroupDetails(
       LdapSettings ldapSettings, EncryptedDataDetail encryptedDataDetail, UserGroup userGroup) {
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(ldapSettings.getAccountId())
@@ -227,7 +231,8 @@ public class LdapGroupSyncJob implements Job {
     return groupResponse;
   }
 
-  private boolean validateUserGroupStates(Collection<UserGroup> userGroups) {
+  @VisibleForTesting
+  boolean validateUserGroupStates(Collection<UserGroup> userGroups) {
     for (UserGroup userGroup : userGroups) {
       UserGroup savedUserGroup = userGroupService.get(userGroup.getAccountId(), userGroup.getUuid(), false);
       if (!savedUserGroup.isSsoLinked()) {
@@ -240,27 +245,42 @@ public class LdapGroupSyncJob implements Job {
     return true;
   }
 
-  private void syncUserGroups(String accountId, LdapSettings ldapSettings, List<UserGroup> userGroups) {
+  @VisibleForTesting
+  void syncUserGroups(String accountId, LdapSettings ldapSettings, List<UserGroup> userGroups, String ssoId) {
     Map<UserGroup, Set<User>> removedGroupMembers = new HashMap<>();
     Map<LdapUserResponse, Set<UserGroup>> addedGroupMembers = new HashMap<>();
 
     EncryptedDataDetail encryptedDataDetail = ldapSettings.getEncryptedDataDetails(secretManager);
 
+    List<UserGroup> userGroupsFailedToSync = new ArrayList<>();
     for (UserGroup userGroup : userGroups) {
-      LdapGroupResponse groupResponse = fetchGroupDetails(ldapSettings, encryptedDataDetail, userGroup);
+      try {
+        LdapGroupResponse groupResponse = fetchGroupDetails(ldapSettings, encryptedDataDetail, userGroup);
 
-      if (!groupResponse.isSelectable()) {
-        String message =
-            String.format(LdapConstants.USER_GROUP_SYNC_NOT_ELIGIBLE, userGroup.getName(), groupResponse.getMessage());
-        throw new WingsException(ErrorCode.USER_GROUP_SYNC_FAILURE, message);
+        if (!groupResponse.isSelectable()) {
+          String message = String.format(
+              LdapConstants.USER_GROUP_SYNC_NOT_ELIGIBLE, userGroup.getName(), groupResponse.getMessage());
+          throw new UnsupportedOperationException(message);
+        }
+
+        userGroup = syncUserGroupMetadata(userGroup, groupResponse);
+
+        updateRemovedGroupMembers(userGroup, groupResponse.getUsers(), removedGroupMembers);
+        updateAddedGroupMembers(userGroup, groupResponse.getUsers(), addedGroupMembers);
+      } catch (Exception e) {
+        logger.error("LDAP sync failed for userGroup {}", userGroup.getName(), e);
+        userGroupsFailedToSync.add(userGroup);
       }
-
-      userGroup = syncUserGroupMetadata(userGroup, groupResponse);
-
-      updateRemovedGroupMembers(userGroup, groupResponse.getUsers(), removedGroupMembers);
-      updateAddedGroupMembers(userGroup, groupResponse.getUsers(), addedGroupMembers);
     }
 
+    if (userGroupsFailedToSync.isEmpty()) {
+      ssoSettingService.closeSyncFailureAlertIfOpen(accountId, ssoId);
+    } else {
+      String userGroupsFailed =
+          userGroupsFailedToSync.stream().map(UserGroup::getName).collect(Collectors.joining(", ", "[", "]"));
+      ssoSettingService.raiseSyncFailureAlert(
+          accountId, ssoId, String.format("Ldap Sync failed for groups: %s", userGroupsFailed));
+    }
     // Sync the groups only if the state is still the same as we started. Else any change in the groups would have
     // already triggered another cron job and it will handle it.
     if (validateUserGroupStates(userGroups)) {
@@ -296,9 +316,7 @@ public class LdapGroupSyncJob implements Job {
       }
 
       List<UserGroup> userGroupsToSync = userGroupService.getUserGroupsBySsoId(accountId, ssoId);
-      syncUserGroups(accountId, ldapSettings, userGroupsToSync);
-
-      ssoSettingService.closeSyncFailureAlertIfOpen(accountId, ssoId);
+      syncUserGroups(accountId, ldapSettings, userGroupsToSync, ssoId);
 
       logger.info("Ldap group sync job done for ssoId:" + ssoId);
     } catch (WingsException exception) {
