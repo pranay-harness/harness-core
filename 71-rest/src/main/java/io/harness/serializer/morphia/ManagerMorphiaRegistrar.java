@@ -698,6 +698,7 @@ import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
 import software.wings.yaml.YamlHistory;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.errorhandling.GitSyncError;
+import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
@@ -969,6 +970,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TimeSeriesKeyTransactions.class);
     set.add(K8sWorkload.class);
     set.add(LastReceivedPublishedMessage.class);
+    set.add(GitFileActivity.class);
   }
 
   @Override

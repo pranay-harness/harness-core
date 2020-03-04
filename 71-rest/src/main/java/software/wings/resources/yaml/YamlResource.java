@@ -1054,14 +1054,6 @@ public class YamlResource {
   }
 
   @POST
-  @Path("git-sync-errors")
-  @Timed
-  @ExceptionMetered
-  public RestResponse fixGitSyncError(@QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
-    return yamlGitService.fixGitSyncErrors(accountId, yamlPayload.getPath(), yamlPayload.getYaml());
-  }
-
-  @POST
   @Path("git-sync-errors-discard-all")
   @Timed
   @ExceptionMetered

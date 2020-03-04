@@ -46,7 +46,6 @@ import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -103,7 +102,6 @@ import software.wings.beans.yaml.GitFileChange.Builder;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.YamlProcessingException;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.EntityTypeLogContext;
@@ -124,7 +122,6 @@ import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.CryptoUtils;
-import software.wings.utils.Utils;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.directory.DirectoryPath;
 import software.wings.yaml.directory.FolderNode;
@@ -182,6 +179,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Inject YamlHelper yamlHelper;
   @Inject private WebhookEventUtils webhookEventUtils;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject GitSyncService gitSyncService;
 
   /**
    * Gets the yaml git sync info by entityId
@@ -1082,53 +1080,6 @@ public class YamlGitServiceImpl implements YamlGitService {
       alertService.closeAlert(
           accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId, gitToHarness));
     }
-  }
-
-  @Override
-  @Deprecated
-  public RestResponse fixGitSyncErrors(String accountId, String yamlFilePath, String newYamlContent) {
-    logger.info(
-        GIT_YAML_LOG_PREFIX + "Fixing git sync errors for account {} and yaml file {}", accountId, yamlFilePath);
-    RestResponse<List<GitSyncError>> listRestResponse = listGitSyncErrors(accountId);
-    List<GitSyncError> syncErrorList = listRestResponse.getResource();
-    if (isEmpty(syncErrorList)) {
-      logger.warn("No sync errors found to process for account {}", accountId);
-      return RestResponse.Builder.aRestResponse().build();
-    }
-
-    List<GitFileChange> gitFileChangeList = Lists.newArrayList();
-
-    syncErrorList.forEach(syncError -> {
-      String currentYamlFilePath = syncError.getYamlFilePath();
-      String yamlContent;
-      if (currentYamlFilePath.equals(yamlFilePath)) {
-        yamlContent = newYamlContent;
-      } else {
-        yamlContent = syncError.getYamlContent();
-      }
-
-      ChangeType changeType = Utils.getEnumFromString(ChangeType.class, syncError.getChangeType());
-      GitFileChange gitFileChange = Builder.aGitFileChange()
-                                        .withAccountId(accountId)
-                                        .withFilePath(syncError.getYamlFilePath())
-                                        .withFileContent(yamlContent)
-                                        .withChangeType(changeType)
-                                        .build();
-      gitFileChangeList.add(gitFileChange);
-    });
-
-    try {
-      logger.info(GIT_YAML_LOG_PREFIX + "Processing fix Git Sync Errors for account {}", accountId);
-      yamlService.processChangeSet(gitFileChangeList);
-      logger.info(GIT_YAML_LOG_PREFIX + "Processed fix Git Sync Errors for account {}", accountId);
-      removeGitSyncErrors(accountId, gitFileChangeList, false);
-    } catch (YamlProcessingException ex) {
-      logger.warn(GIT_YAML_LOG_PREFIX + "Unable to process Git sync errors for account {}", accountId, ex);
-      // gitToHarness is false, as this action is initiated from UI
-      processFailedChanges(accountId, ex.getFailedYamlFileChangeMap(), false);
-    }
-
-    return RestResponse.Builder.aRestResponse().build();
   }
 
   @Override

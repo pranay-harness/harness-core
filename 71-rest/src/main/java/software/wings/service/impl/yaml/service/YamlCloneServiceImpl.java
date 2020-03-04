@@ -188,6 +188,7 @@ public class YamlCloneServiceImpl implements YamlCloneService {
                            .withFileContent(gitFileChange.getFileContent())
                            .withChangeType(ChangeType.ADD)
                            .withFilePath(gitFileChange.getFilePath())
+                           .withCommitId(gitFileChange.getCommitId())
                            .build());
       }
 

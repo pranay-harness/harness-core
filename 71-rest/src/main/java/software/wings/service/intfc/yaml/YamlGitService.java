@@ -166,16 +166,6 @@ public interface YamlGitService {
    */
   RestResponse discardGitSyncError(String accountId, String errorId);
 
-  /**
-   * Fix git sync errors rest response.
-   *
-   * @param accountId      the account id
-   * @param yamlFilePath   the yaml file path
-   * @param newYamlContent the new yaml content
-   * @return the rest response
-   */
-  RestResponse fixGitSyncErrors(String accountId, String yamlFilePath, String newYamlContent);
-
   void raiseAlertForGitFailure(String accountId, String appId, ErrorCode errorCode, String message);
 
   void closeAlertForGitFailureIfOpen(String accountId, String appId, AlertType alertType, AlertData alertData);
