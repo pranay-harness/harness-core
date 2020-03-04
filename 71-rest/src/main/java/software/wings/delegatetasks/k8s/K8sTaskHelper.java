@@ -147,6 +147,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -164,6 +165,8 @@ public class K8sTaskHelper {
 
   private static String eventOutputFormat =
       "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,MESSAGE:.message,REASON:.reason";
+
+  private static final int FETCH_FILES_DISPLAY_LIMIT = 100;
 
   private static String eventWithNamespaceOutputFormat =
       "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,NAMESPACE:.involvedObject.namespace,MESSAGE:.message,REASON:.reason";
@@ -994,15 +997,27 @@ public class K8sTaskHelper {
     return sb.toString();
   }
 
-  private String getManifestFileNamesInLogFormat(String manifestFilesDirectory) throws Exception {
-    StringBuilder sb = new StringBuilder(1024);
-
+  @VisibleForTesting
+  String getManifestFileNamesInLogFormat(String manifestFilesDirectory) throws IOException {
     Path basePath = Paths.get(manifestFilesDirectory);
     try (Stream<Path> paths = Files.walk(basePath)) {
-      paths.filter(Files::isRegularFile)
-          .forEach(each
-              -> sb.append(color(format("- %s", getRelativePath(each.toString(), basePath.toString())), Gray))
-                     .append(System.lineSeparator()));
+      return generateTruncatedFileListForLogging(basePath, paths);
+    }
+  }
+
+  @VisibleForTesting
+  String generateTruncatedFileListForLogging(Path basePath, Stream<Path> paths) {
+    StringBuilder sb = new StringBuilder(1024);
+    AtomicInteger filesTraversed = new AtomicInteger(0);
+    paths.filter(Files::isRegularFile).forEach(each -> {
+      if (filesTraversed.getAndIncrement() <= FETCH_FILES_DISPLAY_LIMIT) {
+        sb.append(color(format("- %s", getRelativePath(each.toString(), basePath.toString())), Gray))
+            .append(System.lineSeparator());
+      }
+    });
+    if (filesTraversed.get() > FETCH_FILES_DISPLAY_LIMIT) {
+      sb.append(color(format("- ..%d more", filesTraversed.get() - FETCH_FILES_DISPLAY_LIMIT), Gray))
+          .append(System.lineSeparator());
     }
 
     return sb.toString();
@@ -1074,7 +1089,8 @@ public class K8sTaskHelper {
     return false;
   }
 
-  private static String getRelativePath(String filePath, String prefixPath) {
+  @VisibleForTesting
+  static String getRelativePath(String filePath, String prefixPath) {
     Path fileAbsolutePath = Paths.get(filePath).toAbsolutePath();
     Path prefixAbsolutePath = Paths.get(prefixPath).toAbsolutePath();
     return prefixAbsolutePath.relativize(fileAbsolutePath).toString();

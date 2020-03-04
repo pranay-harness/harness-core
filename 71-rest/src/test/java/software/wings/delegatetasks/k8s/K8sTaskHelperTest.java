@@ -19,7 +19,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DAEMON_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.STATEFUL_SET_YAML;
@@ -39,7 +40,9 @@ import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.rule.Owner;
+import org.apache.sshd.common.file.util.MockPath;
 import org.assertj.core.api.Assertions;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -66,6 +69,8 @@ import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -75,7 +80,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(Utils.class)
+@PrepareForTest({Utils.class, K8sTaskHelper.class})
 @PowerMockIgnore("javax.net.*")
 public class K8sTaskHelperTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
@@ -90,6 +95,12 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Mock private Process process;
 
   @Inject @InjectMocks private K8sTaskHelper helper;
+
+  @Before
+  public void setup() {
+    mockStatic(Files.class);
+    when(Files.isRegularFile(any(Path.class))).thenReturn(true);
+  }
 
   @Test
   @Owner(developers = SATYAM)
@@ -305,14 +316,14 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
     PowerMockito.mockStatic(Utils.class);
     ProcessResult processResult = new ProcessResult(0, new ProcessOutput(output.getBytes()));
-    PowerMockito.when(Utils.executeScript(anyString(), anyString(), any(), any())).thenReturn(processResult);
+    when(Utils.executeScript(anyString(), anyString(), any(), any())).thenReturn(processResult);
 
     String latestRevision = helper.getLatestRevision(client, resource.getResourceId(), k8sDelegateTaskParams);
     assertThat(latestRevision).isEqualTo("36");
 
     PowerMockito.mockStatic(Utils.class);
     processResult = new ProcessResult(1, new ProcessOutput("".getBytes()));
-    PowerMockito.when(Utils.executeScript(anyString(), anyString(), any(), any())).thenReturn(processResult);
+    when(Utils.executeScript(anyString(), anyString(), any(), any())).thenReturn(processResult);
 
     latestRevision = helper.getLatestRevision(client, resource.getResourceId(), k8sDelegateTaskParams);
     assertThat(latestRevision).isEqualTo("");
@@ -321,15 +332,15 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   private void setupForDoStatusCheckForAllResources() throws Exception {
     PowerMockito.mockStatic(Utils.class);
     ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
-    PowerMockito.when(Utils.executeScript(anyString(), anyString(), any(), any())).thenReturn(processResult);
+    when(Utils.executeScript(anyString(), anyString(), any(), any())).thenReturn(processResult);
 
-    PowerMockito.when(Utils.encloseWithQuotesIfNeeded("kubectl")).thenReturn("kubectl");
-    PowerMockito.when(Utils.encloseWithQuotesIfNeeded("oc")).thenReturn("oc");
-    PowerMockito.when(Utils.encloseWithQuotesIfNeeded("config-path")).thenReturn("config-path");
+    when(Utils.encloseWithQuotesIfNeeded("kubectl")).thenReturn("kubectl");
+    when(Utils.encloseWithQuotesIfNeeded("oc")).thenReturn("oc");
+    when(Utils.encloseWithQuotesIfNeeded("config-path")).thenReturn("config-path");
 
     when(process.destroyForcibly()).thenReturn(process);
-    PowerMockito.when(Utils.startScript(any(), any(), any(), any())).thenReturn(startedProcess);
-    PowerMockito.when(startedProcess.getProcess()).thenReturn(process);
+    when(Utils.startScript(any(), any(), any(), any())).thenReturn(startedProcess);
+    when(startedProcess.getProcess()).thenReturn(process);
   }
 
   private void doStatusCheck(String manifestFilePath, String expectedOutput, boolean allResources) throws Exception {
@@ -392,5 +403,43 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
     doStatusCheck("/k8s/deployment.yaml",
         "kubectl --kubeconfig=config-path rollout status Deployment/nginx-deployment --watch=true", true);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGenerateTruncatedFileListForLogging() throws Exception {
+    MockPath basePath = new MockPath("foo");
+    String loggedFiles;
+
+    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(0, "file").stream());
+    assertThat(loggedFiles).isEmpty();
+    assertThat(loggedFiles).doesNotContain("..more");
+
+    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(1, "file").stream());
+    assertThat(loggedFiles).isNotEmpty();
+    assertThat(loggedFiles).doesNotContain("..more");
+
+    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(100, "file").stream());
+    assertThat(loggedFiles).isNotEmpty();
+    assertThat(loggedFiles).doesNotContain("..more");
+
+    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(101, "file").stream());
+    assertThat(loggedFiles).isNotEmpty();
+    assertThat(loggedFiles).contains("..1 more");
+
+    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(199, "file").stream());
+    assertThat(loggedFiles).isNotEmpty();
+    assertThat(loggedFiles).contains("..99 more");
+  }
+
+  private List<Path> getNFilePathsWithSuffix(int n, String suffix) {
+    List<Path> paths = new ArrayList<>();
+    for (int i = 0; i < n; i++) {
+      Path mockPath = mock(Path.class);
+      paths.add(mockPath);
+      when(mockPath.relativize(any(Path.class))).thenAnswer(invocationOnMock -> new MockPath("foo"));
+    }
+    return paths;
   }
 }
