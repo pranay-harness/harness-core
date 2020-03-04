@@ -481,8 +481,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
              application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
         .thenReturn(notificationGroups);
     when(personalizationService.fetch(anyString(), anyString(), any())).thenReturn(null);
-
-    when(featureFlagService.isEnabled(FeatureName.ADD_WORKFLOW_FORMIK, ACCOUNT_ID)).thenReturn(true);
   }
 
   @Test

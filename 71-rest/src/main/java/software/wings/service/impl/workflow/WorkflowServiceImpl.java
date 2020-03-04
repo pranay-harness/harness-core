@@ -45,7 +45,6 @@ import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVI
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
-import static software.wings.beans.FeatureName.ADD_WORKFLOW_FORMIK;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.FeatureName.TEMPLATED_PIPELINES;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -801,9 +800,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       orchestrationWorkflow.onSave();
       workflowServiceTemplateHelper.populatePropertiesFromWorkflow(workflow);
 
-      if (featureFlagService.isEnabled(ADD_WORKFLOW_FORMIK, workflow.getAccountId())) {
-        workflowServiceTemplateHelper.setServiceTemplateExpressionMetadata(workflow, orchestrationWorkflow);
-      }
+      workflowServiceTemplateHelper.setServiceTemplateExpressionMetadata(workflow, orchestrationWorkflow);
 
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap(workflow.getAppId()),
@@ -1045,9 +1042,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         templateExpressions, workflow.getAppId(), serviceId, infraRefactor ? infraDefinitionId : inframappingId,
         envChanged, infraChanged, migration);
 
-    if (featureFlagService.isEnabled(ADD_WORKFLOW_FORMIK, accountId)) {
-      workflowServiceTemplateHelper.setServiceTemplateExpressionMetadata(workflow, orchestrationWorkflow);
-    }
+    workflowServiceTemplateHelper.setServiceTemplateExpressionMetadata(workflow, orchestrationWorkflow);
+
     setUnset(ops, "templateExpressions", templateExpressions);
 
     List<String> linkedTemplateUuids = new ArrayList<>();
