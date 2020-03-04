@@ -311,8 +311,9 @@ public class MigrationList {
         .add(Pair.of(292, CleanupSyncStatusForDeletedEntities.class))
         .add(Pair.of(293, DeleteCVCronMigration.class))
         .add(Pair.of(294, AmiDeploymentTypeMigration.class))
-        .add(Pair.of(295, SyncNewFolderForConfigFiles.class))
+        .add(Pair.of(295, BaseMigration.class))
         .add(Pair.of(296, GitSyncErrorGitDetailsMigration.class))
+        .add(Pair.of(297, SyncNewFolderForConfigFiles.class))
         .build();
   }
 }

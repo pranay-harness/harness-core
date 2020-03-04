@@ -34,28 +34,31 @@ public class GitSyncErrorGitDetailsMigration implements Migration {
     try (HIterator<GitSyncError> records = new HIterator<>(query.fetch())) {
       while (records.hasNext()) {
         GitSyncError syncError = records.next();
+        try {
+          // already populated
+          if (isNotEmpty(syncError.getGitConnectorId())) {
+            continue;
+          }
 
-        // already populated
-        if (isNotEmpty(syncError.getGitConnectorId())) {
-          continue;
-        }
-
-        final String accountId = syncError.getAccountId();
-        final String appId = syncError.getAppId();
-        if (isEmpty(appId)) {
-          logger.info("SKipping GitSyncError id=[{}], as app id is absent", syncError.getUuid());
-          continue;
-        }
-        final YamlGitConfig yamlGitConfig = getYamlGitConfig(accountId, appId);
-        if (yamlGitConfig != null) {
-          syncError.setGitConnectorId(yamlGitConfig.getGitConnectorId());
-          syncError.setBranchName(yamlGitConfig.getBranchName());
-          syncError.setYamlGitConfigId(yamlGitConfig.getUuid());
-          wingsPersistence.save(syncError);
-          logger.info(
-              "Updated GitSyncError id= [{}], with GitConnectorId= [{}], BranchName =[{}], YamlGitConfigId=[{}]",
-              syncError.getUuid(), syncError.getGitConnectorId(), syncError.getBranchName(),
-              syncError.getYamlGitConfigId());
+          final String accountId = syncError.getAccountId();
+          final String appId = syncError.getAppId();
+          if (isEmpty(appId)) {
+            logger.info("SKipping GitSyncError id=[{}], as app id is absent", syncError.getUuid());
+            continue;
+          }
+          final YamlGitConfig yamlGitConfig = getYamlGitConfig(accountId, appId);
+          if (yamlGitConfig != null) {
+            syncError.setGitConnectorId(yamlGitConfig.getGitConnectorId());
+            syncError.setBranchName(yamlGitConfig.getBranchName());
+            syncError.setYamlGitConfigId(yamlGitConfig.getUuid());
+            wingsPersistence.save(syncError);
+            logger.info(
+                "Updated GitSyncError id= [{}], with GitConnectorId= [{}], BranchName =[{}], YamlGitConfigId=[{}]",
+                syncError.getUuid(), syncError.getGitConnectorId(), syncError.getBranchName(),
+                syncError.getYamlGitConfigId());
+          }
+        } catch (Exception e) {
+          logger.error("Error while processing gitsyncerror id =" + syncError.getUuid(), e);
         }
       }
     }

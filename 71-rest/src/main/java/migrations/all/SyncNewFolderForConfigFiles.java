@@ -109,6 +109,12 @@ public class SyncNewFolderForConfigFiles implements Migration {
   }
 
   private void pushYamlChangeSet(String accountId, String appId, List<GitFileChange> gitFileChanges) {
+    if (gitFileChanges.isEmpty()) {
+      logger.info(DEBUG_LINE + "Yamlchangeset for account {} and app {} not created as config files are not present.",
+          accountId, appId);
+      return;
+    }
+
     YamlChangeSet yamlChangeSet = obtainYamlChangeSetForNonFullSync(accountId, appId, gitFileChanges, true);
     yamlChangeSet = yamlChangeSetService.save(yamlChangeSet);
     yamlChangeSetId.add(yamlChangeSet.getUuid());
