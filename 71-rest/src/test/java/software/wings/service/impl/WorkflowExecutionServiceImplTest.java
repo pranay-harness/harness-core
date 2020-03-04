@@ -1666,7 +1666,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS, intermittent = true)
   @Category(UnitTests.class)
-  @Ignore("For some reason it has started failing on all the PRs.")
   public void shouldTriggerTemplateCanaryWorkflow() throws InterruptedException {
     Service service1 = addService("svc1");
 

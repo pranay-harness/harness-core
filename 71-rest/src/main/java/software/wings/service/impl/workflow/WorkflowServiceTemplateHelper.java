@@ -631,7 +631,7 @@ public class WorkflowServiceTemplateHelper {
         return;
       }
       Service service = serviceResourceService.get(serviceId);
-      if (service == null) {
+      if (service == null || service.getArtifactType() == null) {
         return;
       }
       metadata.put(Variable.ARTIFACT_TYPE, service.getArtifactType().name());
