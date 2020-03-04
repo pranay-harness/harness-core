@@ -228,7 +228,9 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named("asyncExecutor") private ExecutorService asyncExecutorService;
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutorService;
   @Inject @Named("timeoutExecutor") private ExecutorService timeoutEnforcementService;
+  @Inject @Named("alternativeExecutor") private ExecutorService alternativeExecutorService;
   @Inject private ExecutorService syncExecutorService;
+
   @Inject private SignalService signalService;
   @Inject private MessageService messageService;
   @Inject private Injector injector;
@@ -1425,7 +1427,7 @@ public class DelegateServiceImpl implements DelegateService {
         if (delegateAlternativeValidateTask != null) {
           injector.injectMembers(delegateAlternativeValidateTask);
 
-          executorService.submit(() -> {
+          alternativeExecutorService.submit(() -> {
             logger.info("Executing comparison for task type {}", delegateTask.getData().getTaskType());
 
             try {
