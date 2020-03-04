@@ -379,4 +379,13 @@ public class SpotInstStateHelper {
   public boolean isBlueGreenWorkflow(ExecutionContext context) {
     return OrchestrationWorkflowType.BLUE_GREEN == context.getOrchestrationWorkflowType();
   }
+
+  public Integer getTimeoutFromCommandRequest(SpotInstCommandRequest commandRequest) {
+    if (commandRequest == null || commandRequest.getSpotInstTaskParameters() == null
+        || commandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin() == null) {
+      return 5;
+    }
+
+    return commandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin();
+  }
 }

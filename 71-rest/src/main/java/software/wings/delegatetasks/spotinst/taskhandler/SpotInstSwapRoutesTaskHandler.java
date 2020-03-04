@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
@@ -145,22 +146,24 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
 
     restoreRoutesToOriginalStateIfChanged(awsConfig, swapRoutesParameters);
 
-    // Downsize new elastiGrup
-    ElastiGroup temp = ElastiGroup.builder()
-                           .id(newElastiGroupId)
-                           .name(stageElastiGroupName)
-                           .capacity(ElastiGroupCapacity.builder().minimum(0).maximum(0).target(0).build())
-                           .build();
-    updateElastiGroupAndWait(spotInstToken, spotInstAccountId, temp, steadyStateTimeOut, swapRoutesParameters,
-        DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
+    if (isNotEmpty(newElastiGroupId)) {
+      // Downsize new elastiGrup
+      ElastiGroup temp = ElastiGroup.builder()
+                             .id(newElastiGroupId)
+                             .name(stageElastiGroupName)
+                             .capacity(ElastiGroupCapacity.builder().minimum(0).maximum(0).target(0).build())
+                             .build();
+      updateElastiGroupAndWait(spotInstToken, spotInstAccountId, temp, steadyStateTimeOut, swapRoutesParameters,
+          DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
 
-    // Rename new elastiGroup to STAGE
-    logCallback = getLogCallBack(swapRoutesParameters, RENAME_NEW_COMMAND_UNIT);
-    logCallback.saveExecutionLog(
-        format("Renaming Elastigroup with id: [%s] to name: [%s]", newElastiGroupId, stageElastiGroupName));
-    spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, newElastiGroupId,
-        ElastiGroupRenameRequest.builder().name(stageElastiGroupName).build());
-    logCallback.saveExecutionLog("Completed Rename", INFO, SUCCESS);
+      // Rename new elastiGroup to STAGE
+      logCallback = getLogCallBack(swapRoutesParameters, RENAME_NEW_COMMAND_UNIT);
+      logCallback.saveExecutionLog(
+          format("Renaming Elastigroup with id: [%s] to name: [%s]", newElastiGroupId, stageElastiGroupName));
+      spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, newElastiGroupId,
+          ElastiGroupRenameRequest.builder().name(stageElastiGroupName).build());
+      logCallback.saveExecutionLog("Completed Rename", INFO, SUCCESS);
+    }
 
     return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(SUCCESS).build();
   }
@@ -168,6 +171,11 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
   private void restoreRoutesToOriginalStateIfChanged(
       AwsConfig awsConfig, SpotInstSwapRoutesTaskParameters swapRoutesParameters) {
     ExecutionLogCallback logCallback = getLogCallBack(swapRoutesParameters, SWAP_ROUTES_COMMAND_UNIT);
+    if (isEmpty(swapRoutesParameters.getLBdetailsForBGDeploymentList())) {
+      logCallback.saveExecutionLog("No Action Needed", INFO, SUCCESS);
+      return;
+    }
+
     for (LoadBalancerDetailsForBGDeployment lbDetail : swapRoutesParameters.getLBdetailsForBGDeploymentList()) {
       DescribeListenersResult result = awsElbHelperServiceDelegate.describeListenerResult(
           awsConfig, emptyList(), lbDetail.getProdListenerArn(), swapRoutesParameters.getAwsRegion());

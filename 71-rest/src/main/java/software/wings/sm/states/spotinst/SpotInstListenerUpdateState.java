@@ -193,7 +193,7 @@ public class SpotInstListenerUpdateState extends State {
         .oldElastiGroup(setupContextElement.getOldElastiGroupOriginalConfig())
         .elastiGroupNamePrefix(setupContextElement.getElstiGroupNamePrefix())
         .lBdetailsForBGDeploymentList(setupContextElement.getLbDetailsForBGDeployment())
-        .timeoutIntervalInMin(commandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin())
+        .timeoutIntervalInMin(spotInstStateHelper.getTimeoutFromCommandRequest(commandRequest))
         .rollback(isRollback())
         .build();
   }

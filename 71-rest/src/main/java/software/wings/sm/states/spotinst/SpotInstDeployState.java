@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -132,7 +133,7 @@ public class SpotInstDeployState extends State {
 
     // create activity
     List<CommandUnit> commandUnitList = null;
-    if (spotInstSetupContextElement.isBlueGreen()) {
+    if (OrchestrationWorkflowType.BLUE_GREEN == context.getOrchestrationWorkflowType()) {
       commandUnitList = ImmutableList.of(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
           new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
           new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR));
@@ -308,7 +309,7 @@ public class SpotInstDeployState extends State {
         .rollback(isRollback())
         .resizeNewFirst(ResizeStrategy.RESIZE_NEW_FIRST == spotInstSetupContextElement.getResizeStrategy())
         .blueGreen(isBlueGreen)
-        .timeoutIntervalInMin(commandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin())
+        .timeoutIntervalInMin(spotInstStateHelper.getTimeoutFromCommandRequest(commandRequest))
         .oldElastiGroupWithUpdatedCapacity(oldElastiGroup)
         .newElastiGroupWithUpdatedCapacity(newElastiGroup)
         .build();
