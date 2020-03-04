@@ -71,9 +71,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.KubernetesClusterAuthType;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlRepresenter;
@@ -111,6 +113,7 @@ import javax.net.ssl.X509TrustManager;
 @Slf4j
 public class KubernetesHelperService {
   @Inject private EncryptionService encryptionService;
+  @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   public static void validateNamespace(String namespace) {
     if (isBlank(namespace)) {
@@ -147,6 +150,10 @@ public class KubernetesHelperService {
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String apiVersion) {
     Config config = getConfig(kubernetesConfig, encryptedDataDetails, apiVersion);
 
+    if (KubernetesClusterAuthType.OIDC == kubernetesConfig.getAuthType()) {
+      config.setOauthToken(containerDeploymentDelegateHelper.getOidcIdToken(kubernetesConfig));
+    }
+
     String namespace = "default";
     if (isNotBlank(config.getNamespace())) {
       namespace = config.getNamespace();
@@ -161,6 +168,10 @@ public class KubernetesHelperService {
   public OpenShiftClient getOpenShiftClient(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     Config config = getConfig(kubernetesConfig, encryptedDataDetails, StringUtils.EMPTY);
+
+    if (KubernetesClusterAuthType.OIDC == kubernetesConfig.getAuthType()) {
+      config.setOauthToken(containerDeploymentDelegateHelper.getOidcIdToken(kubernetesConfig));
+    }
 
     String namespace = "default";
     if (isNotBlank(config.getNamespace())) {
@@ -220,6 +231,10 @@ public class KubernetesHelperService {
 
   public IstioClient getIstioClient(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     Config config = getConfig(kubernetesConfig, encryptedDataDetails, StringUtils.EMPTY);
+
+    if (KubernetesClusterAuthType.OIDC == kubernetesConfig.getAuthType()) {
+      config.setOauthToken(containerDeploymentDelegateHelper.getOidcIdToken(kubernetesConfig));
+    }
 
     String namespace = "default";
     if (isNotBlank(config.getNamespace())) {

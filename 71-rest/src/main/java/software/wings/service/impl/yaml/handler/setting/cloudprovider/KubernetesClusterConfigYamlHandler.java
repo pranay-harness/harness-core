@@ -74,6 +74,30 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
         yaml.setServiceAccountToken(encryptedYamlRef);
       }
 
+      if (kubernetesClusterConfig.getEncryptedOidcSecret() != null) {
+        fieldName = "oidcSecret";
+        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
+        yaml.setOidcSecret(encryptedYamlRef);
+      }
+
+      if (kubernetesClusterConfig.getEncryptedOidcClientId() != null) {
+        fieldName = "oidcClientId";
+        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
+        yaml.setOidcClientId(encryptedYamlRef);
+      }
+
+      if (kubernetesClusterConfig.getEncryptedOidcPassword() != null) {
+        fieldName = "oidcPassword";
+        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
+        yaml.setOidcPassword(encryptedYamlRef);
+      }
+
+      yaml.setOidcIdentityProviderUrl(kubernetesClusterConfig.getOidcIdentityProviderUrl());
+      yaml.setOidcUsername(kubernetesClusterConfig.getOidcUsername());
+      yaml.setOidcGrantType(kubernetesClusterConfig.getOidcGrantType());
+      yaml.setOidcScopes(kubernetesClusterConfig.getOidcScopes());
+      yaml.setAuthType(kubernetesClusterConfig.getAuthType());
+
       yaml.setClientKeyAlgo(kubernetesClusterConfig.getClientKeyAlgo());
 
       if (ccmSettingService.isCloudCostEnabled(settingAttribute.getAccountId())) {
@@ -115,6 +139,14 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     kubernetesClusterConfig.setEncryptedClientKey(yaml.getClientKey());
     kubernetesClusterConfig.setEncryptedClientKeyPassphrase(yaml.getClientKeyPassphrase());
     kubernetesClusterConfig.setSkipValidation(yaml.isSkipValidation());
+    kubernetesClusterConfig.setOidcIdentityProviderUrl(yaml.getOidcIdentityProviderUrl());
+    kubernetesClusterConfig.setAuthType(yaml.getAuthType());
+    kubernetesClusterConfig.setOidcUsername(yaml.getOidcUsername());
+    kubernetesClusterConfig.setOidcGrantType(yaml.getOidcGrantType());
+    kubernetesClusterConfig.setOidcScopes(yaml.getOidcScopes());
+    kubernetesClusterConfig.setEncryptedOidcClientId(yaml.getOidcClientId());
+    kubernetesClusterConfig.setEncryptedOidcSecret(yaml.getOidcSecret());
+    kubernetesClusterConfig.setEncryptedOidcPassword(yaml.getOidcPassword());
 
     ChangeContext.Builder clonedContextBuilder =
         cloneFileChangeContext(changeContext, changeContext.getYaml().getContinuousEfficiencyConfig());

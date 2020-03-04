@@ -1509,7 +1509,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsVPC.class, 7319);
     kryo.register(AwsSubnet.class, 7320);
     kryo.register(AwsSecurityGroup.class, 7321);
-
     kryo.register(SkipStateExecutionData.class, 7322);
     kryo.register(KustomizeConfig.class, 7323);
   }

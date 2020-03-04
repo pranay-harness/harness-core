@@ -7,7 +7,6 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -228,7 +227,7 @@ public class SettingValidationService {
     } else if (settingValue instanceof KubernetesClusterConfig) {
       if (!((KubernetesClusterConfig) settingValue).isSkipValidation()) {
         boolean isCloudCostEnabled = ccmSettingService.isCloudCostEnabled(settingAttribute);
-        validateKubernetesClusterConfig(settingAttribute, isCloudCostEnabled);
+        validateKubernetesClusterConfig(settingAttribute, encryptedDataDetails, isCloudCostEnabled);
       }
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
         || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig
@@ -326,7 +325,8 @@ public class SettingValidationService {
     pcfHelperService.validate(pcfConfig);
   }
 
-  private boolean validateKubernetesClusterConfig(SettingAttribute settingAttribute, boolean isCloudCostEnabled) {
+  private boolean validateKubernetesClusterConfig(
+      SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails, boolean isCloudCostEnabled) {
     SettingValue settingValue = settingAttribute.getValue();
     Preconditions.checkArgument(((KubernetesClusterConfig) settingValue).isSkipValidation() == false);
 
@@ -337,7 +337,7 @@ public class SettingValidationService {
     String namespace = "default";
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
-                                                        .encryptionDetails(emptyList())
+                                                        .encryptionDetails(encryptedDataDetails)
                                                         .namespace(namespace)
                                                         .cloudCostEnabled(isCloudCostEnabled)
                                                         .build();
