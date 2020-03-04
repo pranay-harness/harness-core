@@ -160,6 +160,12 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
                                                    .username(username)
                                                    .clientKeyAlgo(clientKeyAlgo)
                                                    .namespace(namespaceNotBlank);
+
+    // Set fields needed by OIDC Auth Type
+    if (KubernetesClusterAuthType.OIDC == authType) {
+      return initWithOidcAuthDetails(kubernetesConfig);
+    }
+
     if (isNotBlank(encryptedPassword)) {
       kubernetesConfig.encryptedPassword(encryptedPassword);
     } else {
@@ -199,6 +205,22 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     return kubernetesConfig.build();
   }
 
+  private KubernetesConfig initWithOidcAuthDetails(KubernetesConfigBuilder kubernetesConfig) {
+    kubernetesConfig.oidcClientId(oidcClientId);
+    kubernetesConfig.encryptedOidcClientId(encryptedOidcClientId);
+    kubernetesConfig.oidcSecret(oidcSecret);
+    kubernetesConfig.encryptedOidcSecret(encryptedOidcSecret);
+    kubernetesConfig.oidcUsername(oidcUsername);
+    kubernetesConfig.oidcPassword(oidcPassword);
+    kubernetesConfig.encryptedOidcPassword(encryptedOidcPassword);
+    kubernetesConfig.oidcGrantType(oidcGrantType);
+    kubernetesConfig.oidcIdentityProviderUrl(oidcIdentityProviderUrl);
+    kubernetesConfig.authType(authType);
+    kubernetesConfig.oidcScopes(oidcScopes);
+
+    return kubernetesConfig.build();
+  }
+
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     if (useKubernetesDelegate) {
@@ -225,13 +247,23 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     private String serviceAccountToken;
     private String clientKeyAlgo;
     private boolean skipValidation;
+    private KubernetesClusterAuthType authType;
+    private String oidcIdentityProviderUrl;
+    private String oidcUsername;
+    private OidcGrantType oidcGrantType;
+    private String oidcScopes;
+    private String oidcSecret;
+    private String oidcPassword;
+    private String oidcClientId;
     private CCMConfig.Yaml continuousEfficiencyConfig;
 
     @lombok.Builder
     public Yaml(boolean useKubernetesDelegate, String delegateName, String type, String harnessApiVersion,
         String masterUrl, String username, String password, String caCert, String clientCert, String clientKey,
         String clientKeyPassphrase, String serviceAccountToken, String clientKeyAlgo, boolean skipValidation,
-        UsageRestrictions.Yaml usageRestrictions, CCMConfig.Yaml ccmConfig) {
+        UsageRestrictions.Yaml usageRestrictions, CCMConfig.Yaml ccmConfig, KubernetesClusterAuthType authType,
+        String oidcIdentityProviderUrl, String oidcUsername, OidcGrantType oidcGrantType, String oidcScopes,
+        String oidcSecret, String oidcPassword, String oidcClientId) {
       super(type, harnessApiVersion, usageRestrictions);
       this.useKubernetesDelegate = useKubernetesDelegate;
       this.delegateName = delegateName;
@@ -246,6 +278,13 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
       this.clientKeyAlgo = clientKeyAlgo;
       this.skipValidation = skipValidation;
       this.continuousEfficiencyConfig = ccmConfig;
+      this.authType = authType;
+      this.oidcIdentityProviderUrl = oidcIdentityProviderUrl;
+      this.oidcUsername = oidcUsername;
+      this.oidcPassword = oidcPassword;
+      this.oidcClientId = oidcClientId;
+      this.oidcGrantType = oidcGrantType;
+      this.oidcSecret = oidcSecret;
     }
   }
 }

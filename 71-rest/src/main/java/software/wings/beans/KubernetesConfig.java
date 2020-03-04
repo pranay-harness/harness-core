@@ -22,7 +22,6 @@ import java.util.List;
  */
 @JsonTypeName("KUBERNETES")
 @Data
-@Builder
 @ToString(exclude = {"password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase", "serviceAccountToken"})
 @EqualsAndHashCode(callSuper = true)
 public class KubernetesConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
@@ -45,6 +44,19 @@ public class KubernetesConfig extends SettingValue implements EncryptableSetting
   private String encryptedClientKeyPassphrase;
   private String encryptedServiceAccountToken;
 
+  private KubernetesClusterAuthType authType;
+  // -- OIDC AUTH fields.
+  private String oidcIdentityProviderUrl;
+  private String oidcUsername;
+  private OidcGrantType oidcGrantType;
+  private String oidcScopes;
+  @Encrypted private char[] oidcClientId;
+  @Encrypted private char[] oidcSecret;
+  @Encrypted private char[] oidcPassword;
+  private String encryptedOidcSecret;
+  private String encryptedOidcPassword;
+  private String encryptedOidcClientId;
+
   /**
    * Instantiates a new setting value.
    */
@@ -52,10 +64,14 @@ public class KubernetesConfig extends SettingValue implements EncryptableSetting
     super(SettingVariableTypes.KUBERNETES.name());
   }
 
+  @Builder
   public KubernetesConfig(String masterUrl, String username, char[] password, char[] caCert, char[] clientCert,
       char[] clientKey, char[] clientKeyPassphrase, char[] serviceAccountToken, String clientKeyAlgo, String namespace,
       String accountId, String encryptedPassword, String encryptedCaCert, String encryptedClientCert,
-      String encryptedClientKey, String encryptedClientKeyPassphrase, String encryptedServiceAccountToken) {
+      String encryptedClientKey, String encryptedClientKeyPassphrase, String encryptedServiceAccountToken,
+      KubernetesClusterAuthType authType, char[] oidcClientId, char[] oidcSecret, String oidcIdentityProviderUrl,
+      String oidcUsername, char[] oidcPassword, String oidcScopes, String encryptedOidcSecret,
+      String encryptedOidcPassword, String encryptedOidcClientId, OidcGrantType oidcGrantType) {
     this();
     this.masterUrl = masterUrl;
     this.username = username;
@@ -74,6 +90,17 @@ public class KubernetesConfig extends SettingValue implements EncryptableSetting
     this.encryptedClientKey = encryptedClientKey;
     this.encryptedClientKeyPassphrase = encryptedClientKeyPassphrase;
     this.encryptedServiceAccountToken = encryptedServiceAccountToken;
+    this.authType = authType;
+    this.oidcClientId = oidcClientId == null ? null : oidcClientId.clone();
+    this.oidcSecret = oidcSecret == null ? null : oidcSecret.clone();
+    this.oidcIdentityProviderUrl = oidcIdentityProviderUrl;
+    this.oidcUsername = oidcUsername;
+    this.oidcPassword = oidcPassword == null ? null : oidcPassword.clone();
+    this.oidcScopes = oidcScopes;
+    this.encryptedOidcClientId = encryptedOidcClientId;
+    this.encryptedOidcPassword = encryptedOidcPassword;
+    this.encryptedOidcSecret = encryptedOidcSecret;
+    this.oidcGrantType = oidcGrantType == null ? OidcGrantType.password : oidcGrantType;
   }
 
   @Override

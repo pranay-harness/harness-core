@@ -20,6 +20,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.OidcGrantType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.KubernetesClusterConfigYamlHandler;
@@ -56,6 +57,11 @@ public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConf
     assertThat(K8sClusterConfigWithValidation.getName()).isEqualTo(kubernetesClusterConfigName);
 
     testCRUD(generateSettingValueYamlConfig(kubernetesClusterConfigName, K8sClusterConfigWithValidation));
+
+    SettingAttribute oidcCloudProvider = createKubernetesClusterConfigOIDCProvider(kubernetesClusterConfigName, false);
+    assertThat(oidcCloudProvider.getName()).isEqualTo(kubernetesClusterConfigName);
+
+    testCRUD(generateSettingValueYamlConfig(kubernetesClusterConfigName, oidcCloudProvider));
   }
 
   private SettingAttribute createKubernetesClusterConfigProvider(
@@ -71,6 +77,29 @@ public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConf
                                                    .username(username)
                                                    .password(password.toCharArray())
                                                    .accountId(ACCOUNT_ID)
+                                                   .skipValidation(skipValidation)
+                                                   .build())
+                                    .build());
+  }
+
+  private SettingAttribute createKubernetesClusterConfigOIDCProvider(
+      String kubernetesClusterConfigName, boolean skipValidation) {
+    when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
+
+    return settingsService.save(aSettingAttribute()
+                                    .withName(kubernetesClusterConfigName)
+                                    .withCategory(SettingCategory.CLOUD_PROVIDER)
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withValue(KubernetesClusterConfig.builder()
+                                                   .masterUrl(masterUrl)
+                                                   .oidcUsername(username)
+                                                   .oidcPassword(password.toCharArray())
+                                                   .accountId(ACCOUNT_ID)
+                                                   .oidcIdentityProviderUrl("oidcUrl")
+                                                   .oidcClientId("clientId".toCharArray())
+                                                   .oidcSecret("secret".toCharArray())
+                                                   .oidcScopes("email")
+                                                   .oidcGrantType(OidcGrantType.password)
                                                    .skipValidation(skipValidation)
                                                    .build())
                                     .build());
