@@ -39,6 +39,7 @@ extend type Query {
   ): EfficiencyStatsData @dataFetcher(name: efficiencyStats)
 
   sunburstChartStats(
+    limit: Int
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]
