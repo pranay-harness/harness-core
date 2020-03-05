@@ -70,8 +70,7 @@ public class K8sWatchEventConfig {
       // special handling for added events (for restarting watches)
       if (k8sWatchEvent.getType() == K8sWatchEvent.Type.TYPE_ADDED) {
         K8sYaml k8sYaml =
-            k8sYamlDao.fetchLatestYaml(k8sWatchEvent.getClusterId(), k8sWatchEvent.getResourceRef().getUid())
-                .orElse(null);
+            k8sYamlDao.fetchLatestYaml(k8sWatchEvent.getClusterId(), k8sWatchEvent.getResourceRef().getUid());
         if (k8sYaml != null) {
           if (k8sWatchEvent.getNewResourceYaml().equals(k8sYaml.getYaml())) {
             // same yaml already captured - skip.
@@ -156,7 +155,7 @@ public class K8sWatchEventConfig {
                           .accountId(enrichedK8sEvent.getAccountId())
                           .clusterType(ClusterType.K8S.name())
                           .costEventSource(CostEventSource.K8S_CLUSTER.name())
-                          .costEventType(CostEventType.K8S_RESOURCE_UPDATE.name())
+                          .costEventType(CostEventType.K8S_RESOURCE_CHANGE.name())
                           .clusterId(k8sWatchEvent.getClusterId())
                           .startTimestamp(enrichedK8sEvent.getOccurredAt())
                           .eventDescription(k8sWatchEvent.getDescription())

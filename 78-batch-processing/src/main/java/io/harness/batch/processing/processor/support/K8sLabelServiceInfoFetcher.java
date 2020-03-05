@@ -26,17 +26,15 @@ public class K8sLabelServiceInfoFetcher {
   }
 
   public Optional<HarnessServiceInfo> fetchHarnessServiceInfo(String accountId, Map<String, String> labelsMap) {
-    String releaseName = labelsMap.get(K8sCCMConstants.RELEASE_NAME);
-    if (releaseName != null) {
-      K8sDeploymentKey k8sDeploymentKey = K8sDeploymentKey.builder().releaseName(releaseName).build();
-      K8sDeploymentInfo k8sDeploymentInfo = K8sDeploymentInfo.builder().releaseName(releaseName).build();
+    return Optional.ofNullable(labelsMap.get(K8sCCMConstants.RELEASE_NAME)).flatMap(relName -> {
+      K8sDeploymentKey k8sDeploymentKey = K8sDeploymentKey.builder().releaseName(relName).build();
+      K8sDeploymentInfo k8sDeploymentInfo = K8sDeploymentInfo.builder().releaseName(relName).build();
       DeploymentSummary deploymentSummary = DeploymentSummary.builder()
                                                 .accountId(accountId)
                                                 .k8sDeploymentKey(k8sDeploymentKey)
                                                 .deploymentInfo(k8sDeploymentInfo)
                                                 .build();
       return cloudToHarnessMappingService.getHarnessServiceInfo(deploymentSummary);
-    }
-    return Optional.empty();
+    });
   }
 }
