@@ -7,6 +7,7 @@ import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.service.intfc.AlertService;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Future;
@@ -24,6 +25,12 @@ public class NoOpAlertService implements AlertService {
 
   @Override
   public Future openAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Future openAlertWithTTL(
+      String accountId, String appId, AlertType alertType, AlertData alertData, Date validUntil) {
     throw new UnsupportedOperationException();
   }
 

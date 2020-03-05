@@ -8,6 +8,7 @@ import software.wings.beans.alert.AlertType;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Future;
@@ -19,6 +20,8 @@ public interface AlertService extends OwnedByAccount, OwnedByApplication {
   List<AlertType> listCategoriesAndTypes(@QueryParam("accountId") String accountId);
 
   Future openAlert(String accountId, String appId, AlertType alertType, AlertData alertData);
+
+  Future openAlertWithTTL(String accountId, String appId, AlertType alertType, AlertData alertData, Date validUntil);
 
   void closeAlert(String accountId, String appId, AlertType alertType, AlertData alertData);
 

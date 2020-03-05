@@ -67,6 +67,8 @@ public interface ContinuousVerificationService {
 
   boolean openAlert(String cvConfigId, ContinuousVerificationAlertData alertData);
 
+  boolean openAlert(String cvConfigId, ContinuousVerificationAlertData alertData, long validUntil);
+
   boolean closeAlert(String cvConfigId, ContinuousVerificationAlertData alertData);
 
   List<ContinuousVerificationExecutionMetaData> getCVDeploymentData(
