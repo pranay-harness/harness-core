@@ -28,6 +28,7 @@ import io.harness.exception.WingsException;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.app.MainConfiguration;
@@ -446,7 +447,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
     GcsFileMetadata gcsFileMetadata = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
                                           .filter(GcsFileMetadataKeys.entityId, entityId)
                                           .filter(GcsFileMetadataKeys.fileBucket, fileBucket)
-                                          .order("-createdAt")
+                                          .order(Sort.descending(GcsFileMetadataKeys.createdAt))
                                           .get();
 
     return gcsFileMetadata == null ? null : gcsFileMetadata.getGcsFileId();
@@ -455,8 +456,8 @@ public class GoogleCloudFileServiceImpl implements FileService {
   private String getFileIdFromGcsFileMetadataByVersion(String entityId, Integer version, FileBucket fileBucket) {
     GcsFileMetadata gcsFileMetadata = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
                                           .filter(GcsFileMetadataKeys.entityId, entityId)
-                                          .filter(GcsFileMetadataKeys.version, version)
                                           .filter(GcsFileMetadataKeys.fileBucket, fileBucket)
+                                          .filter(GcsFileMetadataKeys.version, version)
                                           .get();
 
     return gcsFileMetadata == null ? null : gcsFileMetadata.getGcsFileId();

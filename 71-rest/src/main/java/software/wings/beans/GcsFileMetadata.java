@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -39,11 +40,16 @@ public class GcsFileMetadata extends Base {
   @NotEmpty @Indexed private String gcsFileId;
   @NotEmpty private String fileName;
   @NotEmpty private FileBucket fileBucket;
-  private String entityId;
+  @Indexed private String entityId;
   private int version;
   private long fileLength;
   private String mimeType;
   private ChecksumType checksumType;
   private String checksum;
   private Map<String, Object> others; // Additional metadata, typically used by TerraformState.
+
+  @UtilityClass
+  public static final class GcsFileMetadataKeys {
+    public static final String createdAt = "createdAt";
+  }
 }
