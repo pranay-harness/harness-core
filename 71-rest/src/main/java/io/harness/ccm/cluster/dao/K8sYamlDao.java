@@ -9,8 +9,6 @@ import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Sort;
 
-import java.util.Optional;
-
 @Singleton
 public class K8sYamlDao {
   private final HPersistence hPersistence;
@@ -20,18 +18,18 @@ public class K8sYamlDao {
     this.hPersistence = hPersistence;
   }
 
-  public Optional<K8sYaml> fetchLatestYaml(String clusterId, String uid) {
-    return Optional.ofNullable(hPersistence.createQuery(K8sYaml.class)
-                                   .field(K8sYamlKeys.clusterId)
-                                   .equal(clusterId)
-                                   .field(K8sYamlKeys.uid)
-                                   .equal(uid)
-                                   .order(Sort.descending(K8sYamlKeys.resourceVersion))
-                                   .get(new FindOptions().limit(1)));
+  public K8sYaml fetchLatestYaml(String clusterId, String uid) {
+    return hPersistence.createQuery(K8sYaml.class)
+        .field(K8sYamlKeys.clusterId)
+        .equal(clusterId)
+        .field(K8sYamlKeys.uid)
+        .equal(uid)
+        .order(Sort.descending(K8sYamlKeys.resourceVersion))
+        .get(new FindOptions().limit(1));
   }
 
   public String ensureYamlSaved(String clusterId, String uid, String resourceVersion, String yaml) {
-    K8sYaml latest = fetchLatestYaml(clusterId, uid).orElse(null);
+    K8sYaml latest = fetchLatestYaml(clusterId, uid);
     if (latest != null && yaml.equals(latest.getYaml())) {
       return latest.getUuid();
     } else {
