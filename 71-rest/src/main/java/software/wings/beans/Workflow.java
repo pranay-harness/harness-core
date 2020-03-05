@@ -85,7 +85,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
 
   private transient List<String> templatizedServiceIds = new ArrayList<>();
 
-  private List<String> linkedTemplateUuids = new ArrayList<>();
+  @Indexed private List<String> linkedTemplateUuids = new ArrayList<>();
 
   @Indexed private List<String> linkedArtifactStreamIds = new ArrayList<>();
 

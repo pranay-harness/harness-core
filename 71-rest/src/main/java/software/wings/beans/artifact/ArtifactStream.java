@@ -81,7 +81,7 @@ public abstract class ArtifactStream
   private int failedCronAttempts;
   @Indexed private Long nextIteration;
   @Indexed private Long nextCleanupIteration;
-  private String templateUuid;
+  @Indexed private String templateUuid;
   private String templateVersion;
   private List<Variable> templateVariables = new ArrayList<>();
   private String accountId;
