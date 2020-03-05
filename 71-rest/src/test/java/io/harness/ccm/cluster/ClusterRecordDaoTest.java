@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.dao.ClusterRecordDao;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;

@@ -1,9 +1,10 @@
-package io.harness.ccm.cluster;
+package io.harness.ccm.cluster.dao;
 
 import static io.harness.persistence.HQuery.excludeValidate;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
@@ -19,6 +20,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import java.util.List;
 
 @Slf4j
+@Singleton
 public class ClusterRecordDao {
   public static final String cloudProviderField = ClusterRecordKeys.cluster + "."
       + "cloudProviderId";

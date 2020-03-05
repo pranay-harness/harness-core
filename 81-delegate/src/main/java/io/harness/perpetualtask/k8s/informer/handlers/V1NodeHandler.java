@@ -13,4 +13,9 @@ public class V1NodeHandler extends BaseHandler<V1Node> {
   String getKind() {
     return "Node";
   }
+
+  @Override
+  String getApiVersion() {
+    return "v1";
+  }
 }

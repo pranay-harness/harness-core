@@ -11,11 +11,14 @@ import io.harness.event.payloads.EcsUtilization;
 import io.harness.event.payloads.NodeMetric;
 import io.harness.event.payloads.PodMetric;
 import io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent;
+import io.harness.perpetualtask.k8s.watch.K8sWatchEvent;
 import io.harness.perpetualtask.k8s.watch.NodeEvent;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;
 import io.harness.perpetualtask.k8s.watch.PodEvent;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class EventTypeConstants {
   public static final String K8S_POD_INFO = PodInfo.class.getName();
   public static final String K8S_NODE_INFO = NodeInfo.class.getName();
@@ -32,6 +35,5 @@ public class EventTypeConstants {
   public static final String ECS_TASK_LIFECYCLE = EcsTaskLifecycle.class.getName();
   public static final String ECS_CONTAINER_INSTANCE_INFO = EcsContainerInstanceInfo.class.getName();
   public static final String ECS_CONTAINER_INSTANCE_LIFECYCLE = EcsContainerInstanceLifecycle.class.getName();
-
-  private EventTypeConstants() {}
+  public static final String K8S_WATCH_EVENT = K8sWatchEvent.class.getName();
 }

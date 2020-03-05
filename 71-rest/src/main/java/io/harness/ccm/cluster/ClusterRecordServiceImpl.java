@@ -9,6 +9,7 @@ import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.ccm.cluster.dao.ClusterRecordDao;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;

@@ -13,4 +13,9 @@ public class V1PodHandler extends BaseHandler<V1Pod> {
   String getKind() {
     return "Pod";
   }
+
+  @Override
+  String getApiVersion() {
+    return "v1";
+  }
 }

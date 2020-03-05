@@ -3,7 +3,7 @@ package software.wings.graphql.datafetcher.k8sLabel;
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
-import io.harness.ccm.cluster.K8sWorkloadDao;
+import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;

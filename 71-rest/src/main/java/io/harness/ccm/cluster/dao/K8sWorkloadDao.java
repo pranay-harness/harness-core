@@ -1,8 +1,9 @@
-package io.harness.ccm.cluster;
+package io.harness.ccm.cluster.dao;
 
 import static io.harness.persistence.HQuery.excludeValidate;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.ccm.cluster.entities.K8sWorkload.K8sWorkloadKeys;
@@ -19,8 +20,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Singleton
 public class K8sWorkloadDao {
-  public static final String LABEL_FIELD = K8sWorkloadKeys.labels + ".";
+  private static final String LABEL_FIELD = K8sWorkloadKeys.labels + ".";
   @Inject private HPersistence persistence;
 
   public void save(K8sWorkload k8sWorkload) {

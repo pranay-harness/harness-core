@@ -13,4 +13,9 @@ public class V1StatefulSetHandler extends BaseHandler<V1StatefulSet> {
   String getKind() {
     return "StatefulSet";
   }
+
+  @Override
+  String getApiVersion() {
+    return "apps/v1";
+  }
 }

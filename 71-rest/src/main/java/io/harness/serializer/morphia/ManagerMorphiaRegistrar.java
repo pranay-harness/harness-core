@@ -9,6 +9,7 @@ import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.cluster.entities.GcpKubernetesCluster;
 import io.harness.ccm.cluster.entities.K8sWorkload;
+import io.harness.ccm.cluster.entities.K8sYaml;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
@@ -971,6 +972,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(K8sWorkload.class);
     set.add(LastReceivedPublishedMessage.class);
     set.add(GitFileActivity.class);
+    set.add(K8sYaml.class);
   }
 
   @Override

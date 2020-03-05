@@ -1,37 +1,30 @@
 package io.harness.batch.processing.processor;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.batch.processing.processor.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.processor.util.K8sResourceUtils;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
-import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
-import software.wings.api.DeploymentSummary;
-import software.wings.api.K8sDeploymentInfo;
-import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 import software.wings.beans.instance.HarnessServiceInfo;
-import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, InstanceInfo> {
   @Autowired private InstanceDataService instanceDataService;
-  @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
+  @Autowired private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
   @Autowired private WorkloadRepository workloadRepository;
   private static String POD = "Pod";
   private static String KUBE_SYSTEM_NAMESPACE = "kube-system";
@@ -84,7 +77,8 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
     }
 
     Map<String, String> labelsMap = podInfo.getLabelsMap();
-    HarnessServiceInfo harnessServiceInfo = getHarnessServiceInfo(accountId, labelsMap);
+    HarnessServiceInfo harnessServiceInfo =
+        k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(accountId, labelsMap).orElse(null);
 
     try {
       workloadRepository.savePodWorkload(accountId, podInfo);
@@ -108,23 +102,5 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
         .harnessServiceInfo(harnessServiceInfo)
         // TODO: add missing fields in PodInfo
         .build();
-  }
-
-  @VisibleForTesting
-  HarnessServiceInfo getHarnessServiceInfo(String accountId, Map<String, String> labelsMap) {
-    if (labelsMap.containsKey(K8sCCMConstants.RELEASE_NAME)) {
-      String releaseName = labelsMap.get(K8sCCMConstants.RELEASE_NAME);
-      K8sDeploymentKey k8sDeploymentKey = K8sDeploymentKey.builder().releaseName(releaseName).build();
-      K8sDeploymentInfo k8sDeploymentInfo = K8sDeploymentInfo.builder().releaseName(releaseName).build();
-      DeploymentSummary deploymentSummary = DeploymentSummary.builder()
-                                                .accountId(accountId)
-                                                .k8sDeploymentKey(k8sDeploymentKey)
-                                                .deploymentInfo(k8sDeploymentInfo)
-                                                .build();
-      Optional<HarnessServiceInfo> harnessServiceInfo =
-          cloudToHarnessMappingService.getHarnessServiceInfo(deploymentSummary);
-      return harnessServiceInfo.orElse(null);
-    }
-    return null;
   }
 }

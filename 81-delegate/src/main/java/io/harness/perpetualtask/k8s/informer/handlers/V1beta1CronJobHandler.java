@@ -13,4 +13,9 @@ public class V1beta1CronJobHandler extends BaseHandler<V1beta1CronJob> {
   String getKind() {
     return "CronJob";
   }
+
+  @Override
+  String getApiVersion() {
+    return "batch/v1beta1";
+  }
 }

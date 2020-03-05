@@ -1,5 +1,10 @@
 package io.harness.batch.processing.schedule;
 
+import static io.harness.batch.processing.ccm.BatchJobType.DEPLOYMENT_EVENT;
+import static io.harness.batch.processing.ccm.BatchJobType.K8S_WATCH_EVENT;
+
+import com.google.common.collect.ImmutableSet;
+
 import io.harness.batch.processing.ccm.BatchJobType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -35,7 +40,7 @@ public class EventJobScheduler {
 
   private void runJob(String accountId, Job job) {
     try {
-      if (BatchJobType.fromJob(job) == BatchJobType.DEPLOYMENT_EVENT) {
+      if (ImmutableSet.of(DEPLOYMENT_EVENT, K8S_WATCH_EVENT).contains(BatchJobType.fromJob(job))) {
         return;
       }
       batchJobRunner.runJob(accountId, job);

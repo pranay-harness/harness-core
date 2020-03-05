@@ -13,4 +13,9 @@ public class V1EventHandler extends BaseHandler<V1Event> {
   String getKind() {
     return "Event";
   }
+
+  @Override
+  String getApiVersion() {
+    return "v1";
+  }
 }

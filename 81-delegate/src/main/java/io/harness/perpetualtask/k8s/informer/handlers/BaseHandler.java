@@ -13,14 +13,16 @@ import io.harness.perpetualtask.k8s.watch.K8sWatchEvent;
 import io.harness.reflection.ReflectionUtils;
 import io.kubernetes.client.informer.ResourceEventHandler;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
 import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.util.Yaml;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.joor.Reflect;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,7 @@ import java.util.Optional;
 
 @Slf4j
 public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiType> {
+  private static final String METADATA = "metadata";
   private final EventPublisher eventPublisher;
 
   private final K8sWatchEvent clusterDetailsProto;
@@ -48,6 +51,7 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
 
   @Override
   public void onAdd(ApiType resource) {
+    handleDifferentApiVersion(resource);
     logger.debug("Added resource: {}", ResourceDetails.ofResource(resource));
     V1OwnerReference controller = getController(resource);
     if (controller != null) {
@@ -69,43 +73,72 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
     }
   }
 
+  private void handleDifferentApiVersion(ApiType resource) {
+    if (Reflect.on(resource).get("kind") == null) {
+      Reflect.on(resource).set("kind", getKind());
+    }
+    if (Reflect.on(resource).get("apiVersion") == null) {
+      Reflect.on(resource).set("apiVersion", getApiVersion());
+    }
+  }
+
   @Override
   public void onUpdate(ApiType oldResource, ApiType newResource) {
     ResourceDetails oldResourceDetails = ResourceDetails.ofResource(oldResource);
     ResourceDetails newResourceDetails = ResourceDetails.ofResource(newResource);
     logger.debug("Resource: {} updated from {} to {}", oldResourceDetails, oldResourceDetails.getResourceVersion(),
         newResourceDetails.getResourceVersion());
+    String oldYaml = yamlDump(oldResource);
+    String newYaml = yamlDump(newResource);
     // Publish change event only if the spec changes, and the resource does not have a controlling owner (in which case
     // the change will be captured in owner)
-    boolean specChanged = isSpecChanged(oldResource, newResource);
+    boolean specChanged = !StringUtils.equals(oldYaml, newYaml);
     V1OwnerReference controller = getController(oldResource);
     K8sObjectReference objectReference = createObjectReference(oldResource);
     logger.debug("Updated Resource: {}, SpecChanged: {}, controller:{}", objectReference, specChanged, controller);
     if (controller != null) {
       logger.debug("Skipping publish for resource updated as it has controller: {}", controller);
     } else if (!specChanged) {
-      logger.debug("Skipping publish for resource updated since no spec change");
+      logger.debug("Skipping publish for resource updated since no yaml change");
     } else {
       publishMessage(K8sWatchEvent.newBuilder()
                          .setType(K8sWatchEvent.Type.TYPE_UPDATED)
                          .setResourceRef(objectReference)
                          .setOldResourceVersion(getResourceVersion(oldResource))
-                         .setOldResourceYaml(yamlDump(oldResource))
+                         .setOldResourceYaml(oldYaml)
                          .setNewResourceVersion(getResourceVersion(newResource))
-                         .setNewResourceYaml(yamlDump(newResource))
+                         .setNewResourceYaml(newYaml)
                          .setDescription(String.format("%s updated", getKind()))
                          .build(),
           HTimestamps.fromInstant(Instant.now()));
     }
   }
 
-  private String yamlDump(ApiType resource) {
-    Reflect.on(resource).set("status", null);
-    return Yaml.dump(resource);
+  private ApiType clone(ApiType resource) {
+    try {
+      @SuppressWarnings("unchecked") ApiType copy = (ApiType) Yaml.load(Yaml.dump(resource));
+      return copy;
+    } catch (IOException e) {
+      logger.warn("Serialization round trip should clone", e);
+      return resource;
+    }
   }
 
-  private boolean isSpecChanged(ApiType oldResource, ApiType newResource) {
-    return ObjectUtils.notEqual(getSpec(oldResource), getSpec(newResource));
+  private String yamlDump(ApiType resource) {
+    // to avoid mutating resource
+    ApiType copy = clone(resource);
+    Reflect.on(copy).set("status", null);
+    V1ObjectMetaBuilder newV1ObjectMetaBuilder = new V1ObjectMetaBuilder();
+    V1ObjectMeta objectMeta = getMetadata(copy);
+    if (objectMeta != null) {
+      newV1ObjectMetaBuilder.withName(objectMeta.getName())
+          .withNamespace(objectMeta.getNamespace())
+          .withLabels(objectMeta.getLabels())
+          .withAnnotations(objectMeta.getAnnotations())
+          .withUid(objectMeta.getUid());
+    }
+    Reflect.on(copy).set(METADATA, newV1ObjectMetaBuilder.build());
+    return Yaml.dump(copy);
   }
 
   @Override
@@ -145,17 +178,14 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
   }
 
   abstract String getKind();
+  abstract String getApiVersion();
 
   private V1ObjectMeta getMetadata(ApiType resource) {
-    return (V1ObjectMeta) ReflectionUtils.getFieldValue(resource, "metadata");
+    return (V1ObjectMeta) ReflectionUtils.getFieldValue(resource, METADATA);
   }
 
   private String getResourceVersion(ApiType resource) {
     return Optional.ofNullable(getMetadata(resource)).map(V1ObjectMeta::getResourceVersion).orElse("");
-  }
-
-  private Object getSpec(Object resource) {
-    return ReflectionUtils.getFieldValue(resource, "spec");
   }
 
   private V1OwnerReference getController(ApiType resource) {
@@ -183,9 +213,9 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
     String resourceVersion;
 
     static ResourceDetails ofResource(Object resource) {
-      Map<String, Object> fieldValues = ReflectionUtils.getFieldValues(resource, ImmutableSet.of("kind", "metadata"));
+      Map<String, Object> fieldValues = ReflectionUtils.getFieldValues(resource, ImmutableSet.of("kind", METADATA));
       String kind = (String) fieldValues.get("kind");
-      V1ObjectMeta objectMeta = (V1ObjectMeta) fieldValues.computeIfAbsent("metadata", k -> new V1ObjectMeta());
+      V1ObjectMeta objectMeta = (V1ObjectMeta) fieldValues.computeIfAbsent(METADATA, k -> new V1ObjectMeta());
       return ResourceDetails.builder()
           .kind(kind)
           .name(objectMeta.getName())
