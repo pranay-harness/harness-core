@@ -331,6 +331,17 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
           when(restCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
           return restCall;
         });
+
+    when(verificationManagerClient.triggerCVAlertWithTtl(
+             anyString(), anyLong(), any(ContinuousVerificationAlertData.class)))
+        .then(invocation -> {
+          Object[] args = invocation.getArguments();
+          managerVerificationService.openAlert(
+              (String) args[0], (ContinuousVerificationAlertData) args[2], (long) args[1]);
+          Call<RestResponse<Boolean>> restCall = mock(Call.class);
+          when(restCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+          return restCall;
+        });
   }
 
   @Test

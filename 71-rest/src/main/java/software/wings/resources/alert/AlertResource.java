@@ -74,6 +74,14 @@ public class AlertResource {
   }
 
   @POST
+  @Path("/open-cv-alert-with-ttl")
+  @LearningEngineAuth
+  public RestResponse<Boolean> openCVAlert(@QueryParam("cvConfigId") String cvConfigId,
+      @QueryParam("validUntil") long validUntil, @Body ContinuousVerificationAlertData alertData) {
+    return new RestResponse<>(continuousVerificationService.openAlert(cvConfigId, alertData, validUntil));
+  }
+
+  @POST
   @Path("/close-cv-alert")
   @LearningEngineAuth
   public RestResponse<Boolean> closeCVAlert(

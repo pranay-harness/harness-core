@@ -76,6 +76,10 @@ public interface VerificationManagerClient {
   Call<RestResponse<Boolean>> triggerCVAlert(
       @Query("cvConfigId") String cvConfigId, @Body ContinuousVerificationAlertData alertData);
 
+  @POST("alerts/open-cv-alert-with-ttl")
+  Call<RestResponse<Boolean>> triggerCVAlertWithTtl(@Query("cvConfigId") String cvConfigId,
+      @Query("validUntil") long validUntil, @Body ContinuousVerificationAlertData alertData);
+
   @POST("alerts/close-cv-alert")
   Call<RestResponse<Boolean>> closeCVAlert(
       @Query("cvConfigId") String cvConfigId, @Body ContinuousVerificationAlertData alertData);

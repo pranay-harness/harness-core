@@ -1955,7 +1955,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         if (isNotEmpty(analysisClusterMap)) {
           final SplunkAnalysisCluster splunkAnalysisCluster =
               analysisClusterMap.entrySet().iterator().next().getValue();
-          verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlert(cvConfigId,
+          verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlertWithTtl(
+              cvConfigId, OffsetDateTime.now().plusHours(2).toInstant().toEpochMilli(),
               ContinuousVerificationAlertData.builder()
                   .mlAnalysisType(MLAnalysisType.LOG_ML)
                   .logAnomaly(splunkAnalysisCluster.getText())
@@ -1971,7 +1972,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         if (isNotEmpty(analysisClusterMap)) {
           final SplunkAnalysisCluster splunkAnalysisCluster =
               analysisClusterMap.entrySet().iterator().next().getValue();
-          verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlert(cvConfigId,
+          verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlertWithTtl(
+              cvConfigId, OffsetDateTime.now().plusHours(2).toInstant().toEpochMilli(),
               ContinuousVerificationAlertData.builder()
                   .mlAnalysisType(MLAnalysisType.LOG_ML)
                   .logAnomaly(splunkAnalysisCluster.getText())

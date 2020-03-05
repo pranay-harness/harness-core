@@ -2500,6 +2500,25 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   @Override
+  public boolean openAlert(String cvConfigId, ContinuousVerificationAlertData alertData, long validUntil) {
+    final CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+    Preconditions.checkNotNull(cvConfiguration, "No config found with id " + cvConfigId);
+    Preconditions.checkNotNull(alertData, "Invalid alert data");
+    alertData.setCvConfiguration(cvConfiguration);
+    alertData.setAlertStatus(AlertStatus.Open);
+    alertData.setPortalUrl(isNotEmpty(mainConfiguration.getApiUrl()) ? mainConfiguration.getApiUrl()
+                                                                     : mainConfiguration.getPortal().getUrl());
+    alertData.setAccountId(cvConfiguration.getAccountId());
+    addHighRiskTxnsIfNecessary(alertData);
+    logger.info("Opening alert with riskscore {} for {} and validUntil {}", alertData.getRiskScore(), cvConfiguration,
+        validUntil);
+    Date validUntilDate = Date.from(Instant.ofEpochMilli(validUntil));
+    alertService.openAlertWithTTL(cvConfiguration.getAccountId(), cvConfiguration.getAppId(),
+        CONTINUOUS_VERIFICATION_ALERT, alertData, validUntilDate);
+    return true;
+  }
+
+  @Override
   public boolean closeAlert(String cvConfigId, ContinuousVerificationAlertData alertData) {
     final CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
     Preconditions.checkNotNull(cvConfiguration, "No config found with id " + cvConfigId);

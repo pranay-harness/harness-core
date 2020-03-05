@@ -38,6 +38,7 @@ import software.wings.beans.Notification;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.resources.ContinuousVerificationResource;
+import software.wings.service.impl.event.AlertEvent;
 import software.wings.service.impl.event.GenericEventListener;
 import software.wings.service.impl.event.GenericEventPublisher;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
@@ -55,6 +56,7 @@ import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -554,11 +556,68 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
     assertThat(genericEvents.size()).isEqualTo(1);
     GenericEvent genericEvent = genericEvents.get(0);
     assertThat(genericEvent.getEvent().getEventType()).isEqualTo(EventType.OPEN_ALERT);
-
+    assertThat(
+        ((AlertEvent) genericEvent.getEvent().getEventData().getEventInfo()).getAlert().getValidUntil().toInstant())
+        .isAfter(Instant.now().plusSeconds(300));
     alertNotificationHandler.handleEvent(genericEvent.getEvent());
     assertThat(notifications.size()).isEqualTo(1);
     assertThat(notifications.get(0).getEventType()).isEqualTo(EventType.OPEN_ALERT);
 
+    // now close the alert and ensure that the notficiation comes
+    continuousVerificationService.closeAlert(cvConfigId,
+        ContinuousVerificationAlertData.builder()
+            .cvConfiguration(cvConfig)
+            .analysisStartTime(35)
+            .analysisEndTime(50)
+            .riskScore(0.2)
+            .mlAnalysisType(MLAnalysisType.TIME_SERIES)
+            .accountId(accountId)
+            .build());
+
+    waitForAlertEvent(2);
+    genericEvents = wingsPersistence.createQuery(GenericEvent.class, excludeAuthority).asList();
+    assertThat(genericEvents.size()).isEqualTo(2);
+    genericEvent = genericEvents.get(1);
+    assertThat(genericEvent.getEvent().getEventType()).isEqualTo(EventType.CLOSE_ALERT);
+
+    alertNotificationHandler.handleEvent(genericEvent.getEvent());
+    assertThat(notifications.size()).isEqualTo(2);
+    assertThat(notifications.get(0).getEventType()).isEqualTo(EventType.OPEN_ALERT);
+    assertThat(notifications.get(1).getEventType()).isEqualTo(EventType.CLOSE_ALERT);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testAlert_WithTTL() throws IOException {
+    final NewRelicCVServiceConfiguration cvConfig = createCvConfig();
+    final String cvConfigId = wingsPersistence.save(cvConfig);
+
+    wingsPersistence.save(
+        new AlertNotificationRule(accountId, AlertCategory.ContinuousVerification, null, Sets.newHashSet()));
+    continuousVerificationService.openAlert(cvConfigId,
+        ContinuousVerificationAlertData.builder()
+            .cvConfiguration(cvConfig)
+            .analysisStartTime(10)
+            .analysisEndTime(25)
+            .riskScore(0.6)
+            .mlAnalysisType(MLAnalysisType.TIME_SERIES)
+            .accountId(accountId)
+            .build(),
+        Instant.now().plusSeconds(300).toEpochMilli());
+    waitForAlertEvent(1);
+    List<GenericEvent> genericEvents = wingsPersistence.createQuery(GenericEvent.class, excludeAuthority).asList();
+    assertThat(genericEvents.size()).isEqualTo(1);
+    GenericEvent genericEvent = genericEvents.get(0);
+    assertThat(genericEvent.getEvent().getEventType()).isEqualTo(EventType.OPEN_ALERT);
+    assertThat(
+        ((AlertEvent) genericEvent.getEvent().getEventData().getEventInfo()).getAlert().getValidUntil().toInstant())
+        .isBeforeOrEqualTo(Instant.now().plusSeconds(300));
+    alertNotificationHandler.handleEvent(genericEvent.getEvent());
+    assertThat(notifications.size()).isEqualTo(1);
+    assertThat(notifications.get(0).getEventType()).isEqualTo(EventType.OPEN_ALERT);
+    // assertThat(((Alert)
+    // genericEvent.getEvent()).getValidUntil().toInstant()).isBeforeOrEqualTo(Instant.now().plusSeconds(300));
     // now close the alert and ensure that the notficiation comes
     continuousVerificationService.closeAlert(cvConfigId,
         ContinuousVerificationAlertData.builder()
