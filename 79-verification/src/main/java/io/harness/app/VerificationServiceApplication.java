@@ -8,6 +8,7 @@ import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SEC
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.ServiceSecretKey.ServiceType.LEARNING_ENGINE;
+import static software.wings.beans.alert.Alert.AlertKeys;
 import static software.wings.common.VerificationConstants.CV_TASK_CRON_POLL_INTERVAL_SEC;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_LABELS;
@@ -59,6 +60,7 @@ import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.jobs.sg247.collection.ServiceGuardDataCollectionJob;
+import io.harness.jobs.sg247.logs.ServiceGuardCleanUpAlertsJob;
 import io.harness.jobs.sg247.logs.ServiceGuardLogAnalysisJob;
 import io.harness.jobs.workflow.WorkflowCVTaskCreationHandler;
 import io.harness.jobs.workflow.collection.CVDataCollectionJob;
@@ -92,6 +94,8 @@ import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo.LicenseInfoKeys;
+import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.AlertType;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.GenericExceptionMapper;
@@ -104,6 +108,8 @@ import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.MLAnalysisType;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -352,6 +358,31 @@ public class VerificationServiceApplication extends Application<VerificationServ
         () -> dataCollectionIterator.process(ProcessMode.PUMP), 0, 5, TimeUnit.SECONDS);
   }
 
+  private void registerAlertsCleanupIterator(Injector injector,
+      ScheduledThreadPoolExecutor workflowVerificationExecutor, Duration interval, int maxAllowedThreads) {
+    Handler<Alert> handler = new ServiceGuardCleanUpAlertsJob();
+    injector.injectMembers(handler);
+    PersistenceIterator alertsCleanupIterator =
+        MongoPersistenceIterator.<Alert>builder()
+            .clazz(Alert.class)
+            .fieldName(AlertKeys.cvCleanUpIteration)
+            .targetInterval(interval)
+            .acceptableNoAlertDelay(ofSeconds(30))
+            .executorService(workflowVerificationExecutor)
+            .semaphore(new Semaphore(maxAllowedThreads))
+            .handler(handler)
+            .schedulingType(REGULAR)
+            .filterExpander(query
+                -> query.filter(AlertKeys.type, AlertType.CONTINUOUS_VERIFICATION_ALERT)
+                       .field(AlertKeys.createdAt)
+                       .lessThanOrEq(Instant.now().minus(6, ChronoUnit.HOURS).toEpochMilli()))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(alertsCleanupIterator);
+    workflowVerificationExecutor.scheduleAtFixedRate(
+        () -> alertsCleanupIterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.MINUTES);
+  }
+
   private void registerCreateCVTaskIterator(Injector injector, ScheduledThreadPoolExecutor workflowVerificationExecutor,
       Duration interval, int maxAllowedThreads) {
     Handler<AnalysisContext> handler = new WorkflowCVTaskCreationHandler();
@@ -383,6 +414,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
         AccountKeys.serviceGuardDataAnalysisIteration, ofMinutes(1), 7);
     registerIterator(injector, serviceGuardExecutor, new CVDataCollectionJob(),
         AccountKeys.workflowDataCollectionIteration, ofSeconds(CV_TASK_CRON_POLL_INTERVAL_SEC), 7);
+    registerAlertsCleanupIterator(injector, serviceGuardExecutor, ofMinutes(2), 7);
   }
 
   private void registerIterator(Injector injector, ScheduledThreadPoolExecutor serviceGuardExecutor,
