@@ -29,6 +29,7 @@ import software.wings.yaml.gitSync.GitFileActivity.Status;
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -125,12 +126,13 @@ public class GitSyncServiceImpl implements GitSyncService {
   public GitFileProcessingSummary logFileActivityAndGenerateProcessingSummary(List<Change> changeList,
       Map<String, YamlProcessingException.ChangeWithErrorMsg> failedYamlFileChangeMap, Status status,
       String errorMessage) {
+    List<Change> changeListCopy = new ArrayList<>(changeList);
     List<GitFileActivity> activities = new LinkedList<>();
     if (EmptyPredicate.isEmpty(failedYamlFileChangeMap)) {
       // if files got skipped before git processing, mark them as FAILURE
       if (status == Status.SKIPPED) {
         activities =
-            changeList.stream()
+            changeListCopy.stream()
                 .map(
                     change -> buildBaseGitFileActivity(change).status(Status.FAILED).errorMessage(errorMessage).build())
                 .collect(Collectors.toList());
@@ -143,7 +145,7 @@ public class GitSyncServiceImpl implements GitSyncService {
                               final Change change = e.getValue().getChange();
                               // keep removing FAILURE files from original list of files, to obtain remaining COMPLETED
                               // ones
-                              changeList.remove(change);
+                              changeListCopy.remove(change);
                               return buildBaseGitFileActivity(change)
                                   .status(Status.FAILED)
                                   .errorMessage(e.getValue().getErrorMsg())
@@ -151,8 +153,8 @@ public class GitSyncServiceImpl implements GitSyncService {
                             })
                             .collect(Collectors.toList()));
       // files successfully processed
-      if (EmptyPredicate.isNotEmpty(changeList)) {
-        activities.addAll(changeList.stream()
+      if (EmptyPredicate.isNotEmpty(changeListCopy)) {
+        activities.addAll(changeListCopy.stream()
                               .map(change -> buildBaseGitFileActivity(change).status(Status.SUCCESS).build())
                               .collect(Collectors.toList()));
       }
