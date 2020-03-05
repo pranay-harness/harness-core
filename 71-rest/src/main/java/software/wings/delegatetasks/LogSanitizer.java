@@ -1,46 +1,46 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.expression.SecretString.SECRET_MASK;
 import static org.apache.commons.lang3.StringUtils.replaceEach;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.Set;
 
 /**
- * Replace secret values with secret name expressions for safe display
+ * Replace secret values with mask for safe display
  */
 @Slf4j
 public class LogSanitizer {
   private final String activityId;
-  // Map of secret names to unmasked secret values
-  private final Map<String, String> secrets;
+  private final Set<String> secrets;
 
-  public LogSanitizer(String activityId, Map<String, String> secrets) {
+  public LogSanitizer(String activityId, Set<String> secrets) {
     this.activityId = activityId;
     this.secrets = secrets;
   }
 
   /**
-   * Replace secret values in {@code log} with secret name expressions for safe display
+   * Replace secret values in {@code log} with mask for safe display
    * @param activityId The id to match to the set of secrets for this sanitizer
    * @param log The text that may contain secret values
-   * @return text with secrets replaced by a secret name expression
+   * @return text with secrets replaced by a mask
    */
   public String sanitizeLog(String activityId, String log) {
     if (StringUtils.equals(activityId, this.activityId)) {
       if (isEmpty(secrets)) {
         return log;
       }
-      ArrayList<String> secretNames = new ArrayList<>();
+      ArrayList<String> secretMasks = new ArrayList<>();
       ArrayList<String> secretValues = new ArrayList<>();
-      for (Map.Entry<String, String> entry : secrets.entrySet()) {
-        secretNames.add("<<<" + entry.getKey() + ">>>");
-        secretValues.add(entry.getValue());
+      for (String secret : secrets) {
+        secretMasks.add(SECRET_MASK);
+        secretValues.add(secret);
       }
-      return replaceEach(log, secretValues.toArray(new String[] {}), secretNames.toArray(new String[] {}));
+      return replaceEach(log, secretValues.toArray(new String[] {}), secretMasks.toArray(new String[] {}));
     }
     return log;
   }
