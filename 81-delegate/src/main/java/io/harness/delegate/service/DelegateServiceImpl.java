@@ -79,6 +79,8 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.executioncapability.CapabilityType;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.logging.DelegateStackdriverLogAppender;
@@ -185,6 +187,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.net.ssl.SSLContext;
@@ -1438,12 +1441,20 @@ public class DelegateServiceImpl implements DelegateService {
 
               List<DelegateConnectionResult> originalResults = future.get();
 
-              boolean original = originalResults.stream().allMatch(result -> result.isValidated());
-              boolean alternative = alternativeResults.stream().allMatch(result -> result.isValidated());
+              boolean original = originalResults.stream().allMatch(DelegateConnectionResult::isValidated);
+              boolean alternative = alternativeResults.stream().allMatch(DelegateConnectionResult::isValidated);
 
               if (original != alternative) {
-                logger.error("The original validation {} is different from the alternative for task type {}", original,
-                    delegateTask.getData().getTaskType());
+                List<CapabilityType> capabilityTypes = delegateTask.getExecutionCapabilities()
+                                                           .stream()
+                                                           .map(ExecutionCapability::getCapabilityType)
+                                                           .collect(Collectors.toList());
+                logger.error(
+                    "[DelegateCapability] The original validation {} is different from the alternative for task type {}. Capabilities executed are {}",
+                    original, delegateTask.getData().getTaskType(), capabilityTypes);
+                alternativeResults.forEach(result
+                    -> logger.error("[DelegateCapability] Capability results for Criteria {} is {}",
+                        result.getCriteria(), result.isValidated()));
               }
             } catch (InterruptedException exception) {
               logger.error("Comparison failed.", exception);
