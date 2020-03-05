@@ -55,7 +55,7 @@ public class CostEventServiceImpl implements CostEventService {
         }
       }
     } else {
-      logger.warn("Not processing instance event data:[{}]", costEventDataList.size());
+      logger.warn("Not processing cost event data:[{}]", costEventDataList.size());
     }
     return successfulInsert;
   }
@@ -79,7 +79,7 @@ public class CostEventServiceImpl implements CostEventService {
     return successfulUpdate;
   }
 
-  void updateDeploymentStatement(PreparedStatement statement, CostEventData costEventData) throws SQLException {
+  private void updateDeploymentStatement(PreparedStatement statement, CostEventData costEventData) throws SQLException {
     statement.setString(1, costEventData.getSettingId());
     statement.setString(2, costEventData.getClusterId());
     statement.setString(3, costEventData.getClusterType());
@@ -93,7 +93,7 @@ public class CostEventServiceImpl implements CostEventService {
     statement.setString(11, costEventData.getDeploymentId());
   }
 
-  void updateInsertStatement(PreparedStatement statement, CostEventData costEventData) throws SQLException {
+  private void updateInsertStatement(PreparedStatement statement, CostEventData costEventData) throws SQLException {
     statement.setTimestamp(1, new Timestamp(costEventData.getStartTimestamp()), utils.getDefaultCalendar());
     statement.setString(2, costEventData.getAccountId());
     statement.setString(3, costEventData.getSettingId());

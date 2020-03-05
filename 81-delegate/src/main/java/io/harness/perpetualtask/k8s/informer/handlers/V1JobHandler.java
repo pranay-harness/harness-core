@@ -13,4 +13,9 @@ public class V1JobHandler extends BaseHandler<V1Job> {
   String getKind() {
     return "Job";
   }
+
+  @Override
+  String getApiVersion() {
+    return "batch/v1";
+  }
 }

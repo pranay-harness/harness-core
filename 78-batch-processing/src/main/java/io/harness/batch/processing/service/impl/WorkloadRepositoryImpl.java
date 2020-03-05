@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Optional;
 
 @Service
 public class WorkloadRepositoryImpl implements WorkloadRepository {
@@ -57,5 +58,17 @@ public class WorkloadRepositoryImpl implements WorkloadRepository {
                  HPersistence.upsertReturnNewOptions))
               != null);
     }
+  }
+
+  @Override
+  public Optional<K8sWorkload> getWorkload(String accountId, String clusterId, String uid) {
+    return Optional.ofNullable(hPersistence.createQuery(K8sWorkload.class)
+                                   .field(K8sWorkloadKeys.accountId)
+                                   .equal(accountId)
+                                   .field(K8sWorkloadKeys.clusterId)
+                                   .equal(clusterId)
+                                   .field(K8sWorkloadKeys.uid)
+                                   .equal(uid)
+                                   .get());
   }
 }

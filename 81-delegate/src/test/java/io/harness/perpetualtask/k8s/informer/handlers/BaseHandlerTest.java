@@ -18,8 +18,6 @@ import io.harness.perpetualtask.k8s.watch.K8sWatchEvent;
 import io.harness.rule.Owner;
 import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.openapi.models.V1ReplicaSetBuilder;
-import io.kubernetes.client.util.Yaml;
-import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -52,6 +50,7 @@ public class BaseHandlerTest extends CategoryTest {
     V1ReplicaSetHandler handler = new V1ReplicaSetHandler(eventPublisher, clusterDetails);
     handler.onAdd(new V1ReplicaSetBuilder()
                       .withKind("ReplicaSet")
+                      .withApiVersion("apps/v1")
                       .withNewMetadata()
                       .withName("nginx-ingress-controller-589f8749b5")
                       .withNamespace("ingress-nginx")
@@ -77,6 +76,7 @@ public class BaseHandlerTest extends CategoryTest {
     V1ReplicaSetHandler handler = new V1ReplicaSetHandler(eventPublisher, clusterDetails);
     V1ReplicaSet replicaSet = new V1ReplicaSetBuilder()
                                   .withKind("ReplicaSet")
+                                  .withApiVersion("apps/v1")
                                   .withNewMetadata()
                                   .withName("nginx-ingress-controller-589f8749b5")
                                   .withNamespace("ingress-nginx")
@@ -85,21 +85,26 @@ public class BaseHandlerTest extends CategoryTest {
                                   .endMetadata()
                                   .build();
     handler.onAdd(replicaSet);
+
     verify(eventPublisher)
-        .publishMessage(eq(K8sWatchEvent.newBuilder(expectedClusterDetailsProto)
-                                .mergeFrom(K8sWatchEvent.newBuilder()
-                                               .setType(K8sWatchEvent.Type.TYPE_ADDED)
-                                               .setResourceRef(K8sObjectReference.newBuilder()
-                                                                   .setKind("ReplicaSet")
-                                                                   .setName("nginx-ingress-controller-589f8749b5")
-                                                                   .setNamespace("ingress-nginx")
-                                                                   .setUid("228947ad-3cba-11ea-886a-4201ac10650a")
-                                                                   .build())
-                                               .setNewResourceVersion("200777582")
-                                               .setNewResourceYaml(yamlDump(replicaSet))
-                                               .setDescription("ReplicaSet created")
-                                               .build())
-                                .build()),
+        .publishMessage(
+            eq(K8sWatchEvent.newBuilder(expectedClusterDetailsProto)
+                    .mergeFrom(
+                        K8sWatchEvent.newBuilder()
+                            .setType(K8sWatchEvent.Type.TYPE_ADDED)
+                            .setResourceRef(K8sObjectReference.newBuilder()
+                                                .setKind("ReplicaSet")
+                                                .setName("nginx-ingress-controller-589f8749b5")
+                                                .setNamespace("ingress-nginx")
+                                                .setUid("228947ad-3cba-11ea-886a-4201ac10650a")
+                                                .build())
+                            .setNewResourceVersion("200777582")
+                            .setNewResourceYaml("apiVersion: apps/v1\n"
+                                + "kind: ReplicaSet\n"
+                                + "metadata: {name: nginx-ingress-controller-589f8749b5, namespace: ingress-nginx, uid: 228947ad-3cba-11ea-886a-4201ac10650a}\n")
+                            .setDescription("ReplicaSet created")
+                            .build())
+                    .build()),
             any(), anyMapOf(String.class, String.class));
     verifyNoMoreInteractions(eventPublisher);
   }
@@ -111,6 +116,7 @@ public class BaseHandlerTest extends CategoryTest {
     V1ReplicaSetHandler handler = new V1ReplicaSetHandler(eventPublisher, clusterDetails);
     V1ReplicaSet v1ReplicaSetOld = new V1ReplicaSetBuilder()
                                        .withKind("ReplicaSet")
+                                       .withApiVersion("apps/v1")
                                        .withNewMetadata()
                                        .withName("nginx-ingress-controller-589f8749b5")
                                        .withNamespace("ingress-nginx")
@@ -131,6 +137,7 @@ public class BaseHandlerTest extends CategoryTest {
                                        .build();
     V1ReplicaSet v1ReplicaSetNew = new V1ReplicaSetBuilder()
                                        .withKind("ReplicaSet")
+                                       .withApiVersion("apps/v1")
                                        .withNewMetadata()
                                        .withName("nginx-ingress-controller-589f8749b5")
                                        .withNamespace("ingress-nginx")
@@ -160,6 +167,7 @@ public class BaseHandlerTest extends CategoryTest {
     V1ReplicaSetHandler handler = new V1ReplicaSetHandler(eventPublisher, clusterDetails);
     V1ReplicaSet v1ReplicaSetOld = new V1ReplicaSetBuilder()
                                        .withKind("ReplicaSet")
+                                       .withApiVersion("apps/v1")
                                        .withNewMetadata()
                                        .withName("nginx-ingress-controller-589f8749b5")
                                        .withNamespace("ingress-nginx")
@@ -175,6 +183,7 @@ public class BaseHandlerTest extends CategoryTest {
                                        .build();
     V1ReplicaSet v1ReplicaSetNew = new V1ReplicaSetBuilder()
                                        .withKind("ReplicaSet")
+                                       .withApiVersion("apps/v1")
                                        .withNewMetadata()
                                        .withName("nginx-ingress-controller-589f8749b5")
                                        .withNamespace("ingress-nginx")
@@ -199,6 +208,7 @@ public class BaseHandlerTest extends CategoryTest {
     V1ReplicaSetHandler handler = new V1ReplicaSetHandler(eventPublisher, clusterDetails);
     V1ReplicaSet v1ReplicaSetOld = new V1ReplicaSetBuilder()
                                        .withKind("ReplicaSet")
+                                       .withApiVersion("apps/v1")
                                        .withNewMetadata()
                                        .withName("nginx-ingress-controller-589f8749b5")
                                        .withNamespace("ingress-nginx")
@@ -214,6 +224,7 @@ public class BaseHandlerTest extends CategoryTest {
                                        .build();
     V1ReplicaSet v1ReplicaSetNew = new V1ReplicaSetBuilder()
                                        .withKind("ReplicaSet")
+                                       .withApiVersion("apps/v1")
                                        .withNewMetadata()
                                        .withName("nginx-ingress-controller-589f8749b5")
                                        .withNamespace("ingress-nginx")
@@ -229,22 +240,30 @@ public class BaseHandlerTest extends CategoryTest {
                                        .build();
     handler.onUpdate(v1ReplicaSetOld, v1ReplicaSetNew);
     verify(eventPublisher)
-        .publishMessage(eq(K8sWatchEvent.newBuilder(expectedClusterDetailsProto)
-                                .mergeFrom(K8sWatchEvent.newBuilder()
-                                               .setType(K8sWatchEvent.Type.TYPE_UPDATED)
-                                               .setResourceRef(K8sObjectReference.newBuilder()
-                                                                   .setKind("ReplicaSet")
-                                                                   .setName("nginx-ingress-controller-589f8749b5")
-                                                                   .setNamespace("ingress-nginx")
-                                                                   .setUid("228947ad-3cba-11ea-886a-4201ac10650a")
-                                                                   .build())
-                                               .setOldResourceVersion("200777582")
-                                               .setNewResourceVersion("200777583")
-                                               .setOldResourceYaml(yamlDump(v1ReplicaSetOld))
-                                               .setNewResourceYaml(yamlDump(v1ReplicaSetNew))
-                                               .setDescription("ReplicaSet updated")
-                                               .build())
-                                .build()),
+        .publishMessage(
+            eq(K8sWatchEvent.newBuilder(expectedClusterDetailsProto)
+                    .mergeFrom(
+                        K8sWatchEvent.newBuilder()
+                            .setType(K8sWatchEvent.Type.TYPE_UPDATED)
+                            .setResourceRef(K8sObjectReference.newBuilder()
+                                                .setKind("ReplicaSet")
+                                                .setName("nginx-ingress-controller-589f8749b5")
+                                                .setNamespace("ingress-nginx")
+                                                .setUid("228947ad-3cba-11ea-886a-4201ac10650a")
+                                                .build())
+                            .setOldResourceVersion("200777582")
+                            .setNewResourceVersion("200777583")
+                            .setOldResourceYaml("apiVersion: apps/v1\n"
+                                + "kind: ReplicaSet\n"
+                                + "metadata: {name: nginx-ingress-controller-589f8749b5, namespace: ingress-nginx, uid: 228947ad-3cba-11ea-886a-4201ac10650a}\n"
+                                + "spec: {replicas: 1}\n")
+                            .setNewResourceYaml("apiVersion: apps/v1\n"
+                                + "kind: ReplicaSet\n"
+                                + "metadata: {name: nginx-ingress-controller-589f8749b5, namespace: ingress-nginx, uid: 228947ad-3cba-11ea-886a-4201ac10650a}\n"
+                                + "spec: {replicas: 3}\n")
+                            .setDescription("ReplicaSet updated")
+                            .build())
+                    .build()),
             any(), anyMapOf(String.class, String.class));
     verifyNoMoreInteractions(eventPublisher);
   }
@@ -256,6 +275,7 @@ public class BaseHandlerTest extends CategoryTest {
     V1ReplicaSetHandler handler = new V1ReplicaSetHandler(eventPublisher, clusterDetails);
     handler.onDelete(new V1ReplicaSetBuilder()
                          .withKind("ReplicaSet")
+                         .withApiVersion("apps/v1")
                          .withNewMetadata()
                          .withName("nginx-ingress-controller-589f8749b5")
                          .withNamespace("ingress-nginx")
@@ -282,6 +302,7 @@ public class BaseHandlerTest extends CategoryTest {
     V1ReplicaSetHandler handler = new V1ReplicaSetHandler(eventPublisher, clusterDetails);
     V1ReplicaSet replicaSet = new V1ReplicaSetBuilder()
                                   .withKind("ReplicaSet")
+                                  .withApiVersion("apps/v1")
                                   .withNewMetadata()
                                   .withName("nginx-ingress-controller-589f8749b5")
                                   .withNamespace("ingress-nginx")
@@ -291,26 +312,25 @@ public class BaseHandlerTest extends CategoryTest {
                                   .build();
     handler.onDelete(replicaSet, false);
     verify(eventPublisher)
-        .publishMessage(eq(K8sWatchEvent.newBuilder(expectedClusterDetailsProto)
-                                .mergeFrom(K8sWatchEvent.newBuilder()
-                                               .setType(K8sWatchEvent.Type.TYPE_DELETED)
-                                               .setResourceRef(K8sObjectReference.newBuilder()
-                                                                   .setKind("ReplicaSet")
-                                                                   .setName("nginx-ingress-controller-589f8749b5")
-                                                                   .setNamespace("ingress-nginx")
-                                                                   .setUid("228947ad-3cba-11ea-886a-4201ac10650a")
-                                                                   .build())
-                                               .setOldResourceVersion("200777582")
-                                               .setOldResourceYaml(yamlDump(replicaSet))
-                                               .setDescription("ReplicaSet deleted")
-                                               .build())
-                                .build()),
+        .publishMessage(
+            eq(K8sWatchEvent.newBuilder(expectedClusterDetailsProto)
+                    .mergeFrom(
+                        K8sWatchEvent.newBuilder()
+                            .setType(K8sWatchEvent.Type.TYPE_DELETED)
+                            .setResourceRef(K8sObjectReference.newBuilder()
+                                                .setKind("ReplicaSet")
+                                                .setName("nginx-ingress-controller-589f8749b5")
+                                                .setNamespace("ingress-nginx")
+                                                .setUid("228947ad-3cba-11ea-886a-4201ac10650a")
+                                                .build())
+                            .setOldResourceVersion("200777582")
+                            .setOldResourceYaml("apiVersion: apps/v1\n"
+                                + "kind: ReplicaSet\n"
+                                + "metadata: {name: nginx-ingress-controller-589f8749b5, namespace: ingress-nginx, uid: 228947ad-3cba-11ea-886a-4201ac10650a}\n")
+                            .setDescription("ReplicaSet deleted")
+                            .build())
+                    .build()),
             any(), anyMapOf(String.class, String.class));
     verifyNoMoreInteractions(eventPublisher);
-  }
-
-  private String yamlDump(Object resource) {
-    Reflect.on(resource).set("status", null);
-    return Yaml.dump(resource);
   }
 }

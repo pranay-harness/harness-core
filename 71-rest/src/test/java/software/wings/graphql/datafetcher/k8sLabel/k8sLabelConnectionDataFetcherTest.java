@@ -10,7 +10,7 @@ import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.SelectedField;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.cluster.K8sWorkloadDao;
+import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -50,24 +50,31 @@ public class k8sLabelConnectionDataFetcherTest extends AbstractDataFetcherTest {
   private long creationTime;
 
   private static final DataFetchingFieldSelectionSet testSelectionSet = new DataFetchingFieldSelectionSet() {
+    @Override
     public MergedSelectionSet get() {
       return MergedSelectionSet.newMergedSelectionSet().build();
     }
+    @Override
     public Map<String, Map<String, Object>> getArguments() {
       return Collections.emptyMap();
     }
+    @Override
     public Map<String, GraphQLFieldDefinition> getDefinitions() {
       return Collections.emptyMap();
     }
+    @Override
     public boolean contains(String fieldGlobPattern) {
       return false;
     }
+    @Override
     public SelectedField getField(String fieldName) {
       return null;
     }
+    @Override
     public List<SelectedField> getFields() {
       return Collections.emptyList();
     }
+    @Override
     public List<SelectedField> getFields(String fieldGlobPattern) {
       return Collections.emptyList();
     }

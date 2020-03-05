@@ -2,7 +2,6 @@ package io.harness.batch.processing.processor;
 
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -15,6 +14,7 @@ import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
+import io.harness.batch.processing.processor.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
@@ -36,7 +36,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.beans.instance.HarnessServiceInfo;
-import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -49,9 +48,10 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   @InjectMocks private K8sPodEventProcessor k8sPodEventProcessor;
   @InjectMocks private K8sPodInfoProcessor k8sPodInfoProcessor;
   @Mock private InstanceDataService instanceDataService;
-  @Mock private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Mock private HPersistence hPersistence;
   @Mock private WorkloadRepository workloadRepository;
+
+  @Mock private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
 
   private static final String POD_UID = "pod_uid";
   private static final String POD_NAME = "pod_name";
@@ -111,9 +111,9 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     when(instanceDataService.fetchInstanceDataWithName(
              ACCOUNT_ID, CLUSTER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
         .thenReturn(instanceData);
-    when(cloudToHarnessMappingService.getHarnessServiceInfo(any())).thenReturn(harnessServiceInfo());
     Map<String, String> label = new HashMap<>();
     label.put(K8sCCMConstants.RELEASE_NAME, K8sCCMConstants.RELEASE_NAME);
+    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, label)).thenReturn(harnessServiceInfo());
     Map<String, Quantity> requestQuantity = new HashMap<>();
     requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M"));
     requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M"));
@@ -147,9 +147,9 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     when(instanceDataService.fetchInstanceDataWithName(
              ACCOUNT_ID, CLUSTER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
         .thenReturn(instanceData);
-    when(cloudToHarnessMappingService.getHarnessServiceInfo(any())).thenReturn(harnessServiceInfo());
     Map<String, String> label = new HashMap<>();
     label.put(K8sCCMConstants.RELEASE_NAME, K8sCCMConstants.RELEASE_NAME);
+    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, label)).thenReturn(harnessServiceInfo());
     Map<String, Quantity> requestQuantity = new HashMap<>();
     requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M"));
     requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M"));
@@ -175,22 +175,14 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     verify(workloadRepository).savePodWorkload(ACCOUNT_ID, (PodInfo) k8sPodInfoMessage.getMessage());
   }
 
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void testGetHarnessServiceInfo() {
-    HarnessServiceInfo harnessServiceInfo = k8sPodInfoProcessor.getHarnessServiceInfo(ACCOUNT_ID, new HashMap<>());
-    assertThat(harnessServiceInfo).isNull();
-  }
-
   private InstanceData getNodeInstantData() {
     Map<String, String> nodeMetaData = new HashMap<>();
     nodeMetaData.put(InstanceMetaDataConstants.REGION, InstanceMetaDataConstants.REGION);
     nodeMetaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
     nodeMetaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
     io.harness.batch.processing.ccm.Resource instanceResource = io.harness.batch.processing.ccm.Resource.builder()
-                                                                    .cpuUnits(Double.valueOf(CPU_AMOUNT))
-                                                                    .memoryMb(Double.valueOf(MEMORY_AMOUNT))
+                                                                    .cpuUnits((double) CPU_AMOUNT)
+                                                                    .memoryMb((double) MEMORY_AMOUNT)
                                                                     .build();
     return InstanceData.builder()
         .instanceId(NODE_NAME)

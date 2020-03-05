@@ -13,4 +13,9 @@ public class V1DaemonSetHandler extends BaseHandler<V1DaemonSet> {
   String getKind() {
     return "DaemonSet";
   }
+
+  @Override
+  String getApiVersion() {
+    return "apps/v1";
+  }
 }

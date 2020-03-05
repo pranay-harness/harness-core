@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.rule.Owner;
 import org.junit.Before;

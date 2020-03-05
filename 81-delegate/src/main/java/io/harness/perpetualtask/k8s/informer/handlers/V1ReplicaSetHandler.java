@@ -13,4 +13,9 @@ public class V1ReplicaSetHandler extends BaseHandler<V1ReplicaSet> {
   String getKind() {
     return "ReplicaSet";
   }
+
+  @Override
+  String getApiVersion() {
+    return "apps/v1";
+  }
 }

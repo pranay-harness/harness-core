@@ -13,4 +13,9 @@ public class V1DeploymentHandler extends BaseHandler<V1Deployment> {
   String getKind() {
     return "Deployment";
   }
+
+  @Override
+  String getApiVersion() {
+    return "apps/v1";
+  }
 }
