@@ -33,10 +33,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.rule.Owner;
+import lombok.Builder;
+import lombok.Value;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -44,6 +47,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
+import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -193,119 +197,110 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
   }
 
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldAssignTaskWithAllMatchingTags() {
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .tags(ImmutableList.of("a", "b"))
-            .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
-    Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
-                            .includeScopes(emptyList())
-                            .excludeScopes(emptyList())
-                            .tags(ImmutableList.of("a", "b", "c"))
-                            .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+  @Value
+  @Builder
+  public static class TagTestData {
+    List<String> taskTags;
+    List<String> delegateTags;
+    boolean assignable;
   }
 
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
-  public void shouldNotAssignTaskWithPartialMatchingTags() {
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .tags(ImmutableList.of("a", "b"))
-            .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+  public void assignByTags() {
+    List<TagTestData> tests =
+        ImmutableList.<TagTestData>builder()
+            .add(TagTestData.builder().taskTags(null).delegateTags(null).assignable(true).build())
+            .add(TagTestData.builder().taskTags(null).delegateTags(emptyList()).assignable(true).build())
+            .add(TagTestData.builder().taskTags(emptyList()).delegateTags(null).assignable(true).build())
+            .add(TagTestData.builder().taskTags(emptyList()).delegateTags(emptyList()).assignable(true).build())
+            .add(TagTestData.builder().taskTags(ImmutableList.of("a")).delegateTags(null).assignable(false).build())
+            .add(TagTestData.builder()
+                     .taskTags(ImmutableList.of("a"))
+                     .delegateTags(emptyList())
+                     .assignable(false)
+                     .build())
+            .add(TagTestData.builder().taskTags(null).delegateTags(ImmutableList.of("a")).assignable(true).build())
+            .add(TagTestData.builder()
+                     .taskTags(emptyList())
+                     .delegateTags(ImmutableList.of("a"))
+                     .assignable(true)
+                     .build())
+            .add(TagTestData.builder()
+                     .taskTags(ImmutableList.of("a", "b"))
+                     .delegateTags(ImmutableList.of("a", "c", "b"))
+                     .assignable(true)
+                     .build())
+            .add(TagTestData.builder()
+                     .taskTags(ImmutableList.of("a", "b", "c"))
+                     .delegateTags(ImmutableList.of("a", "b"))
+                     .assignable(false)
+                     .build())
+            .add(TagTestData.builder()
+                     .taskTags(ImmutableList.of("a", "b"))
+                     .delegateTags(ImmutableList.of("c", "a"))
+                     .assignable(false)
+                     .build())
+            .add(TagTestData.builder()
+                     .taskTags(ImmutableList.of("a", "b"))
+                     .delegateTags(ImmutableList.of("c", "d"))
+                     .assignable(false)
+                     .build())
+            .add(TagTestData.builder()
+                     .taskTags(ImmutableList.of("a ", " B "))
+                     .delegateTags(ImmutableList.of("A", " b"))
+                     .assignable(true)
+                     .build())
+            .add(TagTestData.builder()
+                     .taskTags(ImmutableList.of("a-b"))
+                     .delegateTags(ImmutableList.of("a", " b"))
+                     .assignable(false)
+                     .build())
+            .add(TagTestData.builder()
+                     .taskTags(ImmutableList.of("a"))
+                     .delegateTags(ImmutableList.of("a-b"))
+                     .assignable(false)
+                     .build())
+            .add(TagTestData.builder()
+                     .taskTags(ImmutableList.of("", " "))
+                     .delegateTags(ImmutableList.of("a"))
+                     .assignable(true)
+                     .build())
             .build();
-    Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
-                            .includeScopes(emptyList())
-                            .excludeScopes(emptyList())
-                            .tags(ImmutableList.of("b", "c"))
-                            .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
-  }
 
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldNotAssignTaskWithNoMatchingTags() {
-    DelegateTask delegateTask =
+    DelegateTaskBuilder delegateTaskBuilder =
         DelegateTask.builder()
             .async(true)
             .accountId(ACCOUNT_ID)
             .appId(APP_ID)
-            .tags(ImmutableList.of("a", "b"))
-            .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
-    Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
-                            .includeScopes(emptyList())
-                            .excludeScopes(emptyList())
-                            .tags(ImmutableList.of("c", "d"))
-                            .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
-  }
+            .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
 
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldAssignTaskWithEmptyDelegateTaskTags() {
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .tags(null)
-            .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
-    Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
-                            .includeScopes(emptyList())
-                            .excludeScopes(emptyList())
-                            .tags(ImmutableList.of("a", "b", "c"))
-                            .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
-  }
+    DelegateBuilder delegateBuilder = Delegate.builder()
+                                          .accountId(ACCOUNT_ID)
+                                          .uuid(DELEGATE_ID)
+                                          .includeScopes(emptyList())
+                                          .excludeScopes(emptyList());
 
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldNotAssignTaskWithEmptyDelegateTags() {
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .tags(ImmutableList.of("a", "b"))
-            .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
-    Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
-                            .includeScopes(emptyList())
-                            .excludeScopes(emptyList())
-                            .tags(null)
-                            .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
+    for (TagTestData test : tests) {
+      Delegate delegate = delegateBuilder.tags(test.getDelegateTags()).build();
+      when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+
+      DelegateTask delegateTask = delegateTaskBuilder.tags(test.getTaskTags()).build();
+      assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isEqualTo(test.isAssignable());
+    }
+
+    delegateTaskBuilder.envId(ENV_ID);
+    delegateBuilder.excludeScopes(
+        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()));
+
+    for (TagTestData test : tests) {
+      Delegate delegate = delegateBuilder.tags(test.getDelegateTags()).build();
+      when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+
+      DelegateTask delegateTask = delegateTaskBuilder.tags(test.getTaskTags()).build();
+      assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
+    }
   }
 
   @Test
