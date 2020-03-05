@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml;
 
 import static java.util.function.Function.identity;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.beans.Base.ID_KEY;
+import static software.wings.beans.Base.APP_ID_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -101,8 +101,10 @@ public class GitSyncServiceImpl implements GitSyncService {
     final List<Application> applicationsWithYamlGitConfigEnabled =
         wingsPersistence.createQuery(Application.class)
             .filter(ACCOUNT_ID_KEY, accountId)
-            .field(ID_KEY)
-            .in(yamlGitConfigList.stream().map(yamlGitConfig -> yamlGitConfig.getAppId()).collect(Collectors.toList()))
+            .field(APP_ID_KEY)
+            .in(yamlGitConfigList.stream()
+                    .map(yamlGitConfig -> yamlGitConfig.getEntityId())
+                    .collect(Collectors.toList()))
             .asList();
 
     if (EmptyPredicate.isEmpty(applicationsWithYamlGitConfigEnabled)) {
@@ -148,12 +150,12 @@ public class GitSyncServiceImpl implements GitSyncService {
                                   .build();
                             })
                             .collect(Collectors.toList()));
-    }
-    // files successfully processed
-    if (EmptyPredicate.isNotEmpty(changeList)) {
-      activities.addAll(changeList.stream()
-                            .map(change -> buildBaseGitFileActivity(change).status(Status.SUCCESS).build())
-                            .collect(Collectors.toList()));
+      // files successfully processed
+      if (EmptyPredicate.isNotEmpty(changeList)) {
+        activities.addAll(changeList.stream()
+                              .map(change -> buildBaseGitFileActivity(change).status(Status.SUCCESS).build())
+                              .collect(Collectors.toList()));
+      }
     }
     if (EmptyPredicate.isNotEmpty(activities)) {
       wingsPersistence.save(activities);
