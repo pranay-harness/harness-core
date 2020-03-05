@@ -169,10 +169,12 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -1566,7 +1568,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private Optional<LogSanitizer> getLogSanitizer(@NotNull TaskData taskData) {
     String activityId = null;
-    Map<String, String> secrets = new HashMap<>();
+    Set<String> secrets = new HashSet<>();
 
     // TODO: This gets secrets for Shell Script, Shell Script Provision, and Command only
     // When secret decryption is moved to delegate for each task then those secrets can be used instead.
@@ -1576,7 +1578,7 @@ public class DelegateServiceImpl implements DelegateService {
         // Shell Script
         ShellScriptParameters shellScriptParameters = (ShellScriptParameters) parameters[0];
         activityId = shellScriptParameters.getActivityId();
-        secrets = secretMapFromMaskedVariables(
+        secrets = secretsFromMaskedVariables(
             shellScriptParameters.getServiceVariables(), shellScriptParameters.getSafeDisplayServiceVariables());
       } else if (parameters[0] instanceof ShellScriptProvisionParameters) {
         // Shell Script Provision
@@ -1586,8 +1588,7 @@ public class DelegateServiceImpl implements DelegateService {
         if (isNotEmpty(encryptedVariables)) {
           for (Entry<String, EncryptedDataDetail> encryptedVariable : encryptedVariables.entrySet()) {
             try {
-              secrets.put(encryptedVariable.getKey(),
-                  String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue())));
+              secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue())));
             } catch (IOException e) {
               throw new WingsException("Error occurred while decrypting encrypted variables", e);
             }
@@ -1600,7 +1601,7 @@ public class DelegateServiceImpl implements DelegateService {
         // Command
         CommandExecutionContext context = (CommandExecutionContext) parameters[1];
         activityId = context.getActivityId();
-        secrets = secretMapFromMaskedVariables(context.getServiceVariables(), context.getSafeDisplayServiceVariables());
+        secrets = secretsFromMaskedVariables(context.getServiceVariables(), context.getSafeDisplayServiceVariables());
       }
     }
     return isNotBlank(activityId) && isNotEmpty(secrets) ? Optional.of(new LogSanitizer(activityId, secrets))
@@ -1608,19 +1609,19 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   /**
-   * Build secret map from two maps. Both contain all variables, secret and plain.
+   * Create set of secrets from two maps. Both contain all variables, secret and plain.
    * The first does not mask secrets while the second does
    * @param serviceVariables contains all variables, secret and plain, unmasked
    * @param safeDisplayServiceVariables contains all variables with secret ones masked
-   * @return map of only secret variables, unmasked
+   * @return set of secret variable values, unmasked
    */
-  private static Map<String, String> secretMapFromMaskedVariables(
+  private static Set<String> secretsFromMaskedVariables(
       Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables) {
-    Map<String, String> secrets = new HashMap<>();
+    Set<String> secrets = new HashSet<>();
     if (isNotEmpty(serviceVariables) && isNotEmpty(safeDisplayServiceVariables)) {
       for (Map.Entry<String, String> entry : safeDisplayServiceVariables.entrySet()) {
         if (SECRET_MASK.equals(entry.getValue())) {
-          secrets.put(entry.getKey(), serviceVariables.get(entry.getKey()));
+          secrets.add(serviceVariables.get(entry.getKey()));
         }
       }
     }
