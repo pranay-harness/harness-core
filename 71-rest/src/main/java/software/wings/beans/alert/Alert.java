@@ -3,6 +3,7 @@ package software.wings.beans.alert;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -32,15 +33,18 @@ import javax.validation.constraints.NotNull;
  */
 @FieldNameConstants(innerTypeName = "AlertKeys")
 @Indexes({
-  @Index(fields = {
-    @Field("accountId"), @Field("appId"), @Field("type"), @Field("status")
-  }, options = @IndexOptions(name = "accountAppTypeStatusIdx"))
+  @Index(fields = { @Field("accountId")
+                    , @Field("appId"), @Field("type"), @Field("status") },
+      options = @IndexOptions(name = "accountAppTypeStatusIdx"))
+  ,
+      @Index(fields = { @Field("type")
+                        , @Field("createdAt") }, options = @IndexOptions(name = "createdAtTypeIndex"))
 })
 @Data
 @Builder
 @Entity(value = "alerts")
 @HarnessEntity(exportable = false)
-public class Alert implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class Alert implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @Indexed @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private long createdAt;
@@ -61,4 +65,22 @@ public class Alert implements PersistentEntity, UuidAware, CreatedAtAware, Updat
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   @Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(14).toInstant());
+
+  @Indexed private Long cvCleanUpIteration;
+
+  @Override
+  public void updateNextIteration(String fieldName, Long nextIteration) {
+    if (AlertKeys.cvCleanUpIteration.equals(fieldName)) {
+      this.cvCleanUpIteration = nextIteration;
+      return;
+    }
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    if (AlertKeys.cvCleanUpIteration.equals(fieldName)) {
+      return this.cvCleanUpIteration;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
 }
