@@ -117,7 +117,6 @@ import migrations.all.SettingAttributesCategoryMigration;
 import migrations.all.StackdriverServiceGuardMetricsGroupingMigration;
 import migrations.all.SweepingPhaseMigration;
 import migrations.all.SweepingStateMigration;
-import migrations.all.SyncNewFolderForConfigFiles;
 import migrations.all.SystemTemplateGalleryMigration;
 import migrations.all.TimeSeriesAnalysisRecordsMigration;
 import migrations.all.TimeSeriesMLAnalysisCompressionSaveMigration;
@@ -313,7 +312,7 @@ public class MigrationList {
         .add(Pair.of(294, AmiDeploymentTypeMigration.class))
         .add(Pair.of(295, BaseMigration.class))
         .add(Pair.of(296, GitSyncErrorGitDetailsMigration.class))
-        .add(Pair.of(297, SyncNewFolderForConfigFiles.class))
+        .add(Pair.of(297, BaseMigration.class))
         .build();
   }
 }
