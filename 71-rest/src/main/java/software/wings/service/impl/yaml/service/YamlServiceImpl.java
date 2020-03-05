@@ -133,6 +133,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
@@ -220,12 +221,11 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   public List<ChangeContext> processChangeSet(List<Change> changeList, boolean isGitSyncPath)
       throws YamlProcessingException {
     // e.g. remove files outside of setup folder. (checking filePath)
-    List<Change> invalidChangeList = changeList;
+    List<Change> changeListCopy = new ArrayList<>(changeList);
     changeList = filterInvalidFilePaths(changeList);
-    invalidChangeList.removeAll(changeList);
-    if (EmptyPredicate.isNotEmpty(invalidChangeList)) {
+    if (EmptyPredicate.isEmpty(changeList)) {
       gitSyncService.logFileActivityAndGenerateProcessingSummary(
-          invalidChangeList, null, GitFileActivity.Status.SKIPPED, "Invalid file path");
+          changeListCopy, null, GitFileActivity.Status.SKIPPED, "Invalid file path");
     }
 
     // compute the order of processing
@@ -242,7 +242,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
             .putAll(emptyIfNull(processingErrorMap))
             .putAll(emptyIfNull(validationResponseMap.errorMsgMap))
             .build();
-    gitSyncService.logFileActivityAndGenerateProcessingSummary(changeList, failedYamlFileChangeMap, null, null);
+    gitSyncService.logFileActivityAndGenerateProcessingSummary(changeListCopy, failedYamlFileChangeMap, null, null);
     ensureNoError(failedYamlFileChangeMap);
 
     logger.info(GIT_YAML_LOG_PREFIX + "Processed all the changes from GIT without any error.");
