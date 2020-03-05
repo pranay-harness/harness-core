@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
  */
 @Slf4j
 public class MessageServiceImpl implements MessageService {
-  private static final String ROOT = "msg/";
+  private static final String FOUNDATION = "msg/";
   private static final String IO = "io/";
   private static final String DATA = "data/";
   @VisibleForTesting static final String IN = "IN";
@@ -56,6 +56,7 @@ public class MessageServiceImpl implements MessageService {
   @VisibleForTesting static final String PRIMARY_DELIMITER = "|-|";
   @VisibleForTesting static final String SECONDARY_DELIMITER = "::";
 
+  private final String root;
   private final Clock clock;
   private final MessengerType messengerType;
   private final String processId;
@@ -65,7 +66,8 @@ public class MessageServiceImpl implements MessageService {
   private final Map<File, BlockingQueue<Message>> messageQueues = new HashMap<>();
   private final AtomicBoolean running = new AtomicBoolean(true);
 
-  public MessageServiceImpl(Clock clock, MessengerType messengerType, String processId) {
+  public MessageServiceImpl(String root, Clock clock, MessengerType messengerType, String processId) {
+    this.root = root;
     this.clock = clock;
     this.messengerType = messengerType;
     this.processId = processId;
@@ -303,7 +305,7 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public List<String> listChannels(MessengerType type) {
-    File channelDirectory = new File(ROOT + IO + type.name().toLowerCase() + "/");
+    File channelDirectory = new File(root + FOUNDATION + IO + type.name().toLowerCase() + "/");
     try {
       FileUtils.forceMkdir(channelDirectory);
     } catch (Exception e) {
@@ -422,7 +424,7 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public List<String> listDataNames(@Nullable String prefix) {
-    File dataDirectory = new File(ROOT + DATA);
+    File dataDirectory = new File(root + FOUNDATION + DATA);
     try {
       FileUtils.forceMkdir(dataDirectory);
     } catch (Exception e) {
@@ -497,13 +499,13 @@ public class MessageServiceImpl implements MessageService {
   }
 
   private File getMessageChannel(MessengerType type, String id) throws IOException {
-    File channel = new File(ROOT + IO + type.name().toLowerCase() + "/" + id);
+    File channel = new File(root + FOUNDATION + IO + type.name().toLowerCase() + "/" + id);
     FileUtils.forceMkdirParent(channel);
     return channel;
   }
 
   private File getDataFile(String name) throws IOException {
-    File file = new File(ROOT + DATA + name);
+    File file = new File(root + FOUNDATION + DATA + name);
     FileUtils.forceMkdirParent(file);
     return file;
   }

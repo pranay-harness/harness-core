@@ -47,7 +47,7 @@ public class WatcherModule extends DependencyModule {
 
     bind(MessageService.class)
         .toInstance(
-            new MessageServiceImpl(Clock.systemUTC(), MessengerType.WATCHER, WatcherApplication.getProcessId()));
+            new MessageServiceImpl("", Clock.systemUTC(), MessengerType.WATCHER, WatcherApplication.getProcessId()));
     bind(Clock.class).toInstance(Clock.systemUTC());
   }
 

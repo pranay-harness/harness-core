@@ -419,7 +419,7 @@ public class DelegateModule extends DependencyModule {
     bind(ContainerDeploymentDelegateHelper.class);
     bind(MessageService.class)
         .toInstance(
-            new MessageServiceImpl(Clock.systemUTC(), MessengerType.DELEGATE, DelegateApplication.getProcessId()));
+            new MessageServiceImpl("", Clock.systemUTC(), MessengerType.DELEGATE, DelegateApplication.getProcessId()));
     bind(PcfClient.class).to(PcfClientImpl.class);
     bind(PcfDeploymentManager.class).to(PcfDeploymentManagerImpl.class);
     bind(AwsEcrHelperServiceDelegate.class).to(AwsEcrHelperServiceDelegateImpl.class);
