@@ -10,7 +10,8 @@ public enum AccountMigration {
   TRIAL_TO_ESSENTIALS(AccountType.TRIAL, AccountType.ESSENTIALS, false),
   TRIAL_TO_COMMUNITY(AccountType.TRIAL, AccountType.COMMUNITY, true),
   COMMUNITY_TO_PAID(AccountType.COMMUNITY, AccountType.PAID, false),
-  COMMUNITY_TO_ESSENTIALS(AccountType.COMMUNITY, AccountType.ESSENTIALS, false);
+  COMMUNITY_TO_ESSENTIALS(AccountType.COMMUNITY, AccountType.ESSENTIALS, false),
+  COMMUNITY_TO_TRIAL(AccountType.COMMUNITY, AccountType.TRIAL, false);
 
   private final String from;
   private final String to;
