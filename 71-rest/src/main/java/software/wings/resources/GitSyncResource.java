@@ -74,8 +74,7 @@ public class GitSyncResource {
   @GET
   @Path("activity")
   public RestResponse<PageResponse<GitFileActivity>> listGitFileActivity(
-      @BeanParam PageRequest<GitFileActivity> pageRequest, @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("filePath") String filePath) {
+      @BeanParam PageRequest<GitFileActivity> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     pageRequest.addFilter(GitFileActivityKeys.accountId, SearchFilter.Operator.EQ, accountId);
     PageResponse<GitFileActivity> pageResponse = gitSyncService.fetchGitSyncActivity(pageRequest);
     return new RestResponse<>(pageResponse);
