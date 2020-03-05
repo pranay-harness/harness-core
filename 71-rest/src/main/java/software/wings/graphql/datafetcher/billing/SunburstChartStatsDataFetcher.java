@@ -9,7 +9,7 @@ import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.Account;
-import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
+import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndLimit;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
@@ -38,12 +38,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.StringJoiner;
 
 @Slf4j
-public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithAggregationList<QLCCMAggregationFunction,
-    QLBillingDataFilter, QLCCMGroupBy, QLBillingSortCriteria> {
+public class SunburstChartStatsDataFetcher
+    extends AbstractStatsDataFetcherWithAggregationListAndLimit<QLCCMAggregationFunction, QLBillingDataFilter,
+        QLCCMGroupBy, QLBillingSortCriteria> {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject QLBillingStatsHelper billingStatsHelper;
@@ -53,6 +55,7 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
   private static int idleCostBaseline = 30;
   private static int unallocatedCostBaseline = 5;
   private static String unsupportedType = "UnsupportedType ";
+  private static final String OTHERS = "Others";
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -388,8 +391,10 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
       String id = parentIds.getKey();
       String clusterType = parentIds.getValue();
       QLSunburstChartDataPointBuilder dataPointBuilder = QLSunburstChartDataPoint.builder();
+      QLSunburstGridDataPoint metadata = sunburstGridDataPointMap.get(id);
       dataPointBuilder.id(id);
-      dataPointBuilder.metadata(sunburstGridDataPointMap.get(id));
+      dataPointBuilder.metadata(metadata);
+      dataPointBuilder.value(metadata.getValue());
       dataPointBuilder.name(billingStatsHelper.getEntityName(parentField, id));
       dataPointBuilder.type(parentField.getFieldName());
       dataPointBuilder.parent(ROOT_PARENT_ID);
@@ -504,8 +509,75 @@ public class SunburstChartStatsDataFetcher extends AbstractStatsDataFetcherWithA
 
   @Override
   protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList,
-      List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingSortCriteria> sort, QLData qlData) {
-    return null;
+      List<QLCCMAggregationFunction> aggregateFunction, QLData qlData, Integer limit) {
+    QLSunburstChartData data = (QLSunburstChartData) qlData;
+    ValueComparator valueComparator = new ValueComparator();
+    List<QLSunburstChartDataPoint> limitProcessedDataPoints = new ArrayList<>();
+    PriorityQueue<QLSunburstChartDataPoint> pqParentLevelData = new PriorityQueue<>(valueComparator);
+    Map<String, PriorityQueue<QLSunburstChartDataPoint>> mapOfParentChildrenEntities = new HashMap<>();
+    for (QLSunburstChartDataPoint dataPoint : data.getData()) {
+      // Add Root Parent
+      if (dataPoint.getId().equals(ROOT_PARENT_ID)) {
+        limitProcessedDataPoints.add(dataPoint);
+      } else if (dataPoint.getParent().equals(ROOT_PARENT_ID)) {
+        // Find Top Parent Level Entries
+        pqParentLevelData.add(dataPoint);
+      } else {
+        // Collect ParentId to Top Contributors
+        String parentId = dataPoint.getParent();
+        PriorityQueue<QLSunburstChartDataPoint> listOfChildren = new PriorityQueue<>(valueComparator);
+        PriorityQueue<QLSunburstChartDataPoint> mapValue = mapOfParentChildrenEntities.get(parentId);
+        if (mapValue != null) {
+          listOfChildren.addAll(mapValue);
+        }
+        listOfChildren.add(dataPoint);
+        mapOfParentChildrenEntities.put(parentId, listOfChildren);
+      }
+    }
+    List<String> retainedParents = processDataPoints(pqParentLevelData, limitProcessedDataPoints, limit);
+    List<String> retainedChildren = new ArrayList<>();
+    for (String parentId : retainedParents) {
+      List<String> retainedList =
+          processDataPoints(mapOfParentChildrenEntities.get(parentId), limitProcessedDataPoints, limit);
+      retainedChildren.addAll(retainedList);
+    }
+    for (String parentId : retainedChildren) {
+      processDataPoints(mapOfParentChildrenEntities.get(parentId), limitProcessedDataPoints, limit);
+    }
+    return QLSunburstChartData.builder().data(limitProcessedDataPoints).gridData(data.getGridData()).build();
+  }
+
+  List<String> processDataPoints(PriorityQueue<QLSunburstChartDataPoint> pqParentLevelData,
+      List<QLSunburstChartDataPoint> limitProcessedDataPoints, Integer limit) {
+    List<String> retainedElements = new ArrayList<>();
+    QLSunburstChartDataPointBuilder othersDataPoint = QLSunburstChartDataPoint.builder();
+    Double othersDataPointValue = 0.0;
+    boolean processOthersDataPoint = true;
+    int parentCounter = 0;
+    while (!pqParentLevelData.isEmpty()) {
+      if (parentCounter++ < limit) {
+        QLSunburstChartDataPoint dataPoint = pqParentLevelData.poll();
+        limitProcessedDataPoints.add(dataPoint);
+        retainedElements.add(dataPoint.getId());
+      } else {
+        QLSunburstChartDataPoint dataPoint = pqParentLevelData.poll();
+        if (processOthersDataPoint) {
+          String otherDataPointParent = dataPoint.getParent();
+          othersDataPoint.parent(otherDataPointParent);
+          othersDataPoint.id(otherDataPointParent + "_" + OTHERS);
+          othersDataPoint.name(OTHERS);
+          othersDataPoint.type(dataPoint.getType());
+          othersDataPoint.clusterType(dataPoint.getClusterType());
+          othersDataPoint.instanceType(dataPoint.getInstanceType());
+          processOthersDataPoint = false;
+        }
+        othersDataPointValue += dataPoint.getValue().doubleValue();
+      }
+    }
+    if (!processOthersDataPoint) {
+      limitProcessedDataPoints.add(othersDataPoint.value(othersDataPointValue).build());
+    }
+    return retainedElements;
   }
 
   @Override

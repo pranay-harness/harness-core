@@ -40,7 +40,9 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Mock TimeScaleDBService timeScaleDBService;
@@ -50,6 +52,8 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
 
   private final BigDecimal TOTAL_COST = new BigDecimal("100.0");
   private final BigDecimal IDLE_COST = new BigDecimal("50.0");
+  private final BigDecimal METADATA_VALUE = new BigDecimal("50.0");
+  private final Map<String, QLSunburstGridDataPoint> gridDataPointMap = new HashMap<>();
   private final String ROOT_PARENT_ID = "ROOT_PARENT_ID";
   private final String ROOT_PARENT = "";
   private long END_TIME = 1571509800000l;
@@ -72,6 +76,9 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
     when(mockStatement.executeQuery(anyString())).thenReturn(resultSet);
     resetValues();
     mockResultSet();
+    QLSunburstGridDataPoint metadata = QLSunburstGridDataPoint.builder().value(METADATA_VALUE).build();
+    gridDataPointMap.put(APP1_ID_ACCOUNT1, metadata);
+    gridDataPointMap.put(CLUSTER1_ID, metadata);
 
     aggregateFunction = Arrays.asList(makeBillingAmtAggregation(), makeIdleCostAggregation());
     sort = Arrays.asList(makeDescTotalCostSort());
@@ -99,7 +106,7 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
         makeWorkloadNameEntityGroupBy(), makeClusterTypeEntityGroupBy());
 
     List<QLSunburstChartDataPoint> sunburstChartData = sunburstChartStatsDataFetcher.getSunburstChartData(
-        ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, true, Collections.emptyMap());
+        ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, true, gridDataPointMap);
     assertThat(sunburstChartData.get(0).getId()).isEqualTo(ROOT_PARENT_ID);
     assertThat(sunburstChartData.get(1).getId())
         .isEqualTo(CLUSTER1_ID + ":" + NAMESPACE1 + ":" + WORKLOAD_NAME_ACCOUNT1);
@@ -158,7 +165,7 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
         Arrays.asList(makeApplicationGroupBy(), makeEnvironmentGroupBy(), makeServiceGroupBy());
 
     List<QLSunburstChartDataPoint> sunburstChartData = sunburstChartStatsDataFetcher.getSunburstChartData(
-        ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, true, Collections.emptyMap());
+        ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, true, gridDataPointMap);
     assertThat(sunburstChartData.get(0).getId()).isEqualTo(ROOT_PARENT_ID);
     assertThat(sunburstChartData.get(0).getParent()).isEqualTo(ROOT_PARENT);
     assertThat(sunburstChartData.get(1).getId())
@@ -171,6 +178,20 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(sunburstChartData.get(3).getId()).isEqualTo(APP1_ID_ACCOUNT1);
     assertThat(sunburstChartData.get(3).getName()).isEqualTo(APP1_ID_ACCOUNT1);
     assertThat(sunburstChartData.get(3).getParent()).isEqualTo(ROOT_PARENT_ID);
+
+    QLSunburstChartData postFetchData =
+        (QLSunburstChartData) sunburstChartStatsDataFetcher.postFetch(ACCOUNT1_ID, Collections.EMPTY_LIST,
+            Collections.EMPTY_LIST, QLSunburstChartData.builder().data(sunburstChartData).build(), 1);
+    assertThat(postFetchData.getData().get(0).getId()).isEqualTo(ROOT_PARENT_ID);
+    assertThat(postFetchData.getData().get(1).getId()).isEqualTo(APP1_ID_ACCOUNT1);
+    assertThat(postFetchData.getData().get(2).getId()).isEqualTo(APP1_ID_ACCOUNT1 + ":" + ENV1_ID_APP1_ACCOUNT1);
+    assertThat(postFetchData.getData().get(3).getId())
+        .isEqualTo(APP1_ID_ACCOUNT1 + ":" + ENV1_ID_APP1_ACCOUNT1 + ":" + SERVICE1_ID_APP1_ACCOUNT1);
+
+    QLSunburstChartData postFetchDataWithOtherPoints =
+        (QLSunburstChartData) sunburstChartStatsDataFetcher.postFetch(ACCOUNT1_ID, Collections.EMPTY_LIST,
+            Collections.EMPTY_LIST, QLSunburstChartData.builder().data(sunburstChartData).build(), 0);
+    assertThat(postFetchDataWithOtherPoints.getData().get(0).getId()).isEqualTo(ROOT_PARENT_ID);
   }
 
   @Test
