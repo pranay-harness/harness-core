@@ -58,15 +58,21 @@ public class MessageServiceTest extends CategoryTest {
 
     Clock clock = mock(Clock.class);
     when(clock.millis()).thenReturn(100L);
-    messageService = new MessageServiceImpl(clock, MESSENGER_TYPE, processId);
 
-    messageFile = new File("msg/io/delegate/" + processId);
-    otherMessageFile = new File("msg/io/watcher/" + otherProcessId);
-    dataFile1 = new File("msg/data/" + data1);
-    dataFile2 = new File("msg/data/" + data2);
+    String tempDir = System.getProperty("java.io.tmpdir");
+
+    messageService = new MessageServiceImpl(tempDir, clock, MESSENGER_TYPE, processId);
+
+    messageFile = new File(tempDir + "msg/io/delegate/" + processId, "");
     messageFile.deleteOnExit();
+
+    otherMessageFile = new File(tempDir + "msg/io/watcher/" + otherProcessId);
     otherMessageFile.deleteOnExit();
+
+    dataFile1 = new File(tempDir + "msg/data/" + data1);
     dataFile1.deleteOnExit();
+
+    dataFile2 = new File(tempDir + "msg/data/" + data2);
     dataFile2.deleteOnExit();
   }
 
