@@ -86,7 +86,7 @@ public class VerificationManagerClientHelper {
                 -> logger.error("Error while calling manager for call {} after all retries", call.request().toString(),
                     event.getFailure()));
     try {
-      return Failsafe.with(retryPolicy).get(() -> SafeHttpCall.execute(call));
+      return Failsafe.with(retryPolicy).get(() -> SafeHttpCall.execute(call.clone()));
     } catch (Exception e) {
       throw new VerificationOperationException(ErrorCode.RETRY_FAILED,
           "Exception occurred while calling manager from verification service. Exception: " + e.getMessage());
