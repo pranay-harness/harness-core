@@ -3,6 +3,7 @@ package io.harness.filesystem;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.System.currentTimeMillis;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.SYNC;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
@@ -132,30 +133,56 @@ public class FileIo {
 
   public static boolean acquireLock(File file, Duration wait) {
     File lockFile = new File(file.getPath() + ".lock");
-    final long finishAt = (lockFile.exists() ? lockFile.lastModified() : System.currentTimeMillis()) + wait.toMillis();
-    boolean wasInterrupted = false;
+
+    long startTime = currentTimeMillis();
+
     try {
-      while (lockFile.exists()) {
-        final long remaining = finishAt - System.currentTimeMillis();
-        if (remaining < 0) {
+      while (!atomicallyCreateNewFile(lockFile)) {
+        long modified = lockFile.lastModified();
+        // If the file was deleted and we know it was there because the createNewFile failed, lets use current time.
+        // This way we will give a complete cycle for the lock. If no other competes for it we will get it from the
+        // next attempt and it wouldn't matter.
+        if (modified == 0) {
+          modified = currentTimeMillis();
+        }
+
+        // When we should finish waiting the other process to release the file.
+        long finishAt = Math.max(startTime, modified) + wait.toMillis();
+
+        // How much time remain
+        long remaining = finishAt - currentTimeMillis();
+
+        // If we have waited too long after the last lock we should just grab it.
+        // Probably the other process died without cleaning the lock file.
+        if (remaining <= 0) {
           break;
         }
+
         try {
           Thread.sleep(Math.min(100, remaining));
         } catch (InterruptedException e) {
-          wasInterrupted = true;
+          Thread.currentThread().interrupt();
           return false;
         }
       }
-      FileUtils.touch(lockFile);
       return true;
-    } catch (Exception e) {
+    } catch (RuntimeException | IOException e) {
       return false;
-    } finally {
-      if (wasInterrupted) {
-        Thread.currentThread().interrupt();
+    }
+  }
+
+  private boolean atomicallyCreateNewFile(File lockFile) throws IOException {
+    try {
+      if (lockFile.createNewFile()) {
+        return true;
+      }
+    } catch (IOException exception) {
+      // Suppress "No such file or directory" - it seems internal createNewFile issue
+      if (!exception.getMessage().equals("No such file or directory")) {
+        throw exception;
       }
     }
+    return false;
   }
 
   public static boolean releaseLock(File file) {
