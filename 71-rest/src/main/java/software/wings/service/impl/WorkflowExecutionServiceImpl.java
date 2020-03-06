@@ -338,6 +338,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private ResourceConstraintService resourceConstraintService;
   @Inject private AuthService authService;
   @Inject private RollbackStateMachineGenerator rollbackStateMachineGenerator;
+  @Inject private ResourceLookupFilterHelper resourceLookupFilterHelper;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -3997,5 +3998,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return workflowExecutionInfoBuilder.build();
+  }
+
+  public void addTagFilterToPageRequest(PageRequest<WorkflowExecution> pageRequest, String tagFilter) {
+    resourceLookupFilterHelper.addResourceLookupFiltersToPageRequest(pageRequest, tagFilter);
   }
 }

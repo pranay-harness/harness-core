@@ -5,7 +5,10 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.WorkflowType.ORCHESTRATION;
+import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -35,6 +38,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.WorkflowType;
@@ -54,6 +58,7 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.SSHExecutionCredential;
@@ -157,8 +162,8 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldListExecutionsForPipeline() {
-    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.PIPELINE);
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.PIPELINE, SUCCESS);
+    ExecutionArgs executionArgs = createExecutionArgs(PIPELINE);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, PIPELINE, SUCCESS);
 
     workflowExecution.setPipelineExecution(createAndFetchPipelineExecution(SUCCESS));
     wingsPersistence.save(workflowExecution);
@@ -174,14 +179,14 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFetchExecutionWithoutSummary() {
     ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
+    executionArgs.setWorkflowType(ORCHESTRATION);
     executionArgs.setExecutionCredential(
         SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
     executionArgs.setOrchestrationId(generateUuid());
 
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, PAUSED);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, ORCHESTRATION, PAUSED);
 
-    workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
+    workflowExecution.setWorkflowType(PIPELINE);
     workflowExecution.setPipelineExecution(createAndFetchPipelineExecution(PAUSED));
 
     wingsPersistence.save(workflowExecution);
@@ -201,7 +206,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
 
     executionArgs.setArtifactIdNames(artifactIdNames);
 
-    WorkflowExecution workflowExecution1 = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, PAUSED);
+    WorkflowExecution workflowExecution1 = createWorkflowExecution(executionArgs, ORCHESTRATION, PAUSED);
 
     wingsPersistence.save(workflowExecution1);
 
@@ -217,8 +222,8 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldTestExecutionDetails() {
-    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.PIPELINE);
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.PIPELINE, PAUSED);
+    ExecutionArgs executionArgs = createExecutionArgs(PIPELINE);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, PIPELINE, PAUSED);
 
     workflowExecution.setPipelineExecution(createAndFetchPipelineExecution(PAUSED));
     wingsPersistence.save(workflowExecution);
@@ -236,8 +241,8 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldTestExecutionDetailsWithFinalStage() {
-    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.PIPELINE);
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.PIPELINE, SUCCESS);
+    ExecutionArgs executionArgs = createExecutionArgs(PIPELINE);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, PIPELINE, SUCCESS);
 
     workflowExecution.setPipelineExecution(createAndFetchPipelineExecution(SUCCESS));
     wingsPersistence.save(workflowExecution);
@@ -253,8 +258,8 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldTestExecutionDetailsWithFinalStage1() {
-    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.PIPELINE);
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.PIPELINE, SUCCESS);
+    ExecutionArgs executionArgs = createExecutionArgs(PIPELINE);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, PIPELINE, SUCCESS);
 
     workflowExecution.setPipelineExecution(createAndFetchPipelineExecution(SUCCESS));
     wingsPersistence.save(workflowExecution);
@@ -270,8 +275,8 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldUpdateNotes() {
-    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.PIPELINE);
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.PIPELINE, SUCCESS);
+    ExecutionArgs executionArgs = createExecutionArgs(PIPELINE);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, PIPELINE, SUCCESS);
 
     workflowExecution.setPipelineExecution(createAndFetchPipelineExecution(SUCCESS));
     wingsPersistence.save(workflowExecution);
@@ -286,8 +291,8 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldAppendInfraMappingIds() {
-    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.PIPELINE);
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.PIPELINE, SUCCESS);
+    ExecutionArgs executionArgs = createExecutionArgs(PIPELINE);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, PIPELINE, SUCCESS);
 
     workflowExecution.setPipelineExecution(createAndFetchPipelineExecution(SUCCESS));
     wingsPersistence.save(workflowExecution);
@@ -300,8 +305,8 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldUpdateInfraMappingIds() {
-    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.PIPELINE);
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.PIPELINE, SUCCESS);
+    ExecutionArgs executionArgs = createExecutionArgs(PIPELINE);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, PIPELINE, SUCCESS);
 
     workflowExecution.setInfraMappingIds(asList(generateUuid()));
     workflowExecution.setPipelineExecution(createAndFetchPipelineExecution(SUCCESS));
@@ -326,14 +331,14 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldObtainLastGoodDeployedVariables() {
-    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
+    ExecutionArgs executionArgs = createExecutionArgs(ORCHESTRATION);
     String serviceId = generateUuid();
     String workflowId = generateUuid();
     ArtifactVariable artifactVariable =
         ArtifactVariable.builder().name("ArtifactVariable").entityType(SERVICE).entityId(serviceId).build();
     executionArgs.setArtifactVariables(asList(artifactVariable));
 
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, ORCHESTRATION, SUCCESS);
     workflowExecution.setWorkflowId(workflowId);
 
     wingsPersistence.save(workflowExecution);
@@ -346,7 +351,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldObtainLastGoodDeployedArtifacts() {
-    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
+    ExecutionArgs executionArgs = createExecutionArgs(ORCHESTRATION);
     String workflowId = generateUuid();
 
     Artifact artifact = Artifact.Builder.anArtifact()
@@ -358,7 +363,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
 
     executionArgs.setArtifacts(asList(artifact));
 
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, ORCHESTRATION, SUCCESS);
     workflowExecution.setWorkflowId(workflowId);
 
     wingsPersistence.save(workflowExecution);
@@ -369,9 +374,9 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldRefreshCollectedArtifacts() {
-    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
-    WorkflowExecution workflowExecution1 = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+    ExecutionArgs executionArgs = createExecutionArgs(ORCHESTRATION);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, ORCHESTRATION, SUCCESS);
+    WorkflowExecution workflowExecution1 = createWorkflowExecution(executionArgs, ORCHESTRATION, SUCCESS);
 
     String envId = generateUuid();
     String serviceId = generateUuid();
@@ -415,8 +420,8 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldFetchLatestExecutionForServiceIds() {
-    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+    ExecutionArgs executionArgs = createExecutionArgs(ORCHESTRATION);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, ORCHESTRATION, SUCCESS);
 
     String envId = generateUuid();
     String serviceId = generateUuid();
@@ -440,8 +445,8 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldFetchExecutionForVerification() {
-    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+    ExecutionArgs executionArgs = createExecutionArgs(ORCHESTRATION);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, ORCHESTRATION, SUCCESS);
 
     String envId = generateUuid();
     String serviceId = generateUuid();
@@ -463,8 +468,8 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldFetchLatestExecutionForInfraMappingIds() {
-    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+    ExecutionArgs executionArgs = createExecutionArgs(ORCHESTRATION);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, ORCHESTRATION, SUCCESS);
 
     String infraId = generateUuid();
     workflowExecution.setInfraMappingIds(asList(infraId));
@@ -482,8 +487,8 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowExecutionList() {
-    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
-    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+    ExecutionArgs executionArgs = createExecutionArgs(ORCHESTRATION);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, ORCHESTRATION, SUCCESS);
 
     String envId = generateUuid();
     String workflowId = generateUuid();
@@ -590,5 +595,90 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
     executionArgs.setOrchestrationId(generateUuid());
 
     return executionArgs;
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldListExecutionsMatchingTagsWithKey() {
+    final WorkflowExecutionBuilder workflowExecutionBuilder =
+        WorkflowExecution.builder().appId(APP_ID).accountId(ACCOUNT_ID);
+
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid())
+                              .tags(asList(createNameValuePair("foo", ""), createNameValuePair("commitId", "1")))
+                              .build());
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid())
+                              .tags(asList(createNameValuePair("foo", "bar"), createNameValuePair("commitId", "1")))
+                              .build());
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid())
+                              .tags(asList(createNameValuePair("foo", "baz"), createNameValuePair("commitId", "2")))
+                              .build());
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid())
+                              .tags(asList(createNameValuePair("foo", "bar"), createNameValuePair("commitId", "3")))
+                              .build());
+    wingsPersistence.save(
+        workflowExecutionBuilder.uuid(generateUuid()).tags(asList(createNameValuePair("env", "dev"))).build());
+    wingsPersistence.save(
+        workflowExecutionBuilder.uuid(generateUuid()).tags(asList(createNameValuePair("env", "prod"))).build());
+    // get workflow executions matching labels
+    PageRequest<WorkflowExecution> pageRequest = new PageRequest<>();
+    pageRequest.addFilter(WorkflowExecutionKeys.accountId, Operator.EQ, ACCOUNT_ID)
+        .addFilter(WorkflowExecutionKeys.appId, Operator.EQ, APP_ID);
+    workflowExecutionService.addTagFilterToPageRequest(pageRequest,
+        "{\"harnessTagFilter\":{\"matchAll\":false,\"conditions\":[{\"name\":\"foo\",\"operator\":\"EXISTS\"}]}}");
+
+    PageResponse<WorkflowExecution> pageResponse =
+        workflowExecutionService.listExecutions(pageRequest, false, true, true, false);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.size()).isEqualTo(4);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldListExecutionsMatchingTagsWithKeyValue() {
+    final WorkflowExecutionBuilder workflowExecutionBuilder =
+        WorkflowExecution.builder().appId(APP_ID).accountId(ACCOUNT_ID);
+
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid())
+                              .tags(asList(createNameValuePair("foo", ""), createNameValuePair("commitId", "1")))
+                              .build());
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid())
+                              .tags(asList(createNameValuePair("foo", "bar"), createNameValuePair("commitId", "1")))
+                              .build());
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid())
+                              .tags(asList(createNameValuePair("foo", "baz"), createNameValuePair("commitId", "2")))
+                              .build());
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid())
+                              .tags(asList(createNameValuePair("foo", "bar"), createNameValuePair("commitId", "3")))
+                              .build());
+    wingsPersistence.save(
+        workflowExecutionBuilder.uuid(generateUuid()).tags(asList(createNameValuePair("env", "dev"))).build());
+    wingsPersistence.save(
+        workflowExecutionBuilder.uuid(generateUuid()).tags(asList(createNameValuePair("env", "prod"))).build());
+    // get workflow executions matching key:value
+    PageRequest<WorkflowExecution> pageRequest = new PageRequest<>();
+    pageRequest.addFilter(WorkflowExecutionKeys.accountId, Operator.EQ, ACCOUNT_ID)
+        .addFilter(WorkflowExecutionKeys.appId, Operator.EQ, APP_ID);
+    workflowExecutionService.addTagFilterToPageRequest(pageRequest,
+        "{\"harnessTagFilter\":{\"matchAll\":false,\"conditions\":[{\"name\":\"commitId\",\"operator\":\"IN\",\"values\":[\"1\"]}]}}");
+    PageResponse<WorkflowExecution> pageResponse =
+        workflowExecutionService.listExecutions(pageRequest, false, true, true, false);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.size()).isEqualTo(2);
+
+    // case sensitive tag search
+    pageRequest = new PageRequest<>();
+    pageRequest.addFilter(WorkflowExecutionKeys.accountId, Operator.EQ, ACCOUNT_ID)
+        .addFilter(WorkflowExecutionKeys.appId, Operator.EQ, APP_ID);
+    workflowExecutionService.addTagFilterToPageRequest(pageRequest,
+        "{\"harnessTagFilter\":{\"matchAll\":false,\"conditions\":[{\"name\":\"COMMITID\",\"operator\":\"IN\",\"values\":[\"1\"]}]}}");
+    pageResponse = workflowExecutionService.listExecutions(pageRequest, false, true, true, false);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.size()).isEqualTo(0);
+  }
+
+  private NameValuePair createNameValuePair(String name, String value) {
+    return NameValuePair.builder().name(name).value(value).build();
   }
 }

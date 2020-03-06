@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -729,5 +730,25 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
   private void saveUserGroupToPersistence(UserGroup userGroup) {
     wingsPersistence1.save(userGroup);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testAddTagFilterToMatchKeysToPageRequest() {
+    PageRequest<WorkflowExecution> pageRequest = new PageRequest<>();
+    workflowExecutionService.addTagFilterToPageRequest(pageRequest,
+        "{\"harnessTagFilter\":{\"matchAll\":false,\"conditions\":[{\"name\":\"label\",\"operator\":\"EXISTS\"}]}}");
+    assertThat(pageRequest.getFilters().size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testAddTagFilterToMatchKeyValuePairsToPageRequest() {
+    PageRequest<WorkflowExecution> pageRequest = new PageRequest<>();
+    workflowExecutionService.addTagFilterToPageRequest(pageRequest,
+        "{\"harnessTagFilter\":{\"matchAll\":false,\"conditions\":[{\"name\":\"feature\",\"operator\":\"IN\",\"values\":[\"copy\"]}]}}");
+    assertThat(pageRequest.getFilters().size()).isEqualTo(1);
   }
 }

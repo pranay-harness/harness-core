@@ -240,4 +240,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   WorkflowExecutionInfo getWorkflowExecutionInfo(String workflowExecutionId);
 
   boolean isMultiService(String appId, String workflowExecutionId);
+
+  void addTagFilterToPageRequest(PageRequest<WorkflowExecution> pageRequest, String tagFilter);
 }
