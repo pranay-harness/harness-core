@@ -11,6 +11,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -36,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javax.xml.stream.XMLStreamException;
 
 /**
@@ -169,6 +171,11 @@ public class NexusServiceImpl implements NexusService {
           "Failed to fetch images/groups from Nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId, e);
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
+      }
+      if (e.getCause() != null && e.getCause() instanceof TimeoutException) {
+        throw new ArtifactServerException(
+            "Failed to fetch images/groups from Nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId,
+            e.getCause(), USER);
       }
     }
     return groupIds;
