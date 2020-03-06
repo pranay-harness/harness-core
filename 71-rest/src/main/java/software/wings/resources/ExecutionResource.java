@@ -34,6 +34,7 @@ import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.beans.RequiredExecutionArgs;
@@ -60,6 +61,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.RollbackConfirmation;
@@ -91,6 +93,7 @@ public class ExecutionResource {
   @Inject private StateInspectionService stateInspectionService;
   @Inject private AuthHandler authHandler;
   @Inject private AuthService authService;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject @Named(DeploymentHistoryFeature.FEATURE_NAME) private RestrictedFeature deploymentHistoryFeature;
 
   /**
@@ -114,7 +117,8 @@ public class ExecutionResource {
       @BeanParam PageRequest<WorkflowExecution> pageRequest,
       @DefaultValue("false") @QueryParam("includeGraph") boolean includeGraph,
       @QueryParam("workflowType") List<String> workflowTypes,
-      @DefaultValue("false") @QueryParam("includeIndirectExecutions") boolean includeIndirectExecutions) {
+      @DefaultValue("false") @QueryParam("includeIndirectExecutions") boolean includeIndirectExecutions,
+      @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
     List<String> authorizedAppIds;
     if (isNotEmpty(appIds)) {
       authorizedAppIds = appIds;
@@ -138,6 +142,11 @@ public class ExecutionResource {
       pageRequest.addFilter("workflowId", Operator.EQ, orchestrationId);
     }
 
+    if (featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, accountId)) {
+      if (withTags && isNotBlank(tagFilter)) {
+        workflowExecutionService.addTagFilterToPageRequest(pageRequest, tagFilter);
+      }
+    }
     Optional<Integer> retentionPeriodInDays =
         ((DeploymentHistoryFeature) deploymentHistoryFeature).getRetentionPeriodInDays(accountId);
     retentionPeriodInDays.ifPresent(val
