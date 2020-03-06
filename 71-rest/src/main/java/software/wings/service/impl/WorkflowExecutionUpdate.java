@@ -441,7 +441,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
           workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, true);
       logger.info("Breakdown refresh happened for workflow execution {}", workflowExecution.getUuid());
       if (context.getWorkflowType() == WorkflowType.ORCHESTRATION
-          && featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, workflowExecution.getAccountId())) {
+          && !featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, workflowExecution.getAccountId())) {
         executionEventQueue.send(ExecutionEvent.builder()
                                      .appId(appId)
                                      .workflowId(workflowExecution.getWorkflowId())
