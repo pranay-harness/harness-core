@@ -12,7 +12,10 @@ import java.util.List;
 @JsonSubTypes({
   @JsonSubTypes.Type(value = AddOperation.class, name = "Add")
   , @JsonSubTypes.Type(value = RemoveOperation.class, name = "Remove"),
-      @JsonSubTypes.Type(value = ReplaceOperation.class, name = "Replace")
+      @JsonSubTypes.Type(value = ReplaceOperation.class, name = "Replace"),
+      @JsonSubTypes.Type(value = OktaAddOperation.class, name = "add"),
+      @JsonSubTypes.Type(value = OktaRemoveOperation.class, name = "remove"),
+      @JsonSubTypes.Type(value = OktaReplaceOperation.class, name = "replace")
 })
 public abstract class PatchOperation {
   @JsonProperty private String path;

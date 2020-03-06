@@ -5,6 +5,7 @@ import static io.harness.exception.WingsException.GROUP;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -16,12 +17,12 @@ import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.resources.ScimMultiValuedObject;
 import software.wings.service.intfc.UserGroupService;
 
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,16 +33,22 @@ import javax.ws.rs.core.Response.Status;
 public class ScimGroupServiceImpl implements ScimGroupService {
   @Inject private UserGroupService userGroupService;
   @Inject private WingsPersistence wingsPersistence;
-  public static final String EXC_MSG_GROUP_DOESNT_EXIST = "Group does not exist";
-
-  private Integer MAX_RESULT_COUNT = 20;
+  private static final String EXC_MSG_GROUP_DOESNT_EXIST = "Group does not exist";
+  private static final String DISPLAY_NAME = "displayName";
+  private static final Integer MAX_RESULT_COUNT = 20;
+  private static final String REPLACE_OKTA = "replace";
+  private static final String REPLACE = "Replace";
+  private static final String ADD = "ADD";
+  private static final String ADD_OKTA = "add";
+  private static final String REMOVE = "REMOVE";
+  private static final String REMOVE_OKTA = "remove";
 
   @Override
   public ScimListResponse<ScimGroup> searchGroup(String filter, String accountId, Integer count, Integer startIndex) {
     startIndex = startIndex == null ? 0 : startIndex;
     count = count == null ? MAX_RESULT_COUNT : count;
     ScimListResponse<ScimGroup> searchGroupResponse = new ScimListResponse<>();
-    logger.info("Searching groups in account {} with filter: {}", accountId, filter);
+    logger.info("SCIM: Searching groups in account {} with filter: {}", accountId, filter);
     String searchQuery = null;
 
     if (StringUtils.isNotEmpty(filter)) {
@@ -51,7 +58,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
         String operand = split[1];
         searchQuery = operand.substring(1, operand.length() - 1);
       } catch (Exception ex) {
-        logger.error("SCIM: Failed to process group search query: {} for account: {}", filter, accountId);
+        logger.error("SCIM: Failed to process group search query: {} for account: {}", filter, accountId, ex);
       }
     }
 
@@ -61,7 +68,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
       groupList = searchUserGroupByName(accountId, searchQuery, count, startIndex);
       groupList.forEach(searchGroupResponse::resource);
     } catch (WingsException ex) {
-      logger.info("Search query: {}, account: {}", searchQuery, accountId, ex);
+      logger.info("SCIM: Search query: {}, account: {}", searchQuery, accountId, ex);
     }
 
     searchGroupResponse.startIndex(startIndex);
@@ -97,7 +104,8 @@ public class ScimGroupServiceImpl implements ScimGroupService {
 
   @Override
   public Response updateGroup(String groupId, String accountId, ScimGroup scimGroup) {
-    logger.info("Update group call with groupId: {}, groupId {}, group resource:{}", groupId, accountId, scimGroup);
+    logger.info(
+        "SCIM: Update group call with groupId: {}, groupId {}, group resource:{}", groupId, accountId, scimGroup);
     UserGroup userGroup = userGroupService.get(accountId, groupId, false);
     if (userGroup == null) {
       return Response.status(Status.NOT_FOUND).build();
@@ -108,8 +116,8 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     updateMembers(scimGroup, updateOperations);
 
     wingsPersistence.update(userGroup, updateOperations);
-    logger.info(
-        "Update group call successful groupId: {}, groupId {}, group resource: {}", groupId, accountId, scimGroup);
+    logger.info("SCIM: Update group call successful groupId: {}, groupId {}, group resource: {}", groupId, accountId,
+        scimGroup);
     return Response.status(Status.OK).entity(scimGroup).build();
   }
 
@@ -123,20 +131,32 @@ public class ScimGroupServiceImpl implements ScimGroupService {
   }
 
   private String processReplaceOperationOnGroup(String groupId, String accountId, PatchOperation patchOperation) {
-    if (!"displayName".equals(patchOperation.getPath())) {
+    if (!DISPLAY_NAME.equals(patchOperation.getPath())) {
       logger.error(
-          "Expected replace operation only on the displayName. Received it on path: {}, for accountId: {}, for GroupId {}",
+          "SCIM: Expected replace operation only on the displayName. Received it on path: {}, for accountId: {}, for GroupId {}",
           patchOperation.getPath(), accountId, groupId);
       // no operation needed. Pass
     } else {
       try {
         return patchOperation.getValue(String.class);
       } catch (Exception ex) {
-        logger.error("Failed to process the operation: {}, for accountId: {}, for GroupId {}",
-            patchOperation.toString(), accountId, groupId);
+        logger.error("SCIM: Failed to process the operation: {}, for accountId: {}, for GroupId {}",
+            patchOperation.toString(), accountId, groupId, ex);
       }
     }
-    throw new WingsException("Failed to update group name");
+    throw new InvalidRequestException("Failed to update group name");
+  }
+
+  private String processOktaReplaceOperationOnGroup(String groupId, String accountId, PatchOperation patchOperation) {
+    try {
+      if (patchOperation.getValue(ScimMultiValuedObject.class) != null) {
+        return patchOperation.getValue(ScimMultiValuedObject.class).getDisplayName();
+      }
+    } catch (Exception ex) {
+      logger.error("SCIM: Failed to process the REPLACE_OKTA operation: {}, for accountId: {}, for GroupId {}",
+          patchOperation.toString(), accountId, groupId, ex);
+    }
+    throw new InvalidRequestException("Failed to update group name");
   }
 
   @Override
@@ -150,26 +170,33 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     List<String> existingMemberIds =
         existingGroup.getMemberIds() != null ? existingGroup.getMemberIds() : new ArrayList<>();
     List<String> newMemberIds = new ArrayList<>(existingMemberIds);
-    String newGroupName = "";
+    String newGroupName = null;
 
     for (software.wings.scim.PatchOperation patchOperation : patchRequest.getOperations()) {
       Set<String> userIdsFromOperation = getUserIdsFromOperation(patchOperation, accountId, groupId);
-      if (patchOperation.getOpType().equals("Replace")) {
-        newGroupName = processReplaceOperationOnGroup(groupId, accountId, patchOperation);
-      } else if (patchOperation.getOpType().equals("Add")) {
-        // We will add only those users which exists in the db
-        for (String userId : userIdsFromOperation) {
-          User user = wingsPersistence.get(User.class, userId);
-          if (user != null) {
-            newMemberIds.add(userId);
-          } else {
-            logger.info("No user exists in the db with the id {}", userId);
-          }
+      switch (patchOperation.getOpType()) {
+        case REPLACE: {
+          newGroupName = processReplaceOperationOnGroup(groupId, accountId, patchOperation);
+          break;
         }
-      } else if (patchOperation.getOpType().equals("Remove")) {
-        newMemberIds.removeAll(userIdsFromOperation);
-      } else {
-        logger.error("Received unexpected operation: {}", patchOperation.toString());
+        case REPLACE_OKTA: {
+          newGroupName = processOktaReplaceOperationOnGroup(groupId, accountId, patchOperation);
+          break;
+        }
+        case ADD:
+        case ADD_OKTA: {
+          updateNewMemberIds(userIdsFromOperation, newMemberIds);
+          break;
+        }
+        case REMOVE:
+        case REMOVE_OKTA: {
+          newMemberIds.removeAll(userIdsFromOperation);
+          break;
+        }
+        default: {
+          logger.error("SCIM: Received unexpected PATCH operation: {}", patchOperation.toString());
+          break;
+        }
       }
     }
 
@@ -189,24 +216,48 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     return Response.status(Status.NO_CONTENT).build();
   }
 
+  private void updateNewMemberIds(Set<String> userIdsFromOperation, List<String> newMemberIds) {
+    for (String userId : userIdsFromOperation) {
+      User user = wingsPersistence.get(User.class, userId);
+      if (user != null) {
+        newMemberIds.add(userId);
+      } else {
+        logger.info("SCIM: No user exists in the db with the id {}", userId);
+      }
+    }
+  }
+
   private Set<String> getUserIdsFromOperation(PatchOperation patchOperation, String accountId, String groupId) {
+    if (patchOperation.getPath() != null && patchOperation.getPath().contains("members[")) {
+      try {
+        Set<String> userIds = new HashSet<>();
+        String filter = URLDecoder.decode(patchOperation.getPath(), "UTF-8");
+        String[] split = filter.split(" eq ");
+        String operand = split[1];
+        userIds.add(operand.substring(1, operand.length() - 2));
+        return userIds;
+      } catch (Exception ex) {
+        logger.error("SCIM: Not able to decode path. Received it in path: {}, for accountId: {}, for GroupId {}",
+            patchOperation.getPath(), accountId, groupId, ex);
+      }
+    }
+
     if (!"members".equals(patchOperation.getPath())) {
-      logger.error("Expect operation only on the members. Received it on path: {}, for accountId: {}, for GroupId {}",
+      logger.error(
+          "SCIM: Expect operation only on the members. Received it in path: {}, for accountId: {}, for GroupId {}",
           patchOperation.getPath(), accountId, groupId);
       return Collections.emptySet();
     }
 
     try {
       List<? extends ScimMultiValuedObject> operations = patchOperation.getValues(ScimMultiValuedObject.class);
-
       if (!isEmpty(operations)) {
         return operations.stream().map(operation -> (String) operation.getValue()).collect(Collectors.toSet());
       }
-
-      logger.error("Operations received is null. Skipping remove operation processing for groupId: {}", groupId);
+      logger.error("SCIM: Operations received is null. Skipping remove operation processing for groupId: {}", groupId);
     } catch (Exception ex) {
-      logger.error("Failed to process the operation: {}, for accountId: {}, for GroupId {}", patchOperation.toString(),
-          accountId, groupId, ex);
+      logger.error("SCIM: Failed to process the operation: {}, for accountId: {}, for GroupId {}",
+          patchOperation.toString(), accountId, groupId, ex);
     }
 
     return Collections.emptySet();
@@ -219,7 +270,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
       throw new UnauthorizedException(EXC_MSG_GROUP_DOESNT_EXIST, GROUP);
     }
     ScimGroup scimGroup = buildGroupResponse(userGroup);
-    logger.info("Response to get group call: {}", scimGroup);
+    logger.info("SCIM: Response to get group call: {}", scimGroup);
     return scimGroup;
   }
 
@@ -269,7 +320,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
         if (user != null) {
           newMemberIds.add(member.getValue());
         } else {
-          logger.info("No user exists in the db with the id {}", member.getValue());
+          logger.info("SCIM: No user exists in the db with the id {}", member.getValue());
         }
       }
     });
