@@ -4,7 +4,6 @@ import io.harness.batch.processing.billing.service.PricingData;
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
-import io.harness.batch.processing.pricing.service.intfc.AwsCustomPricingService;
 import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -18,23 +17,17 @@ import java.util.Map;
 @Service
 public class EcsFargateInstancePricingStrategy implements InstancePricingStrategy {
   private final VMPricingService vmPricingService;
-  private final AwsCustomPricingService awsCustomPricingService;
 
   @Autowired
-  public EcsFargateInstancePricingStrategy(
-      VMPricingService vmPricingService, AwsCustomPricingService awsCustomPricingService) {
+  public EcsFargateInstancePricingStrategy(VMPricingService vmPricingService) {
     this.vmPricingService = vmPricingService;
-    this.awsCustomPricingService = awsCustomPricingService;
   }
 
   @Override
   public PricingData getPricePerHour(InstanceData instanceData, Instant startTime) {
-    EcsFargatePricingInfo fargatePricingInfo = awsCustomPricingService.getFargateVMPricingInfo(instanceData, startTime);
-    if (null == fargatePricingInfo) {
-      Map<String, String> instanceMetaData = instanceData.getMetaData();
-      String region = instanceMetaData.get(InstanceMetaDataConstants.REGION);
-      fargatePricingInfo = vmPricingService.getFargatePricingInfo(region);
-    }
+    Map<String, String> instanceMetaData = instanceData.getMetaData();
+    String region = instanceMetaData.get(InstanceMetaDataConstants.REGION);
+    EcsFargatePricingInfo fargatePricingInfo = vmPricingService.getFargatePricingInfo(region);
 
     double cpuPricePerHour = (instanceData.getTotalResource().getCpuUnits() / 1024) * fargatePricingInfo.getCpuPrice();
     double memoryPricePerHour =
