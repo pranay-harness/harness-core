@@ -1,20 +1,25 @@
 package io.harness.filesystem;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.filesystem.FileIo.deleteFileIfExists;
 import static io.harness.filesystem.FileIo.getHomeDir;
+import static io.harness.filesystem.FileIo.releaseLock;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.filesystem.FileIo.writeFile;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.nio.file.Files.lines;
+import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.threading.Concurrent;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -24,6 +29,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 
 public class FileIoTest extends CategoryTest {
@@ -134,5 +141,30 @@ public class FileIoTest extends CategoryTest {
   public void testGetHomeDir() {
     String homeDir = getHomeDir();
     assertThat(isEmpty(homeDir)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void fileLockConcurrently() {
+    File file = new File(getRandomTempDirectory() + "file");
+
+    ReentrantLock re = new ReentrantLock();
+
+    AtomicBoolean failed = new AtomicBoolean(false);
+
+    Concurrent.test(100, n -> {
+      if (acquireLock(file, ofSeconds(1))) {
+        if (re.tryLock()) {
+          re.unlock();
+        } else {
+          failed.set(true);
+        }
+        releaseLock(file);
+      } else {
+        failed.set(true);
+      }
+    });
+    assertThat(failed.get()).isFalse();
   }
 }
