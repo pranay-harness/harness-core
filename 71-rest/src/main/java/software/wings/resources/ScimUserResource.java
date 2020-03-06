@@ -29,7 +29,7 @@ import javax.ws.rs.core.Response.Status;
 
 @Api("scim")
 @Path("/scim/account/{accountId}/")
-@Consumes("application/scim+json")
+@Consumes({"application/scim+json", "application/json"})
 @Produces("application/scim+json")
 @Slf4j
 @ScimAPI

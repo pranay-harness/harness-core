@@ -1,4 +1,4 @@
-package software.wings.resources;
+package software.wings.scim;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
@@ -15,4 +15,8 @@ public class ScimMultiValuedObject<T> {
   String display;
   T value;
   @JsonProperty("$ref") URI ref;
+
+  String id;
+  String displayName;
+  boolean active;
 }
