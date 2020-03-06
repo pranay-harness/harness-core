@@ -29,7 +29,7 @@ public class InstancePricingStrategyContextTest extends CategoryTest {
   public void testGetInstancePricingStrategy() {
     InstancePricingStrategyContext instancePricingStrategyContext = new InstancePricingStrategyContext(
         new ComputeInstancePricingStrategy(vmPricingService, awsCustomPricingService),
-        new EcsFargateInstancePricingStrategy(vmPricingService, awsCustomPricingService));
+        new EcsFargateInstancePricingStrategy(vmPricingService));
     InstancePricingStrategy computeInstancePricingStrategy =
         instancePricingStrategyContext.getInstancePricingStrategy(InstanceType.EC2_INSTANCE);
     assertThat(computeInstancePricingStrategy.getClass()).isEqualTo(ComputeInstancePricingStrategy.class);

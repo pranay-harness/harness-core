@@ -395,7 +395,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   public void testGetInstanceBillingAmountForFargate() throws IOException {
     when(vmPricingService.getFargatePricingInfo(REGION)).thenReturn(createEcsFargatePricingInfo());
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.ECS_TASK_FARGATE))
-        .thenReturn(new EcsFargateInstancePricingStrategy(vmPricingService, awsCustomPricingService));
+        .thenReturn(new EcsFargateInstancePricingStrategy(vmPricingService));
     Resource instanceResource = getInstanceResource(320, 2048);
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
