@@ -168,11 +168,13 @@ import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.HoldingScope;
+import software.wings.utils.ArtifactType;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -1664,7 +1666,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = SRINIVAS, intermittent = true)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTriggerTemplateCanaryWorkflow() throws InterruptedException {
     Service service1 = addService("svc1");
@@ -1868,16 +1870,17 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   private Workflow createTemplateWorkflow(
       String appId, Environment env, Service service, InfrastructureMapping infrastructureMapping) {
-    TemplateExpression infraExpression = TemplateExpression.builder()
-                                             .fieldName("infraMappingId")
-                                             .expression("${ServiceInfra_SSH}")
-                                             .metadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
-                                             .build();
+    TemplateExpression infraExpression =
+        TemplateExpression.builder()
+            .fieldName("infraMappingId")
+            .expression("${ServiceInfra_SSH}")
+            .metadata(new HashMap<>(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING")))
+            .build();
 
     TemplateExpression serviceExpression = TemplateExpression.builder()
                                                .fieldName("serviceId")
                                                .expression("${Service}")
-                                               .metadata(ImmutableMap.of("entityType", "SERVICE"))
+                                               .metadata(new HashMap<>(ImmutableMap.of("entityType", "SERVICE")))
                                                .build();
 
     Workflow orchestrationWorkflow =
@@ -2031,8 +2034,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   private Service addService(String svc1) {
-    return wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name(svc1).appId(app.getUuid()).build());
+    return wingsPersistence.saveAndGet(Service.class,
+        Service.builder()
+            .uuid(generateUuid())
+            .name(svc1)
+            .appId(app.getUuid())
+            .artifactType(ArtifactType.DOCKER)
+            .build());
   }
 
   @Test
