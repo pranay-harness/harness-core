@@ -44,10 +44,11 @@ public class NewRelicDataCollectionInfoV2 extends MetricsDataCollectionInfo {
   public NewRelicDataCollectionInfoV2(String accountId, String applicationId, String envId, Instant startTime,
       Instant endTime, Set<String> hosts, String cvConfigId, String stateExecutionId, String workflowId,
       String workflowExecutionId, String serviceId, String cvTaskId, String connectorId,
-      List<EncryptedDataDetail> encryptedDataDetails, NewRelicConfig newRelicConfig, long newRelicAppId,
-      Map<String, String> hostsToGroupNameMap) {
+      List<EncryptedDataDetail> encryptedDataDetails, Instant dataCollectionStartTime, NewRelicConfig newRelicConfig,
+      long newRelicAppId, Map<String, String> hostsToGroupNameMap) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, hostsToGroupNameMap);
+        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, dataCollectionStartTime,
+        hostsToGroupNameMap);
     this.newRelicConfig = newRelicConfig;
     this.newRelicAppId = newRelicAppId;
   }

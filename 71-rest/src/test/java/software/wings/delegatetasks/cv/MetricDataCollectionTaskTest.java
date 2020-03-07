@@ -10,6 +10,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -40,6 +41,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class MetricDataCollectionTaskTest extends WingsBaseTest {
   private MetricsDataCollectionTask<MetricsDataCollectionInfo> metricsDataCollectionTask;
@@ -70,8 +72,9 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
     metricsDataCollectionInfo.getHostsToGroupNameMap().put("host3", "group1");
     metricsDataCollectionInfo.getHostsToGroupNameMap().put("host4", "group2");
     Instant now = Instant.ofEpochMilli(Timestamp.currentMinuteBoundary());
-    when(metricsDataCollectionInfo.getStartTime()).thenReturn(now.minus(10, ChronoUnit.MINUTES));
-    when(metricsDataCollectionInfo.getEndTime()).thenReturn(now);
+    when(metricsDataCollectionInfo.getEndTime()).thenReturn(now.plus(1, ChronoUnit.MINUTES));
+    when(metricsDataCollectionInfo.getStartTime()).thenReturn(now);
+    when(metricsDataCollectionInfo.getDataCollectionStartTime()).thenReturn(now);
     metricsDataCollectionTask.collectAndSaveData(metricsDataCollectionInfo);
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
     verify(metricStoreService)
@@ -87,10 +90,33 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
     assertThat(capturedList.stream().allMatch(newRelicMetricDataRecord
                    -> newRelicMetricDataRecord.getTimeStamp() == metricsDataCollectionInfo.getEndTime().toEpochMilli()))
         .isTrue();
-    assertThat(capturedList.stream().allMatch(newRelicMetricDataRecord
-                   -> newRelicMetricDataRecord.getDataCollectionMinute()
-                       == TimeUnit.MILLISECONDS.toMinutes(metricsDataCollectionInfo.getEndTime().toEpochMilli())))
-        .isTrue();
+    assertThat(capturedList.stream()
+                   .map(newRelicMetricDataRecord -> newRelicMetricDataRecord.getDataCollectionMinute())
+                   .collect(Collectors.toList()))
+        .isEqualTo(Lists.newArrayList(0, 0, 0));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCollectAndSaveData_withoutHostWithAbsoluteMinute() throws DataCollectionException {
+    MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
+    when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet());
+    metricsDataCollectionInfo.getHostsToGroupNameMap().put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME);
+    Instant now = Instant.ofEpochMilli(Timestamp.currentMinuteBoundary());
+    when(metricsDataCollectionInfo.getStartTime()).thenReturn(now.minus(10, ChronoUnit.MINUTES));
+    when(metricsDataCollectionInfo.getEndTime()).thenReturn(now);
+    metricsDataCollectionTask.collectAndSaveData(metricsDataCollectionInfo);
+    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+    verify(metricStoreService)
+        .saveNewRelicMetrics(anyString(), anyString(), anyString(), anyString(), captor.capture());
+    List<NewRelicMetricDataRecord> capturedList = captor.getValue();
+    assertThat(capturedList.size()).isEqualTo(1);
+    assertThat(capturedList.get(0).getName()).isEqualTo("Harness heartbeat metric");
+    assertThat(capturedList.get(0).getLevel()).isEqualTo(ClusterLevel.H0);
+    assertThat(capturedList.get(0).getTimeStamp()).isEqualTo(metricsDataCollectionInfo.getEndTime().toEpochMilli());
+    assertThat(capturedList.get(0).getDataCollectionMinute())
+        .isEqualTo(TimeUnit.MILLISECONDS.toMinutes(metricsDataCollectionInfo.getEndTime().toEpochMilli()));
   }
 
   @Test
@@ -111,7 +137,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testIfNewRelicMetricDataRecordsAreSaved() throws DataCollectionException {
+  public void testcollectAndSaveData_IfNewRelicMetricDataRecordsAreSaved() throws DataCollectionException {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
     when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1"));
     Instant now = Instant.now();
@@ -140,6 +166,40 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
     assertThat(records.get(0).getDataCollectionMinute())
         .isEqualTo(TimeUnit.MILLISECONDS.toMinutes(metricElement.getTimestamp()));
     assertThat(records.get(0).getCvConfigId()).isEqualTo(metricsDataCollectionInfo.getCvConfigId());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testcollectAndSaveData_IfNewRelicMetricDataRecordsAreSavedWithRelativeMinute()
+      throws DataCollectionException {
+    MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
+    when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1"));
+    Instant now = Instant.now();
+    when(metricsDataCollectionInfo.getStartTime()).thenReturn(now.minus(1, ChronoUnit.MINUTES));
+    when(metricsDataCollectionInfo.getEndTime()).thenReturn(now);
+    when(metricsDataCollectionInfo.getDataCollectionStartTime()).thenReturn(now.minus(5, ChronoUnit.MINUTES));
+    MetricElement metricElement = MetricElement.builder()
+                                      .name("metric1")
+                                      .host("host1")
+                                      .groupName("default")
+                                      .timestamp(System.currentTimeMillis())
+                                      .build();
+    when(metricsDataCollector.fetchMetrics(any())).thenReturn(Lists.newArrayList(metricElement));
+    metricsDataCollectionTask.collectAndSaveData(metricsDataCollectionInfo);
+
+    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+    verify(metricStoreService).saveNewRelicMetrics(any(), any(), any(), any(), captor.capture());
+    List<NewRelicMetricDataRecord> records = captor.getValue();
+    assertThat(records.size()).isEqualTo(1);
+    assertThat(records.get(0).getStateExecutionId()).isEqualTo(metricsDataCollectionInfo.getStateExecutionId());
+    assertThat(records.get(0).getServiceId()).isEqualTo(metricsDataCollectionInfo.getServiceId());
+    assertThat(records.get(0).getHost()).isEqualTo("host1");
+    assertThat(records.get(0).getGroupName()).isEqualTo(metricElement.getGroupName());
+    assertThat(records.get(0).getName()).isEqualTo(metricElement.getName());
+    assertThat(records.get(0).getTimeStamp()).isEqualTo(metricElement.getTimestamp());
+    assertThat(records.get(0).getStateType()).isEqualTo(metricsDataCollectionInfo.getStateType());
+    assertThat(records.get(0).getDataCollectionMinute()).isEqualTo(5);
   }
 
   @Test

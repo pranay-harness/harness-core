@@ -41,10 +41,11 @@ public class SplunkDataCollectionInfoV2 extends LogDataCollectionInfoV2 {
   public SplunkDataCollectionInfoV2(String accountId, String applicationId, String envId, Instant startTime,
       Instant endTime, Set<String> hosts, String cvConfigId, String stateExecutionId, String workflowId,
       String workflowExecutionId, String serviceId, String cvTaskId, String connectorId, String query,
-      String hostnameField, List<EncryptedDataDetail> encryptedDataDetails, SplunkConfig splunkConfig,
-      boolean isAdvancedQuery) {
+      String hostnameField, List<EncryptedDataDetail> encryptedDataDetails, Instant dataCollectionStartTime,
+      SplunkConfig splunkConfig, boolean isAdvancedQuery) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, query, hostnameField);
+        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, dataCollectionStartTime, query,
+        hostnameField);
     this.splunkConfig = splunkConfig;
     this.isAdvancedQuery = isAdvancedQuery;
   }

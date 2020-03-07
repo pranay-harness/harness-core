@@ -46,11 +46,12 @@ public class InstanaDataCollectionInfo extends MetricsDataCollectionInfo {
   public InstanaDataCollectionInfo(String accountId, String applicationId, String envId, Instant startTime,
       Instant endTime, Set<String> hosts, String cvConfigId, String stateExecutionId, String workflowId,
       String workflowExecutionId, String serviceId, String cvTaskId, String connectorId,
-      List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> hostsToGroupNameMap,
-      InstanaConfig instanaConfig, String query, List<String> metrics, String hostTagFilter,
-      List<InstanaTagFilter> tagFilters) {
+      List<EncryptedDataDetail> encryptedDataDetails, Instant dataCollectionStartTime,
+      Map<String, String> hostsToGroupNameMap, InstanaConfig instanaConfig, String query, List<String> metrics,
+      String hostTagFilter, List<InstanaTagFilter> tagFilters) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, hostsToGroupNameMap);
+        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, dataCollectionStartTime,
+        hostsToGroupNameMap);
     this.query = query;
     this.metrics = metrics;
     this.instanaConfig = instanaConfig;

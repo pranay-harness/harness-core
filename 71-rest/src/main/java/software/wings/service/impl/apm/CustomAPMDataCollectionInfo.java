@@ -50,11 +50,12 @@ public class CustomAPMDataCollectionInfo extends MetricsDataCollectionInfo {
   public CustomAPMDataCollectionInfo(String accountId, String applicationId, String envId, Instant startTime,
       Instant endTime, Set<String> hosts, String cvConfigId, String stateExecutionId, String workflowId,
       String workflowExecutionId, String serviceId, String cvTaskId, String connectorId,
-      Map<String, String> hostsToGroupNameMap, APMVerificationConfig apmConfig, Map<String, String> headers,
-      Map<String, String> options, List<EncryptedDataDetail> encryptedDataDetails,
+      Map<String, String> hostsToGroupNameMap, Instant dataCollectionStartTime, APMVerificationConfig apmConfig,
+      Map<String, String> headers, Map<String, String> options, List<EncryptedDataDetail> encryptedDataDetails,
       List<APMMetricInfo> canaryMetricInfos, List<APMMetricInfo> metricEndpoints) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, hostsToGroupNameMap);
+        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, dataCollectionStartTime,
+        hostsToGroupNameMap);
     this.apmConfig = apmConfig;
     this.headers = headers;
     this.options = options;
