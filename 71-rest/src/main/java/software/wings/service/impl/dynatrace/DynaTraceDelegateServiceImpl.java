@@ -7,14 +7,9 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.http.HttpStatus;
 import retrofit2.Call;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DynaTraceConfig;
@@ -23,14 +18,10 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.dynatrace.DynaTraceRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
-import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.DynatraceState;
 
-import java.io.IOException;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -58,46 +49,14 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
   @Override
   public DynaTraceMetricDataResponse fetchMetricData(DynaTraceConfig dynaTraceConfig,
       DynaTraceMetricDataRequest dataRequest, List<EncryptedDataDetail> encryptedDataDetails,
-      ThirdPartyApiCallLog apiCallLog) throws IOException {
+      ThirdPartyApiCallLog apiCallLog) {
     Preconditions.checkNotNull(apiCallLog);
     apiCallLog.setTitle(
         "Fetching metric data for " + dataRequest.getTimeseriesId() + " from " + dynaTraceConfig.getDynaTraceUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name("url")
-                                     .value(dynaTraceConfig.getDynaTraceUrl())
-                                     .type(FieldType.URL)
-                                     .build());
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name("payload")
-                                     .value(JsonUtils.asJson(dataRequest))
-                                     .type(FieldType.JSON)
-                                     .build());
     final Call<DynaTraceMetricDataResponse> request =
         getDynaTraceRestClient(dynaTraceConfig)
             .fetchMetricData(getHeaderWithCredentials(dynaTraceConfig, encryptedDataDetails), dataRequest);
-    final Response<DynaTraceMetricDataResponse> response;
-    try {
-      response = request.execute();
-    } catch (Exception e) {
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-      delegateLogService.save(dynaTraceConfig.getAccountId(), apiCallLog);
-      throw new WingsException("Unsuccessful response while fetching data from DynaTrace. Error message: "
-          + e.getMessage() + " Request: " + dynaTraceConfig.getDynaTraceUrl());
-    }
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    if (response.isSuccessful()) {
-      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-      delegateLogService.save(dynaTraceConfig.getAccountId(), apiCallLog);
-      return response.body();
-    } else {
-      logger.error("Request not successful. Reason: {}, request: {}", response, dataRequest);
-      apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
-      delegateLogService.save(dynaTraceConfig.getAccountId(), apiCallLog);
-      throw new WingsException("Unsuccessful response while fetching data from Dynatrace. Error code: "
-          + response.code() + ". Error: " + response.errorBody());
-    }
+    return requestExecutor.executeRequest(apiCallLog, request);
   }
 
   @Override
