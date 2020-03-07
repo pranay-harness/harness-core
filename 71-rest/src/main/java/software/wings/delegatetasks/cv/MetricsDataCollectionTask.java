@@ -65,6 +65,11 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
 
   private NewRelicMetricDataRecord mapToNewRelicMetricDataRecord(
       DataCollectionInfoV2 dataCollectionInfo, MetricElement metricElement) {
+    int dataCollectionMinute = (int) TimeUnit.MILLISECONDS.toMinutes(metricElement.getTimestamp());
+    if (dataCollectionInfo.getDataCollectionStartTime() != null) {
+      dataCollectionMinute = (int) (dataCollectionMinute
+          - TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getDataCollectionStartTime().toEpochMilli()));
+    }
     return NewRelicMetricDataRecord.builder()
         .name(metricElement.getName())
         .appId(dataCollectionInfo.getApplicationId())
@@ -79,7 +84,7 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
         .values(metricElement.getValues())
         .groupName(metricElement.getGroupName())
         .tag(metricElement.getTag())
-        .dataCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(metricElement.getTimestamp()))
+        .dataCollectionMinute(dataCollectionMinute)
         .build();
   }
 
@@ -105,10 +110,20 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
 
   protected void addHeartbeats(
       MetricsDataCollectionInfo metricsDataCollectionInfo, List<NewRelicMetricDataRecord> newRelicMetrics) {
-    int heartbeatMin = (int) TimeUnit.MILLISECONDS.toMinutes(metricsDataCollectionInfo.getEndTime().toEpochMilli());
+    int heartbeatMin = (int) (TimeUnit.MILLISECONDS.toMinutes(metricsDataCollectionInfo.getEndTime().toEpochMilli()));
     Set<String> groups = new HashSet<>();
     for (Map.Entry<String, String> entry : metricsDataCollectionInfo.getHostsToGroupNameMap().entrySet()) {
       if (!groups.contains(entry.getValue())) {
+        int dataCollectionMinute = heartbeatMin;
+        if (metricsDataCollectionInfo.getDataCollectionStartTime() != null) {
+          // unfortunately there is a inconsistency between how heartbeat is created for workflow and how it's created
+          // for service guard.
+          dataCollectionMinute =
+              (int) ((dataCollectionMinute
+                         - TimeUnit.MILLISECONDS.toMinutes(
+                               metricsDataCollectionInfo.getDataCollectionStartTime().toEpochMilli()))
+                  - 1);
+        }
         newRelicMetrics.add(NewRelicMetricDataRecord.builder()
                                 .stateType(metricsDataCollectionInfo.getStateType())
                                 .name(HARNESS_HEARTBEAT_METRIC_NAME)
@@ -117,7 +132,7 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
                                 .workflowExecutionId(metricsDataCollectionInfo.getWorkflowExecutionId())
                                 .serviceId(metricsDataCollectionInfo.getServiceId())
                                 .stateExecutionId(metricsDataCollectionInfo.getStateExecutionId())
-                                .dataCollectionMinute(heartbeatMin)
+                                .dataCollectionMinute(dataCollectionMinute)
                                 .timeStamp(TimeUnit.MINUTES.toMillis(heartbeatMin))
                                 .level(ClusterLevel.H0)
                                 .cvConfigId(metricsDataCollectionInfo.getCvConfigId())

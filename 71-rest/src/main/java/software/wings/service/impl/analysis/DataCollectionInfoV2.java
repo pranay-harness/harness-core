@@ -44,6 +44,7 @@ public abstract class DataCollectionInfoV2 implements TaskParameters, ExecutionC
   private String cvTaskId;
   private String connectorId;
   private List<EncryptedDataDetail> encryptedDataDetails;
+  private Instant dataCollectionStartTime;
 
   public Set<String> getHosts() {
     // morphia converts empty objects to null while saving to database so making sure it's always returns empty set if

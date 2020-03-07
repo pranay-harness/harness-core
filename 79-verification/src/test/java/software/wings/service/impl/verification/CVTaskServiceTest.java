@@ -343,8 +343,9 @@ public class CVTaskServiceTest extends VerificationBaseTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testCreateCVTasks() {
+    long startDataCollectionMinute = Timestamp.currentMinuteBoundary();
     AnalysisContext analysisContext = AnalysisContext.builder().build();
-    analysisContext.setStartDataCollectionMinute(TimeUnit.MILLISECONDS.toMillis(Timestamp.currentMinuteBoundary()));
+    analysisContext.setStartDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(startDataCollectionMinute));
     analysisContext.setAccountId(accountId);
     analysisContext.setDataCollectionInfov2(createDataCollectionInfo());
     analysisContext.setTimeDuration(10);
@@ -361,6 +362,8 @@ public class CVTaskServiceTest extends VerificationBaseTest {
     assertThat(cvTasks.get(cvTasks.size() - 1).getNextTaskId()).isNull();
     for (int i = 1; i < 10; i++) {
       assertThat(cvTasks.get(i).getStatus()).isEqualTo(ExecutionStatus.WAITING);
+      assertThat(cvTasks.get(i).getDataCollectionInfo().getDataCollectionStartTime())
+          .isEqualTo(Instant.ofEpochMilli(startDataCollectionMinute));
     }
   }
 
@@ -369,7 +372,7 @@ public class CVTaskServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testCreateCVTasks_forPredictive() {
     AnalysisContext analysisContext = AnalysisContext.builder().build();
-    analysisContext.setStartDataCollectionMinute(TimeUnit.MILLISECONDS.toMillis(Timestamp.currentMinuteBoundary()));
+    analysisContext.setStartDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()));
     analysisContext.setAccountId(accountId);
     analysisContext.setDataCollectionInfov2(createDataCollectionInfo());
     analysisContext.setTimeDuration(10);
@@ -402,7 +405,7 @@ public class CVTaskServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testCreateCVTasks_forHistorical() {
     AnalysisContext analysisContext = AnalysisContext.builder().build();
-    analysisContext.setStartDataCollectionMinute(TimeUnit.MILLISECONDS.toMillis(Timestamp.currentMinuteBoundary()));
+    analysisContext.setStartDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()));
     analysisContext.setAccountId(accountId);
     analysisContext.setDataCollectionInfov2(createDataCollectionInfo());
     analysisContext.setTimeDuration(10);

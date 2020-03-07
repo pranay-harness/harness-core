@@ -59,6 +59,8 @@ public class CVTaskServiceImpl implements CVTaskService {
   public void createCVTasks(AnalysisContext context) {
     List<CVTask> cvTasks = new ArrayList<>();
     long startTime = TimeUnit.MINUTES.toMillis(context.getStartDataCollectionMinute());
+    Instant dataCollectionStartTime =
+        Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(context.getStartDataCollectionMinute()));
     if (context.getComparisonStrategy() == PREDICTIVE) {
       cvTasks.addAll(createCVTasksForPredictiveComparisionStrategy(context, startTime));
     }
@@ -75,6 +77,7 @@ public class CVTaskServiceImpl implements CVTaskService {
       copy.setStartTime(Instant.ofEpochMilli(startTimeMSForCurrentMinute));
       Duration duration = Duration.ofMinutes(Math.min(timeDuration - minute, 1));
       copy.setEndTime(Instant.ofEpochMilli(startTimeMSForCurrentMinute + duration.toMillis()));
+      copy.setDataCollectionStartTime(dataCollectionStartTime);
       CVTask cvTask =
           CVTask.builder()
               .accountId(context.getAccountId())

@@ -44,10 +44,12 @@ public class ElkDataCollectionInfoV2 extends LogDataCollectionInfoV2 {
   public ElkDataCollectionInfoV2(String accountId, String applicationId, String envId, Instant startTime,
       Instant endTime, Set<String> hosts, String cvConfigId, String stateExecutionId, String workflowId,
       String workflowExecutionId, String serviceId, String cvTaskId, String connectorId, String query,
-      String hostnameField, List<EncryptedDataDetail> encryptedDataDetails, ElkConfig elkConfig, String indices,
-      String messageField, String timestampField, String timestampFieldFormat, ElkQueryType queryType) {
+      String hostnameField, List<EncryptedDataDetail> encryptedDataDetails, Instant dataCollectionStartTime,
+      ElkConfig elkConfig, String indices, String messageField, String timestampField, String timestampFieldFormat,
+      ElkQueryType queryType) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, query, hostnameField);
+        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, dataCollectionStartTime, query,
+        hostnameField);
     this.elkConfig = elkConfig;
     this.indices = indices;
     this.messageField = messageField;
