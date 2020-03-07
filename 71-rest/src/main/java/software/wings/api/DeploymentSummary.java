@@ -45,11 +45,19 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
           },
           options = @IndexOptions(name = "containerSvcName_inframappingId_createdAt", background = true)),
 
+      @Index(fields =
+          {
+            @Field(DeploymentSummaryKeys.accountId)
+            , @Field(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_INFO),
+                @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
+          },
+          options = @IndexOptions(name = "accountId_k8sDeploymentInfo", background = true)),
+
       @Index(fields = {
-        @Field(DeploymentSummaryKeys.accountId)
-        , @Field(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_INFO),
+        @Field(DeploymentSummaryKeys.infraMappingId)
+        , @Field(DeploymentSummaryKeys.CONTAINER_KEY_LABELS), @Field(DeploymentSummaryKeys.CONTAINER_KEY_NEW_VERSION),
             @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
-      }, options = @IndexOptions(name = "accountId_k8sDeploymentInfo", background = true))
+      }, options = @IndexOptions(name = "inframappingId_containerlabelsAndVersion", background = true))
 })
 @FieldNameConstants(innerTypeName = "DeploymentSummaryKeys")
 public class DeploymentSummary extends Base {
@@ -124,5 +132,7 @@ public class DeploymentSummary extends Base {
     public static final String CLUSTER_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES = "deploymentInfo.clusterName";
     public static final String RELEASE_NAME_K8S_DEPLOYMENT_INFO = "deploymentInfo.releaseName";
     public static final String CONTAINER_KEY_SERVICE_NAME = "containerDeploymentKey.containerServiceName";
+    public static final String CONTAINER_KEY_LABELS = "containerDeploymentKey.labels";
+    public static final String CONTAINER_KEY_NEW_VERSION = "containerDeploymentKey.newVersion";
   }
 }
