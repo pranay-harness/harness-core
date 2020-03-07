@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.LAMBDA_HOST_NAME;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
@@ -498,7 +499,12 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     return null;
   }
 
-  public abstract AnalysisTolerance getAnalysisTolerance();
+  public AnalysisTolerance getAnalysisTolerance() {
+    if (isBlank(tolerance)) {
+      return AnalysisTolerance.LOW;
+    }
+    return AnalysisTolerance.valueOf(tolerance);
+  }
 
   public void setAnalysisTolerance(String tolerance) {
     this.tolerance = tolerance;

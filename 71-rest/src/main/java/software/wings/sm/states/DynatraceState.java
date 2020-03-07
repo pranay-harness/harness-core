@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.base.Preconditions;
@@ -14,32 +13,25 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.AnalysisTolerance;
-import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -48,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Slf4j
+@FieldNameConstants(innerTypeName = "DynatraceStateKeys")
 public class DynatraceState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore public static final String TEST_HOST_NAME = "testNode";
   @Transient @SchemaIgnore public static final String CONTROL_HOST_NAME = "controlNode";
@@ -61,38 +54,6 @@ public class DynatraceState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
-  @Attributes(required = true, title = "Baseline for Risk Analysis")
-  @DefaultValue("COMPARE_WITH_PREVIOUS")
-  public AnalysisComparisonStrategy getComparisonStrategy() {
-    if (isBlank(comparisonStrategy)) {
-      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
-    }
-    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
-  }
-
-  @Override
-  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
-  @DefaultValue("15")
-  public String getTimeDuration() {
-    if (isBlank(timeDuration)) {
-      return String.valueOf(15);
-    }
-    return timeDuration;
-  }
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
-  @Attributes(required = true, title = "Algorithm Sensitivity")
-  @DefaultValue("MEDIUM")
-  public AnalysisTolerance getAnalysisTolerance() {
-    if (isBlank(tolerance)) {
-      return AnalysisTolerance.LOW;
-    }
-    return AnalysisTolerance.valueOf(tolerance);
-  }
-
-  @Override
   public Logger getLogger() {
     return logger;
   }
@@ -100,8 +61,11 @@ public class DynatraceState extends AbstractMetricAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
+    final String resolvedConnectorId =
+        getResolvedConnectorId(context, DynatraceStateKeys.analysisServerConfigId, analysisServerConfigId);
     String envId = getEnvId(context);
-    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+
+    final SettingAttribute settingAttribute = settingsService.get(resolvedConnectorId);
     Preconditions.checkNotNull(settingAttribute, "No dynatrace setting with id: " + analysisServerConfigId + " found");
 
     final DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingAttribute.getValue();
@@ -151,15 +115,6 @@ public class DynatraceState extends AbstractMetricAnalysisState {
             .build(),
         waitId);
     return delegateService.queueTask(delegateTask);
-  }
-
-  public static Set<String> splitServiceMethods(String serviceMethods) {
-    Set<String> methodNames = new HashSet<>();
-    String[] methods = serviceMethods.split("\n");
-    for (String method : methods) {
-      methodNames.add(method.trim());
-    }
-    return methodNames;
   }
 
   @Override
