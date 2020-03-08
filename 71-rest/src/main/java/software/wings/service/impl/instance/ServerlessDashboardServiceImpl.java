@@ -19,7 +19,6 @@ import static software.wings.beans.instance.dashboard.InstanceSummaryStats.Build
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -73,6 +72,7 @@ import software.wings.service.intfc.instance.ServerlessDashboardService;
 import software.wings.service.intfc.instance.ServerlessInstanceService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -116,7 +116,7 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
 
     long serverlessInstanceCount = getServerlessInstanceCount(query);
 
-    Map<String, List<EntitySummaryStats>> instanceSummaryMap = Maps.newHashMap();
+    Map<String, List<EntitySummaryStats>> instanceSummaryMap = new HashMap<>();
     for (String groupByEntityType : groupByEntityTypes) {
       String entityNameColumn;
       String entityIdColumn;
@@ -170,7 +170,7 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
     aggregationPipeline.skip(offset);
     aggregationPipeline.limit(limit);
 
-    final Iterator<ServiceInstanceCount> aggregate =
+    Iterator<ServiceInstanceCount> aggregate =
         HPersistence.retry(() -> aggregationPipeline.aggregate(ServiceInstanceCount.class));
     aggregate.forEachRemaining(instanceInfoList::add);
     return constructInstanceSummaryStatsByService(instanceInfoList, offset, limit);
@@ -221,7 +221,7 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
       return emptyList();
     }
 
-    final String appId = serviceAggregationInfoList.get(0).getAppInfo().getId();
+    String appId = serviceAggregationInfoList.get(0).getAppInfo().getId();
 
     InstanceStatsByEnvironment currentEnv = null;
     InstanceStatsByArtifact currentArtifact;
@@ -354,15 +354,15 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
 
   @VisibleForTesting
   InstanceSummaryStatsByService getInstanceSummaryStatsByService(ServiceInstanceCount serviceInstanceCount) {
-    final EntitySummary appInfo = serviceInstanceCount.getAppInfo();
-    final EntitySummary appSummary =
+    EntitySummary appInfo = serviceInstanceCount.getAppInfo();
+    EntitySummary appSummary =
         EntitySummary.builder().name(appInfo.getName()).id(appInfo.getId()).type(APPLICATION.name()).build();
 
-    final List<EnvType> envTypeList = ListUtils.emptyIfNull(serviceInstanceCount.envTypeList);
-    final long prodCount =
+    List<EnvType> envTypeList = ListUtils.emptyIfNull(serviceInstanceCount.envTypeList);
+    long prodCount =
         envTypeList.stream().filter(envType -> EnvironmentType.PROD.name().equals(envType.getType())).count();
 
-    final long nonprodCount = envTypeList.size() - prodCount;
+    long nonprodCount = envTypeList.size() - prodCount;
 
     EntitySummary serviceInfo = serviceInstanceCount.getServiceInfo();
     return InstanceSummaryStatsByService.builder()
@@ -483,7 +483,7 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
   }
 
   private UserRequestContext getUserContext() {
-    final User user = UserThreadLocal.get();
+    User user = UserThreadLocal.get();
     if (user != null) {
       return user.getUserRequestContext();
     }
@@ -497,14 +497,14 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
   @VisibleForTesting
   Query<ServerlessInstance> getInstanceQuery(
       String accountId, List<String> appIds, boolean includeDeleted, long timestamp) {
-    final Query<ServerlessInstance> query = wingsPersistence.createQuery(ServerlessInstance.class);
+    Query<ServerlessInstance> query = wingsPersistence.createQuery(ServerlessInstance.class);
     if (isNotEmpty(appIds)) {
       query.field(ServerlessInstanceKeys.appId).in(appIds);
     } else {
-      final UserRequestContext userRequestContext = getUserContext();
+      UserRequestContext userRequestContext = getUserContext();
       if (userRequestContext != null) {
         if (userRequestContext.isAppIdFilterRequired()) {
-          final Set<String> finalAllowedAppIdSet = Sets.newHashSet();
+          Set<String> finalAllowedAppIdSet = Sets.newHashSet();
           finalAllowedAppIdSet.addAll(emptyIfNull(userRequestContext.getAppIds()));
 
           if (includeDeleted && isUserAccountAdmin(accountId)) {

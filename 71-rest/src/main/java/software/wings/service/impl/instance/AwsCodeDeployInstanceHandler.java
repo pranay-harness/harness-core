@@ -5,7 +5,6 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.singletonList;
 import static java.util.function.Function.identity;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
@@ -39,6 +38,7 @@ import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManage
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -110,7 +110,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
     }
 
     // key - ec2 instance id, value - instance
-    Map<String, Instance> ec2InstanceIdInstanceMap = Maps.newHashMap();
+    Map<String, Instance> ec2InstanceIdInstanceMap = new HashMap<>();
 
     List<Instance> instancesInDB = getInstances(appId, infraMappingId);
 

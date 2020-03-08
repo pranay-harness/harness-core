@@ -13,7 +13,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -38,6 +37,7 @@ import software.wings.sm.StateType;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -234,7 +234,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
     Instant now = Instant.now();
     when(dataCollectionInfo.getStartTime()).thenReturn(now.minus(10, ChronoUnit.MINUTES));
     when(dataCollectionInfo.getEndTime()).thenReturn(now);
-    when(dataCollectionInfo.getHostsToGroupNameMap()).thenReturn(Maps.newHashMap());
+    when(dataCollectionInfo.getHostsToGroupNameMap()).thenReturn(new HashMap<>());
     return dataCollectionInfo;
   }
 }

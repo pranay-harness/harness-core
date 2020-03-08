@@ -8,7 +8,6 @@ import static software.wings.graphql.utils.GraphQLConstants.CREATE_APPLICATION_A
 import static software.wings.graphql.utils.GraphQLConstants.DELETE_APPLICATION_API;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -50,6 +49,7 @@ import software.wings.service.intfc.UserService;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -330,7 +330,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
       UserRestrictionInfo userRestrictionInfo, String accountId, boolean emptyAppIdsInReq, boolean isScopedToApp,
       List<String> appIdsFromRequest) {
     UserRequestContextBuilder userRequestContextBuilder =
-        UserRequestContext.builder().accountId(accountId).entityInfoMap(Maps.newHashMap());
+        UserRequestContext.builder().accountId(accountId).entityInfoMap(new HashMap<>());
 
     userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
     userRequestContextBuilder.userRestrictionInfo(userRestrictionInfo);
@@ -351,7 +351,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
   }
 
   public <I, O> void handlePostMutation(MutationContext mutationContext, I parameter, O mutationResult) {
-    final DataFetchingEnvironment dataFetchingEnvironment = mutationContext.getDataFetchingEnvironment();
+    DataFetchingEnvironment dataFetchingEnvironment = mutationContext.getDataFetchingEnvironment();
 
     if (apisToEvictUserPermissionRestrictionCache.contains(dataFetchingEnvironment.getField().getName())) {
       authService.evictUserPermissionAndRestrictionCacheForAccount(mutationContext.getAccountId(), true, true);

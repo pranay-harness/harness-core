@@ -2,8 +2,6 @@ package software.wings.beans;
 
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 
-import com.google.common.collect.Maps;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
@@ -31,6 +29,7 @@ import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -82,7 +81,7 @@ public class ConfigFile extends BaseFile implements EncryptableSetting {
 
   @FormDataParam("defaultVersion") private int defaultVersion;
 
-  @Default private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
+  @Default private Map<String, EntityVersion> envIdVersionMap = new HashMap<>();
 
   @JsonIgnore @FormDataParam("envIdVersionMapString") private String envIdVersionMapString;
 

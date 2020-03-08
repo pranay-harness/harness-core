@@ -11,7 +11,6 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -78,11 +77,11 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   private String customThresholdRefId;
 
   public void setCustomThresholdRefId(String crIds) {
-    this.customThresholdRefId = crIds;
+    customThresholdRefId = crIds;
   }
 
   public String getCustomThresholdRefId() {
-    return this.customThresholdRefId;
+    return customThresholdRefId;
   }
 
   static {
@@ -253,7 +252,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         getLogger().info("triggered data collection for {} state, delegateTaskId: {}", getStateType(), delegateTaskId);
       }
       logDataCollectionTriggeredMessage(activityLogger);
-      final VerificationDataAnalysisResponse response =
+      VerificationDataAnalysisResponse response =
           VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();
       response.setExecutionStatus(ExecutionStatus.RUNNING);
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
@@ -271,7 +270,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       getLogger().error("metric analysis state {} failed", context.getStateExecutionInstanceId(), ex);
       continuousVerificationService.setMetaDataExecutionStatus(
           context.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true, false);
-      final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
+      VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
           VerificationStateAnalysisExecutionData.builder()
               .stateExecutionInstanceId(context.getStateExecutionInstanceId())
               .serverConfigId(getAnalysisServerConfigId())
@@ -412,11 +411,11 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     testNodes.keySet().forEach(controlNodes::remove);
 
     int timeDurationInt = Integer.parseInt(getTimeDuration());
-    String accountId = this.appService.get(context.getAppId()).getAccountId();
+    String accountId = appService.get(context.getAppId()).getAccountId();
 
     AnalysisContext analysisContext =
         AnalysisContext.builder()
-            .accountId(this.appService.get(context.getAppId()).getAccountId())
+            .accountId(appService.get(context.getAppId()).getAccountId())
             .appId(context.getAppId())
             .workflowId(getWorkflowId(context))
             .workflowExecutionId(context.getWorkflowExecutionId())
@@ -425,8 +424,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .analysisType(MLAnalysisType.TIME_SERIES)
             .controlNodes(controlNodes)
             .testNodes(testNodes)
-            .isSSL(this.configuration.isSslEnabled())
-            .appPort(this.configuration.getApplicationPort())
+            .isSSL(configuration.isSslEnabled())
+            .appPort(configuration.getApplicationPort())
             .comparisonStrategy(getComparisonStrategy())
             .timeDuration(timeDurationInt)
             .stateType(StateType.valueOf(getStateType()))
@@ -480,7 +479,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .collectionTime(Integer.parseInt(getTimeDuration()))
             .encryptedDataDetails(
                 secretManager.getEncryptionDetails(gcpConfig, context.getAppId(), context.getWorkflowExecutionId()))
-            .hosts(Maps.newHashMap())
+            .hosts(new HashMap<>())
             .loadBalancerMetrics(stackDriverState.fetchLoadBalancerMetrics())
             .podMetrics(stackDriverState.fetchPodMetrics())
             .build();

@@ -21,7 +21,6 @@ import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -74,6 +73,7 @@ import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -315,7 +315,7 @@ public class AwsAsgHelperServiceDelegateImpl
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> asgs) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      Map<String, Integer> capacities = Maps.newHashMap();
+      Map<String, Integer> capacities = new HashMap<>();
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       String nextToken = null;
       DescribeAutoScalingGroupsRequest request = null;

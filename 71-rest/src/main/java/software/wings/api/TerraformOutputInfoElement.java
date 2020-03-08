@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import com.google.common.collect.Maps;
-
 import io.harness.context.ContextElementType;
 import lombok.Builder;
 import software.wings.sm.ContextElement;
@@ -31,7 +29,7 @@ public class TerraformOutputInfoElement implements ContextElement {
 
   @Override
   public Map<String, Object> paramMap(ExecutionContext context) {
-    HashMap<String, Object> paramMap = Maps.newHashMap();
+    HashMap<String, Object> paramMap = new HashMap<>();
     paramMap.put("terraform", outputVariables);
     return paramMap;
   }

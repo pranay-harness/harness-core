@@ -9,7 +9,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.Utils.escapifyString;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -28,6 +27,7 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 @Slf4j
@@ -69,9 +69,9 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
 
   @JsonIgnore @SchemaIgnore private String activityId;
 
-  @JsonIgnore @Transient @SchemaIgnore private Map<String, String> envVariables = Maps.newHashMap();
+  @JsonIgnore @Transient @SchemaIgnore private Map<String, String> envVariables = new HashMap<>();
 
-  @JsonIgnore @Transient @SchemaIgnore private Map<String, String> safeDisplayEnvVariables = Maps.newHashMap();
+  @JsonIgnore @Transient @SchemaIgnore private Map<String, String> safeDisplayEnvVariables = new HashMap<>();
 
   @JsonIgnore @Transient @SchemaIgnore private String preInitCommand;
 

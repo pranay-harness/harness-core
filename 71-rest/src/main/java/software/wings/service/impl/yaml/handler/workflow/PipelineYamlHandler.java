@@ -7,7 +7,6 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Pipeline.Yaml;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -25,6 +24,7 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.PipelineService;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -83,7 +83,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   }
 
   private Map<String, String> getPreviousStageElementMap(Pipeline previous) {
-    Map<String, String> entityIdMap = Maps.newHashMap();
+    Map<String, String> entityIdMap = new HashMap<>();
 
     if (previous == null) {
       return entityIdMap;

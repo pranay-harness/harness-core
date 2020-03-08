@@ -7,7 +7,6 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ObjectType.NOTIFICATION_GROUP;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -23,6 +22,7 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.utils.Utils;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -40,7 +40,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
-    Map<NotificationChannelType, List<String>> addressByChannelTypeMap = Maps.newHashMap();
+    Map<NotificationChannelType, List<String>> addressByChannelTypeMap = new HashMap<>();
     if (yaml.getAddresses() != null) {
       addressByChannelTypeMap = toAddressByChannelTypeMap(yaml.getAddresses());
     }

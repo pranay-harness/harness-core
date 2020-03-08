@@ -2,7 +2,6 @@ package software.wings.beans.command;
 
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -11,6 +10,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
 
+import java.util.HashMap;
 import java.util.Map;
 public class InitPowerShellCommandUnit extends AbstractCommandUnit {
   @Inject @Transient private transient CommandUnitHelper commandUnitHelper;
@@ -20,9 +20,9 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
 
   @JsonIgnore @SchemaIgnore private String activityId;
 
-  @JsonIgnore @Transient @SchemaIgnore private Map<String, String> envVariables = Maps.newHashMap();
+  @JsonIgnore @Transient @SchemaIgnore private Map<String, String> envVariables = new HashMap<>();
 
-  @JsonIgnore @Transient @SchemaIgnore private Map<String, String> safeDisplayEnvVariables = Maps.newHashMap();
+  @JsonIgnore @Transient @SchemaIgnore private Map<String, String> safeDisplayEnvVariables = new HashMap<>();
 
   public InitPowerShellCommandUnit() {
     super(CommandUnitType.EXEC);

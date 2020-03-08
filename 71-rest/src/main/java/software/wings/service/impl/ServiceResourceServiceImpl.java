@@ -51,7 +51,6 @@ import static software.wings.yaml.YamlHelper.trimYaml;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
@@ -206,6 +205,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -1940,7 +1940,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private Map<String, String> getEntityMap(@NotEmpty String serviceId, String commandName) {
-    Map<String, String> map = Maps.newHashMap();
+    Map<String, String> map = new HashMap<>();
 
     if (isNotEmpty(serviceId)) {
       map.put(EntityType.SERVICE.name(), serviceId);

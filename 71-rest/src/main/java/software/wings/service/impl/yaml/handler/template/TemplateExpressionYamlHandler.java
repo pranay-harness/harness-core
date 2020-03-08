@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.handler.template;
 
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -19,6 +18,7 @@ import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.utils.Utils;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +32,7 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
   private TemplateExpression toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
 
-    Map<String, Object> properties = Maps.newHashMap();
+    Map<String, Object> properties = new HashMap<>();
     if (yaml.getMetadata() != null) {
       List<NameValuePair> nameValuePairList =
           yaml.getMetadata()

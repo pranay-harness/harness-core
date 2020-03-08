@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.google.api.client.util.Maps;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.model.Bucket;
 import com.google.api.services.storage.model.Buckets;
@@ -55,7 +54,7 @@ public class GcsServiceTest extends WingsBaseTest {
   @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListBuckets() throws IOException {
-    HashMap<String, String> bucketList = Maps.newHashMap();
+    HashMap<String, String> bucketList = new HashMap<>();
     bucketList.put("bucket", "bucketId");
     Buckets buckets = new Buckets();
     Bucket bucket = new Bucket();

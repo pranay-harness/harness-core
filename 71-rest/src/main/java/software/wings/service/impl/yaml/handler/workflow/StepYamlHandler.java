@@ -11,7 +11,6 @@ import static software.wings.beans.template.TemplateHelper.convertToEntityVariab
 import static software.wings.beans.template.TemplateHelper.obtainTemplateVersion;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -44,6 +43,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.yaml.workflow.StepYaml;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -92,7 +92,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     }
 
     // properties
-    Map<String, Object> outputProperties = Maps.newHashMap();
+    Map<String, Object> outputProperties = new HashMap<>();
 
     Map<String, Object> yamlProperties = stepYaml.getProperties();
     if (yamlProperties != null) {
@@ -143,7 +143,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   @Override
   public StepYaml toYaml(GraphNode step, String appId) {
     Map<String, Object> properties = step.getProperties();
-    final Map<String, Object> outputProperties = new TreeMap<>();
+    Map<String, Object> outputProperties = new TreeMap<>();
     if (properties != null) {
       properties.forEach((name, value) -> {
         if (!shouldBeIgnored(name)) {

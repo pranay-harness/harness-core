@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.inject.Singleton;
 
@@ -62,14 +61,14 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
     if (!(infrastructureMapping instanceof AwsAmiInfrastructureMapping)) {
-      final String msg =
+      String msg =
           "Incompatible infra mapping type. Expecting ami type. Found:" + infrastructureMapping.getInfraMappingType();
       logger.error(msg);
       throw WingsException.builder().message(msg).build();
     }
 
     // key - ec2 instance id, value - instance
-    Map<String, Instance> ec2InstanceIdInstanceMap = Maps.newHashMap();
+    Map<String, Instance> ec2InstanceIdInstanceMap = new HashMap<>();
 
     loadInstanceMapBasedOnType(appId, infraMappingId, asgInstanceMap, ec2InstanceIdInstanceMap);
 

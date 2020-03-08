@@ -28,7 +28,7 @@ public class PhysicalInfrastructureMappingTest extends WingsBaseTest {
   public void testApplyProvisionerVariables() {
     PhysicalInfrastructureMapping infrastructureMapping = Builder.aPhysicalInfrastructureMapping().build();
 
-    HashMap<String, Object> blueprintProperties = Maps.newHashMap();
+    HashMap<String, Object> blueprintProperties = new HashMap<>();
 
     Map<String, Object> host1 = Maps.newLinkedHashMap();
     host1.put("Hostname", "abc.com");
@@ -60,6 +60,6 @@ public class PhysicalInfrastructureMappingTest extends WingsBaseTest {
     hosts.add(host3);
 
     Assertions.assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> infrastructureMapping.applyProvisionerVariables(Maps.newHashMap(), null, false));
+        .isThrownBy(() -> infrastructureMapping.applyProvisionerVariables(new HashMap<>(), null, false));
   }
 }

@@ -88,7 +88,6 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -147,6 +146,7 @@ import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.sm.PipelineSummary;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -197,7 +197,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                    Account.Builder.anAccount().withUuid(ACCOUNT_2_ID).build()))
                .build();
 
-    Map<String, AppPermissionSummaryForUI> appPermissionsMap = Maps.newHashMap();
+    Map<String, AppPermissionSummaryForUI> appPermissionsMap = new HashMap<>();
     setAppPermissionsMap(appPermissionsMap, ENV_1_ID, APP_1_ID);
     setAppPermissionsMap(appPermissionsMap, ENV_2_ID, APP_2_ID);
     setAppPermissionsMap(appPermissionsMap, ENV_3_ID, APP_2_ID);
@@ -224,7 +224,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
 
   private void setAppPermissionsMap(
       Map<String, AppPermissionSummaryForUI> appPermissionsMap, String envId, String appId) {
-    Map<String, Set<Action>> envPermissionMap = Maps.newHashMap();
+    Map<String, Set<Action>> envPermissionMap = new HashMap<>();
     envPermissionMap.put(envId, newHashSet(Action.READ));
 
     AppPermissionSummaryForUI appPermissionSummaryForUI =
@@ -337,7 +337,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
     Map<String, Integer> instanceCountMap = usageMetricsHelper.getAllValidInstanceCounts();
     boolean account1Validation = false;
     boolean account2Validation = false;
-    final Iterator<Entry<String, Integer>> mapIterator = instanceCountMap.entrySet().iterator();
+    Iterator<Entry<String, Integer>> mapIterator = instanceCountMap.entrySet().iterator();
     while (mapIterator.hasNext()) {
       Map.Entry entry = mapIterator.next();
       if (entry.getKey().equals(ACCOUNT_1_ID)) {

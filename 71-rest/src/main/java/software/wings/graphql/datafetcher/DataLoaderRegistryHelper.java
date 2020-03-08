@@ -1,6 +1,5 @@
 package software.wings.graphql.datafetcher;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -14,6 +13,7 @@ import org.dataloader.DataLoaderRegistry;
 import org.dataloader.MappedBatchLoader;
 import software.wings.app.GraphQLModule;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -22,7 +22,7 @@ public class DataLoaderRegistryHelper {
 
   @Inject
   public DataLoaderRegistryHelper() {
-    this.batchedDataLoaders = Maps.newHashMap();
+    batchedDataLoaders = new HashMap<>();
   }
 
   @Inject

@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static jersey.repackaged.com.google.common.collect.Maps.newHashMap;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
 
 import com.google.inject.Inject;
@@ -23,6 +22,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -95,7 +95,7 @@ public class AwsAmiAsgDesiredInstancesMigration implements Migration {
                     workflowModified = true;
                     Map<String, Object> properties = node.getProperties();
                     if (properties == null) {
-                      properties = newHashMap();
+                      properties = new HashMap<>();
                     }
                     int desiredInstances = DEFAULT_AMI_ASG_DESIRED_INSTANCES;
                     if (isNotEmpty(properties)) {
