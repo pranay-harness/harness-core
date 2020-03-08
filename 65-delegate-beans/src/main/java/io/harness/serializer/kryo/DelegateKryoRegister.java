@@ -3,7 +3,6 @@ package io.harness.serializer.kryo;
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
-
 import io.harness.serializer.KryoRegistrar;
 
 public class DelegateKryoRegister implements KryoRegistrar {

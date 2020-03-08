@@ -128,7 +128,6 @@ import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.DelegateConnectionHeartbeat;
-import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateSequenceConfig;
@@ -136,6 +135,7 @@ import software.wings.beans.DelegateSequenceConfig.DelegateSequenceConfigKeys;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Event.Type;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.FileMetadata;
@@ -1591,11 +1591,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     try {
       addMergedParamsForCapabilityCheck(task);
 
-      DelegatePackage delegatePackage = getDelegatePackageWithEncryptionConfig(task);
+      DelegateTaskPackage delegateTaskPackage = getDelegatePackageWithEncryptionConfig(task);
       CapabilityHelper.embedCapabilitiesInDelegateTask(task,
-          delegatePackage == null || isEmpty(delegatePackage.getEncryptionConfigs())
+          delegateTaskPackage == null || isEmpty(delegateTaskPackage.getEncryptionConfigs())
               ? Collections.emptyList()
-              : delegatePackage.getEncryptionConfigs().values());
+              : delegateTaskPackage.getEncryptionConfigs().values());
 
       if (isNotEmpty(task.getExecutionCapabilities())) {
         logger.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(task));
@@ -1674,7 +1674,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public DelegatePackage reportConnectionResults(
+  public DelegateTaskPackage reportConnectionResults(
       String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results) {
     assignDelegateService.saveConnectionResults(results);
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
@@ -1706,7 +1706,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public DelegatePackage acquireDelegateTask(String accountId, String delegateId, String taskId) {
+  public DelegateTaskPackage acquireDelegateTask(String accountId, String delegateId, String taskId) {
     try {
       logger.info("Acquiring delegate task");
       DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
@@ -1726,7 +1726,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           return assignTask(delegateId, taskId, delegateTask);
         } else if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
           setValidationStarted(delegateId, delegateTask);
-          return DelegatePackage.builder().delegateTask(delegateTask).build();
+          return DelegateTaskPackage.builder().delegateTask(delegateTask).build();
         } else {
           logger.info("Delegate is blacklisted for task");
           return null;
@@ -1881,7 +1881,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     return null;
   }
 
-  private DelegatePackage resolvePreAssignmentExpressions(DelegateTask delegateTask) {
+  private DelegateTaskPackage resolvePreAssignmentExpressions(DelegateTask delegateTask) {
     logger.info("Entering resolvePreAssignmentExpressions");
 
     try {
@@ -1904,14 +1904,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           return null;
         }
 
-        return DelegatePackage.builder()
+        return DelegateTaskPackage.builder()
             .delegateTask(delegateTask)
             .encryptionConfigs(secretManagerFunctor.getEncryptionConfigs())
             .secretDetails(secretManagerFunctor.getSecretDetails())
             .build();
       }
 
-      return DelegatePackage.builder().delegateTask(delegateTask).build();
+      return DelegateTaskPackage.builder().delegateTask(delegateTask).build();
     } catch (CriticalExpressionEvaluationException exception) {
       logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
       Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
@@ -1930,7 +1930,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
   }
 
-  private DelegatePackage getDelegatePackageWithEncryptionConfig(DelegateTask delegateTask) {
+  private DelegateTaskPackage getDelegatePackageWithEncryptionConfig(DelegateTask delegateTask) {
     try {
       if (CapabilityHelper.isTaskParameterType(delegateTask.getData())) {
         return resolvePreAssignmentExpressions(delegateTask);
@@ -1940,7 +1940,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         Map<String, EncryptionConfig> encryptionConfigMap =
             CapabilityHelper.fetchEncryptionDetailsListFromParameters(delegateTask.getData());
 
-        return DelegatePackage.builder().delegateTask(delegateTask).encryptionConfigs(encryptionConfigMap).build();
+        return DelegateTaskPackage.builder().delegateTask(delegateTask).encryptionConfigs(encryptionConfigMap).build();
       }
     } catch (CriticalExpressionEvaluationException exception) {
       logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
@@ -1976,7 +1976,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
   }
 
-  private DelegatePackage assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
+  private DelegateTaskPackage assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
     // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(delegateTask);
 

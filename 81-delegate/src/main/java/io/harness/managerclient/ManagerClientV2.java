@@ -20,9 +20,9 @@ import retrofit2.http.Query;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
-import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateTaskEvent;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Log;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -106,12 +106,12 @@ public interface ManagerClientV2 {
 
   @KryoResponse
   @PUT("agent/delegates/{delegateId}/tasks/{taskId}/acquire")
-  Call<DelegatePackage> acquireTask(
+  Call<DelegateTaskPackage> acquireTask(
       @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
 
   @KryoResponse
   @POST("agent/delegates/{delegateId}/tasks/{taskId}/report")
-  Call<DelegatePackage> reportConnectionResults(@Path("delegateId") String delegateId, @Path("taskId") String uuid,
+  Call<DelegateTaskPackage> reportConnectionResults(@Path("delegateId") String delegateId, @Path("taskId") String uuid,
       @Query("accountId") String accountId, @Body List<DelegateConnectionResult> results);
 
   @KryoResponse

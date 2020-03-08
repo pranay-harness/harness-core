@@ -28,7 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
-import software.wings.beans.DelegatePackage;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.KmsConfig;
 import software.wings.security.encryption.EncryptedData;
 
@@ -39,7 +39,7 @@ public class DelegateServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock private ManagerClientV2 managerClient;
-  @Mock private Call<DelegatePackage> delegatePackageCall;
+  @Mock private Call<DelegateTaskPackage> delegatePackageCall;
   @Mock private DelegateDecryptionService delegateDecryptionService;
 
   @InjectMocks @Inject DelegateServiceImpl delegateService;
@@ -56,15 +56,16 @@ public class DelegateServiceImplTest extends CategoryTest {
   public void shouldNotApplyFunctorIfNoSecrets() {
     final String delegateTaskId = UUIDGenerator.generateUuid();
 
-    final DelegatePackage delegatePackage = DelegatePackage.builder()
-                                                .delegateTask(DelegateTask.builder()
-                                                                  .async(true)
-                                                                  .uuid(delegateTaskId)
-                                                                  .data(TaskData.builder().taskType("HTTP").build())
-                                                                  .build())
-                                                .build();
+    final DelegateTaskPackage delegateTaskPackage =
+        DelegateTaskPackage.builder()
+            .delegateTask(DelegateTask.builder()
+                              .async(true)
+                              .uuid(delegateTaskId)
+                              .data(TaskData.builder().taskType("HTTP").build())
+                              .build())
+            .build();
 
-    delegateService.applyDelegateSecretFunctor(delegatePackage);
+    delegateService.applyDelegateSecretFunctor(delegateTaskPackage);
     verify(delegateDecryptionService, times(0)).decrypt(anyMap());
   }
 
@@ -87,17 +88,18 @@ public class DelegateServiceImplTest extends CategoryTest {
 
     secretDetails.put("SECRET_UUID", secretDetail);
 
-    final DelegatePackage delegatePackage = DelegatePackage.builder()
-                                                .delegateTask(DelegateTask.builder()
-                                                                  .async(true)
-                                                                  .uuid(delegateTaskId)
-                                                                  .data(TaskData.builder().taskType("HTTP").build())
-                                                                  .build())
-                                                .encryptionConfigs(encryptionConfigMap)
-                                                .secretDetails(secretDetails)
-                                                .build();
+    final DelegateTaskPackage delegateTaskPackage =
+        DelegateTaskPackage.builder()
+            .delegateTask(DelegateTask.builder()
+                              .async(true)
+                              .uuid(delegateTaskId)
+                              .data(TaskData.builder().taskType("HTTP").build())
+                              .build())
+            .encryptionConfigs(encryptionConfigMap)
+            .secretDetails(secretDetails)
+            .build();
 
-    delegateService.applyDelegateSecretFunctor(delegatePackage);
+    delegateService.applyDelegateSecretFunctor(delegateTaskPackage);
     verify(delegateDecryptionService, times(1)).decrypt(anyMap());
   }
 }
