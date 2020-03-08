@@ -61,7 +61,8 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
 
     // should not create a second record
     ClusterRecord actualClusterRecord2 = clusterRecordDao.upsertCluster(k8sClusterRecord);
-    assertThat(actualClusterRecord2).isEqualTo(actualClusterRecord1);
+    assertThat(actualClusterRecord2).isEqualToIgnoringGivenFields(actualClusterRecord1, "lastUpdatedAt");
+    assertThat(actualClusterRecord2.getLastUpdatedAt()).isNotEqualTo(actualClusterRecord1.getLastUpdatedAt());
   }
 
   @Test
