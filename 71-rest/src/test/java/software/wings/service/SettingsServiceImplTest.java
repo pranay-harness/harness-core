@@ -60,7 +60,6 @@ import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -127,6 +126,7 @@ import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -382,7 +382,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   public void shouldGetByNameAndValueType() {
     when(spyQuery.get()).thenReturn(aSettingAttribute().build());
 
-    final SettingAttribute settingAttribute =
+    SettingAttribute settingAttribute =
         settingsService.fetchSettingAttributeByName(ACCOUNT_ID, "AWS Cloud Provider", SettingVariableTypes.AWS);
 
     assertThat(settingAttribute).isNotNull();
@@ -479,7 +479,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   private SettingAttribute prepareSettingAttributeForUpdate() {
-    final String uuid = UUID.randomUUID().toString();
+    String uuid = UUID.randomUUID().toString();
     SettingAttribute settingAttribute =
         aSettingAttribute()
             .withUuid(uuid)
@@ -502,7 +502,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void updateShouldMaskHostConnectionPrivateKey() {
-    final String uuid = UUID.randomUUID().toString();
+    String uuid = UUID.randomUUID().toString();
     HostConnectionAttributes hostConnectionAttributes = aHostConnectionAttributes()
                                                             .withAccessType(AccessType.KEY)
                                                             .withAccountId(UUIDGenerator.generateUuid())
@@ -539,8 +539,8 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testValidateWhenValid() {
-    final String uuid = UUID.randomUUID().toString();
-    final SettingAttribute settingAttribute =
+    String uuid = UUID.randomUUID().toString();
+    SettingAttribute settingAttribute =
         aSettingAttribute()
             .withUuid(uuid)
             .withAppId(APP_ID)
@@ -550,7 +550,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
             .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
             .build();
     doReturn(true).when(settingValidationService).validate(settingAttribute);
-    final ValidationResult result = settingsService.validate(settingAttribute);
+    ValidationResult result = settingsService.validate(settingAttribute);
     assertThat(result).isNotNull();
     assertThat(result.isValid()).isTrue();
   }
@@ -559,8 +559,8 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testValidateWhenNotValid() {
-    final String uuid = UUID.randomUUID().toString();
-    final SettingAttribute settingAttribute =
+    String uuid = UUID.randomUUID().toString();
+    SettingAttribute settingAttribute =
         aSettingAttribute()
             .withUuid(uuid)
             .withAppId(APP_ID)
@@ -570,7 +570,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
             .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
             .build();
     doReturn(false).when(settingValidationService).validate(settingAttribute);
-    final ValidationResult result = settingsService.validate(settingAttribute);
+    ValidationResult result = settingsService.validate(settingAttribute);
     assertThat(result).isNotNull();
     assertThat(result.isValid()).isFalse();
   }
@@ -579,8 +579,8 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testValidateIdValid() {
-    final String uuid = UUID.randomUUID().toString();
-    final SettingAttribute settingAttribute =
+    String uuid = UUID.randomUUID().toString();
+    SettingAttribute settingAttribute =
         aSettingAttribute()
             .withUuid(uuid)
             .withAppId(APP_ID)
@@ -591,7 +591,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
             .build();
     doReturn(settingAttribute).when(mockWingsPersistence).get(SettingAttribute.class, uuid);
     doReturn(true).when(settingValidationService).validate(settingAttribute);
-    final ValidationResult result = settingsService.validate(uuid);
+    ValidationResult result = settingsService.validate(uuid);
     assertThat(result).isNotNull();
     assertThat(result.isValid()).isTrue();
   }
@@ -600,9 +600,9 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testValidateIdWhenNotExists() {
-    final String uuid = UUID.randomUUID().toString();
+    String uuid = UUID.randomUUID().toString();
     doReturn(null).when(mockWingsPersistence).get(SettingAttribute.class, uuid);
-    final ValidationResult result = settingsService.validate(uuid);
+    ValidationResult result = settingsService.validate(uuid);
     assertThat(result).isNotNull();
     assertThat(result.isValid()).isFalse();
   }
@@ -676,9 +676,9 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
       User user = User.Builder.anUser().name(USER_NAME).uuid(USER_ID).build();
 
-      Map<String, AppPermissionSummaryForUI> appPermissionsMap = Maps.newHashMap();
+      Map<String, AppPermissionSummaryForUI> appPermissionsMap = new HashMap<>();
 
-      Map<String, Set<Action>> envPermissionMap = Maps.newHashMap();
+      Map<String, Set<Action>> envPermissionMap = new HashMap<>();
       envPermissionMap.put(ENV_ID_1, newHashSet(Action.READ));
 
       AppPermissionSummaryForUI appPermissionSummaryForUI =

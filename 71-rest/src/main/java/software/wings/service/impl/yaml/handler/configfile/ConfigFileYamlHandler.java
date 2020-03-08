@@ -8,7 +8,6 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -35,6 +34,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.Utils;
 
 import java.io.ByteArrayInputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -75,7 +75,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
   public Yaml toYaml(ConfigFile bean, String appId) {
     // target environments
     Map<String, EntityVersion> envIdVersionMap = bean.getEnvIdVersionMap();
-    final List<String> envNameList = Lists.newArrayList();
+    List<String> envNameList = Lists.newArrayList();
     if (envIdVersionMap != null) {
       // Find all the envs that are configured to use the default version. If the env is configured to use default
       // version, the value is null.
@@ -130,7 +130,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
 
     Yaml yaml = changeContext.getYaml();
     List<String> envNameList = yaml.getTargetEnvs();
-    Map<String, EntityVersion> envIdMap = Maps.newHashMap();
+    Map<String, EntityVersion> envIdMap = new HashMap<>();
     if (isNotEmpty(envNameList)) {
       envNameList.forEach(envName -> {
         Environment environment = environmentService.getEnvironmentByName(appId, envName);

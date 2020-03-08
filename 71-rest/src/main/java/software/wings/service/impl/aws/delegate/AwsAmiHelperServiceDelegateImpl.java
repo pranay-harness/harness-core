@@ -17,7 +17,6 @@ import static software.wings.utils.AsgConvention.getRevisionFromTag;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -63,6 +62,7 @@ import software.wings.utils.AsgConvention;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -559,12 +559,11 @@ public class AwsAmiHelperServiceDelegateImpl
       logCallback.saveExecutionLog("Starting AWS AMI Setup", INFO);
 
       logCallback.saveExecutionLog("Getting base auto scaling group");
-      final AutoScalingGroup baseAutoScalingGroup = ensureAndGetBaseAutoScalingGroup(
+      AutoScalingGroup baseAutoScalingGroup = ensureAndGetBaseAutoScalingGroup(
           awsConfig, encryptionDetails, request.getRegion(), request.getInfraMappingAsgName(), logCallback);
       boolean isBaseAsgLtBased = false;
       LaunchConfiguration baseLaunchConfiguration = null;
-      final LaunchTemplateSpecification baseLaunchTemplateSpecification =
-          extractLaunchTemplateSpecFrom(baseAutoScalingGroup);
+      LaunchTemplateSpecification baseLaunchTemplateSpecification = extractLaunchTemplateSpecFrom(baseAutoScalingGroup);
       LaunchTemplateVersion baseLaunchTemplateVersion = null;
       LaunchTemplateVersion newLaunchTemplateVersion = null;
       if (baseLaunchTemplateSpecification != null) {
@@ -690,13 +689,13 @@ public class AwsAmiHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, String region) {
     logCallback.saveExecutionLog("Creating new launch template version");
 
-    final CreateLaunchTemplateVersionRequest createLaunchTemplateVersionRequest = createNewLaunchTemplateVersionRequest(
+    CreateLaunchTemplateVersionRequest createLaunchTemplateVersionRequest = createNewLaunchTemplateVersionRequest(
         request.getArtifactRevision(), baseLaunchTemplateVersion, request.getUserData());
-    final CreateLaunchTemplateVersionResult newLaunchTemplateVersionResult =
+    CreateLaunchTemplateVersionResult newLaunchTemplateVersionResult =
         awsEc2HelperServiceDelegate.createLaunchTemplateVersion(
             createLaunchTemplateVersionRequest, awsConfig, encryptionDetails, region);
     if (newLaunchTemplateVersionResult == null || newLaunchTemplateVersionResult.getLaunchTemplateVersion() == null) {
-      final String errorMsg = format("Unable to create new version of Launch Template from base [%s] , version =[%s]",
+      String errorMsg = format("Unable to create new version of Launch Template from base [%s] , version =[%s]",
           baseLaunchTemplateVersion.getLaunchTemplateName(), baseLaunchTemplateVersion.getVersionNumber());
       logCallback.saveExecutionLog(errorMsg, ERROR);
       throw new InvalidRequestException(errorMsg);
@@ -711,9 +710,9 @@ public class AwsAmiHelperServiceDelegateImpl
   void populatePreDeploymentData(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region,
       List<AutoScalingGroup> harnessManagedAutoScalingGroups, AwsAmiServiceSetupResponseBuilder builder,
       ExecutionLogCallback logCallback) {
-    Map<String, Integer> minCapacityMap = Maps.newHashMap();
-    Map<String, Integer> desiredCapacityMap = Maps.newHashMap();
-    Map<String, List<String>> scalingPolicyJSONMap = Maps.newHashMap();
+    Map<String, Integer> minCapacityMap = new HashMap<>();
+    Map<String, Integer> desiredCapacityMap = new HashMap<>();
+    Map<String, List<String>> scalingPolicyJSONMap = new HashMap<>();
     if (isNotEmpty(harnessManagedAutoScalingGroups)) {
       harnessManagedAutoScalingGroups.forEach(group -> {
         if (group.getDesiredCapacity() > 0) {
@@ -996,9 +995,8 @@ public class AwsAmiHelperServiceDelegateImpl
   LaunchTemplateVersion ensureAndGetLaunchTemplateVersion(LaunchTemplateSpecification baseLaunchTemplateSpec,
       AutoScalingGroup baseAutoScalingGroup, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, ExecutionLogCallback logCallback) {
-    final LaunchTemplateVersion baseLaunchTemplateVersion =
-        awsEc2HelperServiceDelegate.getLaunchTemplateVersion(awsConfig, encryptionDetails, region,
-            baseLaunchTemplateSpec.getLaunchTemplateId(), baseLaunchTemplateSpec.getVersion());
+    LaunchTemplateVersion baseLaunchTemplateVersion = awsEc2HelperServiceDelegate.getLaunchTemplateVersion(awsConfig,
+        encryptionDetails, region, baseLaunchTemplateSpec.getLaunchTemplateId(), baseLaunchTemplateSpec.getVersion());
 
     if (baseLaunchTemplateVersion == null) {
       String errorMessage = format(

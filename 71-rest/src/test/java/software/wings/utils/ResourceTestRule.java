@@ -1,7 +1,6 @@
 package software.wings.utils;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import com.codahale.metrics.MetricRegistry;
@@ -25,6 +24,7 @@ import org.junit.runners.model.Statement;
 import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.jersey.KryoMessageBodyProvider;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import javax.servlet.ServletConfig;
@@ -100,9 +100,9 @@ public class ResourceTestRule implements TestRule {
   }
 
   @Override
-  public Statement apply(final Statement base, Description description) {
-    final ResourceTestRule rule = this;
-    final String ruleId = String.valueOf(rule.hashCode());
+  public Statement apply(Statement base, Description description) {
+    ResourceTestRule rule = this;
+    String ruleId = String.valueOf(rule.hashCode());
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
@@ -115,7 +115,7 @@ public class ResourceTestRule implements TestRule {
 
             @Override
             protected DeploymentContext configureDeployment() {
-              final ResourceTestResourceConfig resourceConfig = new ResourceTestResourceConfig(ruleId, rule);
+              ResourceTestResourceConfig resourceConfig = new ResourceTestResourceConfig(ruleId, rule);
               return ServletDeploymentContext.builder(resourceConfig)
                   .initParam(ServletProperties.JAXRS_APPLICATION_CLASS, ResourceTestResourceConfig.class.getName())
                   .initParam(ResourceTestResourceConfig.RULE_ID, ruleId)
@@ -123,7 +123,7 @@ public class ResourceTestRule implements TestRule {
             }
 
             @Override
-            protected void configureClient(final ClientConfig config) {
+            protected void configureClient(ClientConfig config) {
               config.register(KryoMessageBodyProvider.class, 0);
 
               JacksonJsonProvider jsonProvider = new JacksonJsonProvider();
@@ -149,7 +149,7 @@ public class ResourceTestRule implements TestRule {
   public static class Builder {
     private final Set<Object> singletons = Sets.newHashSet();
     private final Set<Class<?>> providers = Sets.newHashSet();
-    private final Map<String, Object> properties = Maps.newHashMap();
+    private final Map<String, Object> properties = new HashMap<>();
     private ObjectMapper mapper = Jackson.newObjectMapper();
     private Validator validator = Validators.newValidator();
     private TestContainerFactory testContainerFactory = new InMemoryTestContainerFactory();
@@ -228,7 +228,7 @@ public class ResourceTestRule implements TestRule {
      * @return the test container factory
      */
     public Builder setTestContainerFactory(TestContainerFactory factory) {
-      this.testContainerFactory = factory;
+      testContainerFactory = factory;
       return this;
     }
 
@@ -247,7 +247,7 @@ public class ResourceTestRule implements TestRule {
    */
   public static class ResourceTestResourceConfig extends DropwizardResourceConfig {
     private static final String RULE_ID = "io.dropwizard.testing.junit.resourceTestRuleId";
-    private static final Map<String, ResourceTestRule> RULE_ID_TO_RULE = Maps.newHashMap();
+    private static final Map<String, ResourceTestRule> RULE_ID_TO_RULE = new HashMap<>();
 
     /**
      * Instantiates a new Resource test resource config.
@@ -255,7 +255,7 @@ public class ResourceTestRule implements TestRule {
      * @param ruleId           the rule id
      * @param resourceTestRule the resource test rule
      */
-    public ResourceTestResourceConfig(final String ruleId, final ResourceTestRule resourceTestRule) {
+    public ResourceTestResourceConfig(String ruleId, ResourceTestRule resourceTestRule) {
       super(true, new MetricRegistry());
       RULE_ID_TO_RULE.put(ruleId, resourceTestRule);
       configure(resourceTestRule);
@@ -276,7 +276,7 @@ public class ResourceTestRule implements TestRule {
       configure(resourceTestRule);
     }
 
-    private void configure(final ResourceTestRule resourceTestRule) {
+    private void configure(ResourceTestRule resourceTestRule) {
       register(new ConstraintViolationExceptionMapper());
       for (Class<?> provider : resourceTestRule.providers) {
         register(provider);

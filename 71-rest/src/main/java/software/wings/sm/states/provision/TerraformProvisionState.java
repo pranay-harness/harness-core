@@ -23,7 +23,6 @@ import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEOUT_IN_MINUTES;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -306,7 +305,7 @@ public abstract class TerraformProvisionState extends State {
   private void saveUserInputs(ExecutionContext context, TerraformExecutionData terraformExecutionData,
       TerraformInfrastructureProvisioner terraformProvisioner) {
     String workspace = terraformExecutionData.getWorkspace();
-    Map<String, Object> others = Maps.newHashMap();
+    Map<String, Object> others = new HashMap<>();
     if (!(this instanceof DestroyTerraformProvisionState)) {
       List<NameValuePair> variables = terraformExecutionData.getVariables();
       List<NameValuePair> backendConfigs = terraformExecutionData.getBackendConfigs();
@@ -356,7 +355,7 @@ public abstract class TerraformProvisionState extends State {
       }
 
     } else {
-      if (this.getStateType().equals(StateType.TERRAFORM_DESTROY.name())) {
+      if (getStateType().equals(StateType.TERRAFORM_DESTROY.name())) {
         if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
           if (isNotEmpty(getTargets())) {
             saveTerraformConfig(context, terraformProvisioner, terraformExecutionData);
@@ -394,7 +393,7 @@ public abstract class TerraformProvisionState extends State {
       List<NameValuePair> workflowVariables, List<NameValuePair> provisionerVariables) {
     Map<String, String> variableTypesMap = isNotEmpty(provisionerVariables)
         ? provisionerVariables.stream().collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValueType))
-        : Maps.newHashMap();
+        : new HashMap<>();
     List<NameValuePair> validVariables = new ArrayList<>();
     if (isNotEmpty(workflowVariables)) {
       workflowVariables.stream()
@@ -551,8 +550,8 @@ public abstract class TerraformProvisionState extends State {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     String workspace = context.renderExpression(this.workspace);
     workspace = handleDefaultWorkspace(workspace);
-    final String entityId = generateEntityId(context, workspace);
-    final String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
+    String entityId = generateEntityId(context, workspace);
+    String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
 
     Map<String, String> variables = null;
     Map<String, EncryptedDataDetail> encryptedVariables = null;
@@ -560,10 +559,10 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
 
     if (this instanceof DestroyTerraformProvisionState && fileId != null) {
-      final FileMetadata fileMetadata = fileService.getFileMetadata(fileId, FileBucket.TERRAFORM_STATE);
+      FileMetadata fileMetadata = fileService.getFileMetadata(fileId, FileBucket.TERRAFORM_STATE);
 
       if (fileMetadata != null && fileMetadata.getMetadata() != null) {
-        final Map<String, Object> rawVariables = (Map<String, Object>) fileMetadata.getMetadata().get(VARIABLES_KEY);
+        Map<String, Object> rawVariables = (Map<String, Object>) fileMetadata.getMetadata().get(VARIABLES_KEY);
         if (isNotEmpty(rawVariables)) {
           variables =
               infrastructureProvisionerService.extractTextVariables(rawVariables.entrySet()
@@ -578,7 +577,7 @@ public abstract class TerraformProvisionState extends State {
                   context);
         }
 
-        final Map<String, Object> rawBackendConfigs =
+        Map<String, Object> rawBackendConfigs =
             (Map<String, Object>) fileMetadata.getMetadata().get(BACKEND_CONFIGS_KEY);
         if (isNotEmpty(rawBackendConfigs)) {
           backendConfigs =
@@ -594,7 +593,7 @@ public abstract class TerraformProvisionState extends State {
                   context);
         }
 
-        final Map<String, Object> rawEncryptedVariables =
+        Map<String, Object> rawEncryptedVariables =
             (Map<String, Object>) fileMetadata.getMetadata().get(ENCRYPTED_VARIABLES_KEY);
         if (isNotEmpty(rawEncryptedVariables)) {
           encryptedVariables = infrastructureProvisionerService.extractEncryptedTextVariables(
@@ -610,7 +609,7 @@ public abstract class TerraformProvisionState extends State {
               context.getAppId());
         }
 
-        final Map<String, Object> rawEncryptedBackendConfigs =
+        Map<String, Object> rawEncryptedBackendConfigs =
             (Map<String, Object>) fileMetadata.getMetadata().get(ENCRYPTED_BACKEND_CONFIGS_KEY);
         if (isNotEmpty(rawEncryptedBackendConfigs)) {
           encryptedBackendConfigs = infrastructureProvisionerService.extractEncryptedTextVariables(
@@ -637,7 +636,7 @@ public abstract class TerraformProvisionState extends State {
       }
 
     } else {
-      final List<NameValuePair> validVariables =
+      List<NameValuePair> validVariables =
           validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
 
       variables = infrastructureProvisionerService.extractTextVariables(validVariables, context);
@@ -741,7 +740,7 @@ public abstract class TerraformProvisionState extends State {
   }
 
   protected TerraformInfrastructureProvisioner getTerraformInfrastructureProvisioner(ExecutionContext context) {
-    final InfrastructureProvisioner infrastructureProvisioner =
+    InfrastructureProvisioner infrastructureProvisioner =
         infrastructureProvisionerService.get(context.getAppId(), provisionerId);
 
     if (infrastructureProvisioner == null) {

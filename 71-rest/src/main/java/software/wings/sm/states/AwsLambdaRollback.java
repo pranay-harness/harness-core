@@ -10,7 +10,6 @@ import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.AwsLambdaContextElement.AWS_LAMBDA_REQUEST_PARAM;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -27,6 +26,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -75,7 +75,7 @@ public class AwsLambdaRollback extends AwsLambdaState {
     if (awsLambdaContextElement != null) {
       List<Tag> tags = awsLambdaContextElement.getTags();
       if (isNotEmpty(tags)) {
-        Map<String, String> functionTags = Maps.newHashMap();
+        Map<String, String> functionTags = new HashMap<>();
         tags.forEach(tag -> { functionTags.put(tag.getKey(), context.renderExpression(tag.getValue())); });
         return functionTags;
       }

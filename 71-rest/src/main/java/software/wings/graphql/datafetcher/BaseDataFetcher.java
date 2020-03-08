@@ -1,6 +1,5 @@
 package software.wings.graphql.datafetcher;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetcher;
@@ -11,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.directive.DataFetcherDirective.DataFetcherDirectiveAttributes;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -26,7 +26,7 @@ public abstract class BaseDataFetcher implements DataFetcher {
   protected final Map<String, DataFetcherDirectiveAttributes> parentToContextFieldArgsMap;
 
   public BaseDataFetcher() {
-    parentToContextFieldArgsMap = Maps.newHashMap();
+    parentToContextFieldArgsMap = new HashMap<>();
   }
 
   public void addDataFetcherDirectiveAttributesForParent(

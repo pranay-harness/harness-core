@@ -1,7 +1,6 @@
 package io.harness.event.usagemetrics;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -19,6 +18,7 @@ import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 @FieldNameConstants(innerTypeName = "UsageMetricsTestKeys")
@@ -37,7 +37,7 @@ public class UsageMetricsTestUtils {
   private String EXECUTIONID;
 
   public static void validateTimeSeriesEventInfo(DeploymentTimeSeriesEvent timeSeriesEvent, int number) {
-    final TimeSeriesEventInfo timeSeriesEventInfo = timeSeriesEvent.getTimeSeriesEventInfo();
+    TimeSeriesEventInfo timeSeriesEventInfo = timeSeriesEvent.getTimeSeriesEventInfo();
     Assertions.assertThat(timeSeriesEventInfo).isNotNull();
     Assertions.assertThat(timeSeriesEventInfo.getAccountId()).isEqualTo(UsageMetricsTestKeys.ACCOUNTID);
     Assertions.assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.EXECUTIONID))
@@ -69,7 +69,7 @@ public class UsageMetricsTestUtils {
   }
 
   public static WorkflowExecution generateWorkflowExecution(int number) {
-    final Map<String, String> artifactBuildNumber = Maps.newHashMap();
+    Map<String, String> artifactBuildNumber = new HashMap<>();
     artifactBuildNumber.put(ArtifactKeys.metadata_buildNo, "123");
     return WorkflowExecution.builder()
         .uuid(UsageMetricsTestKeys.EXECUTIONID + number)

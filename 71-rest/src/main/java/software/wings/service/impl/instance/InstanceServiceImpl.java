@@ -6,7 +6,6 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.validation.Validator.nullCheck;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -204,7 +203,7 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public void pruneByEnvironment(String appId, String envId) {
-    HashMap<String, String> map = Maps.newHashMap();
+    HashMap<String, String> map = new HashMap<>();
     map.put("appId", appId);
     map.put("envId", envId);
     pruneByEntity(map);
@@ -212,7 +211,7 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public void pruneByInfrastructureMapping(String appId, String infraMappingId) {
-    HashMap<String, String> map = Maps.newHashMap();
+    HashMap<String, String> map = new HashMap<>();
     map.put("appId", appId);
     map.put("infraMappingId", infraMappingId);
     pruneByEntity(map);
@@ -220,7 +219,7 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public void pruneByService(String appId, String serviceId) {
-    HashMap<String, String> map = Maps.newHashMap();
+    HashMap<String, String> map = new HashMap<>();
     map.put("appId", appId);
     map.put("serviceId", serviceId);
     pruneByEntity(map);

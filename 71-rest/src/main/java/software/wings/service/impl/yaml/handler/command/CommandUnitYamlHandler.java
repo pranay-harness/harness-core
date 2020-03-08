@@ -1,7 +1,5 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import com.google.common.collect.Maps;
-
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
@@ -15,6 +13,7 @@ import software.wings.beans.yaml.YamlConstants;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.utils.Utils;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +42,7 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
   }
 
   protected Map<String, Object> getNodeProperties(ChangeContext<Y> changeContext) {
-    return Maps.newHashMap();
+    return new HashMap<>();
   }
 
   protected C toBean(ChangeContext<Y> changeContext) throws HarnessException {

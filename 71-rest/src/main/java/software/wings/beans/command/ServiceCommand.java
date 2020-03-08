@@ -4,7 +4,6 @@ import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -18,6 +17,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EntityVersion;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -33,7 +33,7 @@ public class ServiceCommand extends Base {
 
   private String name;
   @Indexed private String serviceId;
-  private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
+  private Map<String, EntityVersion> envIdVersionMap = new HashMap<>();
   private Integer defaultVersion;
 
   private boolean targetToAllEnv = true;
@@ -240,11 +240,10 @@ public class ServiceCommand extends Base {
     if (!super.equals(obj)) {
       return false;
     }
-    final ServiceCommand other = (ServiceCommand) obj;
-    return Objects.equals(this.name, other.name) && Objects.equals(this.serviceId, other.serviceId)
-        && Objects.equals(this.envIdVersionMap, other.envIdVersionMap)
-        && Objects.equals(this.defaultVersion, other.defaultVersion)
-        && Objects.equals(this.targetToAllEnv, other.targetToAllEnv);
+    ServiceCommand other = (ServiceCommand) obj;
+    return Objects.equals(name, other.name) && Objects.equals(serviceId, other.serviceId)
+        && Objects.equals(envIdVersionMap, other.envIdVersionMap)
+        && Objects.equals(defaultVersion, other.defaultVersion) && Objects.equals(targetToAllEnv, other.targetToAllEnv);
   }
 
   @Override
@@ -282,7 +281,7 @@ public class ServiceCommand extends Base {
   public static final class Builder {
     private String name;
     private String serviceId;
-    private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
+    private Map<String, EntityVersion> envIdVersionMap = new HashMap<>();
     private Integer defaultVersion;
     private boolean targetToAllEnv = true;
     private boolean setAsDefault;
@@ -408,7 +407,7 @@ public class ServiceCommand extends Base {
       serviceCommand.setLastUpdatedBy(lastUpdatedBy);
       serviceCommand.setLastUpdatedAt(lastUpdatedAt);
       serviceCommand.setSetAsDefault(setAsDefault);
-      serviceCommand.targetToAllEnv = this.targetToAllEnv;
+      serviceCommand.targetToAllEnv = targetToAllEnv;
       serviceCommand.setTemplateUuid(templateUuid);
       serviceCommand.setTemplateVersion(templateVersion);
       return serviceCommand;

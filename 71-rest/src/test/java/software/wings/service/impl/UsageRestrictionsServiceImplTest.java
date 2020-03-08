@@ -30,7 +30,6 @@ import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import io.harness.CategoryTest;
@@ -1063,22 +1062,22 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
   public static UserPermissionInfo getUserPermissionInfo(
       List<String> appIds, List<String> envIds, Set<Action> actions) {
-    Map<Action, Set<EnvInfo>> envPermissionsInternal = Maps.newHashMap();
+    Map<Action, Set<EnvInfo>> envPermissionsInternal = new HashMap<>();
 
     Set<EnvInfo> envInfoSet = envIds.stream()
                                   .map(envId -> EnvInfo.builder().envType("PROD").envId(envId).build())
                                   .collect(Collectors.toSet());
     actions.forEach(action -> envPermissionsInternal.put(action, envInfoSet));
 
-    Map<String, AppPermissionSummary> appPermissionsMapInternal = Maps.newHashMap();
+    Map<String, AppPermissionSummary> appPermissionsMapInternal = new HashMap<>();
     AppPermissionSummary appPermissionSummaryInternal =
         AppPermissionSummary.builder().envPermissions(envPermissionsInternal).build();
 
     appIds.forEach(appId -> appPermissionsMapInternal.put(appId, appPermissionSummaryInternal));
 
-    Map<String, AppPermissionSummaryForUI> appPermissionsMap = Maps.newHashMap();
+    Map<String, AppPermissionSummaryForUI> appPermissionsMap = new HashMap<>();
 
-    Map<String, Set<Action>> envPermissionMap = Maps.newHashMap();
+    Map<String, Set<Action>> envPermissionMap = new HashMap<>();
     envIds.forEach(envId -> envPermissionMap.put(envId, actions));
 
     AppPermissionSummaryForUI appPermissionSummaryForUI =

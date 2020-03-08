@@ -8,7 +8,6 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -44,6 +43,7 @@ import software.wings.service.intfc.template.TemplateService;
 import software.wings.utils.Utils;
 import software.wings.yaml.command.CommandYaml;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -113,7 +113,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
         Builder.aCommand().withCommandType(commandType).withCommandUnits(commandUnitList).withName(name).build();
 
     List<String> envNameList = commandYaml.getTargetEnvs();
-    Map<String, EntityVersion> envIdMap = Maps.newHashMap();
+    Map<String, EntityVersion> envIdMap = new HashMap<>();
     if (isNotEmpty(envNameList)) {
       envNameList.forEach(envName -> {
         Environment environment = environmentService.getEnvironmentByName(appId, envName);
@@ -193,7 +193,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
 
     // target environments
     Map<String, EntityVersion> envIdVersionMap = serviceCommand.getEnvIdVersionMap();
-    final List<String> envNameList = Lists.newArrayList();
+    List<String> envNameList = Lists.newArrayList();
     if (envIdVersionMap != null) {
       // Find all the envs that are configured to use the default version. If the env is configured to use default
       // version, the value is null.
@@ -212,7 +212,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
       }
     }
     String templateUri = null;
-    final String templateUuid = serviceCommand.getTemplateUuid();
+    String templateUuid = serviceCommand.getTemplateUuid();
     if (templateUuid != null) {
       // Command is linked
       templateUri = templateService.fetchTemplateUri(templateUuid);

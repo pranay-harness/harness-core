@@ -13,7 +13,6 @@ import static javax.ws.rs.Priorities.AUTHORIZATION;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -52,6 +51,7 @@ import software.wings.service.intfc.WhitelistService;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -391,7 +391,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   private UserRequestContext buildUserRequestContext(String accountId, User user, boolean emptyAppIdsInReq) {
     UserRequestContextBuilder userRequestContextBuilder =
-        UserRequestContext.builder().accountId(accountId).entityInfoMap(Maps.newHashMap());
+        UserRequestContext.builder().accountId(accountId).entityInfoMap(new HashMap<>());
 
     UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user, false);
     userRequestContextBuilder.userPermissionInfo(userPermissionInfo);

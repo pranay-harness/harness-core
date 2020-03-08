@@ -7,7 +7,6 @@ import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptySet;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -178,7 +177,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return false;
     }
 
-    final UsageRestrictions entityUsageRestrictionsFinal = entityUsageRestrictions;
+    UsageRestrictions entityUsageRestrictionsFinal = entityUsageRestrictions;
     // We want to first check if the restrictions from user permissions is not null
     if (isEmpty(appEnvMapFromEntityRestrictions)) {
       return hasAnyCommonEnv(entityUsageRestrictions, restrictionsFromUserPermissions);
@@ -268,7 +267,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Override
   public Map<String, Set<String>> getAppEnvMapFromUserPermissions(
       String accountId, UserPermissionInfo userPermissionInfo, Action action) {
-    Map<String, Set<String>> appEnvMap = Maps.newHashMap();
+    Map<String, Set<String>> appEnvMap = new HashMap<>();
 
     Map<String, AppPermissionSummary> appPermissionMap = userPermissionInfo.getAppPermissionMapInternal();
 
@@ -292,7 +291,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         appEnvMap.put(appId, envSet);
       }
 
-      final Set<String> envSetFinal = envSet;
+      Set<String> envSetFinal = envSet;
       AppPermissionSummary appPermissionSummary = appPermission.getValue();
 
       if (appPermissionSummary == null) {
@@ -319,7 +318,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Override
   public Map<String, Set<String>> getAppEnvMap(
       Set<AppEnvRestriction> appEnvRestrictions, Map<String, List<Base>> appIdEnvMap) {
-    Map<String, Set<String>> appEnvMap = Maps.newHashMap();
+    Map<String, Set<String>> appEnvMap = new HashMap<>();
 
     if (isEmpty(appEnvRestrictions)) {
       return appEnvMap;
@@ -772,7 +771,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Override
   public boolean userHasPermissionsToChangeEntity(
       String accountId, UsageRestrictions entityUsageRestrictions, Map<String, List<Base>> appIdEnvMap) {
-    return this.userHasPermissionsToChangeEntity(accountId, entityUsageRestrictions,
+    return userHasPermissionsToChangeEntity(accountId, entityUsageRestrictions,
         getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getUsageRestrictions(), appIdEnvMap);
   }
 

@@ -1,7 +1,5 @@
 package software.wings.beans.artifact;
 
-import com.google.common.collect.Maps;
-
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -15,6 +13,7 @@ import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.utils.ArtifactType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,7 +43,7 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private String platform;
   private Map<String, String> filters;
   private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
-  private Map<String, String> metadata = Maps.newHashMap();
+  private Map<String, String> metadata = new HashMap<>();
   private List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
   private boolean copyArtifactEnabled;
   private String artifactoryDockerRepositoryServer;

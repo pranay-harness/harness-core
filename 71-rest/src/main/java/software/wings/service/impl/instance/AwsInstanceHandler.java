@@ -6,7 +6,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -41,6 +40,7 @@ import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -75,7 +75,7 @@ public class AwsInstanceHandler extends InstanceHandler {
     AwsInfrastructureMapping awsInfraMapping = (AwsInfrastructureMapping) infrastructureMapping;
 
     // key - ec2 instance id, value - instance
-    Map<String, Instance> ec2InstanceIdInstanceMap = Maps.newHashMap();
+    Map<String, Instance> ec2InstanceIdInstanceMap = new HashMap<>();
 
     loadInstanceMapBasedOnType(appId, infraMappingId, asgInstanceMap, ec2InstanceIdInstanceMap);
 
@@ -165,7 +165,7 @@ public class AwsInstanceHandler extends InstanceHandler {
                 Collectors.toMap(com.amazonaws.services.ec2.model.Instance::getInstanceId, identity()));
 
         Collection<Instance> instancesInDB = asgInstanceMap.get(autoScalingGroupName);
-        Map<String, Instance> instancesInDBMap = Maps.newHashMap();
+        Map<String, Instance> instancesInDBMap = new HashMap<>();
 
         // If there are prior instances in db already
         if (isNotEmpty(instancesInDB)) {

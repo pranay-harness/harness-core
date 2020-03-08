@@ -1,13 +1,12 @@
 package software.wings.api.cloudformation;
 
-import com.google.common.collect.Maps;
-
 import io.harness.context.ContextElementType;
 import lombok.Builder;
 import lombok.Value;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Value
@@ -32,7 +31,7 @@ public class CloudFormationOutputInfoElement implements CloudFormationElement {
 
   @Override
   public Map<String, Object> paramMap(ExecutionContext context) {
-    Map<String, Object> map = Maps.newHashMap();
+    Map<String, Object> map = new HashMap<>();
     map.put("cloudformation", newStackOutputs);
     return map;
   }

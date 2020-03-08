@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toSet;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
@@ -29,6 +28,7 @@ import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.helpers.ext.azure.AzureHelperService;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,7 +51,7 @@ public class AzureInstanceHandler extends InstanceHandler {
     }
 
     AzureInfrastructureMapping azureInfrastructureMapping = (AzureInfrastructureMapping) infrastructureMapping;
-    Map<String, Instance> azureInstanceIdInstanceMap = Maps.newHashMap();
+    Map<String, Instance> azureInstanceIdInstanceMap = new HashMap<>();
 
     loadInstanceMapBasedOnType(appId, infraMappingId, azureInstanceIdInstanceMap);
 

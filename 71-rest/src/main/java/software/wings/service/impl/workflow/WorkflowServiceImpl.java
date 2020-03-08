@@ -78,7 +78,6 @@ import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -365,7 +364,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Map<StateTypeScope, List<Stencil>> stencils(
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes) {
-    final Map<StateTypeScope, List<Stencil>> stencils = getStencils(appId, workflowId, phaseId, stateTypeScopes);
+    Map<StateTypeScope, List<Stencil>> stencils = getStencils(appId, workflowId, phaseId, stateTypeScopes);
     removeStencil(stencils, appId, FeatureName.INFRA_MAPPING_REFACTOR, StateTypeScope.ORCHESTRATION_STENCILS,
         StateType.PCF_PLUGIN);
     return stencils;
@@ -532,8 +531,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       sd.getScopes().forEach(scope -> mapByScope.computeIfAbsent(scope, k -> new ArrayList<>()).add(sd));
     }
 
-    this.cachedStencils = mapByScope;
-    this.cachedStencilMap = mapByType;
+    cachedStencils = mapByScope;
+    cachedStencilMap = mapByType;
     return mapByScope;
   }
 
@@ -594,7 +593,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                   .addFilter("appId", EQ, workflow.getAppId())
                   .build();
 
-          final List<WorkflowExecution> workflowExecutions =
+          List<WorkflowExecution> workflowExecutions =
               workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false)
                   .getResponse();
 
@@ -758,11 +757,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (workflow.getUuid() == null) {
       workflow.setUuid(generateUuid());
     }
-    final boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId());
+    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId());
 
     validateWorkflowNameForDuplicates(workflow);
     validateOrchestrationWorkflow(workflow);
-    final OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
     List<String> linkedTemplateUuids = new ArrayList<>();
     List<String> linkedArtifactStreamIds = new ArrayList<>();
@@ -1007,7 +1006,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,
       boolean onSaveCallNeeded, boolean infraChanged, boolean envChanged, boolean cloned, boolean migration) {
-    final String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
     boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, accountId);
     WorkflowServiceHelper.cleanupWorkflowStepSkipStrategies(orchestrationWorkflow);
     Workflow savedWorkflow = readWorkflow(workflow.getAppId(), workflow.getUuid());
@@ -1306,7 +1305,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             (String) step.getProperties().get("provisionerId"), (String) step.getProperties().get("workspace"));
       }
       if (stateType != null) {
-        Map<String, Object> propertiesMap = Maps.newHashMap();
+        Map<String, Object> propertiesMap = new HashMap<>();
         propertiesMap.put("provisionerId", step.getProperties().get("provisionerId"));
         propertiesMap.put("timeoutMillis", step.getProperties().get("timeoutMillis"));
         propertiesMap.put("workspace",
@@ -1784,13 +1783,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
-    final Optional<GraphNode> graphNode = orchestrationWorkflow.getGraph()
-                                              .getSubworkflows()
-                                              .get(subworkflowId)
-                                              .getNodes()
-                                              .stream()
-                                              .filter(n -> node.getId().equals(n.getId()))
-                                              .findFirst();
+    Optional<GraphNode> graphNode = orchestrationWorkflow.getGraph()
+                                        .getSubworkflows()
+                                        .get(subworkflowId)
+                                        .getNodes()
+                                        .stream()
+                                        .filter(n -> node.getId().equals(n.getId()))
+                                        .findFirst();
     return graphNode.isPresent() ? graphNode.get() : null;
   }
 
@@ -1950,7 +1949,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Set<String> variableNames = new HashSet<>();
     List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
     for (Variable variable : userVariables) {
-      final String defaultValue = variable.getValue();
+      String defaultValue = variable.getValue();
       if (variable.isFixed()) {
         if (isBlank(defaultValue)) {
           throw new InvalidRequestException(
@@ -2027,7 +2026,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (includeList.contains(Include.DEPLOYMENT_TYPE)) {
-      final List<DeploymentType> deploymentTypes =
+      List<DeploymentType> deploymentTypes =
           workflowServiceHelper.obtainDeploymentTypes(workflow.getOrchestrationWorkflow());
       deploymentMetadataBuilder.deploymentTypes(deploymentTypes);
     }
@@ -2036,7 +2035,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (envIds == null) {
         envIds = new ArrayList<>();
       }
-      final String resolvedEnvId = workflowServiceHelper.obtainTemplatedEnvironmentId(workflow, workflowVariables);
+      String resolvedEnvId = workflowServiceHelper.obtainTemplatedEnvironmentId(workflow, workflowVariables);
       if (resolvedEnvId != null && !envIds.contains(resolvedEnvId)) {
         envIds.add(resolvedEnvId);
       }
@@ -3175,7 +3174,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return null;
     }
 
-    final String msg = format("Connector [%s] is referenced by %s [%s]", settingAttribute.getName(),
+    String msg = format("Connector [%s] is referenced by %s [%s]", settingAttribute.getName(),
         plural("workflow", count), sb.toString());
     return () -> msg;
   }
@@ -3183,14 +3182,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public List<InstanceElement> getDeployedNodes(String appId, String workflowId) {
     int offset = 0;
-    final PageRequest<WorkflowExecution> pageRequest = aPageRequest()
-                                                           .addFilter("appId", Operator.EQ, appId)
-                                                           .addFilter("workflowId", Operator.EQ, workflowId)
-                                                           .addFilter("status", Operator.EQ, SUCCESS)
-                                                           .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
-                                                           .withOffset(String.valueOf(offset))
-                                                           .withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE))
-                                                           .build();
+    PageRequest<WorkflowExecution> pageRequest = aPageRequest()
+                                                     .addFilter("appId", Operator.EQ, appId)
+                                                     .addFilter("workflowId", Operator.EQ, workflowId)
+                                                     .addFilter("status", Operator.EQ, SUCCESS)
+                                                     .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
+                                                     .withOffset(String.valueOf(offset))
+                                                     .withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE))
+                                                     .build();
 
     PageResponse<WorkflowExecution> workflowExecutions;
     List<InstanceElement> instanceElements = new ArrayList<>();
@@ -3317,9 +3316,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId) {
-    final List<WorkflowExecution> workflowExecutions =
+    List<WorkflowExecution> workflowExecutions =
         workflowExecutionService.getLastSuccessfulWorkflowExecutions(appId, workflowId, serviceId);
-    final List<String> workflowExecutionIds = new ArrayList<>();
+    List<String> workflowExecutionIds = new ArrayList<>();
     if (workflowExecutions != null) {
       for (WorkflowExecution workflowExecution : workflowExecutions) {
         workflowExecutionIds.add(workflowExecution.getUuid());
@@ -3341,7 +3340,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public WorkflowExecution getWorkflowExecutionForStateExecutionId(final String appId, final String stateExecutionId) {
+  public WorkflowExecution getWorkflowExecutionForStateExecutionId(String appId, String stateExecutionId) {
     StateExecutionInstance stateExecutionData = workflowExecutionService.getStateExecutionData(appId, stateExecutionId);
     return workflowExecutionService.getWorkflowExecutionForVerificationService(
         appId, stateExecutionData.getExecutionUuid());
@@ -3428,7 +3427,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     LinkedList<String> recent = null;
 
     if (userId != null) {
-      final Personalization personalization =
+      Personalization personalization =
           personalizationService.fetch(workflow.getAccountId(), userId, asList(PersonalizationKeys.steps));
 
       if (personalization != null && personalization.getSteps() != null) {
@@ -3461,11 +3460,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     DeploymentType workflowPhaseDeploymentType = workflowPhase != null ? workflowPhase.getDeploymentType() : null;
     for (StepType step : stepTypes) {
       if (step.matches(workflowPhaseDeploymentType, orchestrationWorkflowType)) {
-        final WorkflowStepMeta stepMeta = WorkflowStepMeta.builder()
-                                              .name(step.getName())
-                                              .favorite(isNotEmpty(favorites) && favorites.contains(step.getType()))
-                                              .available(true)
-                                              .build();
+        WorkflowStepMeta stepMeta = WorkflowStepMeta.builder()
+                                        .name(step.getName())
+                                        .favorite(isNotEmpty(favorites) && favorites.contains(step.getType()))
+                                        .available(true)
+                                        .build();
         steps.put(step.getType(), stepMeta);
       }
     }

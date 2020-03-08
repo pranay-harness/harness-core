@@ -16,7 +16,6 @@ import static software.wings.beans.TaskType.AWS_LAMBDA_TASK;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -89,6 +88,7 @@ import software.wings.stencils.DefaultValue;
 import software.wings.utils.LambdaConvention;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -197,7 +197,7 @@ public class AwsLambdaState extends State {
 
   private void updateAwsLambdaExecutionSummaries(ExecutionContext context, AwsLambdaExecuteWfResponse wfResponse) {
     try {
-      if (!AWS_LAMBDA_STATE.name().equals(this.getStateType())) {
+      if (!AWS_LAMBDA_STATE.name().equals(getStateType())) {
         return;
       }
 
@@ -234,7 +234,7 @@ public class AwsLambdaState extends State {
     Environment env = workflowStandardParams.getEnv();
     notNullCheck("env", env, USER);
 
-    final String envId = env.getUuid();
+    String envId = env.getUuid();
     Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
     Command command =
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, envId, getCommandName()).getCommand();
@@ -413,7 +413,7 @@ public class AwsLambdaState extends State {
   }
 
   protected Map<String, String> getFunctionTags(ExecutionContext context) {
-    Map<String, String> functionTags = Maps.newHashMap();
+    Map<String, String> functionTags = new HashMap<>();
     if (isNotEmpty(tags)) {
       tags.forEach(tag -> { functionTags.put(tag.getKey(), context.renderExpression(tag.getValue())); });
     }

@@ -44,7 +44,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -205,7 +204,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private AppService appService;
   @Inject private EnvironmentService envService;
   // DO NOT DELETE THIS, PRUNE logic needs it
-  @SuppressWarnings("unused") @Inject private InstanceService instanceService;
+  @Inject private InstanceService instanceService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ServiceInstanceService serviceInstanceService;
@@ -1283,7 +1282,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public Map<String, Object> getInfraMappingStencils(String appId) {
     return stencilPostProcessor
-        .postProcess(Lists.newArrayList(InfrastructureMappingType.values()), appId, Maps.newHashMap())
+        .postProcess(Lists.newArrayList(InfrastructureMappingType.values()), appId, new HashMap<>())
         .stream()
         .collect(toMap(Stencil::getName, identity()));
   }
@@ -1590,6 +1589,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return Collections.emptyMap();
   }
 
+  @Override
   @VisibleForTesting
   public List<String> getVPCIds(String appId, String computeProviderId, String region) {
     return CollectionUtils.emptyIfNull(listVPC(appId, computeProviderId, region))
@@ -1665,6 +1665,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         domain, path, tcpRoute, useRandomPort, portNum);
   }
 
+  @Override
   public List<String> getSGIds(String appId, String computeProviderId, String region, List<String> vpcIds) {
     return CollectionUtils.emptyIfNull(listSecurityGroups(appId, computeProviderId, region, vpcIds))
         .stream()
@@ -1691,6 +1692,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return emptyList();
   }
 
+  @Override
   @VisibleForTesting
   public List<String> getSubnetIds(String appId, String computeProviderId, String region, List<String> vpcIds) {
     return CollectionUtils.emptyIfNull(listSubnets(appId, computeProviderId, region, vpcIds))

@@ -1,12 +1,11 @@
 package software.wings.beans.yaml;
 
-import com.google.common.collect.Maps;
-
 import io.harness.persistence.PersistentEntity;
 import lombok.Data;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.yaml.BaseYaml;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -18,8 +17,8 @@ public class ChangeContext<Y extends BaseYaml> {
   private YamlType yamlType;
   private Y yaml;
   private BaseYamlHandler yamlSyncHandler;
-  private Map<String, String> entityIdMap = Maps.newHashMap();
-  private Map<String, Object> properties = Maps.newHashMap();
+  private Map<String, String> entityIdMap = new HashMap<>();
+  private Map<String, Object> properties = new HashMap<>();
   private PersistentEntity entity;
 
   public Builder toBuilder() {
@@ -37,8 +36,8 @@ public class ChangeContext<Y extends BaseYaml> {
     private YamlType yamlType;
     private Y yaml;
     private BaseYamlHandler yamlSyncHandler;
-    private Map<String, String> entityIdMap = Maps.newHashMap();
-    private Map<String, Object> properties = Maps.newHashMap();
+    private Map<String, String> entityIdMap = new HashMap<>();
+    private Map<String, Object> properties = new HashMap<>();
 
     private Builder() {}
 

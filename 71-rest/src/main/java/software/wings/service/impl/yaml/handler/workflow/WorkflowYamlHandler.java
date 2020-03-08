@@ -11,7 +11,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.service.impl.yaml.handler.workflow.PhaseStepYamlHandler.PHASE_STEP_PROPERTY_NAME;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
@@ -53,6 +52,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.yaml.workflow.StepYaml;
 import software.wings.yaml.workflow.WorkflowYaml;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -142,7 +142,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
           phaseList.stream().collect(Collectors.toMap(WorkflowPhase::getName, identity()));
 
       // rollback phases
-      Map<String, WorkflowPhase> rollbackPhaseMap = Maps.newHashMap();
+      Map<String, WorkflowPhase> rollbackPhaseMap = new HashMap<>();
       if (yaml.getRollbackPhases() != null) {
         List<WorkflowPhase> rollbackPhaseList =
             yaml.getRollbackPhases()

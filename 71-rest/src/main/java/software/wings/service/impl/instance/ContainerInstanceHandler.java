@@ -16,7 +16,6 @@ import static software.wings.beans.container.Label.Builder.aLabel;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -182,7 +181,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
           }
 
           // Key - containerId (taskId in ECS / podId in Kubernetes), Value - Instance
-          Map<String, Instance> instancesInDBMap = Maps.newHashMap();
+          Map<String, Instance> instancesInDBMap = new HashMap<>();
 
           // If there are prior instances in db already
           for (Instance instance : instancesInDB) {

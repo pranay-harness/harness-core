@@ -10,7 +10,6 @@ import static software.wings.utils.Utils.escapifyString;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 
@@ -34,6 +33,7 @@ import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -80,9 +80,9 @@ public class InitSshCommandUnit extends SshCommandUnit {
 
   @JsonIgnore @SchemaIgnore private String activityId;
 
-  @JsonIgnore @Transient @SchemaIgnore private Map<String, String> envVariables = Maps.newHashMap();
+  @JsonIgnore @Transient @SchemaIgnore private Map<String, String> envVariables = new HashMap<>();
 
-  @JsonIgnore @Transient @SchemaIgnore private Map<String, String> safeDisplayEnvVariables = Maps.newHashMap();
+  @JsonIgnore @Transient @SchemaIgnore private Map<String, String> safeDisplayEnvVariables = new HashMap<>();
 
   @JsonIgnore @Transient @SchemaIgnore private String preInitCommand;
 

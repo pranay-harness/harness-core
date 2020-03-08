@@ -136,6 +136,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -232,12 +233,12 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     computeProcessingOrder(changeList);
 
     // validate
-    final ChangeContextErrorMap validationResponseMap = validate(changeList);
+    ChangeContextErrorMap validationResponseMap = validate(changeList);
     // process in the given order
-    final Map<String, ChangeWithErrorMsg> processingErrorMap =
+    Map<String, ChangeWithErrorMsg> processingErrorMap =
         process(validationResponseMap.changeContextList, isGitSyncPath);
 
-    final Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap =
+    Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap =
         ImmutableMap.<String, ChangeWithErrorMsg>builder()
             .putAll(emptyIfNull(processingErrorMap))
             .putAll(emptyIfNull(validationResponseMap.errorMsgMap))
@@ -273,7 +274,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     List<GitFileChange> gitFileChangeList = asList(change);
 
     try {
-      final List<ChangeContext> changeContextList = processChangeSet(asList(change));
+      List<ChangeContext> changeContextList = processChangeSet(asList(change));
       notNullCheck("Change Context List is null", changeContextList);
       boolean empty = isEmpty(changeContextList);
       if (!empty) {
@@ -317,8 +318,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
                 try {
                   List changeList = getChangesForZipFile(accountId, fileInputStream, yamlPath);
 
-                  final List<ChangeContext> changeSets = processChangeSet(changeList);
-                  Map<String, Object> metaDataMap = Maps.newHashMap();
+                  List<ChangeContext> changeSets = processChangeSet(changeList);
+                  Map<String, Object> metaDataMap = new HashMap<>();
                   metaDataMap.put("yamlFilesProcessed", changeSets.size());
                   return Builder.aRestResponse().withMetaData(metaDataMap).build();
                 } catch (YamlProcessingException ex) {
@@ -480,7 +481,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       String yamlFilePath = change.getFilePath();
 
       try {
-        final ChangeContext manifestFileChangeContext = validateManifestFile(yamlFilePath, change);
+        ChangeContext manifestFileChangeContext = validateManifestFile(yamlFilePath, change);
 
         if (manifestFileChangeContext != null) {
           changeContextList.add(manifestFileChangeContext);
@@ -798,15 +799,15 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private final class FilePathComparator implements Comparator<Change> {
     @Override
     public int compare(Change lhs, Change rhs) {
-      final int lCoffecient = lhs.getChangeType() == ChangeType.DELETE ? -1 : 1;
-      final int rCoffecient = rhs.getChangeType() == ChangeType.DELETE ? -1 : 1;
+      int lCoffecient = lhs.getChangeType() == ChangeType.DELETE ? -1 : 1;
+      int rCoffecient = rhs.getChangeType() == ChangeType.DELETE ? -1 : 1;
       return (lCoffecient * findOrdinal(lhs.getFilePath(), lhs.getAccountId()))
           - (rCoffecient * findOrdinal(rhs.getFilePath(), rhs.getAccountId()));
     }
   }
 
   private int findOrdinal(String yamlFilePath, String accountId) {
-    final AtomicInteger count = new AtomicInteger();
+    AtomicInteger count = new AtomicInteger();
     Optional<YamlType> first = getYamlProcessingOrder(accountId)
                                    .stream()
                                    .filter(yamlType -> {
@@ -869,15 +870,15 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
    * @param yamlSubType
    * @return
    */
-  public BaseYaml getYamlForFilePath(
-      final String accountId, final String yamlFilePath, final String yamlSubType, final String applicationId) {
+  @Override
+  public BaseYaml getYamlForFilePath(String accountId, String yamlFilePath, String yamlSubType, String applicationId) {
     if (EmptyPredicate.isEmpty(yamlFilePath)) {
       throw new InvalidArgumentsException(Pair.of("yaml file path", "cannot be empty"));
     }
     BaseYaml yamlForFilePath = null;
     try {
       YamlType yamlType = findYamlType(yamlFilePath, accountId);
-      final BaseYamlHandler yamlHandler = yamlHandlerFactory.getYamlHandler(yamlType, yamlSubType);
+      BaseYamlHandler yamlHandler = yamlHandlerFactory.getYamlHandler(yamlType, yamlSubType);
       yamlForFilePath = yamlHandler.toYaml(yamlHandler.get(accountId, yamlFilePath), applicationId);
     } catch (Exception e) {
       logger.error(String.format("Error while fetching yaml content for file path %s", yamlFilePath));

@@ -14,7 +14,6 @@ import static software.wings.utils.WingsTestConstants.INTEGER_DEFAULT_VALUE;
 import static software.wings.utils.WingsTestConstants.LONG_DEFAULT_VALUE;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -68,7 +67,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldExpandStencilOnPostProcess() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
-        Collections.singletonList(new StencilType(ExpandStencilObject.class)), APP_ID, Maps.newHashMap());
+        Collections.singletonList(new StencilType(ExpandStencilObject.class)), APP_ID, new HashMap<>());
 
     assertThat(processedStencils)
         .hasSize(2)
@@ -94,7 +93,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotExpandForStencilEnumOnPostProcess() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
-        Collections.singletonList(new StencilType(EnumStencilObject.class)), APP_ID, Maps.newHashMap());
+        Collections.singletonList(new StencilType(EnumStencilObject.class)), APP_ID, new HashMap<>());
 
     assertThat(processedStencils)
         .hasSize(1)
@@ -110,7 +109,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSetDefaultValueForTheField() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
-        Collections.singletonList(new StencilType(DefaultStencilObject.class)), APP_ID, Maps.newHashMap());
+        Collections.singletonList(new StencilType(DefaultStencilObject.class)), APP_ID, new HashMap<>());
 
     assertThat(processedStencils)
         .hasSize(1)
@@ -125,7 +124,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSetDefaultValueForTheAccessorMethod() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
-        Collections.singletonList(new StencilType(DefaultMethodStencilObject.class)), APP_ID, Maps.newHashMap());
+        Collections.singletonList(new StencilType(DefaultMethodStencilObject.class)), APP_ID, new HashMap<>());
 
     processedStencils.stream()
         .map(Stencil::getJsonSchema)

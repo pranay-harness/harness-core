@@ -66,6 +66,7 @@ import software.wings.stencils.DefaultValue;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -241,7 +242,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     evaluatedParameters.forEach(
         (String key, String value) -> evaluatedParameters.put(key, context.renderExpression(value)));
 
-    Map<String, String> evaluatedFilePathsForAssertion = Maps.newHashMap();
+    Map<String, String> evaluatedFilePathsForAssertion = new HashMap<>();
     if (isNotEmpty(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionEntry
           -> evaluatedFilePathsForAssertion.put(

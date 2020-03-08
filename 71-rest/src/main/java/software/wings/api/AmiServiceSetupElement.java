@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import static com.google.common.collect.Maps.newHashMap;
-
 import com.google.common.collect.ImmutableMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -15,6 +13,7 @@ import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,7 +46,7 @@ public class AmiServiceSetupElement implements ContextElement {
 
   @Override
   public Map<String, Object> paramMap(ExecutionContext context) {
-    Map<String, Object> map = newHashMap();
+    Map<String, Object> map = new HashMap<>();
     map.put("newAsgName", newAutoScalingGroupName);
     map.put("oldAsgName", oldAutoScalingGroupName);
     return ImmutableMap.of("ami", map);

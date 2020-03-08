@@ -5,8 +5,6 @@ import static io.harness.govern.Switch.unhandled;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_SIMPLE_HTTP_CONNECTIVITY_URL;
 
-import com.google.common.collect.Maps;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -94,46 +92,46 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
    * @param other the other
    */
   public CommandExecutionContext(CommandExecutionContext other) {
-    this.accountId = other.accountId;
-    this.envId = other.envId;
-    this.host = other.host;
-    this.appId = other.appId;
-    this.activityId = other.activityId;
-    this.runtimePath = other.runtimePath;
-    this.stagingPath = other.stagingPath;
-    this.backupPath = other.backupPath;
-    this.windowsRuntimePath = other.windowsRuntimePath;
-    this.serviceTemplateId = other.serviceTemplateId;
-    this.executionCredential = other.executionCredential;
-    this.appContainer = other.appContainer;
-    this.artifactFiles = other.artifactFiles;
-    this.serviceVariables = other.serviceVariables;
-    this.safeDisplayServiceVariables = other.safeDisplayServiceVariables;
-    this.envVariables = other.envVariables;
-    this.hostConnectionAttributes = other.hostConnectionAttributes;
-    this.hostConnectionCredentials = other.hostConnectionCredentials;
-    this.bastionConnectionAttributes = other.bastionConnectionAttributes;
-    this.bastionConnectionCredentials = other.bastionConnectionCredentials;
-    this.winrmConnectionAttributes = other.winrmConnectionAttributes;
-    this.winrmConnectionEncryptedDataDetails = other.winrmConnectionEncryptedDataDetails;
-    this.artifactStreamAttributes = other.artifactStreamAttributes;
-    this.cloudProviderSetting = other.cloudProviderSetting;
-    this.cloudProviderCredentials = other.cloudProviderCredentials;
-    this.codeDeployParams = other.codeDeployParams;
-    this.containerSetupParams = other.containerSetupParams;
-    this.containerResizeParams = other.containerResizeParams;
-    this.metadata = other.metadata;
-    this.commandExecutionData = other.commandExecutionData;
-    this.timeout = other.timeout;
-    this.deploymentType = other.deploymentType;
-    this.artifactServerEncryptedDataDetails = other.artifactServerEncryptedDataDetails;
-    this.inlineSshCommand = other.inlineSshCommand;
-    this.executeOnDelegate = other.executeOnDelegate;
-    this.artifactStreamAttributesMap = other.artifactStreamAttributesMap;
-    this.multiArtifactMap = other.multiArtifactMap;
-    this.multiArtifact = other.multiArtifact;
-    this.artifactServerEncryptedDataDetailsMap = other.artifactServerEncryptedDataDetailsMap;
-    this.artifactFileName = other.artifactFileName;
+    accountId = other.accountId;
+    envId = other.envId;
+    host = other.host;
+    appId = other.appId;
+    activityId = other.activityId;
+    runtimePath = other.runtimePath;
+    stagingPath = other.stagingPath;
+    backupPath = other.backupPath;
+    windowsRuntimePath = other.windowsRuntimePath;
+    serviceTemplateId = other.serviceTemplateId;
+    executionCredential = other.executionCredential;
+    appContainer = other.appContainer;
+    artifactFiles = other.artifactFiles;
+    serviceVariables = other.serviceVariables;
+    safeDisplayServiceVariables = other.safeDisplayServiceVariables;
+    envVariables = other.envVariables;
+    hostConnectionAttributes = other.hostConnectionAttributes;
+    hostConnectionCredentials = other.hostConnectionCredentials;
+    bastionConnectionAttributes = other.bastionConnectionAttributes;
+    bastionConnectionCredentials = other.bastionConnectionCredentials;
+    winrmConnectionAttributes = other.winrmConnectionAttributes;
+    winrmConnectionEncryptedDataDetails = other.winrmConnectionEncryptedDataDetails;
+    artifactStreamAttributes = other.artifactStreamAttributes;
+    cloudProviderSetting = other.cloudProviderSetting;
+    cloudProviderCredentials = other.cloudProviderCredentials;
+    codeDeployParams = other.codeDeployParams;
+    containerSetupParams = other.containerSetupParams;
+    containerResizeParams = other.containerResizeParams;
+    metadata = other.metadata;
+    commandExecutionData = other.commandExecutionData;
+    timeout = other.timeout;
+    deploymentType = other.deploymentType;
+    artifactServerEncryptedDataDetails = other.artifactServerEncryptedDataDetails;
+    inlineSshCommand = other.inlineSshCommand;
+    executeOnDelegate = other.executeOnDelegate;
+    artifactStreamAttributesMap = other.artifactStreamAttributesMap;
+    multiArtifactMap = other.multiArtifactMap;
+    multiArtifact = other.multiArtifact;
+    artifactServerEncryptedDataDetailsMap = other.artifactServerEncryptedDataDetailsMap;
+    artifactFileName = other.artifactFileName;
   }
 
   /**
@@ -234,9 +232,9 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private ExecutionCredential executionCredential;
     private AppContainer appContainer;
     private List<ArtifactFile> artifactFiles;
-    private Map<String, String> serviceVariables = Maps.newHashMap();
-    private Map<String, String> safeDisplayServiceVariables = Maps.newHashMap();
-    private Map<String, String> envVariables = Maps.newHashMap();
+    private Map<String, String> serviceVariables = new HashMap<>();
+    private Map<String, String> safeDisplayServiceVariables = new HashMap<>();
+    private Map<String, String> envVariables = new HashMap<>();
     private SettingAttribute hostConnectionAttributes;
     private List<EncryptedDataDetail> hostConnectionCredentials;
     private SettingAttribute bastionConnectionAttributes;
@@ -249,7 +247,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private CodeDeployParams codeDeployParams;
     private ContainerSetupParams containerSetupParams;
     private ContainerResizeParams containerResizeParams;
-    private Map<String, String> metadata = Maps.newHashMap();
+    private Map<String, String> metadata = new HashMap<>();
     private CommandExecutionData commandExecutionData;
     private Integer timeout;
     private String deploymentType;
@@ -356,7 +354,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     }
 
     public Builder withHostConnectionCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
-      this.hostConnectionCredentials = encryptedDataDetails;
+      hostConnectionCredentials = encryptedDataDetails;
       return this;
     }
 
@@ -366,12 +364,12 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     }
 
     public Builder withBastionConnectionCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
-      this.bastionConnectionCredentials = encryptedDataDetails;
+      bastionConnectionCredentials = encryptedDataDetails;
       return this;
     }
 
     public Builder withWinRmConnectionAttributes(WinRmConnectionAttributes winRmConnectionAttributes) {
-      this.winrmConnectionAttributes = winRmConnectionAttributes;
+      winrmConnectionAttributes = winRmConnectionAttributes;
       return this;
     }
 
@@ -392,7 +390,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     }
 
     public Builder withCloudProviderCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
-      this.cloudProviderCredentials = encryptedDataDetails;
+      cloudProviderCredentials = encryptedDataDetails;
       return this;
     }
 

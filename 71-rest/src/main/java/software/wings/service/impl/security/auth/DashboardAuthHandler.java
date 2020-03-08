@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -42,7 +41,7 @@ public class DashboardAuthHandler {
   public Map<String, Set<Action>> getDashboardAccessPermissions(
       User user, String accountId, UserPermissionInfo userPermissionInfo, List<UserGroup> userGroups) {
     if (user == null) {
-      return Maps.newHashMap();
+      return new HashMap<>();
     }
 
     boolean accountAdmin = isAccountAdmin(userPermissionInfo);

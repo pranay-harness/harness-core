@@ -33,7 +33,6 @@ import static io.harness.event.model.EventType.USER_INVITED_FROM_EXISTING_ACCOUN
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -66,6 +65,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -100,7 +100,7 @@ public class MarketoHandler implements EventHandler {
   public MarketoHandler(MarketoConfig marketoConfig, EventListener eventListener) {
     this.marketoConfig = marketoConfig;
     if (isMarketoEnabled()) {
-      campaignRegistry = Maps.newHashMap();
+      campaignRegistry = new HashMap<>();
       registerCampaignRegistry();
       registerEventHandlers(eventListener);
       retrofit = new Retrofit.Builder()

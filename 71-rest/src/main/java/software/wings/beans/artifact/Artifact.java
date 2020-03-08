@@ -1,7 +1,6 @@
 package software.wings.beans.artifact;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -25,6 +24,7 @@ import software.wings.beans.Service;
 import software.wings.expression.ArtifactLabelEvaluator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -79,8 +79,8 @@ public class Artifact extends Base {
 
   private String artifactStreamId;
   private String artifactSourceName;
-  private Map<String, String> metadata = Maps.newHashMap();
-  private Map<String, String> labels = Maps.newHashMap();
+  private Map<String, String> metadata = new HashMap<>();
+  private Map<String, String> labels = new HashMap<>();
   @Transient @JsonIgnore public ArtifactLabelEvaluator label;
   @NotEmpty private String displayName;
   private String revision;
@@ -315,8 +315,8 @@ public class Artifact extends Base {
     protected String appId;
     private String artifactStreamId;
     private String artifactSourceName;
-    private Map<String, String> metadata = Maps.newHashMap();
-    private Map<String, String> labels = Maps.newHashMap();
+    private Map<String, String> metadata = new HashMap<>();
+    private Map<String, String> labels = new HashMap<>();
     private ArtifactLabelEvaluator label;
     private String displayName;
     private String revision;

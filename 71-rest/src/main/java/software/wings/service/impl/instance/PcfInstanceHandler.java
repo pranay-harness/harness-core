@@ -5,7 +5,6 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.util.function.Function.identity;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -121,7 +120,7 @@ public class PcfInstanceHandler extends InstanceHandler {
 
           Collection<Instance> instancesInDB = pcfAppNameInstanceMap.get(pcfApplicationName);
 
-          Map<String, Instance> instancesInDBMap = Maps.newHashMap();
+          Map<String, Instance> instancesInDBMap = new HashMap<>();
 
           // If there are prior instances in db already
           if (isNotEmpty(instancesInDB)) {
