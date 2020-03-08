@@ -5,6 +5,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -21,10 +22,11 @@ import org.mongodb.morphia.annotations.Indexed;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "clusterRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class ClusterRecord implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware {
+public class ClusterRecord implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   @Indexed String accountId;
   final Cluster cluster;
   String[] perpetualTaskIds; // reference
   @SchemaIgnore long createdAt;
+  long lastUpdatedAt;
 }
