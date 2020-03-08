@@ -16,7 +16,7 @@ public class ChartMuseumCapabilityCheck implements CapabilityCheck {
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     ChartMuseumCapability chartMuseumCapability = (ChartMuseumCapability) delegateCapability;
     String chartMuseumVersionCommand = chartMuseumCapability.getChartMuseumCommand().replace(
-        "${HELM_PATH}", encloseWithQuotesIfNeeded(InstallUtils.getChartMuseumPath()));
+        "${CHART_MUSEUM_PATH}", encloseWithQuotesIfNeeded(InstallUtils.getChartMuseumPath()));
 
     ProcessExecutor processExecutor = new ProcessExecutor().command("/bin/sh", "-c", chartMuseumVersionCommand);
     boolean valid = false;
